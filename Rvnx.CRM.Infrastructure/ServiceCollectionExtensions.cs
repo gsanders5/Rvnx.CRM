@@ -1,0 +1,26 @@
+﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Rvnx.CRM.Core.Interfaces;
+using Rvnx.CRM.Infrastructure.Data;
+using Rvnx.CRM.Infrastructure.Repositories;
+
+namespace Rvnx.CRM.Infrastructure;
+
+public static class ServiceCollectionExtensions
+{
+    public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration configuration)
+    {
+        // Add DbContext
+        services.AddDbContext<CRMDbContext>(options =>
+        {
+            var connectionString = configuration.GetConnectionString("DefaultConnection");
+            options.UseSqlite(connectionString);
+        });
+
+        // Add Repository
+        services.AddScoped<IRepository, Repository>();
+
+        return services;
+    }
+}
