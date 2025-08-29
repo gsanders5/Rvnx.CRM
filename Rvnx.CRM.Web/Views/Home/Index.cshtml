@@ -1,4 +1,5 @@
-﻿@model List<Rvnx.CRM.Core.Models.Person>
+﻿@using Rvnx.CRM.Core.Models.Person
+@model List<Person>
 
 @{
     ViewData["Title"] = "Home Page - CRM System";
@@ -32,10 +33,6 @@
                     <thead class="table-dark">
                         <tr>
                             <th>Name</th>
-                            <th>Email</th>
-                            <th>Phone</th>
-                            <th>Job Title</th>
-                            <th>Company</th>
                             <th>Created</th>
                         </tr>
                     </thead>
@@ -47,19 +44,6 @@
                                     <strong>@person.FirstName @person.LastName</strong>
                                     <br />
                                     <small class="text-muted">ID: @person.Id.ToString()[..8]...</small>
-                                </td>
-                                <td>
-                                    <a href="mailto:@person.Email">@person.Email</a>
-                                </td>
-                                <td>
-                                    @if (!string.IsNullOrEmpty(person.PhoneNumber))
-                                    {
-                                        <a href="tel:@person.PhoneNumber">@person.PhoneNumber</a>
-                                    }
-                                    else
-                                    {
-                                        <span class="text-muted">N/A</span>
-                                    }
                                 </td>
                                 <td>
                                     <small>

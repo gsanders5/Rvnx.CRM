@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Rvnx.CRM.Core.Interfaces;
-using Rvnx.CRM.Core.Models;
+using Rvnx.CRM.Core.Models.Person;
 using Rvnx.CRM.Web.Models;
 using System.Diagnostics;
 
@@ -46,28 +46,29 @@ namespace Rvnx.CRM.Web.Controllers
 
             if (existingCount == 0)
             {
+                var TestPhone = new PhoneNumber
+                {
+                    Number = "123-456-7890",
+                    Type = "Test"
+                };
+
                 var testPeople = new List<Person>
                 {
-                    new Person
+                    new()
                     {
                         FirstName = "John",
                         LastName = "Doe",
-                        Email = "john.doe@example.com",
-                        PhoneNumber = "555-0101",
+                        PhoneNumbers = [TestPhone]
                     },
-                    new Person
+                    new()
                     {
                         FirstName = "Jane",
                         LastName = "Smith",
-                        Email = "jane.smith@example.com",
-                        PhoneNumber = "555-0102",
                     },
-                    new Person
+                    new()
                     {
                         FirstName = "Bob",
                         LastName = "Johnson",
-                        Email = "bob.johnson@example.com",
-                        PhoneNumber = "555-0103",
                     }
                 };
 

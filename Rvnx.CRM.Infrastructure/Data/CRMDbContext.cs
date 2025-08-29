@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Rvnx.CRM.Core.Models;
+using Rvnx.CRM.Core.Models.Person;
 
 namespace Rvnx.CRM.Infrastructure.Data;
 
