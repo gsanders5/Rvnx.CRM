@@ -17,4 +17,5 @@ public class PhoneNumber : CRMBaseEntity
     [Required]
     [Display(Name = "Phone Holder")]
     public virtual Person Person { get; set; } = null!;
+    public virtual ICollection<Note> Notes { get; set; } = [];
 }

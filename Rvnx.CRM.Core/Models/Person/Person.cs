@@ -27,4 +27,5 @@ public class Person : CRMBaseEntity
     public string FullName => $"{FirstName} {LastName}".Trim();
 
     public virtual ICollection<PhoneNumber> PhoneNumbers { get; set; } = [];
+    public virtual ICollection<Note> Notes { get; set; } = [];
 }
