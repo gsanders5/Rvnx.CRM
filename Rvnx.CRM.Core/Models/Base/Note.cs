@@ -1,7 +1,7 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace Rvnx.CRM.Core.Models.Person;
+namespace Rvnx.CRM.Core.Models.Base;
 
 [Table("Note")]
 public class Note : CRMBaseEntity
@@ -15,6 +15,12 @@ public class Note : CRMBaseEntity
     [Display(Name = "Note")]
     public string Value { get; set; } = string.Empty;
 
-    public virtual Person? Person { get; set; }
-    public virtual PhoneNumber? PhoneNumber { get; set; }
+    [Required]
+    [Display(Name = "Person ID")]
+    public Guid PersonId { get; set; }
+
+    [Required]
+    [Display(Name = "Person")]
+    [ForeignKey(nameof(PersonId))]
+    public virtual Person Person { get; set; } = null!;
 }

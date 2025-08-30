@@ -1,12 +1,18 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using Rvnx.CRM.Core.Models;
-using Rvnx.CRM.Core.Models.Person;
+using Rvnx.CRM.Core.Models.Base;
+using Rvnx.CRM.Core.Models.Business;
+using Rvnx.CRM.Core.Models.Contact;
+using Rvnx.CRM.Core.Models.Dates;
 
 namespace Rvnx.CRM.Infrastructure.Data;
 
 public class CRMDbContext(DbContextOptions<CRMDbContext> options) : DbContext(options)
 {
-    public DbSet<Person> People { get; set; }
+    public DbSet<Contact> Contacts { get; set; }
+    public DbSet<Employer> Employers { get; set; }
+    public DbSet<PhoneNumber> PhoneNumbers { get; set; }
+    public DbSet<Note> Notes { get; set; }
+    public DbSet<ImportantDate> ImportantDates { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

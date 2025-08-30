@@ -1,4 +1,4 @@
-﻿using Rvnx.CRM.Core.Models;
+﻿using Rvnx.CRM.Core.Models.Base;
 
 namespace Rvnx.CRM.Core.Interfaces;
 

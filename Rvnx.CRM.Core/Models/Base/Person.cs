@@ -1,12 +1,10 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using Rvnx.CRM.Core.Models.Dates;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using Microsoft.EntityFrameworkCore;
 
-namespace Rvnx.CRM.Core.Models.Person;
+namespace Rvnx.CRM.Core.Models.Base;
 
-[Table("People")]
-[Index(nameof(FirstName), nameof(LastName), Name = "IX_People_FirstName_LastName")]
-public class Person : CRMBaseEntity
+public abstract class Person : CRMBaseEntity
 {
     [Required]
     [MaxLength(100)]
@@ -22,10 +20,11 @@ public class Person : CRMBaseEntity
     [DataType(DataType.Date)]
     public DateTime? Birthday { get; set; }
 
+    [Display(Name = "Important Dates")]
+    [InverseProperty(nameof(ImportantDate.Person))]
+    public virtual ICollection<ImportantDate> ImportantDates { get; set; } = [];
+
     [NotMapped]
     [Display(Name = "Full Name")]
     public string FullName => $"{FirstName} {LastName}".Trim();
-
-    public virtual ICollection<PhoneNumber> PhoneNumbers { get; set; } = [];
-    public virtual ICollection<Note> Notes { get; set; } = [];
 }

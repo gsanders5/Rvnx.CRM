@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Rvnx.CRM.Core.Interfaces;
-using Rvnx.CRM.Core.Models.Person;
+using Rvnx.CRM.Core.Models.Base;
+using Rvnx.CRM.Core.Models.Contact;
 using Rvnx.CRM.Web.Models;
 using System.Diagnostics;
 
@@ -42,42 +43,6 @@ namespace Rvnx.CRM.Web.Controllers
         // Action to add some test data
         public async Task<IActionResult> SeedTestData()
         {
-            var existingCount = await _repository.CountAsync<Person>();
-
-            if (existingCount == 0)
-            {
-                var TestPhone = new PhoneNumber
-                {
-                    Number = "123-456-7890",
-                    Type = "Test"
-                };
-
-                var testPeople = new List<Person>
-                {
-                    new()
-                    {
-                        FirstName = "John",
-                        LastName = "Doe",
-                        PhoneNumbers = [TestPhone]
-                    },
-                    new()
-                    {
-                        FirstName = "Jane",
-                        LastName = "Smith",
-                    },
-                    new()
-                    {
-                        FirstName = "Bob",
-                        LastName = "Johnson",
-                    }
-                };
-
-                await _repository.AddRangeAsync(testPeople);
-                await _repository.SaveChangesAsync();
-
-                _logger.LogInformation($"Added {testPeople.Count} test people to the database");
-            }
-
             return RedirectToAction("Index");
         }
     }

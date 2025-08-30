@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace Rvnx.CRM.Core.Models;
+namespace Rvnx.CRM.Core.Models.Base;
 
 public abstract class CRMBaseEntity
 {
