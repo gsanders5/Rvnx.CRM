@@ -22,6 +22,7 @@ public class CRMDbContext(DbContextOptions<CRMDbContext> options) : DbContext(op
     public DbSet<Pet> Pets { get; set; }
     public DbSet<ContactInfo> ContactInfos { get; set; }
     public DbSet<Fact> Facts { get; set; }
+    public DbSet<Address> Addresses { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -41,6 +42,7 @@ public class CRMDbContext(DbContextOptions<CRMDbContext> options) : DbContext(op
         modelBuilder.Entity<ImportantDate>().HasIndex(e => new { e.EntityId, e.EntityType });
         modelBuilder.Entity<ContactInfo>().HasIndex(e => new { e.EntityId, e.EntityType });
         modelBuilder.Entity<Fact>().HasIndex(e => new { e.EntityId, e.EntityType });
+        modelBuilder.Entity<Address>().HasIndex(e => new { e.EntityId, e.EntityType });
         modelBuilder.Entity<Attachment>().HasIndex(e => new { e.EntityId, e.EntityType });
         modelBuilder.Entity<PhoneNumber>().HasIndex(e => new { e.EntityId, e.EntityType });
         modelBuilder.Entity<Relationship>().HasIndex(e => new { e.EntityId, e.EntityType });
@@ -48,15 +50,16 @@ public class CRMDbContext(DbContextOptions<CRMDbContext> options) : DbContext(op
 
         // Seed RelationshipTypes
         var seedDate = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+        // Using fixed GUIDs for predictability in tests/code if needed, but they are random V4
         modelBuilder.Entity<RelationshipType>().HasData(
-            new RelationshipType { Id = Guid.Parse("11111111-1111-1111-1111-111111111111"), Name = "Parent", OppositeName = "Child", EntityType = EntityTypes.Person, CreatedBy = "System", LastChangedBy = "System", CreatedDate = seedDate, LastChangedDate = seedDate },
-            new RelationshipType { Id = Guid.Parse("22222222-2222-2222-2222-222222222222"), Name = "Spouse", OppositeName = "Spouse", EntityType = EntityTypes.Person, CreatedBy = "System", LastChangedBy = "System", CreatedDate = seedDate, LastChangedDate = seedDate },
-            new RelationshipType { Id = Guid.Parse("33333333-3333-3333-3333-333333333333"), Name = "Sibling", OppositeName = "Sibling", EntityType = EntityTypes.Person, CreatedBy = "System", LastChangedBy = "System", CreatedDate = seedDate, LastChangedDate = seedDate },
-            new RelationshipType { Id = Guid.Parse("44444444-4444-4444-4444-444444444444"), Name = "Friend", OppositeName = "Friend", EntityType = EntityTypes.Person, CreatedBy = "System", LastChangedBy = "System", CreatedDate = seedDate, LastChangedDate = seedDate },
-            new RelationshipType { Id = Guid.Parse("55555555-5555-5555-5555-555555555555"), Name = "Partner", OppositeName = "Partner", EntityType = EntityTypes.Person, CreatedBy = "System", LastChangedBy = "System", CreatedDate = seedDate, LastChangedDate = seedDate },
-            new RelationshipType { Id = Guid.Parse("66666666-6666-6666-6666-666666666666"), Name = "Manager", OppositeName = "Employee", EntityType = EntityTypes.Person, CreatedBy = "System", LastChangedBy = "System", CreatedDate = seedDate, LastChangedDate = seedDate },
-            new RelationshipType { Id = Guid.Parse("77777777-7777-7777-7777-777777777777"), Name = "Teacher", OppositeName = "Student", EntityType = EntityTypes.Person, CreatedBy = "System", LastChangedBy = "System", CreatedDate = seedDate, LastChangedDate = seedDate },
-            new RelationshipType { Id = Guid.Parse("88888888-8888-8888-8888-888888888888"), Name = "Parent Company", OppositeName = "Subsidiary", EntityType = EntityTypes.Company, CreatedBy = "System", LastChangedBy = "System", CreatedDate = seedDate, LastChangedDate = seedDate }
+            new RelationshipType { Id = Guid.Parse("7c1f8d22-1b6a-4c28-9c1e-3f5a2b8e9d1a"), Name = "Parent", OppositeName = "Child", EntityType = EntityTypes.Person, CreatedBy = "System", LastChangedBy = "System", CreatedDate = seedDate, LastChangedDate = seedDate },
+            new RelationshipType { Id = Guid.Parse("b2e9a5c8-7f4d-4a1b-8c6e-5f9d3a0e2b4c"), Name = "Spouse", OppositeName = "Spouse", EntityType = EntityTypes.Person, CreatedBy = "System", LastChangedBy = "System", CreatedDate = seedDate, LastChangedDate = seedDate },
+            new RelationshipType { Id = Guid.Parse("d4f1b8a9-3e2c-4b5d-9a6f-1c0e7d8b5a2f"), Name = "Sibling", OppositeName = "Sibling", EntityType = EntityTypes.Person, CreatedBy = "System", LastChangedBy = "System", CreatedDate = seedDate, LastChangedDate = seedDate },
+            new RelationshipType { Id = Guid.Parse("a5b6c7d8-9e0f-1a2b-3c4d-5e6f7a8b9c0d"), Name = "Friend", OppositeName = "Friend", EntityType = EntityTypes.Person, CreatedBy = "System", LastChangedBy = "System", CreatedDate = seedDate, LastChangedDate = seedDate },
+            new RelationshipType { Id = Guid.Parse("f9e8d7c6-b5a4-3210-9876-543210fedcba"), Name = "Partner", OppositeName = "Partner", EntityType = EntityTypes.Person, CreatedBy = "System", LastChangedBy = "System", CreatedDate = seedDate, LastChangedDate = seedDate },
+            new RelationshipType { Id = Guid.Parse("1a2b3c4d-5e6f-7890-a1b2-c3d4e5f67890"), Name = "Manager", OppositeName = "Employee", EntityType = EntityTypes.Person, CreatedBy = "System", LastChangedBy = "System", CreatedDate = seedDate, LastChangedDate = seedDate },
+            new RelationshipType { Id = Guid.Parse("09876543-210f-edcb-a987-6543210fedcb"), Name = "Teacher", OppositeName = "Student", EntityType = EntityTypes.Person, CreatedBy = "System", LastChangedBy = "System", CreatedDate = seedDate, LastChangedDate = seedDate },
+            new RelationshipType { Id = Guid.Parse("fedcba98-7654-3210-fedc-ba9876543210"), Name = "Parent Company", OppositeName = "Subsidiary", EntityType = EntityTypes.Company, CreatedBy = "System", LastChangedBy = "System", CreatedDate = seedDate, LastChangedDate = seedDate }
         );
     }
 

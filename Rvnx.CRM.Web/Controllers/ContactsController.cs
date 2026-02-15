@@ -433,6 +433,9 @@ namespace Rvnx.CRM.Web.Controllers
             var facts = await _repository.ListAsync<Fact>(f => f.EntityId == contactId && f.EntityType == EntityTypes.Person);
             if (facts.Any()) await _repository.DeleteRangeAsync(facts);
 
+            var addresses = await _repository.ListAsync<Address>(a => a.EntityId == contactId && a.EntityType == EntityTypes.Person);
+            if (addresses.Any()) await _repository.DeleteRangeAsync(addresses);
+
             var attachments = await _repository.ListAsync<Attachment>(a => a.EntityId == contactId && a.EntityType == EntityTypes.Person);
             if (attachments.Any()) await _repository.DeleteRangeAsync(attachments);
 
