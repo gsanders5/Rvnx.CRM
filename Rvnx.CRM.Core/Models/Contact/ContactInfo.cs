@@ -1,3 +1,4 @@
+using Rvnx.CRM.Core.Enumerations;
 using Rvnx.CRM.Core.Models.Base;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
@@ -8,9 +9,8 @@ namespace Rvnx.CRM.Core.Models.Contact
     public class ContactInfo : CRMGenericEntity
     {
         [Required]
-        [MaxLength(50)]
         [Display(Name = "Type")]
-        public string Type { get; set; } = string.Empty;
+        public ContactInfoType Type { get; set; }
 
         [Required]
         [MaxLength(256)]
