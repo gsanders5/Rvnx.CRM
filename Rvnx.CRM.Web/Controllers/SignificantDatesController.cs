@@ -9,16 +9,12 @@ using Rvnx.CRM.Web.Controllers.Base;
 
 namespace Rvnx.CRM.Web.Controllers
 {
-    public class SignificantDatesController : AuthorizedController
+    public class SignificantDatesController : RepositoryController
     {
-        private readonly IRepository _repository;
-
-        public SignificantDatesController(IRepository repository)
+        public SignificantDatesController(IRepository repository) : base(repository)
         {
-            _repository = repository;
         }
 
-        // GET: SignificantDates/Create
         public IActionResult Create(Guid entityId, string entityType)
         {
             return View(new SignificantDateDto
@@ -30,7 +26,6 @@ namespace Rvnx.CRM.Web.Controllers
             });
         }
 
-        // POST: SignificantDates/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind("Id,Title,Description,Date,EntityId,EntityType,RemindMe,EventFrequency")] SignificantDateDto dto)
@@ -68,12 +63,11 @@ namespace Rvnx.CRM.Web.Controllers
                 await _repository.SaveChangesAsync();
 
                 // Redirect back to the entity details
-                return RedirectToAction("Details", GetControllerForEntity(dto.EntityType), new { id = dto.EntityId });
+                return RedirectToEntity(dto.EntityId, dto.EntityType);
             }
             return View(dto);
         }
 
-        // GET: SignificantDates/Edit/5
         public async Task<IActionResult> Edit(Guid? id)
         {
             if (id == null) return NotFound();
@@ -82,7 +76,6 @@ namespace Rvnx.CRM.Web.Controllers
             return importantDate == null ? NotFound() : View(importantDate.ToDto());
         }
 
-        // POST: SignificantDates/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(Guid id, [Bind("Id,Title,Description,Date,EntityId,EntityType,RemindMe,EventFrequency")] SignificantDateDto dto)
@@ -126,12 +119,11 @@ namespace Rvnx.CRM.Web.Controllers
                     if (!await _repository.ExistsAsync<SignificantDate>(dto.Id)) return NotFound();
                     else throw;
                 }
-                return RedirectToAction("Details", GetControllerForEntity(dto.EntityType), new { id = dto.EntityId });
+                return RedirectToEntity(dto.EntityId, dto.EntityType);
             }
             return View(dto);
         }
 
-        // GET: SignificantDates/Delete/5
         public async Task<IActionResult> Delete(Guid? id)
         {
             if (id == null) return NotFound();
@@ -140,7 +132,6 @@ namespace Rvnx.CRM.Web.Controllers
             return importantDate == null ? NotFound() : View(importantDate.ToDto());
         }
 
-        // POST: SignificantDates/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(Guid id)
@@ -154,19 +145,9 @@ namespace Rvnx.CRM.Web.Controllers
                 await _repository.DeleteAsync<SignificantDate>(id);
                 await _repository.SaveChangesAsync();
 
-                return RedirectToAction("Details", GetControllerForEntity(entityType), new { id = entityId });
+                return RedirectToEntity(entityId, entityType);
             }
             return RedirectToAction("Index", "Home"); // Fallback
-        }
-
-        private string GetControllerForEntity(string entityType)
-        {
-            return entityType switch
-            {
-                EntityTypes.Person => "Contacts",
-                // Add other types as needed
-                _ => "Home"
-            };
         }
     }
 }

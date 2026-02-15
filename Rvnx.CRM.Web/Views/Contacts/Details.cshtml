@@ -26,7 +26,7 @@
                 }
                 else
                 {
-                    <div class="card-img-top d-flex align-items-center justify-content-center bg-light text-muted" style="height: 300px;">
+                    <div class="card-img-top d-flex align-items-center justify-content-center bg-body-tertiary text-muted" style="height: 300px;">
                         <i class="bi bi-person-fill display-1"></i>
                     </div>
                 }
@@ -361,7 +361,7 @@
                 </div>
                 <div class="card-body">
                     <div class="collapse mb-3" id="uploadAttachmentForm">
-                        <form asp-controller="Attachments" asp-action="Upload" method="post" enctype="multipart/form-data" class="border p-3 rounded bg-light">
+                        <form asp-controller="Attachments" asp-action="Upload" method="post" enctype="multipart/form-data" class="border p-3 rounded bg-body-tertiary">
                             <input type="hidden" name="entityId" value="@Model.Id" />
                             <input type="hidden" name="entityType" value="Person" />
                             <div class="mb-2">
@@ -406,16 +406,5 @@
 </div>
 
 @section Scripts {
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            document.querySelectorAll('.note-source').forEach(source => {
-                const markdown = source.textContent;
-                const render = source.nextElementSibling;
-                // Parse markdown and sanitize HTML before rendering
-                const dirtyHtml = marked.parse(markdown);
-                const cleanHtml = DOMPurify.sanitize(dirtyHtml);
-                render.innerHTML = cleanHtml;
-            });
-        });
-    </script>
+    <script src="~/js/markdown-renderer.js" asp-append-version="true"></script>
 }

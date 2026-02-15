@@ -23,7 +23,6 @@ namespace Rvnx.CRM.Web.Controllers
             _logger = logger;
         }
 
-        // GET: Contacts
         public async Task<IActionResult> Index()
         {
             List<Contact> contacts = await _repository.ListAsync<Contact>();
@@ -53,7 +52,6 @@ namespace Rvnx.CRM.Web.Controllers
             return View(contactDtos);
         }
 
-        // GET: Contacts/Details/5
         public async Task<IActionResult> Details(Guid? id)
         {
             if (id == null) return NotFound();
@@ -113,13 +111,11 @@ namespace Rvnx.CRM.Web.Controllers
             return View(contactDto);
         }
 
-        // GET: Contacts/Create
         public IActionResult Create()
         {
             return View(new CreateContactDto());
         }
 
-        // POST: Contacts/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind("FirstName,LastName,Nickname,Email,Phone,JobTitle,Company,Birthday")] CreateContactDto contactDto)
@@ -179,7 +175,6 @@ namespace Rvnx.CRM.Web.Controllers
             return View(contactDto);
         }
 
-        // GET: Contacts/Edit/5
         public async Task<IActionResult> Edit(Guid? id)
         {
             if (id == null) return NotFound();
@@ -214,7 +209,6 @@ namespace Rvnx.CRM.Web.Controllers
             return View(dto);
         }
 
-        // POST: Contacts/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(Guid id, [Bind("Id,FirstName,LastName,Nickname,Email,Phone,JobTitle,Company,Birthday")] UpdateContactDto contactDto, IFormFile? profileImage)
@@ -382,7 +376,6 @@ namespace Rvnx.CRM.Web.Controllers
             return View(contactDto);
         }
 
-        // GET: Contacts/Delete/5
         public async Task<IActionResult> Delete(Guid? id)
         {
             if (id == null) return NotFound();
@@ -390,7 +383,6 @@ namespace Rvnx.CRM.Web.Controllers
             return contact == null ? NotFound() : View(contact);
         }
 
-        // POST: Contacts/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(Guid id)

@@ -8,41 +8,12 @@ using Rvnx.CRM.Web.Controllers.Base;
 
 namespace Rvnx.CRM.Web.Controllers
 {
-    public class RelationshipsController : AuthorizedController
+    public class RelationshipsController : RepositoryController
     {
-        private readonly IRepository _repository;
-
-        public RelationshipsController(IRepository repository)
+        public RelationshipsController(IRepository repository) : base(repository)
         {
-            _repository = repository;
         }
 
-        private async Task<string> GetEntityName(Guid id, string type)
-        {
-            if (type == EntityTypes.Person)
-            {
-                Contact? p = await _repository.GetByIdAsync<Contact>(id);
-                return p?.FullName ?? "Unknown Person";
-            }
-            else if (type == EntityTypes.Company)
-            {
-                Employer? c = await _repository.GetByIdAsync<Employer>(id);
-                return c?.CompanyName ?? "Unknown Company";
-            }
-            return "Unknown Entity";
-        }
-
-        private IActionResult RedirectToEntity(Guid id, string type)
-        {
-            if (type == EntityTypes.Person)
-            {
-                return RedirectToAction("Details", "Contacts", new { id });
-            }
-            // Add other types here
-            return RedirectToAction("Index", "Home");
-        }
-
-        // GET: Relationships/Create
         public async Task<IActionResult> Create(Guid entityId, string entityType)
         {
             if (entityId == Guid.Empty || string.IsNullOrEmpty(entityType)) return NotFound();
@@ -79,7 +50,6 @@ namespace Rvnx.CRM.Web.Controllers
             return View(new Relationship { EntityId = entityId, EntityType = entityType });
         }
 
-        // POST: Relationships/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind("EntityId,RelatedEntityId,EntityType,Description,StartDate,EndDate")] Relationship relationship, string relationshipTypeSelection)
@@ -159,7 +129,6 @@ namespace Rvnx.CRM.Web.Controllers
             return View(relationship);
         }
 
-        // GET: Relationships/Edit/5
         public async Task<IActionResult> Edit(Guid? id)
         {
             if (id == null) return NotFound();
@@ -212,7 +181,6 @@ namespace Rvnx.CRM.Web.Controllers
             return View(relationship);
         }
 
-        // POST: Relationships/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(Guid id, [Bind("Id,EntityId,RelatedEntityId,EntityType,RelationshipTypeId,Description,StartDate,EndDate")] Relationship relationship, string relationshipTypeSelection)
@@ -254,7 +222,6 @@ namespace Rvnx.CRM.Web.Controllers
             return View(relationship);
         }
 
-        // GET: Relationships/Delete/5
         public async Task<IActionResult> Delete(Guid? id)
         {
             if (id == null) return NotFound();
@@ -267,7 +234,6 @@ namespace Rvnx.CRM.Web.Controllers
             return View(relationship);
         }
 
-        // POST: Relationships/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(Guid id)

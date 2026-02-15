@@ -6,13 +6,10 @@ using Rvnx.CRM.Web.Controllers.Base;
 
 namespace Rvnx.CRM.Web.Controllers
 {
-    public class FactsController : AuthorizedController
+    public class FactsController : RepositoryController
     {
-        private readonly IRepository _repository;
-
-        public FactsController(IRepository repository)
+        public FactsController(IRepository repository) : base(repository)
         {
-            _repository = repository;
         }
 
         public IActionResult Create(Guid entityId, string entityType)
@@ -79,11 +76,6 @@ namespace Rvnx.CRM.Web.Controllers
                 return RedirectToEntity(entityId, entityType);
             }
             return RedirectToAction("Index", "Home");
-        }
-
-        private IActionResult RedirectToEntity(Guid id, string type)
-        {
-            return type == EntityTypes.Person ? RedirectToAction("Details", "Contacts", new { id }) : RedirectToAction("Index", "Home");
         }
     }
 }
