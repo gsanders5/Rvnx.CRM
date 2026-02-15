@@ -5,12 +5,12 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Rvnx.CRM.Core.Models.Contact
 {
-    [Table("ContactInfo")]
-    public class ContactInfo : CRMGenericEntity
+    [Table("ContactMethod")]
+    public class ContactMethod : PolymorphicEntity
     {
         [Required]
         [Display(Name = "Type")]
-        public ContactInfoType Type { get; set; }
+        public ContactMethodType Type { get; set; }
 
         [Required]
         [MaxLength(256)]

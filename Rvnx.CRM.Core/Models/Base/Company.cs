@@ -2,7 +2,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace Rvnx.CRM.Core.Models.Base;
 
-public abstract class Company : CRMBaseEntity
+public abstract class Company : BaseEntity
 {
     [Required]
     [MaxLength(200)]

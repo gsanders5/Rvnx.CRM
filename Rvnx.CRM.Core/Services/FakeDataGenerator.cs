@@ -54,12 +54,12 @@ namespace Rvnx.CRM.Core.Services
             // Generate Phone
             if (_random.Next(2) == 0)
             {
-                contact.ContactInfos.Add(new ContactInfo
+                contact.ContactMethods.Add(new ContactMethod
                 {
                     Id = Guid.NewGuid(),
                     EntityId = contact.Id,
                     EntityType = EntityTypes.Person,
-                    Type = ContactInfoType.Phone,
+                    Type = ContactMethodType.Phone,
                     Value = $"{_random.Next(200, 999)}-{_random.Next(200, 999)}-{_random.Next(1000, 9999)}",
                     Label = "Mobile"
                 });
@@ -68,12 +68,12 @@ namespace Rvnx.CRM.Core.Services
             // Generate Email
             if (_random.Next(2) == 0)
             {
-                contact.ContactInfos.Add(new ContactInfo
+                contact.ContactMethods.Add(new ContactMethod
                 {
                     Id = Guid.NewGuid(),
                     EntityId = contact.Id,
                     EntityType = EntityTypes.Person,
-                    Type = ContactInfoType.Email,
+                    Type = ContactMethodType.Email,
                     Value = $"{firstName.ToLower()}.{lastName.ToLower()}@example.com",
                     Label = "Personal"
                 });
@@ -85,7 +85,7 @@ namespace Rvnx.CRM.Core.Services
                 int year = DateTime.Today.Year - _random.Next(20, 70);
                 int month = _random.Next(1, 13);
                 int day = _random.Next(1, 28);
-                contact.ImportantDates.Add(new ImportantDate
+                contact.SignificantDates.Add(new SignificantDate
                 {
                     Id = Guid.NewGuid(),
                     EntityId = contact.Id,

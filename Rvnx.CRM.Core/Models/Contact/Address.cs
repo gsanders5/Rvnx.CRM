@@ -5,7 +5,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace Rvnx.CRM.Core.Models.Contact
 {
     [Table("Address")]
-    public class Address : CRMGenericEntity
+    public class Address : PolymorphicEntity
     {
         [Required]
         [MaxLength(200)]

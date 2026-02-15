@@ -37,6 +37,24 @@
                         </li>
                     </ul>
                     <ul class="navbar-nav">
+                        @if (Context.RequestServices.GetService<Microsoft.Extensions.Configuration.IConfiguration>().GetValue<bool>("Authentication:Enabled"))
+                        {
+                            if (User.Identity?.IsAuthenticated == true)
+                            {
+                                <li class="nav-item">
+                                    <span class="nav-link">Hello, @User.Identity.Name!</span>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" asp-area="" asp-controller="Account" asp-action="Logout">Logout</a>
+                                </li>
+                            }
+                            else
+                            {
+                                <li class="nav-item">
+                                    <a class="nav-link" asp-area="" asp-controller="Account" asp-action="Login">Login</a>
+                                </li>
+                            }
+                        }
                         <li class="nav-item">
                             <button class="btn btn-link nav-link" id="theme-toggle" title="Toggle theme">
                                 <i class="bi bi-moon-stars-fill" id="theme-icon"></i>

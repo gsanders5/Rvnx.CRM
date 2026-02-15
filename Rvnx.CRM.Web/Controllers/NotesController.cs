@@ -4,10 +4,11 @@ using Rvnx.CRM.Core.Interfaces;
 using Rvnx.CRM.Core.Models.Base;
 using Rvnx.CRM.Core.Models.Business;
 using Rvnx.CRM.Core.Models.Contact;
+using Rvnx.CRM.Web.Controllers.Base;
 
 namespace Rvnx.CRM.Web.Controllers
 {
-    public class NotesController : Controller
+    public class NotesController : AuthorizedController
     {
         private readonly IRepository _repository;
 

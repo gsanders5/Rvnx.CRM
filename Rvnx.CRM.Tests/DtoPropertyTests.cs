@@ -43,42 +43,42 @@ namespace Rvnx.CRM.Tests
         [Fact]
         public void ContactDetailDto_ShouldHave_All_Contact_Properties()
         {
-            // Contact inherits Person, CRMBaseEntity
+            // Contact inherits Person, BaseEntity
             VerifyProperties<Contact, ContactDetailDto>(new[] { "IsHidden", "Addresses", "Attachments" }); // Handled as collections in DetailDto
         }
 
         [Fact]
         public void PetDto_ShouldHave_All_Pet_Properties()
         {
-            // Pet inherits CRMGenericEntity, CRMBaseEntity
+            // Pet inherits PolymorphicEntity, BaseEntity
             VerifyProperties<Pet, PetDto>();
         }
 
         [Fact]
         public void NoteDto_ShouldHave_All_Note_Properties()
         {
-            // Note inherits CRMGenericEntity, CRMBaseEntity
+            // Note inherits PolymorphicEntity, BaseEntity
             VerifyProperties<Note, NoteDto>();
         }
 
         [Fact]
-        public void ImportantDateDto_ShouldHave_All_ImportantDate_Properties()
+        public void SignificantDateDto_ShouldHave_All_SignificantDate_Properties()
         {
-            // ImportantDate inherits CRMGenericEntity, CRMBaseEntity
-            VerifyProperties<ImportantDate, ImportantDateDto>();
+            // SignificantDate inherits PolymorphicEntity, BaseEntity
+            VerifyProperties<SignificantDate, SignificantDateDto>();
         }
 
         [Fact]
         public void ReminderDto_ShouldHave_All_Reminder_Properties()
         {
-            // Reminder inherits CRMGenericEntity, CRMBaseEntity
+            // Reminder inherits PolymorphicEntity, BaseEntity
             VerifyProperties<Reminder, ReminderDto>();
         }
 
         [Fact]
         public void RelationshipDto_ShouldHave_All_Relationship_Properties()
         {
-            // Relationship inherits CRMGenericEntity, CRMBaseEntity
+            // Relationship inherits PolymorphicEntity, BaseEntity
             VerifyProperties<Relationship, RelationshipDto>(new[] { "RelationshipType", "Person", "RelatedPerson" });
         }
     }

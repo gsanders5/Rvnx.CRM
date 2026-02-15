@@ -5,7 +5,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace Rvnx.CRM.Core.Models.Contact;
 
 [Table("Relationship")]
-public class Relationship : CRMGenericEntity
+public class Relationship : PolymorphicEntity
 {
     [Required]
     [Display(Name = "Related Entity ID")]

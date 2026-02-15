@@ -33,20 +33,26 @@ namespace Rvnx.CRM.Core.Extensions
                 Description = entity.Description,
                 DueDate = entity.DueDate,
                 EntityId = entity.EntityId,
-                EntityType = entity.EntityType
+                EntityType = entity.EntityType,
+                RemindMe = entity.RemindMe,
+                ReminderSent = entity.ReminderSent,
+                EventFrequency = entity.EventFrequency
             };
         }
 
-        public static ImportantDateDto ToDto(this ImportantDate entity)
+        public static SignificantDateDto ToDto(this SignificantDate entity)
         {
-            return new ImportantDateDto
+            return new SignificantDateDto
             {
                 Id = entity.Id,
                 Title = entity.Title ?? string.Empty,
                 Date = entity.Date,
                 Description = entity.Description,
                 EntityId = entity.EntityId,
-                EntityType = entity.EntityType
+                EntityType = entity.EntityType,
+                RemindMe = entity.RemindMe,
+                ReminderSent = entity.ReminderSent,
+                EventFrequency = entity.EventFrequency
             };
         }
 
@@ -93,9 +99,9 @@ namespace Rvnx.CRM.Core.Extensions
             };
         }
 
-        public static ContactInfoDto ToDto(this ContactInfo entity)
+        public static ContactMethodDto ToDto(this ContactMethod entity)
         {
-            return new ContactInfoDto
+            return new ContactMethodDto
             {
                 Id = entity.Id,
                 Type = entity.Type,
@@ -150,10 +156,10 @@ namespace Rvnx.CRM.Core.Extensions
                 // Lists will be populated separately or via mapping if loaded
                 Notes = entity.Notes?.Select(n => n.ToDto()) ?? new List<NoteDto>(),
                 Reminders = entity.Reminders?.Select(r => r.ToDto()) ?? new List<ReminderDto>(),
-                ImportantDates = entity.ImportantDates?.Select(d => d.ToDto()) ?? new List<ImportantDateDto>(),
+                SignificantDates = entity.SignificantDates?.Select(d => d.ToDto()) ?? new List<SignificantDateDto>(),
                 Relationships = entity.Relationships?.Select(r => r.ToDto()) ?? new List<RelationshipDto>(),
                 RelatedTo = entity.RelatedTo?.Select(r => r.ToDto()) ?? new List<RelationshipDto>(),
-                ContactInfos = entity.ContactInfos?.Select(i => i.ToDto()) ?? new List<ContactInfoDto>(),
+                ContactMethods = entity.ContactMethods?.Select(i => i.ToDto()) ?? new List<ContactMethodDto>(),
                 Facts = entity.Facts?.Select(f => f.ToDto()) ?? new List<FactDto>(),
                 Attachments = entity.Attachments?.Select(a => a.ToDto()) ?? new List<AttachmentDto>(),
                 // Pets to be populated by caller as they are not on Person

@@ -5,7 +5,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace Rvnx.CRM.Core.Models.Dates;
 
 [Table("Reminder")]
-public class Reminder : CRMGenericEntity
+public class Reminder : RemindableEntity
 {
     [Required]
     [MaxLength(200)]

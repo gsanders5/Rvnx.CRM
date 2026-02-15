@@ -1,11 +1,14 @@
 namespace Rvnx.CRM.Core.DTOs.Common
 {
-    public class ImportantDateDto : BaseDto
+    public class SignificantDateDto : BaseDto
     {
         public string Title { get; set; } = string.Empty;
         public DateTime Date { get; set; }
         public string? Description { get; set; }
         public Guid EntityId { get; set; }
         public string EntityType { get; set; } = string.Empty;
+        public bool RemindMe { get; set; }
+        public DateTime? ReminderSent { get; set; }
+        public TimeSpan EventFrequency { get; set; } = TimeSpan.FromDays(365);
     }
 }

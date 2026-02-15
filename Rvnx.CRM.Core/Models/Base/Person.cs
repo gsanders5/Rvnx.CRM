@@ -5,7 +5,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Rvnx.CRM.Core.Models.Base;
 
-public abstract class Person : CRMBaseEntity
+public abstract class Person : BaseEntity
 {
     [Required]
     [MaxLength(100)]
@@ -43,7 +43,7 @@ public abstract class Person : CRMBaseEntity
     public ICollection<Reminder> Reminders { get; set; } = [];
 
     [NotMapped]
-    public ICollection<ImportantDate> ImportantDates { get; set; } = [];
+    public ICollection<SignificantDate> SignificantDates { get; set; } = [];
 
     [NotMapped]
     public ICollection<Relationship> Relationships { get; set; } = [];
@@ -52,7 +52,7 @@ public abstract class Person : CRMBaseEntity
     public ICollection<Relationship> RelatedTo { get; set; } = [];
 
     [NotMapped]
-    public ICollection<ContactInfo> ContactInfos { get; set; } = [];
+    public ICollection<ContactMethod> ContactMethods { get; set; } = [];
 
     [NotMapped]
     public ICollection<Fact> Facts { get; set; } = [];

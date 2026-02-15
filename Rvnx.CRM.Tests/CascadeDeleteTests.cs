@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Moq;
 using Rvnx.CRM.Core.Constants;
+using Rvnx.CRM.Core.Interfaces;
 using Rvnx.CRM.Core.Models.Base;
 using Rvnx.CRM.Core.Models.Contact;
 using Rvnx.CRM.Core.Models.Dates;
@@ -18,7 +19,12 @@ namespace Rvnx.CRM.Tests
             DbContextOptions<CRMDbContext> options = new DbContextOptionsBuilder<CRMDbContext>()
                 .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
                 .Options;
-            CRMDbContext context = new(options);
+
+            var mockUserService = new Mock<ICurrentUserService>();
+            mockUserService.Setup(u => u.UserId).Returns("TestUser");
+            mockUserService.Setup(u => u.UserName).Returns("TestUser");
+
+            CRMDbContext context = new(options, mockUserService.Object);
             context.Database.EnsureCreated();
             return context;
         }
@@ -40,9 +46,9 @@ namespace Rvnx.CRM.Tests
             // Add Dependencies
             await repository.AddAsync(new Note { Id = Guid.NewGuid(), EntityId = contactId, EntityType = EntityTypes.Person, Title = "N", Value = "V" });
             await repository.AddAsync(new Reminder { Id = Guid.NewGuid(), EntityId = contactId, EntityType = EntityTypes.Person, Title = "R", DueDate = DateTime.Now });
-            await repository.AddAsync(new ImportantDate { Id = Guid.NewGuid(), EntityId = contactId, EntityType = EntityTypes.Person, Title = "D", Date = DateTime.Now });
+            await repository.AddAsync(new SignificantDate { Id = Guid.NewGuid(), EntityId = contactId, EntityType = EntityTypes.Person, Title = "D", Date = DateTime.Now });
             await repository.AddAsync(new Address { Id = Guid.NewGuid(), EntityId = contactId, EntityType = EntityTypes.Person, Street = "S" });
-            await repository.AddAsync(new ContactInfo { Id = Guid.NewGuid(), EntityId = contactId, EntityType = EntityTypes.Person, Type = Core.Enumerations.ContactInfoType.Email, Value = "e@e.com" });
+            await repository.AddAsync(new ContactMethod { Id = Guid.NewGuid(), EntityId = contactId, EntityType = EntityTypes.Person, Type = Core.Enumerations.ContactMethodType.Email, Value = "e@e.com" });
             await repository.AddAsync(new Attachment { Id = Guid.NewGuid(), EntityId = contactId, EntityType = EntityTypes.Person, AttachmentType = "T", ContentType = "C" });
 
             await repository.SaveChangesAsync();
@@ -54,9 +60,9 @@ namespace Rvnx.CRM.Tests
             Assert.Null(await repository.GetByIdAsync<Contact>(contactId));
             Assert.Empty(await repository.ListAsync<Note>(x => x.EntityId == contactId));
             Assert.Empty(await repository.ListAsync<Reminder>(x => x.EntityId == contactId));
-            Assert.Empty(await repository.ListAsync<ImportantDate>(x => x.EntityId == contactId));
+            Assert.Empty(await repository.ListAsync<SignificantDate>(x => x.EntityId == contactId));
             Assert.Empty(await repository.ListAsync<Address>(x => x.EntityId == contactId));
-            Assert.Empty(await repository.ListAsync<ContactInfo>(x => x.EntityId == contactId));
+            Assert.Empty(await repository.ListAsync<ContactMethod>(x => x.EntityId == contactId));
             Assert.Empty(await repository.ListAsync<Attachment>(x => x.EntityId == contactId));
         }
 

@@ -1,6 +1,6 @@
 namespace Rvnx.CRM.Core.Enumerations
 {
-    public enum ContactInfoType
+    public enum ContactMethodType
     {
         Other = 0,
         Email = 1,
