@@ -1,4 +1,4 @@
-﻿using Rvnx.CRM.Core.Models.Base;
+using Rvnx.CRM.Core.Models.Base;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using static Rvnx.CRM.Core.Enumerations.CoreEnumerations;
@@ -17,11 +17,11 @@ public class PhoneNumber : CRMBaseEntity
     public string? Value { get; set; } = string.Empty;
 
     [Required]
-    [Display(Name = "Person ID")]
-    public Guid PersonId { get; set; }
+    [Display(Name = "Entity ID")]
+    public Guid EntityId { get; set; }
 
     [Required]
-    [Display(Name = "Phone Holder")]
-    [ForeignKey(nameof(PersonId))]
-    public virtual Person Person { get; set; } = null!;
+    [MaxLength(100)]
+    [Display(Name = "Entity Type")]
+    public string EntityType { get; set; } = string.Empty;
 }

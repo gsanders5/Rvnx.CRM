@@ -17,5 +17,10 @@ public class RelationshipType : CRMBaseEntity
     [Display(Name = "Reverse Name")]
     public string OppositeName { get; set; } = string.Empty;
 
+    [Required]
+    [MaxLength(100)]
+    [Display(Name = "Entity Type")]
+    public string EntityType { get; set; } = string.Empty;
+
     public bool IsSymmetric => Name == OppositeName;
 }

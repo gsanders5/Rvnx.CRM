@@ -4,6 +4,7 @@ using Rvnx.CRM.Core.Interfaces;
 using Rvnx.CRM.Core.Models.Contact;
 using Rvnx.CRM.Core.Models.Dates;
 using Rvnx.CRM.Core.Models.Base;
+using Rvnx.CRM.Core.Constants;
 
 namespace Rvnx.CRM.Web.Controllers
 {
@@ -28,30 +29,50 @@ namespace Rvnx.CRM.Web.Controllers
         // GET: Contacts/Details/5
         public async Task<IActionResult> Details(Guid? id)
         {
-            if (id == null)
+            if (id == null) return NotFound();
+
+            var contact = await _repository.GetByIdWithIncludesAsync<Contact>(id.Value, "Employers");
+            if (contact == null) return NotFound();
+
+            // Manually fetch related entities
+            contact.Notes = await _repository.ListAsync<Note>(n => n.EntityId == id.Value && n.EntityType == EntityTypes.Person);
+            contact.Reminders = await _repository.ListAsync<Reminder>(r => r.EntityId == id.Value && r.EntityType == EntityTypes.Person);
+            contact.ImportantDates = await _repository.ListAsync<ImportantDate>(d => d.EntityId == id.Value && d.EntityType == EntityTypes.Person);
+
+            var types = await _repository.ListAsync<RelationshipType>();
+
+            // Relationships
+            var relationships = await _repository.ListAsync<Relationship>(r => r.EntityId == id.Value && r.EntityType == EntityTypes.Person);
+            foreach (var rel in relationships)
             {
-                return NotFound();
+                rel.RelationshipType = types.FirstOrDefault(t => t.Id == rel.RelationshipTypeId);
+                rel.RelatedPerson = await _repository.GetByIdAsync<Contact>(rel.RelatedEntityId); // Assuming Contacts for now
             }
+            contact.Relationships = relationships;
 
-            var contact = await _repository.GetByIdWithIncludesAsync<Contact>(
-                id.Value,
-                "Notes",
-                "Relationships.RelatedPerson",
-                "Relationships.RelationshipType",
-                "RelatedTo.Person",
-                "RelatedTo.RelationshipType",
-                "Reminders",
-                "Employers",
-                "ImportantDates"
-            );
-
-            if (contact == null)
+            // RelatedTo
+            var relatedTo = await _repository.ListAsync<Relationship>(r => r.RelatedEntityId == id.Value && r.EntityType == EntityTypes.Person);
+            foreach (var rel in relatedTo)
             {
-                return NotFound();
+                rel.RelationshipType = types.FirstOrDefault(t => t.Id == rel.RelationshipTypeId);
+                rel.Person = await _repository.GetByIdAsync<Contact>(rel.EntityId);
             }
+            contact.RelatedTo = relatedTo;
 
-            var attachments = await _repository.ListAsync<Attachment>(a => a.EntityId == id.Value && a.EntityType == "Contact" && a.AttachmentType == "ProfileImage");
-            ViewBag.ProfileImage = attachments.FirstOrDefault();
+            // Profile Image
+            var profileAttachments = await _repository.ListAsync<Attachment>(a => a.EntityId == id.Value && a.EntityType == EntityTypes.Person && a.AttachmentType == "ProfileImage");
+            var profileAttachment = profileAttachments.FirstOrDefault();
+
+            if (profileAttachment != null)
+            {
+                // Fetch content
+                profileAttachment = await _repository.GetByIdWithIncludesAsync<Attachment>(profileAttachment.Id, "AttachmentContent");
+                if (profileAttachment?.AttachmentContent != null)
+                {
+                     ViewBag.ProfileImageBase64 = Convert.ToBase64String(profileAttachment.AttachmentContent.Content);
+                     ViewBag.ProfileImageContentType = profileAttachment.ContentType;
+                }
+            }
 
             return View(contact);
         }
@@ -80,16 +101,9 @@ namespace Rvnx.CRM.Web.Controllers
         // GET: Contacts/Edit/5
         public async Task<IActionResult> Edit(Guid? id)
         {
-            if (id == null)
-            {
-                return NotFound();
-            }
-
+            if (id == null) return NotFound();
             var contact = await _repository.GetByIdAsync<Contact>(id.Value);
-            if (contact == null)
-            {
-                return NotFound();
-            }
+            if (contact == null) return NotFound();
             return View(contact);
         }
 
@@ -98,20 +112,14 @@ namespace Rvnx.CRM.Web.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(Guid id, [Bind("Id,FirstName,LastName,Nickname,Email,Phone,JobTitle,Company,Birthday")] Contact contact, IFormFile? profileImage)
         {
-            if (id != contact.Id)
-            {
-                return NotFound();
-            }
+            if (id != contact.Id) return NotFound();
 
             if (ModelState.IsValid)
             {
                 try
                 {
                     var existingContact = await _repository.GetByIdAsync<Contact>(id);
-                    if (existingContact == null)
-                    {
-                        return NotFound();
-                    }
+                    if (existingContact == null) return NotFound();
 
                     existingContact.FirstName = contact.FirstName;
                     existingContact.LastName = contact.LastName;
@@ -127,14 +135,20 @@ namespace Rvnx.CRM.Web.Controllers
                         using var ms = new MemoryStream();
                         await profileImage.CopyToAsync(ms);
                         var fileBytes = ms.ToArray();
-                        var base64 = Convert.ToBase64String(fileBytes);
 
-                        var existingAttachments = await _repository.ListAsync<Attachment>(a => a.EntityId == id && a.EntityType == "Contact" && a.AttachmentType == "ProfileImage");
+                        var existingAttachments = await _repository.ListAsync<Attachment>(a => a.EntityId == id && a.EntityType == EntityTypes.Person && a.AttachmentType == "ProfileImage");
                         var existingAttachment = existingAttachments.FirstOrDefault();
 
                         if (existingAttachment != null)
                         {
-                            existingAttachment.Content = base64;
+                            // Load content to update it
+                            existingAttachment = await _repository.GetByIdWithIncludesAsync<Attachment>(existingAttachment.Id, "AttachmentContent");
+                            if (existingAttachment.AttachmentContent == null)
+                            {
+                                existingAttachment.AttachmentContent = new AttachmentContent { AttachmentId = existingAttachment.Id };
+                            }
+                            existingAttachment.AttachmentContent.Content = fileBytes;
+
                             existingAttachment.ContentType = profileImage.ContentType;
                             existingAttachment.FileName = profileImage.FileName;
                             await _repository.UpdateAsync(existingAttachment);
@@ -145,11 +159,14 @@ namespace Rvnx.CRM.Web.Controllers
                             {
                                 Id = Guid.NewGuid(),
                                 EntityId = id,
-                                EntityType = "Contact",
+                                EntityType = EntityTypes.Person,
                                 AttachmentType = "ProfileImage",
-                                Content = base64,
                                 ContentType = profileImage.ContentType,
-                                FileName = profileImage.FileName
+                                FileName = profileImage.FileName,
+                                AttachmentContent = new AttachmentContent
+                                {
+                                    Content = fileBytes
+                                }
                             };
                             await _repository.AddAsync(attachment);
                         }
@@ -160,14 +177,8 @@ namespace Rvnx.CRM.Web.Controllers
                 }
                 catch (DbUpdateConcurrencyException)
                 {
-                    if (!await ContactExists(contact.Id))
-                    {
-                        return NotFound();
-                    }
-                    else
-                    {
-                        throw;
-                    }
+                    if (!await ContactExists(contact.Id)) return NotFound();
+                    else throw;
                 }
                 return RedirectToAction(nameof(Index));
             }
@@ -177,17 +188,9 @@ namespace Rvnx.CRM.Web.Controllers
         // GET: Contacts/Delete/5
         public async Task<IActionResult> Delete(Guid? id)
         {
-            if (id == null)
-            {
-                return NotFound();
-            }
-
+            if (id == null) return NotFound();
             var contact = await _repository.GetByIdAsync<Contact>(id.Value);
-            if (contact == null)
-            {
-                return NotFound();
-            }
-
+            if (contact == null) return NotFound();
             return View(contact);
         }
 
@@ -196,22 +199,36 @@ namespace Rvnx.CRM.Web.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(Guid id)
         {
-            var contact = await _repository.GetByIdWithIncludesAsync<Contact>(id, "Relationships", "RelatedTo");
+            // Fetch related entities manually
+            var relationships = await _repository.ListAsync<Relationship>(r => r.EntityId == id && r.EntityType == EntityTypes.Person);
+            if (relationships.Any()) await _repository.DeleteRangeAsync(relationships);
 
-            if (contact != null)
-            {
-                if (contact.Relationships.Any())
-                {
-                    await _repository.DeleteRangeAsync(contact.Relationships);
-                }
-                if (contact.RelatedTo.Any())
-                {
-                    await _repository.DeleteRangeAsync(contact.RelatedTo);
-                }
+            var relatedTo = await _repository.ListAsync<Relationship>(r => r.RelatedEntityId == id && r.EntityType == EntityTypes.Person);
+            if (relatedTo.Any()) await _repository.DeleteRangeAsync(relatedTo);
 
-                await _repository.DeleteAsync<Contact>(id);
-                await _repository.SaveChangesAsync();
-            }
+            var notes = await _repository.ListAsync<Note>(n => n.EntityId == id && n.EntityType == EntityTypes.Person);
+            if (notes.Any()) await _repository.DeleteRangeAsync(notes);
+
+            var reminders = await _repository.ListAsync<Reminder>(r => r.EntityId == id && r.EntityType == EntityTypes.Person);
+            if (reminders.Any()) await _repository.DeleteRangeAsync(reminders);
+
+            var importantDates = await _repository.ListAsync<ImportantDate>(d => d.EntityId == id && d.EntityType == EntityTypes.Person);
+            if (importantDates.Any()) await _repository.DeleteRangeAsync(importantDates);
+
+            // Attachments
+             var attachments = await _repository.ListAsync<Attachment>(a => a.EntityId == id && a.EntityType == EntityTypes.Person);
+             if (attachments.Any())
+             {
+                 // Content deletes via Cascade?
+                 // AttachmentContent has FK to Attachment with Cascade Delete in OnModelCreating.
+                 // So deleting Attachment should delete Content.
+                 await _repository.DeleteRangeAsync(attachments);
+             }
+
+            // Finally delete contact
+            await _repository.DeleteAsync<Contact>(id);
+            await _repository.SaveChangesAsync();
+
             return RedirectToAction(nameof(Index));
         }
 

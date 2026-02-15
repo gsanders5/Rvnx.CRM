@@ -11,16 +11,162 @@ using Rvnx.CRM.Infrastructure.Data;
 namespace Rvnx.CRM.Infrastructure.Migrations
 {
     [DbContext(typeof(CRMDbContext))]
-    [Migration("20260215015102_AddRelationshipType")]
-    partial class AddRelationshipType
+    [Migration("20260215050748_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
-            modelBuilder.HasAnnotation("ProductVersion", "9.0.8");
+            modelBuilder.HasAnnotation("ProductVersion", "8.0.0");
 
-            modelBuilder.Entity("Rvnx.CRM.Core.Models.Base.Company", b =>
+            modelBuilder.Entity("Rvnx.CRM.Core.Models.Base.Attachment", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("AttachmentType")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ContentType")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("CreatedBy")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("EntityId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("EntityType")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("FileName")
+                        .HasMaxLength(255)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("LastChangedBy")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("LastChangedDate")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("UserId")
+                        .HasMaxLength(450)
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("EntityId", "EntityType");
+
+                    b.ToTable("Attachment");
+                });
+
+            modelBuilder.Entity("Rvnx.CRM.Core.Models.Base.AttachmentContent", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("AttachmentId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<byte[]>("Content")
+                        .IsRequired()
+                        .HasColumnType("BLOB");
+
+                    b.Property<string>("CreatedBy")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("LastChangedBy")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("LastChangedDate")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("UserId")
+                        .HasMaxLength(450)
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AttachmentId")
+                        .IsUnique();
+
+                    b.ToTable("AttachmentContent");
+                });
+
+            modelBuilder.Entity("Rvnx.CRM.Core.Models.Base.Note", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("CreatedBy")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("EntityId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("EntityType")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("LastChangedBy")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("LastChangedDate")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("UserId")
+                        .HasMaxLength(450)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Value")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("EntityId", "EntityType");
+
+                    b.ToTable("Note");
+                });
+
+            modelBuilder.Entity("Rvnx.CRM.Core.Models.Business.Employer", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -39,12 +185,24 @@ namespace Rvnx.CRM.Infrastructure.Migrations
                     b.Property<DateTime>("CreatedDate")
                         .HasColumnType("TEXT");
 
+                    b.Property<Guid>("EmployeeId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("EndDate")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("JobTitle")
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("LastChangedBy")
                         .IsRequired()
                         .HasMaxLength(256)
                         .HasColumnType("TEXT");
 
                     b.Property<DateTime>("LastChangedDate")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("StartDate")
                         .HasColumnType("TEXT");
 
                     b.Property<string>("UserId")
@@ -56,57 +214,12 @@ namespace Rvnx.CRM.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Company");
+                    b.HasIndex("EmployeeId");
 
-                    b.UseTptMappingStrategy();
+                    b.ToTable("Employer");
                 });
 
-            modelBuilder.Entity("Rvnx.CRM.Core.Models.Base.Note", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("CreatedBy")
-                        .IsRequired()
-                        .HasMaxLength(256)
-                        .HasColumnType("TEXT");
-
-                    b.Property<DateTime>("CreatedDate")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("LastChangedBy")
-                        .IsRequired()
-                        .HasMaxLength(256)
-                        .HasColumnType("TEXT");
-
-                    b.Property<DateTime>("LastChangedDate")
-                        .HasColumnType("TEXT");
-
-                    b.Property<Guid>("PersonId")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Title")
-                        .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("UserId")
-                        .HasMaxLength(450)
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Value")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("PersonId");
-
-                    b.ToTable("Note");
-                });
-
-            modelBuilder.Entity("Rvnx.CRM.Core.Models.Base.Person", b =>
+            modelBuilder.Entity("Rvnx.CRM.Core.Models.Contact.Contact", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -119,9 +232,6 @@ namespace Rvnx.CRM.Infrastructure.Migrations
                         .HasMaxLength(200)
                         .HasColumnType("TEXT");
 
-                    b.Property<Guid?>("CompanyId")
-                        .HasColumnType("TEXT");
-
                     b.Property<string>("CreatedBy")
                         .IsRequired()
                         .HasMaxLength(256)
@@ -131,7 +241,6 @@ namespace Rvnx.CRM.Infrastructure.Migrations
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Email")
-                        .IsRequired()
                         .HasMaxLength(256)
                         .HasColumnType("TEXT");
 
@@ -153,7 +262,10 @@ namespace Rvnx.CRM.Infrastructure.Migrations
                         .HasColumnType("TEXT");
 
                     b.Property<string>("LastName")
-                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Nickname")
                         .HasMaxLength(100)
                         .HasColumnType("TEXT");
 
@@ -167,11 +279,7 @@ namespace Rvnx.CRM.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("CompanyId");
-
-                    b.ToTable("Person");
-
-                    b.UseTptMappingStrategy();
+                    b.ToTable("Contact");
                 });
 
             modelBuilder.Entity("Rvnx.CRM.Core.Models.Contact.PhoneNumber", b =>
@@ -188,15 +296,20 @@ namespace Rvnx.CRM.Infrastructure.Migrations
                     b.Property<DateTime>("CreatedDate")
                         .HasColumnType("TEXT");
 
+                    b.Property<Guid>("EntityId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("EntityType")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("LastChangedBy")
                         .IsRequired()
                         .HasMaxLength(256)
                         .HasColumnType("TEXT");
 
                     b.Property<DateTime>("LastChangedDate")
-                        .HasColumnType("TEXT");
-
-                    b.Property<Guid>("PersonId")
                         .HasColumnType("TEXT");
 
                     b.Property<int>("Type")
@@ -213,7 +326,7 @@ namespace Rvnx.CRM.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("PersonId");
+                    b.HasIndex("EntityId", "EntityType");
 
                     b.ToTable("PhoneNumber");
                 });
@@ -238,6 +351,14 @@ namespace Rvnx.CRM.Infrastructure.Migrations
                     b.Property<DateTime?>("EndDate")
                         .HasColumnType("TEXT");
 
+                    b.Property<Guid>("EntityId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("EntityType")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("LastChangedBy")
                         .IsRequired()
                         .HasMaxLength(256)
@@ -246,10 +367,7 @@ namespace Rvnx.CRM.Infrastructure.Migrations
                     b.Property<DateTime>("LastChangedDate")
                         .HasColumnType("TEXT");
 
-                    b.Property<Guid>("PersonId")
-                        .HasColumnType("TEXT");
-
-                    b.Property<Guid>("RelatedPersonId")
+                    b.Property<Guid>("RelatedEntityId")
                         .HasColumnType("TEXT");
 
                     b.Property<Guid>("RelationshipTypeId")
@@ -264,11 +382,11 @@ namespace Rvnx.CRM.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("PersonId");
-
-                    b.HasIndex("RelatedPersonId");
-
                     b.HasIndex("RelationshipTypeId");
+
+                    b.HasIndex("EntityId", "EntityType");
+
+                    b.HasIndex("RelatedEntityId", "EntityType");
 
                     b.ToTable("Relationship");
                 });
@@ -285,6 +403,11 @@ namespace Rvnx.CRM.Infrastructure.Migrations
                         .HasColumnType("TEXT");
 
                     b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("EntityType")
+                        .IsRequired()
+                        .HasMaxLength(100)
                         .HasColumnType("TEXT");
 
                     b.Property<string>("LastChangedBy")
@@ -319,6 +442,7 @@ namespace Rvnx.CRM.Infrastructure.Migrations
                             Id = new Guid("11111111-1111-1111-1111-111111111111"),
                             CreatedBy = "System",
                             CreatedDate = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            EntityType = "Person",
                             LastChangedBy = "System",
                             LastChangedDate = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             Name = "Parent",
@@ -329,6 +453,7 @@ namespace Rvnx.CRM.Infrastructure.Migrations
                             Id = new Guid("22222222-2222-2222-2222-222222222222"),
                             CreatedBy = "System",
                             CreatedDate = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            EntityType = "Person",
                             LastChangedBy = "System",
                             LastChangedDate = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             Name = "Spouse",
@@ -339,6 +464,7 @@ namespace Rvnx.CRM.Infrastructure.Migrations
                             Id = new Guid("33333333-3333-3333-3333-333333333333"),
                             CreatedBy = "System",
                             CreatedDate = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            EntityType = "Person",
                             LastChangedBy = "System",
                             LastChangedDate = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             Name = "Sibling",
@@ -349,6 +475,7 @@ namespace Rvnx.CRM.Infrastructure.Migrations
                             Id = new Guid("44444444-4444-4444-4444-444444444444"),
                             CreatedBy = "System",
                             CreatedDate = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            EntityType = "Person",
                             LastChangedBy = "System",
                             LastChangedDate = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             Name = "Friend",
@@ -359,6 +486,7 @@ namespace Rvnx.CRM.Infrastructure.Migrations
                             Id = new Guid("55555555-5555-5555-5555-555555555555"),
                             CreatedBy = "System",
                             CreatedDate = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            EntityType = "Person",
                             LastChangedBy = "System",
                             LastChangedDate = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             Name = "Partner",
@@ -369,6 +497,7 @@ namespace Rvnx.CRM.Infrastructure.Migrations
                             Id = new Guid("66666666-6666-6666-6666-666666666666"),
                             CreatedBy = "System",
                             CreatedDate = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            EntityType = "Person",
                             LastChangedBy = "System",
                             LastChangedDate = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             Name = "Manager",
@@ -379,10 +508,22 @@ namespace Rvnx.CRM.Infrastructure.Migrations
                             Id = new Guid("77777777-7777-7777-7777-777777777777"),
                             CreatedBy = "System",
                             CreatedDate = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            EntityType = "Person",
                             LastChangedBy = "System",
                             LastChangedDate = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             Name = "Teacher",
                             OppositeName = "Student"
+                        },
+                        new
+                        {
+                            Id = new Guid("88888888-8888-8888-8888-888888888888"),
+                            CreatedBy = "System",
+                            CreatedDate = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            EntityType = "Company",
+                            LastChangedBy = "System",
+                            LastChangedDate = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Name = "Parent Company",
+                            OppositeName = "Subsidiary"
                         });
                 });
 
@@ -390,9 +531,6 @@ namespace Rvnx.CRM.Infrastructure.Migrations
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("TEXT");
-
-                    b.Property<Guid?>("CompanyId")
                         .HasColumnType("TEXT");
 
                     b.Property<string>("CreatedBy")
@@ -409,15 +547,19 @@ namespace Rvnx.CRM.Infrastructure.Migrations
                     b.Property<string>("Description")
                         .HasColumnType("TEXT");
 
+                    b.Property<Guid?>("EntityId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("EntityType")
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("LastChangedBy")
                         .IsRequired()
                         .HasMaxLength(256)
                         .HasColumnType("TEXT");
 
                     b.Property<DateTime>("LastChangedDate")
-                        .HasColumnType("TEXT");
-
-                    b.Property<Guid?>("PersonId")
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Title")
@@ -430,9 +572,7 @@ namespace Rvnx.CRM.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("CompanyId");
-
-                    b.HasIndex("PersonId");
+                    b.HasIndex("EntityId", "EntityType");
 
                     b.ToTable("ImportantDate");
                 });
@@ -457,6 +597,13 @@ namespace Rvnx.CRM.Infrastructure.Migrations
                     b.Property<DateTime>("DueDate")
                         .HasColumnType("TEXT");
 
+                    b.Property<Guid?>("EntityId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("EntityType")
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
                     b.Property<bool>("IsCompleted")
                         .HasColumnType("INTEGER");
 
@@ -466,9 +613,6 @@ namespace Rvnx.CRM.Infrastructure.Migrations
                         .HasColumnType("TEXT");
 
                     b.Property<DateTime>("LastChangedDate")
-                        .HasColumnType("TEXT");
-
-                    b.Property<Guid?>("PersonId")
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Title")
@@ -482,117 +626,20 @@ namespace Rvnx.CRM.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("PersonId");
+                    b.HasIndex("EntityId", "EntityType");
 
                     b.ToTable("Reminder");
                 });
 
-            modelBuilder.Entity("Rvnx.CRM.Core.Models.Business.Employer", b =>
+            modelBuilder.Entity("Rvnx.CRM.Core.Models.Base.AttachmentContent", b =>
                 {
-                    b.HasBaseType("Rvnx.CRM.Core.Models.Base.Company");
-
-                    b.Property<Guid>("EmployeeId")
-                        .HasColumnType("TEXT");
-
-                    b.Property<DateTime?>("EndDate")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("JobTitle")
-                        .HasColumnType("TEXT");
-
-                    b.Property<DateTime?>("StartDate")
-                        .HasColumnType("TEXT");
-
-                    b.HasIndex("EmployeeId");
-
-                    b.ToTable("Employer");
-                });
-
-            modelBuilder.Entity("Rvnx.CRM.Core.Models.Contact.Contact", b =>
-                {
-                    b.HasBaseType("Rvnx.CRM.Core.Models.Base.Person");
-
-                    b.ToTable("Contact");
-                });
-
-            modelBuilder.Entity("Rvnx.CRM.Core.Models.Base.Note", b =>
-                {
-                    b.HasOne("Rvnx.CRM.Core.Models.Contact.Contact", "Person")
-                        .WithMany("Notes")
-                        .HasForeignKey("PersonId")
+                    b.HasOne("Rvnx.CRM.Core.Models.Base.Attachment", "Attachment")
+                        .WithOne("AttachmentContent")
+                        .HasForeignKey("Rvnx.CRM.Core.Models.Base.AttachmentContent", "AttachmentId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("Person");
-                });
-
-            modelBuilder.Entity("Rvnx.CRM.Core.Models.Base.Person", b =>
-                {
-                    b.HasOne("Rvnx.CRM.Core.Models.Base.Company", null)
-                        .WithMany("Contacts")
-                        .HasForeignKey("CompanyId");
-                });
-
-            modelBuilder.Entity("Rvnx.CRM.Core.Models.Contact.PhoneNumber", b =>
-                {
-                    b.HasOne("Rvnx.CRM.Core.Models.Contact.Contact", "Person")
-                        .WithMany("PhoneNumbers")
-                        .HasForeignKey("PersonId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Person");
-                });
-
-            modelBuilder.Entity("Rvnx.CRM.Core.Models.Contact.Relationship", b =>
-                {
-                    b.HasOne("Rvnx.CRM.Core.Models.Base.Person", "Person")
-                        .WithMany("Relationships")
-                        .HasForeignKey("PersonId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("Rvnx.CRM.Core.Models.Base.Person", "RelatedPerson")
-                        .WithMany("RelatedTo")
-                        .HasForeignKey("RelatedPersonId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("Rvnx.CRM.Core.Models.Contact.RelationshipType", "RelationshipType")
-                        .WithMany()
-                        .HasForeignKey("RelationshipTypeId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Person");
-
-                    b.Navigation("RelatedPerson");
-
-                    b.Navigation("RelationshipType");
-                });
-
-            modelBuilder.Entity("Rvnx.CRM.Core.Models.Dates.ImportantDate", b =>
-                {
-                    b.HasOne("Rvnx.CRM.Core.Models.Base.Company", "Company")
-                        .WithMany("ImportantDates")
-                        .HasForeignKey("CompanyId");
-
-                    b.HasOne("Rvnx.CRM.Core.Models.Base.Person", "Person")
-                        .WithMany("ImportantDates")
-                        .HasForeignKey("PersonId");
-
-                    b.Navigation("Company");
-
-                    b.Navigation("Person");
-                });
-
-            modelBuilder.Entity("Rvnx.CRM.Core.Models.Dates.Reminder", b =>
-                {
-                    b.HasOne("Rvnx.CRM.Core.Models.Base.Person", "Person")
-                        .WithMany("Reminders")
-                        .HasForeignKey("PersonId");
-
-                    b.Navigation("Person");
+                    b.Navigation("Attachment");
                 });
 
             modelBuilder.Entity("Rvnx.CRM.Core.Models.Business.Employer", b =>
@@ -603,49 +650,28 @@ namespace Rvnx.CRM.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("Rvnx.CRM.Core.Models.Base.Company", null)
-                        .WithOne()
-                        .HasForeignKey("Rvnx.CRM.Core.Models.Business.Employer", "Id")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
                     b.Navigation("Employee");
                 });
 
-            modelBuilder.Entity("Rvnx.CRM.Core.Models.Contact.Contact", b =>
+            modelBuilder.Entity("Rvnx.CRM.Core.Models.Contact.Relationship", b =>
                 {
-                    b.HasOne("Rvnx.CRM.Core.Models.Base.Person", null)
-                        .WithOne()
-                        .HasForeignKey("Rvnx.CRM.Core.Models.Contact.Contact", "Id")
+                    b.HasOne("Rvnx.CRM.Core.Models.Contact.RelationshipType", "RelationshipType")
+                        .WithMany()
+                        .HasForeignKey("RelationshipTypeId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("RelationshipType");
                 });
 
-            modelBuilder.Entity("Rvnx.CRM.Core.Models.Base.Company", b =>
+            modelBuilder.Entity("Rvnx.CRM.Core.Models.Base.Attachment", b =>
                 {
-                    b.Navigation("Contacts");
-
-                    b.Navigation("ImportantDates");
-                });
-
-            modelBuilder.Entity("Rvnx.CRM.Core.Models.Base.Person", b =>
-                {
-                    b.Navigation("ImportantDates");
-
-                    b.Navigation("RelatedTo");
-
-                    b.Navigation("Relationships");
-
-                    b.Navigation("Reminders");
+                    b.Navigation("AttachmentContent");
                 });
 
             modelBuilder.Entity("Rvnx.CRM.Core.Models.Contact.Contact", b =>
                 {
                     b.Navigation("Employers");
-
-                    b.Navigation("Notes");
-
-                    b.Navigation("PhoneNumbers");
                 });
 #pragma warning restore 612, 618
         }

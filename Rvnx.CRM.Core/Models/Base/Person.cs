@@ -1,5 +1,6 @@
 using Rvnx.CRM.Core.Models.Contact;
-﻿using Rvnx.CRM.Core.Models.Dates;
+using Rvnx.CRM.Core.Models.Dates;
+using Rvnx.CRM.Core.Models.Base;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -40,23 +41,23 @@ public abstract class Person : CRMBaseEntity
     [DataType(DataType.Date)]
     public DateTime? Birthday { get; set; }
 
-    [Display(Name = "Important Dates")]
-    [InverseProperty(nameof(ImportantDate.Person))]
-    public virtual ICollection<ImportantDate> ImportantDates { get; set; } = [];
-
-    [Display(Name = "Relationships")]
-    [InverseProperty(nameof(Relationship.Person))]
-    public virtual ICollection<Relationship> Relationships { get; set; } = [];
-
-    [Display(Name = "Related To")]
-    [InverseProperty(nameof(Relationship.RelatedPerson))]
-    public virtual ICollection<Relationship> RelatedTo { get; set; } = [];
-
-    [Display(Name = "Reminders")]
-    [InverseProperty(nameof(Reminder.Person))]
-    public virtual ICollection<Reminder> Reminders { get; set; } = [];
-
     [NotMapped]
     [Display(Name = "Full Name")]
     public string FullName => $"{FirstName} {LastName}".Trim();
+
+    // NotMapped Properties for View Compatibility
+    [NotMapped]
+    public ICollection<Note> Notes { get; set; } = [];
+
+    [NotMapped]
+    public ICollection<Reminder> Reminders { get; set; } = [];
+
+    [NotMapped]
+    public ICollection<ImportantDate> ImportantDates { get; set; } = [];
+
+    [NotMapped]
+    public ICollection<Relationship> Relationships { get; set; } = [];
+
+    [NotMapped]
+    public ICollection<Relationship> RelatedTo { get; set; } = [];
 }

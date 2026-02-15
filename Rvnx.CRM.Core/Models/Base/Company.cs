@@ -1,4 +1,4 @@
-﻿using Rvnx.CRM.Core.Models.Dates;
+using Rvnx.CRM.Core.Models.Dates;
 using System.ComponentModel.DataAnnotations;
 
 namespace Rvnx.CRM.Core.Models.Base;
@@ -12,10 +12,4 @@ public abstract class Company : CRMBaseEntity
 
     [Display(Name = "Website")]
     public string? Website { get; set; } = string.Empty;
-
-    [Display(Name = "Contacts")]
-    public virtual ICollection<Person> Contacts { get; set; } = [];
-
-    [Display(Name = "Important Dates")]
-    public virtual ICollection<ImportantDate> ImportantDates { get; set; } = [];
 }

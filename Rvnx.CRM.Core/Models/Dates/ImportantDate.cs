@@ -1,4 +1,4 @@
-﻿using Rvnx.CRM.Core.Models.Base;
+using Rvnx.CRM.Core.Models.Base;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -18,17 +18,10 @@ public class ImportantDate : CRMBaseEntity
     [Display(Name = "Date")]
     public DateTime Date { get; set; }
 
-    [Display(Name = "Person ID")]
-    public Guid? PersonId { get; set; }
+    [Display(Name = "Entity ID")]
+    public Guid? EntityId { get; set; }
 
-    [Display(Name = "Person")]
-    [ForeignKey(nameof(PersonId))]
-    public virtual Person? Person { get; set; }
-
-    [Display(Name = "Company ID")]
-    public Guid? CompanyId { get; set; }
-
-    [Display(Name = "Company")]
-    [ForeignKey(nameof(CompanyId))]
-    public virtual Company? Company { get; set; }
+    [MaxLength(100)]
+    [Display(Name = "Entity Type")]
+    public string? EntityType { get; set; }
 }
