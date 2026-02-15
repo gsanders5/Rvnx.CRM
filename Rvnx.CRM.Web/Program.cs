@@ -1,7 +1,5 @@
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc.Authorization;
 using Microsoft.EntityFrameworkCore;
 using Rvnx.CRM.Core.Interfaces;
 using Rvnx.CRM.Infrastructure;
@@ -63,16 +61,7 @@ namespace Rvnx.CRM.Web
                 });
             }
 
-            builder.Services.AddControllersWithViews(options =>
-            {
-                if (authEnabled)
-                {
-                    var policy = new AuthorizationPolicyBuilder()
-                        .RequireAuthenticatedUser()
-                        .Build();
-                    options.Filters.Add(new AuthorizeFilter(policy));
-                }
-            });
+            builder.Services.AddControllersWithViews();
 
             builder.Services.AddInfrastructure(builder.Configuration);
 

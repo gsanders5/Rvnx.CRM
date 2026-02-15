@@ -1,10 +1,11 @@
 using Microsoft.AspNetCore.Mvc;
 using Rvnx.CRM.Core.Interfaces;
 using Rvnx.CRM.Core.Models.Base;
+using Rvnx.CRM.Web.Controllers.Base;
 
 namespace Rvnx.CRM.Web.Controllers
 {
-    public class AttachmentsController : Controller
+    public class AttachmentsController : BaseAuthorizedController
     {
         private readonly IRepository _repository;
         private static readonly string[] AllowedExtensions = { ".jpg", ".jpeg", ".png", ".gif", ".pdf", ".txt", ".doc", ".docx", ".xls", ".xlsx" };

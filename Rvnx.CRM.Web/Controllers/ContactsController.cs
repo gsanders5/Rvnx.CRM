@@ -8,10 +8,11 @@ using Rvnx.CRM.Core.Interfaces;
 using Rvnx.CRM.Core.Models.Base;
 using Rvnx.CRM.Core.Models.Contact;
 using Rvnx.CRM.Core.Models.Dates;
+using Rvnx.CRM.Web.Controllers.Base;
 
 namespace Rvnx.CRM.Web.Controllers
 {
-    public class ContactsController : Controller
+    public class ContactsController : BaseAuthorizedController
     {
         private readonly IRepository _repository;
         private readonly ILogger<ContactsController> _logger;

@@ -5,10 +5,11 @@ using Rvnx.CRM.Core.DTOs.Common;
 using Rvnx.CRM.Core.Extensions;
 using Rvnx.CRM.Core.Interfaces;
 using Rvnx.CRM.Core.Models.Dates;
+using Rvnx.CRM.Web.Controllers.Base;
 
 namespace Rvnx.CRM.Web.Controllers
 {
-    public class ImportantDatesController : Controller
+    public class ImportantDatesController : BaseAuthorizedController
     {
         private readonly IRepository _repository;
 

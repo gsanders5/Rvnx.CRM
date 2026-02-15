@@ -3,12 +3,13 @@ using Rvnx.CRM.Core.Constants;
 using Rvnx.CRM.Core.Interfaces;
 using Rvnx.CRM.Core.Models.Contact;
 using Rvnx.CRM.Core.Models.Dates;
+using Rvnx.CRM.Web.Controllers.Base;
 using Rvnx.CRM.Web.Models;
 using System.Diagnostics;
 
 namespace Rvnx.CRM.Web.Controllers
 {
-    public class HomeController : Controller
+    public class HomeController : BaseAuthorizedController
     {
         private readonly ILogger<HomeController> _logger;
         private readonly IRepository _repository;

@@ -3,11 +3,12 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Rvnx.CRM.Web.Controllers.Base;
 
 namespace Rvnx.CRM.Web.Controllers;
 
 [AllowAnonymous]
-public class AccountController : Controller
+public class AccountController : BaseController
 {
     [HttpGet]
     public IActionResult Login(string returnUrl = "/")

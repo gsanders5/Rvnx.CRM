@@ -4,10 +4,11 @@ using Rvnx.CRM.Core.DTOs.Pet;
 using Rvnx.CRM.Core.Extensions;
 using Rvnx.CRM.Core.Interfaces;
 using Rvnx.CRM.Core.Models.Contact;
+using Rvnx.CRM.Web.Controllers.Base;
 
 namespace Rvnx.CRM.Web.Controllers
 {
-    public class PetsController : Controller
+    public class PetsController : BaseAuthorizedController
     {
         private readonly IRepository _repository;
 

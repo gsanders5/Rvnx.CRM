@@ -2,10 +2,11 @@ using Microsoft.AspNetCore.Mvc;
 using Rvnx.CRM.Core.Constants;
 using Rvnx.CRM.Core.Interfaces;
 using Rvnx.CRM.Core.Models.Contact;
+using Rvnx.CRM.Web.Controllers.Base;
 
 namespace Rvnx.CRM.Web.Controllers
 {
-    public class ContactInfosController : Controller
+    public class ContactInfosController : BaseAuthorizedController
     {
         private readonly IRepository _repository;
 

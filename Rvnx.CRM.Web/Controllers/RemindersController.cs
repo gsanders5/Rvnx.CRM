@@ -4,10 +4,11 @@ using Rvnx.CRM.Core.Interfaces;
 using Rvnx.CRM.Core.Models.Business;
 using Rvnx.CRM.Core.Models.Contact;
 using Rvnx.CRM.Core.Models.Dates;
+using Rvnx.CRM.Web.Controllers.Base;
 
 namespace Rvnx.CRM.Web.Controllers
 {
-    public class RemindersController : Controller
+    public class RemindersController : BaseAuthorizedController
     {
         private readonly IRepository _repository;
 
