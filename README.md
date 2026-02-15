@@ -1,11 +1,11 @@
-﻿# Rvnx CRM System
+# Rvnx CRM System
 
-A modern CRM system built with ASP.NET Core 9.0 using clean architecture principles and Entity Framework Core.
+A modern CRM system built with ASP.NET Core 8.0 using clean architecture principles and Entity Framework Core.
 
 ## Project Structure
 
 ```
-Rvnx.CRM.Web/
+.
 ├── Rvnx.CRM.Core/              # Domain layer (business entities, interfaces)
 │   ├── Interfaces/
 │   │   └── IRepository.cs      # Generic repository interface
@@ -50,9 +50,9 @@ Rvnx.CRM.Web/
 
 ## Technology Stack
 
-- **.NET 9.0** (with global.json configured for SDK 9.0.304)
+- **.NET 8.0**
 - **ASP.NET Core MVC** for web interface
-- **Entity Framework Core 9.0** for data access
+- **Entity Framework Core 8.0** for data access
 - **SQLite** for development database (configurable for SQL Server/PostgreSQL)
 - **Bootstrap 5** for UI styling
 
@@ -134,23 +134,51 @@ await _repository.SaveChangesAsync();
 ## Setup Instructions
 
 ### Prerequisites
-- .NET 9.0 SDK
+- .NET 8.0 SDK
 - Visual Studio 2022 or VS Code
 
 ### Database Setup
+
+The project uses SQLite by default. The database file `rvnx-crm.db` will be created in the `Rvnx.CRM.Web` directory.
+
+#### 1. Initial Setup (No existing database)
+
+If you are setting up the project for the first time or do not have the `rvnx-crm.db` file:
+
 ```bash
-# Create initial migration
-dotnet ef migrations add InitialCreate --project Rvnx.CRM.Infrastructure --startup-project Rvnx.CRM.Web
-
-# Update database
+# Apply migrations to create the database
 dotnet ef database update --project Rvnx.CRM.Infrastructure --startup-project Rvnx.CRM.Web
+```
+This command creates the database file `rvnx-crm.db` in `Rvnx.CRM.Web/` and applies all existing migrations.
 
-# Run application
+#### 2. Update Existing Database
+
+If you already have a database and want to apply the latest changes (migrations):
+
+```bash
+# Update the database to the latest migration
+dotnet ef database update --project Rvnx.CRM.Infrastructure --startup-project Rvnx.CRM.Web
+```
+
+#### 3. Reset Database (Start from scratch)
+
+If you want to completely wipe the database and start over:
+
+1.  Delete the `rvnx-crm.db` file located in the `Rvnx.CRM.Web/` directory.
+2.  Run the update command again:
+
+```bash
+dotnet ef database update --project Rvnx.CRM.Infrastructure --startup-project Rvnx.CRM.Web
+```
+
+### Run the Application
+
+```bash
 dotnet run --project Rvnx.CRM.Web
 ```
 
-### Test the Setup
-1. Navigate to home page
+## Test the Setup
+1. Navigate to home page (usually `http://localhost:5000` or `https://localhost:5001`)
 2. Click "Add Test Data" to populate sample people
 3. View people listing with audit information
 
@@ -171,7 +199,7 @@ dotnet run --project Rvnx.CRM.Web
 ### Audit Trail Implementation
 - Automatically populated in `CRMDbContext.UpdateAuditFields()`
 - Triggered on `SaveChanges()` and `SaveChangesAsync()`
-- Currently uses "Environment.Usernamez" placeholder for user identification
+- Currently uses "Environment.Username" placeholder for user identification
 
 ## Next Steps / TODOs
 
@@ -202,14 +230,13 @@ dotnet run --project Rvnx.CRM.Web
 ## File Locations
 
 ### Key Configuration Files
-- `global.json`: Forces .NET 9 SDK usage
 - `appsettings.json`: Database configuration
 - `Program.cs`: Dependency injection setup
 - `ServiceCollectionExtensions.cs`: Infrastructure service registration
 
 ### Database Files
-- `rvnx-crm.db`: SQLite database file (created automatically)
-- `Migrations/`: EF Core migration files
+- `rvnx-crm.db`: SQLite database file (created automatically in `Rvnx.CRM.Web/`)
+- `Migrations/`: EF Core migration files (in `Rvnx.CRM.Infrastructure/`)
 
 ## Database Schema
 
