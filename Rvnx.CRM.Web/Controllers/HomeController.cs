@@ -21,7 +21,7 @@ namespace Rvnx.CRM.Web.Controllers
         public async Task<IActionResult> Index()
         {
             // Get all people from the database
-            var people = await _repository.ListAsync<Person>();
+            var people = await _repository.ListAsync<Contact>();
 
             // Log the count for debugging
             _logger.LogInformation($"Found {people.Count} people in the database");
