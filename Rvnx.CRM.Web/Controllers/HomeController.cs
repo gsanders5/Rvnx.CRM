@@ -54,39 +54,59 @@ namespace Rvnx.CRM.Web.Controllers
                 });
             }
 
-            // 3. Fetch Birthdays (from Contacts)
+            // 3. Fetch Important Dates (Birthdays, Anniversaries, etc.)
+            var importantDates = await _repository.ListAsync<ImportantDate>(d => d.EntityType == EntityTypes.Person);
             var today = DateTime.Today;
-            foreach (var contact in contacts)
-            {
-                if (contact.Birthday.HasValue)
-                {
-                    var bday = contact.Birthday.Value;
-                    DateTime nextBday;
 
-                    // Handle leap year birthdays (Feb 29) on non-leap years
-                    if (bday.Month == 2 && bday.Day == 29 && !DateTime.IsLeapYear(today.Year))
+            foreach (var date in importantDates)
+            {
+                if (contactDict.TryGetValue(date.EntityId, out var contact))
+                {
+                    var originalDate = date.Date;
+                    DateTime nextOccurrence;
+
+                    // Handle leap year dates (Feb 29) on non-leap years
+                    if (originalDate.Month == 2 && originalDate.Day == 29 && !DateTime.IsLeapYear(today.Year))
                     {
-                        nextBday = new DateTime(today.Year, 2, 28);
+                        nextOccurrence = new DateTime(today.Year, 2, 28);
                     }
                     else
                     {
-                        nextBday = new DateTime(today.Year, bday.Month, bday.Day);
+                        nextOccurrence = new DateTime(today.Year, originalDate.Month, originalDate.Day);
                     }
 
-                    if (nextBday < today)
+                    if (nextOccurrence < today)
                     {
-                        nextBday = nextBday.AddYears(1);
+                         // Move to next year
+                         if (originalDate.Month == 2 && originalDate.Day == 29 && !DateTime.IsLeapYear(today.Year + 1))
+                         {
+                             nextOccurrence = new DateTime(today.Year + 1, 2, 28);
+                         }
+                         else
+                         {
+                             nextOccurrence = new DateTime(today.Year + 1, originalDate.Month, originalDate.Day);
+                         }
+                    }
+
+                    string desc = "";
+                    if (date.Title?.Equals("Birthday", StringComparison.OrdinalIgnoreCase) == true)
+                    {
+                        desc = $"Turns {nextOccurrence.Year - originalDate.Year}";
+                    }
+                    else
+                    {
+                         desc = $"{date.Title} ({originalDate.ToShortDateString()})";
                     }
 
                     model.UpcomingEvents.Add(new UpcomingEventViewModel
                     {
-                        Title = $"{contact.FirstName}'s Birthday",
-                        Description = $"Turns {nextBday.Year - bday.Year}",
-                        Date = nextBday,
-                        Type = "Birthday",
+                        Title = $"{contact.FirstName}'s {date.Title}",
+                        Description = desc,
+                        Date = nextOccurrence,
+                        Type = date.Title?.Equals("Birthday", StringComparison.OrdinalIgnoreCase) == true ? "Birthday" : "Event",
                         RelatedEntityId = contact.Id,
                         RelatedEntityName = contact.FullName,
-                        TimeUntil = GetTimeUntil(nextBday)
+                        TimeUntil = GetTimeUntil(nextOccurrence)
                     });
                 }
             }

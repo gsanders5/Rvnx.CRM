@@ -21,14 +21,6 @@ public abstract class Person : CRMBaseEntity
     [Display(Name = "Nickname")]
     public string? Nickname { get; set; }
 
-    [MaxLength(256)]
-    [Display(Name = "Email")]
-    public string? Email { get; set; }
-
-    [MaxLength(20)]
-    [Display(Name = "Phone")]
-    public string? Phone { get; set; }
-
     [MaxLength(100)]
     [Display(Name = "Job Title")]
     public string? JobTitle { get; set; }
@@ -36,10 +28,6 @@ public abstract class Person : CRMBaseEntity
     [MaxLength(200)]
     [Display(Name = "Company")]
     public string? Company { get; set; }
-
-    [Display(Name = "Birthday")]
-    [DataType(DataType.Date)]
-    public DateTime? Birthday { get; set; }
 
     [NotMapped]
     [Display(Name = "Full Name")]
