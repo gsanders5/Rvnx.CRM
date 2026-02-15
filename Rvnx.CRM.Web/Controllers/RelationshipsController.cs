@@ -68,10 +68,10 @@ namespace Rvnx.CRM.Web.Controllers
             var options = new List<SelectListItem>();
             foreach (var t in types)
             {
-                options.Add(new SelectListItem { Value = $"{t.Id}_Fwd", Text = t.Name });
+                options.Add(new SelectListItem { Value = $"{t.Id}_Fwd", Text = $"is {t.Name} of" });
                 if (!t.IsSymmetric)
                 {
-                    options.Add(new SelectListItem { Value = $"{t.Id}_Rev", Text = t.OppositeName });
+                    options.Add(new SelectListItem { Value = $"{t.Id}_Rev", Text = $"is {t.OppositeName} of" });
                 }
             }
             ViewData["RelationshipTypeSelection"] = new SelectList(options, "Value", "Text");
@@ -148,10 +148,10 @@ namespace Rvnx.CRM.Web.Controllers
             var options = new List<SelectListItem>();
             foreach (var t in types)
             {
-                options.Add(new SelectListItem { Value = $"{t.Id}_Fwd", Text = t.Name });
+                options.Add(new SelectListItem { Value = $"{t.Id}_Fwd", Text = $"is {t.Name} of" });
                 if (!t.IsSymmetric)
                 {
-                    options.Add(new SelectListItem { Value = $"{t.Id}_Rev", Text = t.OppositeName });
+                    options.Add(new SelectListItem { Value = $"{t.Id}_Rev", Text = $"is {t.OppositeName} of" });
                 }
             }
             ViewData["RelationshipTypeSelection"] = new SelectList(options, "Value", "Text", relationshipTypeSelection);
@@ -192,10 +192,10 @@ namespace Rvnx.CRM.Web.Controllers
             var options = new List<SelectListItem>();
             foreach (var t in types)
             {
-                options.Add(new SelectListItem { Value = $"{t.Id}_Fwd", Text = t.Name });
+                options.Add(new SelectListItem { Value = $"{t.Id}_Fwd", Text = $"is {t.Name} of" });
                 if (!t.IsSymmetric)
                 {
-                    options.Add(new SelectListItem { Value = $"{t.Id}_Rev", Text = t.OppositeName });
+                    options.Add(new SelectListItem { Value = $"{t.Id}_Rev", Text = $"is {t.OppositeName} of" });
                 }
             }
 

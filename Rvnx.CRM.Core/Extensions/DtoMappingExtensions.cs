@@ -93,6 +93,33 @@ namespace Rvnx.CRM.Core.Extensions
             };
         }
 
+        public static ContactInfoDto ToDto(this ContactInfo entity)
+        {
+            return new ContactInfoDto
+            {
+                Id = entity.Id,
+                Type = entity.Type,
+                Value = entity.Value,
+                Label = entity.Label,
+                EntityId = entity.EntityId,
+                EntityType = entity.EntityType,
+                CreatedDate = entity.CreatedDate
+            };
+        }
+
+        public static FactDto ToDto(this Fact entity)
+        {
+            return new FactDto
+            {
+                Id = entity.Id,
+                Category = entity.Category,
+                Value = entity.Value,
+                EntityId = entity.EntityId,
+                EntityType = entity.EntityType,
+                CreatedDate = entity.CreatedDate
+            };
+        }
+
         // Contact Mappings
         public static ContactDto ToDto(this Contact entity)
         {
@@ -130,6 +157,8 @@ namespace Rvnx.CRM.Core.Extensions
                 ImportantDates = entity.ImportantDates?.Select(d => d.ToDto()) ?? new List<ImportantDateDto>(),
                 Relationships = entity.Relationships?.Select(r => r.ToDto()) ?? new List<RelationshipDto>(),
                 RelatedTo = entity.RelatedTo?.Select(r => r.ToDto()) ?? new List<RelationshipDto>(),
+                ContactInfos = entity.ContactInfos?.Select(i => i.ToDto()) ?? new List<ContactInfoDto>(),
+                Facts = entity.Facts?.Select(f => f.ToDto()) ?? new List<FactDto>(),
                 // Pets to be populated by caller as they are not on Person
             };
         }

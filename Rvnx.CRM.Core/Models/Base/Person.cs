@@ -60,4 +60,10 @@ public abstract class Person : CRMBaseEntity
 
     [NotMapped]
     public ICollection<Relationship> RelatedTo { get; set; } = [];
+
+    [NotMapped]
+    public ICollection<ContactInfo> ContactInfos { get; set; } = [];
+
+    [NotMapped]
+    public ICollection<Fact> Facts { get; set; } = [];
 }

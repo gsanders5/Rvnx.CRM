@@ -20,6 +20,8 @@ public class CRMDbContext(DbContextOptions<CRMDbContext> options) : DbContext(op
     public DbSet<RelationshipType> RelationshipTypes { get; set; }
     public DbSet<Reminder> Reminders { get; set; }
     public DbSet<Pet> Pets { get; set; }
+    public DbSet<ContactInfo> ContactInfos { get; set; }
+    public DbSet<Fact> Facts { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -37,6 +39,8 @@ public class CRMDbContext(DbContextOptions<CRMDbContext> options) : DbContext(op
         modelBuilder.Entity<Pet>().HasIndex(e => new { e.EntityId, e.EntityType });
         modelBuilder.Entity<Reminder>().HasIndex(e => new { e.EntityId, e.EntityType });
         modelBuilder.Entity<ImportantDate>().HasIndex(e => new { e.EntityId, e.EntityType });
+        modelBuilder.Entity<ContactInfo>().HasIndex(e => new { e.EntityId, e.EntityType });
+        modelBuilder.Entity<Fact>().HasIndex(e => new { e.EntityId, e.EntityType });
         modelBuilder.Entity<Attachment>().HasIndex(e => new { e.EntityId, e.EntityType });
         modelBuilder.Entity<PhoneNumber>().HasIndex(e => new { e.EntityId, e.EntityType });
         modelBuilder.Entity<Relationship>().HasIndex(e => new { e.EntityId, e.EntityType });

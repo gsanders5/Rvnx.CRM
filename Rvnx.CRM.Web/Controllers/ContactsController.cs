@@ -64,6 +64,12 @@ namespace Rvnx.CRM.Web.Controllers
             // Pets
             var pets = await _repository.ListAsync<Pet>(p => p.EntityId == id.Value && p.EntityType == EntityTypes.Person);
 
+            // Contact Infos
+            contact.ContactInfos = await _repository.ListAsync<ContactInfo>(i => i.EntityId == id.Value && i.EntityType == EntityTypes.Person);
+
+            // Facts
+            contact.Facts = await _repository.ListAsync<Fact>(f => f.EntityId == id.Value && f.EntityType == EntityTypes.Person);
+
             var contactDto = contact.ToDetailDto();
             contactDto.Pets = pets.Select(p => p.ToDto()).ToList();
 
@@ -240,6 +246,12 @@ namespace Rvnx.CRM.Web.Controllers
 
             var pets = await _repository.ListAsync<Pet>(p => p.EntityId == contactId && p.EntityType == EntityTypes.Person);
             if (pets.Any()) await _repository.DeleteRangeAsync(pets);
+
+            var contactInfos = await _repository.ListAsync<ContactInfo>(i => i.EntityId == contactId && i.EntityType == EntityTypes.Person);
+            if (contactInfos.Any()) await _repository.DeleteRangeAsync(contactInfos);
+
+            var facts = await _repository.ListAsync<Fact>(f => f.EntityId == contactId && f.EntityType == EntityTypes.Person);
+            if (facts.Any()) await _repository.DeleteRangeAsync(facts);
 
             var attachments = await _repository.ListAsync<Attachment>(a => a.EntityId == contactId && a.EntityType == EntityTypes.Person);
             if (attachments.Any()) await _repository.DeleteRangeAsync(attachments);

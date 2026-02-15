@@ -1,0 +1,93 @@
+using Microsoft.AspNetCore.Mvc;
+using Rvnx.CRM.Core.Constants;
+using Rvnx.CRM.Core.Interfaces;
+using Rvnx.CRM.Core.Models.Contact;
+
+namespace Rvnx.CRM.Web.Controllers
+{
+    public class FactsController : Controller
+    {
+        private readonly IRepository _repository;
+
+        public FactsController(IRepository repository)
+        {
+            _repository = repository;
+        }
+
+        public IActionResult Create(Guid entityId, string entityType)
+        {
+            if (entityId == Guid.Empty || string.IsNullOrEmpty(entityType)) return NotFound();
+            return View(new Fact { EntityId = entityId, EntityType = entityType });
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Create([Bind("EntityId,EntityType,Category,Value")] Fact fact)
+        {
+            if (ModelState.IsValid)
+            {
+                fact.Id = Guid.NewGuid();
+                await _repository.AddAsync(fact);
+                await _repository.SaveChangesAsync();
+                return RedirectToEntity(fact.EntityId, fact.EntityType);
+            }
+            return View(fact);
+        }
+
+        public async Task<IActionResult> Edit(Guid? id)
+        {
+            if (id == null) return NotFound();
+            var fact = await _repository.GetByIdAsync<Fact>(id.Value);
+            if (fact == null) return NotFound();
+            return View(fact);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Edit(Guid id, [Bind("Id,EntityId,EntityType,Category,Value")] Fact fact)
+        {
+            if (id != fact.Id) return NotFound();
+
+            if (ModelState.IsValid)
+            {
+                await _repository.UpdateAsync(fact);
+                await _repository.SaveChangesAsync();
+                return RedirectToEntity(fact.EntityId, fact.EntityType);
+            }
+            return View(fact);
+        }
+
+        public async Task<IActionResult> Delete(Guid? id)
+        {
+            if (id == null) return NotFound();
+            var fact = await _repository.GetByIdAsync<Fact>(id.Value);
+            if (fact == null) return NotFound();
+            return View(fact);
+        }
+
+        [HttpPost, ActionName("Delete")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteConfirmed(Guid id)
+        {
+            var fact = await _repository.GetByIdAsync<Fact>(id);
+            if (fact != null)
+            {
+                var entityId = fact.EntityId;
+                var entityType = fact.EntityType;
+                await _repository.DeleteAsync<Fact>(id);
+                await _repository.SaveChangesAsync();
+                return RedirectToEntity(entityId, entityType);
+            }
+            return RedirectToAction("Index", "Home");
+        }
+
+        private IActionResult RedirectToEntity(Guid id, string type)
+        {
+            if (type == EntityTypes.Person)
+            {
+                return RedirectToAction("Details", "Contacts", new { id });
+            }
+            return RedirectToAction("Index", "Home");
+        }
+    }
+}

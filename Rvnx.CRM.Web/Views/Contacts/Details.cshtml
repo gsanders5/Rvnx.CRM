@@ -17,6 +17,7 @@
     <div class="row">
         <!-- Main Info -->
         <div class="col-md-4">
+            <!-- Profile Card -->
             <div class="card mb-4 shadow-sm">
                 @if (!string.IsNullOrEmpty(Model.ProfileImageBase64))
                 {
@@ -29,28 +30,136 @@
                     </div>
                 }
                 <div class="card-header">
-                    <h5 class="card-title mb-0"><i class="bi bi-person-lines-fill"></i> Contact Info</h5>
+                    <h5 class="card-title mb-0"><i class="bi bi-person-lines-fill"></i> Primary Info</h5>
                 </div>
                 <div class="card-body">
-                    <dl class="row">
-                        <dt class="col-sm-4">Nickname</dt>
-                        <dd class="col-sm-8">@Model.Nickname</dd>
+                    <dl class="row mb-0">
+                        @if (!string.IsNullOrEmpty(Model.Nickname))
+                        {
+                            <dt class="col-sm-4">Nickname</dt>
+                            <dd class="col-sm-8">@Model.Nickname</dd>
+                        }
 
-                        <dt class="col-sm-4">Email</dt>
-                        <dd class="col-sm-8"><a href="mailto:@Model.Email">@Model.Email</a></dd>
+                        @if (!string.IsNullOrEmpty(Model.Email))
+                        {
+                            <dt class="col-sm-4">Email</dt>
+                            <dd class="col-sm-8"><a href="mailto:@Model.Email">@Model.Email</a></dd>
+                        }
 
-                        <dt class="col-sm-4">Phone</dt>
-                        <dd class="col-sm-8"><a href="tel:@Model.Phone">@Model.Phone</a></dd>
+                        @if (!string.IsNullOrEmpty(Model.Phone))
+                        {
+                            <dt class="col-sm-4">Phone</dt>
+                            <dd class="col-sm-8"><a href="tel:@Model.Phone">@Model.Phone</a></dd>
+                        }
 
-                        <dt class="col-sm-4">Company</dt>
-                        <dd class="col-sm-8">@Model.Company</dd>
+                        @if (!string.IsNullOrEmpty(Model.Company))
+                        {
+                            <dt class="col-sm-4">Company</dt>
+                            <dd class="col-sm-8">@Model.Company</dd>
+                        }
 
-                        <dt class="col-sm-4">Job Title</dt>
-                        <dd class="col-sm-8">@Model.JobTitle</dd>
+                        @if (!string.IsNullOrEmpty(Model.JobTitle))
+                        {
+                            <dt class="col-sm-4">Job Title</dt>
+                            <dd class="col-sm-8">@Model.JobTitle</dd>
+                        }
 
                         <dt class="col-sm-4">Birthday</dt>
-                        <dd class="col-sm-8">@(Model.Birthday?.ToShortDateString() ?? "N/A")</dd>
+                        @if (Model.Birthday.HasValue)
+                        {
+                            var today = DateTime.Today;
+                            var age = today.Year - Model.Birthday.Value.Year;
+                            if (Model.Birthday.Value.Date > today.AddYears(-age)) age--;
+                            <dd class="col-sm-8">@Model.Birthday.Value.ToShortDateString() (@age years old)</dd>
+                        }
+                        else
+                        {
+                            <dd class="col-sm-8">N/A</dd>
+                        }
                     </dl>
+                </div>
+            </div>
+
+            <!-- Additional Contact Info -->
+            <div class="card mb-4 border shadow-sm">
+                <div class="card-header bg-transparent border-0 pt-3 px-3 d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0 fw-bold"><i class="bi bi-person-badge"></i> Contact Info</h5>
+                    <a asp-controller="ContactInfos" asp-action="Create" asp-route-entityId="@Model.Id" asp-route-entityType="Person" class="btn btn-sm btn-outline-primary"><i class="bi bi-plus-lg"></i> Add</a>
+                </div>
+                <div class="card-body px-3 pb-3">
+                    @if (Model.ContactInfos != null && Model.ContactInfos.Any())
+                    {
+                        <ul class="list-group list-group-flush">
+                            @foreach (var info in Model.ContactInfos)
+                            {
+                                <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+                                    <div>
+                                        <div class="fw-bold">@info.Type @(string.IsNullOrEmpty(info.Label) ? "" : $"({info.Label})")</div>
+                                        <div class="text-break">
+                                            @if (info.Type.Equals("Email", StringComparison.OrdinalIgnoreCase))
+                                            {
+                                                <a href="mailto:@info.Value">@info.Value</a>
+                                            }
+                                            else if (info.Type.Equals("Phone", StringComparison.OrdinalIgnoreCase))
+                                            {
+                                                <a href="tel:@info.Value">@info.Value</a>
+                                            }
+                                            else if (info.Type.Equals("Website", StringComparison.OrdinalIgnoreCase) || info.Value.StartsWith("http"))
+                                            {
+                                                <a href="@info.Value" target="_blank">@info.Value</a>
+                                            }
+                                            else
+                                            {
+                                                @info.Value
+                                            }
+                                        </div>
+                                    </div>
+                                    <div class="btn-group btn-group-sm">
+                                        <a asp-controller="ContactInfos" asp-action="Edit" asp-route-id="@info.Id" class="btn btn-outline-secondary" title="Edit"><i class="bi bi-pencil-square"></i></a>
+                                        <a asp-controller="ContactInfos" asp-action="Delete" asp-route-id="@info.Id" class="btn btn-outline-danger" title="Delete"><i class="bi bi-trash"></i></a>
+                                    </div>
+                                </li>
+                            }
+                        </ul>
+                    }
+                    else
+                    {
+                        <p class="text-muted text-center mb-0">No additional info.</p>
+                    }
+                </div>
+            </div>
+
+            <!-- Quick Facts -->
+            <div class="card mb-4 border shadow-sm">
+                <div class="card-header bg-transparent border-0 pt-3 px-3 d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0 fw-bold"><i class="bi bi-lightbulb"></i> Quick Facts</h5>
+                    <a asp-controller="Facts" asp-action="Create" asp-route-entityId="@Model.Id" asp-route-entityType="Person" class="btn btn-sm btn-outline-primary"><i class="bi bi-plus-lg"></i> Add</a>
+                </div>
+                <div class="card-body px-3 pb-3">
+                    @if (Model.Facts != null && Model.Facts.Any())
+                    {
+                        var groups = Model.Facts.GroupBy(f => f.Category).OrderBy(g => g.Key);
+                        foreach (var group in groups)
+                        {
+                            <h6 class="text-muted text-uppercase small fw-bold mt-2 mb-1">@group.Key</h6>
+                            <ul class="list-group list-group-flush mb-2">
+                                @foreach (var fact in group)
+                                {
+                                    <li class="list-group-item d-flex justify-content-between align-items-center px-0 py-1 border-0">
+                                        <span>@fact.Value</span>
+                                        <div class="btn-group btn-group-sm opacity-50 hover-opacity-100">
+                                            <a asp-controller="Facts" asp-action="Edit" asp-route-id="@fact.Id" class="text-secondary me-2"><i class="bi bi-pencil-square"></i></a>
+                                            <a asp-controller="Facts" asp-action="Delete" asp-route-id="@fact.Id" class="text-danger"><i class="bi bi-trash"></i></a>
+                                        </div>
+                                    </li>
+                                }
+                            </ul>
+                        }
+                    }
+                    else
+                    {
+                        <p class="text-muted text-center mb-0">No facts added.</p>
+                    }
                 </div>
             </div>
 
@@ -147,7 +256,6 @@
 
         <!-- Right Column -->
         <div class="col-md-8">
-
             <!-- Reminders -->
             <div class="card mb-4">
                 <div class="card-header d-flex justify-content-between align-items-center">
