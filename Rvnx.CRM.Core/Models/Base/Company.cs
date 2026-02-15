@@ -1,4 +1,3 @@
-using Rvnx.CRM.Core.Models.Dates;
 using System.ComponentModel.DataAnnotations;
 
 namespace Rvnx.CRM.Core.Models.Base;

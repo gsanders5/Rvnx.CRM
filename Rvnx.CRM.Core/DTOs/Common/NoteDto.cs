@@ -1,6 +1,3 @@
-using Rvnx.CRM.Core.DTOs.Common;
-using System;
-
 namespace Rvnx.CRM.Core.DTOs.Common
 {
     public class NoteDto : BaseDto

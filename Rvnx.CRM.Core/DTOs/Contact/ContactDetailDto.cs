@@ -1,7 +1,6 @@
 using Rvnx.CRM.Core.DTOs.Business;
 using Rvnx.CRM.Core.DTOs.Common;
 using Rvnx.CRM.Core.DTOs.Pet;
-using System.Collections.Generic;
 
 namespace Rvnx.CRM.Core.DTOs.Contact
 {

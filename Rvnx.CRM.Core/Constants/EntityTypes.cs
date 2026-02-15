@@ -24,5 +24,8 @@ public static class EntityTypes
         Attachment
     };
 
-    public static bool IsValid(string type) => All.Contains(type);
+    public static bool IsValid(string type)
+    {
+        return All.Contains(type);
+    }
 }

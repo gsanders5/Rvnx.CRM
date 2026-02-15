@@ -1,13 +1,13 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Rvnx.CRM.Core.Interfaces;
-using Rvnx.CRM.Core.Models.Contact;
-using Rvnx.CRM.Core.Models.Dates;
-using Rvnx.CRM.Core.Models.Base;
 using Rvnx.CRM.Core.Constants;
 using Rvnx.CRM.Core.DTOs.Contact;
-using Rvnx.CRM.Core.Extensions;
 using Rvnx.CRM.Core.Enumerations;
+using Rvnx.CRM.Core.Extensions;
+using Rvnx.CRM.Core.Interfaces;
+using Rvnx.CRM.Core.Models.Base;
+using Rvnx.CRM.Core.Models.Contact;
+using Rvnx.CRM.Core.Models.Dates;
 
 namespace Rvnx.CRM.Web.Controllers
 {
@@ -52,8 +52,8 @@ namespace Rvnx.CRM.Web.Controllers
                         var content = contents.FirstOrDefault(c => c.AttachmentId == attachment.Id);
                         if (content != null)
                         {
-                             dto.ProfileImageBase64 = Convert.ToBase64String(content.Content);
-                             dto.ProfileImageContentType = attachment.ContentType;
+                            dto.ProfileImageBase64 = Convert.ToBase64String(content.Content);
+                            dto.ProfileImageContentType = attachment.ContentType;
                         }
                     }
                 }
@@ -117,8 +117,8 @@ namespace Rvnx.CRM.Web.Controllers
                 profileAttachment = await _repository.GetByIdWithIncludesAsync<Attachment>(profileAttachment.Id, "AttachmentContent");
                 if (profileAttachment?.AttachmentContent != null)
                 {
-                     contactDto.ProfileImageBase64 = Convert.ToBase64String(profileAttachment.AttachmentContent.Content);
-                     contactDto.ProfileImageContentType = profileAttachment.ContentType;
+                    contactDto.ProfileImageBase64 = Convert.ToBase64String(profileAttachment.AttachmentContent.Content);
+                    contactDto.ProfileImageContentType = profileAttachment.ContentType;
                 }
             }
 
@@ -393,8 +393,7 @@ namespace Rvnx.CRM.Web.Controllers
         {
             if (id == null) return NotFound();
             var contact = await _repository.GetByIdAsync<Contact>(id.Value);
-            if (contact == null) return NotFound();
-            return View(contact);
+            return contact == null ? NotFound() : View(contact);
         }
 
         // POST: Contacts/Delete/5

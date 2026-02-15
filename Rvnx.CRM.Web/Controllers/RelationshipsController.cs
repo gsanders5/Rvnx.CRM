@@ -2,7 +2,6 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Rvnx.CRM.Core.Constants;
 using Rvnx.CRM.Core.Interfaces;
-using Rvnx.CRM.Core.Models.Base;
 using Rvnx.CRM.Core.Models.Business;
 using Rvnx.CRM.Core.Models.Contact;
 
@@ -168,8 +167,8 @@ namespace Rvnx.CRM.Web.Controllers
             if (relationship == null) return NotFound();
 
             // Fetch RelationshipType manually as GetByIdAsync doesn't include
-             var type = await _repository.GetByIdAsync<RelationshipType>(relationship.RelationshipTypeId);
-             relationship.RelationshipType = type;
+            var type = await _repository.GetByIdAsync<RelationshipType>(relationship.RelationshipTypeId);
+            relationship.RelationshipType = type;
 
             ViewData["EntityName"] = await GetEntityName(relationship.EntityId, relationship.EntityType);
             ViewData["EntityId"] = relationship.EntityId;
@@ -181,7 +180,7 @@ namespace Rvnx.CRM.Web.Controllers
                 var available = all.Where(p => p.Id != relationship.EntityId).OrderBy(p => p.FullName).ToList();
                 ViewData["RelatedEntityId"] = new SelectList(available, "Id", "FullName", relationship.RelatedEntityId);
             }
-             else if (relationship.EntityType == EntityTypes.Company)
+            else if (relationship.EntityType == EntityTypes.Company)
             {
                 var all = await _repository.ListAsync<Employer>();
                 var available = all.Where(c => c.Id != relationship.EntityId).OrderBy(c => c.CompanyName).ToList();
@@ -250,8 +249,8 @@ namespace Rvnx.CRM.Web.Controllers
                     ModelState.AddModelError("RelationshipTypeSelection", "Invalid Relationship Type.");
                 }
             }
-             // Reload data... (omitted for brevity, assume similar to Create)
-             return View(relationship);
+            // Reload data... (omitted for brevity, assume similar to Create)
+            return View(relationship);
         }
 
         // GET: Relationships/Delete/5
@@ -260,10 +259,10 @@ namespace Rvnx.CRM.Web.Controllers
             if (id == null) return NotFound();
             var relationship = await _repository.GetByIdAsync<Relationship>(id.Value);
             if (relationship == null) return NotFound();
-             // Manually load types/names for display
-             relationship.RelationshipType = await _repository.GetByIdAsync<RelationshipType>(relationship.RelationshipTypeId);
-             relationship.Person = await _repository.GetByIdAsync<Contact>(relationship.EntityId); // Assumption
-             relationship.RelatedPerson = await _repository.GetByIdAsync<Contact>(relationship.RelatedEntityId); // Assumption
+            // Manually load types/names for display
+            relationship.RelationshipType = await _repository.GetByIdAsync<RelationshipType>(relationship.RelationshipTypeId);
+            relationship.Person = await _repository.GetByIdAsync<Contact>(relationship.EntityId); // Assumption
+            relationship.RelatedPerson = await _repository.GetByIdAsync<Contact>(relationship.RelatedEntityId); // Assumption
             return View(relationship);
         }
 

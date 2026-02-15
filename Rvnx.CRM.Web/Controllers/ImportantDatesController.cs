@@ -5,8 +5,6 @@ using Rvnx.CRM.Core.DTOs.Common;
 using Rvnx.CRM.Core.Extensions;
 using Rvnx.CRM.Core.Interfaces;
 using Rvnx.CRM.Core.Models.Dates;
-using Rvnx.CRM.Web.Models;
-using System.Security.Cryptography.X509Certificates;
 
 namespace Rvnx.CRM.Web.Controllers
 {
@@ -77,9 +75,7 @@ namespace Rvnx.CRM.Web.Controllers
             if (id == null) return NotFound();
 
             var importantDate = await _repository.GetByIdAsync<ImportantDate>(id.Value);
-            if (importantDate == null) return NotFound();
-
-            return View(importantDate.ToDto());
+            return importantDate == null ? NotFound() : View(importantDate.ToDto());
         }
 
         // POST: ImportantDates/Edit/5
@@ -135,9 +131,7 @@ namespace Rvnx.CRM.Web.Controllers
             if (id == null) return NotFound();
 
             var importantDate = await _repository.GetByIdAsync<ImportantDate>(id.Value);
-            if (importantDate == null) return NotFound();
-
-            return View(importantDate.ToDto());
+            return importantDate == null ? NotFound() : View(importantDate.ToDto());
         }
 
         // POST: ImportantDates/Delete/5

@@ -49,7 +49,7 @@ public class CRMDbContext(DbContextOptions<CRMDbContext> options) : DbContext(op
         modelBuilder.Entity<Relationship>().HasIndex(e => new { e.RelatedEntityId, e.EntityType });
 
         // Seed RelationshipTypes
-        var seedDate = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+        DateTime seedDate = new(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc);
         // Using fixed GUIDs for predictability in tests/code if needed, but they are random V4
         modelBuilder.Entity<RelationshipType>().HasData(
             new RelationshipType { Id = Guid.Parse("7c1f8d22-1b6a-4c28-9c1e-3f5a2b8e9d1a"), Name = "Parent", OppositeName = "Child", EntityType = EntityTypes.Person, CreatedBy = "System", LastChangedBy = "System", CreatedDate = seedDate, LastChangedDate = seedDate },
@@ -77,12 +77,12 @@ public class CRMDbContext(DbContextOptions<CRMDbContext> options) : DbContext(op
 
     private void UpdateAuditFields()
     {
-        var entries = ChangeTracker.Entries<CRMBaseEntity>()
-            .Where(e => e.State == EntityState.Added || e.State == EntityState.Modified);
+        IEnumerable<Microsoft.EntityFrameworkCore.ChangeTracking.EntityEntry<CRMBaseEntity>> entries = ChangeTracker.Entries<CRMBaseEntity>()
+            .Where(e => e.State is EntityState.Added or EntityState.Modified);
 
-        foreach (var entry in entries)
+        foreach (Microsoft.EntityFrameworkCore.ChangeTracking.EntityEntry<CRMBaseEntity>? entry in entries)
         {
-            var now = DateTime.UtcNow;
+            DateTime now = DateTime.UtcNow;
 
             if (entry.State == EntityState.Added)
             {
@@ -104,7 +104,7 @@ public class CRMDbContext(DbContextOptions<CRMDbContext> options) : DbContext(op
     private static string GetUsername()
     {
         // Placeholder - Will update when OAuth configured.
-        var username = Environment.UserName;
+        string username = Environment.UserName;
         return username ?? string.Empty;
     }
 }

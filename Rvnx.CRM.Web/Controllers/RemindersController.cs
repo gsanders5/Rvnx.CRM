@@ -1,7 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Rvnx.CRM.Core.Constants;
 using Rvnx.CRM.Core.Interfaces;
-using Rvnx.CRM.Core.Models.Base;
 using Rvnx.CRM.Core.Models.Business;
 using Rvnx.CRM.Core.Models.Contact;
 using Rvnx.CRM.Core.Models.Dates;
@@ -76,9 +75,9 @@ namespace Rvnx.CRM.Web.Controllers
 
             if (reminder.EntityId != Guid.Empty && !string.IsNullOrEmpty(reminder.EntityType))
             {
-                 ViewData["EntityName"] = await GetEntityName(reminder.EntityId, reminder.EntityType);
-                 ViewData["EntityId"] = reminder.EntityId;
-                 ViewData["EntityType"] = reminder.EntityType;
+                ViewData["EntityName"] = await GetEntityName(reminder.EntityId, reminder.EntityType);
+                ViewData["EntityId"] = reminder.EntityId;
+                ViewData["EntityType"] = reminder.EntityType;
             }
             return View(reminder);
         }

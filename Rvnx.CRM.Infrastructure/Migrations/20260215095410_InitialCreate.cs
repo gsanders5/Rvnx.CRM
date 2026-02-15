@@ -1,9 +1,7 @@
-﻿using System;
-using Microsoft.EntityFrameworkCore.Migrations;
+﻿using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
-#pragma warning disable CA1814 // Prefer jagged arrays over multidimensional
 
 namespace Rvnx.CRM.Infrastructure.Migrations
 {
@@ -13,6 +11,30 @@ namespace Rvnx.CRM.Infrastructure.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.CreateTable(
+                name: "Address",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "TEXT", nullable: false),
+                    Street = table.Column<string>(type: "TEXT", maxLength: 200, nullable: false),
+                    City = table.Column<string>(type: "TEXT", maxLength: 100, nullable: false),
+                    State = table.Column<string>(type: "TEXT", maxLength: 100, nullable: false),
+                    Zip = table.Column<string>(type: "TEXT", maxLength: 20, nullable: false),
+                    Country = table.Column<string>(type: "TEXT", maxLength: 100, nullable: false),
+                    AddressType = table.Column<string>(type: "TEXT", maxLength: 50, nullable: false),
+                    CreatedBy = table.Column<string>(type: "TEXT", maxLength: 256, nullable: false),
+                    LastChangedBy = table.Column<string>(type: "TEXT", maxLength: 256, nullable: false),
+                    CreatedDate = table.Column<DateTime>(type: "TEXT", nullable: false),
+                    LastChangedDate = table.Column<DateTime>(type: "TEXT", nullable: false),
+                    UserId = table.Column<string>(type: "TEXT", maxLength: 450, nullable: true),
+                    EntityId = table.Column<Guid>(type: "TEXT", nullable: false),
+                    EntityType = table.Column<string>(type: "TEXT", maxLength: 50, nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Address", x => x.Id);
+                });
+
             migrationBuilder.CreateTable(
                 name: "Attachment",
                 columns: table => new
@@ -48,7 +70,8 @@ namespace Rvnx.CRM.Infrastructure.Migrations
                     LastName = table.Column<string>(type: "TEXT", maxLength: 100, nullable: true),
                     Nickname = table.Column<string>(type: "TEXT", maxLength: 100, nullable: true),
                     JobTitle = table.Column<string>(type: "TEXT", maxLength: 100, nullable: true),
-                    Company = table.Column<string>(type: "TEXT", maxLength: 200, nullable: true)
+                    Company = table.Column<string>(type: "TEXT", maxLength: 200, nullable: true),
+                    IsHidden = table.Column<bool>(type: "INTEGER", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -318,6 +341,11 @@ namespace Rvnx.CRM.Infrastructure.Migrations
                 });
 
             migrationBuilder.CreateIndex(
+                name: "IX_Address_EntityId_EntityType",
+                table: "Address",
+                columns: new[] { "EntityId", "EntityType" });
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Attachment_EntityId_EntityType",
                 table: "Attachment",
                 columns: new[] { "EntityId", "EntityType" });
@@ -387,6 +415,9 @@ namespace Rvnx.CRM.Infrastructure.Migrations
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.DropTable(
+                name: "Address");
+
             migrationBuilder.DropTable(
                 name: "AttachmentContent");
 

@@ -14,7 +14,7 @@ public static class ServiceCollectionExtensions
         // Add DbContext
         services.AddDbContext<CRMDbContext>(options =>
         {
-            var connectionString = configuration.GetConnectionString("DefaultConnection");
+            string? connectionString = configuration.GetConnectionString("DefaultConnection");
             options.UseSqlite(connectionString);
         });
 

@@ -1,5 +1,4 @@
 using Microsoft.AspNetCore.Mvc;
-using Rvnx.CRM.Core.Constants;
 using Rvnx.CRM.Core.Interfaces;
 using Rvnx.CRM.Core.Models.Base;
 using Rvnx.CRM.Core.Models.Contact;
@@ -82,37 +81,37 @@ namespace Rvnx.CRM.Web.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> ResetDatabase()
         {
-             // This is dangerous in prod, but fine for debug controller
-             var contacts = await _repository.ListAsync<Contact>();
-             await _repository.DeleteRangeAsync(contacts);
+            // This is dangerous in prod, but fine for debug controller
+            var contacts = await _repository.ListAsync<Contact>();
+            await _repository.DeleteRangeAsync(contacts);
 
-             // Also delete related generic entities... (simplified for now, assumes cascade or manual cleanup if implemented)
-             // For a full reset, we might want to drop tables, but repository pattern might not expose that.
-             // We will rely on deleting contacts and letting the user know they might have orphans if not careful,
-             // or implement a full cleanup.
+            // Also delete related generic entities... (simplified for now, assumes cascade or manual cleanup if implemented)
+            // For a full reset, we might want to drop tables, but repository pattern might not expose that.
+            // We will rely on deleting contacts and letting the user know they might have orphans if not careful,
+            // or implement a full cleanup.
 
-             // Clean up generic entities
-             var notes = await _repository.ListAsync<Note>();
-             await _repository.DeleteRangeAsync(notes);
+            // Clean up generic entities
+            var notes = await _repository.ListAsync<Note>();
+            await _repository.DeleteRangeAsync(notes);
 
-             var reminders = await _repository.ListAsync<Reminder>();
-             await _repository.DeleteRangeAsync(reminders);
+            var reminders = await _repository.ListAsync<Reminder>();
+            await _repository.DeleteRangeAsync(reminders);
 
-             var dates = await _repository.ListAsync<ImportantDate>();
-             await _repository.DeleteRangeAsync(dates);
+            var dates = await _repository.ListAsync<ImportantDate>();
+            await _repository.DeleteRangeAsync(dates);
 
-             var infos = await _repository.ListAsync<ContactInfo>();
-             await _repository.DeleteRangeAsync(infos);
+            var infos = await _repository.ListAsync<ContactInfo>();
+            await _repository.DeleteRangeAsync(infos);
 
-             var facts = await _repository.ListAsync<Fact>();
-             await _repository.DeleteRangeAsync(facts);
+            var facts = await _repository.ListAsync<Fact>();
+            await _repository.DeleteRangeAsync(facts);
 
-             var addresses = await _repository.ListAsync<Address>();
-             await _repository.DeleteRangeAsync(addresses);
+            var addresses = await _repository.ListAsync<Address>();
+            await _repository.DeleteRangeAsync(addresses);
 
-             await _repository.SaveChangesAsync();
+            await _repository.SaveChangesAsync();
 
-             return RedirectToAction("Index");
+            return RedirectToAction("Index");
         }
     }
 }

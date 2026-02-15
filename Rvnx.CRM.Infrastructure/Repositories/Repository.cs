@@ -18,9 +18,9 @@ public class Repository(CRMDbContext context) : IRepository
 
     public async Task<T?> GetByIdWithIncludesAsync<T>(Guid id, params string[] includes) where T : CRMBaseEntity
     {
-        var query = _context.Set<T>().AsQueryable();
+        IQueryable<T> query = _context.Set<T>().AsQueryable();
 
-        foreach (var include in includes)
+        foreach (string include in includes)
         {
             query = query.Include(include);
         }
@@ -30,7 +30,7 @@ public class Repository(CRMDbContext context) : IRepository
 
     public async Task<List<T>> ListAsync<T>(int? skip = null, int? take = null, CancellationToken cancellationToken = default) where T : CRMBaseEntity
     {
-        var query = _context.Set<T>().AsQueryable();
+        IQueryable<T> query = _context.Set<T>().AsQueryable();
 
         if (skip.HasValue)
         {
@@ -52,7 +52,7 @@ public class Repository(CRMDbContext context) : IRepository
 
     public async Task<List<T>> ListAsNoTrackingAsync<T>(int? skip = null, int? take = null, CancellationToken cancellationToken = default) where T : CRMBaseEntity
     {
-        var query = _context.Set<T>().AsNoTracking();
+        IQueryable<T> query = _context.Set<T>().AsNoTracking();
 
         if (skip.HasValue)
         {
@@ -70,13 +70,13 @@ public class Repository(CRMDbContext context) : IRepository
     // Create Operations
     public async Task<T> AddAsync<T>(T entity, CancellationToken cancellationToken = default) where T : CRMBaseEntity
     {
-        var entry = await _context.Set<T>().AddAsync(entity, cancellationToken);
+        Microsoft.EntityFrameworkCore.ChangeTracking.EntityEntry<T> entry = await _context.Set<T>().AddAsync(entity, cancellationToken);
         return entry.Entity;
     }
 
     public async Task<IEnumerable<T>> AddRangeAsync<T>(IEnumerable<T> entities, CancellationToken cancellationToken = default) where T : CRMBaseEntity
     {
-        var entitiesList = entities.ToList();
+        List<T> entitiesList = entities.ToList();
         await _context.Set<T>().AddRangeAsync(entitiesList, cancellationToken);
         return entitiesList;
     }
@@ -91,10 +91,10 @@ public class Repository(CRMDbContext context) : IRepository
     // Delete Operations
     public Task DeleteAsync<T>(Guid id, CancellationToken cancellationToken = default) where T : CRMBaseEntity
     {
-        var entity = _context.Set<T>().Local.FirstOrDefault(e => e.Id == id);
+        T? entity = _context.Set<T>().Local.FirstOrDefault(e => e.Id == id);
         if (entity == null)
         {
-            entity = (T)Activator.CreateInstance(typeof(T), true)!;
+            entity = (T) Activator.CreateInstance(typeof(T), true)!;
             entity.Id = id;
         }
 

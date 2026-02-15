@@ -16,8 +16,9 @@ namespace Rvnx.CRM.Web.Controllers
 
         public IActionResult Create(Guid entityId, string entityType)
         {
-            if (entityId == Guid.Empty || string.IsNullOrEmpty(entityType)) return NotFound();
-            return View(new Fact { EntityId = entityId, EntityType = entityType });
+            return entityId == Guid.Empty || string.IsNullOrEmpty(entityType)
+                ? NotFound()
+                : View(new Fact { EntityId = entityId, EntityType = entityType });
         }
 
         [HttpPost]
@@ -38,8 +39,7 @@ namespace Rvnx.CRM.Web.Controllers
         {
             if (id == null) return NotFound();
             var fact = await _repository.GetByIdAsync<Fact>(id.Value);
-            if (fact == null) return NotFound();
-            return View(fact);
+            return fact == null ? NotFound() : View(fact);
         }
 
         [HttpPost]
@@ -61,8 +61,7 @@ namespace Rvnx.CRM.Web.Controllers
         {
             if (id == null) return NotFound();
             var fact = await _repository.GetByIdAsync<Fact>(id.Value);
-            if (fact == null) return NotFound();
-            return View(fact);
+            return fact == null ? NotFound() : View(fact);
         }
 
         [HttpPost, ActionName("Delete")]
@@ -83,11 +82,7 @@ namespace Rvnx.CRM.Web.Controllers
 
         private IActionResult RedirectToEntity(Guid id, string type)
         {
-            if (type == EntityTypes.Person)
-            {
-                return RedirectToAction("Details", "Contacts", new { id });
-            }
-            return RedirectToAction("Index", "Home");
+            return type == EntityTypes.Person ? RedirectToAction("Details", "Contacts", new { id }) : RedirectToAction("Index", "Home");
         }
     }
 }

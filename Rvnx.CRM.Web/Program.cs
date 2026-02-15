@@ -1,6 +1,5 @@
 using Rvnx.CRM.Infrastructure;
 using Rvnx.CRM.Infrastructure.Data;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace Rvnx.CRM.Web
 {

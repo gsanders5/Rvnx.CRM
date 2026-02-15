@@ -1,15 +1,13 @@
-using Rvnx.CRM.Core.Constants;
-using Rvnx.CRM.Core.Interfaces;
-using Rvnx.CRM.Core.Models.Base;
-using Rvnx.CRM.Core.Models.Contact;
-using Rvnx.CRM.Core.Models.Dates;
-using Rvnx.CRM.Web.Controllers;
-using Rvnx.CRM.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Moq;
-using Xunit;
+using Rvnx.CRM.Core.Constants;
+using Rvnx.CRM.Core.Models.Base;
+using Rvnx.CRM.Core.Models.Contact;
+using Rvnx.CRM.Core.Models.Dates;
+using Rvnx.CRM.Infrastructure.Data;
 using Rvnx.CRM.Infrastructure.Repositories;
+using Rvnx.CRM.Web.Controllers;
 
 namespace Rvnx.CRM.Tests
 {
@@ -17,10 +15,10 @@ namespace Rvnx.CRM.Tests
     {
         private CRMDbContext GetInMemoryDbContext()
         {
-            var options = new DbContextOptionsBuilder<CRMDbContext>()
+            DbContextOptions<CRMDbContext> options = new DbContextOptionsBuilder<CRMDbContext>()
                 .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
                 .Options;
-            var context = new CRMDbContext(options);
+            CRMDbContext context = new(options);
             context.Database.EnsureCreated();
             return context;
         }
@@ -29,13 +27,13 @@ namespace Rvnx.CRM.Tests
         public async Task DeleteContact_ShouldDelete_Dependencies()
         {
             // Arrange
-            using var context = GetInMemoryDbContext();
-            var repository = new Repository(context);
-            var logger = new Mock<ILogger<ContactsController>>();
-            var controller = new ContactsController(repository, logger.Object);
+            using CRMDbContext context = GetInMemoryDbContext();
+            Repository repository = new(context);
+            Mock<ILogger<ContactsController>> logger = new();
+            ContactsController controller = new(repository, logger.Object);
 
-            var contactId = Guid.NewGuid();
-            var contact = new Contact { Id = contactId, FirstName = "Test", LastName = "Delete" };
+            Guid contactId = Guid.NewGuid();
+            Contact contact = new() { Id = contactId, FirstName = "Test", LastName = "Delete" };
             await repository.AddAsync(contact);
             await repository.SaveChangesAsync();
 
@@ -66,17 +64,17 @@ namespace Rvnx.CRM.Tests
         public async Task DeleteContact_ShouldDelete_Relationships()
         {
             // Arrange
-            using var context = GetInMemoryDbContext();
-            var repository = new Repository(context);
-            var logger = new Mock<ILogger<ContactsController>>();
-            var controller = new ContactsController(repository, logger.Object);
+            using CRMDbContext context = GetInMemoryDbContext();
+            Repository repository = new(context);
+            Mock<ILogger<ContactsController>> logger = new();
+            ContactsController controller = new(repository, logger.Object);
 
-            var c1 = new Contact { Id = Guid.NewGuid(), FirstName = "C1" };
-            var c2 = new Contact { Id = Guid.NewGuid(), FirstName = "C2" };
+            Contact c1 = new() { Id = Guid.NewGuid(), FirstName = "C1" };
+            Contact c2 = new() { Id = Guid.NewGuid(), FirstName = "C2" };
             await repository.AddAsync(c1);
             await repository.AddAsync(c2);
 
-            var typeId = Guid.NewGuid(); // Fake Type
+            Guid typeId = Guid.NewGuid(); // Fake Type
             await repository.AddAsync(new RelationshipType { Id = typeId, Name = "Rel", OppositeName = "RelOp", EntityType = EntityTypes.Person });
 
             // C1 -> C2
@@ -94,7 +92,7 @@ namespace Rvnx.CRM.Tests
             Assert.NotNull(await repository.GetByIdAsync<Contact>(c2.Id));
 
             // Should be no relationships involving C1
-            var rels = await repository.ListAsync<Relationship>(r => r.EntityId == c1.Id || r.RelatedEntityId == c1.Id);
+            List<Relationship> rels = await repository.ListAsync<Relationship>(r => r.EntityId == c1.Id || r.RelatedEntityId == c1.Id);
             Assert.Empty(rels);
         }
     }

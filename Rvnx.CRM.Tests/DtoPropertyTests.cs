@@ -1,14 +1,10 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
 using Rvnx.CRM.Core.DTOs.Common;
 using Rvnx.CRM.Core.DTOs.Contact;
 using Rvnx.CRM.Core.DTOs.Pet;
 using Rvnx.CRM.Core.Models.Base;
 using Rvnx.CRM.Core.Models.Contact;
 using Rvnx.CRM.Core.Models.Dates;
-using Xunit;
+using System.Reflection;
 
 namespace Rvnx.CRM.Tests
 {
@@ -16,18 +12,18 @@ namespace Rvnx.CRM.Tests
     {
         private void VerifyProperties<TModel, TDto>(string[]? ignoreProperties = null)
         {
-            var modelProperties = typeof(TModel).GetProperties(BindingFlags.Public | BindingFlags.Instance);
-            var dtoProperties = typeof(TDto).GetProperties(BindingFlags.Public | BindingFlags.Instance);
-            var dtoPropertyNames = dtoProperties.Select(p => p.Name).ToHashSet();
+            PropertyInfo[] modelProperties = typeof(TModel).GetProperties(BindingFlags.Public | BindingFlags.Instance);
+            PropertyInfo[] dtoProperties = typeof(TDto).GetProperties(BindingFlags.Public | BindingFlags.Instance);
+            HashSet<string> dtoPropertyNames = dtoProperties.Select(p => p.Name).ToHashSet();
 
-            var missingProperties = new List<string>();
+            List<string> missingProperties = new();
 
             // Convert ignoreProperties to HashSet for faster lookup if not null
-            var ignoredSet = ignoreProperties != null
+            HashSet<string> ignoredSet = ignoreProperties != null
                 ? new HashSet<string>(ignoreProperties)
                 : new HashSet<string>();
 
-            foreach (var property in modelProperties)
+            foreach (PropertyInfo property in modelProperties)
             {
                 if (ignoredSet.Contains(property.Name))
                 {

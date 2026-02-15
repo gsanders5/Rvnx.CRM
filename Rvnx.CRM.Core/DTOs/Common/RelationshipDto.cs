@@ -1,5 +1,3 @@
-using System;
-
 namespace Rvnx.CRM.Core.DTOs.Common
 {
     public class RelationshipDto : BaseDto

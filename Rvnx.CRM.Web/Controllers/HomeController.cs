@@ -63,41 +63,23 @@ namespace Rvnx.CRM.Web.Controllers
                 if (contactDict.TryGetValue(date.EntityId, out var contact))
                 {
                     var originalDate = date.Date;
-                    DateTime nextOccurrence;
+                    DateTime nextOccurrence = originalDate.Month == 2 && originalDate.Day == 29 && !DateTime.IsLeapYear(today.Year)
+                        ? new DateTime(today.Year, 2, 28)
+                        : new DateTime(today.Year, originalDate.Month, originalDate.Day);
 
                     // Handle leap year dates (Feb 29) on non-leap years
-                    if (originalDate.Month == 2 && originalDate.Day == 29 && !DateTime.IsLeapYear(today.Year))
-                    {
-                        nextOccurrence = new DateTime(today.Year, 2, 28);
-                    }
-                    else
-                    {
-                        nextOccurrence = new DateTime(today.Year, originalDate.Month, originalDate.Day);
-                    }
 
                     if (nextOccurrence < today)
                     {
-                         // Move to next year
-                         if (originalDate.Month == 2 && originalDate.Day == 29 && !DateTime.IsLeapYear(today.Year + 1))
-                         {
-                             nextOccurrence = new DateTime(today.Year + 1, 2, 28);
-                         }
-                         else
-                         {
-                             nextOccurrence = new DateTime(today.Year + 1, originalDate.Month, originalDate.Day);
-                         }
+                        // Move to next year
+                        nextOccurrence = originalDate.Month == 2 && originalDate.Day == 29 && !DateTime.IsLeapYear(today.Year + 1)
+                            ? new DateTime(today.Year + 1, 2, 28)
+                            : new DateTime(today.Year + 1, originalDate.Month, originalDate.Day);
                     }
 
-                    string desc = "";
-                    if (date.Title?.Equals("Birthday", StringComparison.OrdinalIgnoreCase) == true)
-                    {
-                        desc = $"Turns {nextOccurrence.Year - originalDate.Year}";
-                    }
-                    else
-                    {
-                         desc = $"{date.Title} ({originalDate.ToShortDateString()})";
-                    }
-
+                    string desc = date.Title?.Equals("Birthday", StringComparison.OrdinalIgnoreCase) == true
+                        ? $"Turns {nextOccurrence.Year - originalDate.Year}"
+                        : $"{date.Title} ({originalDate.ToShortDateString()})";
                     model.UpcomingEvents.Add(new UpcomingEventViewModel
                     {
                         Title = $"{contact.FirstName}'s {date.Title}",
@@ -132,12 +114,12 @@ namespace Rvnx.CRM.Web.Controllers
             {
                 if (rel.EntityType == EntityTypes.Person)
                 {
-                     model.GraphLinks.Add(new GraphLink
-                     {
-                         Source = rel.EntityId.ToString(),
-                         Target = rel.RelatedEntityId.ToString(),
-                         Type = "Relationship"
-                     });
+                    model.GraphLinks.Add(new GraphLink
+                    {
+                        Source = rel.EntityId.ToString(),
+                        Target = rel.RelatedEntityId.ToString(),
+                        Type = "Relationship"
+                    });
                 }
             }
 
@@ -150,9 +132,7 @@ namespace Rvnx.CRM.Web.Controllers
             if (span.Days == 0) return "Today";
             if (span.Days == 1) return "Tomorrow";
             if (span.Days < 0) return "Overdue";
-            if (span.Days < 7) return $"In {span.Days} days";
-            if (span.Days < 14) return "In 1 week";
-            return $"In {span.Days / 7} weeks";
+            return span.Days < 7 ? $"In {span.Days} days" : span.Days < 14 ? "In 1 week" : $"In {span.Days / 7} weeks";
         }
 
         public IActionResult Privacy()

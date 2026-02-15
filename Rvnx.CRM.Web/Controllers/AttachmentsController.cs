@@ -61,32 +61,32 @@ namespace Rvnx.CRM.Web.Controllers
                 await _repository.DeleteAsync<Attachment>(id);
                 await _repository.SaveChangesAsync();
             }
-             return Redirect(Request.Headers["Referer"].ToString());
+            return Redirect(Request.Headers["Referer"].ToString());
         }
 
         public async Task<IActionResult> Download(Guid id)
         {
-             var attachment = await _repository.GetByIdWithIncludesAsync<Attachment>(id, "AttachmentContent");
-             if (attachment == null || attachment.AttachmentContent == null) return NotFound();
+            var attachment = await _repository.GetByIdWithIncludesAsync<Attachment>(id, "AttachmentContent");
+            if (attachment == null || attachment.AttachmentContent == null) return NotFound();
 
-             // Force download for everything except specific safe types if needed,
-             // but 'File' result with filename argument usually sets Content-Disposition to attachment.
-             return File(attachment.AttachmentContent.Content, attachment.ContentType, attachment.FileName);
+            // Force download for everything except specific safe types if needed,
+            // but 'File' result with filename argument usually sets Content-Disposition to attachment.
+            return File(attachment.AttachmentContent.Content, attachment.ContentType, attachment.FileName);
         }
 
         public async Task<IActionResult> View(Guid id)
         {
-             var attachment = await _repository.GetByIdWithIncludesAsync<Attachment>(id, "AttachmentContent");
-             if (attachment == null || attachment.AttachmentContent == null) return NotFound();
+            var attachment = await _repository.GetByIdWithIncludesAsync<Attachment>(id, "AttachmentContent");
+            if (attachment == null || attachment.AttachmentContent == null) return NotFound();
 
-             // Only allow inline viewing for safe image types
-             if (ImageContentTypes.Contains(attachment.ContentType))
-             {
-                 return File(attachment.AttachmentContent.Content, attachment.ContentType);
-             }
+            // Only allow inline viewing for safe image types
+            if (ImageContentTypes.Contains(attachment.ContentType))
+            {
+                return File(attachment.AttachmentContent.Content, attachment.ContentType);
+            }
 
-             // Otherwise force download
-             return File(attachment.AttachmentContent.Content, attachment.ContentType, attachment.FileName);
+            // Otherwise force download
+            return File(attachment.AttachmentContent.Content, attachment.ContentType, attachment.FileName);
         }
     }
 }

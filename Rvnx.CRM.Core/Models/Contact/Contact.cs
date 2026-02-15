@@ -1,6 +1,5 @@
 using Rvnx.CRM.Core.Models.Base;
 using Rvnx.CRM.Core.Models.Business;
-using Rvnx.CRM.Core.Models.Dates;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 

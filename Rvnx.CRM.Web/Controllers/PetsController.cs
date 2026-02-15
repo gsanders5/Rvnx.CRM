@@ -89,9 +89,7 @@ namespace Rvnx.CRM.Web.Controllers
         public async Task<IActionResult> Delete(Guid id)
         {
             var pet = await _repository.GetByIdAsync<Pet>(id);
-            if (pet == null) return NotFound();
-
-            return View(pet.ToDto());
+            return pet == null ? NotFound() : View(pet.ToDto());
         }
 
         // POST: Pets/Delete/5

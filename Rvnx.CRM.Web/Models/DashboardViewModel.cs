@@ -1,6 +1,3 @@
-using System;
-using System.Collections.Generic;
-
 namespace Rvnx.CRM.Web.Models
 {
     public class DashboardViewModel
