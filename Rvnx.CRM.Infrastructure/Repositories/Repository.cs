@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Rvnx.CRM.Core.Interfaces;
 using Rvnx.CRM.Core.Models.Base;
 using Rvnx.CRM.Infrastructure.Data;
@@ -14,6 +14,16 @@ public class Repository(CRMDbContext context) : IRepository
     public async Task<T?> GetByIdAsync<T>(Guid id, CancellationToken cancellationToken = default) where T : CRMBaseEntity
     {
         return await _context.Set<T>().FindAsync(new object[] { id }, cancellationToken);
+    }
+
+    public IQueryable<T> GetQuery<T>() where T : CRMBaseEntity
+    {
+        return _context.Set<T>();
+    }
+
+    public IQueryable<T> GetQueryAsNoTracking<T>() where T : CRMBaseEntity
+    {
+        return _context.Set<T>().AsNoTracking();
     }
 
     public async Task<T?> GetByIdWithIncludesAsync<T>(Guid id, params string[] includes) where T : CRMBaseEntity
@@ -33,9 +43,20 @@ public class Repository(CRMDbContext context) : IRepository
         return await _context.Set<T>().ToListAsync(cancellationToken);
     }
 
-    public async Task<List<T>> ListAsNoTrackingAsync<T>(CancellationToken cancellationToken = default) where T : CRMBaseEntity
+    public async Task<List<T>> ListAsync<T>(int? skip = null, int? take = null, CancellationToken cancellationToken = default) where T : CRMBaseEntity
     {
-        return await _context.Set<T>().AsNoTracking().ToListAsync(cancellationToken);
+        var query = GetQuery<T>();
+        if (skip.HasValue) query = query.Skip(skip.Value);
+        if (take.HasValue) query = query.Take(take.Value);
+        return await query.ToListAsync(cancellationToken);
+    }
+
+    public async Task<List<T>> ListAsNoTrackingAsync<T>(int? skip = null, int? take = null, CancellationToken cancellationToken = default) where T : CRMBaseEntity
+    {
+        var query = GetQueryAsNoTracking<T>();
+        if (skip.HasValue) query = query.Skip(skip.Value);
+        if (take.HasValue) query = query.Take(take.Value);
+        return await query.ToListAsync(cancellationToken);
     }
 
     // Create Operations
