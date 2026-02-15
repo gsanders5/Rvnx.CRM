@@ -37,7 +37,7 @@
                         </li>
                     </ul>
                     <ul class="navbar-nav">
-                        @if (Context.RequestServices.GetService<Microsoft.Extensions.Configuration.IConfiguration>().GetValue<bool>("Authentication:Enabled"))
+                        @if (Context.RequestServices.GetService<Microsoft.Extensions.Configuration.IConfiguration>()?.GetValue<bool>("Authentication:Enabled") ?? false)
                         {
                             if (User.Identity?.IsAuthenticated == true)
                             {
