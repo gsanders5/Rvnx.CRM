@@ -1,0 +1,67 @@
+@model Rvnx.CRM.Core.DTOs.Pet.UpdatePetDto
+
+@{
+    ViewData["Title"] = "Edit Pet";
+    var entityId = ViewBag.EntityId;
+}
+
+<h1>Edit Pet</h1>
+
+<div class="row">
+    <div class="col-md-6">
+        <form asp-action="Edit">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <input type="hidden" asp-for="Id" />
+            <!-- We need EntityId to go back, but it's not in UpdatePetDto. Passed via ViewBag or hidden if we want to preserve it?
+                 The Controller fetches EntityId from DB when POSTing, but for "Back" button we need it.
+                 Or we can redirect to Index if we lose it, but ideally we return to Contact Details.
+            -->
+
+            <div class="mb-3">
+                <label asp-for="Name" class="form-label"></label>
+                <input asp-for="Name" class="form-control" />
+                <span asp-validation-for="Name" class="text-danger"></span>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="Species" class="form-label"></label>
+                <input asp-for="Species" class="form-control" />
+                <span asp-validation-for="Species" class="text-danger"></span>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="Breed" class="form-label"></label>
+                <input asp-for="Breed" class="form-control" />
+                <span asp-validation-for="Breed" class="text-danger"></span>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="Birthday" class="form-label"></label>
+                <input asp-for="Birthday" class="form-control" type="date" />
+                <span asp-validation-for="Birthday" class="text-danger"></span>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="Notes" class="form-label"></label>
+                <textarea asp-for="Notes" class="form-control"></textarea>
+                <span asp-validation-for="Notes" class="text-danger"></span>
+            </div>
+
+            <div class="form-group mt-3">
+                <button type="submit" class="btn btn-primary"><i class="bi bi-save"></i> Save</button>
+                @if (entityId != null)
+                {
+                    <a asp-controller="Contacts" asp-action="Details" asp-route-id="@entityId" class="btn btn-secondary">Back to Contact</a>
+                }
+                else
+                {
+                    <a href="javascript:history.back()" class="btn btn-secondary">Back</a>
+                }
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

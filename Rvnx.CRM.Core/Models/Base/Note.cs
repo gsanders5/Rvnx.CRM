@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace Rvnx.CRM.Core.Models.Base;
 
 [Table("Note")]
-public class Note : CRMBaseEntity
+public class Note : CRMGenericEntity
 {
     [Required]
     [MaxLength(200)]
@@ -14,11 +14,4 @@ public class Note : CRMBaseEntity
     [Required]
     [Display(Name = "Note")]
     public string Value { get; set; } = string.Empty;
-
-    [Required]
-    public Guid EntityId { get; set; }
-
-    [Required]
-    [MaxLength(100)]
-    public string EntityType { get; set; } = string.Empty;
 }

@@ -5,7 +5,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace Rvnx.CRM.Core.Models.Dates;
 
 [Table("Reminder")]
-public class Reminder : CRMBaseEntity
+public class Reminder : CRMGenericEntity
 {
     [Required]
     [MaxLength(200)]
@@ -21,11 +21,4 @@ public class Reminder : CRMBaseEntity
 
     [Display(Name = "Is Completed")]
     public bool IsCompleted { get; set; } = false;
-
-    [Display(Name = "Entity ID")]
-    public Guid? EntityId { get; set; }
-
-    [MaxLength(100)]
-    [Display(Name = "Entity Type")]
-    public string? EntityType { get; set; }
 }

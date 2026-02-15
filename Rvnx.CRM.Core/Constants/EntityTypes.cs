@@ -2,8 +2,8 @@ namespace Rvnx.CRM.Core.Constants;
 
 public static class EntityTypes
 {
-    public const string Person = "Person"; // Maps to Contact
-    public const string Company = "Company"; // Maps to Employer
+    public const string Person = "Person";
+    public const string Company = "Company";
     public const string Opportunity = "Opportunity";
 
     // Auxiliary Entities

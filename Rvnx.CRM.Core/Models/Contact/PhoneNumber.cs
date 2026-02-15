@@ -6,7 +6,7 @@ using static Rvnx.CRM.Core.Enumerations.CoreEnumerations;
 namespace Rvnx.CRM.Core.Models.Contact;
 
 [Table(nameof(PhoneNumber))]
-public class PhoneNumber : CRMBaseEntity
+public class PhoneNumber : CRMGenericEntity
 {
     [MaxLength(20)]
     [Display(Name = "Phone Number Type")]
@@ -15,13 +15,4 @@ public class PhoneNumber : CRMBaseEntity
     [MaxLength(20)]
     [Display(Name = "Phone Number")]
     public string? Value { get; set; } = string.Empty;
-
-    [Required]
-    [Display(Name = "Entity ID")]
-    public Guid EntityId { get; set; }
-
-    [Required]
-    [MaxLength(100)]
-    [Display(Name = "Entity Type")]
-    public string EntityType { get; set; } = string.Empty;
 }

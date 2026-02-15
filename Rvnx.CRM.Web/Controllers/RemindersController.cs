@@ -32,9 +32,9 @@ namespace Rvnx.CRM.Web.Controllers
             return "Unknown Entity";
         }
 
-        private IActionResult RedirectToEntity(Guid? id, string? type)
+        private IActionResult RedirectToEntity(Guid id, string? type)
         {
-            if (id == null || string.IsNullOrEmpty(type)) return RedirectToAction("Index", "Home");
+            if (id == Guid.Empty || string.IsNullOrEmpty(type)) return RedirectToAction("Index", "Home");
 
             if (type == EntityTypes.Person)
             {
@@ -74,9 +74,9 @@ namespace Rvnx.CRM.Web.Controllers
                 return RedirectToEntity(reminder.EntityId, reminder.EntityType);
             }
 
-            if (reminder.EntityId.HasValue && !string.IsNullOrEmpty(reminder.EntityType))
+            if (reminder.EntityId != Guid.Empty && !string.IsNullOrEmpty(reminder.EntityType))
             {
-                 ViewData["EntityName"] = await GetEntityName(reminder.EntityId.Value, reminder.EntityType);
+                 ViewData["EntityName"] = await GetEntityName(reminder.EntityId, reminder.EntityType);
                  ViewData["EntityId"] = reminder.EntityId;
                  ViewData["EntityType"] = reminder.EntityType;
             }
@@ -91,9 +91,9 @@ namespace Rvnx.CRM.Web.Controllers
             var reminder = await _repository.GetByIdAsync<Reminder>(id.Value);
             if (reminder == null) return NotFound();
 
-            if (reminder.EntityId.HasValue && !string.IsNullOrEmpty(reminder.EntityType))
+            if (reminder.EntityId != Guid.Empty && !string.IsNullOrEmpty(reminder.EntityType))
             {
-                ViewData["EntityName"] = await GetEntityName(reminder.EntityId.Value, reminder.EntityType);
+                ViewData["EntityName"] = await GetEntityName(reminder.EntityId, reminder.EntityType);
             }
 
             return View(reminder);
@@ -121,9 +121,9 @@ namespace Rvnx.CRM.Web.Controllers
                 return RedirectToEntity(reminder.EntityId, reminder.EntityType);
             }
 
-            if (reminder.EntityId.HasValue && !string.IsNullOrEmpty(reminder.EntityType))
+            if (reminder.EntityId != Guid.Empty && !string.IsNullOrEmpty(reminder.EntityType))
             {
-                ViewData["EntityName"] = await GetEntityName(reminder.EntityId.Value, reminder.EntityType);
+                ViewData["EntityName"] = await GetEntityName(reminder.EntityId, reminder.EntityType);
             }
             return View(reminder);
         }
@@ -135,9 +135,9 @@ namespace Rvnx.CRM.Web.Controllers
             var reminder = await _repository.GetByIdAsync<Reminder>(id.Value);
             if (reminder == null) return NotFound();
 
-            if (reminder.EntityId.HasValue && !string.IsNullOrEmpty(reminder.EntityType))
+            if (reminder.EntityId != Guid.Empty && !string.IsNullOrEmpty(reminder.EntityType))
             {
-                ViewData["EntityName"] = await GetEntityName(reminder.EntityId.Value, reminder.EntityType);
+                ViewData["EntityName"] = await GetEntityName(reminder.EntityId, reminder.EntityType);
             }
             return View(reminder);
         }
