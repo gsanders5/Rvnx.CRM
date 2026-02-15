@@ -136,5 +136,136 @@ namespace Rvnx.CRM.Web.Controllers
 
             return View(relationship);
         }
+
+        // GET: Relationships/Edit/5
+        public async Task<IActionResult> Edit(Guid? id)
+        {
+            if (id == null)
+            {
+                return NotFound();
+            }
+
+            var relationship = await _repository.GetByIdWithIncludesAsync<Relationship>(id.Value, "Person", "RelatedPerson", "RelationshipType");
+            if (relationship == null)
+            {
+                return NotFound();
+            }
+
+            ViewData["PersonName"] = relationship.Person?.FullName;
+
+            var allPeople = await _repository.ListAsync<Contact>();
+            var availablePeople = allPeople.Where(p => p.Id != relationship.PersonId).OrderBy(p => p.FullName).ToList();
+
+            ViewData["RelatedPersonId"] = new SelectList(availablePeople, "Id", "FullName", relationship.RelatedPersonId);
+
+            var types = await _repository.ListAsync<RelationshipType>();
+            var options = new List<SelectListItem>();
+            foreach (var t in types)
+            {
+                options.Add(new SelectListItem { Value = $"{t.Id}_Fwd", Text = t.Name });
+                if (!t.IsSymmetric)
+                {
+                    options.Add(new SelectListItem { Value = $"{t.Id}_Rev", Text = t.OppositeName });
+                }
+            }
+
+            var currentSelection = $"{relationship.RelationshipTypeId}_Fwd";
+            ViewData["RelationshipTypeSelection"] = new SelectList(options, "Value", "Text", currentSelection);
+
+            return View(relationship);
+        }
+
+        // POST: Relationships/Edit/5
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Edit(Guid id, [Bind("Id,PersonId,RelatedPersonId,RelationshipTypeId,Description,StartDate,EndDate")] Relationship relationship, string relationshipTypeSelection)
+        {
+            if (id != relationship.Id)
+            {
+                return NotFound();
+            }
+
+            if (string.IsNullOrEmpty(relationshipTypeSelection))
+            {
+                ModelState.AddModelError("RelationshipTypeSelection", "Relationship Type is required.");
+            }
+
+            if (ModelState.IsValid)
+            {
+                var parts = relationshipTypeSelection.Split('_');
+                if (parts.Length == 2 && Guid.TryParse(parts[0], out var typeId))
+                {
+                    var direction = parts[1]; // Fwd or Rev
+                    relationship.RelationshipTypeId = typeId;
+
+                    if (direction == "Rev")
+                    {
+                        var temp = relationship.PersonId;
+                        relationship.PersonId = relationship.RelatedPersonId;
+                        relationship.RelatedPersonId = temp;
+                    }
+
+                    await _repository.UpdateAsync(relationship);
+                    await _repository.SaveChangesAsync();
+
+                    return RedirectToAction("Details", "Contacts", new { id = relationship.PersonId });
+                }
+                else
+                {
+                    ModelState.AddModelError("RelationshipTypeSelection", "Invalid Relationship Type.");
+                }
+            }
+
+            var allPeople = await _repository.ListAsync<Contact>();
+            var availablePeople = allPeople.Where(p => p.Id != relationship.PersonId).OrderBy(p => p.FullName).ToList();
+            ViewData["RelatedPersonId"] = new SelectList(availablePeople, "Id", "FullName", relationship.RelatedPersonId);
+
+            var types = await _repository.ListAsync<RelationshipType>();
+            var options = new List<SelectListItem>();
+            foreach (var t in types)
+            {
+                options.Add(new SelectListItem { Value = $"{t.Id}_Fwd", Text = t.Name });
+                if (!t.IsSymmetric)
+                {
+                    options.Add(new SelectListItem { Value = $"{t.Id}_Rev", Text = t.OppositeName });
+                }
+            }
+            ViewData["RelationshipTypeSelection"] = new SelectList(options, "Value", "Text", relationshipTypeSelection);
+
+            return View(relationship);
+        }
+
+        // GET: Relationships/Delete/5
+        public async Task<IActionResult> Delete(Guid? id)
+        {
+            if (id == null)
+            {
+                return NotFound();
+            }
+
+            var relationship = await _repository.GetByIdWithIncludesAsync<Relationship>(id.Value, "Person", "RelatedPerson", "RelationshipType");
+            if (relationship == null)
+            {
+                return NotFound();
+            }
+
+            return View(relationship);
+        }
+
+        // POST: Relationships/Delete/5
+        [HttpPost, ActionName("Delete")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteConfirmed(Guid id)
+        {
+            var relationship = await _repository.GetByIdAsync<Relationship>(id);
+            if (relationship != null)
+            {
+                var personId = relationship.PersonId;
+                await _repository.DeleteAsync<Relationship>(id);
+                await _repository.SaveChangesAsync();
+                return RedirectToAction("Details", "Contacts", new { id = personId });
+            }
+            return RedirectToAction("Index", "Contacts");
+        }
     }
 }
