@@ -47,13 +47,17 @@ public class Repository(CRMDbContext context) : IRepository
     }
 
     // Delete Operations
-    public async Task DeleteAsync<T>(Guid id, CancellationToken cancellationToken = default) where T : CRMBaseEntity
+    public Task DeleteAsync<T>(Guid id, CancellationToken cancellationToken = default) where T : CRMBaseEntity
     {
-        var entity = await GetByIdAsync<T>(id, cancellationToken);
-        if (entity != null)
+        var entity = _context.Set<T>().Local.FirstOrDefault(e => e.Id == id);
+        if (entity == null)
         {
-            _context.Set<T>().Remove(entity);
+            entity = (T)Activator.CreateInstance(typeof(T), true)!;
+            entity.Id = id;
         }
+
+        _context.Set<T>().Remove(entity);
+        return Task.CompletedTask;
     }
 
     public Task DeleteAsync<T>(T entity, CancellationToken cancellationToken = default) where T : CRMBaseEntity
