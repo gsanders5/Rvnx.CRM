@@ -1,0 +1,22 @@
+using Rvnx.CRM.Core.DTOs.Common;
+using Rvnx.CRM.Core.DTOs.Pet;
+using System.Collections.Generic;
+
+namespace Rvnx.CRM.Core.DTOs.Contact
+{
+    public class ContactDetailDto : ContactDto
+    {
+        public string? Nickname { get; set; }
+        public DateTime? Birthday { get; set; }
+
+        public string? ProfileImageBase64 { get; set; }
+        public string? ProfileImageContentType { get; set; }
+
+        public IEnumerable<NoteDto> Notes { get; set; } = new List<NoteDto>();
+        public IEnumerable<ReminderDto> Reminders { get; set; } = new List<ReminderDto>();
+        public IEnumerable<ImportantDateDto> ImportantDates { get; set; } = new List<ImportantDateDto>();
+        public IEnumerable<RelationshipDto> Relationships { get; set; } = new List<RelationshipDto>();
+        public IEnumerable<RelationshipDto> RelatedTo { get; set; } = new List<RelationshipDto>();
+        public IEnumerable<PetDto> Pets { get; set; } = new List<PetDto>();
+    }
+}

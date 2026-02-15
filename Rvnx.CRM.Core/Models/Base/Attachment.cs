@@ -4,15 +4,8 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace Rvnx.CRM.Core.Models.Base;
 
 [Table("Attachment")]
-public class Attachment : CRMBaseEntity
+public class Attachment : CRMGenericEntity
 {
-    [Required]
-    public Guid EntityId { get; set; }
-
-    [Required]
-    [MaxLength(100)]
-    public string EntityType { get; set; } = string.Empty;
-
     [Required]
     [MaxLength(100)]
     public string AttachmentType { get; set; } = string.Empty;

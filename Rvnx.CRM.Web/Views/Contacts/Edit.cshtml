@@ -1,4 +1,4 @@
-@model Rvnx.CRM.Core.Models.Contact.Contact
+@model Rvnx.CRM.Core.DTOs.Contact.UpdateContactDto
 
 @{
     ViewData["Title"] = "Edit Contact";
@@ -11,8 +11,6 @@
         <form asp-action="Edit" enctype="multipart/form-data">
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
             <input type="hidden" asp-for="Id" />
-            <input type="hidden" asp-for="CreatedBy" />
-            <input type="hidden" asp-for="CreatedDate" />
 
             <div class="mb-3">
                 <label asp-for="FirstName" class="form-label"></label>
@@ -24,6 +22,12 @@
                 <label asp-for="LastName" class="form-label"></label>
                 <input asp-for="LastName" class="form-control" />
                 <span asp-validation-for="LastName" class="text-danger"></span>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="Nickname" class="form-label"></label>
+                <input asp-for="Nickname" class="form-control" />
+                <span asp-validation-for="Nickname" class="text-danger"></span>
             </div>
 
             <div class="mb-3">

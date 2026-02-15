@@ -34,9 +34,9 @@ namespace Rvnx.CRM.Web.Controllers
             foreach (var reminder in reminders)
             {
                 string entityName = "Unknown";
-                if (reminder.EntityId.HasValue && reminder.EntityType == EntityTypes.Person)
+                if (reminder.EntityId != Guid.Empty && reminder.EntityType == EntityTypes.Person)
                 {
-                    if (contactDict.TryGetValue(reminder.EntityId.Value, out var contact))
+                    if (contactDict.TryGetValue(reminder.EntityId, out var contact))
                     {
                         entityName = contact.FullName;
                     }

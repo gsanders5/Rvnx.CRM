@@ -5,20 +5,11 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace Rvnx.CRM.Core.Models.Contact;
 
 [Table("Relationship")]
-public class Relationship : CRMBaseEntity
+public class Relationship : CRMGenericEntity
 {
-    [Required]
-    [Display(Name = "Entity ID")]
-    public Guid EntityId { get; set; }
-
     [Required]
     [Display(Name = "Related Entity ID")]
     public Guid RelatedEntityId { get; set; }
-
-    [Required]
-    [MaxLength(100)]
-    [Display(Name = "Entity Type")]
-    public string EntityType { get; set; } = string.Empty;
 
     [Required]
     [Display(Name = "Relationship Type")]

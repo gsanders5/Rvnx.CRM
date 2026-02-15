@@ -19,6 +19,7 @@ public class CRMDbContext(DbContextOptions<CRMDbContext> options) : DbContext(op
     public DbSet<Relationship> Relationships { get; set; }
     public DbSet<RelationshipType> RelationshipTypes { get; set; }
     public DbSet<Reminder> Reminders { get; set; }
+    public DbSet<Pet> Pets { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -33,6 +34,7 @@ public class CRMDbContext(DbContextOptions<CRMDbContext> options) : DbContext(op
 
         // Add indices for polymorphic lookups
         modelBuilder.Entity<Note>().HasIndex(e => new { e.EntityId, e.EntityType });
+        modelBuilder.Entity<Pet>().HasIndex(e => new { e.EntityId, e.EntityType });
         modelBuilder.Entity<Reminder>().HasIndex(e => new { e.EntityId, e.EntityType });
         modelBuilder.Entity<ImportantDate>().HasIndex(e => new { e.EntityId, e.EntityType });
         modelBuilder.Entity<Attachment>().HasIndex(e => new { e.EntityId, e.EntityType });
