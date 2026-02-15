@@ -8,10 +8,6 @@ namespace Rvnx.CRM.Core.DTOs.Contact
     public class ContactDetailDto : ContactDto
     {
         public string? Nickname { get; set; }
-        public DateTime? Birthday { get; set; }
-
-        public string? ProfileImageBase64 { get; set; }
-        public string? ProfileImageContentType { get; set; }
 
         public IEnumerable<NoteDto> Notes { get; set; } = new List<NoteDto>();
         public IEnumerable<ReminderDto> Reminders { get; set; } = new List<ReminderDto>();

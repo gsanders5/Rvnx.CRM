@@ -7,6 +7,7 @@ using Rvnx.CRM.Core.Models.Base;
 using Rvnx.CRM.Core.Constants;
 using Rvnx.CRM.Core.DTOs.Contact;
 using Rvnx.CRM.Core.Extensions;
+using Rvnx.CRM.Core.Enumerations;
 
 namespace Rvnx.CRM.Web.Controllers
 {
@@ -25,7 +26,40 @@ namespace Rvnx.CRM.Web.Controllers
         public async Task<IActionResult> Index()
         {
             var contacts = await _repository.ListAsync<Contact>();
-            return View(contacts.Select(c => c.ToDto()).ToList());
+            var contactDtos = contacts.Select(c => c.ToDto()).ToList();
+
+            // Optimally: Get all profile images for these contacts
+            var contactIds = contacts.Select(c => c.Id).ToList();
+
+            // 1. Fetch Profile Image Attachments for these contacts
+            var profileAttachments = await _repository.ListAsync<Attachment>(a => a.EntityType == EntityTypes.Person
+                && a.AttachmentType == "ProfileImage"
+                && contactIds.Contains(a.EntityId));
+
+            if (profileAttachments.Any())
+            {
+                var attachmentIds = profileAttachments.Select(a => a.Id).ToList();
+
+                // 2. Fetch Content for these attachments
+                var contents = await _repository.ListAsync<AttachmentContent>(c => attachmentIds.Contains(c.AttachmentId));
+
+                // 3. Map to DTOs
+                foreach (var dto in contactDtos)
+                {
+                    var attachment = profileAttachments.FirstOrDefault(a => a.EntityId == dto.Id);
+                    if (attachment != null)
+                    {
+                        var content = contents.FirstOrDefault(c => c.AttachmentId == attachment.Id);
+                        if (content != null)
+                        {
+                             dto.ProfileImageBase64 = Convert.ToBase64String(content.Content);
+                             dto.ProfileImageContentType = attachment.ContentType;
+                        }
+                    }
+                }
+            }
+
+            return View(contactDtos);
         }
 
         // GET: Contacts/Details/5
@@ -106,6 +140,51 @@ namespace Rvnx.CRM.Web.Controllers
             {
                 var contact = contactDto.ToEntity();
                 await _repository.AddAsync(contact);
+                // Save first to get ID (though GUID is generated in ToEntity, it's safer to ensure DB existence)
+                await _repository.SaveChangesAsync();
+
+                // Add Email
+                if (!string.IsNullOrEmpty(contactDto.Email))
+                {
+                    await _repository.AddAsync(new ContactInfo
+                    {
+                        Id = Guid.NewGuid(),
+                        EntityId = contact.Id,
+                        EntityType = EntityTypes.Person,
+                        Type = ContactInfoType.Email,
+                        Value = contactDto.Email,
+                        Label = "Primary"
+                    });
+                }
+
+                // Add Phone
+                if (!string.IsNullOrEmpty(contactDto.Phone))
+                {
+                    await _repository.AddAsync(new ContactInfo
+                    {
+                        Id = Guid.NewGuid(),
+                        EntityId = contact.Id,
+                        EntityType = EntityTypes.Person,
+                        Type = ContactInfoType.Phone,
+                        Value = contactDto.Phone,
+                        Label = "Primary"
+                    });
+                }
+
+                // Add Birthday
+                if (contactDto.Birthday.HasValue)
+                {
+                    await _repository.AddAsync(new ImportantDate
+                    {
+                        Id = Guid.NewGuid(),
+                        EntityId = contact.Id,
+                        EntityType = EntityTypes.Person,
+                        Title = "Birthday",
+                        Date = contactDto.Birthday.Value,
+                        Description = "Birthday"
+                    });
+                }
+
                 await _repository.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
             }
@@ -123,14 +202,27 @@ namespace Rvnx.CRM.Web.Controllers
             {
                 Id = contact.Id,
                 FirstName = contact.FirstName,
-                LastName = contact.LastName,
+                LastName = contact.LastName ?? string.Empty,
                 Nickname = contact.Nickname,
-                Email = contact.Email,
-                Phone = contact.Phone,
                 JobTitle = contact.JobTitle,
-                Company = contact.Company,
-                Birthday = contact.Birthday
+                Company = contact.Company
             };
+
+            // Fetch Email (Primary)
+            var emails = await _repository.ListAsync<ContactInfo>(c => c.EntityId == contact.Id && c.EntityType == EntityTypes.Person && c.Type == ContactInfoType.Email);
+            // Prioritize one labeled "Primary" or just take the first one
+            var email = emails.FirstOrDefault(e => e.Label == "Primary") ?? emails.FirstOrDefault();
+            dto.Email = email?.Value;
+
+            // Fetch Phone
+            var phones = await _repository.ListAsync<ContactInfo>(c => c.EntityId == contact.Id && c.EntityType == EntityTypes.Person && c.Type == ContactInfoType.Phone);
+            var phone = phones.FirstOrDefault(p => p.Label == "Primary") ?? phones.FirstOrDefault();
+            dto.Phone = phone?.Value;
+
+            // Fetch Birthday
+            var bdays = await _repository.ListAsync<ImportantDate>(d => d.EntityId == contact.Id && d.EntityType == EntityTypes.Person && d.Title == "Birthday");
+            dto.Birthday = bdays.FirstOrDefault()?.Date;
+
             return View(dto);
         }
 
@@ -150,6 +242,94 @@ namespace Rvnx.CRM.Web.Controllers
 
                     existingContact.UpdateEntity(contactDto);
 
+                    // --- Update Email ---
+                    var emails = await _repository.ListAsync<ContactInfo>(c => c.EntityId == id && c.EntityType == EntityTypes.Person && c.Type == ContactInfoType.Email);
+                    var existingEmail = emails.FirstOrDefault(e => e.Label == "Primary") ?? emails.FirstOrDefault();
+
+                    if (!string.IsNullOrEmpty(contactDto.Email))
+                    {
+                        if (existingEmail != null)
+                        {
+                            existingEmail.Value = contactDto.Email;
+                            await _repository.UpdateAsync(existingEmail);
+                        }
+                        else
+                        {
+                            await _repository.AddAsync(new ContactInfo
+                            {
+                                Id = Guid.NewGuid(),
+                                EntityId = id,
+                                EntityType = EntityTypes.Person,
+                                Type = ContactInfoType.Email,
+                                Value = contactDto.Email,
+                                Label = "Primary"
+                            });
+                        }
+                    }
+                    else if (existingEmail != null)
+                    {
+                        await _repository.DeleteAsync<ContactInfo>(existingEmail.Id);
+                    }
+
+                    // --- Update Phone ---
+                    var phones = await _repository.ListAsync<ContactInfo>(c => c.EntityId == id && c.EntityType == EntityTypes.Person && c.Type == ContactInfoType.Phone);
+                    var existingPhone = phones.FirstOrDefault(p => p.Label == "Primary") ?? phones.FirstOrDefault();
+
+                    if (!string.IsNullOrEmpty(contactDto.Phone))
+                    {
+                        if (existingPhone != null)
+                        {
+                            existingPhone.Value = contactDto.Phone;
+                            await _repository.UpdateAsync(existingPhone);
+                        }
+                        else
+                        {
+                            await _repository.AddAsync(new ContactInfo
+                            {
+                                Id = Guid.NewGuid(),
+                                EntityId = id,
+                                EntityType = EntityTypes.Person,
+                                Type = ContactInfoType.Phone,
+                                Value = contactDto.Phone,
+                                Label = "Primary"
+                            });
+                        }
+                    }
+                    else if (existingPhone != null)
+                    {
+                        await _repository.DeleteAsync<ContactInfo>(existingPhone.Id);
+                    }
+
+                    // --- Update Birthday ---
+                    var bdays = await _repository.ListAsync<ImportantDate>(d => d.EntityId == id && d.EntityType == EntityTypes.Person && d.Title == "Birthday");
+                    var existingBday = bdays.FirstOrDefault();
+
+                    if (contactDto.Birthday.HasValue)
+                    {
+                        if (existingBday != null)
+                        {
+                            existingBday.Date = contactDto.Birthday.Value;
+                            await _repository.UpdateAsync(existingBday);
+                        }
+                        else
+                        {
+                            await _repository.AddAsync(new ImportantDate
+                            {
+                                Id = Guid.NewGuid(),
+                                EntityId = id,
+                                EntityType = EntityTypes.Person,
+                                Title = "Birthday",
+                                Date = contactDto.Birthday.Value,
+                                Description = "Birthday"
+                            });
+                        }
+                    }
+                    else if (existingBday != null)
+                    {
+                        await _repository.DeleteAsync<ImportantDate>(existingBday.Id);
+                    }
+
+                    // --- Profile Image ---
                     if (profileImage != null && profileImage.Length > 0)
                     {
                         using var ms = new MemoryStream();

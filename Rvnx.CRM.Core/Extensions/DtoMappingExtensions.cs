@@ -130,8 +130,6 @@ namespace Rvnx.CRM.Core.Extensions
                 FirstName = entity.FirstName,
                 LastName = entity.LastName ?? string.Empty,
                 FullName = entity.FullName,
-                Email = entity.Email,
-                Phone = entity.Phone,
                 Company = entity.Company,
                 JobTitle = entity.JobTitle,
                 CreatedDate = entity.CreatedDate
@@ -146,12 +144,10 @@ namespace Rvnx.CRM.Core.Extensions
                 FirstName = entity.FirstName,
                 LastName = entity.LastName ?? string.Empty,
                 FullName = entity.FullName,
-                Email = entity.Email,
-                Phone = entity.Phone,
                 Company = entity.Company,
                 JobTitle = entity.JobTitle,
                 Nickname = entity.Nickname,
-                Birthday = entity.Birthday,
+
                 // Lists will be populated separately or via mapping if loaded
                 Notes = entity.Notes?.Select(n => n.ToDto()) ?? new List<NoteDto>(),
                 Reminders = entity.Reminders?.Select(r => r.ToDto()) ?? new List<ReminderDto>(),
@@ -172,11 +168,9 @@ namespace Rvnx.CRM.Core.Extensions
                 FirstName = dto.FirstName,
                 LastName = dto.LastName,
                 Nickname = dto.Nickname,
-                Email = dto.Email,
-                Phone = dto.Phone,
                 JobTitle = dto.JobTitle,
-                Company = dto.Company,
-                Birthday = dto.Birthday
+                Company = dto.Company
+                // Email, Phone, Birthday removed from Contact
             };
         }
 
@@ -185,11 +179,9 @@ namespace Rvnx.CRM.Core.Extensions
             entity.FirstName = dto.FirstName;
             entity.LastName = dto.LastName;
             entity.Nickname = dto.Nickname;
-            entity.Email = dto.Email;
-            entity.Phone = dto.Phone;
             entity.JobTitle = dto.JobTitle;
             entity.Company = dto.Company;
-            entity.Birthday = dto.Birthday;
+            // Email, Phone, Birthday removed from Contact
         }
 
         public static Pet ToEntity(this CreatePetDto dto)

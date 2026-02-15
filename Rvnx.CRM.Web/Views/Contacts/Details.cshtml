@@ -41,18 +41,6 @@
                             <dd class="col-sm-8">@Model.Nickname</dd>
                         }
 
-                        @if (!string.IsNullOrEmpty(Model.Email))
-                        {
-                            <dt class="col-sm-4">Email</dt>
-                            <dd class="col-sm-8"><a href="mailto:@Model.Email">@Model.Email</a></dd>
-                        }
-
-                        @if (!string.IsNullOrEmpty(Model.Phone))
-                        {
-                            <dt class="col-sm-4">Phone</dt>
-                            <dd class="col-sm-8"><a href="tel:@Model.Phone">@Model.Phone</a></dd>
-                        }
-
                         @if (!string.IsNullOrEmpty(Model.Company))
                         {
                             <dt class="col-sm-4">Company</dt>
@@ -63,15 +51,6 @@
                         {
                             <dt class="col-sm-4">Job Title</dt>
                             <dd class="col-sm-8">@Model.JobTitle</dd>
-                        }
-
-                        @if (Model.Birthday.HasValue)
-                        {
-                            var today = DateTime.Today;
-                            var age = today.Year - Model.Birthday.Value.Year;
-                            if (Model.Birthday.Value.Date > today.AddYears(-age)) age--;
-                            <dt class="col-sm-4">Birthday</dt>
-                            <dd class="col-sm-8">@Model.Birthday.Value.ToShortDateString() (@age years old)</dd>
                         }
                     </dl>
                 </div>
@@ -263,6 +242,44 @@
 
         <!-- Right Column -->
         <div class="col-md-8">
+            <!-- Important Dates -->
+            <div class="card mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0"><i class="bi bi-calendar-event"></i> Important Dates</h5>
+                    <a asp-controller="ImportantDates" asp-action="Create" asp-route-entityId="@Model.Id" asp-route-entityType="Person" class="btn btn-sm btn-outline-primary"><i class="bi bi-plus-lg"></i> Add</a>
+                </div>
+                <div class="card-body">
+                    @if (Model.ImportantDates != null && Model.ImportantDates.Any())
+                    {
+                        <ul class="list-group">
+                            @foreach (var date in Model.ImportantDates.OrderBy(d => d.Date))
+                            {
+                                <li class="list-group-item">
+                                    <div class="d-flex w-100 justify-content-between">
+                                        <h6 class="mb-1">@date.Title</h6>
+                                        <div>
+                                            <span class="badge bg-info text-dark">@date.Date.ToShortDateString()</span>
+                                            <div class="btn-group btn-group-sm ml-2">
+                                                <a asp-controller="ImportantDates" asp-action="Edit" asp-route-id="@date.Id" class="btn btn-outline-secondary" title="Edit"><i class="bi bi-pencil-square"></i></a>
+                                                <a asp-controller="ImportantDates" asp-action="Delete" asp-route-id="@date.Id" class="btn btn-outline-danger" title="Delete"><i class="bi bi-trash"></i></a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    @if(!string.IsNullOrEmpty(date.Description) && date.Description != date.Title)
+                                    {
+                                        <p class="mb-1 text-muted small">@date.Description</p>
+                                    }
+                                </li>
+                            }
+                        </ul>
+                    }
+                    else
+                    {
+                        <p class="text-muted">No important dates recorded.</p>
+                    }
+                </div>
+            </div>
+
             <!-- Reminders -->
             <div class="card mb-4">
                 <div class="card-header d-flex justify-content-between align-items-center">
