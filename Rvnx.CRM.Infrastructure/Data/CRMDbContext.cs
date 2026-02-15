@@ -12,6 +12,7 @@ public class CRMDbContext(DbContextOptions<CRMDbContext> options) : DbContext(op
     public DbSet<Employer> Employers { get; set; }
     public DbSet<PhoneNumber> PhoneNumbers { get; set; }
     public DbSet<Note> Notes { get; set; }
+    public DbSet<Attachment> Attachments { get; set; }
     public DbSet<ImportantDate> ImportantDates { get; set; }
     public DbSet<Relationship> Relationships { get; set; }
     public DbSet<RelationshipType> RelationshipTypes { get; set; }

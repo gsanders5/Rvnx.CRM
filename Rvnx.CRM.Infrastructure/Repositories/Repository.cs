@@ -45,6 +45,11 @@ public class Repository(CRMDbContext context) : IRepository
         return await query.ToListAsync(cancellationToken);
     }
 
+    public async Task<List<T>> ListAsync<T>(Expression<Func<T, bool>> predicate, CancellationToken cancellationToken = default) where T : CRMBaseEntity
+    {
+        return await _context.Set<T>().Where(predicate).ToListAsync(cancellationToken);
+    }
+
     public async Task<List<T>> ListAsNoTrackingAsync<T>(int? skip = null, int? take = null, CancellationToken cancellationToken = default) where T : CRMBaseEntity
     {
         var query = _context.Set<T>().AsNoTracking();
