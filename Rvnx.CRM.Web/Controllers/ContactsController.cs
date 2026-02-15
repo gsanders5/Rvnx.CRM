@@ -50,6 +50,9 @@ namespace Rvnx.CRM.Web.Controllers
                 return NotFound();
             }
 
+            var attachments = await _repository.ListAsync<Attachment>(a => a.EntityId == id.Value && a.EntityType == "Contact" && a.AttachmentType == "ProfileImage");
+            ViewBag.ProfileImage = attachments.FirstOrDefault();
+
             return View(contact);
         }
 
@@ -93,7 +96,7 @@ namespace Rvnx.CRM.Web.Controllers
         // POST: Contacts/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(Guid id, [Bind("Id,FirstName,LastName,Nickname,Email,Phone,JobTitle,Company,Birthday")] Contact contact)
+        public async Task<IActionResult> Edit(Guid id, [Bind("Id,FirstName,LastName,Nickname,Email,Phone,JobTitle,Company,Birthday")] Contact contact, IFormFile? profileImage)
         {
             if (id != contact.Id)
             {
@@ -118,6 +121,39 @@ namespace Rvnx.CRM.Web.Controllers
                     existingContact.JobTitle = contact.JobTitle;
                     existingContact.Company = contact.Company;
                     existingContact.Birthday = contact.Birthday;
+
+                    if (profileImage != null && profileImage.Length > 0)
+                    {
+                        using var ms = new MemoryStream();
+                        await profileImage.CopyToAsync(ms);
+                        var fileBytes = ms.ToArray();
+                        var base64 = Convert.ToBase64String(fileBytes);
+
+                        var existingAttachments = await _repository.ListAsync<Attachment>(a => a.EntityId == id && a.EntityType == "Contact" && a.AttachmentType == "ProfileImage");
+                        var existingAttachment = existingAttachments.FirstOrDefault();
+
+                        if (existingAttachment != null)
+                        {
+                            existingAttachment.Content = base64;
+                            existingAttachment.ContentType = profileImage.ContentType;
+                            existingAttachment.FileName = profileImage.FileName;
+                            await _repository.UpdateAsync(existingAttachment);
+                        }
+                        else
+                        {
+                            var attachment = new Attachment
+                            {
+                                Id = Guid.NewGuid(),
+                                EntityId = id,
+                                EntityType = "Contact",
+                                AttachmentType = "ProfileImage",
+                                Content = base64,
+                                ContentType = profileImage.ContentType,
+                                FileName = profileImage.FileName
+                            };
+                            await _repository.AddAsync(attachment);
+                        }
+                    }
 
                     await _repository.UpdateAsync(existingContact);
                     await _repository.SaveChangesAsync();
