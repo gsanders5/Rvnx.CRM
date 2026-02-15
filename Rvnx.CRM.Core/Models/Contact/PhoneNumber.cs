@@ -6,7 +6,7 @@ using static Rvnx.CRM.Core.Enumerations.CoreEnumerations;
 namespace Rvnx.CRM.Core.Models.Contact;
 
 [Table(nameof(PhoneNumber))]
-public class PhoneNumber : CRMGenericEntity
+public class PhoneNumber : PolymorphicEntity
 {
     [MaxLength(20)]
     [Display(Name = "Phone Number Type")]

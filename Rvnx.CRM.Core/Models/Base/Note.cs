@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace Rvnx.CRM.Core.Models.Base;
 
 [Table("Note")]
-public class Note : CRMGenericEntity
+public class Note : PolymorphicEntity
 {
     [Required]
     [MaxLength(200)]

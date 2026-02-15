@@ -20,12 +20,12 @@ public class CRMDbContext(DbContextOptions<CRMDbContext> options, ICurrentUserSe
     public DbSet<Note> Notes { get; set; }
     public DbSet<Attachment> Attachments { get; set; }
     public DbSet<AttachmentContent> AttachmentContents { get; set; }
-    public DbSet<ImportantDate> ImportantDates { get; set; }
+    public DbSet<SignificantDate> SignificantDates { get; set; }
     public DbSet<Relationship> Relationships { get; set; }
     public DbSet<RelationshipType> RelationshipTypes { get; set; }
     public DbSet<Reminder> Reminders { get; set; }
     public DbSet<Pet> Pets { get; set; }
-    public DbSet<ContactInfo> ContactInfos { get; set; }
+    public DbSet<ContactMethod> ContactMethods { get; set; }
     public DbSet<Fact> Facts { get; set; }
     public DbSet<Address> Addresses { get; set; }
     public DbSet<User> Users { get; set; }
@@ -43,8 +43,8 @@ public class CRMDbContext(DbContextOptions<CRMDbContext> options, ICurrentUserSe
         modelBuilder.Entity<Note>().HasIndex(e => new { e.EntityId, e.EntityType });
         modelBuilder.Entity<Pet>().HasIndex(e => new { e.EntityId, e.EntityType });
         modelBuilder.Entity<Reminder>().HasIndex(e => new { e.EntityId, e.EntityType });
-        modelBuilder.Entity<ImportantDate>().HasIndex(e => new { e.EntityId, e.EntityType });
-        modelBuilder.Entity<ContactInfo>().HasIndex(e => new { e.EntityId, e.EntityType });
+        modelBuilder.Entity<SignificantDate>().HasIndex(e => new { e.EntityId, e.EntityType });
+        modelBuilder.Entity<ContactMethod>().HasIndex(e => new { e.EntityId, e.EntityType });
         modelBuilder.Entity<Fact>().HasIndex(e => new { e.EntityId, e.EntityType });
         modelBuilder.Entity<Address>().HasIndex(e => new { e.EntityId, e.EntityType });
         modelBuilder.Entity<Attachment>().HasIndex(e => new { e.EntityId, e.EntityType });
@@ -53,11 +53,11 @@ public class CRMDbContext(DbContextOptions<CRMDbContext> options, ICurrentUserSe
         modelBuilder.Entity<Relationship>().HasIndex(e => new { e.RelatedEntityId, e.EntityType });
 
         var entityTypes = modelBuilder.Model.GetEntityTypes()
-            .Where(e => typeof(CRMBaseEntity).IsAssignableFrom(e.ClrType));
+            .Where(e => typeof(BaseEntity).IsAssignableFrom(e.ClrType));
 
         foreach (var entityType in entityTypes)
         {
-            modelBuilder.Entity(entityType.Name).HasIndex(nameof(CRMBaseEntity.UserId));
+            modelBuilder.Entity(entityType.Name).HasIndex(nameof(BaseEntity.UserId));
 
             if (!typeof(IGlobalEntity).IsAssignableFrom(entityType.ClrType))
             {
@@ -82,7 +82,7 @@ public class CRMDbContext(DbContextOptions<CRMDbContext> options, ICurrentUserSe
         );
     }
 
-    private void ConfigureGlobalFilter<T>(ModelBuilder modelBuilder) where T : CRMBaseEntity
+    private void ConfigureGlobalFilter<T>(ModelBuilder modelBuilder) where T : BaseEntity
     {
         modelBuilder.Entity<T>().HasQueryFilter(e => e.UserId == _currentUserService.UserId);
     }
@@ -101,13 +101,13 @@ public class CRMDbContext(DbContextOptions<CRMDbContext> options, ICurrentUserSe
 
     private void UpdateAuditFields()
     {
-        IEnumerable<Microsoft.EntityFrameworkCore.ChangeTracking.EntityEntry<CRMBaseEntity>> entries = ChangeTracker.Entries<CRMBaseEntity>()
+        IEnumerable<Microsoft.EntityFrameworkCore.ChangeTracking.EntityEntry<BaseEntity>> entries = ChangeTracker.Entries<BaseEntity>()
             .Where(e => e.State is EntityState.Added or EntityState.Modified);
 
         string username = GetUsername();
         string? userId = GetUserId();
 
-        foreach (Microsoft.EntityFrameworkCore.ChangeTracking.EntityEntry<CRMBaseEntity>? entry in entries)
+        foreach (Microsoft.EntityFrameworkCore.ChangeTracking.EntityEntry<BaseEntity>? entry in entries)
         {
             DateTime now = DateTime.UtcNow;
 
@@ -127,9 +127,9 @@ public class CRMDbContext(DbContextOptions<CRMDbContext> options, ICurrentUserSe
             {
                 entry.Entity.LastChangedDate = now;
                 entry.Entity.LastChangedBy = username;
-                entry.Property(nameof(CRMBaseEntity.CreatedDate)).IsModified = false;
-                entry.Property(nameof(CRMBaseEntity.CreatedBy)).IsModified = false;
-                entry.Property(nameof(CRMBaseEntity.UserId)).IsModified = false;
+                entry.Property(nameof(BaseEntity.CreatedDate)).IsModified = false;
+                entry.Property(nameof(BaseEntity.CreatedBy)).IsModified = false;
+                entry.Property(nameof(BaseEntity.UserId)).IsModified = false;
             }
         }
     }

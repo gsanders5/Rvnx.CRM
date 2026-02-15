@@ -1,18 +1,17 @@
-@model Rvnx.CRM.Core.DTOs.Common.ImportantDateDto
+@model Rvnx.CRM.Core.DTOs.Common.SignificantDateDto
 
 @{
-    ViewData["Title"] = "Edit Important Date";
+    ViewData["Title"] = "Create Important Date";
 }
 
-<h1>Edit Important Date</h1>
+<h1>Create Important Date</h1>
 
 <h4>Important Date</h4>
 <hr />
 <div class="row">
     <div class="col-md-4">
-        <form asp-action="Edit">
+        <form asp-action="Create">
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-            <input type="hidden" asp-for="Id" />
             <input type="hidden" asp-for="EntityId" />
             <input type="hidden" asp-for="EntityType" />
 
@@ -32,7 +31,7 @@
                 <span asp-validation-for="Description" class="text-danger"></span>
             </div>
             <div class="form-group mt-3">
-                <input type="submit" value="Save" class="btn btn-primary" />
+                <input type="submit" value="Create" class="btn btn-primary" />
                 <a asp-controller="@(Model.EntityType == Rvnx.CRM.Core.Constants.EntityTypes.Person ? "Contacts" : "Home")" asp-action="Details" asp-route-id="@Model.EntityId" class="btn btn-secondary">Back</a>
             </div>
         </form>

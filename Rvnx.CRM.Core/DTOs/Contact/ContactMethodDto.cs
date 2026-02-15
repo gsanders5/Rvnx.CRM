@@ -3,9 +3,9 @@ using Rvnx.CRM.Core.Enumerations;
 
 namespace Rvnx.CRM.Core.DTOs.Contact
 {
-    public class ContactInfoDto : BaseDto
+    public class ContactMethodDto : BaseDto
     {
-        public ContactInfoType Type { get; set; }
+        public ContactMethodType Type { get; set; }
         public string Value { get; set; } = string.Empty;
         public string? Label { get; set; }
         public Guid EntityId { get; set; }

@@ -2,7 +2,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace Rvnx.CRM.Core.Models.Base
 {
-    public abstract class CRMGenericEntity : CRMBaseEntity
+    public abstract class PolymorphicEntity : BaseEntity
     {
         [Required]
         [Display(Name = "Entity ID")]

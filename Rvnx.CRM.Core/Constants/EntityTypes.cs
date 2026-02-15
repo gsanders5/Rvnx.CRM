@@ -9,7 +9,7 @@ public static class EntityTypes
     // Auxiliary Entities
     public const string Note = "Note";
     public const string Reminder = "Reminder";
-    public const string ImportantDate = "ImportantDate";
+    public const string SignificantDate = "SignificantDate";
     public const string Relationship = "Relationship";
     public const string Attachment = "Attachment";
 
@@ -19,7 +19,7 @@ public static class EntityTypes
         Opportunity,
         Note,
         Reminder,
-        ImportantDate,
+        SignificantDate,
         Relationship,
         Attachment
     };

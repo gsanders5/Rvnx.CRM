@@ -9,19 +9,19 @@ using Rvnx.CRM.Web.Controllers.Base;
 
 namespace Rvnx.CRM.Web.Controllers
 {
-    public class ImportantDatesController : BaseAuthorizedController
+    public class SignificantDatesController : AuthorizedController
     {
         private readonly IRepository _repository;
 
-        public ImportantDatesController(IRepository repository)
+        public SignificantDatesController(IRepository repository)
         {
             _repository = repository;
         }
 
-        // GET: ImportantDates/Create
+        // GET: SignificantDates/Create
         public IActionResult Create(Guid entityId, string entityType)
         {
-            return View(new ImportantDateDto
+            return View(new SignificantDateDto
             {
                 EntityId = entityId,
                 EntityType = entityType,
@@ -29,17 +29,17 @@ namespace Rvnx.CRM.Web.Controllers
             });
         }
 
-        // POST: ImportantDates/Create
+        // POST: SignificantDates/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Id,Title,Description,Date,EntityId,EntityType")] ImportantDateDto dto)
+        public async Task<IActionResult> Create([Bind("Id,Title,Description,Date,EntityId,EntityType")] SignificantDateDto dto)
         {
             if (ModelState.IsValid)
             {
                 // Enforce unique Birthday
                 if (string.Equals(dto.Title, "Birthday", StringComparison.OrdinalIgnoreCase))
                 {
-                    var existingBirthday = (await _repository.ListAsync<ImportantDate>(d =>
+                    var existingBirthday = (await _repository.ListAsync<SignificantDate>(d =>
                         d.EntityId == dto.EntityId &&
                         d.EntityType == dto.EntityType &&
                         d.Title == "Birthday")).Any();
@@ -51,7 +51,7 @@ namespace Rvnx.CRM.Web.Controllers
                     }
                 }
 
-                var importantDate = new ImportantDate
+                var importantDate = new SignificantDate
                 {
                     Id = Guid.NewGuid(),
                     Title = dto.Title,
@@ -70,19 +70,19 @@ namespace Rvnx.CRM.Web.Controllers
             return View(dto);
         }
 
-        // GET: ImportantDates/Edit/5
+        // GET: SignificantDates/Edit/5
         public async Task<IActionResult> Edit(Guid? id)
         {
             if (id == null) return NotFound();
 
-            var importantDate = await _repository.GetByIdAsync<ImportantDate>(id.Value);
+            var importantDate = await _repository.GetByIdAsync<SignificantDate>(id.Value);
             return importantDate == null ? NotFound() : View(importantDate.ToDto());
         }
 
-        // POST: ImportantDates/Edit/5
+        // POST: SignificantDates/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(Guid id, [Bind("Id,Title,Description,Date,EntityId,EntityType")] ImportantDateDto dto)
+        public async Task<IActionResult> Edit(Guid id, [Bind("Id,Title,Description,Date,EntityId,EntityType")] SignificantDateDto dto)
         {
             if (id != dto.Id) return NotFound();
 
@@ -90,14 +90,14 @@ namespace Rvnx.CRM.Web.Controllers
             {
                 try
                 {
-                    var importantDate = await _repository.GetByIdAsync<ImportantDate>(id);
+                    var importantDate = await _repository.GetByIdAsync<SignificantDate>(id);
                     if (importantDate == null) return NotFound();
 
                     // Enforce unique Birthday (if title changed to Birthday)
                     if (string.Equals(dto.Title, "Birthday", StringComparison.OrdinalIgnoreCase) &&
                         !string.Equals(importantDate.Title, "Birthday", StringComparison.OrdinalIgnoreCase))
                     {
-                        var existingBirthday = (await _repository.ListAsync<ImportantDate>(d =>
+                        var existingBirthday = (await _repository.ListAsync<SignificantDate>(d =>
                             d.EntityId == dto.EntityId &&
                             d.EntityType == dto.EntityType &&
                             d.Title == "Birthday")).Any();
@@ -118,7 +118,7 @@ namespace Rvnx.CRM.Web.Controllers
                 }
                 catch (DbUpdateConcurrencyException)
                 {
-                    if (!await _repository.ExistsAsync<ImportantDate>(dto.Id)) return NotFound();
+                    if (!await _repository.ExistsAsync<SignificantDate>(dto.Id)) return NotFound();
                     else throw;
                 }
                 return RedirectToAction("Details", GetControllerForEntity(dto.EntityType), new { id = dto.EntityId });
@@ -126,27 +126,27 @@ namespace Rvnx.CRM.Web.Controllers
             return View(dto);
         }
 
-        // GET: ImportantDates/Delete/5
+        // GET: SignificantDates/Delete/5
         public async Task<IActionResult> Delete(Guid? id)
         {
             if (id == null) return NotFound();
 
-            var importantDate = await _repository.GetByIdAsync<ImportantDate>(id.Value);
+            var importantDate = await _repository.GetByIdAsync<SignificantDate>(id.Value);
             return importantDate == null ? NotFound() : View(importantDate.ToDto());
         }
 
-        // POST: ImportantDates/Delete/5
+        // POST: SignificantDates/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(Guid id)
         {
-            var importantDate = await _repository.GetByIdAsync<ImportantDate>(id);
+            var importantDate = await _repository.GetByIdAsync<SignificantDate>(id);
             if (importantDate != null)
             {
                 var entityId = importantDate.EntityId;
                 var entityType = importantDate.EntityType;
 
-                await _repository.DeleteAsync<ImportantDate>(id);
+                await _repository.DeleteAsync<SignificantDate>(id);
                 await _repository.SaveChangesAsync();
 
                 return RedirectToAction("Details", GetControllerForEntity(entityType), new { id = entityId });

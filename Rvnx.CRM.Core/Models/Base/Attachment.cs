@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace Rvnx.CRM.Core.Models.Base;
 
 [Table("Attachment")]
-public class Attachment : CRMGenericEntity
+public class Attachment : PolymorphicEntity
 {
     [Required]
     [MaxLength(100)]

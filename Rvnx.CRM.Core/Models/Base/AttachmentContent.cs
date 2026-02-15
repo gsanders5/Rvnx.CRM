@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace Rvnx.CRM.Core.Models.Base;
 
 [Table("AttachmentContent")]
-public class AttachmentContent : CRMBaseEntity
+public class AttachmentContent : BaseEntity
 {
     [Required]
     public byte[] Content { get; set; } = [];

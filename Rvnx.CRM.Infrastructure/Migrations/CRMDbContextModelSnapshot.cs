@@ -342,7 +342,7 @@ namespace Rvnx.CRM.Infrastructure.Migrations
                     b.ToTable("Contact");
                 });
 
-            modelBuilder.Entity("Rvnx.CRM.Core.Models.Contact.ContactInfo", b =>
+            modelBuilder.Entity("Rvnx.CRM.Core.Models.Contact.ContactMethod", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -392,7 +392,7 @@ namespace Rvnx.CRM.Infrastructure.Migrations
 
                     b.HasIndex("EntityId", "EntityType");
 
-                    b.ToTable("ContactInfo");
+                    b.ToTable("ContactMethod");
                 });
 
             modelBuilder.Entity("Rvnx.CRM.Core.Models.Contact.Fact", b =>
@@ -751,7 +751,7 @@ namespace Rvnx.CRM.Infrastructure.Migrations
                         });
                 });
 
-            modelBuilder.Entity("Rvnx.CRM.Core.Models.Dates.ImportantDate", b =>
+            modelBuilder.Entity("Rvnx.CRM.Core.Models.Dates.SignificantDate", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -799,7 +799,7 @@ namespace Rvnx.CRM.Infrastructure.Migrations
 
                     b.HasIndex("EntityId", "EntityType");
 
-                    b.ToTable("ImportantDate");
+                    b.ToTable("SignificantDate");
                 });
 
             modelBuilder.Entity("Rvnx.CRM.Core.Models.Dates.Reminder", b =>

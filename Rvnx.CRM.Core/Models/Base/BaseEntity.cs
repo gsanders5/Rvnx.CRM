@@ -2,7 +2,7 @@
 
 namespace Rvnx.CRM.Core.Models.Base;
 
-public abstract class CRMBaseEntity
+public abstract class BaseEntity
 {
     [Key]
     [Required]

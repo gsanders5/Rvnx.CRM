@@ -8,7 +8,7 @@ using Rvnx.CRM.Web.Controllers.Base;
 
 namespace Rvnx.CRM.Web.Controllers
 {
-    public class RemindersController : BaseAuthorizedController
+    public class RemindersController : AuthorizedController
     {
         private readonly IRepository _repository;
 

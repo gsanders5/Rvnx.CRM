@@ -9,7 +9,7 @@ using System.Diagnostics;
 
 namespace Rvnx.CRM.Web.Controllers
 {
-    public class HomeController : BaseAuthorizedController
+    public class HomeController : AuthorizedController
     {
         private readonly ILogger<HomeController> _logger;
         private readonly IRepository _repository;
@@ -56,7 +56,7 @@ namespace Rvnx.CRM.Web.Controllers
             }
 
             // 3. Fetch Important Dates (Birthdays, Anniversaries, etc.)
-            var importantDates = await _repository.ListAsync<ImportantDate>(d => d.EntityType == EntityTypes.Person);
+            var importantDates = await _repository.ListAsync<SignificantDate>(d => d.EntityType == EntityTypes.Person);
             var today = DateTime.Today;
 
             foreach (var date in importantDates)

@@ -9,7 +9,7 @@ using Rvnx.CRM.Web.Controllers.Base;
 
 namespace Rvnx.CRM.Web.Controllers
 {
-    public class DebugOperationsController : BaseAuthorizedController
+    public class DebugOperationsController : AuthorizedController
     {
         private readonly IRepository _repository;
 
@@ -36,12 +36,12 @@ namespace Rvnx.CRM.Web.Controllers
 
                 // Detach related entities to add them separately (EF Core tracking issue prevention)
                 var addresses = contact.Addresses?.ToList();
-                var infos = contact.ContactInfos?.ToList();
-                var dates = contact.ImportantDates?.ToList();
+                var infos = contact.ContactMethods?.ToList();
+                var dates = contact.SignificantDates?.ToList();
 
                 contact.Addresses = [];
-                contact.ContactInfos = [];
-                contact.ImportantDates = [];
+                contact.ContactMethods = [];
+                contact.SignificantDates = [];
 
                 await _repository.AddAsync(contact);
                 await _repository.SaveChangesAsync(); // Save contact first to ensure it exists
@@ -99,10 +99,10 @@ namespace Rvnx.CRM.Web.Controllers
             var reminders = await _repository.ListAsync<Reminder>();
             await _repository.DeleteRangeAsync(reminders);
 
-            var dates = await _repository.ListAsync<ImportantDate>();
+            var dates = await _repository.ListAsync<SignificantDate>();
             await _repository.DeleteRangeAsync(dates);
 
-            var infos = await _repository.ListAsync<ContactInfo>();
+            var infos = await _repository.ListAsync<ContactMethod>();
             await _repository.DeleteRangeAsync(infos);
 
             var facts = await _repository.ListAsync<Fact>();

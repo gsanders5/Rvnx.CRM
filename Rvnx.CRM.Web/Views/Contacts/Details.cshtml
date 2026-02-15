@@ -60,27 +60,27 @@
             <div class="card mb-4 border shadow-sm">
                 <div class="card-header bg-transparent border-0 pt-3 px-3 d-flex justify-content-between align-items-center">
                     <h5 class="card-title mb-0 fw-bold"><i class="bi bi-person-badge"></i> Contact Info</h5>
-                    <a asp-controller="ContactInfos" asp-action="Create" asp-route-entityId="@Model.Id" asp-route-entityType="Person" class="btn btn-sm btn-outline-primary"><i class="bi bi-plus-lg"></i> Add</a>
+                    <a asp-controller="ContactMethods" asp-action="Create" asp-route-entityId="@Model.Id" asp-route-entityType="Person" class="btn btn-sm btn-outline-primary"><i class="bi bi-plus-lg"></i> Add</a>
                 </div>
                 <div class="card-body px-3 pb-3">
-                    @if (Model.ContactInfos != null && Model.ContactInfos.Any())
+                    @if (Model.ContactMethods != null && Model.ContactMethods.Any())
                     {
                         <ul class="list-group list-group-flush">
-                            @foreach (var info in Model.ContactInfos)
+                            @foreach (var info in Model.ContactMethods)
                             {
                                 <li class="list-group-item d-flex justify-content-between align-items-center px-0">
                                     <div>
                                         <div class="fw-bold">@info.Type @(string.IsNullOrEmpty(info.Label) ? "" : $"({info.Label})")</div>
                                         <div class="text-break">
-                                            @if (info.Type == ContactInfoType.Email)
+                                            @if (info.Type == ContactMethodType.Email)
                                             {
                                                 <a href="mailto:@info.Value">@info.Value</a>
                                             }
-                                            else if (info.Type == ContactInfoType.Phone)
+                                            else if (info.Type == ContactMethodType.Phone)
                                             {
                                                 <a href="tel:@info.Value">@info.Value</a>
                                             }
-                                            else if (info.Type == ContactInfoType.Website || info.Value.StartsWith("http"))
+                                            else if (info.Type == ContactMethodType.Website || info.Value.StartsWith("http"))
                                             {
                                                 <a href="@info.Value" target="_blank">@info.Value</a>
                                             }
@@ -91,8 +91,8 @@
                                         </div>
                                     </div>
                                     <div class="btn-group btn-group-sm">
-                                        <a asp-controller="ContactInfos" asp-action="Edit" asp-route-id="@info.Id" class="btn btn-outline-secondary" title="Edit"><i class="bi bi-pencil-square"></i></a>
-                                        <a asp-controller="ContactInfos" asp-action="Delete" asp-route-id="@info.Id" class="btn btn-outline-danger" title="Delete"><i class="bi bi-trash"></i></a>
+                                        <a asp-controller="ContactMethods" asp-action="Edit" asp-route-id="@info.Id" class="btn btn-outline-secondary" title="Edit"><i class="bi bi-pencil-square"></i></a>
+                                        <a asp-controller="ContactMethods" asp-action="Delete" asp-route-id="@info.Id" class="btn btn-outline-danger" title="Delete"><i class="bi bi-trash"></i></a>
                                     </div>
                                 </li>
                             }
@@ -238,13 +238,13 @@
             <div class="card mb-4">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h5 class="card-title mb-0"><i class="bi bi-calendar-event"></i> Important Dates</h5>
-                    <a asp-controller="ImportantDates" asp-action="Create" asp-route-entityId="@Model.Id" asp-route-entityType="Person" class="btn btn-sm btn-outline-primary"><i class="bi bi-plus-lg"></i> Add</a>
+                    <a asp-controller="SignificantDates" asp-action="Create" asp-route-entityId="@Model.Id" asp-route-entityType="Person" class="btn btn-sm btn-outline-primary"><i class="bi bi-plus-lg"></i> Add</a>
                 </div>
                 <div class="card-body">
-                    @if (Model.ImportantDates != null && Model.ImportantDates.Any())
+                    @if (Model.SignificantDates != null && Model.SignificantDates.Any())
                     {
                         <ul class="list-group">
-                            @foreach (var date in Model.ImportantDates.OrderBy(d => d.Date))
+                            @foreach (var date in Model.SignificantDates.OrderBy(d => d.Date))
                             {
                                 <li class="list-group-item">
                                     <div class="d-flex w-100 justify-content-between">
@@ -261,8 +261,8 @@
                                             }
 
                                             <div class="btn-group btn-group-sm ml-2">
-                                                <a asp-controller="ImportantDates" asp-action="Edit" asp-route-id="@date.Id" class="btn btn-outline-secondary" title="Edit"><i class="bi bi-pencil-square"></i></a>
-                                                <a asp-controller="ImportantDates" asp-action="Delete" asp-route-id="@date.Id" class="btn btn-outline-danger" title="Delete"><i class="bi bi-trash"></i></a>
+                                                <a asp-controller="SignificantDates" asp-action="Edit" asp-route-id="@date.Id" class="btn btn-outline-secondary" title="Edit"><i class="bi bi-pencil-square"></i></a>
+                                                <a asp-controller="SignificantDates" asp-action="Delete" asp-route-id="@date.Id" class="btn btn-outline-danger" title="Delete"><i class="bi bi-trash"></i></a>
                                             </div>
                                         </div>
                                     </div>

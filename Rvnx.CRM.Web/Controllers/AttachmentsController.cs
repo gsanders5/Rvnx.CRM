@@ -5,7 +5,7 @@ using Rvnx.CRM.Web.Controllers.Base;
 
 namespace Rvnx.CRM.Web.Controllers
 {
-    public class AttachmentsController : BaseAuthorizedController
+    public class AttachmentsController : AuthorizedController
     {
         private readonly IRepository _repository;
         private static readonly string[] AllowedExtensions = { ".jpg", ".jpeg", ".png", ".gif", ".pdf", ".txt", ".doc", ".docx", ".xls", ".xlsx" };

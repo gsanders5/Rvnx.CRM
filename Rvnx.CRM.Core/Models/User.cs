@@ -3,7 +3,7 @@ using Rvnx.CRM.Core.Models.Base;
 
 namespace Rvnx.CRM.Core.Models;
 
-public class User : CRMBaseEntity
+public class User : BaseEntity
 {
     [Required]
     [MaxLength(256)]

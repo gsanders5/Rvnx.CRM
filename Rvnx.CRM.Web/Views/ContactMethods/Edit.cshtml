@@ -1,4 +1,4 @@
-@model Rvnx.CRM.Core.Models.Contact.ContactInfo
+@model Rvnx.CRM.Core.Models.Contact.ContactMethod
 
 @{
     ViewData["Title"] = "Edit Contact Info";
@@ -16,7 +16,7 @@
 
             <div class="mb-3">
                 <label asp-for="Type" class="form-label"></label>
-                <select asp-for="Type" asp-items="Html.GetEnumSelectList<Rvnx.CRM.Core.Enumerations.ContactInfoType>()" class="form-select"></select>
+                <select asp-for="Type" asp-items="Html.GetEnumSelectList<Rvnx.CRM.Core.Enumerations.ContactMethodType>()" class="form-select"></select>
                 <span asp-validation-for="Type" class="text-danger"></span>
             </div>
             <div class="mb-3">

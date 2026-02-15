@@ -8,7 +8,7 @@ using Rvnx.CRM.Web.Controllers.Base;
 
 namespace Rvnx.CRM.Web.Controllers
 {
-    public class RelationshipsController : BaseAuthorizedController
+    public class RelationshipsController : AuthorizedController
     {
         private readonly IRepository _repository;
 

@@ -6,7 +6,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace Rvnx.CRM.Core.Models.Contact;
 
 [Table("RelationshipType")]
-public class RelationshipType : CRMBaseEntity, IGlobalEntity
+public class RelationshipType : BaseEntity, IGlobalEntity
 {
     [Required]
     [MaxLength(100)]

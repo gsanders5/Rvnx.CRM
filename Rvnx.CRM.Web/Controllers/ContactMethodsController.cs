@@ -6,11 +6,11 @@ using Rvnx.CRM.Web.Controllers.Base;
 
 namespace Rvnx.CRM.Web.Controllers
 {
-    public class ContactInfosController : BaseAuthorizedController
+    public class ContactMethodsController : AuthorizedController
     {
         private readonly IRepository _repository;
 
-        public ContactInfosController(IRepository repository)
+        public ContactMethodsController(IRepository repository)
         {
             _repository = repository;
         }
@@ -19,12 +19,12 @@ namespace Rvnx.CRM.Web.Controllers
         {
             return entityId == Guid.Empty || string.IsNullOrEmpty(entityType)
                 ? NotFound()
-                : View(new ContactInfo { EntityId = entityId, EntityType = entityType });
+                : View(new ContactMethod { EntityId = entityId, EntityType = entityType });
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("EntityId,EntityType,Type,Value,Label")] ContactInfo contactInfo)
+        public async Task<IActionResult> Create([Bind("EntityId,EntityType,Type,Value,Label")] ContactMethod contactInfo)
         {
             if (ModelState.IsValid)
             {
@@ -39,13 +39,13 @@ namespace Rvnx.CRM.Web.Controllers
         public async Task<IActionResult> Edit(Guid? id)
         {
             if (id == null) return NotFound();
-            var contactInfo = await _repository.GetByIdAsync<ContactInfo>(id.Value);
+            var contactInfo = await _repository.GetByIdAsync<ContactMethod>(id.Value);
             return contactInfo == null ? NotFound() : View(contactInfo);
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(Guid id, [Bind("Id,EntityId,EntityType,Type,Value,Label")] ContactInfo contactInfo)
+        public async Task<IActionResult> Edit(Guid id, [Bind("Id,EntityId,EntityType,Type,Value,Label")] ContactMethod contactInfo)
         {
             if (id != contactInfo.Id) return NotFound();
 
@@ -61,7 +61,7 @@ namespace Rvnx.CRM.Web.Controllers
         public async Task<IActionResult> Delete(Guid? id)
         {
             if (id == null) return NotFound();
-            var contactInfo = await _repository.GetByIdAsync<ContactInfo>(id.Value);
+            var contactInfo = await _repository.GetByIdAsync<ContactMethod>(id.Value);
             return contactInfo == null ? NotFound() : View(contactInfo);
         }
 
@@ -69,12 +69,12 @@ namespace Rvnx.CRM.Web.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(Guid id)
         {
-            var contactInfo = await _repository.GetByIdAsync<ContactInfo>(id);
+            var contactInfo = await _repository.GetByIdAsync<ContactMethod>(id);
             if (contactInfo != null)
             {
                 var entityId = contactInfo.EntityId;
                 var entityType = contactInfo.EntityType;
-                await _repository.DeleteAsync<ContactInfo>(id);
+                await _repository.DeleteAsync<ContactMethod>(id);
                 await _repository.SaveChangesAsync();
                 return RedirectToEntity(entityId, entityType);
             }

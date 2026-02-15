@@ -79,7 +79,7 @@ namespace Rvnx.CRM.Infrastructure.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "ContactInfo",
+                name: "ContactMethod",
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "TEXT", nullable: false),
@@ -96,7 +96,7 @@ namespace Rvnx.CRM.Infrastructure.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_ContactInfo", x => x.Id);
+                    table.PrimaryKey("PK_ContactMethod", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
@@ -120,7 +120,7 @@ namespace Rvnx.CRM.Infrastructure.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "ImportantDate",
+                name: "SignificantDate",
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "TEXT", nullable: false),
@@ -137,7 +137,7 @@ namespace Rvnx.CRM.Infrastructure.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_ImportantDate", x => x.Id);
+                    table.PrimaryKey("PK_SignificantDate", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
@@ -357,8 +357,8 @@ namespace Rvnx.CRM.Infrastructure.Migrations
                 unique: true);
 
             migrationBuilder.CreateIndex(
-                name: "IX_ContactInfo_EntityId_EntityType",
-                table: "ContactInfo",
+                name: "IX_ContactMethod_EntityId_EntityType",
+                table: "ContactMethod",
                 columns: new[] { "EntityId", "EntityType" });
 
             migrationBuilder.CreateIndex(
@@ -372,8 +372,8 @@ namespace Rvnx.CRM.Infrastructure.Migrations
                 columns: new[] { "EntityId", "EntityType" });
 
             migrationBuilder.CreateIndex(
-                name: "IX_ImportantDate_EntityId_EntityType",
-                table: "ImportantDate",
+                name: "IX_SignificantDate_EntityId_EntityType",
+                table: "SignificantDate",
                 columns: new[] { "EntityId", "EntityType" });
 
             migrationBuilder.CreateIndex(
@@ -422,7 +422,7 @@ namespace Rvnx.CRM.Infrastructure.Migrations
                 name: "AttachmentContent");
 
             migrationBuilder.DropTable(
-                name: "ContactInfo");
+                name: "ContactMethod");
 
             migrationBuilder.DropTable(
                 name: "Employer");
@@ -431,7 +431,7 @@ namespace Rvnx.CRM.Infrastructure.Migrations
                 name: "Fact");
 
             migrationBuilder.DropTable(
-                name: "ImportantDate");
+                name: "SignificantDate");
 
             migrationBuilder.DropTable(
                 name: "Note");

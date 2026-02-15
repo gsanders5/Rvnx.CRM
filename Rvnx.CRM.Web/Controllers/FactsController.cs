@@ -6,7 +6,7 @@ using Rvnx.CRM.Web.Controllers.Base;
 
 namespace Rvnx.CRM.Web.Controllers
 {
-    public class FactsController : BaseAuthorizedController
+    public class FactsController : AuthorizedController
     {
         private readonly IRepository _repository;
 
