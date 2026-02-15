@@ -6,6 +6,8 @@ using Rvnx.CRM.Core.Models.Base;
 using Rvnx.CRM.Core.Models.Business;
 using Rvnx.CRM.Core.Models.Contact;
 using Rvnx.CRM.Core.Models.Dates;
+using System.Linq.Expressions;
+using System.Reflection;
 
 namespace Rvnx.CRM.Infrastructure.Data;
 
@@ -53,9 +55,24 @@ public class CRMDbContext(DbContextOptions<CRMDbContext> options, ICurrentUserSe
         modelBuilder.Entity<Relationship>().HasIndex(e => new { e.EntityId, e.EntityType });
         modelBuilder.Entity<Relationship>().HasIndex(e => new { e.RelatedEntityId, e.EntityType });
 
+        // Apply Global Query Filters to CRMBaseEntity
+        // Exclude specific types that are system-managed or shared
+        var entityTypes = modelBuilder.Model.GetEntityTypes()
+            .Where(e => typeof(CRMBaseEntity).IsAssignableFrom(e.ClrType))
+            .Where(e => e.ClrType != typeof(RelationshipType)) // System Data
+            .Where(e => e.ClrType != typeof(User)); // Auth Data
+
+        foreach (var entityType in entityTypes)
+        {
+            var method = typeof(CRMDbContext)
+                .GetMethod(nameof(ConfigureGlobalFilter), BindingFlags.NonPublic | BindingFlags.Instance)
+                ?.MakeGenericMethod(entityType.ClrType);
+
+            method?.Invoke(this, new object[] { modelBuilder });
+        }
+
         // Seed RelationshipTypes
         DateTime seedDate = new(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc);
-        // Using fixed GUIDs for predictability in tests/code if needed, but they are random V4
         modelBuilder.Entity<RelationshipType>().HasData(
             new RelationshipType { Id = Guid.Parse("7c1f8d22-1b6a-4c28-9c1e-3f5a2b8e9d1a"), Name = "Parent", OppositeName = "Child", EntityType = EntityTypes.Person, CreatedBy = "System", LastChangedBy = "System", CreatedDate = seedDate, LastChangedDate = seedDate },
             new RelationshipType { Id = Guid.Parse("b2e9a5c8-7f4d-4a1b-8c6e-5f9d3a0e2b4c"), Name = "Spouse", OppositeName = "Spouse", EntityType = EntityTypes.Person, CreatedBy = "System", LastChangedBy = "System", CreatedDate = seedDate, LastChangedDate = seedDate },
@@ -66,6 +83,11 @@ public class CRMDbContext(DbContextOptions<CRMDbContext> options, ICurrentUserSe
             new RelationshipType { Id = Guid.Parse("09876543-210f-edcb-a987-6543210fedcb"), Name = "Teacher", OppositeName = "Student", EntityType = EntityTypes.Person, CreatedBy = "System", LastChangedBy = "System", CreatedDate = seedDate, LastChangedDate = seedDate },
             new RelationshipType { Id = Guid.Parse("fedcba98-7654-3210-fedc-ba9876543210"), Name = "Parent Company", OppositeName = "Subsidiary", EntityType = EntityTypes.Company, CreatedBy = "System", LastChangedBy = "System", CreatedDate = seedDate, LastChangedDate = seedDate }
         );
+    }
+
+    private void ConfigureGlobalFilter<T>(ModelBuilder modelBuilder) where T : CRMBaseEntity
+    {
+        modelBuilder.Entity<T>().HasQueryFilter(e => e.UserId == _currentUserService.UserId);
     }
 
     public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
@@ -86,7 +108,7 @@ public class CRMDbContext(DbContextOptions<CRMDbContext> options, ICurrentUserSe
             .Where(e => e.State is EntityState.Added or EntityState.Modified);
 
         string username = GetUsername();
-        string userId = GetUserId();
+        string? userId = GetUserId();
 
         foreach (Microsoft.EntityFrameworkCore.ChangeTracking.EntityEntry<CRMBaseEntity>? entry in entries)
         {
@@ -99,9 +121,6 @@ public class CRMDbContext(DbContextOptions<CRMDbContext> options, ICurrentUserSe
                 entry.Entity.CreatedBy = username;
                 entry.Entity.LastChangedBy = username;
 
-                // Only set UserId if not already set (or always set it?)
-                // The requirement is "Modify the DB to store this user guid whenever a user interacts with the DB"
-                // So I should set it.
                 if (string.IsNullOrEmpty(entry.Entity.UserId))
                 {
                     entry.Entity.UserId = userId;
@@ -113,7 +132,7 @@ public class CRMDbContext(DbContextOptions<CRMDbContext> options, ICurrentUserSe
                 entry.Entity.LastChangedBy = username;
                 entry.Property(nameof(CRMBaseEntity.CreatedDate)).IsModified = false;
                 entry.Property(nameof(CRMBaseEntity.CreatedBy)).IsModified = false;
-                entry.Property(nameof(CRMBaseEntity.UserId)).IsModified = false; // Usually UserId doesn't change on modify
+                entry.Property(nameof(CRMBaseEntity.UserId)).IsModified = false;
             }
         }
     }
@@ -123,8 +142,8 @@ public class CRMDbContext(DbContextOptions<CRMDbContext> options, ICurrentUserSe
         return _currentUserService.UserName ?? "System";
     }
 
-    private string GetUserId()
+    private string? GetUserId()
     {
-        return _currentUserService.UserId ?? "System";
+        return _currentUserService.UserId;
     }
 }

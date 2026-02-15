@@ -20,7 +20,7 @@ public class CurrentUserService : ICurrentUserService
         {
             if (!IsAuthEnabled())
             {
-                return "System";
+                return null;
             }
 
             return _httpContextAccessor.HttpContext?.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
@@ -36,7 +36,8 @@ public class CurrentUserService : ICurrentUserService
                 return "System";
             }
             return _httpContextAccessor.HttpContext?.User?.FindFirst(ClaimTypes.Name)?.Value
-                ?? _httpContextAccessor.HttpContext?.User?.FindFirst(ClaimTypes.Email)?.Value;
+                ?? _httpContextAccessor.HttpContext?.User?.FindFirst(ClaimTypes.Email)?.Value
+                ?? "System";
         }
     }
 

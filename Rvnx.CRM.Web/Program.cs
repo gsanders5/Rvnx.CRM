@@ -69,7 +69,9 @@ namespace Rvnx.CRM.Web
 
                             if (!string.IsNullOrEmpty(subject))
                             {
-                                var user = await dbContext.Users.FirstOrDefaultAsync(u => u.SubjectId == subject);
+                                // Lookup user using IgnoreQueryFilters to ensure we can see all users (if User table was filtered, but it's not)
+                                // Still good practice in case we add filter later.
+                                var user = await dbContext.Users.IgnoreQueryFilters().FirstOrDefaultAsync(u => u.SubjectId == subject);
                                 if (user == null)
                                 {
                                     user = new User
@@ -79,14 +81,7 @@ namespace Rvnx.CRM.Web
                                         DisplayName = name ?? email,
                                         CreatedBy = "System",
                                         LastChangedBy = "System",
-                                        // UserId will be set by DB context if null, but here we are bypassing context logic or using it?
-                                        // Context logic relies on CurrentUserService.
-                                        // But CurrentUserService relies on HttpContext which is being built.
-                                        // The user is not yet fully authenticated in HttpContext.User.
-                                        // So CurrentUserService.UserId might be null or System.
-                                        // So we should let Context handle it or set it manually?
-                                        // If we set UserId to "System", it means "System" created this User record. Which is fine.
-                                        UserId = "System"
+                                        UserId = "System" // System owns the user record mapping
                                     };
                                     dbContext.Users.Add(user);
                                     await dbContext.SaveChangesAsync();
