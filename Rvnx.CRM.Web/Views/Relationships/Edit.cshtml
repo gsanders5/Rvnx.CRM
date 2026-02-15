@@ -19,8 +19,9 @@
             <input type="hidden" asp-for="CreatedBy" />
             <input type="hidden" asp-for="UserId" />
 
-            <div class="mb-3">
-                <label asp-for="RelatedEntityId" class="form-label">Related Entity</label>
+            <div class="form-floating mb-3">
+    <textarea asp-for="Description" class="form-control" rows="3" placeholder="Description"></textarea>
+    <label asp-for="RelatedEntityId">Related Entity</label>
                 <select asp-for="RelatedEntityId" class="form-control" asp-items="ViewBag.RelatedEntityId">
                     <option value="">-- Select Related Entity --</option>
                 </select>
@@ -37,21 +38,20 @@
 
             <div class="mb-3">
                 <label asp-for="Description" class="form-label"></label>
-                <textarea asp-for="Description" class="form-control" rows="3"></textarea>
-                <span asp-validation-for="Description" class="text-danger"></span>
-            </div>
+    <span asp-validation-for="Description" class="text-danger"></span>
+</div>
 
-            <div class="mb-3">
-                <label asp-for="StartDate" class="form-label"></label>
-                <input asp-for="StartDate" class="form-control" type="date" />
-                <span asp-validation-for="StartDate" class="text-danger"></span>
-            </div>
+            <div class="form-floating mb-3">
+    <input asp-for="StartDate" class="form-control" type="date"  placeholder="StartDate"/>
+    <label asp-for="StartDate"></label>
+    <span asp-validation-for="StartDate" class="text-danger"></span>
+</div>
 
-             <div class="mb-3">
-                <label asp-for="EndDate" class="form-label"></label>
-                <input asp-for="EndDate" class="form-control" type="date" />
-                <span asp-validation-for="EndDate" class="text-danger"></span>
-            </div>
+             <div class="form-floating mb-3">
+    <input asp-for="EndDate" class="form-control" type="date"  placeholder="EndDate"/>
+    <label asp-for="EndDate"></label>
+    <span asp-validation-for="EndDate" class="text-danger"></span>
+</div>
 
             <div class="form-group mt-3">
                 <input type="submit" value="Save Relationship" class="btn btn-primary" />

@@ -11,53 +11,53 @@
         <form asp-action="Create">
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
 
-            <div class="mb-3">
-                <label asp-for="FirstName" class="form-label"></label>
-                <input asp-for="FirstName" class="form-control" />
-                <span asp-validation-for="FirstName" class="text-danger"></span>
-            </div>
+            <div class="form-floating mb-3">
+    <input asp-for="FirstName" class="form-control"  placeholder="FirstName"/>
+    <label asp-for="FirstName"></label>
+    <span asp-validation-for="FirstName" class="text-danger"></span>
+</div>
 
-            <div class="mb-3">
-                <label asp-for="LastName" class="form-label"></label>
-                <input asp-for="LastName" class="form-control" />
-                <span asp-validation-for="LastName" class="text-danger"></span>
-            </div>
+            <div class="form-floating mb-3">
+    <input asp-for="LastName" class="form-control"  placeholder="LastName"/>
+    <label asp-for="LastName"></label>
+    <span asp-validation-for="LastName" class="text-danger"></span>
+</div>
 
-             <div class="mb-3">
-                <label asp-for="Nickname" class="form-label"></label>
-                <input asp-for="Nickname" class="form-control" />
-                <span asp-validation-for="Nickname" class="text-danger"></span>
-            </div>
+             <div class="form-floating mb-3">
+    <input asp-for="Nickname" class="form-control"  placeholder="Nickname"/>
+    <label asp-for="Nickname"></label>
+    <span asp-validation-for="Nickname" class="text-danger"></span>
+</div>
 
-            <div class="mb-3">
-                <label asp-for="Email" class="form-label"></label>
-                <input asp-for="Email" class="form-control" />
-                <span asp-validation-for="Email" class="text-danger"></span>
-            </div>
+            <div class="form-floating mb-3">
+    <input asp-for="Email" class="form-control"  placeholder="Email"/>
+    <label asp-for="Email"></label>
+    <span asp-validation-for="Email" class="text-danger"></span>
+</div>
 
-            <div class="mb-3">
-                <label asp-for="Phone" class="form-label"></label>
-                <input asp-for="Phone" class="form-control" />
-                <span asp-validation-for="Phone" class="text-danger"></span>
-            </div>
+            <div class="form-floating mb-3">
+    <input asp-for="Phone" class="form-control"  placeholder="Phone"/>
+    <label asp-for="Phone"></label>
+    <span asp-validation-for="Phone" class="text-danger"></span>
+</div>
 
-            <div class="mb-3">
-                <label asp-for="Company" class="form-label"></label>
-                <input asp-for="Company" class="form-control" />
-                <span asp-validation-for="Company" class="text-danger"></span>
-            </div>
+            <div class="form-floating mb-3">
+    <input asp-for="Company" class="form-control"  placeholder="Company"/>
+    <label asp-for="Company"></label>
+    <span asp-validation-for="Company" class="text-danger"></span>
+</div>
 
-            <div class="mb-3">
-                <label asp-for="JobTitle" class="form-label"></label>
-                <input asp-for="JobTitle" class="form-control" />
-                <span asp-validation-for="JobTitle" class="text-danger"></span>
-            </div>
+            <div class="form-floating mb-3">
+    <input asp-for="JobTitle" class="form-control"  placeholder="JobTitle"/>
+    <label asp-for="JobTitle"></label>
+    <span asp-validation-for="JobTitle" class="text-danger"></span>
+</div>
 
-            <div class="mb-3">
-                <label asp-for="Birthday" class="form-label"></label>
-                <input asp-for="Birthday" class="form-control" type="date" />
-                <span asp-validation-for="Birthday" class="text-danger"></span>
-            </div>
+            <div class="form-floating mb-3">
+    <input asp-for="Birthday" class="form-control" type="date"  placeholder="Birthday"/>
+    <label asp-for="Birthday"></label>
+    <span asp-validation-for="Birthday" class="text-danger"></span>
+</div>
 
             <div class="mb-3 form-check">
                 <input asp-for="IsHidden" class="form-check-input" />
