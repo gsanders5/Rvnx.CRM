@@ -1,10 +1,11 @@
 using Rvnx.CRM.Core.DTOs.Common;
+using Rvnx.CRM.Core.Enumerations;
 
 namespace Rvnx.CRM.Core.DTOs.Contact
 {
     public class ContactInfoDto : BaseDto
     {
-        public string Type { get; set; } = string.Empty;
+        public ContactInfoType Type { get; set; }
         public string Value { get; set; } = string.Empty;
         public string? Label { get; set; }
         public Guid EntityId { get; set; }

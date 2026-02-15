@@ -1,4 +1,5 @@
 @using Rvnx.CRM.Core.DTOs.Contact
+@using Rvnx.CRM.Core.Enumerations
 @model ContactDetailDto
 
 @{
@@ -64,17 +65,13 @@
                             <dd class="col-sm-8">@Model.JobTitle</dd>
                         }
 
-                        <dt class="col-sm-4">Birthday</dt>
                         @if (Model.Birthday.HasValue)
                         {
                             var today = DateTime.Today;
                             var age = today.Year - Model.Birthday.Value.Year;
                             if (Model.Birthday.Value.Date > today.AddYears(-age)) age--;
+                            <dt class="col-sm-4">Birthday</dt>
                             <dd class="col-sm-8">@Model.Birthday.Value.ToShortDateString() (@age years old)</dd>
-                        }
-                        else
-                        {
-                            <dd class="col-sm-8">N/A</dd>
                         }
                     </dl>
                 </div>
@@ -96,15 +93,15 @@
                                     <div>
                                         <div class="fw-bold">@info.Type @(string.IsNullOrEmpty(info.Label) ? "" : $"({info.Label})")</div>
                                         <div class="text-break">
-                                            @if (info.Type.Equals("Email", StringComparison.OrdinalIgnoreCase))
+                                            @if (info.Type == ContactInfoType.Email)
                                             {
                                                 <a href="mailto:@info.Value">@info.Value</a>
                                             }
-                                            else if (info.Type.Equals("Phone", StringComparison.OrdinalIgnoreCase))
+                                            else if (info.Type == ContactInfoType.Phone)
                                             {
                                                 <a href="tel:@info.Value">@info.Value</a>
                                             }
-                                            else if (info.Type.Equals("Website", StringComparison.OrdinalIgnoreCase) || info.Value.StartsWith("http"))
+                                            else if (info.Type == ContactInfoType.Website || info.Value.StartsWith("http"))
                                             {
                                                 <a href="@info.Value" target="_blank">@info.Value</a>
                                             }
@@ -139,14 +136,24 @@
                     @if (Model.Facts != null && Model.Facts.Any())
                     {
                         var groups = Model.Facts.GroupBy(f => f.Category).OrderBy(g => g.Key);
+
+                        // Category Pills
+                        <div class="mb-3">
+                            @foreach (var group in groups)
+                            {
+                                <span class="badge rounded-pill bg-light text-dark border me-1 mb-1">@group.Key</span>
+                            }
+                        </div>
+
                         foreach (var group in groups)
                         {
-                            <h6 class="text-muted text-uppercase small fw-bold mt-2 mb-1">@group.Key</h6>
+                            <h6 class="text-primary small fw-bold mt-2 mb-1 border-bottom pb-1">@group.Key</h6>
                             <ul class="list-group list-group-flush mb-2">
                                 @foreach (var fact in group)
                                 {
-                                    <li class="list-group-item d-flex justify-content-between align-items-center px-0 py-1 border-0">
-                                        <span>@fact.Value</span>
+                                    <li class="list-group-item d-flex justify-content-between align-items-center px-0 py-1 border-0 bg-transparent">
+                                        <div class="d-none note-source">@fact.Value</div>
+                                        <div class="note-render"></div>
                                         <div class="btn-group btn-group-sm opacity-50 hover-opacity-100">
                                             <a asp-controller="Facts" asp-action="Edit" asp-route-id="@fact.Id" class="text-secondary me-2"><i class="bi bi-pencil-square"></i></a>
                                             <a asp-controller="Facts" asp-action="Delete" asp-route-id="@fact.Id" class="text-danger"><i class="bi bi-trash"></i></a>
