@@ -16,5 +16,6 @@ public class ImportantDate : CRMGenericEntity
 
     [Required]
     [Display(Name = "Date")]
+    [DataType(DataType.Date)]
     public DateTime Date { get; set; }
 }
