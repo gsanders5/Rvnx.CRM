@@ -1,3 +1,4 @@
+using Rvnx.CRM.Core.Interfaces;
 using Rvnx.CRM.Core.Models.Base;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
@@ -5,7 +6,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace Rvnx.CRM.Core.Models.Contact;
 
 [Table("RelationshipType")]
-public class RelationshipType : CRMBaseEntity
+public class RelationshipType : CRMBaseEntity, IGlobalEntity
 {
     [Required]
     [MaxLength(100)]

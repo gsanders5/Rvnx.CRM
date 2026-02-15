@@ -28,8 +28,6 @@ public class UserSynchronizationService : IUserSynchronizationService
 
         if (!string.IsNullOrEmpty(subject))
         {
-            // Lookup user using IgnoreQueryFilters to ensure we can see all users (if User table was filtered, but it's not)
-            // Still good practice in case we add filter later.
             var user = await _dbContext.Users.IgnoreQueryFilters().FirstOrDefaultAsync(u => u.SubjectId == subject);
 
             if (user == null)
@@ -41,23 +39,39 @@ public class UserSynchronizationService : IUserSynchronizationService
                     DisplayName = name ?? email,
                     CreatedBy = "System",
                     LastChangedBy = "System",
-                    UserId = "System" // System owns the user record mapping
+                    UserId = "System" // Temporary
                 };
                 _dbContext.Users.Add(user);
+                await _dbContext.SaveChangesAsync();
+
+                // Self-assign ownership
+                user.UserId = user.Id.ToString();
                 await _dbContext.SaveChangesAsync();
             }
             else
             {
-                // Optional: Update user details if changed
-                if (user.Email != email || user.DisplayName != name)
+                bool changed = false;
+                if (email != null && user.Email != email)
                 {
-                    if (email != null) user.Email = email;
-                    if (name != null) user.DisplayName = name;
-                    await _dbContext.SaveChangesAsync();
+                    user.Email = email;
+                    changed = true;
                 }
+                if (name != null && user.DisplayName != name)
+                {
+                    user.DisplayName = name;
+                    changed = true;
+                }
+
+                // Ensure legacy/migrated users own their record
+                if (user.UserId == "System")
+                {
+                    user.UserId = user.Id.ToString();
+                    changed = true;
+                }
+
+                if (changed) await _dbContext.SaveChangesAsync();
             }
 
-            // Map external subject to internal User Id (Guid)
             var identity = (ClaimsIdentity)principal.Identity!;
             var nameIdClaim = identity.FindFirst(ClaimTypes.NameIdentifier);
             if (nameIdClaim != null)
@@ -66,7 +80,6 @@ public class UserSynchronizationService : IUserSynchronizationService
             }
             identity.AddClaim(new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()));
 
-            // Ensure Name claim is set for display
             if (!identity.HasClaim(c => c.Type == ClaimTypes.Name) && !string.IsNullOrEmpty(user.DisplayName))
             {
                  identity.AddClaim(new Claim(ClaimTypes.Name, user.DisplayName));

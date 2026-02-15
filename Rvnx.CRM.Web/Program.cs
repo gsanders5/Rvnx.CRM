@@ -16,7 +16,6 @@ namespace Rvnx.CRM.Web
         {
             var builder = WebApplication.CreateBuilder(args);
 
-            // Add services to the container.
             builder.Services.AddHttpContextAccessor();
             builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
             builder.Services.AddScoped<IUserSynchronizationService, UserSynchronizationService>();
@@ -75,12 +74,10 @@ namespace Rvnx.CRM.Web
                 }
             });
 
-            // Add Infrastructure services
             builder.Services.AddInfrastructure(builder.Configuration);
 
             var app = builder.Build();
 
-            // Ensure database is created (Development only for this task)
             using (var scope = app.Services.CreateScope())
             {
                 var services = scope.ServiceProvider;
@@ -96,7 +93,6 @@ namespace Rvnx.CRM.Web
                 }
             }
 
-            // Configure the HTTP request pipeline.
             if (!app.Environment.IsDevelopment())
             {
                 app.UseExceptionHandler("/Home/Error");

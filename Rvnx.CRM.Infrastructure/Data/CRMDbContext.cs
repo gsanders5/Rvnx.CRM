@@ -6,7 +6,6 @@ using Rvnx.CRM.Core.Models.Base;
 using Rvnx.CRM.Core.Models.Business;
 using Rvnx.CRM.Core.Models.Contact;
 using Rvnx.CRM.Core.Models.Dates;
-using System.Linq.Expressions;
 using System.Reflection;
 
 namespace Rvnx.CRM.Infrastructure.Data;
@@ -35,14 +34,12 @@ public class CRMDbContext(DbContextOptions<CRMDbContext> options, ICurrentUserSe
     {
         base.OnModelCreating(modelBuilder);
 
-        // Configure Attachment 1:1 with Content
         modelBuilder.Entity<Attachment>()
             .HasOne(a => a.AttachmentContent)
             .WithOne(ac => ac.Attachment)
             .HasForeignKey<AttachmentContent>(ac => ac.AttachmentId)
             .OnDelete(DeleteBehavior.Cascade);
 
-        // Add indices for polymorphic lookups
         modelBuilder.Entity<Note>().HasIndex(e => new { e.EntityId, e.EntityType });
         modelBuilder.Entity<Pet>().HasIndex(e => new { e.EntityId, e.EntityType });
         modelBuilder.Entity<Reminder>().HasIndex(e => new { e.EntityId, e.EntityType });
@@ -55,35 +52,23 @@ public class CRMDbContext(DbContextOptions<CRMDbContext> options, ICurrentUserSe
         modelBuilder.Entity<Relationship>().HasIndex(e => new { e.EntityId, e.EntityType });
         modelBuilder.Entity<Relationship>().HasIndex(e => new { e.RelatedEntityId, e.EntityType });
 
-        // Apply Global Query Filters & Optimization Indices to CRMBaseEntity
-        // Exclude specific types that are system-managed or shared
         var entityTypes = modelBuilder.Model.GetEntityTypes()
-            .Where(e => typeof(CRMBaseEntity).IsAssignableFrom(e.ClrType))
-            .Where(e => e.ClrType != typeof(RelationshipType)) // System Data
-            .Where(e => e.ClrType != typeof(User)); // Auth Data
+            .Where(e => typeof(CRMBaseEntity).IsAssignableFrom(e.ClrType));
 
         foreach (var entityType in entityTypes)
         {
-            var method = typeof(CRMDbContext)
-                .GetMethod(nameof(ConfigureGlobalFilter), BindingFlags.NonPublic | BindingFlags.Instance)
-                ?.MakeGenericMethod(entityType.ClrType);
+            modelBuilder.Entity(entityType.Name).HasIndex(nameof(CRMBaseEntity.UserId));
 
-            method?.Invoke(this, new object[] { modelBuilder });
+            if (!typeof(IGlobalEntity).IsAssignableFrom(entityType.ClrType))
+            {
+                var method = typeof(CRMDbContext)
+                    .GetMethod(nameof(ConfigureGlobalFilter), BindingFlags.NonPublic | BindingFlags.Instance)
+                    ?.MakeGenericMethod(entityType.ClrType);
+
+                method?.Invoke(this, new object[] { modelBuilder });
+            }
         }
 
-        // Add UserId Index for Optimization on ALL CRMBaseEntities (including User, but maybe not RelationshipType if it's purely system?)
-        // Actually, if we filter by UserId, an index helps.
-        // For User table, we look up by SubjectId mostly, but maybe UserId too.
-        // Let's add it broadly where useful.
-        foreach (var entityType in modelBuilder.Model.GetEntityTypes()
-            .Where(e => typeof(CRMBaseEntity).IsAssignableFrom(e.ClrType)))
-        {
-             // Use string-based API to avoid generic method reflection overhead if possible,
-             // but HasIndex is easy with builder.Entity(name)
-             modelBuilder.Entity(entityType.Name).HasIndex(nameof(CRMBaseEntity.UserId));
-        }
-
-        // Seed RelationshipTypes
         DateTime seedDate = new(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc);
         modelBuilder.Entity<RelationshipType>().HasData(
             new RelationshipType { Id = Guid.Parse("7c1f8d22-1b6a-4c28-9c1e-3f5a2b8e9d1a"), Name = "Parent", OppositeName = "Child", EntityType = EntityTypes.Person, CreatedBy = "System", LastChangedBy = "System", CreatedDate = seedDate, LastChangedDate = seedDate },
