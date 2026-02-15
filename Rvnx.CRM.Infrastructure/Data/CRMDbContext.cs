@@ -55,7 +55,7 @@ public class CRMDbContext(DbContextOptions<CRMDbContext> options, ICurrentUserSe
         modelBuilder.Entity<Relationship>().HasIndex(e => new { e.EntityId, e.EntityType });
         modelBuilder.Entity<Relationship>().HasIndex(e => new { e.RelatedEntityId, e.EntityType });
 
-        // Apply Global Query Filters to CRMBaseEntity
+        // Apply Global Query Filters & Optimization Indices to CRMBaseEntity
         // Exclude specific types that are system-managed or shared
         var entityTypes = modelBuilder.Model.GetEntityTypes()
             .Where(e => typeof(CRMBaseEntity).IsAssignableFrom(e.ClrType))
@@ -69,6 +69,18 @@ public class CRMDbContext(DbContextOptions<CRMDbContext> options, ICurrentUserSe
                 ?.MakeGenericMethod(entityType.ClrType);
 
             method?.Invoke(this, new object[] { modelBuilder });
+        }
+
+        // Add UserId Index for Optimization on ALL CRMBaseEntities (including User, but maybe not RelationshipType if it's purely system?)
+        // Actually, if we filter by UserId, an index helps.
+        // For User table, we look up by SubjectId mostly, but maybe UserId too.
+        // Let's add it broadly where useful.
+        foreach (var entityType in modelBuilder.Model.GetEntityTypes()
+            .Where(e => typeof(CRMBaseEntity).IsAssignableFrom(e.ClrType)))
+        {
+             // Use string-based API to avoid generic method reflection overhead if possible,
+             // but HasIndex is easy with builder.Entity(name)
+             modelBuilder.Entity(entityType.Name).HasIndex(nameof(CRMBaseEntity.UserId));
         }
 
         // Seed RelationshipTypes

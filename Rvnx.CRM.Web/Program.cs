@@ -4,11 +4,9 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc.Authorization;
 using Microsoft.EntityFrameworkCore;
 using Rvnx.CRM.Core.Interfaces;
-using Rvnx.CRM.Core.Models;
 using Rvnx.CRM.Infrastructure;
 using Rvnx.CRM.Infrastructure.Data;
 using Rvnx.CRM.Web.Services;
-using System.Security.Claims;
 
 namespace Rvnx.CRM.Web
 {
@@ -21,6 +19,7 @@ namespace Rvnx.CRM.Web
             // Add services to the container.
             builder.Services.AddHttpContextAccessor();
             builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
+            builder.Services.AddScoped<IUserSynchronizationService, UserSynchronizationService>();
 
             var authConfig = builder.Configuration.GetSection("Authentication");
             bool authEnabled = authConfig.GetValue<bool>("Enabled");
@@ -55,52 +54,10 @@ namespace Rvnx.CRM.Web
                     {
                         OnTokenValidated = async context =>
                         {
-                            var dbContext = context.HttpContext.RequestServices.GetRequiredService<CRMDbContext>();
-                            var principal = context.Principal;
-
-                            var subject = principal.FindFirst(ClaimTypes.NameIdentifier)?.Value
-                                       ?? principal.FindFirst("sub")?.Value;
-
-                            var email = principal.FindFirst(ClaimTypes.Email)?.Value
-                                     ?? principal.FindFirst("email")?.Value;
-
-                            var name = principal.FindFirst(ClaimTypes.Name)?.Value
-                                    ?? principal.FindFirst("name")?.Value;
-
-                            if (!string.IsNullOrEmpty(subject))
+                            var userSyncService = context.HttpContext.RequestServices.GetRequiredService<IUserSynchronizationService>();
+                            if (context.Principal != null)
                             {
-                                // Lookup user using IgnoreQueryFilters to ensure we can see all users (if User table was filtered, but it's not)
-                                // Still good practice in case we add filter later.
-                                var user = await dbContext.Users.IgnoreQueryFilters().FirstOrDefaultAsync(u => u.SubjectId == subject);
-                                if (user == null)
-                                {
-                                    user = new User
-                                    {
-                                        SubjectId = subject,
-                                        Email = email ?? "unknown@example.com",
-                                        DisplayName = name ?? email,
-                                        CreatedBy = "System",
-                                        LastChangedBy = "System",
-                                        UserId = "System" // System owns the user record mapping
-                                    };
-                                    dbContext.Users.Add(user);
-                                    await dbContext.SaveChangesAsync();
-                                }
-
-                                // Map external subject to internal User Id (Guid)
-                                var identity = (ClaimsIdentity)principal.Identity;
-                                var nameIdClaim = identity.FindFirst(ClaimTypes.NameIdentifier);
-                                if (nameIdClaim != null)
-                                {
-                                    identity.RemoveClaim(nameIdClaim);
-                                }
-                                identity.AddClaim(new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()));
-
-                                // Ensure Name claim is set for display
-                                if (!identity.HasClaim(c => c.Type == ClaimTypes.Name) && !string.IsNullOrEmpty(user.DisplayName))
-                                {
-                                     identity.AddClaim(new Claim(ClaimTypes.Name, user.DisplayName));
-                                }
+                                await userSyncService.SyncUserAsync(context.Principal);
                             }
                         }
                     };
