@@ -6,11 +6,9 @@
     var entityName = ViewData["EntityName"] as string;
 }
 
-<h1>Edit Reminder for @entityName</h1>
-
-<div class="row">
-    <div class="col-md-6">
-        <form asp-action="Edit">
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-7">
+        <form asp-action="Edit" id="eventForm" onsubmit="prepareFrequency()">
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
             <input type="hidden" asp-for="Id" />
             <input type="hidden" asp-for="EntityId" />
@@ -19,53 +17,58 @@
             <input type="hidden" asp-for="CreatedBy" />
             <input type="hidden" asp-for="UserId" />
 
-            <div class="mb-3">
-                <label asp-for="Title" class="form-label"></label>
-                <input asp-for="Title" class="form-control" />
-                <span asp-validation-for="Title" class="text-danger"></span>
-            </div>
+            <div class="card border-0 shadow-sm rounded-3">
+                <div class="card-header bg-white border-bottom p-3 rounded-top-3">
+                    <h4 class="mb-0"><i class="bi bi-pencil-square me-2 text-primary"></i>Edit Reminder for @entityName</h4>
+                </div>
 
-            <div class="mb-3">
-                <label asp-for="Description" class="form-label"></label>
-                <textarea asp-for="Description" class="form-control" rows="3"></textarea>
-                <span asp-validation-for="Description" class="text-danger"></span>
-            </div>
+                <div class="card-body p-4">
 
-            <div class="mb-3">
-                <label asp-for="DueDate" class="form-label"></label>
-                <input asp-for="DueDate" class="form-control" type="date" />
-                <span asp-validation-for="DueDate" class="text-danger"></span>
-            </div>
+                    <!-- Title -->
+                    <div class="mb-3">
+                        <label asp-for="Title" class="form-label fw-bold"></label>
+                        <input asp-for="Title" class="form-control form-control-lg" />
+                        <span asp-validation-for="Title" class="text-danger"></span>
+                    </div>
 
-            <div class="form-check mb-3">
-                <input class="form-check-input" type="checkbox" asp-for="RemindMe" />
-                <label class="form-check-label" asp-for="RemindMe"></label>
-            </div>
+                    <!-- Date -->
+                    <div class="mb-3">
+                        <label asp-for="DueDate" class="form-label fw-bold"></label>
+                        <input asp-for="DueDate" class="form-control" type="date" onchange="updateSummary()" />
+                        <span asp-validation-for="DueDate" class="text-danger"></span>
+                    </div>
 
-            <div class="mb-3">
-                <label asp-for="EventFrequency" class="form-label"></label>
-                <input asp-for="EventFrequency" class="form-control" type="text" placeholder="d.hh:mm:ss" />
-                <span asp-validation-for="EventFrequency" class="text-danger"></span>
-                <div class="form-text">TimeSpan format: d.hh:mm:ss (e.g., 365.00:00:00 for one year)</div>
-            </div>
+                    <!-- Description -->
+                    <div class="mb-4">
+                        <label asp-for="Description" class="form-label fw-bold"></label>
+                        <textarea asp-for="Description" class="form-control" rows="3"></textarea>
+                        <span asp-validation-for="Description" class="text-danger"></span>
+                    </div>
 
-            <div class="form-check mb-3">
-                <input class="form-check-input" type="checkbox" asp-for="IsCompleted" id="IsCompleted">
-                <label class="form-check-label" for="IsCompleted">
-                    @Html.DisplayNameFor(model => model.IsCompleted)
-                </label>
-            </div>
+                    <hr class="my-4">
 
-            <div class="form-group mt-3">
-                <input type="submit" value="Save" class="btn btn-primary" />
-                @if (Model.EntityType == EntityTypes.Person)
-                {
-                     <a asp-controller="Contacts" asp-action="Details" asp-route-id="@Model.EntityId" class="btn btn-secondary">Cancel</a>
-                }
-                else
-                {
-                    <a asp-controller="Home" asp-action="Index" class="btn btn-secondary">Cancel</a>
-                }
+                    <!-- Reminder Duration Partial -->
+                    <partial name="_ReminderDurationPartial" model="Model" />
+
+                    <div class="form-check mb-3 mt-4">
+                        <input class="form-check-input" type="checkbox" asp-for="IsCompleted" id="IsCompleted">
+                        <label class="form-check-label" for="IsCompleted">
+                            @Html.DisplayNameFor(model => model.IsCompleted)
+                        </label>
+                    </div>
+
+                    <div class="d-grid gap-2 mt-4">
+                        <input type="submit" value="Save" class="btn btn-primary btn-lg" />
+                        @if (Model.EntityType == EntityTypes.Person)
+                        {
+                             <a asp-controller="Contacts" asp-action="Details" asp-route-id="@Model.EntityId" class="btn btn-secondary">Cancel</a>
+                        }
+                        else
+                        {
+                            <a asp-controller="Home" asp-action="Index" class="btn btn-secondary">Cancel</a>
+                        }
+                    </div>
+                </div>
             </div>
         </form>
     </div>

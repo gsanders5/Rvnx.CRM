@@ -1,6 +1,8 @@
+using Rvnx.CRM.Core.Interfaces;
+
 namespace Rvnx.CRM.Core.DTOs.Common
 {
-    public class SignificantDateDto : BaseDto
+    public class SignificantDateDto : BaseDto, IRemindableDto
     {
         public string Title { get; set; } = string.Empty;
         public DateTime Date { get; set; }
