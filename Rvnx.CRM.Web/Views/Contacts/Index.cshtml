@@ -1,0 +1,56 @@
+@model IEnumerable<Rvnx.CRM.Core.Models.Contact.Contact>
+
+@{
+    ViewData["Title"] = "Contacts";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h1>Contacts</h1>
+    <a asp-action="Create" class="btn btn-primary">Create New</a>
+</div>
+
+<div class="table-responsive">
+    <table class="table table-striped table-hover">
+        <thead class="table-dark">
+            <tr>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Phone</th>
+                <th>Company</th>
+                <th>Job Title</th>
+                <th>Created</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Model) {
+                <tr>
+                    <td>
+                        <a asp-action="Details" asp-route-id="@item.Id" class="fw-bold text-decoration-none">
+                            @item.FullName
+                        </a>
+                    </td>
+                    <td>@item.Email</td>
+                    <td>@item.Phone</td>
+                    <td>@item.Company</td>
+                    <td>@item.JobTitle</td>
+                    <td>@item.CreatedDate.ToShortDateString()</td>
+                    <td>
+                        <div class="btn-group btn-group-sm">
+                            <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-outline-secondary">Edit</a>
+                            <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-outline-info">Details</a>
+                            <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-outline-danger">Delete</a>
+                        </div>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+@if (!Model.Any())
+{
+    <div class="alert alert-info">
+        No contacts found. Click "Create New" to add one.
+    </div>
+}
