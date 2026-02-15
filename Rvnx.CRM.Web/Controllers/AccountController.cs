@@ -17,13 +17,12 @@ public class AccountController : BaseController
     }
 
     [HttpGet]
-    public async Task<IActionResult> Logout()
+    public IActionResult Logout()
     {
-        if (User.Identity.IsAuthenticated)
-        {
-            await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
-            await HttpContext.SignOutAsync(OpenIdConnectDefaults.AuthenticationScheme);
-        }
-        return RedirectToAction("Index", "Home");
+        // SignOutResult handles clearing cookies and redirecting to the IDP for sign-out
+        return SignOut(
+            new AuthenticationProperties { RedirectUri = "/" },
+            CookieAuthenticationDefaults.AuthenticationScheme,
+            OpenIdConnectDefaults.AuthenticationScheme);
     }
 }

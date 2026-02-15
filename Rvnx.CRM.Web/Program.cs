@@ -41,8 +41,15 @@ namespace Rvnx.CRM.Web
                     options.ResponseType = authConfig["ResponseType"] ?? "code";
                     options.SaveTokens = true;
                     options.CallbackPath = authConfig["CallbackPath"] ?? "/signin-oidc";
+                    options.RemoteSignOutPath = authConfig["RemoteSignOutPath"] ?? "/signout-oidc";
+
+                    options.MapInboundClaims = true; // Explicitly map standard OIDC claims to .NET ClaimTypes
+                    options.GetClaimsFromUserInfoEndpoint = true; // Fetch additional profile info if not in ID token
+
                     options.Scope.Clear();
-                    foreach (var scope in (authConfig["Scopes"] ?? "openid profile email").Split(' '))
+                    // Add default scopes including offline_access for Authentik compatibility (Refresh Tokens)
+                    var scopes = (authConfig["Scopes"] ?? "openid profile email offline_access").Split(' ');
+                    foreach (var scope in scopes)
                     {
                         options.Scope.Add(scope);
                     }
