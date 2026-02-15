@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Moq;
+using Rvnx.CRM.Core.Interfaces;
 using Rvnx.CRM.Core.DTOs.Contact;
 using Rvnx.CRM.Core.Models.Base;
 using Rvnx.CRM.Core.Models.Contact;
@@ -19,7 +20,12 @@ namespace Rvnx.CRM.Tests
             DbContextOptions<CRMDbContext> options = new DbContextOptionsBuilder<CRMDbContext>()
                 .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
                 .Options;
-            return new CRMDbContext(options);
+
+            Mock<ICurrentUserService> mockCurrentUserService = new();
+            mockCurrentUserService.Setup(s => s.UserId).Returns("test-user-id");
+            mockCurrentUserService.Setup(s => s.UserName).Returns("test-user");
+
+            return new CRMDbContext(options, mockCurrentUserService.Object);
         }
 
         [Fact]

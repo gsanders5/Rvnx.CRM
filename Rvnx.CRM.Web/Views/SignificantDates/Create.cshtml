@@ -30,6 +30,19 @@
                 <input asp-for="Description" class="form-control" />
                 <span asp-validation-for="Description" class="text-danger"></span>
             </div>
+
+            <div class="form-check mb-3 mt-3">
+                <input class="form-check-input" type="checkbox" asp-for="RemindMe" />
+                <label class="form-check-label" asp-for="RemindMe"></label>
+            </div>
+
+            <div class="form-group mb-3">
+                <label asp-for="EventFrequency" class="control-label"></label>
+                <input asp-for="EventFrequency" class="form-control" type="text" placeholder="d.hh:mm:ss" />
+                <span asp-validation-for="EventFrequency" class="text-danger"></span>
+                <div class="form-text">TimeSpan format: d.hh:mm:ss (e.g., 365.00:00:00 for one year)</div>
+            </div>
+
             <div class="form-group mt-3">
                 <input type="submit" value="Create" class="btn btn-primary" />
                 <a asp-controller="@(Model.EntityType == Rvnx.CRM.Core.Constants.EntityTypes.Person ? "Contacts" : "Home")" asp-action="Details" asp-route-id="@Model.EntityId" class="btn btn-secondary">Back</a>

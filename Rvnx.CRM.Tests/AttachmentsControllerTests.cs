@@ -1,5 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Moq;
+using Rvnx.CRM.Core.Interfaces;
 using Rvnx.CRM.Core.Models.Base;
 using Rvnx.CRM.Infrastructure.Data;
 using Rvnx.CRM.Infrastructure.Repositories;
@@ -15,8 +17,12 @@ namespace Rvnx.CRM.Tests
             DbContextOptions<CRMDbContext> options = new DbContextOptionsBuilder<CRMDbContext>()
                 .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
                 .Options;
-            CRMDbContext context = new(options);
-            return context;
+
+            Mock<ICurrentUserService> mockCurrentUserService = new();
+            mockCurrentUserService.Setup(s => s.UserId).Returns("test-user-id");
+            mockCurrentUserService.Setup(s => s.UserName).Returns("test-user");
+
+            return new CRMDbContext(options, mockCurrentUserService.Object);
         }
 
         [Fact]
