@@ -155,6 +155,7 @@ namespace Rvnx.CRM.Core.Extensions
                 RelatedTo = entity.RelatedTo?.Select(r => r.ToDto()) ?? new List<RelationshipDto>(),
                 ContactInfos = entity.ContactInfos?.Select(i => i.ToDto()) ?? new List<ContactInfoDto>(),
                 Facts = entity.Facts?.Select(f => f.ToDto()) ?? new List<FactDto>(),
+                Attachments = entity.Attachments?.Select(a => a.ToDto()) ?? new List<AttachmentDto>(),
                 // Pets to be populated by caller as they are not on Person
             };
         }

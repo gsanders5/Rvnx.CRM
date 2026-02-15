@@ -17,5 +17,6 @@ namespace Rvnx.CRM.Core.DTOs.Contact
         public IEnumerable<EmployerDto> Employers { get; set; } = new List<EmployerDto>();
         public IEnumerable<ContactInfoDto> ContactInfos { get; set; } = new List<ContactInfoDto>();
         public IEnumerable<FactDto> Facts { get; set; } = new List<FactDto>();
+        public IEnumerable<AttachmentDto> Attachments { get; set; } = new List<AttachmentDto>();
     }
 }

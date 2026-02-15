@@ -104,6 +104,9 @@ namespace Rvnx.CRM.Web.Controllers
             // Facts
             contact.Facts = await _repository.ListAsync<Fact>(f => f.EntityId == id.Value && f.EntityType == EntityTypes.Person);
 
+            // Attachments
+            contact.Attachments = await _repository.ListAsync<Attachment>(a => a.EntityId == id.Value && a.EntityType == EntityTypes.Person && a.AttachmentType != "ProfileImage");
+
             var contactDto = contact.ToDetailDto();
             contactDto.Pets = pets.Select(p => p.ToDto()).ToList();
 
