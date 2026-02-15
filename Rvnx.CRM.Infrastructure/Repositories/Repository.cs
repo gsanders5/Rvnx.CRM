@@ -38,11 +38,6 @@ public class Repository(CRMDbContext context) : IRepository
         return await query.FirstOrDefaultAsync(e => e.Id == id);
     }
 
-    public async Task<List<T>> ListAsync<T>(CancellationToken cancellationToken = default) where T : CRMBaseEntity
-    {
-        return await _context.Set<T>().ToListAsync(cancellationToken);
-    }
-
     public async Task<List<T>> ListAsync<T>(int? skip = null, int? take = null, CancellationToken cancellationToken = default) where T : CRMBaseEntity
     {
         var query = GetQuery<T>();

@@ -62,7 +62,7 @@ namespace Rvnx.CRM.Web.Controllers
         // POST: Contacts/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("FirstName,LastName,Email,Phone,JobTitle,Company,Birthday,UserId")] Contact contact)
+        public async Task<IActionResult> Create([Bind("FirstName,LastName,Nickname,Email,Phone,JobTitle,Company,Birthday,UserId")] Contact contact)
         {
             if (ModelState.IsValid)
             {
@@ -93,7 +93,7 @@ namespace Rvnx.CRM.Web.Controllers
         // POST: Contacts/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(Guid id, [Bind("Id,FirstName,LastName,Email,Phone,JobTitle,Company,Birthday")] Contact contact)
+        public async Task<IActionResult> Edit(Guid id, [Bind("Id,FirstName,LastName,Nickname,Email,Phone,JobTitle,Company,Birthday")] Contact contact)
         {
             if (id != contact.Id)
             {
@@ -112,6 +112,7 @@ namespace Rvnx.CRM.Web.Controllers
 
                     existingContact.FirstName = contact.FirstName;
                     existingContact.LastName = contact.LastName;
+                    existingContact.Nickname = contact.Nickname;
                     existingContact.Email = contact.Email;
                     existingContact.Phone = contact.Phone;
                     existingContact.JobTitle = contact.JobTitle;

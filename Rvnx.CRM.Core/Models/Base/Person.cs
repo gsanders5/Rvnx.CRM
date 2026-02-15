@@ -12,15 +12,17 @@ public abstract class Person : CRMBaseEntity
     [Display(Name = "First Name")]
     public string FirstName { get; set; } = string.Empty;
 
-    [Required]
     [MaxLength(100)]
     [Display(Name = "Last Name")]
-    public string LastName { get; set; } = string.Empty;
+    public string? LastName { get; set; }
 
-    [Required]
+    [MaxLength(100)]
+    [Display(Name = "Nickname")]
+    public string? Nickname { get; set; }
+
     [MaxLength(256)]
     [Display(Name = "Email")]
-    public string Email { get; set; } = string.Empty;
+    public string? Email { get; set; }
 
     [MaxLength(20)]
     [Display(Name = "Phone")]
