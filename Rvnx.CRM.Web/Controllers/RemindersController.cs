@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Rvnx.CRM.Core.Constants;
+using Rvnx.CRM.Core.Extensions;
 using Rvnx.CRM.Core.Interfaces;
 using Rvnx.CRM.Core.Models.Business;
 using Rvnx.CRM.Core.Models.Contact;
@@ -57,30 +58,43 @@ namespace Rvnx.CRM.Web.Controllers
             {
                 EntityId = entityId,
                 EntityType = entityType,
-                DueDate = DateTime.Now.AddDays(1)
-            });
+                DueDate = DateTime.Now.AddDays(1),
+                EventFrequency = TimeSpan.FromDays(365) // Default
+            }.ToDto());
         }
 
         // POST: Reminders/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Title,Description,DueDate,IsCompleted,EntityId,EntityType")] Reminder reminder)
+        public async Task<IActionResult> Create([Bind("Title,Description,DueDate,IsCompleted,EntityId,EntityType,RemindMe,EventFrequency")] Core.DTOs.Common.ReminderDto reminderDto)
         {
             if (ModelState.IsValid)
             {
-                reminder.Id = Guid.NewGuid();
+                var reminder = new Reminder
+                {
+                    Id = Guid.NewGuid(),
+                    Title = reminderDto.Title,
+                    Description = reminderDto.Description,
+                    DueDate = reminderDto.DueDate,
+                    IsCompleted = reminderDto.IsCompleted,
+                    EntityId = reminderDto.EntityId,
+                    EntityType = reminderDto.EntityType,
+                    RemindMe = reminderDto.RemindMe,
+                    EventFrequency = reminderDto.EventFrequency
+                };
+
                 await _repository.AddAsync(reminder);
                 await _repository.SaveChangesAsync();
                 return RedirectToEntity(reminder.EntityId, reminder.EntityType);
             }
 
-            if (reminder.EntityId != Guid.Empty && !string.IsNullOrEmpty(reminder.EntityType))
+            if (reminderDto.EntityId != Guid.Empty && !string.IsNullOrEmpty(reminderDto.EntityType))
             {
-                ViewData["EntityName"] = await GetEntityName(reminder.EntityId, reminder.EntityType);
-                ViewData["EntityId"] = reminder.EntityId;
-                ViewData["EntityType"] = reminder.EntityType;
+                ViewData["EntityName"] = await GetEntityName(reminderDto.EntityId, reminderDto.EntityType);
+                ViewData["EntityId"] = reminderDto.EntityId;
+                ViewData["EntityType"] = reminderDto.EntityType;
             }
-            return View(reminder);
+            return View(reminderDto);
         }
 
         // GET: Reminders/Edit/5
@@ -96,36 +110,46 @@ namespace Rvnx.CRM.Web.Controllers
                 ViewData["EntityName"] = await GetEntityName(reminder.EntityId, reminder.EntityType);
             }
 
-            return View(reminder);
+            return View(reminder.ToDto());
         }
 
         // POST: Reminders/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(Guid id, [Bind("Id,Title,Description,DueDate,IsCompleted,EntityId,EntityType,CreatedDate,CreatedBy")] Reminder reminder)
+        public async Task<IActionResult> Edit(Guid id, [Bind("Id,Title,Description,DueDate,IsCompleted,EntityId,EntityType,RemindMe,EventFrequency")] Core.DTOs.Common.ReminderDto reminderDto)
         {
-            if (id != reminder.Id) return NotFound();
+            if (id != reminderDto.Id) return NotFound();
 
             if (ModelState.IsValid)
             {
                 try
                 {
+                    var reminder = await _repository.GetByIdAsync<Reminder>(id);
+                    if (reminder == null) return NotFound();
+
+                    reminder.Title = reminderDto.Title;
+                    reminder.Description = reminderDto.Description;
+                    reminder.DueDate = reminderDto.DueDate;
+                    reminder.IsCompleted = reminderDto.IsCompleted;
+                    reminder.RemindMe = reminderDto.RemindMe;
+                    reminder.EventFrequency = reminderDto.EventFrequency;
+
                     await _repository.UpdateAsync(reminder);
                     await _repository.SaveChangesAsync();
                 }
                 catch (Exception)
                 {
-                    if (!await _repository.ExistsAsync<Reminder>(reminder.Id)) return NotFound();
+                    if (!await _repository.ExistsAsync<Reminder>(reminderDto.Id)) return NotFound();
                     else throw;
                 }
-                return RedirectToEntity(reminder.EntityId, reminder.EntityType);
+                return RedirectToEntity(reminderDto.EntityId, reminderDto.EntityType);
             }
 
-            if (reminder.EntityId != Guid.Empty && !string.IsNullOrEmpty(reminder.EntityType))
+            if (reminderDto.EntityId != Guid.Empty && !string.IsNullOrEmpty(reminderDto.EntityType))
             {
-                ViewData["EntityName"] = await GetEntityName(reminder.EntityId, reminder.EntityType);
+                ViewData["EntityName"] = await GetEntityName(reminderDto.EntityId, reminderDto.EntityType);
             }
-            return View(reminder);
+            return View(reminderDto);
         }
 
         // GET: Reminders/Delete/5
@@ -139,7 +163,7 @@ namespace Rvnx.CRM.Web.Controllers
             {
                 ViewData["EntityName"] = await GetEntityName(reminder.EntityId, reminder.EntityType);
             }
-            return View(reminder);
+            return View(reminder.ToDto());
         }
 
         // POST: Reminders/Delete/5

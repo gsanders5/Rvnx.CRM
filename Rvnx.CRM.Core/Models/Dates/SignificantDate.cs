@@ -5,7 +5,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace Rvnx.CRM.Core.Models.Dates;
 
 [Table("SignificantDate")]
-public class SignificantDate : PolymorphicEntity
+public class SignificantDate : RemindableEntity
 {
     [MaxLength(200)]
     [Display(Name = "Title")]

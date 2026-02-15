@@ -33,7 +33,10 @@ namespace Rvnx.CRM.Core.Extensions
                 Description = entity.Description,
                 DueDate = entity.DueDate,
                 EntityId = entity.EntityId,
-                EntityType = entity.EntityType
+                EntityType = entity.EntityType,
+                RemindMe = entity.RemindMe,
+                ReminderSent = entity.ReminderSent,
+                EventFrequency = entity.EventFrequency
             };
         }
 
@@ -46,7 +49,10 @@ namespace Rvnx.CRM.Core.Extensions
                 Date = entity.Date,
                 Description = entity.Description,
                 EntityId = entity.EntityId,
-                EntityType = entity.EntityType
+                EntityType = entity.EntityType,
+                RemindMe = entity.RemindMe,
+                ReminderSent = entity.ReminderSent,
+                EventFrequency = entity.EventFrequency
             };
         }
 

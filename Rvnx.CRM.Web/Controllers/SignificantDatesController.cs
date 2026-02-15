@@ -25,14 +25,15 @@ namespace Rvnx.CRM.Web.Controllers
             {
                 EntityId = entityId,
                 EntityType = entityType,
-                Date = DateTime.Today
+                Date = DateTime.Today,
+                EventFrequency = TimeSpan.FromDays(365) // Default to Yearly
             });
         }
 
         // POST: SignificantDates/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Id,Title,Description,Date,EntityId,EntityType")] SignificantDateDto dto)
+        public async Task<IActionResult> Create([Bind("Id,Title,Description,Date,EntityId,EntityType,RemindMe,EventFrequency")] SignificantDateDto dto)
         {
             if (ModelState.IsValid)
             {
@@ -58,7 +59,9 @@ namespace Rvnx.CRM.Web.Controllers
                     Description = dto.Description,
                     Date = dto.Date,
                     EntityId = dto.EntityId,
-                    EntityType = dto.EntityType
+                    EntityType = dto.EntityType,
+                    RemindMe = dto.RemindMe,
+                    EventFrequency = dto.EventFrequency
                 };
 
                 await _repository.AddAsync(importantDate);
@@ -82,7 +85,7 @@ namespace Rvnx.CRM.Web.Controllers
         // POST: SignificantDates/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(Guid id, [Bind("Id,Title,Description,Date,EntityId,EntityType")] SignificantDateDto dto)
+        public async Task<IActionResult> Edit(Guid id, [Bind("Id,Title,Description,Date,EntityId,EntityType,RemindMe,EventFrequency")] SignificantDateDto dto)
         {
             if (id != dto.Id) return NotFound();
 
@@ -112,6 +115,8 @@ namespace Rvnx.CRM.Web.Controllers
                     importantDate.Title = dto.Title;
                     importantDate.Description = dto.Description;
                     importantDate.Date = dto.Date;
+                    importantDate.RemindMe = dto.RemindMe;
+                    importantDate.EventFrequency = dto.EventFrequency;
 
                     await _repository.UpdateAsync(importantDate);
                     await _repository.SaveChangesAsync();
