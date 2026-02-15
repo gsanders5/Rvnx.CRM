@@ -1,5 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Rvnx.CRM.Core.Constants;
+using Rvnx.CRM.Core.Interfaces;
+using Rvnx.CRM.Core.Models;
 using Rvnx.CRM.Core.Models.Base;
 using Rvnx.CRM.Core.Models.Business;
 using Rvnx.CRM.Core.Models.Contact;
@@ -7,8 +9,10 @@ using Rvnx.CRM.Core.Models.Dates;
 
 namespace Rvnx.CRM.Infrastructure.Data;
 
-public class CRMDbContext(DbContextOptions<CRMDbContext> options) : DbContext(options)
+public class CRMDbContext(DbContextOptions<CRMDbContext> options, ICurrentUserService currentUserService) : DbContext(options)
 {
+    private readonly ICurrentUserService _currentUserService = currentUserService;
+
     public DbSet<Contact> Contacts { get; set; }
     public DbSet<Employer> Employers { get; set; }
     public DbSet<PhoneNumber> PhoneNumbers { get; set; }
@@ -23,6 +27,7 @@ public class CRMDbContext(DbContextOptions<CRMDbContext> options) : DbContext(op
     public DbSet<ContactInfo> ContactInfos { get; set; }
     public DbSet<Fact> Facts { get; set; }
     public DbSet<Address> Addresses { get; set; }
+    public DbSet<User> Users { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -80,6 +85,9 @@ public class CRMDbContext(DbContextOptions<CRMDbContext> options) : DbContext(op
         IEnumerable<Microsoft.EntityFrameworkCore.ChangeTracking.EntityEntry<CRMBaseEntity>> entries = ChangeTracker.Entries<CRMBaseEntity>()
             .Where(e => e.State is EntityState.Added or EntityState.Modified);
 
+        string username = GetUsername();
+        string userId = GetUserId();
+
         foreach (Microsoft.EntityFrameworkCore.ChangeTracking.EntityEntry<CRMBaseEntity>? entry in entries)
         {
             DateTime now = DateTime.UtcNow;
@@ -88,23 +96,35 @@ public class CRMDbContext(DbContextOptions<CRMDbContext> options) : DbContext(op
             {
                 entry.Entity.CreatedDate = now;
                 entry.Entity.LastChangedDate = now;
-                entry.Entity.CreatedBy = GetUsername();
-                entry.Entity.LastChangedBy = GetUsername();
+                entry.Entity.CreatedBy = username;
+                entry.Entity.LastChangedBy = username;
+
+                // Only set UserId if not already set (or always set it?)
+                // The requirement is "Modify the DB to store this user guid whenever a user interacts with the DB"
+                // So I should set it.
+                if (string.IsNullOrEmpty(entry.Entity.UserId))
+                {
+                    entry.Entity.UserId = userId;
+                }
             }
             else if (entry.State == EntityState.Modified)
             {
                 entry.Entity.LastChangedDate = now;
-                entry.Entity.LastChangedBy = GetUsername();
+                entry.Entity.LastChangedBy = username;
                 entry.Property(nameof(CRMBaseEntity.CreatedDate)).IsModified = false;
                 entry.Property(nameof(CRMBaseEntity.CreatedBy)).IsModified = false;
+                entry.Property(nameof(CRMBaseEntity.UserId)).IsModified = false; // Usually UserId doesn't change on modify
             }
         }
     }
 
-    private static string GetUsername()
+    private string GetUsername()
     {
-        // Placeholder - Will update when OAuth configured.
-        string username = Environment.UserName;
-        return username ?? string.Empty;
+        return _currentUserService.UserName ?? "System";
+    }
+
+    private string GetUserId()
+    {
+        return _currentUserService.UserId ?? "System";
     }
 }

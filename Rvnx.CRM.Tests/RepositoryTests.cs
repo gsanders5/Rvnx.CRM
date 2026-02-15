@@ -1,4 +1,6 @@
 using Microsoft.EntityFrameworkCore;
+using Moq;
+using Rvnx.CRM.Core.Interfaces;
 using Rvnx.CRM.Core.Models.Base;
 using Rvnx.CRM.Core.Models.Business;
 using Rvnx.CRM.Core.Models.Contact;
@@ -15,7 +17,12 @@ namespace Rvnx.CRM.Tests
             DbContextOptions<CRMDbContext> options = new DbContextOptionsBuilder<CRMDbContext>()
                 .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
                 .Options;
-            CRMDbContext context = new(options);
+
+            var mockUserService = new Mock<ICurrentUserService>();
+            mockUserService.Setup(u => u.UserId).Returns("TestUser");
+            mockUserService.Setup(u => u.UserName).Returns("TestUser");
+
+            CRMDbContext context = new(options, mockUserService.Object);
             return context;
         }
 
