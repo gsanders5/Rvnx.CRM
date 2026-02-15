@@ -1,6 +1,8 @@
+using Rvnx.CRM.Core.Interfaces;
+
 namespace Rvnx.CRM.Core.DTOs.Common
 {
-    public class ReminderDto : BaseDto
+    public class ReminderDto : BaseDto, IRemindableDto
     {
         public string Title { get; set; } = string.Empty;
         public string? Description { get; set; }
