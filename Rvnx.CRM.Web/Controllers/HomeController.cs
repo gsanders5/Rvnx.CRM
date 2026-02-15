@@ -41,8 +41,26 @@ namespace Rvnx.CRM.Web.Controllers
         }
 
         // Action to add some test data
+        [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> SeedTestData()
         {
+            var existingCount = await _repository.CountAsync<Contact>();
+            if (existingCount == 0)
+            {
+                var testContacts = new List<Contact>
+                {
+                    new Contact { FirstName = "John", LastName = "Doe" },
+                    new Contact { FirstName = "Jane", LastName = "Smith" },
+                    new Contact { FirstName = "Michael", LastName = "Brown" },
+                    new Contact { FirstName = "Emily", LastName = "Davis" },
+                    new Contact { FirstName = "Robert", LastName = "Wilson" }
+                };
+
+                await _repository.AddRangeAsync(testContacts);
+                await _repository.SaveChangesAsync();
+            }
+
             return RedirectToAction("Index");
         }
     }

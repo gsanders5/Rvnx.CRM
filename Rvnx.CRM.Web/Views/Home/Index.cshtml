@@ -14,9 +14,11 @@
     <div class="col-12">
         <div class="d-flex justify-content-between align-items-center mb-3">
             <h2>People (@Model.Count)</h2>
-            <a href="@Url.Action("SeedTestData")" class="btn btn-primary">
-                Add Test Data
-            </a>
+            <form asp-action="SeedTestData" method="post" class="d-inline">
+                <button type="submit" class="btn btn-primary">
+                    Add Test Data
+                </button>
+            </form>
         </div>
 
         @if (Model.Count == 0)
