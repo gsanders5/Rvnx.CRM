@@ -1,3 +1,4 @@
+@using Rvnx.CRM.Core.Constants
 @model Rvnx.CRM.Core.Models.Contact.Relationship
 
 @{
@@ -12,19 +13,14 @@
     <hr />
     <dl class="row">
         <dt class = "col-sm-2">
-            Person
+            Related Entity
         </dt>
         <dd class = "col-sm-10">
-            @Model.Person?.FullName
+            @if(Model.RelatedPerson != null) { @Model.RelatedPerson.FullName }
+            else { @Model.RelatedEntityId }
         </dd>
         <dt class = "col-sm-2">
-            Related Person
-        </dt>
-        <dd class = "col-sm-10">
-            @Model.RelatedPerson?.FullName
-        </dd>
-        <dt class = "col-sm-2">
-            Type
+            Relationship Type
         </dt>
         <dd class = "col-sm-10">
             @Model.RelationshipType?.Name
@@ -40,6 +36,13 @@
     <form asp-action="Delete">
         <input type="hidden" asp-for="Id" />
         <input type="submit" value="Delete" class="btn btn-danger" /> |
-        <a asp-controller="Contacts" asp-action="Details" asp-route-id="@Model.PersonId">Cancel</a>
+        @if (Model.EntityType == EntityTypes.Person)
+        {
+            <a asp-controller="Contacts" asp-action="Details" asp-route-id="@Model.EntityId">Cancel</a>
+        }
+        else
+        {
+            <a asp-controller="Home" asp-action="Index">Cancel</a>
+        }
     </form>
 </div>

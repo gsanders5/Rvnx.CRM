@@ -1,5 +1,4 @@
 using Rvnx.CRM.Core.Models.Base;
-using Rvnx.CRM.Core.Models.Contact;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -23,9 +22,10 @@ public class Reminder : CRMBaseEntity
     [Display(Name = "Is Completed")]
     public bool IsCompleted { get; set; } = false;
 
-    [Display(Name = "Person ID")]
-    public Guid? PersonId { get; set; }
+    [Display(Name = "Entity ID")]
+    public Guid? EntityId { get; set; }
 
-    [ForeignKey(nameof(PersonId))]
-    public virtual Person? Person { get; set; }
+    [MaxLength(100)]
+    [Display(Name = "Entity Type")]
+    public string? EntityType { get; set; }
 }

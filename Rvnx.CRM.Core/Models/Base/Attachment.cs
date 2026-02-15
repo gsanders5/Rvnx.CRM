@@ -18,12 +18,11 @@ public class Attachment : CRMBaseEntity
     public string AttachmentType { get; set; } = string.Empty;
 
     [Required]
-    public string Content { get; set; } = string.Empty;
-
-    [Required]
     [MaxLength(100)]
     public string ContentType { get; set; } = string.Empty;
 
     [MaxLength(255)]
     public string? FileName { get; set; }
+
+    public virtual AttachmentContent? AttachmentContent { get; set; }
 }

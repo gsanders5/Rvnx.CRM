@@ -3,7 +3,8 @@
 
 @{
     ViewData["Title"] = "Details";
-    var profileImage = ViewBag.ProfileImage as Attachment;
+    var profileImageBase64 = ViewBag.ProfileImageBase64 as string;
+    var profileImageContentType = ViewBag.ProfileImageContentType as string;
 }
 
 <div class="container">
@@ -19,9 +20,9 @@
         <!-- Main Info -->
         <div class="col-md-4">
             <div class="card mb-4">
-                @if (profileImage != null)
+                @if (!string.IsNullOrEmpty(profileImageBase64))
                 {
-                    <img src="data:@profileImage.ContentType;base64,@profileImage.Content" class="card-img-top" alt="Profile Image" style="max-height: 300px; object-fit: cover;">
+                    <img src="data:@profileImageContentType;base64,@profileImageBase64" class="card-img-top" alt="Profile Image" style="max-height: 300px; object-fit: cover;">
                 }
                 <div class="card-header">
                     <h5 class="card-title mb-0"><i class="bi bi-person-lines-fill"></i> Contact Info</h5>
@@ -53,7 +54,7 @@
             <div class="card mb-4">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h5 class="card-title mb-0"><i class="bi bi-people"></i> Relationships</h5>
-                    <a asp-controller="Relationships" asp-action="Create" asp-route-personId="@Model.Id" class="btn btn-sm btn-outline-primary"><i class="bi bi-plus-lg"></i> Add</a>
+                    <a asp-controller="Relationships" asp-action="Create" asp-route-entityId="@Model.Id" asp-route-entityType="Person" class="btn btn-sm btn-outline-primary"><i class="bi bi-plus-lg"></i> Add</a>
                 </div>
                 <ul class="list-group list-group-flush">
                     @if ((Model.Relationships != null && Model.Relationships.Any()) || (Model.RelatedTo != null && Model.RelatedTo.Any()))
@@ -65,7 +66,7 @@
                                 <li class="list-group-item d-flex justify-content-between align-items-center">
                                     <div>
                                         <strong>@rel.RelationshipType?.OppositeName:</strong>
-                                        <a asp-action="Details" asp-route-id="@rel.RelatedPersonId">
+                                        <a asp-action="Details" asp-route-id="@rel.RelatedEntityId">
                                             @rel.RelatedPerson?.FullName
                                         </a>
                                     </div>
@@ -83,7 +84,7 @@
                                 <li class="list-group-item d-flex justify-content-between align-items-center">
                                     <div>
                                         <strong>@rel.RelationshipType?.Name:</strong>
-                                        <a asp-action="Details" asp-route-id="@rel.PersonId">
+                                        <a asp-action="Details" asp-route-id="@rel.EntityId">
                                             @rel.Person?.FullName
                                         </a>
                                     </div>
@@ -110,7 +111,7 @@
             <div class="card mb-4">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h5 class="card-title mb-0"><i class="bi bi-alarm"></i> Reminders</h5>
-                    <a asp-controller="Reminders" asp-action="Create" asp-route-personId="@Model.Id" class="btn btn-sm btn-outline-primary"><i class="bi bi-plus-lg"></i> Add</a>
+                    <a asp-controller="Reminders" asp-action="Create" asp-route-entityId="@Model.Id" asp-route-entityType="Person" class="btn btn-sm btn-outline-primary"><i class="bi bi-plus-lg"></i> Add</a>
                 </div>
                 <div class="card-body">
                     @if (Model.Reminders != null && Model.Reminders.Any())
@@ -147,7 +148,7 @@
             <div class="card mb-4">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h5 class="card-title mb-0"><i class="bi bi-journal-text"></i> Notes</h5>
-                    <a asp-controller="Notes" asp-action="Create" asp-route-personId="@Model.Id" class="btn btn-sm btn-outline-primary"><i class="bi bi-plus-lg"></i> Add</a>
+                    <a asp-controller="Notes" asp-action="Create" asp-route-entityId="@Model.Id" asp-route-entityType="Person" class="btn btn-sm btn-outline-primary"><i class="bi bi-plus-lg"></i> Add</a>
                 </div>
                 <div class="card-body">
                     @if (Model.Notes != null && Model.Notes.Any())

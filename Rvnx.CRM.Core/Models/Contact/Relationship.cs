@@ -8,18 +8,17 @@ namespace Rvnx.CRM.Core.Models.Contact;
 public class Relationship : CRMBaseEntity
 {
     [Required]
-    [Display(Name = "Person")]
-    public Guid PersonId { get; set; }
-
-    [ForeignKey(nameof(PersonId))]
-    public virtual Person? Person { get; set; }
+    [Display(Name = "Entity ID")]
+    public Guid EntityId { get; set; }
 
     [Required]
-    [Display(Name = "Related Person")]
-    public Guid RelatedPersonId { get; set; }
+    [Display(Name = "Related Entity ID")]
+    public Guid RelatedEntityId { get; set; }
 
-    [ForeignKey(nameof(RelatedPersonId))]
-    public virtual Person? RelatedPerson { get; set; }
+    [Required]
+    [MaxLength(100)]
+    [Display(Name = "Entity Type")]
+    public string EntityType { get; set; } = string.Empty;
 
     [Required]
     [Display(Name = "Relationship Type")]
@@ -36,4 +35,10 @@ public class Relationship : CRMBaseEntity
 
     [Display(Name = "End Date")]
     public DateTime? EndDate { get; set; }
+
+    [NotMapped]
+    public virtual Person? Person { get; set; }
+
+    [NotMapped]
+    public virtual Person? RelatedPerson { get; set; }
 }

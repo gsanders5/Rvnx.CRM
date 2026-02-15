@@ -1,17 +1,21 @@
+@using Rvnx.CRM.Core.Constants
 @model Rvnx.CRM.Core.Models.Dates.Reminder
 
 @{
     ViewData["Title"] = "Add Reminder";
-    var personName = ViewData["PersonName"] as string;
+    var entityId = ViewData["EntityId"] as Guid?;
+    var entityType = ViewData["EntityType"] as string;
+    var entityName = ViewData["EntityName"] as string;
 }
 
-<h1>Add Reminder for @personName</h1>
+<h1>Add Reminder for @entityName</h1>
 
 <div class="row">
     <div class="col-md-6">
         <form asp-action="Create">
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-            <input type="hidden" asp-for="PersonId" />
+            <input type="hidden" asp-for="EntityId" value="@entityId" />
+            <input type="hidden" asp-for="EntityType" value="@entityType" />
 
             <div class="mb-3">
                 <label asp-for="Title" class="form-label"></label>
@@ -27,20 +31,20 @@
 
             <div class="mb-3">
                 <label asp-for="DueDate" class="form-label"></label>
-                <input asp-for="DueDate" class="form-control" type="datetime-local" />
+                <input asp-for="DueDate" class="form-control" type="date" />
                 <span asp-validation-for="DueDate" class="text-danger"></span>
-            </div>
-
-            <div class="form-check mb-3">
-                <input class="form-check-input" type="checkbox" asp-for="IsCompleted" />
-                <label class="form-check-label" asp-for="IsCompleted">
-                    Completed
-                </label>
             </div>
 
             <div class="form-group mt-3">
                 <input type="submit" value="Save Reminder" class="btn btn-primary" />
-                <a asp-controller="Contacts" asp-action="Details" asp-route-id="@Model.PersonId" class="btn btn-secondary">Cancel</a>
+                @if (entityType == EntityTypes.Person)
+                {
+                     <a asp-controller="Contacts" asp-action="Details" asp-route-id="@entityId" class="btn btn-secondary">Cancel</a>
+                }
+                else
+                {
+                    <a asp-controller="Home" asp-action="Index" class="btn btn-secondary">Cancel</a>
+                }
             </div>
         </form>
     </div>

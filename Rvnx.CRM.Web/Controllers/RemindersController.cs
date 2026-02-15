@@ -1,6 +1,8 @@
 using Microsoft.AspNetCore.Mvc;
+using Rvnx.CRM.Core.Constants;
 using Rvnx.CRM.Core.Interfaces;
 using Rvnx.CRM.Core.Models.Base;
+using Rvnx.CRM.Core.Models.Business;
 using Rvnx.CRM.Core.Models.Contact;
 using Rvnx.CRM.Core.Models.Dates;
 
@@ -15,82 +17,83 @@ namespace Rvnx.CRM.Web.Controllers
             _repository = repository;
         }
 
-        // GET: Reminders/Create?personId=...
-        public async Task<IActionResult> Create(Guid? personId)
+        private async Task<string> GetEntityName(Guid id, string type)
         {
-            if (personId == null)
+            if (type == EntityTypes.Person)
             {
-                return NotFound();
+                var p = await _repository.GetByIdAsync<Contact>(id);
+                return p?.FullName ?? "Unknown Person";
             }
-
-            var person = await _repository.GetByIdAsync<Contact>(personId.Value);
-            if (person == null)
+            else if (type == EntityTypes.Company)
             {
-                return NotFound();
+                var c = await _repository.GetByIdAsync<Employer>(id);
+                return c?.CompanyName ?? "Unknown Company";
             }
+            return "Unknown Entity";
+        }
 
-            ViewData["PersonName"] = person.FullName;
-            ViewData["PersonId"] = person.Id;
+        private IActionResult RedirectToEntity(Guid? id, string? type)
+        {
+            if (id == null || string.IsNullOrEmpty(type)) return RedirectToAction("Index", "Home");
 
-            // Default to tomorrow
-            var reminder = new Reminder
+            if (type == EntityTypes.Person)
             {
-                PersonId = person.Id,
+                return RedirectToAction("Details", "Contacts", new { id });
+            }
+            // Add other types here
+            return RedirectToAction("Index", "Home");
+        }
+
+        // GET: Reminders/Create
+        public async Task<IActionResult> Create(Guid entityId, string entityType)
+        {
+            if (entityId == Guid.Empty || string.IsNullOrEmpty(entityType)) return NotFound();
+
+            ViewData["EntityName"] = await GetEntityName(entityId, entityType);
+            ViewData["EntityId"] = entityId;
+            ViewData["EntityType"] = entityType;
+
+            return View(new Reminder
+            {
+                EntityId = entityId,
+                EntityType = entityType,
                 DueDate = DateTime.Now.AddDays(1)
-            };
-
-            return View(reminder);
+            });
         }
 
         // POST: Reminders/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Title,Description,DueDate,IsCompleted,PersonId,UserId")] Reminder reminder)
+        public async Task<IActionResult> Create([Bind("Title,Description,DueDate,IsCompleted,EntityId,EntityType")] Reminder reminder)
         {
             if (ModelState.IsValid)
             {
                 reminder.Id = Guid.NewGuid();
                 await _repository.AddAsync(reminder);
                 await _repository.SaveChangesAsync();
-
-                if (reminder.PersonId.HasValue)
-                {
-                    return RedirectToAction("Details", "Contacts", new { id = reminder.PersonId });
-                }
-                return RedirectToAction("Index", "Home"); // Should not happen in this flow
+                return RedirectToEntity(reminder.EntityId, reminder.EntityType);
             }
 
-            if (reminder.PersonId.HasValue)
+            if (reminder.EntityId.HasValue && !string.IsNullOrEmpty(reminder.EntityType))
             {
-                var person = await _repository.GetByIdAsync<Contact>(reminder.PersonId.Value);
-                if (person != null)
-                {
-                    ViewData["PersonName"] = person.FullName;
-                    ViewData["PersonId"] = person.Id;
-                }
+                 ViewData["EntityName"] = await GetEntityName(reminder.EntityId.Value, reminder.EntityType);
+                 ViewData["EntityId"] = reminder.EntityId;
+                 ViewData["EntityType"] = reminder.EntityType;
             }
-
             return View(reminder);
         }
 
         // GET: Reminders/Edit/5
         public async Task<IActionResult> Edit(Guid? id)
         {
-            if (id == null)
-            {
-                return NotFound();
-            }
+            if (id == null) return NotFound();
 
-            var reminder = await _repository.GetByIdWithIncludesAsync<Reminder>(id.Value, "Person");
-            if (reminder == null)
-            {
-                return NotFound();
-            }
+            var reminder = await _repository.GetByIdAsync<Reminder>(id.Value);
+            if (reminder == null) return NotFound();
 
-            if (reminder.Person != null)
+            if (reminder.EntityId.HasValue && !string.IsNullOrEmpty(reminder.EntityType))
             {
-                ViewData["PersonName"] = reminder.Person.FullName;
-                ViewData["PersonId"] = reminder.Person.Id;
+                ViewData["EntityName"] = await GetEntityName(reminder.EntityId.Value, reminder.EntityType);
             }
 
             return View(reminder);
@@ -99,12 +102,9 @@ namespace Rvnx.CRM.Web.Controllers
         // POST: Reminders/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(Guid id, [Bind("Id,Title,Description,DueDate,IsCompleted,PersonId,UserId")] Reminder reminder)
+        public async Task<IActionResult> Edit(Guid id, [Bind("Id,Title,Description,DueDate,IsCompleted,EntityId,EntityType,CreatedDate,CreatedBy")] Reminder reminder)
         {
-            if (id != reminder.Id)
-            {
-                return NotFound();
-            }
+            if (id != reminder.Id) return NotFound();
 
             if (ModelState.IsValid)
             {
@@ -115,50 +115,30 @@ namespace Rvnx.CRM.Web.Controllers
                 }
                 catch (Exception)
                 {
-                    if (!await _repository.ExistsAsync<Reminder>(reminder.Id))
-                    {
-                        return NotFound();
-                    }
-                    else
-                    {
-                        throw;
-                    }
+                    if (!await _repository.ExistsAsync<Reminder>(reminder.Id)) return NotFound();
+                    else throw;
                 }
-
-                if (reminder.PersonId.HasValue)
-                {
-                    return RedirectToAction("Details", "Contacts", new { id = reminder.PersonId });
-                }
-                return RedirectToAction("Index", "Home");
+                return RedirectToEntity(reminder.EntityId, reminder.EntityType);
             }
 
-            if (reminder.PersonId.HasValue)
+            if (reminder.EntityId.HasValue && !string.IsNullOrEmpty(reminder.EntityType))
             {
-                var person = await _repository.GetByIdAsync<Contact>(reminder.PersonId.Value);
-                if (person != null)
-                {
-                    ViewData["PersonName"] = person.FullName;
-                    ViewData["PersonId"] = person.Id;
-                }
+                ViewData["EntityName"] = await GetEntityName(reminder.EntityId.Value, reminder.EntityType);
             }
-
             return View(reminder);
         }
 
         // GET: Reminders/Delete/5
         public async Task<IActionResult> Delete(Guid? id)
         {
-            if (id == null)
-            {
-                return NotFound();
-            }
+            if (id == null) return NotFound();
+            var reminder = await _repository.GetByIdAsync<Reminder>(id.Value);
+            if (reminder == null) return NotFound();
 
-            var reminder = await _repository.GetByIdWithIncludesAsync<Reminder>(id.Value, "Person");
-            if (reminder == null)
+            if (reminder.EntityId.HasValue && !string.IsNullOrEmpty(reminder.EntityType))
             {
-                return NotFound();
+                ViewData["EntityName"] = await GetEntityName(reminder.EntityId.Value, reminder.EntityType);
             }
-
             return View(reminder);
         }
 
@@ -170,17 +150,13 @@ namespace Rvnx.CRM.Web.Controllers
             var reminder = await _repository.GetByIdAsync<Reminder>(id);
             if (reminder != null)
             {
-                var personId = reminder.PersonId;
+                var entityId = reminder.EntityId;
+                var entityType = reminder.EntityType;
                 await _repository.DeleteAsync<Reminder>(id);
                 await _repository.SaveChangesAsync();
-
-                if (personId.HasValue)
-                {
-                    return RedirectToAction("Details", "Contacts", new { id = personId });
-                }
-                return RedirectToAction("Index", "Home");
+                return RedirectToEntity(entityId, entityType);
             }
-            return RedirectToAction("Index", "Contacts");
+            return RedirectToAction("Index", "Home");
         }
     }
 }

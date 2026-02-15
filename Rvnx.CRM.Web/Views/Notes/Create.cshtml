@@ -2,17 +2,19 @@
 
 @{
     ViewData["Title"] = "Add Note";
-    var personId = ViewData["PersonId"] as Guid?;
-    var personName = ViewData["PersonName"] as string;
+    var entityId = ViewData["EntityId"] as Guid?;
+    var entityType = ViewData["EntityType"] as string;
+    var entityName = ViewData["EntityName"] as string;
 }
 
-<h1>Add Note for @personName</h1>
+<h1>Add Note for @entityName</h1>
 
 <div class="row">
     <div class="col-md-6">
         <form asp-action="Create">
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-            <input type="hidden" asp-for="PersonId" value="@personId" />
+            <input type="hidden" asp-for="EntityId" value="@entityId" />
+            <input type="hidden" asp-for="EntityType" value="@entityType" />
 
             <div class="mb-3">
                 <label asp-for="Title" class="form-label"></label>
@@ -28,7 +30,7 @@
 
             <div class="mt-3">
                 <button type="submit" class="btn btn-primary"><i class="bi bi-save"></i> Save Note</button>
-                <a asp-controller="Contacts" asp-action="Details" asp-route-id="@personId" class="btn btn-secondary"><i class="bi bi-x-lg"></i> Cancel</a>
+                <a asp-controller="Contacts" asp-action="Details" asp-route-id="@entityId" class="btn btn-secondary"><i class="bi bi-x-lg"></i> Cancel</a>
             </div>
         </form>
     </div>
