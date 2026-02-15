@@ -22,6 +22,9 @@
                 </div>
                 <div class="card-body">
                     <dl class="row">
+                        <dt class="col-sm-4">Nickname</dt>
+                        <dd class="col-sm-8">@Model.Nickname</dd>
+
                         <dt class="col-sm-4">Email</dt>
                         <dd class="col-sm-8"><a href="mailto:@Model.Email">@Model.Email</a></dd>
 
@@ -60,6 +63,10 @@
                                             @rel.RelatedPerson?.FullName
                                         </a>
                                     </div>
+                                    <div class="btn-group btn-group-sm">
+                                         <a asp-controller="Relationships" asp-action="Edit" asp-route-id="@rel.Id" class="btn btn-outline-secondary">Edit</a>
+                                         <a asp-controller="Relationships" asp-action="Delete" asp-route-id="@rel.Id" class="btn btn-outline-danger">Del</a>
+                                    </div>
                                 </li>
                             }
                         }
@@ -73,6 +80,10 @@
                                         <a asp-action="Details" asp-route-id="@rel.PersonId">
                                             @rel.Person?.FullName
                                         </a>
+                                    </div>
+                                    <div class="btn-group btn-group-sm">
+                                         <a asp-controller="Relationships" asp-action="Edit" asp-route-id="@rel.Id" class="btn btn-outline-secondary">Edit</a>
+                                         <a asp-controller="Relationships" asp-action="Delete" asp-route-id="@rel.Id" class="btn btn-outline-danger">Del</a>
                                     </div>
                                 </li>
                             }
@@ -104,9 +115,15 @@
                                 <li class="list-group-item">
                                     <div class="d-flex w-100 justify-content-between">
                                         <h6 class="mb-1">@reminder.Title</h6>
-                                        <small class="@(reminder.DueDate < DateTime.Now ? "text-danger" : "text-muted")">
-                                            @reminder.DueDate.ToShortDateString()
-                                        </small>
+                                        <div>
+                                            <small class="@(reminder.DueDate < DateTime.Now ? "text-danger" : "text-muted")">
+                                                @reminder.DueDate.ToShortDateString()
+                                            </small>
+                                            <div class="btn-group btn-group-sm ml-2">
+                                                <a asp-controller="Reminders" asp-action="Edit" asp-route-id="@reminder.Id" class="btn btn-outline-secondary">Edit</a>
+                                                <a asp-controller="Reminders" asp-action="Delete" asp-route-id="@reminder.Id" class="btn btn-outline-danger">Del</a>
+                                            </div>
+                                        </div>
                                     </div>
                                     <p class="mb-1">@reminder.Description</p>
                                 </li>
@@ -133,7 +150,13 @@
                         {
                             <div class="card mb-2">
                                 <div class="card-body">
-                                    <h6 class="card-subtitle mb-2 text-muted">@note.Title <small>@note.CreatedDate.ToShortDateString()</small></h6>
+                                    <div class="d-flex justify-content-between">
+                                        <h6 class="card-subtitle mb-2 text-muted">@note.Title <small>@note.CreatedDate.ToShortDateString()</small></h6>
+                                        <div class="btn-group btn-group-sm">
+                                            <a asp-controller="Notes" asp-action="Edit" asp-route-id="@note.Id" class="btn btn-outline-secondary">Edit</a>
+                                            <a asp-controller="Notes" asp-action="Delete" asp-route-id="@note.Id" class="btn btn-outline-danger">Del</a>
+                                        </div>
+                                    </div>
                                     <p class="card-text">@note.Value</p>
                                 </div>
                             </div>

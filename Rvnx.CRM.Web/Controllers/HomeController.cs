@@ -20,8 +20,8 @@ namespace Rvnx.CRM.Web.Controllers
 
         public async Task<IActionResult> Index()
         {
-            // Get people from the database with pagination for performance
-            var people = await _repository.ListAsync<Person>(skip: 0, take: 100);
+            // Get all people from the database
+            var people = await _repository.ListAsync<Person>();
 
             // Log the count for debugging
             _logger.LogInformation($"Found {people.Count} people in the database");
