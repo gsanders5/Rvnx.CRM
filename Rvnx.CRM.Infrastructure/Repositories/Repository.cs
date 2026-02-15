@@ -15,14 +15,30 @@ public class Repository(CRMDbContext context) : IRepository
         return await _context.Set<T>().FindAsync(new object[] { id }, cancellationToken);
     }
 
-    public async Task<List<T>> ListAsync<T>(CancellationToken cancellationToken = default) where T : CRMBaseEntity
+    public IQueryable<T> GetQuery<T>() where T : CRMBaseEntity
     {
-        return await _context.Set<T>().ToListAsync(cancellationToken);
+        return _context.Set<T>();
     }
 
-    public async Task<List<T>> ListAsNoTrackingAsync<T>(CancellationToken cancellationToken = default) where T : CRMBaseEntity
+    public IQueryable<T> GetQueryAsNoTracking<T>() where T : CRMBaseEntity
     {
-        return await _context.Set<T>().AsNoTracking().ToListAsync(cancellationToken);
+        return _context.Set<T>().AsNoTracking();
+    }
+
+    public async Task<List<T>> ListAsync<T>(int? skip = null, int? take = null, CancellationToken cancellationToken = default) where T : CRMBaseEntity
+    {
+        var query = GetQuery<T>();
+        if (skip.HasValue) query = query.Skip(skip.Value);
+        if (take.HasValue) query = query.Take(take.Value);
+        return await query.ToListAsync(cancellationToken);
+    }
+
+    public async Task<List<T>> ListAsNoTrackingAsync<T>(int? skip = null, int? take = null, CancellationToken cancellationToken = default) where T : CRMBaseEntity
+    {
+        var query = GetQueryAsNoTracking<T>();
+        if (skip.HasValue) query = query.Skip(skip.Value);
+        if (take.HasValue) query = query.Take(take.Value);
+        return await query.ToListAsync(cancellationToken);
     }
 
     // Create Operations
