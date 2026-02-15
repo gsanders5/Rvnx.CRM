@@ -320,6 +320,15 @@ namespace Rvnx.CRM.Web.Controllers
                     // --- Profile Image ---
                     if (profileImage != null && profileImage.Length > 0)
                     {
+                        // Validate file type
+                        var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".gif" };
+                        var extension = Path.GetExtension(profileImage.FileName).ToLowerInvariant();
+                        if (!allowedExtensions.Contains(extension) || !profileImage.ContentType.StartsWith("image/"))
+                        {
+                            ModelState.AddModelError("", "Only image files (jpg, jpeg, png, gif) are allowed.");
+                            return View(contactDto);
+                        }
+
                         using var ms = new MemoryStream();
                         await profileImage.CopyToAsync(ms);
                         var fileBytes = ms.ToArray();
