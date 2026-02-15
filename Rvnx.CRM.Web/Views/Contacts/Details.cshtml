@@ -116,14 +116,6 @@
                     {
                         var groups = Model.Facts.GroupBy(f => f.Category).OrderBy(g => g.Key);
 
-                        // Category Pills
-                        <div class="mb-3">
-                            @foreach (var group in groups)
-                            {
-                                <span class="badge rounded-pill bg-light text-dark border me-1 mb-1">@group.Key</span>
-                            }
-                        </div>
-
                         foreach (var group in groups)
                         {
                             <h6 class="text-primary small fw-bold mt-2 mb-1 border-bottom pb-1">@group.Key</h6>
@@ -259,6 +251,15 @@
                                         <h6 class="mb-1">@date.Title</h6>
                                         <div>
                                             <span class="badge bg-info text-dark">@date.Date.ToShortDateString()</span>
+
+                                            @if(string.Equals(date.Title, "Birthday", StringComparison.OrdinalIgnoreCase))
+                                            {
+                                                var today = DateTime.Today;
+                                                var age = today.Year - date.Date.Year;
+                                                if (date.Date.Date > today.AddYears(-age)) age--;
+                                                <span class="badge bg-secondary">@age years old</span>
+                                            }
+
                                             <div class="btn-group btn-group-sm ml-2">
                                                 <a asp-controller="ImportantDates" asp-action="Edit" asp-route-id="@date.Id" class="btn btn-outline-secondary" title="Edit"><i class="bi bi-pencil-square"></i></a>
                                                 <a asp-controller="ImportantDates" asp-action="Delete" asp-route-id="@date.Id" class="btn btn-outline-danger" title="Delete"><i class="bi bi-trash"></i></a>
