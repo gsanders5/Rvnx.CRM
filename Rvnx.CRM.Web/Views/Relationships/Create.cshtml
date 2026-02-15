@@ -22,11 +22,11 @@
             </div>
 
             <div class="mb-3">
-                <label asp-for="Type" class="form-label">Relationship Type</label>
-                <select asp-for="Type" class="form-control" asp-items="ViewBag.Type">
+                <label for="relationshipTypeSelection" class="form-label">Relationship Type</label>
+                <select name="relationshipTypeSelection" class="form-control" asp-items="ViewBag.RelationshipTypeSelection">
                      <option value="">-- Select Type --</option>
                 </select>
-                <span asp-validation-for="Type" class="text-danger"></span>
+                @Html.ValidationMessage("RelationshipTypeSelection", new { @class = "text-danger" })
             </div>
 
             <div class="mb-3">

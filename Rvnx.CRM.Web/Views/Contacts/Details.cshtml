@@ -47,18 +47,35 @@
                     <a asp-controller="Relationships" asp-action="Create" asp-route-personId="@Model.Id" class="btn btn-sm btn-outline-primary">Add Relationship</a>
                 </div>
                 <ul class="list-group list-group-flush">
-                    @if (Model.Relationships != null && Model.Relationships.Any())
+                    @if ((Model.Relationships != null && Model.Relationships.Any()) || (Model.RelatedTo != null && Model.RelatedTo.Any()))
                     {
-                        foreach (var rel in Model.Relationships)
+                        @if (Model.Relationships != null)
                         {
-                            <li class="list-group-item d-flex justify-content-between align-items-center">
-                                <div>
-                                    <strong>@rel.Type:</strong>
-                                    <a asp-action="Details" asp-route-id="@rel.RelatedPersonId">
-                                        @rel.RelatedPerson?.FullName
-                                    </a>
-                                </div>
-                            </li>
+                            foreach (var rel in Model.Relationships)
+                            {
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <strong>@rel.RelationshipType?.OppositeName:</strong>
+                                        <a asp-action="Details" asp-route-id="@rel.RelatedPersonId">
+                                            @rel.RelatedPerson?.FullName
+                                        </a>
+                                    </div>
+                                </li>
+                            }
+                        }
+                        @if (Model.RelatedTo != null)
+                        {
+                            foreach (var rel in Model.RelatedTo)
+                            {
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <strong>@rel.RelationshipType?.Name:</strong>
+                                        <a asp-action="Details" asp-route-id="@rel.PersonId">
+                                            @rel.Person?.FullName
+                                        </a>
+                                    </div>
+                                </li>
+                            }
                         }
                     }
                     else

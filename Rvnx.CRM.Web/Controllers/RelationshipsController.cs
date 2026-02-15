@@ -31,14 +31,23 @@ namespace Rvnx.CRM.Web.Controllers
 
             // Get potential related people (exclude current person)
             var allPeople = await _repository.ListAsync<Contact>();
-            var availablePeople = allPeople.Where(p => p.Id != personId).ToList();
+            var availablePeople = allPeople.Where(p => p.Id != personId).OrderBy(p => p.FullName).ToList();
 
             ViewData["PersonName"] = person.FullName;
             ViewData["RelatedPersonId"] = new SelectList(availablePeople, "Id", "FullName");
 
-            // Standard relationship types
-            var types = new List<string> { "Partner", "Spouse", "Child", "Parent", "Sibling", "Friend", "Colleague", "Manager", "Direct Report", "Other" };
-            ViewData["Type"] = new SelectList(types);
+            // Relationship Types
+            var types = await _repository.ListAsync<RelationshipType>();
+            var options = new List<SelectListItem>();
+            foreach (var t in types)
+            {
+                options.Add(new SelectListItem { Value = $"{t.Id}_Fwd", Text = t.Name });
+                if (!t.IsSymmetric)
+                {
+                    options.Add(new SelectListItem { Value = $"{t.Id}_Rev", Text = t.OppositeName });
+                }
+            }
+            ViewData["RelationshipTypeSelection"] = new SelectList(options, "Value", "Text");
 
             return View(new Relationship { PersonId = person.Id });
         }
@@ -46,29 +55,84 @@ namespace Rvnx.CRM.Web.Controllers
         // POST: Relationships/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("PersonId,RelatedPersonId,Type,Description,StartDate,EndDate,UserId")] Relationship relationship)
+        public async Task<IActionResult> Create([Bind("PersonId,RelatedPersonId,Description,StartDate,EndDate,UserId")] Relationship relationship, string relationshipTypeSelection)
         {
+            if (string.IsNullOrEmpty(relationshipTypeSelection))
+            {
+                ModelState.AddModelError("RelationshipTypeSelection", "Relationship Type is required.");
+            }
+
             if (ModelState.IsValid)
             {
-                relationship.Id = Guid.NewGuid();
-                await _repository.AddAsync(relationship);
-                await _repository.SaveChangesAsync();
-                return RedirectToAction("Details", "Contacts", new { id = relationship.PersonId });
+                var parts = relationshipTypeSelection.Split('_');
+                if (parts.Length == 2 && Guid.TryParse(parts[0], out var typeId))
+                {
+                    var direction = parts[1]; // Fwd or Rev
+                    relationship.RelationshipTypeId = typeId;
+
+                    // Capture original person ID for redirection
+                    var originalPersonId = relationship.PersonId;
+
+                    if (direction == "Rev")
+                    {
+                        // Swap so DB record matches the "Forward" definition
+                        // Example: User says "A is Child of B". (Selected "Child", which is Rev of Parent).
+                        // Logic: A is Child -> B is Parent.
+                        // Record: Person=B (Parent), Related=A (Child), Type=Parent.
+                        var temp = relationship.PersonId;
+                        relationship.PersonId = relationship.RelatedPersonId;
+                        relationship.RelatedPersonId = temp;
+                    }
+
+                    relationship.Id = Guid.NewGuid();
+                    await _repository.AddAsync(relationship);
+                    await _repository.SaveChangesAsync();
+
+                    return RedirectToAction("Details", "Contacts", new { id = originalPersonId });
+                }
+                else
+                {
+                     ModelState.AddModelError("RelationshipTypeSelection", "Invalid Relationship Type.");
+                }
             }
 
             // Reload data if validation fails
-            var person = await _repository.GetByIdAsync<Contact>(relationship.PersonId);
+            var person = await _repository.GetByIdAsync<Contact>(relationship.PersonId); // Note: PersonId might be swapped if failed after swap? No, struct is ref type but passed by value reference?
+            // If validation failed BEFORE swap, PersonId is correct.
+            // If validation failed AFTER swap (e.g. SaveChanges error), PersonId is swapped.
+            // But we only swap if ModelState.IsValid is true initially.
+            // So if we fall through here, it's likely pre-swap validation failure OR catch block (not here).
+
+            // To be safe, rely on the ID passed in form?
+            // Actually, if we are here, we need to reload purely based on initial state.
+            // But `relationship` object is modified if we swapped.
+            // Let's re-read PersonId from the original request?
+            // Or just assume if we are here, we haven't swapped yet because `ModelState.IsValid` check covers most cases.
+            // Exception: logic inside the IsValid block fails? No, we return Redirect.
+            // So we are safe.
+
             if (person != null)
             {
                 ViewData["PersonName"] = person.FullName;
             }
 
             var allPeople = await _repository.ListAsync<Contact>();
-            var availablePeople = allPeople.Where(p => p.Id != relationship.PersonId).ToList();
+            // We need the Original Person ID to exclude.
+            // If we haven't swapped, it's relationship.PersonId.
+            var availablePeople = allPeople.Where(p => p.Id != relationship.PersonId).OrderBy(p => p.FullName).ToList();
             ViewData["RelatedPersonId"] = new SelectList(availablePeople, "Id", "FullName", relationship.RelatedPersonId);
 
-            var types = new List<string> { "Partner", "Spouse", "Child", "Parent", "Sibling", "Friend", "Colleague", "Manager", "Direct Report", "Other" };
-            ViewData["Type"] = new SelectList(types, relationship.Type);
+            var types = await _repository.ListAsync<RelationshipType>();
+            var options = new List<SelectListItem>();
+            foreach (var t in types)
+            {
+                options.Add(new SelectListItem { Value = $"{t.Id}_Fwd", Text = t.Name });
+                if (!t.IsSymmetric)
+                {
+                    options.Add(new SelectListItem { Value = $"{t.Id}_Rev", Text = t.OppositeName });
+                }
+            }
+            ViewData["RelationshipTypeSelection"] = new SelectList(options, "Value", "Text", relationshipTypeSelection);
 
             return View(relationship);
         }

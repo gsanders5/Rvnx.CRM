@@ -22,9 +22,11 @@ public class Relationship : CRMBaseEntity
     public virtual Person? RelatedPerson { get; set; }
 
     [Required]
-    [MaxLength(100)]
     [Display(Name = "Relationship Type")]
-    public string Type { get; set; } = string.Empty;
+    public Guid RelationshipTypeId { get; set; }
+
+    [ForeignKey(nameof(RelationshipTypeId))]
+    public virtual RelationshipType? RelationshipType { get; set; }
 
     [Display(Name = "Description")]
     public string? Description { get; set; }

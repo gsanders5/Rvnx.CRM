@@ -37,6 +37,9 @@ namespace Rvnx.CRM.Web.Controllers
                 id.Value,
                 "Notes",
                 "Relationships.RelatedPerson",
+                "Relationships.RelationshipType",
+                "RelatedTo.Person",
+                "RelatedTo.RelationshipType",
                 "Reminders",
                 "Employers",
                 "ImportantDates"
@@ -156,8 +159,22 @@ namespace Rvnx.CRM.Web.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(Guid id)
         {
-            await _repository.DeleteAsync<Contact>(id);
-            await _repository.SaveChangesAsync();
+            var contact = await _repository.GetByIdWithIncludesAsync<Contact>(id, "Relationships", "RelatedTo");
+
+            if (contact != null)
+            {
+                if (contact.Relationships.Any())
+                {
+                    await _repository.DeleteRangeAsync(contact.Relationships);
+                }
+                if (contact.RelatedTo.Any())
+                {
+                    await _repository.DeleteRangeAsync(contact.RelatedTo);
+                }
+
+                await _repository.DeleteAsync<Contact>(id);
+                await _repository.SaveChangesAsync();
+            }
             return RedirectToAction(nameof(Index));
         }
 
