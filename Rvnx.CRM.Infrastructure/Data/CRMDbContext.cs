@@ -13,10 +13,24 @@ public class CRMDbContext(DbContextOptions<CRMDbContext> options) : DbContext(op
     public DbSet<PhoneNumber> PhoneNumbers { get; set; }
     public DbSet<Note> Notes { get; set; }
     public DbSet<ImportantDate> ImportantDates { get; set; }
+    public DbSet<Relationship> Relationships { get; set; }
+    public DbSet<Reminder> Reminders { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
+
+        modelBuilder.Entity<Relationship>()
+            .HasOne(r => r.Person)
+            .WithMany(p => p.Relationships)
+            .HasForeignKey(r => r.PersonId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<Relationship>()
+            .HasOne(r => r.RelatedPerson)
+            .WithMany(p => p.RelatedTo)
+            .HasForeignKey(r => r.RelatedPersonId)
+            .OnDelete(DeleteBehavior.Restrict);
     }
 
     public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)

@@ -1,0 +1,54 @@
+@model Rvnx.CRM.Core.Models.Contact.Relationship
+
+@{
+    ViewData["Title"] = "Add Relationship";
+    var personName = ViewData["PersonName"] as string;
+}
+
+<h1>Add Relationship for @personName</h1>
+
+<div class="row">
+    <div class="col-md-6">
+        <form asp-action="Create">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <input type="hidden" asp-for="PersonId" />
+
+            <div class="mb-3">
+                <label asp-for="RelatedPersonId" class="form-label">Related Person</label>
+                <select asp-for="RelatedPersonId" class="form-control" asp-items="ViewBag.RelatedPersonId">
+                    <option value="">-- Select Person --</option>
+                </select>
+                <span asp-validation-for="RelatedPersonId" class="text-danger"></span>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="Type" class="form-label">Relationship Type</label>
+                <select asp-for="Type" class="form-control" asp-items="ViewBag.Type">
+                     <option value="">-- Select Type --</option>
+                </select>
+                <span asp-validation-for="Type" class="text-danger"></span>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="Description" class="form-label"></label>
+                <textarea asp-for="Description" class="form-control" rows="3"></textarea>
+                <span asp-validation-for="Description" class="text-danger"></span>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="StartDate" class="form-label"></label>
+                <input asp-for="StartDate" class="form-control" type="date" />
+                <span asp-validation-for="StartDate" class="text-danger"></span>
+            </div>
+
+            <div class="form-group mt-3">
+                <input type="submit" value="Save Relationship" class="btn btn-primary" />
+                <a asp-controller="Contacts" asp-action="Details" asp-route-id="@Model.PersonId" class="btn btn-secondary">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

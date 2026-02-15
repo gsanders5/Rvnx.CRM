@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Rvnx.CRM.Infrastructure.Data;
 
@@ -10,9 +11,11 @@ using Rvnx.CRM.Infrastructure.Data;
 namespace Rvnx.CRM.Infrastructure.Migrations
 {
     [DbContext(typeof(CRMDbContext))]
-    partial class CRMDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260215001221_AddRelationshipAndReminder")]
+    partial class AddRelationshipAndReminder
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "9.0.8");
@@ -112,10 +115,6 @@ namespace Rvnx.CRM.Infrastructure.Migrations
                     b.Property<DateTime?>("Birthday")
                         .HasColumnType("TEXT");
 
-                    b.Property<string>("Company")
-                        .HasMaxLength(200)
-                        .HasColumnType("TEXT");
-
                     b.Property<Guid?>("CompanyId")
                         .HasColumnType("TEXT");
 
@@ -127,17 +126,8 @@ namespace Rvnx.CRM.Infrastructure.Migrations
                     b.Property<DateTime>("CreatedDate")
                         .HasColumnType("TEXT");
 
-                    b.Property<string>("Email")
-                        .IsRequired()
-                        .HasMaxLength(256)
-                        .HasColumnType("TEXT");
-
                     b.Property<string>("FirstName")
                         .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("JobTitle")
                         .HasMaxLength(100)
                         .HasColumnType("TEXT");
 
@@ -152,10 +142,6 @@ namespace Rvnx.CRM.Infrastructure.Migrations
                     b.Property<string>("LastName")
                         .IsRequired()
                         .HasMaxLength(100)
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Phone")
-                        .HasMaxLength(20)
                         .HasColumnType("TEXT");
 
                     b.Property<string>("UserId")

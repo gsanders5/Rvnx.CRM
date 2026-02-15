@@ -19,8 +19,7 @@ public class Note : CRMBaseEntity
     [Display(Name = "Person ID")]
     public Guid PersonId { get; set; }
 
-    [Required]
     [Display(Name = "Person")]
     [ForeignKey(nameof(PersonId))]
-    public virtual Person Person { get; set; } = null!;
+    public virtual Person? Person { get; set; }
 }
