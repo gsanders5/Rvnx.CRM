@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Rvnx.CRM.Core.Interfaces;
 using Rvnx.CRM.Core.Models.Base;
 using Rvnx.CRM.Infrastructure.Data;
@@ -10,10 +10,9 @@ public class Repository(CRMDbContext context) : IRepository
 {
     private readonly CRMDbContext _context = context;
 
-    // Read Operations
     public async Task<T?> GetByIdAsync<T>(Guid id, CancellationToken cancellationToken = default) where T : CRMBaseEntity
     {
-        return await _context.Set<T>().FindAsync(new object[] { id }, cancellationToken);
+        return await _context.Set<T>().FindAsync([id], cancellationToken);
     }
 
     public async Task<T?> GetByIdWithIncludesAsync<T>(Guid id, params string[] includes) where T : CRMBaseEntity
@@ -50,6 +49,18 @@ public class Repository(CRMDbContext context) : IRepository
         return await _context.Set<T>().Where(predicate).ToListAsync(cancellationToken);
     }
 
+    public async Task<List<T>> ListAsync<T>(Expression<Func<T, bool>> predicate, CancellationToken cancellationToken = default, params string[] includes) where T : CRMBaseEntity
+    {
+        IQueryable<T> query = _context.Set<T>().Where(predicate);
+
+        foreach (string include in includes)
+        {
+            query = query.Include(include);
+        }
+
+        return await query.ToListAsync(cancellationToken);
+    }
+
     public async Task<List<T>> ListAsNoTrackingAsync<T>(int? skip = null, int? take = null, CancellationToken cancellationToken = default) where T : CRMBaseEntity
     {
         IQueryable<T> query = _context.Set<T>().AsNoTracking();
@@ -67,7 +78,18 @@ public class Repository(CRMDbContext context) : IRepository
         return await query.ToListAsync(cancellationToken);
     }
 
-    // Create Operations
+    public async Task<List<T>> ListAsNoTrackingAsync<T>(Expression<Func<T, bool>> predicate, CancellationToken cancellationToken = default, params string[] includes) where T : CRMBaseEntity
+    {
+        IQueryable<T> query = _context.Set<T>().AsNoTracking().Where(predicate);
+
+        foreach (string include in includes)
+        {
+            query = query.Include(include);
+        }
+
+        return await query.ToListAsync(cancellationToken);
+    }
+
     public async Task<T> AddAsync<T>(T entity, CancellationToken cancellationToken = default) where T : CRMBaseEntity
     {
         Microsoft.EntityFrameworkCore.ChangeTracking.EntityEntry<T> entry = await _context.Set<T>().AddAsync(entity, cancellationToken);
@@ -81,14 +103,12 @@ public class Repository(CRMDbContext context) : IRepository
         return entitiesList;
     }
 
-    // Update Operations
     public Task<T> UpdateAsync<T>(T entity, CancellationToken cancellationToken = default) where T : CRMBaseEntity
     {
         _context.Set<T>().Update(entity);
         return Task.FromResult(entity);
     }
 
-    // Delete Operations
     public Task DeleteAsync<T>(Guid id, CancellationToken cancellationToken = default) where T : CRMBaseEntity
     {
         T? entity = _context.Set<T>().Local.FirstOrDefault(e => e.Id == id);
@@ -114,13 +134,11 @@ public class Repository(CRMDbContext context) : IRepository
         return Task.CompletedTask;
     }
 
-    // Persistence
     public async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
     {
         return await _context.SaveChangesAsync(cancellationToken);
     }
 
-    // Utility
     public async Task<bool> ExistsAsync<T>(Guid id, CancellationToken cancellationToken = default) where T : CRMBaseEntity
     {
         return await _context.Set<T>().AnyAsync(e => e.Id == id, cancellationToken);
@@ -129,5 +147,10 @@ public class Repository(CRMDbContext context) : IRepository
     public async Task<int> CountAsync<T>(CancellationToken cancellationToken = default) where T : CRMBaseEntity
     {
         return await _context.Set<T>().CountAsync(cancellationToken);
+    }
+
+    public async Task<int> CountAsync<T>(Expression<Func<T, bool>> predicate, CancellationToken cancellationToken = default) where T : CRMBaseEntity
+    {
+        return await _context.Set<T>().CountAsync(predicate, cancellationToken);
     }
 }

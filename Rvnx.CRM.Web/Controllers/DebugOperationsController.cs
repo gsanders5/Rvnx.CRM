@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Rvnx.CRM.Core.Constants;
 using Rvnx.CRM.Core.Interfaces;
 using Rvnx.CRM.Core.Models.Base;
 using Rvnx.CRM.Core.Models.Contact;
@@ -37,9 +38,9 @@ namespace Rvnx.CRM.Web.Controllers
                 var infos = contact.ContactInfos?.ToList();
                 var dates = contact.ImportantDates?.ToList();
 
-                contact.Addresses = null;
-                contact.ContactInfos = null;
-                contact.ImportantDates = null;
+                contact.Addresses = [];
+                contact.ContactInfos = [];
+                contact.ImportantDates = [];
 
                 await _repository.AddAsync(contact);
                 await _repository.SaveChangesAsync(); // Save contact first to ensure it exists
@@ -109,8 +110,79 @@ namespace Rvnx.CRM.Web.Controllers
             var addresses = await _repository.ListAsync<Address>();
             await _repository.DeleteRangeAsync(addresses);
 
+            var relationships = await _repository.ListAsync<Relationship>();
+            await _repository.DeleteRangeAsync(relationships);
+
             await _repository.SaveChangesAsync();
 
+            return RedirectToAction("Index");
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> AddRandomRelationships()
+        {
+            // 1. Ensure Relationship Types exist
+            var types = await _repository.ListAsync<RelationshipType>();
+            if (!types.Any())
+            {
+                var defaultTypes = new List<RelationshipType>
+                {
+                    new() { Id = Guid.NewGuid(), Name = "Friend", OppositeName = "Friend", EntityType = EntityTypes.Person },
+                    new() { Id = Guid.NewGuid(), Name = "Colleague", OppositeName = "Colleague", EntityType = EntityTypes.Person },
+                    new() { Id = Guid.NewGuid(), Name = "Family", OppositeName = "Family", EntityType = EntityTypes.Person },
+                    new() { Id = Guid.NewGuid(), Name = "Parent", OppositeName = "Child", EntityType = EntityTypes.Person },
+                    new() { Id = Guid.NewGuid(), Name = "Manager", OppositeName = "Direct Report", EntityType = EntityTypes.Person }
+                };
+                await _repository.AddRangeAsync(defaultTypes);
+                await _repository.SaveChangesAsync();
+                types = defaultTypes;
+            }
+
+            // 2. Get Contacts
+            var contacts = await _repository.ListAsync<Contact>();
+            if (contacts.Count < 2)
+            {
+                TempData["Message"] = "Not enough contacts to create relationships.";
+                return RedirectToAction("Index");
+            }
+
+            // 3. Generate Random Relationships
+            var random = new Random();
+            int relationshipsToCreate = Math.Min(contacts.Count * 2, 50); // Just a heuristic
+            int createdCount = 0;
+
+            for (int i = 0; i < relationshipsToCreate; i++)
+            {
+                var c1 = contacts[random.Next(contacts.Count)];
+                var c2 = contacts[random.Next(contacts.Count)];
+
+                if (c1.Id == c2.Id) continue;
+
+                var type = types[random.Next(types.Count)];
+
+                // Check if relationship already exists
+                var existing = await _repository.ListAsync<Relationship>(r =>
+                    r.EntityId == c1.Id && r.RelatedEntityId == c2.Id && r.RelationshipTypeId == type.Id);
+
+                if (existing.Any()) continue;
+
+                var rel = new Relationship
+                {
+                    Id = Guid.NewGuid(),
+                    EntityId = c1.Id,
+                    RelatedEntityId = c2.Id,
+                    EntityType = EntityTypes.Person,
+                    RelationshipTypeId = type.Id,
+                    Description = "Randomly generated"
+                };
+
+                await _repository.AddAsync(rel);
+                createdCount++;
+            }
+
+            await _repository.SaveChangesAsync();
+            TempData["Message"] = $"Created {createdCount} relationships.";
             return RedirectToAction("Index");
         }
     }

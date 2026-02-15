@@ -14,7 +14,11 @@ public interface IRepository
 
     Task<List<T>> ListAsync<T>(Expression<Func<T, bool>> predicate, CancellationToken cancellationToken = default) where T : CRMBaseEntity;
 
+    Task<List<T>> ListAsync<T>(Expression<Func<T, bool>> predicate, CancellationToken cancellationToken = default, params string[] includes) where T : CRMBaseEntity;
+
     Task<List<T>> ListAsNoTrackingAsync<T>(int? skip = null, int? take = null, CancellationToken cancellationToken = default) where T : CRMBaseEntity;
+
+    Task<List<T>> ListAsNoTrackingAsync<T>(Expression<Func<T, bool>> predicate, CancellationToken cancellationToken = default, params string[] includes) where T : CRMBaseEntity;
 
 
     // Create Operations  
@@ -43,4 +47,6 @@ public interface IRepository
     Task<bool> ExistsAsync<T>(Guid id, CancellationToken cancellationToken = default) where T : CRMBaseEntity;
 
     Task<int> CountAsync<T>(CancellationToken cancellationToken = default) where T : CRMBaseEntity;
+
+    Task<int> CountAsync<T>(Expression<Func<T, bool>> predicate, CancellationToken cancellationToken = default) where T : CRMBaseEntity;
 }
