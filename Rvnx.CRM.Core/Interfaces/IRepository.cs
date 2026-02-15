@@ -10,9 +10,9 @@ public interface IRepository
 
     Task<T?> GetByIdWithIncludesAsync<T>(Guid id, params string[] includes) where T : CRMBaseEntity;
 
-    Task<List<T>> ListAsync<T>(CancellationToken cancellationToken = default) where T : CRMBaseEntity;
+    Task<List<T>> ListAsync<T>(int? skip = null, int? take = null, CancellationToken cancellationToken = default) where T : CRMBaseEntity;
 
-    Task<List<T>> ListAsNoTrackingAsync<T>(CancellationToken cancellationToken = default) where T : CRMBaseEntity;
+    Task<List<T>> ListAsNoTrackingAsync<T>(int? skip = null, int? take = null, CancellationToken cancellationToken = default) where T : CRMBaseEntity;
 
 
     // Create Operations  
