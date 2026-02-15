@@ -2,9 +2,8 @@ using System;
 
 namespace Rvnx.CRM.Core.DTOs.Common
 {
-    public class RelationshipDto
+    public class RelationshipDto : BaseDto
     {
-        public Guid Id { get; set; }
         public Guid EntityId { get; set; }
         public string EntityType { get; set; } = string.Empty;
         public Guid RelatedEntityId { get; set; }
@@ -16,5 +15,9 @@ namespace Rvnx.CRM.Core.DTOs.Common
         public string RelatedEntityName { get; set; } = string.Empty;
 
         public Guid RelationshipTypeId { get; set; }
+
+        public string? Description { get; set; }
+        public DateTime? StartDate { get; set; }
+        public DateTime? EndDate { get; set; }
     }
 }

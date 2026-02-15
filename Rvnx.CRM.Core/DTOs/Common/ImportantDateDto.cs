@@ -2,9 +2,8 @@ using System;
 
 namespace Rvnx.CRM.Core.DTOs.Common
 {
-    public class ImportantDateDto
+    public class ImportantDateDto : BaseDto
     {
-        public Guid Id { get; set; }
         public string Title { get; set; } = string.Empty;
         public DateTime Date { get; set; }
         public string? Description { get; set; }

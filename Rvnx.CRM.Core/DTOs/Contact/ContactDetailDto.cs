@@ -1,3 +1,4 @@
+using Rvnx.CRM.Core.DTOs.Business;
 using Rvnx.CRM.Core.DTOs.Common;
 using Rvnx.CRM.Core.DTOs.Pet;
 using System.Collections.Generic;
@@ -18,5 +19,6 @@ namespace Rvnx.CRM.Core.DTOs.Contact
         public IEnumerable<RelationshipDto> Relationships { get; set; } = new List<RelationshipDto>();
         public IEnumerable<RelationshipDto> RelatedTo { get; set; } = new List<RelationshipDto>();
         public IEnumerable<PetDto> Pets { get; set; } = new List<PetDto>();
+        public IEnumerable<EmployerDto> Employers { get; set; } = new List<EmployerDto>();
     }
 }
