@@ -20,9 +20,9 @@
         <div class="col-md-4">
             <!-- Profile Card -->
             <div class="card mb-4 shadow-sm">
-                @if (!string.IsNullOrEmpty(Model.ProfileImageBase64))
+                @if (Model.ProfileImageId.HasValue)
                 {
-                    <img src="data:@Model.ProfileImageContentType;base64,@Model.ProfileImageBase64" class="card-img-top card-img-profile" alt="Profile Image">
+                    <img src="@Url.Action("View", "Attachments", new { id = Model.ProfileImageId })" class="card-img-top card-img-profile" alt="Profile Image">
                 }
                 else
                 {

@@ -10,7 +10,6 @@ namespace Rvnx.CRM.Core.DTOs.Contact
         public string? Company { get; set; }
         public string? JobTitle { get; set; }
         public bool IsHidden { get; set; }
-        public string? ProfileImageBase64 { get; set; }
-        public string? ProfileImageContentType { get; set; }
+        public Guid? ProfileImageId { get; set; }
     }
 }

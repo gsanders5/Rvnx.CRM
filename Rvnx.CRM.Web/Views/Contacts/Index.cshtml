@@ -35,9 +35,9 @@
             @foreach (var item in Model) {
                 <tr>
                     <td>
-                        @if (!string.IsNullOrEmpty(item.ProfileImageBase64))
+                        @if (item.ProfileImageId.HasValue)
                         {
-                            <img src="data:@item.ProfileImageContentType;base64,@item.ProfileImageBase64" class="rounded-circle" width="40" height="40" alt="@item.FullName" style="object-fit: cover;" />
+                            <img src="@Url.Action("View", "Attachments", new { id = item.ProfileImageId })" class="rounded-circle" width="40" height="40" alt="@item.FullName" style="object-fit: cover;" loading="lazy" />
                         }
                         else
                         {

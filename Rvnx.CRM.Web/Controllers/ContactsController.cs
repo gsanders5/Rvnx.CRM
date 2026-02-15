@@ -39,23 +39,13 @@ namespace Rvnx.CRM.Web.Controllers
 
             if (profileAttachments.Any())
             {
-                var attachmentIds = profileAttachments.Select(a => a.Id).ToList();
-
-                // 2. Fetch Content for these attachments
-                var contents = await _repository.ListAsync<AttachmentContent>(c => attachmentIds.Contains(c.AttachmentId));
-
-                // 3. Map to DTOs
+                // 2. Map to DTOs
                 foreach (var dto in contactDtos)
                 {
                     var attachment = profileAttachments.FirstOrDefault(a => a.EntityId == dto.Id);
                     if (attachment != null)
                     {
-                        var content = contents.FirstOrDefault(c => c.AttachmentId == attachment.Id);
-                        if (content != null)
-                        {
-                            dto.ProfileImageBase64 = Convert.ToBase64String(content.Content);
-                            dto.ProfileImageContentType = attachment.ContentType;
-                        }
+                        dto.ProfileImageId = attachment.Id;
                     }
                 }
             }
@@ -117,13 +107,7 @@ namespace Rvnx.CRM.Web.Controllers
 
             if (profileAttachment != null)
             {
-                // Fetch content
-                profileAttachment = await _repository.GetByIdWithIncludesAsync<Attachment>(profileAttachment.Id, "AttachmentContent");
-                if (profileAttachment?.AttachmentContent != null)
-                {
-                    contactDto.ProfileImageBase64 = Convert.ToBase64String(profileAttachment.AttachmentContent.Content);
-                    contactDto.ProfileImageContentType = profileAttachment.ContentType;
-                }
+                contactDto.ProfileImageId = profileAttachment.Id;
             }
 
             return View(contactDto);
