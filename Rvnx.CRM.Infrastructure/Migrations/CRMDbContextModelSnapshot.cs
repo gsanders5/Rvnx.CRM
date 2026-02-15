@@ -222,9 +222,6 @@ namespace Rvnx.CRM.Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("TEXT");
 
-                    b.Property<DateTime?>("Birthday")
-                        .HasColumnType("TEXT");
-
                     b.Property<string>("Company")
                         .HasMaxLength(200)
                         .HasColumnType("TEXT");
@@ -235,10 +232,6 @@ namespace Rvnx.CRM.Infrastructure.Migrations
                         .HasColumnType("TEXT");
 
                     b.Property<DateTime>("CreatedDate")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Email")
-                        .HasMaxLength(256)
                         .HasColumnType("TEXT");
 
                     b.Property<string>("FirstName")
@@ -264,10 +257,6 @@ namespace Rvnx.CRM.Infrastructure.Migrations
 
                     b.Property<string>("Nickname")
                         .HasMaxLength(100)
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Phone")
-                        .HasMaxLength(20)
                         .HasColumnType("TEXT");
 
                     b.Property<string>("UserId")
@@ -600,7 +589,7 @@ namespace Rvnx.CRM.Infrastructure.Migrations
                     b.HasData(
                         new
                         {
-                            Id = new Guid("11111111-1111-1111-1111-111111111111"),
+                            Id = new Guid("7c1f8d22-1b6a-4c28-9c1e-3f5a2b8e9d1a"),
                             CreatedBy = "System",
                             CreatedDate = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             EntityType = "Person",
@@ -611,7 +600,7 @@ namespace Rvnx.CRM.Infrastructure.Migrations
                         },
                         new
                         {
-                            Id = new Guid("22222222-2222-2222-2222-222222222222"),
+                            Id = new Guid("b2e9a5c8-7f4d-4a1b-8c6e-5f9d3a0e2b4c"),
                             CreatedBy = "System",
                             CreatedDate = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             EntityType = "Person",
@@ -622,7 +611,7 @@ namespace Rvnx.CRM.Infrastructure.Migrations
                         },
                         new
                         {
-                            Id = new Guid("33333333-3333-3333-3333-333333333333"),
+                            Id = new Guid("d4f1b8a9-3e2c-4b5d-9a6f-1c0e7d8b5a2f"),
                             CreatedBy = "System",
                             CreatedDate = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             EntityType = "Person",
@@ -633,7 +622,7 @@ namespace Rvnx.CRM.Infrastructure.Migrations
                         },
                         new
                         {
-                            Id = new Guid("44444444-4444-4444-4444-444444444444"),
+                            Id = new Guid("a5b6c7d8-9e0f-1a2b-3c4d-5e6f7a8b9c0d"),
                             CreatedBy = "System",
                             CreatedDate = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             EntityType = "Person",
@@ -644,7 +633,7 @@ namespace Rvnx.CRM.Infrastructure.Migrations
                         },
                         new
                         {
-                            Id = new Guid("55555555-5555-5555-5555-555555555555"),
+                            Id = new Guid("f9e8d7c6-b5a4-3210-9876-543210fedcba"),
                             CreatedBy = "System",
                             CreatedDate = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             EntityType = "Person",
@@ -655,7 +644,7 @@ namespace Rvnx.CRM.Infrastructure.Migrations
                         },
                         new
                         {
-                            Id = new Guid("66666666-6666-6666-6666-666666666666"),
+                            Id = new Guid("1a2b3c4d-5e6f-7890-a1b2-c3d4e5f67890"),
                             CreatedBy = "System",
                             CreatedDate = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             EntityType = "Person",
@@ -666,7 +655,7 @@ namespace Rvnx.CRM.Infrastructure.Migrations
                         },
                         new
                         {
-                            Id = new Guid("77777777-7777-7777-7777-777777777777"),
+                            Id = new Guid("09876543-210f-edcb-a987-6543210fedcb"),
                             CreatedBy = "System",
                             CreatedDate = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             EntityType = "Person",
@@ -677,7 +666,7 @@ namespace Rvnx.CRM.Infrastructure.Migrations
                         },
                         new
                         {
-                            Id = new Guid("88888888-8888-8888-8888-888888888888"),
+                            Id = new Guid("fedcba98-7654-3210-fedc-ba9876543210"),
                             CreatedBy = "System",
                             CreatedDate = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             EntityType = "Company",

@@ -6,7 +6,17 @@
 
 <div class="d-flex justify-content-between align-items-center mb-3">
     <h1>Contacts</h1>
-    <a asp-action="Create" class="btn btn-primary"><i class="bi bi-plus-lg"></i> Create New</a>
+    <div>
+        @if (Context.Request.Query["showHidden"] == "True")
+        {
+            <a asp-action="Index" asp-route-showHidden="False" class="btn btn-outline-secondary me-2">Hide Hidden</a>
+        }
+        else
+        {
+            <a asp-action="Index" asp-route-showHidden="True" class="btn btn-outline-secondary me-2">Show Hidden</a>
+        }
+        <a asp-action="Create" class="btn btn-primary"><i class="bi bi-plus-lg"></i> Create New</a>
+    </div>
 </div>
 
 <div class="table-responsive">
@@ -40,6 +50,10 @@
                         <a asp-action="Details" asp-route-id="@item.Id" class="fw-bold text-decoration-none">
                             @item.FullName
                         </a>
+                        @if (item.IsHidden)
+                        {
+                            <span class="badge bg-secondary ms-2" title="Hidden"><i class="bi bi-eye-slash"></i></span>
+                        }
                     </td>
                     <td>@item.Company</td>
                     <td>@item.JobTitle</td>

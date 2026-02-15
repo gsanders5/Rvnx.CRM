@@ -18,8 +18,6 @@ namespace Rvnx.CRM.Infrastructure.Migrations
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "TEXT", nullable: false),
-                    EntityId = table.Column<Guid>(type: "TEXT", nullable: false),
-                    EntityType = table.Column<string>(type: "TEXT", maxLength: 100, nullable: false),
                     AttachmentType = table.Column<string>(type: "TEXT", maxLength: 100, nullable: false),
                     ContentType = table.Column<string>(type: "TEXT", maxLength: 100, nullable: false),
                     FileName = table.Column<string>(type: "TEXT", maxLength: 255, nullable: true),
@@ -27,7 +25,9 @@ namespace Rvnx.CRM.Infrastructure.Migrations
                     LastChangedBy = table.Column<string>(type: "TEXT", maxLength: 256, nullable: false),
                     CreatedDate = table.Column<DateTime>(type: "TEXT", nullable: false),
                     LastChangedDate = table.Column<DateTime>(type: "TEXT", nullable: false),
-                    UserId = table.Column<string>(type: "TEXT", maxLength: 450, nullable: true)
+                    UserId = table.Column<string>(type: "TEXT", maxLength: 450, nullable: true),
+                    EntityId = table.Column<Guid>(type: "TEXT", nullable: false),
+                    EntityType = table.Column<string>(type: "TEXT", maxLength: 50, nullable: false)
                 },
                 constraints: table =>
                 {
@@ -47,15 +47,53 @@ namespace Rvnx.CRM.Infrastructure.Migrations
                     FirstName = table.Column<string>(type: "TEXT", maxLength: 100, nullable: false),
                     LastName = table.Column<string>(type: "TEXT", maxLength: 100, nullable: true),
                     Nickname = table.Column<string>(type: "TEXT", maxLength: 100, nullable: true),
-                    Email = table.Column<string>(type: "TEXT", maxLength: 256, nullable: true),
-                    Phone = table.Column<string>(type: "TEXT", maxLength: 20, nullable: true),
                     JobTitle = table.Column<string>(type: "TEXT", maxLength: 100, nullable: true),
-                    Company = table.Column<string>(type: "TEXT", maxLength: 200, nullable: true),
-                    Birthday = table.Column<DateTime>(type: "TEXT", nullable: true)
+                    Company = table.Column<string>(type: "TEXT", maxLength: 200, nullable: true)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Contact", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "ContactInfo",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "TEXT", nullable: false),
+                    Type = table.Column<int>(type: "INTEGER", nullable: false),
+                    Value = table.Column<string>(type: "TEXT", maxLength: 256, nullable: false),
+                    Label = table.Column<string>(type: "TEXT", maxLength: 100, nullable: true),
+                    CreatedBy = table.Column<string>(type: "TEXT", maxLength: 256, nullable: false),
+                    LastChangedBy = table.Column<string>(type: "TEXT", maxLength: 256, nullable: false),
+                    CreatedDate = table.Column<DateTime>(type: "TEXT", nullable: false),
+                    LastChangedDate = table.Column<DateTime>(type: "TEXT", nullable: false),
+                    UserId = table.Column<string>(type: "TEXT", maxLength: 450, nullable: true),
+                    EntityId = table.Column<Guid>(type: "TEXT", nullable: false),
+                    EntityType = table.Column<string>(type: "TEXT", maxLength: 50, nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_ContactInfo", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Fact",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "TEXT", nullable: false),
+                    Category = table.Column<string>(type: "TEXT", maxLength: 100, nullable: false),
+                    Value = table.Column<string>(type: "TEXT", maxLength: 500, nullable: false),
+                    CreatedBy = table.Column<string>(type: "TEXT", maxLength: 256, nullable: false),
+                    LastChangedBy = table.Column<string>(type: "TEXT", maxLength: 256, nullable: false),
+                    CreatedDate = table.Column<DateTime>(type: "TEXT", nullable: false),
+                    LastChangedDate = table.Column<DateTime>(type: "TEXT", nullable: false),
+                    UserId = table.Column<string>(type: "TEXT", maxLength: 450, nullable: true),
+                    EntityId = table.Column<Guid>(type: "TEXT", nullable: false),
+                    EntityType = table.Column<string>(type: "TEXT", maxLength: 50, nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Fact", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
@@ -66,13 +104,13 @@ namespace Rvnx.CRM.Infrastructure.Migrations
                     Title = table.Column<string>(type: "TEXT", maxLength: 200, nullable: true),
                     Description = table.Column<string>(type: "TEXT", nullable: true),
                     Date = table.Column<DateTime>(type: "TEXT", nullable: false),
-                    EntityId = table.Column<Guid>(type: "TEXT", nullable: true),
-                    EntityType = table.Column<string>(type: "TEXT", maxLength: 100, nullable: true),
                     CreatedBy = table.Column<string>(type: "TEXT", maxLength: 256, nullable: false),
                     LastChangedBy = table.Column<string>(type: "TEXT", maxLength: 256, nullable: false),
                     CreatedDate = table.Column<DateTime>(type: "TEXT", nullable: false),
                     LastChangedDate = table.Column<DateTime>(type: "TEXT", nullable: false),
-                    UserId = table.Column<string>(type: "TEXT", maxLength: 450, nullable: true)
+                    UserId = table.Column<string>(type: "TEXT", maxLength: 450, nullable: true),
+                    EntityId = table.Column<Guid>(type: "TEXT", nullable: false),
+                    EntityType = table.Column<string>(type: "TEXT", maxLength: 50, nullable: false)
                 },
                 constraints: table =>
                 {
@@ -86,17 +124,40 @@ namespace Rvnx.CRM.Infrastructure.Migrations
                     Id = table.Column<Guid>(type: "TEXT", nullable: false),
                     Title = table.Column<string>(type: "TEXT", maxLength: 200, nullable: false),
                     Value = table.Column<string>(type: "TEXT", nullable: false),
-                    EntityId = table.Column<Guid>(type: "TEXT", nullable: false),
-                    EntityType = table.Column<string>(type: "TEXT", maxLength: 100, nullable: false),
                     CreatedBy = table.Column<string>(type: "TEXT", maxLength: 256, nullable: false),
                     LastChangedBy = table.Column<string>(type: "TEXT", maxLength: 256, nullable: false),
                     CreatedDate = table.Column<DateTime>(type: "TEXT", nullable: false),
                     LastChangedDate = table.Column<DateTime>(type: "TEXT", nullable: false),
-                    UserId = table.Column<string>(type: "TEXT", maxLength: 450, nullable: true)
+                    UserId = table.Column<string>(type: "TEXT", maxLength: 450, nullable: true),
+                    EntityId = table.Column<Guid>(type: "TEXT", nullable: false),
+                    EntityType = table.Column<string>(type: "TEXT", maxLength: 50, nullable: false)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Note", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Pet",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "TEXT", nullable: false),
+                    Name = table.Column<string>(type: "TEXT", maxLength: 100, nullable: false),
+                    Species = table.Column<string>(type: "TEXT", maxLength: 50, nullable: true),
+                    Breed = table.Column<string>(type: "TEXT", maxLength: 100, nullable: true),
+                    Birthday = table.Column<DateTime>(type: "TEXT", nullable: true),
+                    Notes = table.Column<string>(type: "TEXT", nullable: true),
+                    CreatedBy = table.Column<string>(type: "TEXT", maxLength: 256, nullable: false),
+                    LastChangedBy = table.Column<string>(type: "TEXT", maxLength: 256, nullable: false),
+                    CreatedDate = table.Column<DateTime>(type: "TEXT", nullable: false),
+                    LastChangedDate = table.Column<DateTime>(type: "TEXT", nullable: false),
+                    UserId = table.Column<string>(type: "TEXT", maxLength: 450, nullable: true),
+                    EntityId = table.Column<Guid>(type: "TEXT", nullable: false),
+                    EntityType = table.Column<string>(type: "TEXT", maxLength: 50, nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Pet", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
@@ -106,13 +167,13 @@ namespace Rvnx.CRM.Infrastructure.Migrations
                     Id = table.Column<Guid>(type: "TEXT", nullable: false),
                     Type = table.Column<int>(type: "INTEGER", maxLength: 20, nullable: false),
                     Value = table.Column<string>(type: "TEXT", maxLength: 20, nullable: true),
-                    EntityId = table.Column<Guid>(type: "TEXT", nullable: false),
-                    EntityType = table.Column<string>(type: "TEXT", maxLength: 100, nullable: false),
                     CreatedBy = table.Column<string>(type: "TEXT", maxLength: 256, nullable: false),
                     LastChangedBy = table.Column<string>(type: "TEXT", maxLength: 256, nullable: false),
                     CreatedDate = table.Column<DateTime>(type: "TEXT", nullable: false),
                     LastChangedDate = table.Column<DateTime>(type: "TEXT", nullable: false),
-                    UserId = table.Column<string>(type: "TEXT", maxLength: 450, nullable: true)
+                    UserId = table.Column<string>(type: "TEXT", maxLength: 450, nullable: true),
+                    EntityId = table.Column<Guid>(type: "TEXT", nullable: false),
+                    EntityType = table.Column<string>(type: "TEXT", maxLength: 50, nullable: false)
                 },
                 constraints: table =>
                 {
@@ -147,13 +208,13 @@ namespace Rvnx.CRM.Infrastructure.Migrations
                     Description = table.Column<string>(type: "TEXT", nullable: true),
                     DueDate = table.Column<DateTime>(type: "TEXT", nullable: false),
                     IsCompleted = table.Column<bool>(type: "INTEGER", nullable: false),
-                    EntityId = table.Column<Guid>(type: "TEXT", nullable: true),
-                    EntityType = table.Column<string>(type: "TEXT", maxLength: 100, nullable: true),
                     CreatedBy = table.Column<string>(type: "TEXT", maxLength: 256, nullable: false),
                     LastChangedBy = table.Column<string>(type: "TEXT", maxLength: 256, nullable: false),
                     CreatedDate = table.Column<DateTime>(type: "TEXT", nullable: false),
                     LastChangedDate = table.Column<DateTime>(type: "TEXT", nullable: false),
-                    UserId = table.Column<string>(type: "TEXT", maxLength: 450, nullable: true)
+                    UserId = table.Column<string>(type: "TEXT", maxLength: 450, nullable: true),
+                    EntityId = table.Column<Guid>(type: "TEXT", nullable: false),
+                    EntityType = table.Column<string>(type: "TEXT", maxLength: 50, nullable: false)
                 },
                 constraints: table =>
                 {
@@ -217,9 +278,7 @@ namespace Rvnx.CRM.Infrastructure.Migrations
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "TEXT", nullable: false),
-                    EntityId = table.Column<Guid>(type: "TEXT", nullable: false),
                     RelatedEntityId = table.Column<Guid>(type: "TEXT", nullable: false),
-                    EntityType = table.Column<string>(type: "TEXT", maxLength: 100, nullable: false),
                     RelationshipTypeId = table.Column<Guid>(type: "TEXT", nullable: false),
                     Description = table.Column<string>(type: "TEXT", nullable: true),
                     StartDate = table.Column<DateTime>(type: "TEXT", nullable: true),
@@ -228,7 +287,9 @@ namespace Rvnx.CRM.Infrastructure.Migrations
                     LastChangedBy = table.Column<string>(type: "TEXT", maxLength: 256, nullable: false),
                     CreatedDate = table.Column<DateTime>(type: "TEXT", nullable: false),
                     LastChangedDate = table.Column<DateTime>(type: "TEXT", nullable: false),
-                    UserId = table.Column<string>(type: "TEXT", maxLength: 450, nullable: true)
+                    UserId = table.Column<string>(type: "TEXT", maxLength: 450, nullable: true),
+                    EntityId = table.Column<Guid>(type: "TEXT", nullable: false),
+                    EntityType = table.Column<string>(type: "TEXT", maxLength: 50, nullable: false)
                 },
                 constraints: table =>
                 {
@@ -246,14 +307,14 @@ namespace Rvnx.CRM.Infrastructure.Migrations
                 columns: new[] { "Id", "CreatedBy", "CreatedDate", "EntityType", "LastChangedBy", "LastChangedDate", "Name", "OppositeName", "UserId" },
                 values: new object[,]
                 {
-                    { new Guid("11111111-1111-1111-1111-111111111111"), "System", new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), "Person", "System", new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), "Parent", "Child", null },
-                    { new Guid("22222222-2222-2222-2222-222222222222"), "System", new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), "Person", "System", new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), "Spouse", "Spouse", null },
-                    { new Guid("33333333-3333-3333-3333-333333333333"), "System", new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), "Person", "System", new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), "Sibling", "Sibling", null },
-                    { new Guid("44444444-4444-4444-4444-444444444444"), "System", new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), "Person", "System", new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), "Friend", "Friend", null },
-                    { new Guid("55555555-5555-5555-5555-555555555555"), "System", new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), "Person", "System", new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), "Partner", "Partner", null },
-                    { new Guid("66666666-6666-6666-6666-666666666666"), "System", new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), "Person", "System", new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), "Manager", "Employee", null },
-                    { new Guid("77777777-7777-7777-7777-777777777777"), "System", new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), "Person", "System", new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), "Teacher", "Student", null },
-                    { new Guid("88888888-8888-8888-8888-888888888888"), "System", new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), "Company", "System", new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), "Parent Company", "Subsidiary", null }
+                    { new Guid("09876543-210f-edcb-a987-6543210fedcb"), "System", new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), "Person", "System", new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), "Teacher", "Student", null },
+                    { new Guid("1a2b3c4d-5e6f-7890-a1b2-c3d4e5f67890"), "System", new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), "Person", "System", new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), "Manager", "Employee", null },
+                    { new Guid("7c1f8d22-1b6a-4c28-9c1e-3f5a2b8e9d1a"), "System", new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), "Person", "System", new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), "Parent", "Child", null },
+                    { new Guid("a5b6c7d8-9e0f-1a2b-3c4d-5e6f7a8b9c0d"), "System", new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), "Person", "System", new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), "Friend", "Friend", null },
+                    { new Guid("b2e9a5c8-7f4d-4a1b-8c6e-5f9d3a0e2b4c"), "System", new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), "Person", "System", new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), "Spouse", "Spouse", null },
+                    { new Guid("d4f1b8a9-3e2c-4b5d-9a6f-1c0e7d8b5a2f"), "System", new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), "Person", "System", new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), "Sibling", "Sibling", null },
+                    { new Guid("f9e8d7c6-b5a4-3210-9876-543210fedcba"), "System", new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), "Person", "System", new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), "Partner", "Partner", null },
+                    { new Guid("fedcba98-7654-3210-fedc-ba9876543210"), "System", new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), "Company", "System", new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), "Parent Company", "Subsidiary", null }
                 });
 
             migrationBuilder.CreateIndex(
@@ -268,9 +329,19 @@ namespace Rvnx.CRM.Infrastructure.Migrations
                 unique: true);
 
             migrationBuilder.CreateIndex(
+                name: "IX_ContactInfo_EntityId_EntityType",
+                table: "ContactInfo",
+                columns: new[] { "EntityId", "EntityType" });
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Employer_EmployeeId",
                 table: "Employer",
                 column: "EmployeeId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Fact_EntityId_EntityType",
+                table: "Fact",
+                columns: new[] { "EntityId", "EntityType" });
 
             migrationBuilder.CreateIndex(
                 name: "IX_ImportantDate_EntityId_EntityType",
@@ -280,6 +351,11 @@ namespace Rvnx.CRM.Infrastructure.Migrations
             migrationBuilder.CreateIndex(
                 name: "IX_Note_EntityId_EntityType",
                 table: "Note",
+                columns: new[] { "EntityId", "EntityType" });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Pet_EntityId_EntityType",
+                table: "Pet",
                 columns: new[] { "EntityId", "EntityType" });
 
             migrationBuilder.CreateIndex(
@@ -315,13 +391,22 @@ namespace Rvnx.CRM.Infrastructure.Migrations
                 name: "AttachmentContent");
 
             migrationBuilder.DropTable(
+                name: "ContactInfo");
+
+            migrationBuilder.DropTable(
                 name: "Employer");
+
+            migrationBuilder.DropTable(
+                name: "Fact");
 
             migrationBuilder.DropTable(
                 name: "ImportantDate");
 
             migrationBuilder.DropTable(
                 name: "Note");
+
+            migrationBuilder.DropTable(
+                name: "Pet");
 
             migrationBuilder.DropTable(
                 name: "PhoneNumber");
