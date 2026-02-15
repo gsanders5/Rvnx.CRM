@@ -26,23 +26,23 @@ namespace Rvnx.CRM.Web.Controllers
         // GET: Contacts
         public async Task<IActionResult> Index()
         {
-            var contacts = await _repository.ListAsync<Contact>();
-            var contactDtos = contacts.Select(c => c.ToDto()).ToList();
+            List<Contact> contacts = await _repository.ListAsync<Contact>();
+            List<ContactDto> contactDtos = contacts.Select(c => c.ToDto()).ToList();
 
             // Optimally: Get all profile images for these contacts
-            var contactIds = contacts.Select(c => c.Id).ToList();
+            List<Guid> contactIds = contacts.Select(c => c.Id).ToList();
 
             // 1. Fetch Profile Image Attachments for these contacts
-            var profileAttachments = await _repository.ListAsync<Attachment>(a => a.EntityType == EntityTypes.Person
+            List<Attachment> profileAttachments = await _repository.ListAsync<Attachment>(a => a.EntityType == EntityTypes.Person
                 && a.AttachmentType == "ProfileImage"
                 && contactIds.Contains(a.EntityId));
 
             if (profileAttachments.Any())
             {
                 // 2. Map to DTOs
-                foreach (var dto in contactDtos)
+                foreach (ContactDto? dto in contactDtos)
                 {
-                    var attachment = profileAttachments.FirstOrDefault(a => a.EntityId == dto.Id);
+                    Attachment? attachment = profileAttachments.FirstOrDefault(a => a.EntityId == dto.Id);
                     if (attachment != null)
                     {
                         dto.ProfileImageId = attachment.Id;
@@ -58,7 +58,7 @@ namespace Rvnx.CRM.Web.Controllers
         {
             if (id == null) return NotFound();
 
-            var contact = await _repository.GetByIdWithIncludesAsync<Contact>(id.Value, "Employers");
+            Contact? contact = await _repository.GetByIdWithIncludesAsync<Contact>(id.Value, "Employers");
             if (contact == null) return NotFound();
 
 
@@ -66,11 +66,11 @@ namespace Rvnx.CRM.Web.Controllers
             contact.Reminders = await _repository.ListAsync<Reminder>(r => r.EntityId == id.Value && r.EntityType == EntityTypes.Person);
             contact.SignificantDates = await _repository.ListAsync<SignificantDate>(d => d.EntityId == id.Value && d.EntityType == EntityTypes.Person);
 
-            var types = await _repository.ListAsync<RelationshipType>();
+            List<RelationshipType> types = await _repository.ListAsync<RelationshipType>();
 
             // Relationships
-            var relationships = await _repository.ListAsync<Relationship>(r => r.EntityId == id.Value && r.EntityType == EntityTypes.Person);
-            foreach (var rel in relationships)
+            List<Relationship> relationships = await _repository.ListAsync<Relationship>(r => r.EntityId == id.Value && r.EntityType == EntityTypes.Person);
+            foreach (Relationship rel in relationships)
             {
                 rel.RelationshipType = types.FirstOrDefault(t => t.Id == rel.RelationshipTypeId);
                 rel.RelatedPerson = await _repository.GetByIdAsync<Contact>(rel.RelatedEntityId);
@@ -78,8 +78,8 @@ namespace Rvnx.CRM.Web.Controllers
             contact.Relationships = relationships;
 
             // RelatedTo
-            var relatedTo = await _repository.ListAsync<Relationship>(r => r.RelatedEntityId == id.Value && r.EntityType == EntityTypes.Person);
-            foreach (var rel in relatedTo)
+            List<Relationship> relatedTo = await _repository.ListAsync<Relationship>(r => r.RelatedEntityId == id.Value && r.EntityType == EntityTypes.Person);
+            foreach (Relationship rel in relatedTo)
             {
                 rel.RelationshipType = types.FirstOrDefault(t => t.Id == rel.RelationshipTypeId);
                 rel.Person = await _repository.GetByIdAsync<Contact>(rel.EntityId);
@@ -87,7 +87,7 @@ namespace Rvnx.CRM.Web.Controllers
             contact.RelatedTo = relatedTo;
 
             // Pets
-            var pets = await _repository.ListAsync<Pet>(p => p.EntityId == id.Value && p.EntityType == EntityTypes.Person);
+            List<Pet> pets = await _repository.ListAsync<Pet>(p => p.EntityId == id.Value && p.EntityType == EntityTypes.Person);
 
             // Contact Infos
             contact.ContactMethods = await _repository.ListAsync<ContactMethod>(i => i.EntityId == id.Value && i.EntityType == EntityTypes.Person);
@@ -98,12 +98,12 @@ namespace Rvnx.CRM.Web.Controllers
             // Attachments
             contact.Attachments = await _repository.ListAsync<Attachment>(a => a.EntityId == id.Value && a.EntityType == EntityTypes.Person && a.AttachmentType != "ProfileImage");
 
-            var contactDto = contact.ToDetailDto();
+            ContactDetailDto contactDto = contact.ToDetailDto();
             contactDto.Pets = pets.Select(p => p.ToDto()).ToList();
 
             // Profile Image
-            var profileAttachments = await _repository.ListAsync<Attachment>(a => a.EntityId == id.Value && a.EntityType == EntityTypes.Person && a.AttachmentType == "ProfileImage");
-            var profileAttachment = profileAttachments.FirstOrDefault();
+            List<Attachment> profileAttachments = await _repository.ListAsync<Attachment>(a => a.EntityId == id.Value && a.EntityType == EntityTypes.Person && a.AttachmentType == "ProfileImage");
+            Attachment? profileAttachment = profileAttachments.FirstOrDefault();
 
             if (profileAttachment != null)
             {
@@ -126,7 +126,7 @@ namespace Rvnx.CRM.Web.Controllers
         {
             if (ModelState.IsValid)
             {
-                var contact = contactDto.ToEntity();
+                Contact contact = contactDto.ToEntity();
                 await _repository.AddAsync(contact);
                 // Save first to get ID (though GUID is generated in ToEntity, it's safer to ensure DB existence)
                 await _repository.SaveChangesAsync();
@@ -183,10 +183,10 @@ namespace Rvnx.CRM.Web.Controllers
         public async Task<IActionResult> Edit(Guid? id)
         {
             if (id == null) return NotFound();
-            var contact = await _repository.GetByIdAsync<Contact>(id.Value);
+            Contact? contact = await _repository.GetByIdAsync<Contact>(id.Value);
             if (contact == null) return NotFound();
 
-            var dto = new UpdateContactDto
+            UpdateContactDto dto = new()
             {
                 Id = contact.Id,
                 FirstName = contact.FirstName,
@@ -197,18 +197,18 @@ namespace Rvnx.CRM.Web.Controllers
             };
 
             // Fetch Email (Primary)
-            var emails = await _repository.ListAsync<ContactMethod>(c => c.EntityId == contact.Id && c.EntityType == EntityTypes.Person && c.Type == ContactMethodType.Email);
+            List<ContactMethod> emails = await _repository.ListAsync<ContactMethod>(c => c.EntityId == contact.Id && c.EntityType == EntityTypes.Person && c.Type == ContactMethodType.Email);
             // Prioritize one labeled "Primary" or just take the first one
-            var email = emails.FirstOrDefault(e => e.Label == "Primary") ?? emails.FirstOrDefault();
+            ContactMethod? email = emails.FirstOrDefault(e => e.Label == "Primary") ?? emails.FirstOrDefault();
             dto.Email = email?.Value;
 
             // Fetch Phone
-            var phones = await _repository.ListAsync<ContactMethod>(c => c.EntityId == contact.Id && c.EntityType == EntityTypes.Person && c.Type == ContactMethodType.Phone);
-            var phone = phones.FirstOrDefault(p => p.Label == "Primary") ?? phones.FirstOrDefault();
+            List<ContactMethod> phones = await _repository.ListAsync<ContactMethod>(c => c.EntityId == contact.Id && c.EntityType == EntityTypes.Person && c.Type == ContactMethodType.Phone);
+            ContactMethod? phone = phones.FirstOrDefault(p => p.Label == "Primary") ?? phones.FirstOrDefault();
             dto.Phone = phone?.Value;
 
             // Fetch Birthday
-            var bdays = await _repository.ListAsync<SignificantDate>(d => d.EntityId == contact.Id && d.EntityType == EntityTypes.Person && d.Title == "Birthday");
+            List<SignificantDate> bdays = await _repository.ListAsync<SignificantDate>(d => d.EntityId == contact.Id && d.EntityType == EntityTypes.Person && d.Title == "Birthday");
             dto.Birthday = bdays.FirstOrDefault()?.Date;
 
             return View(dto);
@@ -225,14 +225,14 @@ namespace Rvnx.CRM.Web.Controllers
             {
                 try
                 {
-                    var existingContact = await _repository.GetByIdAsync<Contact>(id);
+                    Contact? existingContact = await _repository.GetByIdAsync<Contact>(id);
                     if (existingContact == null) return NotFound();
 
                     existingContact.UpdateEntity(contactDto);
 
                     // --- Update Email ---
-                    var emails = await _repository.ListAsync<ContactMethod>(c => c.EntityId == id && c.EntityType == EntityTypes.Person && c.Type == ContactMethodType.Email);
-                    var existingEmail = emails.FirstOrDefault(e => e.Label == "Primary") ?? emails.FirstOrDefault();
+                    List<ContactMethod> emails = await _repository.ListAsync<ContactMethod>(c => c.EntityId == id && c.EntityType == EntityTypes.Person && c.Type == ContactMethodType.Email);
+                    ContactMethod? existingEmail = emails.FirstOrDefault(e => e.Label == "Primary") ?? emails.FirstOrDefault();
 
                     if (!string.IsNullOrEmpty(contactDto.Email))
                     {
@@ -260,8 +260,8 @@ namespace Rvnx.CRM.Web.Controllers
                     }
 
                     // --- Update Phone ---
-                    var phones = await _repository.ListAsync<ContactMethod>(c => c.EntityId == id && c.EntityType == EntityTypes.Person && c.Type == ContactMethodType.Phone);
-                    var existingPhone = phones.FirstOrDefault(p => p.Label == "Primary") ?? phones.FirstOrDefault();
+                    List<ContactMethod> phones = await _repository.ListAsync<ContactMethod>(c => c.EntityId == id && c.EntityType == EntityTypes.Person && c.Type == ContactMethodType.Phone);
+                    ContactMethod? existingPhone = phones.FirstOrDefault(p => p.Label == "Primary") ?? phones.FirstOrDefault();
 
                     if (!string.IsNullOrEmpty(contactDto.Phone))
                     {
@@ -289,8 +289,8 @@ namespace Rvnx.CRM.Web.Controllers
                     }
 
                     // --- Update Birthday ---
-                    var bdays = await _repository.ListAsync<SignificantDate>(d => d.EntityId == id && d.EntityType == EntityTypes.Person && d.Title == "Birthday");
-                    var existingBday = bdays.FirstOrDefault();
+                    List<SignificantDate> bdays = await _repository.ListAsync<SignificantDate>(d => d.EntityId == id && d.EntityType == EntityTypes.Person && d.Title == "Birthday");
+                    SignificantDate? existingBday = bdays.FirstOrDefault();
 
                     if (contactDto.Birthday.HasValue)
                     {
@@ -321,20 +321,20 @@ namespace Rvnx.CRM.Web.Controllers
                     if (profileImage != null && profileImage.Length > 0)
                     {
                         // Validate file type
-                        var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".gif" };
-                        var extension = Path.GetExtension(profileImage.FileName).ToLowerInvariant();
+                        string[] allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".gif" };
+                        string extension = Path.GetExtension(profileImage.FileName).ToLowerInvariant();
                         if (!allowedExtensions.Contains(extension) || !profileImage.ContentType.StartsWith("image/"))
                         {
                             ModelState.AddModelError("", "Only image files (jpg, jpeg, png, gif) are allowed.");
                             return View(contactDto);
                         }
 
-                        using var ms = new MemoryStream();
+                        using MemoryStream ms = new();
                         await profileImage.CopyToAsync(ms);
-                        var fileBytes = ms.ToArray();
+                        byte[] fileBytes = ms.ToArray();
 
-                        var existingAttachments = await _repository.ListAsync<Attachment>(a => a.EntityId == id && a.EntityType == EntityTypes.Person && a.AttachmentType == "ProfileImage");
-                        var existingAttachment = existingAttachments.FirstOrDefault();
+                        List<Attachment> existingAttachments = await _repository.ListAsync<Attachment>(a => a.EntityId == id && a.EntityType == EntityTypes.Person && a.AttachmentType == "ProfileImage");
+                        Attachment? existingAttachment = existingAttachments.FirstOrDefault();
 
                         if (existingAttachment != null)
                         {
@@ -342,10 +342,7 @@ namespace Rvnx.CRM.Web.Controllers
                             existingAttachment = await _repository.GetByIdWithIncludesAsync<Attachment>(existingAttachment.Id, "AttachmentContent");
                             if (existingAttachment != null)
                             {
-                                if (existingAttachment.AttachmentContent == null)
-                                {
-                                    existingAttachment.AttachmentContent = new AttachmentContent { AttachmentId = existingAttachment.Id };
-                                }
+                                existingAttachment.AttachmentContent ??= new AttachmentContent { AttachmentId = existingAttachment.Id };
                                 existingAttachment.AttachmentContent.Content = fileBytes;
 
                                 existingAttachment.ContentType = profileImage.ContentType;
@@ -355,7 +352,7 @@ namespace Rvnx.CRM.Web.Controllers
                         }
                         else
                         {
-                            var attachment = new Attachment
+                            Attachment attachment = new()
                             {
                                 Id = Guid.NewGuid(),
                                 EntityId = id,
@@ -389,7 +386,7 @@ namespace Rvnx.CRM.Web.Controllers
         public async Task<IActionResult> Delete(Guid? id)
         {
             if (id == null) return NotFound();
-            var contact = await _repository.GetByIdAsync<Contact>(id.Value);
+            Contact? contact = await _repository.GetByIdAsync<Contact>(id.Value);
             return contact == null ? NotFound() : View(contact);
         }
 
@@ -411,40 +408,40 @@ namespace Rvnx.CRM.Web.Controllers
         /// </summary>
         private async Task DeleteContactDependenciesAsync(Guid contactId)
         {
-            var notes = await _repository.ListAsync<Note>(n => n.EntityId == contactId && n.EntityType == EntityTypes.Person);
+            List<Note> notes = await _repository.ListAsync<Note>(n => n.EntityId == contactId && n.EntityType == EntityTypes.Person);
             if (notes.Any()) await _repository.DeleteRangeAsync(notes);
 
-            var reminders = await _repository.ListAsync<Reminder>(r => r.EntityId == contactId && r.EntityType == EntityTypes.Person);
+            List<Reminder> reminders = await _repository.ListAsync<Reminder>(r => r.EntityId == contactId && r.EntityType == EntityTypes.Person);
             if (reminders.Any()) await _repository.DeleteRangeAsync(reminders);
 
-            var importantDates = await _repository.ListAsync<SignificantDate>(d => d.EntityId == contactId && d.EntityType == EntityTypes.Person);
+            List<SignificantDate> importantDates = await _repository.ListAsync<SignificantDate>(d => d.EntityId == contactId && d.EntityType == EntityTypes.Person);
             if (importantDates.Any()) await _repository.DeleteRangeAsync(importantDates);
 
-            var pets = await _repository.ListAsync<Pet>(p => p.EntityId == contactId && p.EntityType == EntityTypes.Person);
+            List<Pet> pets = await _repository.ListAsync<Pet>(p => p.EntityId == contactId && p.EntityType == EntityTypes.Person);
             if (pets.Any()) await _repository.DeleteRangeAsync(pets);
 
-            var contactInfos = await _repository.ListAsync<ContactMethod>(i => i.EntityId == contactId && i.EntityType == EntityTypes.Person);
+            List<ContactMethod> contactInfos = await _repository.ListAsync<ContactMethod>(i => i.EntityId == contactId && i.EntityType == EntityTypes.Person);
             if (contactInfos.Any()) await _repository.DeleteRangeAsync(contactInfos);
 
-            var facts = await _repository.ListAsync<Fact>(f => f.EntityId == contactId && f.EntityType == EntityTypes.Person);
+            List<Fact> facts = await _repository.ListAsync<Fact>(f => f.EntityId == contactId && f.EntityType == EntityTypes.Person);
             if (facts.Any()) await _repository.DeleteRangeAsync(facts);
 
-            var addresses = await _repository.ListAsync<Address>(a => a.EntityId == contactId && a.EntityType == EntityTypes.Person);
+            List<Address> addresses = await _repository.ListAsync<Address>(a => a.EntityId == contactId && a.EntityType == EntityTypes.Person);
             if (addresses.Any()) await _repository.DeleteRangeAsync(addresses);
 
-            var attachments = await _repository.ListAsync<Attachment>(a => a.EntityId == contactId && a.EntityType == EntityTypes.Person);
+            List<Attachment> attachments = await _repository.ListAsync<Attachment>(a => a.EntityId == contactId && a.EntityType == EntityTypes.Person);
             if (attachments.Any()) await _repository.DeleteRangeAsync(attachments);
 
             // Relationships where this contact is the Source
-            var relationships = await _repository.ListAsync<Relationship>(r => r.EntityId == contactId && r.EntityType == EntityTypes.Person);
+            List<Relationship> relationships = await _repository.ListAsync<Relationship>(r => r.EntityId == contactId && r.EntityType == EntityTypes.Person);
             if (relationships.Any()) await _repository.DeleteRangeAsync(relationships);
 
             // Relationships where this contact is the Target
-            var relatedTo = await _repository.ListAsync<Relationship>(r => r.RelatedEntityId == contactId && r.EntityType == EntityTypes.Person);
+            List<Relationship> relatedTo = await _repository.ListAsync<Relationship>(r => r.RelatedEntityId == contactId && r.EntityType == EntityTypes.Person);
             if (relatedTo.Any()) await _repository.DeleteRangeAsync(relatedTo);
 
             // PhoneNumbers
-            var phoneNumbers = await _repository.ListAsync<PhoneNumber>(p => p.EntityId == contactId && p.EntityType == EntityTypes.Person);
+            List<PhoneNumber> phoneNumbers = await _repository.ListAsync<PhoneNumber>(p => p.EntityId == contactId && p.EntityType == EntityTypes.Person);
             if (phoneNumbers.Any()) await _repository.DeleteRangeAsync(phoneNumbers);
         }
 

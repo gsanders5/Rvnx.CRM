@@ -120,27 +120,6 @@ namespace Rvnx.CRM.Infrastructure.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "SignificantDate",
-                columns: table => new
-                {
-                    Id = table.Column<Guid>(type: "TEXT", nullable: false),
-                    Title = table.Column<string>(type: "TEXT", maxLength: 200, nullable: true),
-                    Description = table.Column<string>(type: "TEXT", nullable: true),
-                    Date = table.Column<DateTime>(type: "TEXT", nullable: false),
-                    CreatedBy = table.Column<string>(type: "TEXT", maxLength: 256, nullable: false),
-                    LastChangedBy = table.Column<string>(type: "TEXT", maxLength: 256, nullable: false),
-                    CreatedDate = table.Column<DateTime>(type: "TEXT", nullable: false),
-                    LastChangedDate = table.Column<DateTime>(type: "TEXT", nullable: false),
-                    UserId = table.Column<string>(type: "TEXT", maxLength: 450, nullable: true),
-                    EntityId = table.Column<Guid>(type: "TEXT", nullable: false),
-                    EntityType = table.Column<string>(type: "TEXT", maxLength: 50, nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_SignificantDate", x => x.Id);
-                });
-
-            migrationBuilder.CreateTable(
                 name: "Note",
                 columns: table => new
                 {
@@ -237,11 +216,57 @@ namespace Rvnx.CRM.Infrastructure.Migrations
                     LastChangedDate = table.Column<DateTime>(type: "TEXT", nullable: false),
                     UserId = table.Column<string>(type: "TEXT", maxLength: 450, nullable: true),
                     EntityId = table.Column<Guid>(type: "TEXT", nullable: false),
-                    EntityType = table.Column<string>(type: "TEXT", maxLength: 50, nullable: false)
+                    EntityType = table.Column<string>(type: "TEXT", maxLength: 50, nullable: false),
+                    RemindMe = table.Column<bool>(type: "INTEGER", nullable: false),
+                    ReminderSent = table.Column<DateTime>(type: "TEXT", nullable: true),
+                    EventFrequency = table.Column<TimeSpan>(type: "TEXT", nullable: false)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Reminder", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "SignificantDate",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "TEXT", nullable: false),
+                    Title = table.Column<string>(type: "TEXT", maxLength: 200, nullable: true),
+                    Description = table.Column<string>(type: "TEXT", nullable: true),
+                    Date = table.Column<DateTime>(type: "TEXT", nullable: false),
+                    CreatedBy = table.Column<string>(type: "TEXT", maxLength: 256, nullable: false),
+                    LastChangedBy = table.Column<string>(type: "TEXT", maxLength: 256, nullable: false),
+                    CreatedDate = table.Column<DateTime>(type: "TEXT", nullable: false),
+                    LastChangedDate = table.Column<DateTime>(type: "TEXT", nullable: false),
+                    UserId = table.Column<string>(type: "TEXT", maxLength: 450, nullable: true),
+                    EntityId = table.Column<Guid>(type: "TEXT", nullable: false),
+                    EntityType = table.Column<string>(type: "TEXT", maxLength: 50, nullable: false),
+                    RemindMe = table.Column<bool>(type: "INTEGER", nullable: false),
+                    ReminderSent = table.Column<DateTime>(type: "TEXT", nullable: true),
+                    EventFrequency = table.Column<TimeSpan>(type: "TEXT", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_SignificantDate", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Users",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "TEXT", nullable: false),
+                    Email = table.Column<string>(type: "TEXT", maxLength: 256, nullable: false),
+                    SubjectId = table.Column<string>(type: "TEXT", maxLength: 256, nullable: false),
+                    DisplayName = table.Column<string>(type: "TEXT", maxLength: 256, nullable: true),
+                    CreatedBy = table.Column<string>(type: "TEXT", maxLength: 256, nullable: false),
+                    LastChangedBy = table.Column<string>(type: "TEXT", maxLength: 256, nullable: false),
+                    CreatedDate = table.Column<DateTime>(type: "TEXT", nullable: false),
+                    LastChangedDate = table.Column<DateTime>(type: "TEXT", nullable: false),
+                    UserId = table.Column<string>(type: "TEXT", maxLength: 450, nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Users", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
@@ -346,9 +371,19 @@ namespace Rvnx.CRM.Infrastructure.Migrations
                 columns: new[] { "EntityId", "EntityType" });
 
             migrationBuilder.CreateIndex(
+                name: "IX_Address_UserId",
+                table: "Address",
+                column: "UserId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Attachment_EntityId_EntityType",
                 table: "Attachment",
                 columns: new[] { "EntityId", "EntityType" });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Attachment_UserId",
+                table: "Attachment",
+                column: "UserId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_AttachmentContent_AttachmentId",
@@ -357,9 +392,24 @@ namespace Rvnx.CRM.Infrastructure.Migrations
                 unique: true);
 
             migrationBuilder.CreateIndex(
+                name: "IX_AttachmentContent_UserId",
+                table: "AttachmentContent",
+                column: "UserId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Contact_UserId",
+                table: "Contact",
+                column: "UserId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_ContactMethod_EntityId_EntityType",
                 table: "ContactMethod",
                 columns: new[] { "EntityId", "EntityType" });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ContactMethod_UserId",
+                table: "ContactMethod",
+                column: "UserId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Employer_EmployeeId",
@@ -367,14 +417,19 @@ namespace Rvnx.CRM.Infrastructure.Migrations
                 column: "EmployeeId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_Employer_UserId",
+                table: "Employer",
+                column: "UserId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Fact_EntityId_EntityType",
                 table: "Fact",
                 columns: new[] { "EntityId", "EntityType" });
 
             migrationBuilder.CreateIndex(
-                name: "IX_SignificantDate_EntityId_EntityType",
-                table: "SignificantDate",
-                columns: new[] { "EntityId", "EntityType" });
+                name: "IX_Fact_UserId",
+                table: "Fact",
+                column: "UserId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Note_EntityId_EntityType",
@@ -382,14 +437,29 @@ namespace Rvnx.CRM.Infrastructure.Migrations
                 columns: new[] { "EntityId", "EntityType" });
 
             migrationBuilder.CreateIndex(
+                name: "IX_Note_UserId",
+                table: "Note",
+                column: "UserId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Pet_EntityId_EntityType",
                 table: "Pet",
                 columns: new[] { "EntityId", "EntityType" });
 
             migrationBuilder.CreateIndex(
+                name: "IX_Pet_UserId",
+                table: "Pet",
+                column: "UserId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_PhoneNumber_EntityId_EntityType",
                 table: "PhoneNumber",
                 columns: new[] { "EntityId", "EntityType" });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_PhoneNumber_UserId",
+                table: "PhoneNumber",
+                column: "UserId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Relationship_EntityId_EntityType",
@@ -407,9 +477,39 @@ namespace Rvnx.CRM.Infrastructure.Migrations
                 column: "RelationshipTypeId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_Relationship_UserId",
+                table: "Relationship",
+                column: "UserId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_RelationshipType_UserId",
+                table: "RelationshipType",
+                column: "UserId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Reminder_EntityId_EntityType",
                 table: "Reminder",
                 columns: new[] { "EntityId", "EntityType" });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Reminder_UserId",
+                table: "Reminder",
+                column: "UserId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_SignificantDate_EntityId_EntityType",
+                table: "SignificantDate",
+                columns: new[] { "EntityId", "EntityType" });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_SignificantDate_UserId",
+                table: "SignificantDate",
+                column: "UserId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Users_UserId",
+                table: "Users",
+                column: "UserId");
         }
 
         /// <inheritdoc />
@@ -431,9 +531,6 @@ namespace Rvnx.CRM.Infrastructure.Migrations
                 name: "Fact");
 
             migrationBuilder.DropTable(
-                name: "SignificantDate");
-
-            migrationBuilder.DropTable(
                 name: "Note");
 
             migrationBuilder.DropTable(
@@ -447,6 +544,12 @@ namespace Rvnx.CRM.Infrastructure.Migrations
 
             migrationBuilder.DropTable(
                 name: "Reminder");
+
+            migrationBuilder.DropTable(
+                name: "SignificantDate");
+
+            migrationBuilder.DropTable(
+                name: "Users");
 
             migrationBuilder.DropTable(
                 name: "Attachment");

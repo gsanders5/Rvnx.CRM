@@ -27,17 +27,17 @@ namespace Rvnx.CRM.Web.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> SeedTestData()
         {
-            var contacts = FakeDataGenerator.GenerateContacts(10);
+            List<Contact> contacts = FakeDataGenerator.GenerateContacts(10);
 
-            foreach (var contact in contacts)
+            foreach (Contact contact in contacts)
             {
                 // Ensure ID is set
                 if (contact.Id == Guid.Empty) contact.Id = Guid.NewGuid();
 
                 // Detach related entities to add them separately (EF Core tracking issue prevention)
-                var addresses = contact.Addresses?.ToList();
-                var infos = contact.ContactMethods?.ToList();
-                var dates = contact.SignificantDates?.ToList();
+                List<Address>? addresses = contact.Addresses?.ToList();
+                List<ContactMethod>? infos = contact.ContactMethods?.ToList();
+                List<SignificantDate>? dates = contact.SignificantDates?.ToList();
 
                 contact.Addresses = [];
                 contact.ContactMethods = [];
@@ -49,7 +49,7 @@ namespace Rvnx.CRM.Web.Controllers
                 // Add related entities
                 if (addresses != null)
                 {
-                    foreach (var addr in addresses)
+                    foreach (Address? addr in addresses)
                     {
                         addr.EntityId = contact.Id;
                         await _repository.AddAsync(addr);
@@ -58,7 +58,7 @@ namespace Rvnx.CRM.Web.Controllers
 
                 if (infos != null)
                 {
-                    foreach (var info in infos)
+                    foreach (ContactMethod? info in infos)
                     {
                         info.EntityId = contact.Id;
                         await _repository.AddAsync(info);
@@ -67,7 +67,7 @@ namespace Rvnx.CRM.Web.Controllers
 
                 if (dates != null)
                 {
-                    foreach (var date in dates)
+                    foreach (SignificantDate? date in dates)
                     {
                         date.EntityId = contact.Id;
                         await _repository.AddAsync(date);
@@ -84,7 +84,7 @@ namespace Rvnx.CRM.Web.Controllers
         public async Task<IActionResult> ResetDatabase()
         {
             // This is dangerous in prod, but fine for debug controller
-            var contacts = await _repository.ListAsync<Contact>();
+            List<Contact> contacts = await _repository.ListAsync<Contact>();
             await _repository.DeleteRangeAsync(contacts);
 
             // Also delete related generic entities... (simplified for now, assumes cascade or manual cleanup if implemented)
@@ -93,25 +93,25 @@ namespace Rvnx.CRM.Web.Controllers
             // or implement a full cleanup.
 
             // Clean up generic entities
-            var notes = await _repository.ListAsync<Note>();
+            List<Note> notes = await _repository.ListAsync<Note>();
             await _repository.DeleteRangeAsync(notes);
 
-            var reminders = await _repository.ListAsync<Reminder>();
+            List<Reminder> reminders = await _repository.ListAsync<Reminder>();
             await _repository.DeleteRangeAsync(reminders);
 
-            var dates = await _repository.ListAsync<SignificantDate>();
+            List<SignificantDate> dates = await _repository.ListAsync<SignificantDate>();
             await _repository.DeleteRangeAsync(dates);
 
-            var infos = await _repository.ListAsync<ContactMethod>();
+            List<ContactMethod> infos = await _repository.ListAsync<ContactMethod>();
             await _repository.DeleteRangeAsync(infos);
 
-            var facts = await _repository.ListAsync<Fact>();
+            List<Fact> facts = await _repository.ListAsync<Fact>();
             await _repository.DeleteRangeAsync(facts);
 
-            var addresses = await _repository.ListAsync<Address>();
+            List<Address> addresses = await _repository.ListAsync<Address>();
             await _repository.DeleteRangeAsync(addresses);
 
-            var relationships = await _repository.ListAsync<Relationship>();
+            List<Relationship> relationships = await _repository.ListAsync<Relationship>();
             await _repository.DeleteRangeAsync(relationships);
 
             await _repository.SaveChangesAsync();
@@ -124,10 +124,10 @@ namespace Rvnx.CRM.Web.Controllers
         public async Task<IActionResult> AddRandomRelationships()
         {
             // 1. Ensure Relationship Types exist
-            var types = await _repository.ListAsync<RelationshipType>();
+            List<RelationshipType> types = await _repository.ListAsync<RelationshipType>();
             if (!types.Any())
             {
-                var defaultTypes = new List<RelationshipType>
+                List<RelationshipType> defaultTypes = new()
                 {
                     new() { Id = Guid.NewGuid(), Name = "Friend", OppositeName = "Friend", EntityType = EntityTypes.Person },
                     new() { Id = Guid.NewGuid(), Name = "Colleague", OppositeName = "Colleague", EntityType = EntityTypes.Person },
@@ -141,7 +141,7 @@ namespace Rvnx.CRM.Web.Controllers
             }
 
             // 2. Get Contacts
-            var contacts = await _repository.ListAsync<Contact>();
+            List<Contact> contacts = await _repository.ListAsync<Contact>();
             if (contacts.Count < 2)
             {
                 TempData["Message"] = "Not enough contacts to create relationships.";
@@ -149,26 +149,26 @@ namespace Rvnx.CRM.Web.Controllers
             }
 
             // 3. Generate Random Relationships
-            var random = new Random();
+            Random random = new();
             int relationshipsToCreate = Math.Min(contacts.Count * 2, 50); // Just a heuristic
             int createdCount = 0;
 
             for (int i = 0; i < relationshipsToCreate; i++)
             {
-                var c1 = contacts[random.Next(contacts.Count)];
-                var c2 = contacts[random.Next(contacts.Count)];
+                Contact c1 = contacts[random.Next(contacts.Count)];
+                Contact c2 = contacts[random.Next(contacts.Count)];
 
                 if (c1.Id == c2.Id) continue;
 
-                var type = types[random.Next(types.Count)];
+                RelationshipType type = types[random.Next(types.Count)];
 
                 // Check if relationship already exists
-                var existing = await _repository.ListAsync<Relationship>(r =>
+                List<Relationship> existing = await _repository.ListAsync<Relationship>(r =>
                     r.EntityId == c1.Id && r.RelatedEntityId == c2.Id && r.RelationshipTypeId == type.Id);
 
                 if (existing.Any()) continue;
 
-                var rel = new Relationship
+                Relationship rel = new()
                 {
                     Id = Guid.NewGuid(),
                     EntityId = c1.Id,

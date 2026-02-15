@@ -22,12 +22,12 @@ namespace Rvnx.CRM.Web.Controllers
         {
             if (type == EntityTypes.Person)
             {
-                var p = await _repository.GetByIdAsync<Contact>(id);
+                Contact? p = await _repository.GetByIdAsync<Contact>(id);
                 return p?.FullName ?? "Unknown Person";
             }
             else if (type == EntityTypes.Company)
             {
-                var c = await _repository.GetByIdAsync<Employer>(id);
+                Employer? c = await _repository.GetByIdAsync<Employer>(id);
                 return c?.CompanyName ?? "Unknown Company";
             }
             return "Unknown Entity";
@@ -70,7 +70,7 @@ namespace Rvnx.CRM.Web.Controllers
         {
             if (ModelState.IsValid)
             {
-                var reminder = new Reminder
+                Reminder reminder = new()
                 {
                     Id = Guid.NewGuid(),
                     Title = reminderDto.Title,
@@ -102,7 +102,7 @@ namespace Rvnx.CRM.Web.Controllers
         {
             if (id == null) return NotFound();
 
-            var reminder = await _repository.GetByIdAsync<Reminder>(id.Value);
+            Reminder? reminder = await _repository.GetByIdAsync<Reminder>(id.Value);
             if (reminder == null) return NotFound();
 
             if (reminder.EntityId != Guid.Empty && !string.IsNullOrEmpty(reminder.EntityType))
@@ -124,7 +124,7 @@ namespace Rvnx.CRM.Web.Controllers
             {
                 try
                 {
-                    var reminder = await _repository.GetByIdAsync<Reminder>(id);
+                    Reminder? reminder = await _repository.GetByIdAsync<Reminder>(id);
                     if (reminder == null) return NotFound();
 
                     reminder.Title = reminderDto.Title;
@@ -156,7 +156,7 @@ namespace Rvnx.CRM.Web.Controllers
         public async Task<IActionResult> Delete(Guid? id)
         {
             if (id == null) return NotFound();
-            var reminder = await _repository.GetByIdAsync<Reminder>(id.Value);
+            Reminder? reminder = await _repository.GetByIdAsync<Reminder>(id.Value);
             if (reminder == null) return NotFound();
 
             if (reminder.EntityId != Guid.Empty && !string.IsNullOrEmpty(reminder.EntityType))
@@ -171,11 +171,11 @@ namespace Rvnx.CRM.Web.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(Guid id)
         {
-            var reminder = await _repository.GetByIdAsync<Reminder>(id);
+            Reminder? reminder = await _repository.GetByIdAsync<Reminder>(id);
             if (reminder != null)
             {
-                var entityId = reminder.EntityId;
-                var entityType = reminder.EntityType;
+                Guid entityId = reminder.EntityId;
+                string entityType = reminder.EntityType;
                 await _repository.DeleteAsync<Reminder>(id);
                 await _repository.SaveChangesAsync();
                 return RedirectToEntity(entityId, entityType);

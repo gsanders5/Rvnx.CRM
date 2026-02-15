@@ -52,16 +52,16 @@ public class CRMDbContext(DbContextOptions<CRMDbContext> options, ICurrentUserSe
         modelBuilder.Entity<Relationship>().HasIndex(e => new { e.EntityId, e.EntityType });
         modelBuilder.Entity<Relationship>().HasIndex(e => new { e.RelatedEntityId, e.EntityType });
 
-        var entityTypes = modelBuilder.Model.GetEntityTypes()
+        IEnumerable<Microsoft.EntityFrameworkCore.Metadata.IMutableEntityType> entityTypes = modelBuilder.Model.GetEntityTypes()
             .Where(e => typeof(BaseEntity).IsAssignableFrom(e.ClrType));
 
-        foreach (var entityType in entityTypes)
+        foreach (Microsoft.EntityFrameworkCore.Metadata.IMutableEntityType? entityType in entityTypes)
         {
             modelBuilder.Entity(entityType.Name).HasIndex(nameof(BaseEntity.UserId));
 
             if (!typeof(IGlobalEntity).IsAssignableFrom(entityType.ClrType))
             {
-                var method = typeof(CRMDbContext)
+                MethodInfo? method = typeof(CRMDbContext)
                     .GetMethod(nameof(ConfigureGlobalFilter), BindingFlags.NonPublic | BindingFlags.Instance)
                     ?.MakeGenericMethod(entityType.ClrType);
 

@@ -1,6 +1,5 @@
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
-using Microsoft.EntityFrameworkCore;
 using Rvnx.CRM.Core.Interfaces;
 using Rvnx.CRM.Infrastructure;
 using Rvnx.CRM.Infrastructure.Data;
@@ -12,13 +11,13 @@ namespace Rvnx.CRM.Web
     {
         public static void Main(string[] args)
         {
-            var builder = WebApplication.CreateBuilder(args);
+            WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
             builder.Services.AddHttpContextAccessor();
             builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
             builder.Services.AddScoped<IUserSynchronizationService, UserSynchronizationService>();
 
-            var authConfig = builder.Configuration.GetSection("Authentication");
+            IConfigurationSection authConfig = builder.Configuration.GetSection("Authentication");
             bool authEnabled = authConfig.GetValue<bool>("Enabled");
 
             if (authEnabled)
@@ -48,8 +47,8 @@ namespace Rvnx.CRM.Web
 
                     options.Scope.Clear();
                     // Add default scopes including offline_access for Authentik compatibility (Refresh Tokens)
-                    var scopes = (authConfig["Scopes"] ?? "openid profile email offline_access").Split(' ');
-                    foreach (var scope in scopes)
+                    string[] scopes = (authConfig["Scopes"] ?? "openid profile email offline_access").Split(' ');
+                    foreach (string scope in scopes)
                     {
                         options.Scope.Add(scope);
                     }
@@ -58,7 +57,7 @@ namespace Rvnx.CRM.Web
                     {
                         OnTokenValidated = async context =>
                         {
-                            var userSyncService = context.HttpContext.RequestServices.GetRequiredService<IUserSynchronizationService>();
+                            IUserSynchronizationService userSyncService = context.HttpContext.RequestServices.GetRequiredService<IUserSynchronizationService>();
                             if (context.Principal != null)
                             {
                                 await userSyncService.SyncUserAsync(context.Principal);
@@ -72,19 +71,19 @@ namespace Rvnx.CRM.Web
 
             builder.Services.AddInfrastructure(builder.Configuration);
 
-            var app = builder.Build();
+            WebApplication app = builder.Build();
 
-            using (var scope = app.Services.CreateScope())
+            using (IServiceScope scope = app.Services.CreateScope())
             {
-                var services = scope.ServiceProvider;
+                IServiceProvider services = scope.ServiceProvider;
                 try
                 {
-                    var context = services.GetRequiredService<CRMDbContext>();
+                    CRMDbContext context = services.GetRequiredService<CRMDbContext>();
                     context.Database.EnsureCreated();
                 }
                 catch (Exception ex)
                 {
-                    var logger = services.GetRequiredService<ILogger<Program>>();
+                    ILogger<Program> logger = services.GetRequiredService<ILogger<Program>>();
                     logger.LogError(ex, "An error occurred creating the DB.");
                 }
             }

@@ -22,17 +22,17 @@ namespace Rvnx.CRM.Web.Controllers
         {
             if (file == null || file.Length == 0) return BadRequest("File is empty.");
 
-            var extension = Path.GetExtension(file.FileName).ToLowerInvariant();
+            string extension = Path.GetExtension(file.FileName).ToLowerInvariant();
             if (!AllowedExtensions.Contains(extension))
             {
                 return BadRequest("File type not allowed.");
             }
 
-            using var ms = new MemoryStream();
+            using MemoryStream ms = new();
             await file.CopyToAsync(ms);
-            var fileBytes = ms.ToArray();
+            byte[] fileBytes = ms.ToArray();
 
-            var attachment = new Attachment
+            Attachment attachment = new()
             {
                 Id = Guid.NewGuid(),
                 EntityId = entityId,
@@ -56,7 +56,7 @@ namespace Rvnx.CRM.Web.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Delete(Guid id)
         {
-            var attachment = await _repository.GetByIdAsync<Attachment>(id);
+            Attachment? attachment = await _repository.GetByIdAsync<Attachment>(id);
             if (attachment != null)
             {
                 await _repository.DeleteAsync<Attachment>(id);
@@ -67,7 +67,7 @@ namespace Rvnx.CRM.Web.Controllers
 
         public async Task<IActionResult> Download(Guid id)
         {
-            var attachment = await _repository.GetByIdWithIncludesAsync<Attachment>(id, "AttachmentContent");
+            Attachment? attachment = await _repository.GetByIdWithIncludesAsync<Attachment>(id, "AttachmentContent");
             if (attachment == null || attachment.AttachmentContent == null) return NotFound();
 
             // Force download for everything except specific safe types if needed,
@@ -77,7 +77,7 @@ namespace Rvnx.CRM.Web.Controllers
 
         public async Task<IActionResult> View(Guid id)
         {
-            var attachment = await _repository.GetByIdWithIncludesAsync<Attachment>(id, "AttachmentContent");
+            Attachment? attachment = await _repository.GetByIdWithIncludesAsync<Attachment>(id, "AttachmentContent");
             if (attachment == null || attachment.AttachmentContent == null) return NotFound();
 
             // Only allow inline viewing for safe image types

@@ -3,19 +3,12 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Moq;
-using Rvnx.CRM.Core.Constants;
 using Rvnx.CRM.Core.DTOs.Contact;
 using Rvnx.CRM.Core.Models.Base;
 using Rvnx.CRM.Core.Models.Contact;
 using Rvnx.CRM.Infrastructure.Data;
 using Rvnx.CRM.Infrastructure.Repositories;
 using Rvnx.CRM.Web.Controllers;
-using System;
-using System.IO;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
-using Xunit;
 
 namespace Rvnx.CRM.Tests
 {
@@ -23,7 +16,7 @@ namespace Rvnx.CRM.Tests
     {
         private CRMDbContext GetInMemoryDbContext()
         {
-            var options = new DbContextOptionsBuilder<CRMDbContext>()
+            DbContextOptions<CRMDbContext> options = new DbContextOptionsBuilder<CRMDbContext>()
                 .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
                 .Options;
             return new CRMDbContext(options);
@@ -33,22 +26,22 @@ namespace Rvnx.CRM.Tests
         public async Task Edit_Post_ShouldReturnValidationError_WhenFileIsNotImage()
         {
             // Arrange
-            using var context = GetInMemoryDbContext();
-            var repository = new Repository(context);
-            var loggerMock = new Mock<ILogger<ContactsController>>();
-            var controller = new ContactsController(repository, loggerMock.Object);
+            using CRMDbContext context = GetInMemoryDbContext();
+            Repository repository = new(context);
+            Mock<ILogger<ContactsController>> loggerMock = new();
+            ContactsController controller = new(repository, loggerMock.Object);
 
-            var contactId = Guid.NewGuid();
-            var contact = new Contact { Id = contactId, FirstName = "John", LastName = "Doe" };
+            Guid contactId = Guid.NewGuid();
+            Contact contact = new() { Id = contactId, FirstName = "John", LastName = "Doe" };
             await repository.AddAsync(contact);
             await repository.SaveChangesAsync();
 
-            var dto = new UpdateContactDto { Id = contactId, FirstName = "John", LastName = "Doe" };
+            UpdateContactDto dto = new() { Id = contactId, FirstName = "John", LastName = "Doe" };
 
-            var fileMock = new Mock<IFormFile>();
-            var content = "This is not an image";
-            var ms = new MemoryStream();
-            var writer = new StreamWriter(ms);
+            Mock<IFormFile> fileMock = new();
+            string content = "This is not an image";
+            MemoryStream ms = new();
+            StreamWriter writer = new(ms);
             writer.Write(content);
             writer.Flush();
             ms.Position = 0;
@@ -59,10 +52,10 @@ namespace Rvnx.CRM.Tests
             fileMock.Setup(f => f.ContentType).Returns("text/plain");
 
             // Act
-            var result = await controller.Edit(contactId, dto, fileMock.Object);
+            IActionResult result = await controller.Edit(contactId, dto, fileMock.Object);
 
             // Assert
-            var viewResult = Assert.IsType<ViewResult>(result);
+            ViewResult viewResult = Assert.IsType<ViewResult>(result);
             Assert.False(controller.ModelState.IsValid);
             // Assert that the error is added to the model-level errors (empty key)
             Assert.True(controller.ModelState.ContainsKey(string.Empty));
@@ -73,22 +66,22 @@ namespace Rvnx.CRM.Tests
         public async Task Edit_Post_ShouldSaveAttachment_WhenFileIsImage()
         {
             // Arrange
-            using var context = GetInMemoryDbContext();
-            var repository = new Repository(context);
-            var loggerMock = new Mock<ILogger<ContactsController>>();
-            var controller = new ContactsController(repository, loggerMock.Object);
+            using CRMDbContext context = GetInMemoryDbContext();
+            Repository repository = new(context);
+            Mock<ILogger<ContactsController>> loggerMock = new();
+            ContactsController controller = new(repository, loggerMock.Object);
 
-            var contactId = Guid.NewGuid();
-            var contact = new Contact { Id = contactId, FirstName = "John", LastName = "Doe" };
+            Guid contactId = Guid.NewGuid();
+            Contact contact = new() { Id = contactId, FirstName = "John", LastName = "Doe" };
             await repository.AddAsync(contact);
             await repository.SaveChangesAsync();
 
-            var dto = new UpdateContactDto { Id = contactId, FirstName = "John", LastName = "Doe" };
+            UpdateContactDto dto = new() { Id = contactId, FirstName = "John", LastName = "Doe" };
 
-            var fileMock = new Mock<IFormFile>();
-            var content = "Fake Image Content";
-            var ms = new MemoryStream();
-            var writer = new StreamWriter(ms);
+            Mock<IFormFile> fileMock = new();
+            string content = "Fake Image Content";
+            MemoryStream ms = new();
+            StreamWriter writer = new(ms);
             writer.Write(content);
             writer.Flush();
             ms.Position = 0;
@@ -105,13 +98,13 @@ namespace Rvnx.CRM.Tests
             fileMock.Setup(f => f.ContentType).Returns("image/png");
 
             // Act
-            var result = await controller.Edit(contactId, dto, fileMock.Object);
+            IActionResult result = await controller.Edit(contactId, dto, fileMock.Object);
 
             // Assert
-            var redirectResult = Assert.IsType<RedirectToActionResult>(result);
+            RedirectToActionResult redirectResult = Assert.IsType<RedirectToActionResult>(result);
             Assert.Equal("Index", redirectResult.ActionName);
 
-            var attachments = await repository.ListAsync<Attachment>(a => a.EntityId == contactId && a.AttachmentType == "ProfileImage");
+            List<Attachment> attachments = await repository.ListAsync<Attachment>(a => a.EntityId == contactId && a.AttachmentType == "ProfileImage");
             Assert.Single(attachments);
             Assert.Equal("image.png", attachments[0].FileName);
         }

@@ -1,5 +1,5 @@
-using System.Security.Claims;
 using Rvnx.CRM.Core.Interfaces;
+using System.Security.Claims;
 
 namespace Rvnx.CRM.Web.Services;
 
@@ -14,32 +14,13 @@ public class CurrentUserService : ICurrentUserService
         _configuration = configuration;
     }
 
-    public string? UserId
-    {
-        get
-        {
-            if (!IsAuthEnabled())
-            {
-                return null;
-            }
+    public string? UserId => !IsAuthEnabled() ? null : (_httpContextAccessor.HttpContext?.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value);
 
-            return _httpContextAccessor.HttpContext?.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        }
-    }
-
-    public string? UserName
-    {
-        get
-        {
-            if (!IsAuthEnabled())
-            {
-                return "System";
-            }
-            return _httpContextAccessor.HttpContext?.User?.FindFirst(ClaimTypes.Name)?.Value
+    public string? UserName => !IsAuthEnabled()
+                ? "System"
+                : _httpContextAccessor.HttpContext?.User?.FindFirst(ClaimTypes.Name)?.Value
                 ?? _httpContextAccessor.HttpContext?.User?.FindFirst(ClaimTypes.Email)?.Value
                 ?? "System";
-        }
-    }
 
     public bool IsAuthenticated => IsAuthEnabled() && (_httpContextAccessor.HttpContext?.User?.Identity?.IsAuthenticated ?? false);
 

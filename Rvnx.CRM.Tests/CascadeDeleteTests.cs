@@ -20,7 +20,7 @@ namespace Rvnx.CRM.Tests
                 .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
                 .Options;
 
-            var mockUserService = new Mock<ICurrentUserService>();
+            Mock<ICurrentUserService> mockUserService = new();
             mockUserService.Setup(u => u.UserId).Returns("TestUser");
             mockUserService.Setup(u => u.UserName).Returns("TestUser");
 

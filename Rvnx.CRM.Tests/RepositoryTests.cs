@@ -1,12 +1,10 @@
 using Microsoft.EntityFrameworkCore;
 using Moq;
 using Rvnx.CRM.Core.Interfaces;
-using Rvnx.CRM.Core.Models.Base;
 using Rvnx.CRM.Core.Models.Business;
 using Rvnx.CRM.Core.Models.Contact;
 using Rvnx.CRM.Infrastructure.Data;
 using Rvnx.CRM.Infrastructure.Repositories;
-using Xunit;
 
 namespace Rvnx.CRM.Tests
 {
@@ -18,7 +16,7 @@ namespace Rvnx.CRM.Tests
                 .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
                 .Options;
 
-            var mockUserService = new Mock<ICurrentUserService>();
+            Mock<ICurrentUserService> mockUserService = new();
             mockUserService.Setup(u => u.UserId).Returns("TestUser");
             mockUserService.Setup(u => u.UserName).Returns("TestUser");
 
@@ -29,15 +27,15 @@ namespace Rvnx.CRM.Tests
         [Fact]
         public async Task ListAsync_Predicate_ShouldFilterCorrectly()
         {
-            using var context = GetInMemoryDbContext();
-            var repo = new Repository(context);
+            using CRMDbContext context = GetInMemoryDbContext();
+            Repository repo = new(context);
 
             await repo.AddAsync(new Contact { Id = Guid.NewGuid(), FirstName = "John", LastName = "Doe" });
             await repo.AddAsync(new Contact { Id = Guid.NewGuid(), FirstName = "Jane", LastName = "Doe" });
             await repo.AddAsync(new Contact { Id = Guid.NewGuid(), FirstName = "Bob", LastName = "Smith" });
             await repo.SaveChangesAsync();
 
-            var does = await repo.ListAsync<Contact>(c => c.LastName == "Doe");
+            List<Contact> does = await repo.ListAsync<Contact>(c => c.LastName == "Doe");
 
             Assert.Equal(2, does.Count);
             Assert.Contains(does, c => c.FirstName == "John");
@@ -47,16 +45,16 @@ namespace Rvnx.CRM.Tests
         [Fact]
         public async Task ListAsync_PredicateAndIncludes_ShouldIncludeRelatedEntities()
         {
-            using var context = GetInMemoryDbContext();
-            var repo = new Repository(context);
+            using CRMDbContext context = GetInMemoryDbContext();
+            Repository repo = new(context);
 
-            var contactId = Guid.NewGuid();
-            var contact = new Contact { Id = contactId, FirstName = "John", LastName = "Doe" };
+            Guid contactId = Guid.NewGuid();
+            Contact contact = new() { Id = contactId, FirstName = "John", LastName = "Doe" };
             await repo.AddAsync(contact);
             await repo.SaveChangesAsync();
 
             // Create Employer
-            var employer = new Employer
+            Employer employer = new()
             {
                 Id = Guid.NewGuid(),
                 CompanyName = "Acme Corp",
@@ -66,10 +64,10 @@ namespace Rvnx.CRM.Tests
             await repo.SaveChangesAsync();
 
             // Act
-            var result = await repo.ListAsNoTrackingAsync<Contact>(c => c.LastName == "Doe", default, "Employers");
+            List<Contact> result = await repo.ListAsNoTrackingAsync<Contact>(c => c.LastName == "Doe", default, "Employers");
 
             // Assert
-            var fetchedContact = result.Single();
+            Contact fetchedContact = result.Single();
             Assert.NotNull(fetchedContact.Employers);
             Assert.NotEmpty(fetchedContact.Employers);
             Assert.Equal("Acme Corp", fetchedContact.Employers.First().CompanyName);
@@ -78,15 +76,15 @@ namespace Rvnx.CRM.Tests
         [Fact]
         public async Task CountAsync_Predicate_ShouldCountCorrectly()
         {
-            using var context = GetInMemoryDbContext();
-            var repo = new Repository(context);
+            using CRMDbContext context = GetInMemoryDbContext();
+            Repository repo = new(context);
 
             await repo.AddAsync(new Contact { Id = Guid.NewGuid(), FirstName = "John", LastName = "Doe" });
             await repo.AddAsync(new Contact { Id = Guid.NewGuid(), FirstName = "Jane", LastName = "Doe" });
             await repo.AddAsync(new Contact { Id = Guid.NewGuid(), FirstName = "Bob", LastName = "Smith" });
             await repo.SaveChangesAsync();
 
-            var count = await repo.CountAsync<Contact>(c => c.LastName == "Doe");
+            int count = await repo.CountAsync<Contact>(c => c.LastName == "Doe");
 
             Assert.Equal(2, count);
         }

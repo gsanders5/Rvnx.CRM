@@ -1,10 +1,9 @@
-using System.Security.Claims;
 using Microsoft.EntityFrameworkCore;
 using Moq;
 using Rvnx.CRM.Core.Interfaces;
 using Rvnx.CRM.Infrastructure.Data;
 using Rvnx.CRM.Web.Services;
-using Xunit;
+using System.Security.Claims;
 
 namespace Rvnx.CRM.Tests
 {
@@ -16,8 +15,8 @@ namespace Rvnx.CRM.Tests
                 .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
                 .Options;
 
-            var mockUserService = new Mock<ICurrentUserService>();
-            mockUserService.Setup(u => u.UserId).Returns((string?)null); // Setup as system for syncing
+            Mock<ICurrentUserService> mockUserService = new();
+            mockUserService.Setup(u => u.UserId).Returns((string?) null); // Setup as system for syncing
             mockUserService.Setup(u => u.UserName).Returns("System");
 
             CRMDbContext context = new(options, mockUserService.Object);
@@ -29,23 +28,23 @@ namespace Rvnx.CRM.Tests
         public async Task SyncUserAsync_NewUser_ShouldCreateUser()
         {
             // Arrange
-            using var context = GetInMemoryDbContext();
-            var service = new UserSynchronizationService(context);
+            using CRMDbContext context = GetInMemoryDbContext();
+            UserSynchronizationService service = new(context);
 
-            var claims = new List<Claim>
+            List<Claim> claims = new()
             {
                 new Claim(ClaimTypes.NameIdentifier, "sub123"),
                 new Claim(ClaimTypes.Email, "test@example.com"),
                 new Claim(ClaimTypes.Name, "Test User")
             };
-            var identity = new ClaimsIdentity(claims, "TestAuth");
-            var principal = new ClaimsPrincipal(identity);
+            ClaimsIdentity identity = new(claims, "TestAuth");
+            ClaimsPrincipal principal = new(identity);
 
             // Act
             await service.SyncUserAsync(principal);
 
             // Assert
-            var user = await context.Users.IgnoreQueryFilters().FirstOrDefaultAsync(u => u.SubjectId == "sub123");
+            Core.Models.User? user = await context.Users.IgnoreQueryFilters().FirstOrDefaultAsync(u => u.SubjectId == "sub123");
             Assert.NotNull(user);
             Assert.Equal("test@example.com", user.Email);
             Assert.Equal("Test User", user.DisplayName);
@@ -58,11 +57,11 @@ namespace Rvnx.CRM.Tests
         public async Task SyncUserAsync_ExistingUser_ShouldUpdateDetailsAndMapId()
         {
             // Arrange
-            using var context = GetInMemoryDbContext();
-            var service = new UserSynchronizationService(context);
+            using CRMDbContext context = GetInMemoryDbContext();
+            UserSynchronizationService service = new(context);
 
             // Pre-create user
-            var existingUser = new Core.Models.User
+            Core.Models.User existingUser = new()
             {
                 SubjectId = "sub456",
                 Email = "old@example.com",
@@ -72,20 +71,20 @@ namespace Rvnx.CRM.Tests
             context.Users.Add(existingUser);
             await context.SaveChangesAsync();
 
-            var claims = new List<Claim>
+            List<Claim> claims = new()
             {
                 new Claim(ClaimTypes.NameIdentifier, "sub456"),
                 new Claim(ClaimTypes.Email, "new@example.com"),
                 new Claim(ClaimTypes.Name, "New Name")
             };
-            var identity = new ClaimsIdentity(claims, "TestAuth");
-            var principal = new ClaimsPrincipal(identity);
+            ClaimsIdentity identity = new(claims, "TestAuth");
+            ClaimsPrincipal principal = new(identity);
 
             // Act
             await service.SyncUserAsync(principal);
 
             // Assert
-            var user = await context.Users.IgnoreQueryFilters().FirstOrDefaultAsync(u => u.SubjectId == "sub456");
+            Core.Models.User? user = await context.Users.IgnoreQueryFilters().FirstOrDefaultAsync(u => u.SubjectId == "sub456");
             Assert.NotNull(user);
             Assert.Equal("new@example.com", user.Email); // Should update
             Assert.Equal("New Name", user.DisplayName); // Should update

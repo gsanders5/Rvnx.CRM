@@ -1,4 +1,3 @@
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Rvnx.CRM.Core.Models.Base;
@@ -6,7 +5,6 @@ using Rvnx.CRM.Infrastructure.Data;
 using Rvnx.CRM.Infrastructure.Repositories;
 using Rvnx.CRM.Web.Controllers;
 using System.Text;
-using Xunit;
 
 namespace Rvnx.CRM.Tests
 {
@@ -25,15 +23,15 @@ namespace Rvnx.CRM.Tests
         public async Task View_ShouldReturnFileContentResult_WhenImageExists()
         {
             // Arrange
-            using var context = GetInMemoryDbContext();
-            var repo = new Repository(context);
-            var controller = new AttachmentsController(repo);
+            using CRMDbContext context = GetInMemoryDbContext();
+            Repository repo = new(context);
+            AttachmentsController controller = new(repo);
 
-            var attachmentId = Guid.NewGuid();
-            var content = Encoding.UTF8.GetBytes("fake image content");
-            var contentType = "image/png";
+            Guid attachmentId = Guid.NewGuid();
+            byte[] content = Encoding.UTF8.GetBytes("fake image content");
+            string contentType = "image/png";
 
-            var attachment = new Attachment
+            Attachment attachment = new()
             {
                 Id = attachmentId,
                 FileName = "test.png",
@@ -49,10 +47,10 @@ namespace Rvnx.CRM.Tests
             await repo.SaveChangesAsync();
 
             // Act
-            var result = await controller.View(attachmentId);
+            IActionResult result = await controller.View(attachmentId);
 
             // Assert
-            var fileResult = Assert.IsType<FileContentResult>(result);
+            FileContentResult fileResult = Assert.IsType<FileContentResult>(result);
             Assert.Equal(contentType, fileResult.ContentType);
             Assert.Equal(content, fileResult.FileContents);
         }
@@ -60,13 +58,13 @@ namespace Rvnx.CRM.Tests
         [Fact]
         public async Task View_ShouldReturnNotFound_WhenAttachmentDoesNotExist()
         {
-             // Arrange
-            using var context = GetInMemoryDbContext();
-            var repo = new Repository(context);
-            var controller = new AttachmentsController(repo);
+            // Arrange
+            using CRMDbContext context = GetInMemoryDbContext();
+            Repository repo = new(context);
+            AttachmentsController controller = new(repo);
 
             // Act
-            var result = await controller.View(Guid.NewGuid());
+            IActionResult result = await controller.View(Guid.NewGuid());
 
             // Assert
             Assert.IsType<NotFoundResult>(result);

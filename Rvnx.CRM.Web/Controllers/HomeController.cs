@@ -22,22 +22,22 @@ namespace Rvnx.CRM.Web.Controllers
 
         public async Task<IActionResult> Index()
         {
-            var model = new DashboardViewModel();
+            DashboardViewModel model = new();
 
             // 1. Fetch Contacts
-            var contacts = await _repository.ListAsync<Contact>();
-            var contactDict = contacts.ToDictionary(c => c.Id, c => c);
+            List<Contact> contacts = await _repository.ListAsync<Contact>();
+            Dictionary<Guid, Contact> contactDict = contacts.ToDictionary(c => c.Id, c => c);
 
             // 2. Fetch Upcoming Reminders
-            var reminders = await _repository.ListAsync<Reminder>(r => !r.IsCompleted && r.DueDate >= DateTime.Today);
+            List<Reminder> reminders = await _repository.ListAsync<Reminder>(r => !r.IsCompleted && r.DueDate >= DateTime.Today);
 
             // Map Reminders
-            foreach (var reminder in reminders)
+            foreach (Reminder reminder in reminders)
             {
                 string entityName = "Unknown";
                 if (reminder.EntityId != Guid.Empty && reminder.EntityType == EntityTypes.Person)
                 {
-                    if (contactDict.TryGetValue(reminder.EntityId, out var contact))
+                    if (contactDict.TryGetValue(reminder.EntityId, out Contact? contact))
                     {
                         entityName = contact.FullName;
                     }
@@ -56,14 +56,14 @@ namespace Rvnx.CRM.Web.Controllers
             }
 
             // 3. Fetch Important Dates (Birthdays, Anniversaries, etc.)
-            var importantDates = await _repository.ListAsync<SignificantDate>(d => d.EntityType == EntityTypes.Person);
-            var today = DateTime.Today;
+            List<SignificantDate> importantDates = await _repository.ListAsync<SignificantDate>(d => d.EntityType == EntityTypes.Person);
+            DateTime today = DateTime.Today;
 
-            foreach (var date in importantDates)
+            foreach (SignificantDate date in importantDates)
             {
-                if (contactDict.TryGetValue(date.EntityId, out var contact))
+                if (contactDict.TryGetValue(date.EntityId, out Contact? contact))
                 {
-                    var originalDate = date.Date;
+                    DateTime originalDate = date.Date;
                     DateTime nextOccurrence = originalDate.Month == 2 && originalDate.Day == 29 && !DateTime.IsLeapYear(today.Year)
                         ? new DateTime(today.Year, 2, 28)
                         : new DateTime(today.Year, originalDate.Month, originalDate.Day);
@@ -99,7 +99,7 @@ namespace Rvnx.CRM.Web.Controllers
 
             // 4. Graph Data
             // Nodes
-            foreach (var contact in contacts)
+            foreach (Contact contact in contacts)
             {
                 model.GraphNodes.Add(new GraphNode
                 {
@@ -110,8 +110,8 @@ namespace Rvnx.CRM.Web.Controllers
             }
 
             // Links
-            var relationships = await _repository.ListAsync<Relationship>();
-            foreach (var rel in relationships)
+            List<Relationship> relationships = await _repository.ListAsync<Relationship>();
+            foreach (Relationship rel in relationships)
             {
                 if (rel.EntityType == EntityTypes.Person)
                 {
@@ -129,11 +129,12 @@ namespace Rvnx.CRM.Web.Controllers
 
         private string GetTimeUntil(DateTime date)
         {
-            var span = date.Date - DateTime.Today;
+            TimeSpan span = date.Date - DateTime.Today;
             if (span.Days == 0) return "Today";
             if (span.Days == 1) return "Tomorrow";
-            if (span.Days < 0) return "Overdue";
-            return span.Days < 7 ? $"In {span.Days} days" : span.Days < 14 ? "In 1 week" : $"In {span.Days / 7} weeks";
+            return span.Days < 0
+                ? "Overdue"
+                : span.Days < 7 ? $"In {span.Days} days" : span.Days < 14 ? "In 1 week" : $"In {span.Days / 7} weeks";
         }
 
         public IActionResult Privacy()

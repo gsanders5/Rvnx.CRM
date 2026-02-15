@@ -1,8 +1,8 @@
-using System.Security.Claims;
 using Microsoft.EntityFrameworkCore;
 using Rvnx.CRM.Core.Interfaces;
 using Rvnx.CRM.Core.Models;
 using Rvnx.CRM.Infrastructure.Data;
+using System.Security.Claims;
 
 namespace Rvnx.CRM.Web.Services;
 
@@ -17,18 +17,18 @@ public class UserSynchronizationService : IUserSynchronizationService
 
     public async Task SyncUserAsync(ClaimsPrincipal principal)
     {
-        var subject = principal.FindFirst(ClaimTypes.NameIdentifier)?.Value
+        string? subject = principal.FindFirst(ClaimTypes.NameIdentifier)?.Value
                    ?? principal.FindFirst("sub")?.Value;
 
-        var email = principal.FindFirst(ClaimTypes.Email)?.Value
+        string? email = principal.FindFirst(ClaimTypes.Email)?.Value
                  ?? principal.FindFirst("email")?.Value;
 
-        var name = principal.FindFirst(ClaimTypes.Name)?.Value
+        string? name = principal.FindFirst(ClaimTypes.Name)?.Value
                 ?? principal.FindFirst("name")?.Value;
 
         if (!string.IsNullOrEmpty(subject))
         {
-            var user = await _dbContext.Users.IgnoreQueryFilters().FirstOrDefaultAsync(u => u.SubjectId == subject);
+            User? user = await _dbContext.Users.IgnoreQueryFilters().FirstOrDefaultAsync(u => u.SubjectId == subject);
 
             if (user == null)
             {
@@ -72,8 +72,8 @@ public class UserSynchronizationService : IUserSynchronizationService
                 if (changed) await _dbContext.SaveChangesAsync();
             }
 
-            var identity = (ClaimsIdentity)principal.Identity!;
-            var nameIdClaim = identity.FindFirst(ClaimTypes.NameIdentifier);
+            ClaimsIdentity identity = (ClaimsIdentity) principal.Identity!;
+            Claim? nameIdClaim = identity.FindFirst(ClaimTypes.NameIdentifier);
             if (nameIdClaim != null)
             {
                 identity.RemoveClaim(nameIdClaim);
@@ -82,7 +82,7 @@ public class UserSynchronizationService : IUserSynchronizationService
 
             if (!identity.HasClaim(c => c.Type == ClaimTypes.Name) && !string.IsNullOrEmpty(user.DisplayName))
             {
-                 identity.AddClaim(new Claim(ClaimTypes.Name, user.DisplayName));
+                identity.AddClaim(new Claim(ClaimTypes.Name, user.DisplayName));
             }
         }
     }

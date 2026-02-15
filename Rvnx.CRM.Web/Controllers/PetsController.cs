@@ -20,7 +20,7 @@ namespace Rvnx.CRM.Web.Controllers
         // GET: Pets/Create?entityId=...
         public IActionResult Create(Guid entityId)
         {
-            var dto = new CreatePetDto
+            CreatePetDto dto = new()
             {
                 EntityId = entityId
             };
@@ -34,7 +34,7 @@ namespace Rvnx.CRM.Web.Controllers
         {
             if (ModelState.IsValid)
             {
-                var pet = petDto.ToEntity();
+                Pet pet = petDto.ToEntity();
                 pet.EntityType = EntityTypes.Person;
                 await _repository.AddAsync(pet);
                 await _repository.SaveChangesAsync();
@@ -47,10 +47,10 @@ namespace Rvnx.CRM.Web.Controllers
         // GET: Pets/Edit/5
         public async Task<IActionResult> Edit(Guid id)
         {
-            var pet = await _repository.GetByIdAsync<Pet>(id);
+            Pet? pet = await _repository.GetByIdAsync<Pet>(id);
             if (pet == null) return NotFound();
 
-            var dto = new UpdatePetDto
+            UpdatePetDto dto = new()
             {
                 Id = pet.Id,
                 Name = pet.Name,
@@ -74,7 +74,7 @@ namespace Rvnx.CRM.Web.Controllers
 
             if (ModelState.IsValid)
             {
-                var pet = await _repository.GetByIdAsync<Pet>(id);
+                Pet? pet = await _repository.GetByIdAsync<Pet>(id);
                 if (pet == null) return NotFound();
 
                 pet.UpdateEntity(petDto);
@@ -89,7 +89,7 @@ namespace Rvnx.CRM.Web.Controllers
         // GET: Pets/Delete/5
         public async Task<IActionResult> Delete(Guid id)
         {
-            var pet = await _repository.GetByIdAsync<Pet>(id);
+            Pet? pet = await _repository.GetByIdAsync<Pet>(id);
             return pet == null ? NotFound() : View(pet.ToDto());
         }
 
@@ -98,10 +98,10 @@ namespace Rvnx.CRM.Web.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(Guid id)
         {
-            var pet = await _repository.GetByIdAsync<Pet>(id);
+            Pet? pet = await _repository.GetByIdAsync<Pet>(id);
             if (pet != null)
             {
-                var entityId = pet.EntityId;
+                Guid entityId = pet.EntityId;
                 await _repository.DeleteAsync<Pet>(id);
                 await _repository.SaveChangesAsync();
                 return RedirectToAction("Details", "Contacts", new { id = entityId });

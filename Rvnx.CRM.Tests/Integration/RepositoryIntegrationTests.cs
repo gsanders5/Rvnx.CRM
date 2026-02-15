@@ -5,7 +5,6 @@ using Rvnx.CRM.Core.Models.Business;
 using Rvnx.CRM.Core.Models.Contact;
 using Rvnx.CRM.Core.Models.Dates;
 using Rvnx.CRM.Infrastructure.Repositories;
-using Xunit;
 
 namespace Rvnx.CRM.Tests.Integration;
 
@@ -22,7 +21,7 @@ public class RepositoryIntegrationTests : SqliteIntegrationTestBase
     public async Task AddAsync_ShouldPersistData_ToRealSqliteDB()
     {
         // Arrange
-        var contact = new Contact { FirstName = "Real", LastName = "Database" };
+        Contact contact = new() { FirstName = "Real", LastName = "Database" };
 
         // Act
         await _repository.AddAsync(contact);
@@ -34,7 +33,7 @@ public class RepositoryIntegrationTests : SqliteIntegrationTestBase
         // but we can query _context directly if we clear change tracker or detach.
         _context.ChangeTracker.Clear();
 
-        var retrieved = await _context.Contacts.FirstOrDefaultAsync(c => c.FirstName == "Real");
+        Contact? retrieved = await _context.Contacts.FirstOrDefaultAsync(c => c.FirstName == "Real");
         retrieved.Should().NotBeNull();
         retrieved!.LastName.Should().Be("Database");
         retrieved.UserId.Should().Be("TestUser"); // Audit field check
@@ -47,7 +46,7 @@ public class RepositoryIntegrationTests : SqliteIntegrationTestBase
         // We will mock TestUser as "UserA" for this test by updating the existing mock setup if possible?
         // No, constructor set it. Let's assume TestUser = UserA.
 
-        var myContact = new Contact { FirstName = "My", LastName = "Contact" };
+        Contact myContact = new() { FirstName = "My", LastName = "Contact" };
         await _repository.AddAsync(myContact);
         await _repository.SaveChangesAsync();
 
@@ -57,8 +56,8 @@ public class RepositoryIntegrationTests : SqliteIntegrationTestBase
         // Since SqliteIntegrationTestBase generates a random file, we need that path to share it.
         // Let's just use Raw SQL to seed "Other" data.
 
-        var otherId = Guid.NewGuid();
-        var now = DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss");
+        Guid otherId = Guid.NewGuid();
+        string now = DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss");
         // Note: SQLite syntax - Table name is Contact, not Contacts
         await _context.Database.ExecuteSqlRawAsync(
             "INSERT INTO Contact (Id, FirstName, LastName, IsHidden, CreatedBy, CreatedDate, LastChangedBy, LastChangedDate, UserId) " +
@@ -67,7 +66,7 @@ public class RepositoryIntegrationTests : SqliteIntegrationTestBase
 
         // 3. Act
         _context.ChangeTracker.Clear();
-        var visibleContacts = await _repository.ListAsync<Contact>();
+        List<Contact> visibleContacts = await _repository.ListAsync<Contact>();
 
         // 4. Assert
         visibleContacts.Should().Contain(c => c.FirstName == "My");
@@ -78,12 +77,12 @@ public class RepositoryIntegrationTests : SqliteIntegrationTestBase
     public async Task CascadeDelete_ShouldWork_OnRealDB()
     {
         // Arrange
-        var contact = new Contact { FirstName = "Delete", LastName = "Me" };
+        Contact contact = new() { FirstName = "Delete", LastName = "Me" };
         await _repository.AddAsync(contact);
         await _repository.SaveChangesAsync();
 
         // Add related entities
-        var date = new SignificantDate
+        SignificantDate date = new()
         {
             Id = Guid.NewGuid(),
             EntityId = contact.Id,
@@ -103,7 +102,7 @@ public class RepositoryIntegrationTests : SqliteIntegrationTestBase
         // UNLESS we are testing standard FKs (like Employer -> Contact).
 
         // Let's test Employer (Standard FK)
-        var employer = new Employer { CompanyName = "Work", EmployeeId = contact.Id };
+        Employer employer = new() { CompanyName = "Work", EmployeeId = contact.Id };
         await _repository.AddAsync(employer);
         await _repository.SaveChangesAsync();
 
@@ -115,11 +114,11 @@ public class RepositoryIntegrationTests : SqliteIntegrationTestBase
         _context.ChangeTracker.Clear();
 
         // Employer should be deleted (Cascade)
-        var emp = await _context.Employers.IgnoreQueryFilters().FirstOrDefaultAsync(e => e.CompanyName == "Work");
+        Employer? emp = await _context.Employers.IgnoreQueryFilters().FirstOrDefaultAsync(e => e.CompanyName == "Work");
         emp.Should().BeNull();
 
         // Generic Entity (SignificantDate) should still exist (No FK)
-        var d = await _context.SignificantDates.IgnoreQueryFilters().FirstOrDefaultAsync(x => x.Title == "Bday");
+        SignificantDate? d = await _context.SignificantDates.IgnoreQueryFilters().FirstOrDefaultAsync(x => x.Title == "Bday");
         d.Should().NotBeNull();
     }
 }

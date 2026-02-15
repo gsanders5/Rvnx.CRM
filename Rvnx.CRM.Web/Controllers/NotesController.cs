@@ -21,12 +21,12 @@ namespace Rvnx.CRM.Web.Controllers
         {
             if (type == EntityTypes.Person)
             {
-                var p = await _repository.GetByIdAsync<Contact>(id);
+                Contact? p = await _repository.GetByIdAsync<Contact>(id);
                 return p?.FullName ?? "Unknown Person";
             }
             else if (type == EntityTypes.Company)
             {
-                var c = await _repository.GetByIdAsync<Employer>(id);
+                Employer? c = await _repository.GetByIdAsync<Employer>(id);
                 return c?.CompanyName ?? "Unknown Company";
             }
             return "Unknown Entity";
@@ -78,7 +78,7 @@ namespace Rvnx.CRM.Web.Controllers
         {
             if (id == null) return NotFound();
 
-            var note = await _repository.GetByIdAsync<Note>(id.Value);
+            Note? note = await _repository.GetByIdAsync<Note>(id.Value);
             if (note == null) return NotFound();
 
             ViewData["EntityName"] = await GetEntityName(note.EntityId, note.EntityType);
@@ -116,7 +116,7 @@ namespace Rvnx.CRM.Web.Controllers
         {
             if (id == null) return NotFound();
 
-            var note = await _repository.GetByIdAsync<Note>(id.Value);
+            Note? note = await _repository.GetByIdAsync<Note>(id.Value);
             if (note == null) return NotFound();
 
             ViewData["EntityName"] = await GetEntityName(note.EntityId, note.EntityType);
@@ -128,11 +128,11 @@ namespace Rvnx.CRM.Web.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(Guid id)
         {
-            var note = await _repository.GetByIdAsync<Note>(id);
+            Note? note = await _repository.GetByIdAsync<Note>(id);
             if (note != null)
             {
-                var entityId = note.EntityId;
-                var entityType = note.EntityType;
+                Guid entityId = note.EntityId;
+                string entityType = note.EntityType;
                 await _repository.DeleteAsync<Note>(id);
                 await _repository.SaveChangesAsync();
                 return RedirectToEntity(entityId, entityType);

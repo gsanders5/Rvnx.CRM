@@ -1,5 +1,5 @@
-using System.ComponentModel.DataAnnotations;
 using Rvnx.CRM.Core.Models.Base;
+using System.ComponentModel.DataAnnotations;
 
 namespace Rvnx.CRM.Core.Models;
 

@@ -39,7 +39,7 @@ namespace Rvnx.CRM.Web.Controllers
         public async Task<IActionResult> Edit(Guid? id)
         {
             if (id == null) return NotFound();
-            var contactInfo = await _repository.GetByIdAsync<ContactMethod>(id.Value);
+            ContactMethod? contactInfo = await _repository.GetByIdAsync<ContactMethod>(id.Value);
             return contactInfo == null ? NotFound() : View(contactInfo);
         }
 
@@ -61,7 +61,7 @@ namespace Rvnx.CRM.Web.Controllers
         public async Task<IActionResult> Delete(Guid? id)
         {
             if (id == null) return NotFound();
-            var contactInfo = await _repository.GetByIdAsync<ContactMethod>(id.Value);
+            ContactMethod? contactInfo = await _repository.GetByIdAsync<ContactMethod>(id.Value);
             return contactInfo == null ? NotFound() : View(contactInfo);
         }
 
@@ -69,11 +69,11 @@ namespace Rvnx.CRM.Web.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(Guid id)
         {
-            var contactInfo = await _repository.GetByIdAsync<ContactMethod>(id);
+            ContactMethod? contactInfo = await _repository.GetByIdAsync<ContactMethod>(id);
             if (contactInfo != null)
             {
-                var entityId = contactInfo.EntityId;
-                var entityType = contactInfo.EntityType;
+                Guid entityId = contactInfo.EntityId;
+                string entityType = contactInfo.EntityType;
                 await _repository.DeleteAsync<ContactMethod>(id);
                 await _repository.SaveChangesAsync();
                 return RedirectToEntity(entityId, entityType);

@@ -15,9 +15,9 @@ public abstract class SqliteIntegrationTestBase : IDisposable
     {
         // Use a unique file for each test class/instance to ensure isolation
         _dbPath = $"test_{Guid.NewGuid()}.db";
-        var connectionString = $"Data Source={_dbPath}";
+        string connectionString = $"Data Source={_dbPath}";
 
-        var options = new DbContextOptionsBuilder<CRMDbContext>()
+        DbContextOptions<CRMDbContext> options = new DbContextOptionsBuilder<CRMDbContext>()
             .UseSqlite(connectionString)
             .Options;
 

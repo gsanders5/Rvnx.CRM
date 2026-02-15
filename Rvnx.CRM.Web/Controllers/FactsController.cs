@@ -39,7 +39,7 @@ namespace Rvnx.CRM.Web.Controllers
         public async Task<IActionResult> Edit(Guid? id)
         {
             if (id == null) return NotFound();
-            var fact = await _repository.GetByIdAsync<Fact>(id.Value);
+            Fact? fact = await _repository.GetByIdAsync<Fact>(id.Value);
             return fact == null ? NotFound() : View(fact);
         }
 
@@ -61,7 +61,7 @@ namespace Rvnx.CRM.Web.Controllers
         public async Task<IActionResult> Delete(Guid? id)
         {
             if (id == null) return NotFound();
-            var fact = await _repository.GetByIdAsync<Fact>(id.Value);
+            Fact? fact = await _repository.GetByIdAsync<Fact>(id.Value);
             return fact == null ? NotFound() : View(fact);
         }
 
@@ -69,11 +69,11 @@ namespace Rvnx.CRM.Web.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(Guid id)
         {
-            var fact = await _repository.GetByIdAsync<Fact>(id);
+            Fact? fact = await _repository.GetByIdAsync<Fact>(id);
             if (fact != null)
             {
-                var entityId = fact.EntityId;
-                var entityType = fact.EntityType;
+                Guid entityId = fact.EntityId;
+                string entityType = fact.EntityType;
                 await _repository.DeleteAsync<Fact>(id);
                 await _repository.SaveChangesAsync();
                 return RedirectToEntity(entityId, entityType);
