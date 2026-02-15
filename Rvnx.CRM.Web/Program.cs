@@ -28,12 +28,11 @@ namespace Rvnx.CRM.Web
             app.UseRouting();
 
             app.UseAuthorization();
+            app.UseStaticFiles();
 
-            app.MapStaticAssets();
             app.MapControllerRoute(
                 name: "default",
-                pattern: "{controller=Home}/{action=Index}/{id?}")
-                .WithStaticAssets();
+                pattern: "{controller=Home}/{action=Index}/{id?}");
 
             app.Run();
         }

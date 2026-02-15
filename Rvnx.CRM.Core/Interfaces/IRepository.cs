@@ -1,4 +1,5 @@
 ﻿using Rvnx.CRM.Core.Models.Base;
+using System.Linq.Expressions;
 
 namespace Rvnx.CRM.Core.Interfaces;
 
@@ -8,6 +9,9 @@ public interface IRepository
     Task<T?> GetByIdAsync<T>(Guid id, CancellationToken cancellationToken = default) where T : CRMBaseEntity;
 
     IQueryable<T> GetQuery<T>() where T : CRMBaseEntity;
+    Task<T?> GetByIdWithIncludesAsync<T>(Guid id, params string[] includes) where T : CRMBaseEntity;
+
+    Task<List<T>> ListAsync<T>(CancellationToken cancellationToken = default) where T : CRMBaseEntity;
 
     IQueryable<T> GetQueryAsNoTracking<T>() where T : CRMBaseEntity;
 

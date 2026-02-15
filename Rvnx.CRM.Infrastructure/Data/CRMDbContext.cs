@@ -13,10 +13,37 @@ public class CRMDbContext(DbContextOptions<CRMDbContext> options) : DbContext(op
     public DbSet<PhoneNumber> PhoneNumbers { get; set; }
     public DbSet<Note> Notes { get; set; }
     public DbSet<ImportantDate> ImportantDates { get; set; }
+    public DbSet<Relationship> Relationships { get; set; }
+    public DbSet<RelationshipType> RelationshipTypes { get; set; }
+    public DbSet<Reminder> Reminders { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
+
+        modelBuilder.Entity<Relationship>()
+            .HasOne(r => r.Person)
+            .WithMany(p => p.Relationships)
+            .HasForeignKey(r => r.PersonId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<Relationship>()
+            .HasOne(r => r.RelatedPerson)
+            .WithMany(p => p.RelatedTo)
+            .HasForeignKey(r => r.RelatedPersonId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        // Seed RelationshipTypes
+        var seedDate = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+        modelBuilder.Entity<RelationshipType>().HasData(
+            new RelationshipType { Id = Guid.Parse("11111111-1111-1111-1111-111111111111"), Name = "Parent", OppositeName = "Child", CreatedBy = "System", LastChangedBy = "System", CreatedDate = seedDate, LastChangedDate = seedDate },
+            new RelationshipType { Id = Guid.Parse("22222222-2222-2222-2222-222222222222"), Name = "Spouse", OppositeName = "Spouse", CreatedBy = "System", LastChangedBy = "System", CreatedDate = seedDate, LastChangedDate = seedDate },
+            new RelationshipType { Id = Guid.Parse("33333333-3333-3333-3333-333333333333"), Name = "Sibling", OppositeName = "Sibling", CreatedBy = "System", LastChangedBy = "System", CreatedDate = seedDate, LastChangedDate = seedDate },
+            new RelationshipType { Id = Guid.Parse("44444444-4444-4444-4444-444444444444"), Name = "Friend", OppositeName = "Friend", CreatedBy = "System", LastChangedBy = "System", CreatedDate = seedDate, LastChangedDate = seedDate },
+            new RelationshipType { Id = Guid.Parse("55555555-5555-5555-5555-555555555555"), Name = "Partner", OppositeName = "Partner", CreatedBy = "System", LastChangedBy = "System", CreatedDate = seedDate, LastChangedDate = seedDate },
+            new RelationshipType { Id = Guid.Parse("66666666-6666-6666-6666-666666666666"), Name = "Manager", OppositeName = "Employee", CreatedBy = "System", LastChangedBy = "System", CreatedDate = seedDate, LastChangedDate = seedDate },
+            new RelationshipType { Id = Guid.Parse("77777777-7777-7777-7777-777777777777"), Name = "Teacher", OppositeName = "Student", CreatedBy = "System", LastChangedBy = "System", CreatedDate = seedDate, LastChangedDate = seedDate }
+        );
     }
 
     public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)

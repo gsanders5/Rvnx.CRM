@@ -1,7 +1,8 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Rvnx.CRM.Core.Interfaces;
 using Rvnx.CRM.Core.Models.Base;
 using Rvnx.CRM.Infrastructure.Data;
+using System.Linq.Expressions;
 
 namespace Rvnx.CRM.Infrastructure.Repositories;
 
@@ -23,6 +24,23 @@ public class Repository(CRMDbContext context) : IRepository
     public IQueryable<T> GetQueryAsNoTracking<T>() where T : CRMBaseEntity
     {
         return _context.Set<T>().AsNoTracking();
+    }
+
+    public async Task<T?> GetByIdWithIncludesAsync<T>(Guid id, params string[] includes) where T : CRMBaseEntity
+    {
+        var query = _context.Set<T>().AsQueryable();
+
+        foreach (var include in includes)
+        {
+            query = query.Include(include);
+        }
+
+        return await query.FirstOrDefaultAsync(e => e.Id == id);
+    }
+
+    public async Task<List<T>> ListAsync<T>(CancellationToken cancellationToken = default) where T : CRMBaseEntity
+    {
+        return await _context.Set<T>().ToListAsync(cancellationToken);
     }
 
     public async Task<List<T>> ListAsync<T>(int? skip = null, int? take = null, CancellationToken cancellationToken = default) where T : CRMBaseEntity

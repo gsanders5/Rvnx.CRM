@@ -10,15 +10,18 @@ public abstract class CRMBaseEntity
 
     [Required]
     [MaxLength(256)]
-    public string CreatedBy { get; set; } = string.Empty;
+    public string CreatedBy { get; set; } = "System";
 
     [Required]
     [MaxLength(256)]
-    public string LastChangedBy { get; set; } = string.Empty;
+    public string LastChangedBy { get; set; } = "System";
 
     [Required]
     public DateTime CreatedDate { get; set; } = DateTime.UtcNow;
 
     [Required]
     public DateTime LastChangedDate { get; set; } = DateTime.UtcNow;
+
+    [MaxLength(450)]
+    public string? UserId { get; set; }
 }

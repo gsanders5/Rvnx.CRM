@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Rvnx.CRM.Infrastructure.Data;
 
@@ -10,9 +11,11 @@ using Rvnx.CRM.Infrastructure.Data;
 namespace Rvnx.CRM.Infrastructure.Migrations
 {
     [DbContext(typeof(CRMDbContext))]
-    partial class CRMDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260215001221_AddRelationshipAndReminder")]
+    partial class AddRelationshipAndReminder
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "9.0.8");
@@ -112,10 +115,6 @@ namespace Rvnx.CRM.Infrastructure.Migrations
                     b.Property<DateTime?>("Birthday")
                         .HasColumnType("TEXT");
 
-                    b.Property<string>("Company")
-                        .HasMaxLength(200)
-                        .HasColumnType("TEXT");
-
                     b.Property<Guid?>("CompanyId")
                         .HasColumnType("TEXT");
 
@@ -127,17 +126,8 @@ namespace Rvnx.CRM.Infrastructure.Migrations
                     b.Property<DateTime>("CreatedDate")
                         .HasColumnType("TEXT");
 
-                    b.Property<string>("Email")
-                        .IsRequired()
-                        .HasMaxLength(256)
-                        .HasColumnType("TEXT");
-
                     b.Property<string>("FirstName")
                         .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("JobTitle")
                         .HasMaxLength(100)
                         .HasColumnType("TEXT");
 
@@ -152,10 +142,6 @@ namespace Rvnx.CRM.Infrastructure.Migrations
                     b.Property<string>("LastName")
                         .IsRequired()
                         .HasMaxLength(100)
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Phone")
-                        .HasMaxLength(20)
                         .HasColumnType("TEXT");
 
                     b.Property<string>("UserId")
@@ -249,10 +235,12 @@ namespace Rvnx.CRM.Infrastructure.Migrations
                     b.Property<Guid>("RelatedPersonId")
                         .HasColumnType("TEXT");
 
-                    b.Property<Guid>("RelationshipTypeId")
+                    b.Property<DateTime?>("StartDate")
                         .HasColumnType("TEXT");
 
-                    b.Property<DateTime?>("StartDate")
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasMaxLength(100)
                         .HasColumnType("TEXT");
 
                     b.Property<string>("UserId")
@@ -265,122 +253,7 @@ namespace Rvnx.CRM.Infrastructure.Migrations
 
                     b.HasIndex("RelatedPersonId");
 
-                    b.HasIndex("RelationshipTypeId");
-
                     b.ToTable("Relationship");
-                });
-
-            modelBuilder.Entity("Rvnx.CRM.Core.Models.Contact.RelationshipType", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("CreatedBy")
-                        .IsRequired()
-                        .HasMaxLength(256)
-                        .HasColumnType("TEXT");
-
-                    b.Property<DateTime>("CreatedDate")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("LastChangedBy")
-                        .IsRequired()
-                        .HasMaxLength(256)
-                        .HasColumnType("TEXT");
-
-                    b.Property<DateTime>("LastChangedDate")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("OppositeName")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("UserId")
-                        .HasMaxLength(450)
-                        .HasColumnType("TEXT");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("RelationshipType");
-
-                    b.HasData(
-                        new
-                        {
-                            Id = new Guid("11111111-1111-1111-1111-111111111111"),
-                            CreatedBy = "System",
-                            CreatedDate = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            LastChangedBy = "System",
-                            LastChangedDate = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Name = "Parent",
-                            OppositeName = "Child"
-                        },
-                        new
-                        {
-                            Id = new Guid("22222222-2222-2222-2222-222222222222"),
-                            CreatedBy = "System",
-                            CreatedDate = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            LastChangedBy = "System",
-                            LastChangedDate = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Name = "Spouse",
-                            OppositeName = "Spouse"
-                        },
-                        new
-                        {
-                            Id = new Guid("33333333-3333-3333-3333-333333333333"),
-                            CreatedBy = "System",
-                            CreatedDate = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            LastChangedBy = "System",
-                            LastChangedDate = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Name = "Sibling",
-                            OppositeName = "Sibling"
-                        },
-                        new
-                        {
-                            Id = new Guid("44444444-4444-4444-4444-444444444444"),
-                            CreatedBy = "System",
-                            CreatedDate = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            LastChangedBy = "System",
-                            LastChangedDate = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Name = "Friend",
-                            OppositeName = "Friend"
-                        },
-                        new
-                        {
-                            Id = new Guid("55555555-5555-5555-5555-555555555555"),
-                            CreatedBy = "System",
-                            CreatedDate = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            LastChangedBy = "System",
-                            LastChangedDate = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Name = "Partner",
-                            OppositeName = "Partner"
-                        },
-                        new
-                        {
-                            Id = new Guid("66666666-6666-6666-6666-666666666666"),
-                            CreatedBy = "System",
-                            CreatedDate = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            LastChangedBy = "System",
-                            LastChangedDate = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Name = "Manager",
-                            OppositeName = "Employee"
-                        },
-                        new
-                        {
-                            Id = new Guid("77777777-7777-7777-7777-777777777777"),
-                            CreatedBy = "System",
-                            CreatedDate = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            LastChangedBy = "System",
-                            LastChangedDate = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Name = "Teacher",
-                            OppositeName = "Student"
-                        });
                 });
 
             modelBuilder.Entity("Rvnx.CRM.Core.Models.Dates.ImportantDate", b =>
@@ -555,17 +428,9 @@ namespace Rvnx.CRM.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("Rvnx.CRM.Core.Models.Contact.RelationshipType", "RelationshipType")
-                        .WithMany()
-                        .HasForeignKey("RelationshipTypeId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
                     b.Navigation("Person");
 
                     b.Navigation("RelatedPerson");
-
-                    b.Navigation("RelationshipType");
                 });
 
             modelBuilder.Entity("Rvnx.CRM.Core.Models.Dates.ImportantDate", b =>
