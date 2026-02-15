@@ -51,56 +51,61 @@
             </div>
 
             <!-- Relationships -->
-            <div class="card mb-4">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <h5 class="card-title mb-0"><i class="bi bi-people"></i> Relationships</h5>
-                    <a asp-controller="Relationships" asp-action="Create" asp-route-entityId="@Model.Id" asp-route-entityType="Person" class="btn btn-sm btn-outline-primary"><i class="bi bi-plus-lg"></i> Add</a>
+            <div class="card mb-4 border shadow-sm">
+                <div class="card-header bg-transparent border-0 pt-3 px-3">
+                    <h5 class="card-title mb-0 fw-bold"><i class="bi bi-people"></i> Relationships</h5>
                 </div>
-                <ul class="list-group list-group-flush">
-                    @if ((Model.Relationships != null && Model.Relationships.Any()) || (Model.RelatedTo != null && Model.RelatedTo.Any()))
-                    {
-                        @if (Model.Relationships != null)
+                <div class="card-body px-3 pb-3">
+                     <div class="d-grid gap-2 mb-3">
+                        @if ((Model.Relationships != null && Model.Relationships.Any()) || (Model.RelatedTo != null && Model.RelatedTo.Any()))
                         {
-                            foreach (var rel in Model.Relationships)
+                            @if (Model.Relationships != null)
                             {
-                                <li class="list-group-item d-flex justify-content-between align-items-center">
-                                    <div>
-                                        <strong>@rel.RelationshipType?.OppositeName:</strong>
-                                        <a asp-action="Details" asp-route-id="@rel.RelatedEntityId">
-                                            @rel.RelatedPerson?.FullName
-                                        </a>
+                                foreach (var rel in Model.Relationships)
+                                {
+                                    <div class="d-flex justify-content-between align-items-center p-3 rounded border hover-shadow" style="background-color: var(--bs-tertiary-bg);">
+                                        <div class="d-flex align-items-center">
+                                            <a asp-action="Details" asp-route-id="@rel.RelatedEntityId" class="text-decoration-none fw-bold text-body me-2">
+                                                @rel.RelatedPerson?.FullName
+                                            </a>
+                                            <span class="badge rounded-pill bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25">@rel.RelationshipType?.OppositeName</span>
+                                        </div>
+                                        <div>
+                                             <a asp-controller="Relationships" asp-action="Edit" asp-route-id="@rel.Id" class="text-secondary me-2"><i class="bi bi-pencil-square"></i></a>
+                                             <a asp-controller="Relationships" asp-action="Delete" asp-route-id="@rel.Id" class="text-danger"><i class="bi bi-trash"></i></a>
+                                        </div>
                                     </div>
-                                    <div class="btn-group btn-group-sm">
-                                         <a asp-controller="Relationships" asp-action="Edit" asp-route-id="@rel.Id" class="btn btn-outline-secondary" title="Edit"><i class="bi bi-pencil-square"></i></a>
-                                         <a asp-controller="Relationships" asp-action="Delete" asp-route-id="@rel.Id" class="btn btn-outline-danger" title="Delete"><i class="bi bi-trash"></i></a>
+                                }
+                            }
+                            @if (Model.RelatedTo != null)
+                            {
+                                foreach (var rel in Model.RelatedTo)
+                                {
+                                    <div class="d-flex justify-content-between align-items-center p-3 rounded border hover-shadow" style="background-color: var(--bs-tertiary-bg);">
+                                        <div class="d-flex align-items-center">
+                                            <a asp-action="Details" asp-route-id="@rel.EntityId" class="text-decoration-none fw-bold text-body me-2">
+                                                @rel.Person?.FullName
+                                            </a>
+                                            <span class="badge rounded-pill bg-info bg-opacity-10 text-info border border-info border-opacity-25">@rel.RelationshipType?.Name</span>
+                                        </div>
+                                        <div>
+                                             <a asp-controller="Relationships" asp-action="Edit" asp-route-id="@rel.Id" class="text-secondary me-2"><i class="bi bi-pencil-square"></i></a>
+                                             <a asp-controller="Relationships" asp-action="Delete" asp-route-id="@rel.Id" class="text-danger"><i class="bi bi-trash"></i></a>
+                                        </div>
                                     </div>
-                                </li>
+                                }
                             }
                         }
-                        @if (Model.RelatedTo != null)
+                        else
                         {
-                            foreach (var rel in Model.RelatedTo)
-                            {
-                                <li class="list-group-item d-flex justify-content-between align-items-center">
-                                    <div>
-                                        <strong>@rel.RelationshipType?.Name:</strong>
-                                        <a asp-action="Details" asp-route-id="@rel.EntityId">
-                                            @rel.Person?.FullName
-                                        </a>
-                                    </div>
-                                    <div class="btn-group btn-group-sm">
-                                         <a asp-controller="Relationships" asp-action="Edit" asp-route-id="@rel.Id" class="btn btn-outline-secondary" title="Edit"><i class="bi bi-pencil-square"></i></a>
-                                         <a asp-controller="Relationships" asp-action="Delete" asp-route-id="@rel.Id" class="btn btn-outline-danger" title="Delete"><i class="bi bi-trash"></i></a>
-                                    </div>
-                                </li>
-                            }
+                            <div class="text-muted text-center py-3">No relationships found.</div>
                         }
-                    }
-                    else
-                    {
-                        <li class="list-group-item text-muted">No relationships found.</li>
-                    }
-                </ul>
+                     </div>
+
+                     <div class="text-end">
+                        <a asp-controller="Relationships" asp-action="Create" asp-route-entityId="@Model.Id" asp-route-entityType="Person" class="btn btn-primary btn-sm">Add Relationship</a>
+                     </div>
+                </div>
             </div>
         </div>
 

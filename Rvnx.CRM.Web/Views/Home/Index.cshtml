@@ -1,64 +1,208 @@
-@using Rvnx.CRM.Core.Models.Base
-@model IReadOnlyList<Person>
+@model Rvnx.CRM.Web.Models.DashboardViewModel
 
 @{
-    ViewData["Title"] = "Home Page - CRM System";
+    ViewData["Title"] = "Dashboard";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Rvnx CRM System</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
-</div>
-
-<div class="row">
-    <div class="col-12">
-        <div class="d-flex justify-content-between align-items-center mb-3">
-            <h2>People (@Model.Count)</h2>
-            <form asp-action="SeedTestData" method="post" class="d-inline">
-                <button type="submit" class="btn btn-primary">
-                    <i class="bi bi-database-add"></i> Add Test Data
-                </button>
-            </form>
+<div class="container-fluid px-4 py-4">
+    <!-- Upcoming Events Section -->
+    <div class="card shadow-sm mb-4 border-primary border-opacity-25" style="border-width: 2px;">
+        <div class="card-header bg-transparent border-0 pt-4 px-4 position-relative overflow-hidden">
+            <h2 class="text-primary font-weight-bold mb-0 position-relative z-1">Upcoming Events</h2>
         </div>
+        <div class="card-body px-4 pb-4 position-relative z-1">
+            @if (Model.UpcomingEvents.Any())
+            {
+                <div class="list-group list-group-flush">
+                    @foreach (var evt in Model.UpcomingEvents)
+                    {
+                        <a href="@(evt.RelatedEntityId.HasValue ? Url.Action("Details", "Contacts", new { id = evt.RelatedEntityId }) : "#")" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center rounded mb-2 border hover-shadow" style="background-color: var(--bs-body-bg);">
+                            <div class="d-flex align-items-center">
+                                <div class="p-3 rounded shadow-sm me-3 text-primary bg-primary bg-opacity-10">
+                                    @if (evt.Type == "Birthday")
+                                    {
+                                        <i class="bi bi-gift-fill fs-5"></i>
+                                    }
+                                    else
+                                    {
+                                        <i class="bi bi-alarm-fill fs-5"></i>
+                                    }
+                                </div>
+                                <div>
+                                    <div class="fw-bold text-body">@evt.RelatedEntityName</div>
+                                    <div class="small text-muted">@evt.Title</div>
+                                </div>
+                            </div>
+                            <div class="text-end">
+                                <div class="fw-bold text-primary">@evt.TimeUntil</div>
+                                <div class="small text-muted">@evt.Date.ToShortDateString()</div>
+                            </div>
+                        </a>
+                    }
+                </div>
+            }
+            else
+            {
+                <div class="text-muted text-center py-4">
+                    No upcoming events.
+                </div>
+            }
+        </div>
+    </div>
 
-        @if (Model.Count == 0)
-        {
-            <div class="alert alert-info">
-                <h4>No people found</h4>
-                <p>Click "Add Test Data" to add some sample people to test the system.</p>
-            </div>
-        }
-        else
-        {
-            <div class="table-responsive">
-                <table class="table table-striped table-hover">
-                    <thead class="table-dark">
-                        <tr>
-                            <th>Name</th>
-                            <th>Created</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach (var person in Model)
-                        {
-                            <tr>
-                                <td>
-                                    <strong>@person.FirstName @person.LastName</strong>
-                                    <br />
-                                    <small class="text-muted">ID: @person.Id.ToString()[..8]...</small>
-                                </td>
-                                <td>
-                                    <small>
-                                        @person.CreatedDate.ToString("MM/dd/yyyy")
-                                        <br />
-                                        <span class="text-muted">by @person.CreatedBy</span>
-                                    </small>
-                                </td>
-                            </tr>
-                        }
-                    </tbody>
-                </table>
-            </div>
-        }
+    <!-- Your Network Graph Section -->
+    <div class="card shadow-sm mb-4 border-primary border-opacity-25" style="border-width: 2px;">
+        <div class="card-header bg-transparent border-0 pt-4 px-4">
+            <h2 class="text-primary font-weight-bold mb-0">Your Network</h2>
+        </div>
+        <div class="card-body p-0 position-relative">
+            <div id="network-graph" style="width: 100%; height: 500px; background-color: var(--bs-body-bg);"></div>
+        </div>
     </div>
 </div>
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const nodes = @Json.Serialize(Model.GraphNodes);
+            const links = @Json.Serialize(Model.GraphLinks);
+
+            const container = document.getElementById('network-graph');
+            const width = container.clientWidth;
+            const height = container.clientHeight;
+
+            // Simple SVG rendering
+            const svgNS = "http://www.w3.org/2000/svg";
+            const svg = document.createElementNS(svgNS, "svg");
+            svg.setAttribute("width", "100%");
+            svg.setAttribute("height", "100%");
+            svg.setAttribute("viewBox", `0 0 ${width} ${height}`);
+            container.appendChild(svg);
+
+            // Basic Force-Directed Simulation logic (Simplified)
+            // Initialize random positions
+            nodes.forEach(node => {
+                node.x = Math.random() * width;
+                node.y = Math.random() * height;
+                node.vx = 0;
+                node.vy = 0;
+            });
+
+            function runSimulation() {
+                // Constants
+                const k = 100; // Repulsion constant
+                const linkDistance = 150;
+                const damping = 0.8;
+                const centerForce = 0.05;
+
+                for (let i = 0; i < 200; i++) { // Run 200 iterations
+                    // Repulsion
+                    for (let n1 of nodes) {
+                        for (let n2 of nodes) {
+                            if (n1 === n2) continue;
+                            const dx = n1.x - n2.x;
+                            const dy = n1.y - n2.y;
+                            let dist = Math.sqrt(dx * dx + dy * dy);
+                            if (dist === 0) dist = 0.1;
+                            const force = k * k / dist;
+                            const fx = (dx / dist) * force;
+                            const fy = (dy / dist) * force;
+                            n1.vx += fx * 0.005;
+                            n1.vy += fy * 0.005;
+                        }
+                    }
+
+                    // Attraction
+                    for (let link of links) {
+                        const source = nodes.find(n => n.id === link.source);
+                        const target = nodes.find(n => n.id === link.target);
+                        if (!source || !target) continue;
+
+                        const dx = target.x - source.x;
+                        const dy = target.y - source.y;
+                        let dist = Math.sqrt(dx * dx + dy * dy);
+                        if (dist === 0) dist = 0.1;
+                        const force = (dist - linkDistance) * 0.05;
+                        const fx = (dx / dist) * force;
+                        const fy = (dy / dist) * force;
+
+                        source.vx += fx;
+                        source.vy += fy;
+                        target.vx -= fx;
+                        target.vy -= fy;
+                    }
+
+                    // Center gravity and keep in bounds
+                    for (let node of nodes) {
+                        node.vx += (width / 2 - node.x) * centerForce;
+                        node.vy += (height / 2 - node.y) * centerForce;
+
+                        // Bounds
+                        if(node.x < 20) node.vx += 1;
+                        if(node.x > width - 20) node.vx -= 1;
+                        if(node.y < 20) node.vy += 1;
+                        if(node.y > height - 20) node.vy -= 1;
+                    }
+
+                    // Update positions
+                    for (let node of nodes) {
+                        node.x += node.vx;
+                        node.y += node.vy;
+                        node.vx *= damping;
+                        node.vy *= damping;
+                    }
+                }
+            }
+
+            if (nodes.length > 0) {
+                runSimulation();
+            }
+
+            // Render Links
+            links.forEach(link => {
+                const source = nodes.find(n => n.id === link.source);
+                const target = nodes.find(n => n.id === link.target);
+                if (source && target) {
+                    const line = document.createElementNS(svgNS, "line");
+                    line.setAttribute("x1", source.x);
+                    line.setAttribute("y1", source.y);
+                    line.setAttribute("x2", target.x);
+                    line.setAttribute("y2", target.y);
+                    line.setAttribute("stroke", "#6c757d");
+                    line.setAttribute("stroke-width", "2");
+                    line.setAttribute("stroke-opacity", "0.5");
+                    svg.appendChild(line);
+                }
+            });
+
+            // Render Nodes
+            nodes.forEach(node => {
+                const g = document.createElementNS(svgNS, "g");
+                g.setAttribute("transform", `translate(${node.x}, ${node.y})`);
+                g.style.cursor = "pointer";
+
+                g.addEventListener('click', () => {
+                    window.location.href = `/Contacts/Details/${node.id}`;
+                });
+
+                const circle = document.createElementNS(svgNS, "circle");
+                circle.setAttribute("r", "20");
+                circle.setAttribute("fill", "#0d6efd"); // Bootstrap primary
+                circle.setAttribute("stroke", "#fff");
+                circle.setAttribute("stroke-width", "2");
+                g.appendChild(circle);
+
+                const text = document.createElementNS(svgNS, "text");
+                text.setAttribute("dy", "35");
+                text.setAttribute("text-anchor", "middle");
+                text.setAttribute("fill", "currentColor"); // Use current color for text (adapts to theme)
+                text.style.fill = "var(--bs-body-color)"; // Ensure it uses bootstrap text color
+                text.setAttribute("font-size", "12");
+                text.textContent = node.name;
+                g.appendChild(text);
+
+                svg.appendChild(g);
+            });
+        });
+    </script>
+}

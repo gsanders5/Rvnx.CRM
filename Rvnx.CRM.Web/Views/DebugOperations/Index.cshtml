@@ -1,0 +1,22 @@
+@{
+    ViewData["Title"] = "Debug Operations";
+}
+
+<div class="container">
+    <h1 class="mb-4">Debug Operations</h1>
+
+    <div class="card">
+        <div class="card-header">
+            Database Operations
+        </div>
+        <div class="card-body">
+            <h5 class="card-title">Seed Test Data</h5>
+            <p class="card-text">Populate the database with sample contacts if it's empty.</p>
+            <form asp-action="SeedTestData" method="post">
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-database-add"></i> Add Test Data
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
