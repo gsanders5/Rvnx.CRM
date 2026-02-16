@@ -260,6 +260,11 @@
                                                 <span class="badge bg-secondary">@age years old</span>
                                             }
 
+                                        @if(date.RemindMe)
+                                        {
+                                            <span class="badge bg-warning text-dark">Remind Me</span>
+                                        }
+
                                             <div class="btn-group btn-group-sm ml-2">
                                                 <a asp-controller="SignificantDates" asp-action="Edit" asp-route-id="@date.Id" class="btn btn-outline-secondary" title="Edit"><i class="bi bi-pencil-square"></i></a>
                                                 <a asp-controller="SignificantDates" asp-action="Delete" asp-route-id="@date.Id" class="btn btn-outline-danger" title="Delete"><i class="bi bi-trash"></i></a>
