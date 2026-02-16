@@ -32,7 +32,6 @@ namespace Rvnx.CRM.Web.Controllers
         {
             if (ModelState.IsValid)
             {
-                // Enforce unique Birthday
                 if (string.Equals(dto.Title, "Birthday", StringComparison.OrdinalIgnoreCase))
                 {
                     bool existingBirthday = (await _repository.ListAsync<SignificantDate>(d =>
@@ -46,7 +45,6 @@ namespace Rvnx.CRM.Web.Controllers
                         return View(dto);
                     }
 
-                    // Force frequency to 1 year for birthdays
                     dto.EventFrequency = TimeSpan.FromDays(365);
                 }
 
@@ -65,7 +63,6 @@ namespace Rvnx.CRM.Web.Controllers
                 await _repository.AddAsync(importantDate);
                 await _repository.SaveChangesAsync();
 
-                // Redirect back to the entity details
                 return RedirectToEntity(dto.EntityId, dto.EntityType);
             }
             return View(dto);
@@ -92,7 +89,6 @@ namespace Rvnx.CRM.Web.Controllers
                     SignificantDate? importantDate = await _repository.GetByIdAsync<SignificantDate>(id);
                     if (importantDate == null) return NotFound();
 
-                    // Enforce unique Birthday (if title changed to Birthday)
                     if (string.Equals(dto.Title, "Birthday", StringComparison.OrdinalIgnoreCase))
                     {
                         if (!string.Equals(importantDate.Title, "Birthday", StringComparison.OrdinalIgnoreCase))
@@ -108,7 +104,6 @@ namespace Rvnx.CRM.Web.Controllers
                                 return View(dto);
                             }
                         }
-                        // Force frequency to 1 year for birthdays
                         dto.EventFrequency = TimeSpan.FromDays(365);
                     }
 
@@ -154,7 +149,7 @@ namespace Rvnx.CRM.Web.Controllers
 
                 return RedirectToEntity(entityId, entityType);
             }
-            return RedirectToAction("Index", "Home"); // Fallback
+            return RedirectToAction("Index", "Home");
         }
     }
 }
