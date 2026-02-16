@@ -28,12 +28,53 @@ namespace Rvnx.CRM.Web.Controllers
             List<Contact> contacts = await _repository.ListAsync<Contact>();
             Dictionary<Guid, Contact> contactDict = contacts.ToDictionary(c => c.Id, c => c);
 
-            // 2. Fetch Upcoming Reminders
-            List<Reminder> reminders = await _repository.ListAsync<Reminder>(r => !r.IsCompleted && r.DueDate >= DateTime.Today);
+            // 2. Fetch Reminders (Pending or Repeating)
+            // Fetch all reminders and filter in memory because SQLite/EFCore doesn't support TimeSpan comparison > TimeSpan.Zero
+            List<Reminder> allReminders = await _repository.ListAsync<Reminder>();
+            List<Reminder> reminders = allReminders.Where(r => !r.IsCompleted || r.EventFrequency > TimeSpan.Zero).ToList();
 
-            // Map Reminders
+            DateTime today = DateTime.Today;
+
             foreach (Reminder reminder in reminders)
             {
+                DateTime nextDate = reminder.DueDate;
+
+                // Logic for repeating reminders:
+                // If it repeats, we calculate the next occurrence relative to Today.
+                // If it's completed, we assume the current instance is done, so we start looking from the next interval.
+                // If it's not completed but in the past, we also move to the next interval (assuming it was missed/skipped? Or do we show overdue?).
+                // Usually overdue items are shown as overdue.
+                // Requirement: "All reminders are considered to repeat every timespan period... display reminders coming up"
+
+                if (reminder.EventFrequency > TimeSpan.Zero)
+                {
+                    // If completed, skip the current due date and move to next
+                    if (reminder.IsCompleted)
+                    {
+                        nextDate = nextDate.Add(reminder.EventFrequency);
+                    }
+
+                    // Project forward until it's today or in the future
+                    // (Be careful of very small frequencies causing infinite loops, though TimeSpan > Zero prevents 0)
+                    // We also need a safeguard for past dates that are VERY old.
+                    while (nextDate < today)
+                    {
+                        nextDate = nextDate.Add(reminder.EventFrequency);
+                    }
+                }
+                else
+                {
+                    // Non-repeating: if completed, skip.
+                    if (reminder.IsCompleted) continue;
+
+                    // If not completed and in the past, it's overdue. We show it.
+                    // If in future, we show it.
+                }
+
+                // If somehow nextDate is still valid (or overdue non-repeating), add it.
+                // For repeating ones, we projected to >= Today, so they are upcoming (or today).
+                // For non-repeating, they might be < Today (Overdue).
+
                 string entityName = "Unknown";
                 if (reminder.EntityId != Guid.Empty && reminder.EntityType == EntityTypes.Person)
                 {
@@ -47,17 +88,16 @@ namespace Rvnx.CRM.Web.Controllers
                 {
                     Title = reminder.Title,
                     Description = reminder.Description ?? "",
-                    Date = reminder.DueDate,
+                    Date = nextDate,
                     Type = "Reminder",
                     RelatedEntityId = reminder.EntityId,
                     RelatedEntityName = entityName,
-                    TimeUntil = GetTimeUntil(reminder.DueDate)
+                    TimeUntil = GetTimeUntil(nextDate)
                 });
             }
 
             // 3. Fetch Important Dates (Birthdays, Anniversaries, etc.)
             List<SignificantDate> importantDates = await _repository.ListAsync<SignificantDate>(d => d.EntityType == EntityTypes.Person);
-            DateTime today = DateTime.Today;
 
             foreach (SignificantDate date in importantDates)
             {

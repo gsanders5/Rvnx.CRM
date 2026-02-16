@@ -243,5 +243,44 @@
     }
 
     // Run on load
-    document.addEventListener('DOMContentLoaded', initDuration);
+    document.addEventListener('DOMContentLoaded', function() {
+        initDuration();
+
+        const titleEl = document.getElementById('Title');
+        if (titleEl) {
+            titleEl.addEventListener('input', checkBirthday);
+            checkBirthday();
+        }
+    });
+
+    function checkBirthday() {
+        const titleEl = document.getElementById('Title');
+        if (!titleEl) return;
+
+        const isBirthday = titleEl.value.trim().toLowerCase() === 'birthday';
+        const inputs = ['Duration_Years', 'Duration_Months', 'Duration_Days', 'Duration_Hours'];
+        const quickSelectBtn = document.getElementById('quickSelect');
+        const remindMeCheckbox = document.getElementById('RemindMe');
+
+        if (isBirthday) {
+            // Force 1 year duration
+            setDuration(1, 0, 0, 0);
+
+            // Disable inputs
+            inputs.forEach(id => {
+                document.getElementById(id).disabled = true;
+            });
+            if(quickSelectBtn) quickSelectBtn.disabled = true;
+
+            // Should we force RemindMe to be checked?
+            // The requirement says "Birthday timespans should always be one year... this timespan can not be edited".
+            // It doesn't explicitly say RemindMe must be true, but it implies reminders/events.
+            // If the user unchecks RemindMe, the duration fields are hidden anyway.
+        } else {
+             inputs.forEach(id => {
+                document.getElementById(id).disabled = false;
+            });
+            if(quickSelectBtn) quickSelectBtn.disabled = false;
+        }
+    }
 </script>

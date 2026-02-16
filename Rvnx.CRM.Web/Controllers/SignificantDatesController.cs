@@ -45,6 +45,9 @@ namespace Rvnx.CRM.Web.Controllers
                         ModelState.AddModelError("Title", "A birthday is already set for this contact.");
                         return View(dto);
                     }
+
+                    // Force frequency to 1 year for birthdays
+                    dto.EventFrequency = TimeSpan.FromDays(365);
                 }
 
                 SignificantDate importantDate = new()
@@ -90,19 +93,23 @@ namespace Rvnx.CRM.Web.Controllers
                     if (importantDate == null) return NotFound();
 
                     // Enforce unique Birthday (if title changed to Birthday)
-                    if (string.Equals(dto.Title, "Birthday", StringComparison.OrdinalIgnoreCase) &&
-                        !string.Equals(importantDate.Title, "Birthday", StringComparison.OrdinalIgnoreCase))
+                    if (string.Equals(dto.Title, "Birthday", StringComparison.OrdinalIgnoreCase))
                     {
-                        bool existingBirthday = (await _repository.ListAsync<SignificantDate>(d =>
-                            d.EntityId == dto.EntityId &&
-                            d.EntityType == dto.EntityType &&
-                            d.Title == "Birthday")).Any();
-
-                        if (existingBirthday)
+                        if (!string.Equals(importantDate.Title, "Birthday", StringComparison.OrdinalIgnoreCase))
                         {
-                            ModelState.AddModelError("Title", "A birthday is already set for this contact.");
-                            return View(dto);
+                            bool existingBirthday = (await _repository.ListAsync<SignificantDate>(d =>
+                                d.EntityId == dto.EntityId &&
+                                d.EntityType == dto.EntityType &&
+                                d.Title == "Birthday")).Any();
+
+                            if (existingBirthday)
+                            {
+                                ModelState.AddModelError("Title", "A birthday is already set for this contact.");
+                                return View(dto);
+                            }
                         }
+                        // Force frequency to 1 year for birthdays
+                        dto.EventFrequency = TimeSpan.FromDays(365);
                     }
 
                     importantDate.Title = dto.Title;
