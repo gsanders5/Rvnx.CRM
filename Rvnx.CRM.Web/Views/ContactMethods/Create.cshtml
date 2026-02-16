@@ -14,15 +14,15 @@
             <input type="hidden" asp-for="EntityType" />
 
             <div class="form-floating mb-3">
-    <input asp-for="Value" class="form-control"  placeholder="Value"/>
-    <label asp-for="Type"></label>
                 <select asp-for="Type" asp-items="Html.GetEnumSelectList<Rvnx.CRM.Core.Enumerations.ContactMethodType>()" class="form-select"></select>
+                <label asp-for="Type"></label>
                 <span asp-validation-for="Type" class="text-danger"></span>
             </div>
-            <div class="mb-3">
-                <label asp-for="Value" class="form-label"></label>
-    <span asp-validation-for="Value" class="text-danger"></span>
-</div>
+            <div class="form-floating mb-3">
+                <input asp-for="Value" class="form-control" placeholder="Value" />
+                <label asp-for="Value"></label>
+                <span asp-validation-for="Value" class="text-danger"></span>
+            </div>
             <div class="form-floating mb-3">
     <input asp-for="Label" class="form-control" placeholder="e.g. Work, Personal"/>
     <label asp-for="Label"></label>
