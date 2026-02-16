@@ -21,4 +21,16 @@ public class Reminder : RemindableEntity
 
     [Display(Name = "Is Completed")]
     public bool IsCompleted { get; set; } = false;
+
+    public DateTime GetNextOccurrence()
+    {
+        DateTime baseDate = DueDate;
+
+        if (IsCompleted && EventFrequency > TimeSpan.Zero)
+        {
+             baseDate = baseDate.Add(EventFrequency);
+        }
+
+        return Rvnx.CRM.Core.Services.DateCalculationService.GetNextOccurrence(baseDate, EventFrequency);
+    }
 }

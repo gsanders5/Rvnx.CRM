@@ -18,4 +18,9 @@ public class SignificantDate : RemindableEntity
     [Display(Name = "Date")]
     [DataType(DataType.Date)]
     public DateTime Date { get; set; }
+
+    public DateTime GetNextOccurrence()
+    {
+        return Rvnx.CRM.Core.Services.DateCalculationService.GetNextOccurrence(Date, EventFrequency);
+    }
 }
