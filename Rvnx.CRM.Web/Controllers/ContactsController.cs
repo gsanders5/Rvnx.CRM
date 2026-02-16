@@ -16,11 +16,159 @@ namespace Rvnx.CRM.Web.Controllers
     {
         private readonly IRepository _repository;
         private readonly ILogger<ContactsController> _logger;
+        private readonly ICurrentUserService _currentUserService;
 
-        public ContactsController(IRepository repository, ILogger<ContactsController> logger)
+        public ContactsController(IRepository repository, ILogger<ContactsController> logger, ICurrentUserService currentUserService)
         {
             _repository = repository;
             _logger = logger;
+            _currentUserService = currentUserService;
+        }
+
+        public async Task<IActionResult> Self()
+        {
+            if (!_currentUserService.IsAuthenticated)
+            {
+                return RedirectToAction("Index", "Home");
+            }
+
+            string? userId = _currentUserService.UserId;
+            if (string.IsNullOrEmpty(userId))
+            {
+                return RedirectToAction("Index", "Home");
+            }
+
+            // Find User Entity by SubjectId (UserId in Core.Models.User is SubjectId from claims, usually)
+            // Wait, BaseEntity has UserId string (Owner). Core.Models.User has SubjectId string.
+            // ICurrentUserService.UserId returns the ClaimTypes.NameIdentifier.
+            // Let's assume Core.Models.User.SubjectId == _currentUserService.UserId.
+
+            // Actually, we linked Contact to Core.Models.User via LinkedUserId (Guid).
+            // So we first need to find the Core.Models.User entity that corresponds to the current logged-in user.
+
+            Rvnx.CRM.Core.Models.User? user = (await _repository.ListAsync<Rvnx.CRM.Core.Models.User>(u => u.SubjectId == userId)).FirstOrDefault();
+
+            if (user == null)
+            {
+                // User entity doesn't exist yet? It should be synced by UserSynchronizationService.
+                // If not, we can't link.
+                return RedirectToAction("Index");
+            }
+
+            // Find Contact linked to this user
+            Contact? selfContact = (await _repository.ListAsync<Contact>(c => c.LinkedUserId == user.Id)).FirstOrDefault();
+
+            if (selfContact != null)
+            {
+                return RedirectToAction(nameof(Details), new { id = selfContact.Id });
+            }
+
+            return RedirectToAction(nameof(CreateSelf));
+        }
+
+        public async Task<IActionResult> CreateSelf()
+        {
+             if (!_currentUserService.IsAuthenticated)
+            {
+                return RedirectToAction("Index", "Home");
+            }
+
+            string? userId = _currentUserService.UserId;
+            if (string.IsNullOrEmpty(userId)) return RedirectToAction("Index", "Home");
+
+            Rvnx.CRM.Core.Models.User? user = (await _repository.ListAsync<Rvnx.CRM.Core.Models.User>(u => u.SubjectId == userId)).FirstOrDefault();
+            if (user == null) return RedirectToAction("Index");
+
+            Contact? selfContact = (await _repository.ListAsync<Contact>(c => c.LinkedUserId == user.Id)).FirstOrDefault();
+            if (selfContact != null)
+            {
+                return RedirectToAction(nameof(Details), new { id = selfContact.Id });
+            }
+
+            CreateContactDto dto = new()
+            {
+                Email = user.Email,
+                FirstName = _currentUserService.UserName ?? string.Empty
+            };
+
+            ViewBag.IsSelfCreate = true;
+            return View("Create", dto);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> CreateSelf([Bind("FirstName,LastName,Nickname,Email,Phone,JobTitle,Company,Birthday")] CreateContactDto contactDto)
+        {
+            if (!_currentUserService.IsAuthenticated) return Unauthorized();
+
+            string? userId = _currentUserService.UserId;
+            if (string.IsNullOrEmpty(userId)) return Unauthorized();
+
+            Rvnx.CRM.Core.Models.User? user = (await _repository.ListAsync<Rvnx.CRM.Core.Models.User>(u => u.SubjectId == userId)).FirstOrDefault();
+            if (user == null) return RedirectToAction("Index");
+
+            // Double check existence
+            Contact? existingSelf = (await _repository.ListAsync<Contact>(c => c.LinkedUserId == user.Id)).FirstOrDefault();
+            if (existingSelf != null)
+            {
+                return RedirectToAction(nameof(Details), new { id = existingSelf.Id });
+            }
+
+            if (ModelState.IsValid)
+            {
+                Contact contact = contactDto.ToEntity();
+                contact.LinkedUserId = user.Id; // Link it!
+
+                await _repository.AddAsync(contact);
+                await _repository.SaveChangesAsync();
+
+                if (!string.IsNullOrEmpty(contactDto.Email))
+                {
+                    await _repository.AddAsync(new ContactMethod
+                    {
+                        Id = Guid.NewGuid(),
+                        EntityId = contact.Id,
+                        EntityType = EntityTypes.Person,
+                        Type = ContactMethodType.Email,
+                        Value = contactDto.Email,
+                        Label = "Primary"
+                    });
+                }
+
+                if (!string.IsNullOrEmpty(contactDto.Phone))
+                {
+                    await _repository.AddAsync(new ContactMethod
+                    {
+                        Id = Guid.NewGuid(),
+                        EntityId = contact.Id,
+                        EntityType = EntityTypes.Person,
+                        Type = ContactMethodType.Phone,
+                        Value = contactDto.Phone,
+                        Label = "Primary"
+                    });
+                }
+
+                if (contactDto.Birthday.HasValue)
+                {
+                    await _repository.AddAsync(new SignificantDate
+                    {
+                        Id = Guid.NewGuid(),
+                        EntityId = contact.Id,
+                        EntityType = EntityTypes.Person,
+                        Title = "Birthday",
+                        Date = contactDto.Birthday.Value,
+                        Description = "Birthday",
+                        RemindMe = true,
+                        EventFrequency = TimeSpan.FromDays(365)
+                    });
+                }
+
+                await _repository.SaveChangesAsync();
+                return RedirectToAction(nameof(Details), new { id = contact.Id });
+            }
+
+            ViewBag.IsSelfCreate = true;
+            return View("Create", contactDto);
         }
 
         public async Task<IActionResult> Index()

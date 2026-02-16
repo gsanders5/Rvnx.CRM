@@ -46,7 +46,7 @@
                             if (User.Identity?.IsAuthenticated == true)
                             {
                                 <li class="nav-item">
-                                    <span class="nav-link">Hello, @User.Identity.Name!</span>
+                                    <a class="nav-link" asp-area="" asp-controller="Contacts" asp-action="Self">Hello, @User.Identity.Name!</a>
                                 </li>
                                 <li class="nav-item">
                                     <a class="nav-link" asp-area="" asp-controller="Account" asp-action="Logout">Logout</a>
