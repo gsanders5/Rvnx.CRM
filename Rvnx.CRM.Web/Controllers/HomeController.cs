@@ -35,8 +35,7 @@ namespace Rvnx.CRM.Web.Controllers
             {
                 DateTime nextDate = reminder.GetNextOccurrence();
 
-                // Logic handled in GetNextOccurrence now
-                // if (reminder.IsCompleted && nextDate == reminder.DueDate) continue;
+                if (reminder.IsCompleted && nextDate == reminder.DueDate) continue;
 
                 string entityName = "Unknown";
                 if (reminder.EntityId != Guid.Empty && reminder.EntityType == EntityTypes.Person)
