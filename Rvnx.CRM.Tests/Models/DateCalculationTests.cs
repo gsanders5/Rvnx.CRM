@@ -129,5 +129,21 @@ namespace Rvnx.CRM.Tests.Models
             // Assert
             Assert.Equal(_today, nextOccurrence);
         }
+
+        [Fact]
+        public void OneOffReminder_ReturnsOriginalDate_WhenPast()
+        {
+            // Arrange
+            // Due date in past, no frequency (one-off)
+            var dueDate = new DateTime(2025, 1, 1);
+            var freq = TimeSpan.Zero;
+
+            // Act
+            var nextOccurrence = DateCalculationService.GetNextOccurrence(dueDate, freq, _today);
+
+            // Assert
+            // Should return original date (overdue), not recur
+            Assert.Equal(dueDate, nextOccurrence);
+        }
     }
 }

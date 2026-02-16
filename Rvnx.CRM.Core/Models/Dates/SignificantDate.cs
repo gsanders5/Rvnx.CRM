@@ -21,6 +21,12 @@ public class SignificantDate : RemindableEntity
 
     public DateTime GetNextOccurrence()
     {
-        return Rvnx.CRM.Core.Services.DateCalculationService.GetNextOccurrence(Date, EventFrequency);
+        // Default to yearly if no frequency is set, for backward compatibility with old birthdays
+        TimeSpan frequency = EventFrequency;
+        if (frequency <= TimeSpan.Zero)
+        {
+            frequency = TimeSpan.FromDays(365);
+        }
+        return Rvnx.CRM.Core.Services.DateCalculationService.GetNextOccurrence(Date, frequency);
     }
 }
