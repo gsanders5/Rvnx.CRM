@@ -1,5 +1,3 @@
-using System;
-
 namespace Rvnx.CRM.Core.Services
 {
     public static class DateCalculationService
@@ -22,7 +20,7 @@ namespace Rvnx.CRM.Core.Services
 
             if (isMultipleOf365Days)
             {
-                int yearsPerCycle = (int)(frequency.TotalDays / 365);
+                int yearsPerCycle = (int) (frequency.TotalDays / 365);
                 int yearsSinceOriginal = today.Year - originalDate.Year;
                 int yearsToAdd = 0;
 

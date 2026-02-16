@@ -117,9 +117,11 @@ namespace Rvnx.CRM.Web.Controllers
         private string GetTimeUntil(DateTime date)
         {
             TimeSpan span = date.Date - DateTime.Today;
-            if (span.Days == 0) return "Today";
-            if (span.Days == 1) return "Tomorrow";
-            return span.Days < 0
+            return span.Days == 0
+                ? "Today"
+                : span.Days == 1
+                ? "Tomorrow"
+                : span.Days < 0
                 ? "Overdue"
                 : span.Days < 7 ? $"In {span.Days} days" : span.Days < 14 ? "In 1 week" : $"In {span.Days / 7} weeks";
         }
