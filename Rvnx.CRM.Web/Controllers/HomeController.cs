@@ -33,9 +33,10 @@ namespace Rvnx.CRM.Web.Controllers
 
             foreach (Reminder reminder in reminders)
             {
-                DateTime nextDate = GetNextOccurrence(reminder);
+                DateTime nextDate = reminder.GetNextOccurrence();
 
-                if (reminder.IsCompleted && nextDate == reminder.DueDate) continue;
+                // Logic handled in GetNextOccurrence now
+                // if (reminder.IsCompleted && nextDate == reminder.DueDate) continue;
 
                 string entityName = "Unknown";
                 if (reminder.EntityId != Guid.Empty && reminder.EntityType == EntityTypes.Person)
@@ -64,7 +65,7 @@ namespace Rvnx.CRM.Web.Controllers
             {
                 if (contactDict.TryGetValue(date.EntityId, out Contact? contact))
                 {
-                    DateTime nextOccurrence = GetNextDateOccurrence(date);
+                    DateTime nextOccurrence = date.GetNextOccurrence();
 
                     string desc = date.Title?.Equals("Birthday", StringComparison.OrdinalIgnoreCase) == true
                         ? $"Turns {nextOccurrence.Year - date.Date.Year}"
@@ -112,30 +113,7 @@ namespace Rvnx.CRM.Web.Controllers
             return View(model);
         }
 
-        private DateTime GetNextOccurrence(Reminder reminder)
-        {
-            DateTime nextDate = reminder.DueDate;
-            DateTime today = DateTime.Today;
-
-            if (reminder.EventFrequency > TimeSpan.Zero)
-            {
-                if (reminder.IsCompleted)
-                {
-                    nextDate = nextDate.Add(reminder.EventFrequency);
-                }
-
-                while (nextDate < today)
-                {
-                    nextDate = nextDate.Add(reminder.EventFrequency);
-                }
-            }
-            return nextDate;
-        }
-
-        private DateTime GetNextDateOccurrence(SignificantDate date)
-        {
-            return Rvnx.CRM.Core.Services.DateCalculationService.GetNextOccurrence(date.Date, date.EventFrequency);
-        }
+        // Removed GetNextOccurrence helper methods as logic is now in Models
 
         private string GetTimeUntil(DateTime date)
         {

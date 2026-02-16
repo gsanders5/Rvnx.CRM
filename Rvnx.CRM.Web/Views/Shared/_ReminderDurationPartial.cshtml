@@ -201,17 +201,7 @@
                 future.setFullYear(future.getFullYear() + years);
             }
         } else {
-             // Drift logic: Add the duration consecutively until > today
-             // Note: Adding months in JS handles variable days in month, so we rely on Date object logic for month/year addition
-             // But for 'drift' logic requested (add fixed timespan), we might need to be careful.
-             // The user request: "if it is a multiple of 365 days, we don't drift. All others are allowed to drift."
-
-             // Since the input is split into Y/M/D, let's just add that combination repeatedly.
-             // JS Date addition handles "add 1 month" differently than "add 30 days".
-             // To match the user's "TimeSpan" concept (which is fixed duration), we should probably convert to days for the drift logic
-             // if we weren't using the Y/M/D inputs. However, since we have Y/M/D inputs, "1 Month" usually implies calendar month.
-
-             // Let's stick to the "Add Duration" loop concept.
+             // Drift logic: Add the duration consecutively
              while (future < today) {
                 future.setFullYear(future.getFullYear() + years);
                 future.setMonth(future.getMonth() + months);
