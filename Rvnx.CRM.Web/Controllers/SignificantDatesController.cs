@@ -32,7 +32,6 @@ namespace Rvnx.CRM.Web.Controllers
         {
             if (ModelState.IsValid)
             {
-                // Enforce unique Birthday
                 if (string.Equals(dto.Title, "Birthday", StringComparison.OrdinalIgnoreCase))
                 {
                     bool existingBirthday = (await _repository.ListAsync<SignificantDate>(d =>
@@ -45,6 +44,8 @@ namespace Rvnx.CRM.Web.Controllers
                         ModelState.AddModelError("Title", "A birthday is already set for this contact.");
                         return View(dto);
                     }
+
+                    dto.EventFrequency = TimeSpan.FromDays(365);
                 }
 
                 SignificantDate importantDate = new()
@@ -62,7 +63,6 @@ namespace Rvnx.CRM.Web.Controllers
                 await _repository.AddAsync(importantDate);
                 await _repository.SaveChangesAsync();
 
-                // Redirect back to the entity details
                 return RedirectToEntity(dto.EntityId, dto.EntityType);
             }
             return View(dto);
@@ -89,20 +89,22 @@ namespace Rvnx.CRM.Web.Controllers
                     SignificantDate? importantDate = await _repository.GetByIdAsync<SignificantDate>(id);
                     if (importantDate == null) return NotFound();
 
-                    // Enforce unique Birthday (if title changed to Birthday)
-                    if (string.Equals(dto.Title, "Birthday", StringComparison.OrdinalIgnoreCase) &&
-                        !string.Equals(importantDate.Title, "Birthday", StringComparison.OrdinalIgnoreCase))
+                    if (string.Equals(dto.Title, "Birthday", StringComparison.OrdinalIgnoreCase))
                     {
-                        bool existingBirthday = (await _repository.ListAsync<SignificantDate>(d =>
-                            d.EntityId == dto.EntityId &&
-                            d.EntityType == dto.EntityType &&
-                            d.Title == "Birthday")).Any();
-
-                        if (existingBirthday)
+                        if (!string.Equals(importantDate.Title, "Birthday", StringComparison.OrdinalIgnoreCase))
                         {
-                            ModelState.AddModelError("Title", "A birthday is already set for this contact.");
-                            return View(dto);
+                            bool existingBirthday = (await _repository.ListAsync<SignificantDate>(d =>
+                                d.EntityId == dto.EntityId &&
+                                d.EntityType == dto.EntityType &&
+                                d.Title == "Birthday")).Any();
+
+                            if (existingBirthday)
+                            {
+                                ModelState.AddModelError("Title", "A birthday is already set for this contact.");
+                                return View(dto);
+                            }
                         }
+                        dto.EventFrequency = TimeSpan.FromDays(365);
                     }
 
                     importantDate.Title = dto.Title;
@@ -147,7 +149,7 @@ namespace Rvnx.CRM.Web.Controllers
 
                 return RedirectToEntity(entityId, entityType);
             }
-            return RedirectToAction("Index", "Home"); // Fallback
+            return RedirectToAction("Index", "Home");
         }
     }
 }

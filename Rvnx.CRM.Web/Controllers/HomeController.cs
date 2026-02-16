@@ -24,16 +24,19 @@ namespace Rvnx.CRM.Web.Controllers
         {
             DashboardViewModel model = new();
 
-            // 1. Fetch Contacts
             List<Contact> contacts = await _repository.ListAsync<Contact>();
             Dictionary<Guid, Contact> contactDict = contacts.ToDictionary(c => c.Id, c => c);
 
-            // 2. Fetch Upcoming Reminders
-            List<Reminder> reminders = await _repository.ListAsync<Reminder>(r => !r.IsCompleted && r.DueDate >= DateTime.Today);
+            // Fetch all reminders and filter in memory because SQLite/EFCore doesn't support TimeSpan comparison > TimeSpan.Zero
+            List<Reminder> allReminders = await _repository.ListAsync<Reminder>();
+            List<Reminder> reminders = allReminders.Where(r => !r.IsCompleted || r.EventFrequency > TimeSpan.Zero).ToList();
 
-            // Map Reminders
             foreach (Reminder reminder in reminders)
             {
+                DateTime nextDate = GetNextOccurrence(reminder);
+
+                if (reminder.IsCompleted && nextDate == reminder.DueDate) continue;
+
                 string entityName = "Unknown";
                 if (reminder.EntityId != Guid.Empty && reminder.EntityType == EntityTypes.Person)
                 {
@@ -47,40 +50,26 @@ namespace Rvnx.CRM.Web.Controllers
                 {
                     Title = reminder.Title,
                     Description = reminder.Description ?? "",
-                    Date = reminder.DueDate,
+                    Date = nextDate,
                     Type = "Reminder",
                     RelatedEntityId = reminder.EntityId,
                     RelatedEntityName = entityName,
-                    TimeUntil = GetTimeUntil(reminder.DueDate)
+                    TimeUntil = GetTimeUntil(nextDate)
                 });
             }
 
-            // 3. Fetch Important Dates (Birthdays, Anniversaries, etc.)
             List<SignificantDate> importantDates = await _repository.ListAsync<SignificantDate>(d => d.EntityType == EntityTypes.Person);
-            DateTime today = DateTime.Today;
 
             foreach (SignificantDate date in importantDates)
             {
                 if (contactDict.TryGetValue(date.EntityId, out Contact? contact))
                 {
-                    DateTime originalDate = date.Date;
-                    DateTime nextOccurrence = originalDate.Month == 2 && originalDate.Day == 29 && !DateTime.IsLeapYear(today.Year)
-                        ? new DateTime(today.Year, 2, 28)
-                        : new DateTime(today.Year, originalDate.Month, originalDate.Day);
-
-                    // Handle leap year dates (Feb 29) on non-leap years
-
-                    if (nextOccurrence < today)
-                    {
-                        // Move to next year
-                        nextOccurrence = originalDate.Month == 2 && originalDate.Day == 29 && !DateTime.IsLeapYear(today.Year + 1)
-                            ? new DateTime(today.Year + 1, 2, 28)
-                            : new DateTime(today.Year + 1, originalDate.Month, originalDate.Day);
-                    }
+                    DateTime nextOccurrence = GetNextDateOccurrence(date.Date);
 
                     string desc = date.Title?.Equals("Birthday", StringComparison.OrdinalIgnoreCase) == true
-                        ? $"Turns {nextOccurrence.Year - originalDate.Year}"
-                        : $"{date.Title} ({originalDate.ToShortDateString()})";
+                        ? $"Turns {nextOccurrence.Year - date.Date.Year}"
+                        : $"{date.Title} ({date.Date.ToShortDateString()})";
+
                     model.UpcomingEvents.Add(new UpcomingEventViewModel
                     {
                         Title = $"{contact.FirstName}'s {date.Title}",
@@ -94,11 +83,8 @@ namespace Rvnx.CRM.Web.Controllers
                 }
             }
 
-            // Sort and limit events
             model.UpcomingEvents = model.UpcomingEvents.OrderBy(e => e.Date).Take(5).ToList();
 
-            // 4. Graph Data
-            // Nodes
             foreach (Contact contact in contacts)
             {
                 model.GraphNodes.Add(new GraphNode
@@ -109,7 +95,6 @@ namespace Rvnx.CRM.Web.Controllers
                 });
             }
 
-            // Links
             List<Relationship> relationships = await _repository.ListAsync<Relationship>();
             foreach (Relationship rel in relationships)
             {
@@ -125,6 +110,42 @@ namespace Rvnx.CRM.Web.Controllers
             }
 
             return View(model);
+        }
+
+        private DateTime GetNextOccurrence(Reminder reminder)
+        {
+            DateTime nextDate = reminder.DueDate;
+            DateTime today = DateTime.Today;
+
+            if (reminder.EventFrequency > TimeSpan.Zero)
+            {
+                if (reminder.IsCompleted)
+                {
+                    nextDate = nextDate.Add(reminder.EventFrequency);
+                }
+
+                while (nextDate < today)
+                {
+                    nextDate = nextDate.Add(reminder.EventFrequency);
+                }
+            }
+            return nextDate;
+        }
+
+        private DateTime GetNextDateOccurrence(DateTime originalDate)
+        {
+            DateTime today = DateTime.Today;
+            DateTime nextOccurrence = originalDate.Month == 2 && originalDate.Day == 29 && !DateTime.IsLeapYear(today.Year)
+                        ? new DateTime(today.Year, 2, 28)
+                        : new DateTime(today.Year, originalDate.Month, originalDate.Day);
+
+            if (nextOccurrence < today)
+            {
+                nextOccurrence = originalDate.Month == 2 && originalDate.Day == 29 && !DateTime.IsLeapYear(today.Year + 1)
+                    ? new DateTime(today.Year + 1, 2, 28)
+                    : new DateTime(today.Year + 1, originalDate.Month, originalDate.Day);
+            }
+            return nextOccurrence;
         }
 
         private string GetTimeUntil(DateTime date)
