@@ -91,8 +91,8 @@
                                         </div>
                                     </div>
                                     <div class="btn-group btn-group-sm">
-                                        <a asp-controller="ContactMethods" asp-action="Edit" asp-route-id="@info.Id" class="btn btn-outline-secondary" title="Edit"><i class="bi bi-pencil-square"></i></a>
-                                        <a asp-controller="ContactMethods" asp-action="Delete" asp-route-id="@info.Id" class="btn btn-outline-danger" title="Delete"><i class="bi bi-trash"></i></a>
+                                        <a asp-controller="ContactMethods" asp-action="Edit" asp-route-id="@info.Id" class="btn btn-outline-secondary" title="Edit" aria-label="Edit @info.Type @info.Value"><i class="bi bi-pencil-square"></i></a>
+                                        <a asp-controller="ContactMethods" asp-action="Delete" asp-route-id="@info.Id" class="btn btn-outline-danger" title="Delete" aria-label="Delete @info.Type @info.Value"><i class="bi bi-trash"></i></a>
                                     </div>
                                 </li>
                             }
@@ -126,8 +126,8 @@
                                         <div class="d-none note-source">@fact.Value</div>
                                         <div class="note-render"></div>
                                         <div class="btn-group btn-group-sm opacity-50 hover-opacity-100">
-                                            <a asp-controller="Facts" asp-action="Edit" asp-route-id="@fact.Id" class="text-secondary me-2"><i class="bi bi-pencil-square"></i></a>
-                                            <a asp-controller="Facts" asp-action="Delete" asp-route-id="@fact.Id" class="text-danger"><i class="bi bi-trash"></i></a>
+                                            <a asp-controller="Facts" asp-action="Edit" asp-route-id="@fact.Id" class="text-secondary me-2" title="Edit fact" aria-label="Edit fact"><i class="bi bi-pencil-square"></i></a>
+                                            <a asp-controller="Facts" asp-action="Delete" asp-route-id="@fact.Id" class="text-danger" title="Delete fact" aria-label="Delete fact"><i class="bi bi-trash"></i></a>
                                         </div>
                                     </li>
                                 }
@@ -162,8 +162,8 @@
                                             <span class="badge rounded-pill bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25">@rel.RelationshipTypeOppositeName</span>
                                         </div>
                                         <div>
-                                             <a asp-controller="Relationships" asp-action="Edit" asp-route-id="@rel.Id" class="text-secondary me-2"><i class="bi bi-pencil-square"></i></a>
-                                             <a asp-controller="Relationships" asp-action="Delete" asp-route-id="@rel.Id" class="text-danger"><i class="bi bi-trash"></i></a>
+                                             <a asp-controller="Relationships" asp-action="Edit" asp-route-id="@rel.Id" class="text-secondary me-2" title="Edit relationship" aria-label="Edit relationship with @rel.RelatedEntityName"><i class="bi bi-pencil-square"></i></a>
+                                             <a asp-controller="Relationships" asp-action="Delete" asp-route-id="@rel.Id" class="text-danger" title="Delete relationship" aria-label="Delete relationship with @rel.RelatedEntityName"><i class="bi bi-trash"></i></a>
                                         </div>
                                     </div>
                                 }
@@ -180,8 +180,8 @@
                                             <span class="badge rounded-pill bg-info bg-opacity-10 text-info border border-info border-opacity-25">@rel.RelationshipTypeName</span>
                                         </div>
                                         <div>
-                                             <a asp-controller="Relationships" asp-action="Edit" asp-route-id="@rel.Id" class="text-secondary me-2"><i class="bi bi-pencil-square"></i></a>
-                                             <a asp-controller="Relationships" asp-action="Delete" asp-route-id="@rel.Id" class="text-danger"><i class="bi bi-trash"></i></a>
+                                             <a asp-controller="Relationships" asp-action="Edit" asp-route-id="@rel.Id" class="text-secondary me-2" title="Edit relationship" aria-label="Edit relationship with @rel.EntityName"><i class="bi bi-pencil-square"></i></a>
+                                             <a asp-controller="Relationships" asp-action="Delete" asp-route-id="@rel.Id" class="text-danger" title="Delete relationship" aria-label="Delete relationship with @rel.EntityName"><i class="bi bi-trash"></i></a>
                                         </div>
                                     </div>
                                 }
@@ -217,8 +217,8 @@
                                         <small class="text-muted">@pet.Species @(string.IsNullOrEmpty(pet.Breed) ? "" : $"({pet.Breed})")</small>
                                     </div>
                                     <div class="btn-group btn-group-sm">
-                                        <a asp-controller="Pets" asp-action="Edit" asp-route-id="@pet.Id" class="btn btn-outline-secondary" title="Edit"><i class="bi bi-pencil-square"></i></a>
-                                        <a asp-controller="Pets" asp-action="Delete" asp-route-id="@pet.Id" class="btn btn-outline-danger" title="Delete"><i class="bi bi-trash"></i></a>
+                                        <a asp-controller="Pets" asp-action="Edit" asp-route-id="@pet.Id" class="btn btn-outline-secondary" title="Edit" aria-label="Edit @pet.Name"><i class="bi bi-pencil-square"></i></a>
+                                        <a asp-controller="Pets" asp-action="Delete" asp-route-id="@pet.Id" class="btn btn-outline-danger" title="Delete" aria-label="Delete @pet.Name"><i class="bi bi-trash"></i></a>
                                     </div>
                                 </li>
                             }
@@ -266,8 +266,8 @@
                                         }
 
                                             <div class="btn-group btn-group-sm ml-2">
-                                                <a asp-controller="SignificantDates" asp-action="Edit" asp-route-id="@date.Id" class="btn btn-outline-secondary" title="Edit"><i class="bi bi-pencil-square"></i></a>
-                                                <a asp-controller="SignificantDates" asp-action="Delete" asp-route-id="@date.Id" class="btn btn-outline-danger" title="Delete"><i class="bi bi-trash"></i></a>
+                                                <a asp-controller="SignificantDates" asp-action="Edit" asp-route-id="@date.Id" class="btn btn-outline-secondary" title="Edit" aria-label="Edit @date.Title"><i class="bi bi-pencil-square"></i></a>
+                                                <a asp-controller="SignificantDates" asp-action="Delete" asp-route-id="@date.Id" class="btn btn-outline-danger" title="Delete" aria-label="Delete @date.Title"><i class="bi bi-trash"></i></a>
                                             </div>
                                         </div>
                                     </div>
@@ -306,8 +306,8 @@
                                                 @reminder.DueDate.ToShortDateString()
                                             </small>
                                             <div class="btn-group btn-group-sm ml-2">
-                                                <a asp-controller="Reminders" asp-action="Edit" asp-route-id="@reminder.Id" class="btn btn-outline-secondary" title="Edit"><i class="bi bi-pencil-square"></i></a>
-                                                <a asp-controller="Reminders" asp-action="Delete" asp-route-id="@reminder.Id" class="btn btn-outline-danger" title="Delete"><i class="bi bi-trash"></i></a>
+                                                <a asp-controller="Reminders" asp-action="Edit" asp-route-id="@reminder.Id" class="btn btn-outline-secondary" title="Edit" aria-label="Edit @reminder.Title"><i class="bi bi-pencil-square"></i></a>
+                                                <a asp-controller="Reminders" asp-action="Delete" asp-route-id="@reminder.Id" class="btn btn-outline-danger" title="Delete" aria-label="Delete @reminder.Title"><i class="bi bi-trash"></i></a>
                                             </div>
                                         </div>
                                     </div>
@@ -339,8 +339,8 @@
                                     <div class="d-flex justify-content-between">
                                         <h6 class="card-subtitle mb-2 text-muted">@note.Title <small>@note.CreatedDate.ToShortDateString()</small></h6>
                                         <div class="btn-group btn-group-sm">
-                                            <a asp-controller="Notes" asp-action="Edit" asp-route-id="@note.Id" class="btn btn-outline-secondary" title="Edit"><i class="bi bi-pencil-square"></i></a>
-                                            <a asp-controller="Notes" asp-action="Delete" asp-route-id="@note.Id" class="btn btn-outline-danger" title="Delete"><i class="bi bi-trash"></i></a>
+                                            <a asp-controller="Notes" asp-action="Edit" asp-route-id="@note.Id" class="btn btn-outline-secondary" title="Edit" aria-label="Edit @note.Title"><i class="bi bi-pencil-square"></i></a>
+                                            <a asp-controller="Notes" asp-action="Delete" asp-route-id="@note.Id" class="btn btn-outline-danger" title="Delete" aria-label="Delete @note.Title"><i class="bi bi-trash"></i></a>
                                         </div>
                                     </div>
                                     <div class="d-none note-source">@note.Value</div>
@@ -398,9 +398,9 @@
                                         </div>
                                     </div>
                                     <div class="btn-group btn-group-sm ms-2 align-self-start">
-                                        <a asp-controller="Attachments" asp-action="Download" asp-route-id="@attachment.Id" class="btn btn-outline-secondary" title="Download"><i class="bi bi-download"></i></a>
+                                        <a asp-controller="Attachments" asp-action="Download" asp-route-id="@attachment.Id" class="btn btn-outline-secondary" title="Download" aria-label="Download @attachment.FileName"><i class="bi bi-download"></i></a>
                                         <form asp-controller="Attachments" asp-action="Delete" asp-route-id="@attachment.Id" method="post" class="d-inline" onsubmit="return confirm('Are you sure?');">
-                                            <button type="submit" class="btn btn-outline-danger" title="Delete"><i class="bi bi-trash"></i></button>
+                                            <button type="submit" class="btn btn-outline-danger" title="Delete" aria-label="Delete @attachment.FileName"><i class="bi bi-trash"></i></button>
                                         </form>
                                     </div>
                                 </li>
