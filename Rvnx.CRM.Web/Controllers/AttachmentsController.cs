@@ -77,7 +77,29 @@ namespace Rvnx.CRM.Web.Controllers
 
         public async Task<IActionResult> View(Guid id)
         {
-            Attachment? attachment = await _repository.GetByIdWithIncludesAsync<Attachment>(id, "AttachmentContent");
+            // 1. Fetch metadata only (fast)
+            Attachment? attachment = await _repository.GetByIdAsync<Attachment>(id);
+            if (attachment == null) return NotFound();
+
+            // 2. Check Cache
+            if (!string.IsNullOrEmpty(Request.Headers["If-Modified-Since"]))
+            {
+                if (DateTime.TryParse(Request.Headers["If-Modified-Since"], out DateTime ifModifiedSince))
+                {
+                    // Truncate milliseconds as HTTP headers don't support them
+                    if (ifModifiedSince >= attachment.LastChangedDate.AddTicks(-(attachment.LastChangedDate.Ticks % TimeSpan.TicksPerSecond)))
+                    {
+                        return StatusCode(304);
+                    }
+                }
+            }
+
+            // 3. Set Cache Headers
+            Response.Headers["Last-Modified"] = attachment.LastChangedDate.ToString("R");
+            Response.Headers["Cache-Control"] = "public, max-age=31536000";
+
+            // 4. Fetch content (if not cached)
+            attachment = await _repository.GetByIdWithIncludesAsync<Attachment>(id, "AttachmentContent");
             if (attachment == null || attachment.AttachmentContent == null) return NotFound();
 
             // Only allow inline viewing for safe image types

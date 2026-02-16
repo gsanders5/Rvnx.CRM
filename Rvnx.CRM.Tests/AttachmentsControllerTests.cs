@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Moq;
 using Rvnx.CRM.Core.Interfaces;
@@ -32,6 +33,10 @@ namespace Rvnx.CRM.Tests
             using CRMDbContext context = GetInMemoryDbContext();
             Repository repo = new(context);
             AttachmentsController controller = new(repo);
+            controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext()
+            };
 
             Guid attachmentId = Guid.NewGuid();
             byte[] content = Encoding.UTF8.GetBytes("fake image content");
@@ -68,12 +73,104 @@ namespace Rvnx.CRM.Tests
             using CRMDbContext context = GetInMemoryDbContext();
             Repository repo = new(context);
             AttachmentsController controller = new(repo);
+            controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext()
+            };
 
             // Act
             IActionResult result = await controller.View(Guid.NewGuid());
 
             // Assert
             Assert.IsType<NotFoundResult>(result);
+        }
+
+        [Fact]
+        public async Task View_ShouldReturn304_WhenIfModifiedSinceIsCurrent()
+        {
+            // Arrange
+            using CRMDbContext context = GetInMemoryDbContext();
+            Repository repo = new(context);
+            AttachmentsController controller = new(repo);
+            controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext()
+            };
+
+            Guid attachmentId = Guid.NewGuid();
+            Attachment attachment = new()
+            {
+                Id = attachmentId,
+                FileName = "test.png",
+                ContentType = "image/png",
+                AttachmentContent = new AttachmentContent
+                {
+                    AttachmentId = attachmentId,
+                    Content = [1, 2, 3]
+                }
+            };
+
+            // Set LastChangedDate explicitly for consistent testing
+            DateTime now = DateTime.UtcNow;
+            // Floor to seconds as DB often does (or logic expects)
+            now = now.AddTicks(-(now.Ticks % TimeSpan.TicksPerSecond));
+            attachment.LastChangedDate = now;
+
+            await repo.AddAsync(attachment);
+            await repo.SaveChangesAsync();
+
+            // Set If-Modified-Since header to current LastChangedDate
+            controller.Request.Headers["If-Modified-Since"] = now.ToString("R");
+
+            // Act
+            IActionResult result = await controller.View(attachmentId);
+
+            // Assert
+            StatusCodeResult statusCodeResult = Assert.IsType<StatusCodeResult>(result);
+            Assert.Equal(304, statusCodeResult.StatusCode);
+        }
+
+        [Fact]
+        public async Task View_ShouldReturnFile_WhenIfModifiedSinceIsOld()
+        {
+            // Arrange
+            using CRMDbContext context = GetInMemoryDbContext();
+            Repository repo = new(context);
+            AttachmentsController controller = new(repo);
+            controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext()
+            };
+
+            Guid attachmentId = Guid.NewGuid();
+            Attachment attachment = new()
+            {
+                Id = attachmentId,
+                FileName = "test.png",
+                ContentType = "image/png",
+                AttachmentContent = new AttachmentContent
+                {
+                    AttachmentId = attachmentId,
+                    Content = [1, 2, 3]
+                }
+            };
+
+            DateTime now = DateTime.UtcNow;
+            attachment.LastChangedDate = now;
+
+            await repo.AddAsync(attachment);
+            await repo.SaveChangesAsync();
+
+            // Set If-Modified-Since header to older date
+            controller.Request.Headers["If-Modified-Since"] = now.AddMinutes(-10).ToString("R");
+
+            // Act
+            IActionResult result = await controller.View(attachmentId);
+
+            // Assert
+            Assert.IsType<FileContentResult>(result);
+            Assert.True(controller.Response.Headers.ContainsKey("Last-Modified"));
+            Assert.True(controller.Response.Headers.ContainsKey("Cache-Control"));
         }
     }
 }
