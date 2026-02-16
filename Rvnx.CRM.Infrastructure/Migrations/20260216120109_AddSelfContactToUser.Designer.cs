@@ -11,8 +11,8 @@ using Rvnx.CRM.Infrastructure.Data;
 namespace Rvnx.CRM.Infrastructure.Migrations
 {
     [DbContext(typeof(CRMDbContext))]
-    [Migration("20260216064045_AddSelfContact")]
-    partial class AddSelfContact
+    [Migration("20260216120109_AddSelfContactToUser")]
+    partial class AddSelfContactToUser
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -342,9 +342,6 @@ namespace Rvnx.CRM.Infrastructure.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("TEXT");
 
-                    b.Property<Guid?>("LinkedUserId")
-                        .HasColumnType("TEXT");
-
                     b.Property<string>("Nickname")
                         .HasMaxLength(100)
                         .HasColumnType("TEXT");
@@ -354,9 +351,6 @@ namespace Rvnx.CRM.Infrastructure.Migrations
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("LinkedUserId")
-                        .IsUnique();
 
                     b.HasIndex("UserId");
 
@@ -943,6 +937,9 @@ namespace Rvnx.CRM.Infrastructure.Migrations
                     b.Property<DateTime>("LastChangedDate")
                         .HasColumnType("TEXT");
 
+                    b.Property<Guid?>("SelfContactId")
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("SubjectId")
                         .IsRequired()
                         .HasMaxLength(256)
@@ -953,6 +950,9 @@ namespace Rvnx.CRM.Infrastructure.Migrations
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("SelfContactId")
+                        .IsUnique();
 
                     b.HasIndex("UserId");
 
@@ -981,15 +981,6 @@ namespace Rvnx.CRM.Infrastructure.Migrations
                     b.Navigation("Employee");
                 });
 
-            modelBuilder.Entity("Rvnx.CRM.Core.Models.Contact.Contact", b =>
-                {
-                    b.HasOne("Rvnx.CRM.Core.Models.User", "LinkedUser")
-                        .WithMany()
-                        .HasForeignKey("LinkedUserId");
-
-                    b.Navigation("LinkedUser");
-                });
-
             modelBuilder.Entity("Rvnx.CRM.Core.Models.Contact.Relationship", b =>
                 {
                     b.HasOne("Rvnx.CRM.Core.Models.Contact.RelationshipType", "RelationshipType")
@@ -999,6 +990,16 @@ namespace Rvnx.CRM.Infrastructure.Migrations
                         .IsRequired();
 
                     b.Navigation("RelationshipType");
+                });
+
+            modelBuilder.Entity("Rvnx.CRM.Core.Models.User", b =>
+                {
+                    b.HasOne("Rvnx.CRM.Core.Models.Contact.Contact", "SelfContact")
+                        .WithOne()
+                        .HasForeignKey("Rvnx.CRM.Core.Models.User", "SelfContactId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("SelfContact");
                 });
 
             modelBuilder.Entity("Rvnx.CRM.Core.Models.Base.Attachment", b =>

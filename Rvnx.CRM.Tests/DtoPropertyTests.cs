@@ -44,7 +44,7 @@ namespace Rvnx.CRM.Tests
         public void ContactDetailDto_ShouldHave_All_Contact_Properties()
         {
             // Contact inherits Person, BaseEntity
-            VerifyProperties<Contact, ContactDetailDto>(new[] { "IsHidden", "Addresses", "Attachments", "LinkedUser" }); // Handled as collections in DetailDto
+            VerifyProperties<Contact, ContactDetailDto>(new[] { "IsHidden", "Addresses", "Attachments" }); // Handled as collections in DetailDto
         }
 
         [Fact]

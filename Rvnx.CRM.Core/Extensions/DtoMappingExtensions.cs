@@ -137,8 +137,7 @@ namespace Rvnx.CRM.Core.Extensions
                 FullName = entity.FullName,
                 Company = entity.Company,
                 JobTitle = entity.JobTitle,
-                CreatedDate = entity.CreatedDate,
-                LinkedUserId = entity.LinkedUserId
+                CreatedDate = entity.CreatedDate
             };
         }
 
@@ -153,7 +152,6 @@ namespace Rvnx.CRM.Core.Extensions
                 Company = entity.Company,
                 JobTitle = entity.JobTitle,
                 Nickname = entity.Nickname,
-                LinkedUserId = entity.LinkedUserId,
 
                 // Lists will be populated separately or via mapping if loaded
                 Notes = entity.Notes?.Select(n => n.ToDto()) ?? new List<NoteDto>(),

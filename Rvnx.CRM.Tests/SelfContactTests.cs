@@ -49,9 +49,8 @@ namespace Rvnx.CRM.Tests
             using CRMDbContext context = GetInMemoryDbContext();
             ContactsController controller = CreateController(context);
 
-            Guid linkedUserId = Guid.NewGuid();
-            User user = new() { Id = linkedUserId, SubjectId = "test-user-id", Email = "test@example.com" };
-            Contact contact = new() { Id = Guid.NewGuid(), FirstName = "Me", LinkedUserId = linkedUserId };
+            Contact contact = new() { Id = Guid.NewGuid(), FirstName = "Me" };
+            User user = new() { Id = Guid.NewGuid(), SubjectId = "test-user-id", Email = "test@example.com", SelfContactId = contact.Id };
 
             context.Set<User>().Add(user);
             context.Set<Contact>().Add(contact);
@@ -73,7 +72,7 @@ namespace Rvnx.CRM.Tests
             using CRMDbContext context = GetInMemoryDbContext();
             ContactsController controller = CreateController(context);
 
-            User user = new() { Id = Guid.NewGuid(), SubjectId = "test-user-id", Email = "test@example.com" };
+            User user = new() { Id = Guid.NewGuid(), SubjectId = "test-user-id", Email = "test@example.com", SelfContactId = null };
             context.Set<User>().Add(user);
             await context.SaveChangesAsync();
 
@@ -106,10 +105,13 @@ namespace Rvnx.CRM.Tests
             RedirectToActionResult redirectResult = Assert.IsType<RedirectToActionResult>(result);
             Assert.Equal("Details", redirectResult.ActionName);
 
-            Contact? createdContact = await context.Set<Contact>().FirstOrDefaultAsync(c => c.LinkedUserId == userId);
+            User? updatedUser = await context.Set<User>().FirstOrDefaultAsync(u => u.Id == userId);
+            Assert.NotNull(updatedUser);
+            Assert.NotNull(updatedUser.SelfContactId);
+
+            Contact? createdContact = await context.Set<Contact>().FirstOrDefaultAsync(c => c.Id == updatedUser.SelfContactId);
             Assert.NotNull(createdContact);
             Assert.Equal("My Self", createdContact.FirstName);
-            Assert.Equal(userId, createdContact.LinkedUserId);
         }
 
         [Fact]
@@ -119,9 +121,8 @@ namespace Rvnx.CRM.Tests
             using CRMDbContext context = GetInMemoryDbContext();
             ContactsController controller = CreateController(context);
 
-            Guid userId = Guid.NewGuid();
-            User user = new() { Id = userId, SubjectId = "test-user-id", Email = "test@example.com" };
-            Contact existingContact = new() { Id = Guid.NewGuid(), FirstName = "Existing", LinkedUserId = userId };
+            Contact existingContact = new() { Id = Guid.NewGuid(), FirstName = "Existing" };
+            User user = new() { Id = Guid.NewGuid(), SubjectId = "test-user-id", Email = "test@example.com", SelfContactId = existingContact.Id };
 
             context.Set<User>().Add(user);
             context.Set<Contact>().Add(existingContact);
@@ -137,7 +138,7 @@ namespace Rvnx.CRM.Tests
             Assert.Equal("Details", redirectResult.ActionName);
             Assert.Equal(existingContact.Id, redirectResult.RouteValues?["id"]);
 
-            int count = await context.Set<Contact>().CountAsync(c => c.LinkedUserId == userId);
+            int count = await context.Set<Contact>().CountAsync();
             Assert.Equal(1, count);
         }
     }

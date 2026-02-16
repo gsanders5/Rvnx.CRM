@@ -56,11 +56,9 @@ namespace Rvnx.CRM.Web.Controllers
             }
 
             // Find Contact linked to this user
-            Contact? selfContact = (await _repository.ListAsync<Contact>(c => c.LinkedUserId == user.Id)).FirstOrDefault();
-
-            if (selfContact != null)
+            if (user.SelfContactId.HasValue)
             {
-                return RedirectToAction(nameof(Details), new { id = selfContact.Id });
+                return RedirectToAction(nameof(Details), new { id = user.SelfContactId });
             }
 
             return RedirectToAction(nameof(CreateSelf));
@@ -79,10 +77,9 @@ namespace Rvnx.CRM.Web.Controllers
             Rvnx.CRM.Core.Models.User? user = (await _repository.ListAsync<Rvnx.CRM.Core.Models.User>(u => u.SubjectId == userId)).FirstOrDefault();
             if (user == null) return RedirectToAction("Index");
 
-            Contact? selfContact = (await _repository.ListAsync<Contact>(c => c.LinkedUserId == user.Id)).FirstOrDefault();
-            if (selfContact != null)
+            if (user.SelfContactId.HasValue)
             {
-                return RedirectToAction(nameof(Details), new { id = selfContact.Id });
+                return RedirectToAction(nameof(Details), new { id = user.SelfContactId });
             }
 
             CreateContactDto dto = new()
@@ -108,18 +105,22 @@ namespace Rvnx.CRM.Web.Controllers
             if (user == null) return RedirectToAction("Index");
 
             // Double check existence
-            Contact? existingSelf = (await _repository.ListAsync<Contact>(c => c.LinkedUserId == user.Id)).FirstOrDefault();
-            if (existingSelf != null)
+            if (user.SelfContactId.HasValue)
             {
-                return RedirectToAction(nameof(Details), new { id = existingSelf.Id });
+                return RedirectToAction(nameof(Details), new { id = user.SelfContactId });
             }
 
             if (ModelState.IsValid)
             {
                 Contact contact = contactDto.ToEntity();
-                contact.LinkedUserId = user.Id; // Link it!
+                // contact.LinkedUserId = user.Id; // Removed
 
                 await _repository.AddAsync(contact);
+
+                // Link User to Contact
+                user.SelfContactId = contact.Id;
+                await _repository.UpdateAsync(user);
+
                 await _repository.SaveChangesAsync();
 
                 if (!string.IsNullOrEmpty(contactDto.Email))

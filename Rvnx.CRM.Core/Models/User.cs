@@ -1,8 +1,11 @@
+using Microsoft.EntityFrameworkCore;
 using Rvnx.CRM.Core.Models.Base;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Rvnx.CRM.Core.Models;
 
+[Index(nameof(SelfContactId), IsUnique = true)]
 public class User : BaseEntity
 {
     [Required]
@@ -15,4 +18,9 @@ public class User : BaseEntity
 
     [MaxLength(256)]
     public string? DisplayName { get; set; }
+
+    public Guid? SelfContactId { get; set; }
+
+    [ForeignKey(nameof(SelfContactId))]
+    public virtual Rvnx.CRM.Core.Models.Contact.Contact? SelfContact { get; set; }
 }

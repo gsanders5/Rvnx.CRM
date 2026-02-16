@@ -6,45 +6,46 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace Rvnx.CRM.Infrastructure.Migrations
 {
     /// <inheritdoc />
-    public partial class AddSelfContact : Migration
+    public partial class AddSelfContactToUser : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.AddColumn<Guid>(
-                name: "LinkedUserId",
-                table: "Contact",
+                name: "SelfContactId",
+                table: "Users",
                 type: "TEXT",
                 nullable: true);
 
             migrationBuilder.CreateIndex(
-                name: "IX_Contact_LinkedUserId",
-                table: "Contact",
-                column: "LinkedUserId",
+                name: "IX_Users_SelfContactId",
+                table: "Users",
+                column: "SelfContactId",
                 unique: true);
 
             migrationBuilder.AddForeignKey(
-                name: "FK_Contact_Users_LinkedUserId",
-                table: "Contact",
-                column: "LinkedUserId",
-                principalTable: "Users",
-                principalColumn: "Id");
+                name: "FK_Users_Contact_SelfContactId",
+                table: "Users",
+                column: "SelfContactId",
+                principalTable: "Contact",
+                principalColumn: "Id",
+                onDelete: ReferentialAction.SetNull);
         }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropForeignKey(
-                name: "FK_Contact_Users_LinkedUserId",
-                table: "Contact");
+                name: "FK_Users_Contact_SelfContactId",
+                table: "Users");
 
             migrationBuilder.DropIndex(
-                name: "IX_Contact_LinkedUserId",
-                table: "Contact");
+                name: "IX_Users_SelfContactId",
+                table: "Users");
 
             migrationBuilder.DropColumn(
-                name: "LinkedUserId",
-                table: "Contact");
+                name: "SelfContactId",
+                table: "Users");
         }
     }
 }
