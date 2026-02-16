@@ -8,16 +8,12 @@ using Rvnx.CRM.Web.Controllers.Base;
 
 namespace Rvnx.CRM.Web.Controllers
 {
-    public class PetsController : AuthorizedController
+    public class PetsController : RepositoryController
     {
-        private readonly IRepository _repository;
-
-        public PetsController(IRepository repository)
+        public PetsController(IRepository repository) : base(repository)
         {
-            _repository = repository;
         }
 
-        // GET: Pets/Create?entityId=...
         public IActionResult Create(Guid entityId)
         {
             CreatePetDto dto = new()
@@ -27,7 +23,6 @@ namespace Rvnx.CRM.Web.Controllers
             return View(dto);
         }
 
-        // POST: Pets/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(CreatePetDto petDto)
@@ -39,12 +34,11 @@ namespace Rvnx.CRM.Web.Controllers
                 await _repository.AddAsync(pet);
                 await _repository.SaveChangesAsync();
 
-                return RedirectToAction("Details", "Contacts", new { id = petDto.EntityId });
+                return RedirectToEntity(petDto.EntityId, EntityTypes.Person);
             }
             return View(petDto);
         }
 
-        // GET: Pets/Edit/5
         public async Task<IActionResult> Edit(Guid id)
         {
             Pet? pet = await _repository.GetByIdAsync<Pet>(id);
@@ -65,7 +59,6 @@ namespace Rvnx.CRM.Web.Controllers
             return View(dto);
         }
 
-        // POST: Pets/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(Guid id, UpdatePetDto petDto)
@@ -81,19 +74,17 @@ namespace Rvnx.CRM.Web.Controllers
                 await _repository.UpdateAsync(pet);
                 await _repository.SaveChangesAsync();
 
-                return RedirectToAction("Details", "Contacts", new { id = pet.EntityId });
+                return RedirectToEntity(pet.EntityId, pet.EntityType);
             }
             return View(petDto);
         }
 
-        // GET: Pets/Delete/5
         public async Task<IActionResult> Delete(Guid id)
         {
             Pet? pet = await _repository.GetByIdAsync<Pet>(id);
             return pet == null ? NotFound() : View(pet.ToDto());
         }
 
-        // POST: Pets/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(Guid id)
@@ -104,7 +95,7 @@ namespace Rvnx.CRM.Web.Controllers
                 Guid entityId = pet.EntityId;
                 await _repository.DeleteAsync<Pet>(id);
                 await _repository.SaveChangesAsync();
-                return RedirectToAction("Details", "Contacts", new { id = entityId });
+                return RedirectToEntity(entityId, pet.EntityType);
             }
             return RedirectToAction("Index", "Contacts");
         }

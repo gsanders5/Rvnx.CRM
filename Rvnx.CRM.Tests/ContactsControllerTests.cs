@@ -65,7 +65,7 @@ namespace Rvnx.CRM.Tests
             Assert.False(controller.ModelState.IsValid);
             // Assert that the error is added to the model-level errors (empty key)
             Assert.True(controller.ModelState.ContainsKey(string.Empty));
-            Assert.Equal("Only image files (jpg, jpeg, png, gif) are allowed.", controller.ModelState[string.Empty].Errors[0].ErrorMessage);
+            Assert.Equal("Only image files (jpg, jpeg, png, gif) are allowed.", controller.ModelState[string.Empty]!.Errors[0].ErrorMessage);
         }
 
         [Fact]

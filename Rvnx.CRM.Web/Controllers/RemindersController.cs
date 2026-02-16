@@ -9,43 +9,12 @@ using Rvnx.CRM.Web.Controllers.Base;
 
 namespace Rvnx.CRM.Web.Controllers
 {
-    public class RemindersController : AuthorizedController
+    public class RemindersController : RepositoryController
     {
-        private readonly IRepository _repository;
-
-        public RemindersController(IRepository repository)
+        public RemindersController(IRepository repository) : base(repository)
         {
-            _repository = repository;
         }
 
-        private async Task<string> GetEntityName(Guid id, string type)
-        {
-            if (type == EntityTypes.Person)
-            {
-                Contact? p = await _repository.GetByIdAsync<Contact>(id);
-                return p?.FullName ?? "Unknown Person";
-            }
-            else if (type == EntityTypes.Company)
-            {
-                Employer? c = await _repository.GetByIdAsync<Employer>(id);
-                return c?.CompanyName ?? "Unknown Company";
-            }
-            return "Unknown Entity";
-        }
-
-        private IActionResult RedirectToEntity(Guid id, string? type)
-        {
-            if (id == Guid.Empty || string.IsNullOrEmpty(type)) return RedirectToAction("Index", "Home");
-
-            if (type == EntityTypes.Person)
-            {
-                return RedirectToAction("Details", "Contacts", new { id });
-            }
-            // Add other types here
-            return RedirectToAction("Index", "Home");
-        }
-
-        // GET: Reminders/Create
         public async Task<IActionResult> Create(Guid entityId, string entityType)
         {
             if (entityId == Guid.Empty || string.IsNullOrEmpty(entityType)) return NotFound();
@@ -63,7 +32,6 @@ namespace Rvnx.CRM.Web.Controllers
             }.ToDto());
         }
 
-        // POST: Reminders/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind("Title,Description,DueDate,IsCompleted,EntityId,EntityType,RemindMe,EventFrequency")] Core.DTOs.Common.ReminderDto reminderDto)
@@ -97,7 +65,6 @@ namespace Rvnx.CRM.Web.Controllers
             return View(reminderDto);
         }
 
-        // GET: Reminders/Edit/5
         public async Task<IActionResult> Edit(Guid? id)
         {
             if (id == null) return NotFound();
@@ -113,7 +80,6 @@ namespace Rvnx.CRM.Web.Controllers
             return View(reminder.ToDto());
         }
 
-        // POST: Reminders/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(Guid id, [Bind("Id,Title,Description,DueDate,IsCompleted,EntityId,EntityType,RemindMe,EventFrequency")] Core.DTOs.Common.ReminderDto reminderDto)
@@ -152,7 +118,6 @@ namespace Rvnx.CRM.Web.Controllers
             return View(reminderDto);
         }
 
-        // GET: Reminders/Delete/5
         public async Task<IActionResult> Delete(Guid? id)
         {
             if (id == null) return NotFound();
@@ -166,7 +131,6 @@ namespace Rvnx.CRM.Web.Controllers
             return View(reminder.ToDto());
         }
 
-        // POST: Reminders/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(Guid id)

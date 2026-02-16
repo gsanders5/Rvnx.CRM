@@ -8,41 +8,12 @@ using Rvnx.CRM.Web.Controllers.Base;
 
 namespace Rvnx.CRM.Web.Controllers
 {
-    public class NotesController : AuthorizedController
+    public class NotesController : RepositoryController
     {
-        private readonly IRepository _repository;
-
-        public NotesController(IRepository repository)
+        public NotesController(IRepository repository) : base(repository)
         {
-            _repository = repository;
         }
 
-        private async Task<string> GetEntityName(Guid id, string type)
-        {
-            if (type == EntityTypes.Person)
-            {
-                Contact? p = await _repository.GetByIdAsync<Contact>(id);
-                return p?.FullName ?? "Unknown Person";
-            }
-            else if (type == EntityTypes.Company)
-            {
-                Employer? c = await _repository.GetByIdAsync<Employer>(id);
-                return c?.CompanyName ?? "Unknown Company";
-            }
-            return "Unknown Entity";
-        }
-
-        private IActionResult RedirectToEntity(Guid id, string type)
-        {
-            if (type == EntityTypes.Person)
-            {
-                return RedirectToAction("Details", "Contacts", new { id });
-            }
-            // Add other types here
-            return RedirectToAction("Index", "Home");
-        }
-
-        // GET: Notes/Create
         public async Task<IActionResult> Create(Guid entityId, string entityType)
         {
             if (entityId == Guid.Empty || string.IsNullOrEmpty(entityType)) return NotFound();
@@ -54,7 +25,6 @@ namespace Rvnx.CRM.Web.Controllers
             return View(new Note { EntityId = entityId, EntityType = entityType });
         }
 
-        // POST: Notes/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind("Title,Value,EntityId,EntityType")] Note note)
@@ -73,7 +43,6 @@ namespace Rvnx.CRM.Web.Controllers
             return View(note);
         }
 
-        // GET: Notes/Edit/5
         public async Task<IActionResult> Edit(Guid? id)
         {
             if (id == null) return NotFound();
@@ -85,7 +54,6 @@ namespace Rvnx.CRM.Web.Controllers
             return View(note);
         }
 
-        // POST: Notes/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(Guid id, [Bind("Id,Title,Value,EntityId,EntityType,CreatedDate,CreatedBy")] Note note)
@@ -111,7 +79,6 @@ namespace Rvnx.CRM.Web.Controllers
             return View(note);
         }
 
-        // GET: Notes/Delete/5
         public async Task<IActionResult> Delete(Guid? id)
         {
             if (id == null) return NotFound();
@@ -123,7 +90,6 @@ namespace Rvnx.CRM.Web.Controllers
             return View(note);
         }
 
-        // POST: Notes/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(Guid id)
