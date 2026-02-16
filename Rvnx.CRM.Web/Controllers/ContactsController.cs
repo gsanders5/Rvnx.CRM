@@ -165,7 +165,9 @@ namespace Rvnx.CRM.Web.Controllers
                         EntityType = EntityTypes.Person,
                         Title = "Birthday",
                         Date = contactDto.Birthday.Value,
-                        Description = "Birthday"
+                        Description = "Birthday",
+                        RemindMe = true,
+                        EventFrequency = TimeSpan.FromDays(365)
                     });
                 }
 
@@ -302,7 +304,9 @@ namespace Rvnx.CRM.Web.Controllers
                                 EntityType = EntityTypes.Person,
                                 Title = "Birthday",
                                 Date = contactDto.Birthday.Value,
-                                Description = "Birthday"
+                                Description = "Birthday",
+                                RemindMe = true,
+                                EventFrequency = TimeSpan.FromDays(365)
                             });
                         }
                     }

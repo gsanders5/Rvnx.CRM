@@ -173,12 +173,52 @@
         });
 
         const baseDate = new Date(eventDateVal + 'T00:00:00');
-        const future = new Date(baseDate);
+        const today = new Date();
+        // Zero out time for date comparison
+        today.setHours(0, 0, 0, 0);
 
-        future.setFullYear(future.getFullYear() + years);
-        future.setMonth(future.getMonth() + months);
-        future.setDate(future.getDate() + days);
-        future.setHours(future.getHours() + hours);
+        let future = new Date(baseDate);
+
+        // Calculate the TimeSpan in milliseconds
+        const msPerDay = 24 * 60 * 60 * 1000;
+        const msPerMonth = 30 * msPerDay; // Approximation for drift calculation
+        const msPerYear = 365 * msPerDay; // Approximation for drift calculation
+
+        const durationMs = (years * msPerYear) + (months * msPerMonth) + (days * msPerDay) + (hours * 60 * 60 * 1000);
+
+        if (durationMs <= 0) {
+            document.getElementById('estimatedDateText').innerText = "Duration must be greater than zero.";
+            return;
+        }
+
+        // Check if strict 1-year multiple (no drift)
+        // We use strict equality for inputs, not milliseconds, to avoid leap year math issues
+        const isStrictYearly = (years > 0 && months === 0 && days === 0 && hours === 0);
+
+        if (isStrictYearly) {
+            // Strict calendar years logic
+            while (future < today) {
+                future.setFullYear(future.getFullYear() + years);
+            }
+        } else {
+             // Drift logic: Add the duration consecutively until > today
+             // Note: Adding months in JS handles variable days in month, so we rely on Date object logic for month/year addition
+             // But for 'drift' logic requested (add fixed timespan), we might need to be careful.
+             // The user request: "if it is a multiple of 365 days, we don't drift. All others are allowed to drift."
+
+             // Since the input is split into Y/M/D, let's just add that combination repeatedly.
+             // JS Date addition handles "add 1 month" differently than "add 30 days".
+             // To match the user's "TimeSpan" concept (which is fixed duration), we should probably convert to days for the drift logic
+             // if we weren't using the Y/M/D inputs. However, since we have Y/M/D inputs, "1 Month" usually implies calendar month.
+
+             // Let's stick to the "Add Duration" loop concept.
+             while (future < today) {
+                future.setFullYear(future.getFullYear() + years);
+                future.setMonth(future.getMonth() + months);
+                future.setDate(future.getDate() + days);
+                future.setHours(future.getHours() + hours);
+             }
+        }
 
         const options = { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' };
         document.getElementById('estimatedDateText').innerText = future.toLocaleDateString("en-US", options);

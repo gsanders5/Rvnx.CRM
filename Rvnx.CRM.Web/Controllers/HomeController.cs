@@ -64,7 +64,7 @@ namespace Rvnx.CRM.Web.Controllers
             {
                 if (contactDict.TryGetValue(date.EntityId, out Contact? contact))
                 {
-                    DateTime nextOccurrence = GetNextDateOccurrence(date.Date);
+                    DateTime nextOccurrence = GetNextDateOccurrence(date);
 
                     string desc = date.Title?.Equals("Birthday", StringComparison.OrdinalIgnoreCase) == true
                         ? $"Turns {nextOccurrence.Year - date.Date.Year}"
@@ -132,20 +132,9 @@ namespace Rvnx.CRM.Web.Controllers
             return nextDate;
         }
 
-        private DateTime GetNextDateOccurrence(DateTime originalDate)
+        private DateTime GetNextDateOccurrence(SignificantDate date)
         {
-            DateTime today = DateTime.Today;
-            DateTime nextOccurrence = originalDate.Month == 2 && originalDate.Day == 29 && !DateTime.IsLeapYear(today.Year)
-                        ? new DateTime(today.Year, 2, 28)
-                        : new DateTime(today.Year, originalDate.Month, originalDate.Day);
-
-            if (nextOccurrence < today)
-            {
-                nextOccurrence = originalDate.Month == 2 && originalDate.Day == 29 && !DateTime.IsLeapYear(today.Year + 1)
-                    ? new DateTime(today.Year + 1, 2, 28)
-                    : new DateTime(today.Year + 1, originalDate.Month, originalDate.Day);
-            }
-            return nextOccurrence;
+            return Rvnx.CRM.Core.Services.DateCalculationService.GetNextOccurrence(date.Date, date.EventFrequency);
         }
 
         private string GetTimeUntil(DateTime date)
