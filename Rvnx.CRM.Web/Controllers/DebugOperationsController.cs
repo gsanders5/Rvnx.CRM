@@ -1,4 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Filters;
+using Microsoft.Extensions.Hosting;
 using Rvnx.CRM.Core.Constants;
 using Rvnx.CRM.Core.Interfaces;
 using Rvnx.CRM.Core.Models.Base;
@@ -12,10 +14,22 @@ namespace Rvnx.CRM.Web.Controllers
     public class DebugOperationsController : AuthorizedController
     {
         private readonly IRepository _repository;
+        private readonly IHostEnvironment _environment;
 
-        public DebugOperationsController(IRepository repository)
+        public DebugOperationsController(IRepository repository, IHostEnvironment environment)
         {
             _repository = repository;
+            _environment = environment;
+        }
+
+        public override void OnActionExecuting(ActionExecutingContext context)
+        {
+            if (!_environment.IsDevelopment())
+            {
+                context.Result = new NotFoundResult();
+                return;
+            }
+            base.OnActionExecuting(context);
         }
 
         public IActionResult Index()

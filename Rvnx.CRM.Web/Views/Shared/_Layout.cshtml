@@ -36,9 +36,11 @@
                         <li class="nav-item">
                             <a class="nav-link" asp-area="" asp-controller="Contacts" asp-action="Index">Contacts</a>
                         </li>
-                        <li class="nav-item">
-                            <a class="nav-link" asp-area="" asp-controller="DebugOperations" asp-action="Index">Debug</a>
-                        </li>
+                        <environment include="Development">
+                            <li class="nav-item">
+                                <a class="nav-link" asp-area="" asp-controller="DebugOperations" asp-action="Index">Debug</a>
+                            </li>
+                        </environment>
                     </ul>
                     <ul class="navbar-nav">
                         @if (Context.RequestServices.GetService<Microsoft.Extensions.Configuration.IConfiguration>()?.GetValue<bool>("Authentication:Enabled") ?? false)
