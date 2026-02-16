@@ -40,6 +40,11 @@ public class CRMDbContext(DbContextOptions<CRMDbContext> options, ICurrentUserSe
             .HasForeignKey<AttachmentContent>(ac => ac.AttachmentId)
             .OnDelete(DeleteBehavior.Cascade);
 
+        modelBuilder.Entity<User>()
+            .HasOne(u => u.SelfContact)
+            .WithOne()
+            .OnDelete(DeleteBehavior.SetNull);
+
         modelBuilder.Entity<Note>().HasIndex(e => new { e.EntityId, e.EntityType });
         modelBuilder.Entity<Pet>().HasIndex(e => new { e.EntityId, e.EntityType });
         modelBuilder.Entity<Reminder>().HasIndex(e => new { e.EntityId, e.EntityType });

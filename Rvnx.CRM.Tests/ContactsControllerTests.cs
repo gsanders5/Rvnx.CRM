@@ -130,7 +130,10 @@ namespace Rvnx.CRM.Tests
             using CRMDbContext context = GetInMemoryDbContext();
             Repository repository = new(context);
             Mock<ILogger<ContactsController>> loggerMock = new();
-            ContactsController controller = new(repository, loggerMock.Object);
+            Mock<ICurrentUserService> userMock = new();
+            userMock.Setup(u => u.UserId).Returns("test-user-id");
+            userMock.Setup(u => u.UserName).Returns("Test User");
+            ContactsController controller = new(repository, loggerMock.Object, userMock.Object);
 
             Guid contactId = Guid.NewGuid();
             Contact contact = new() { Id = contactId, FirstName = "John", LastName = "Doe" };
@@ -169,7 +172,10 @@ namespace Rvnx.CRM.Tests
             using CRMDbContext context = GetInMemoryDbContext();
             Repository repository = new(context);
             Mock<ILogger<ContactsController>> loggerMock = new();
-            ContactsController controller = new(repository, loggerMock.Object);
+            Mock<ICurrentUserService> userMock = new();
+            userMock.Setup(u => u.UserId).Returns("test-user-id");
+            userMock.Setup(u => u.UserName).Returns("Test User");
+            ContactsController controller = new(repository, loggerMock.Object, userMock.Object);
 
             Guid contactId = Guid.NewGuid();
             Contact contact = new() { Id = contactId, FirstName = "John", LastName = "Doe" };
