@@ -91,6 +91,7 @@
                                         </div>
                                     </div>
                                     <div class="btn-group btn-group-sm">
+                                        <button type="button" class="btn btn-outline-secondary btn-copy" data-clipboard-text="@info.Value" title="Copy to clipboard" aria-label="Copy @info.Value to clipboard"><i class="bi bi-clipboard"></i></button>
                                         <a asp-controller="ContactMethods" asp-action="Edit" asp-route-id="@info.Id" class="btn btn-outline-secondary" title="Edit" aria-label="Edit @info.Type @info.Value"><i class="bi bi-pencil-square"></i></a>
                                         <a asp-controller="ContactMethods" asp-action="Delete" asp-route-id="@info.Id" class="btn btn-outline-danger" title="Delete" aria-label="Delete @info.Type @info.Value"><i class="bi bi-trash"></i></a>
                                     </div>
