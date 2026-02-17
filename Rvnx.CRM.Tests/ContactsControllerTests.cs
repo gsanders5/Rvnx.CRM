@@ -38,7 +38,8 @@ namespace Rvnx.CRM.Tests
             using CRMDbContext context = GetInMemoryDbContext();
             Repository repository = new(context);
             Mock<ILogger<ContactsController>> loggerMock = new();
-            ContactsController controller = new(repository, loggerMock.Object);
+            Mock<ICurrentUserService> userMock = new();
+            ContactsController controller = new(repository, loggerMock.Object, userMock.Object);
 
             context.Contacts.Add(new Contact { Id = Guid.NewGuid(), FirstName = "John", LastName = "Doe" });
             context.Contacts.Add(new Contact { Id = Guid.NewGuid(), FirstName = "Jane", LastName = "Doe" });
@@ -60,7 +61,8 @@ namespace Rvnx.CRM.Tests
             using CRMDbContext context = GetInMemoryDbContext();
             Repository repository = new(context);
             Mock<ILogger<ContactsController>> loggerMock = new();
-            ContactsController controller = new(repository, loggerMock.Object);
+            Mock<ICurrentUserService> userMock = new();
+            ContactsController controller = new(repository, loggerMock.Object, userMock.Object);
 
             CreateContactDto dto = new()
             {
@@ -104,7 +106,8 @@ namespace Rvnx.CRM.Tests
             using CRMDbContext context = GetInMemoryDbContext();
             Repository repository = new(context);
             Mock<ILogger<ContactsController>> loggerMock = new();
-            ContactsController controller = new(repository, loggerMock.Object);
+            Mock<ICurrentUserService> userMock = new();
+            ContactsController controller = new(repository, loggerMock.Object, userMock.Object);
 
             Guid contactId = Guid.NewGuid();
             Contact contact = new() { Id = contactId, FirstName = "To", LastName = "Delete" };
