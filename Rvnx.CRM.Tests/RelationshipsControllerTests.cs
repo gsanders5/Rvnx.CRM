@@ -1,10 +1,12 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using Moq;
 using Rvnx.CRM.Core.Constants;
 using Rvnx.CRM.Core.Interfaces;
 using Rvnx.CRM.Core.Models.Base;
 using Rvnx.CRM.Core.Models.Contact;
+using Rvnx.CRM.Core.Services;
 using Rvnx.CRM.Infrastructure.Data;
 using Rvnx.CRM.Infrastructure.Repositories;
 using Rvnx.CRM.Web.Controllers;
@@ -38,10 +40,10 @@ namespace Rvnx.CRM.Tests
             Guid p2Id = Guid.NewGuid();
             context.Contacts.Add(new Contact { Id = p1Id, FirstName = "P1" });
             context.Contacts.Add(new Contact { Id = p2Id, FirstName = "P2" });
-
-            Guid typeId = Guid.NewGuid();
-            context.Set<RelationshipType>().Add(new RelationshipType { Id = typeId, Name = "Parent", OppositeName = "Child", EntityType = EntityTypes.Person });
             await context.SaveChangesAsync();
+
+            // Use a real static ID from Service
+            Guid typeId = Guid.Parse("7c1f8d22-1b6a-4c28-9c1e-3f5a2b8e9d1a"); // Parent
 
             Relationship rel = new()
             {
@@ -79,10 +81,10 @@ namespace Rvnx.CRM.Tests
             Guid p2Id = Guid.NewGuid(); // User selects P2 as related
             context.Contacts.Add(new Contact { Id = p1Id, FirstName = "P1" });
             context.Contacts.Add(new Contact { Id = p2Id, FirstName = "P2" });
-
-            Guid typeId = Guid.NewGuid();
-            context.Set<RelationshipType>().Add(new RelationshipType { Id = typeId, Name = "Parent", OppositeName = "Child", EntityType = EntityTypes.Person });
             await context.SaveChangesAsync();
+
+            // Use a real static ID from Service
+            Guid typeId = Guid.Parse("7c1f8d22-1b6a-4c28-9c1e-3f5a2b8e9d1a"); // Parent
 
             Relationship rel = new()
             {
@@ -124,7 +126,7 @@ namespace Rvnx.CRM.Tests
                 EntityId = p1Id,
                 RelatedEntityId = Guid.NewGuid(),
                 EntityType = EntityTypes.Person,
-                RelationshipTypeId = Guid.NewGuid()
+                RelationshipTypeId = Guid.Parse("7c1f8d22-1b6a-4c28-9c1e-3f5a2b8e9d1a")
             });
             await context.SaveChangesAsync();
 
@@ -134,6 +136,38 @@ namespace Rvnx.CRM.Tests
             // Assert
             RedirectToActionResult redirectResult = Assert.IsType<RedirectToActionResult>(result);
             Assert.Null(await context.Set<Relationship>().FindAsync(relId));
+        }
+
+        [Fact]
+        public async Task Create_Get_PopulatesGroupedOptions()
+        {
+            // Arrange
+            using CRMDbContext context = GetInMemoryDbContext();
+            Repository repository = new(context);
+            RelationshipsController controller = new(repository);
+
+            Guid p1Id = Guid.NewGuid();
+            context.Contacts.Add(new Contact { Id = p1Id, FirstName = "P1" });
+            await context.SaveChangesAsync();
+
+            // Act
+            IActionResult result = await controller.Create(p1Id, EntityTypes.Person);
+
+            // Assert
+            ViewResult viewResult = Assert.IsType<ViewResult>(result);
+            List<SelectListItem>? options = viewResult.ViewData["RelationshipTypeSelection"] as List<SelectListItem>;
+            Assert.NotNull(options);
+
+            // Check that options from static service are present
+            // Spouse
+            var spouseId = Guid.Parse("b2e9a5c8-7f4d-4a1b-8c6e-5f9d3a0e2b4c");
+            Assert.Contains(options, o => o.Value == $"{spouseId}_Fwd" && o.Text == "is Spouse of" && o.Group?.Name == "Family");
+
+            // Father (Parent/Child is defined as Parent/Child in service, not Father/Child explicitly with that ID, but checking logic)
+            // Let's check "Parent"
+            var parentId = Guid.Parse("7c1f8d22-1b6a-4c28-9c1e-3f5a2b8e9d1a");
+            Assert.Contains(options, o => o.Value == $"{parentId}_Fwd" && o.Text == "is Parent of (Child)");
+            Assert.Contains(options, o => o.Value == $"{parentId}_Rev" && o.Text == "is Child of (Parent)");
         }
     }
 }

@@ -5,6 +5,7 @@ using Rvnx.CRM.Core.DTOs.Pet;
 using Rvnx.CRM.Core.Models.Base;
 using Rvnx.CRM.Core.Models.Contact;
 using Rvnx.CRM.Core.Models.Dates;
+using Rvnx.CRM.Core.Services;
 
 namespace Rvnx.CRM.Core.Extensions
 {
@@ -58,6 +59,9 @@ namespace Rvnx.CRM.Core.Extensions
 
         public static RelationshipDto ToDto(this Relationship entity)
         {
+            var typeName = entity.RelationshipTypeName;
+            var oppositeName = entity.RelationshipTypeOppositeName;
+
             return new RelationshipDto
             {
                 Id = entity.Id,
@@ -65,10 +69,13 @@ namespace Rvnx.CRM.Core.Extensions
                 EntityType = entity.EntityType,
                 RelatedEntityId = entity.RelatedEntityId,
                 RelationshipTypeId = entity.RelationshipTypeId,
-                RelationshipTypeName = entity.RelationshipType?.Name ?? string.Empty,
-                RelationshipTypeOppositeName = entity.RelationshipType?.OppositeName ?? string.Empty,
+                RelationshipTypeName = typeName,
+                RelationshipTypeOppositeName = oppositeName,
                 RelatedEntityName = entity.RelatedPerson?.FullName ?? "Unknown",
-                EntityName = entity.Person?.FullName ?? "Unknown"
+                EntityName = entity.Person?.FullName ?? "Unknown",
+                Description = entity.Description,
+                StartDate = entity.StartDate,
+                EndDate = entity.EndDate
             };
         }
 
@@ -137,7 +144,8 @@ namespace Rvnx.CRM.Core.Extensions
                 FullName = entity.FullName,
                 Company = entity.Company,
                 JobTitle = entity.JobTitle,
-                CreatedDate = entity.CreatedDate
+                CreatedDate = entity.CreatedDate,
+                ProfileImageId = entity.ProfileImageId
             };
         }
 
@@ -152,6 +160,7 @@ namespace Rvnx.CRM.Core.Extensions
                 Company = entity.Company,
                 JobTitle = entity.JobTitle,
                 Nickname = entity.Nickname,
+                ProfileImageId = entity.ProfileImageId,
 
                 // Lists will be populated separately or via mapping if loaded
                 Notes = entity.Notes?.Select(n => n.ToDto()) ?? new List<NoteDto>(),

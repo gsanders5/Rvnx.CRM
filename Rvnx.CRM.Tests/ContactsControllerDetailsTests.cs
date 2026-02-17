@@ -8,6 +8,7 @@ using Rvnx.CRM.Core.DTOs.Contact;
 using Rvnx.CRM.Core.Enumerations;
 using Rvnx.CRM.Core.Interfaces;
 using Rvnx.CRM.Core.Models.Contact;
+using Rvnx.CRM.Core.Services;
 using Rvnx.CRM.Infrastructure.Data;
 using Rvnx.CRM.Infrastructure.Repositories;
 using Rvnx.CRM.Web.Controllers;
@@ -55,9 +56,8 @@ namespace Rvnx.CRM.Tests
 
             context.Contacts.AddRange(mainContact, relatedContact, sourceContact);
 
-            // Create Relationship Type
-            RelationshipType friendType = new() { Id = Guid.NewGuid(), Name = "Friend", OppositeName = "Friend" };
-            context.Set<RelationshipType>().Add(friendType);
+            // Use a real static ID from Service (Friend)
+            Guid typeId = Guid.Parse("a5b6c7d8-9e0f-1a2b-3c4d-5e6f7a8b9c0d");
 
             // Create Relationships
             // 1. Main -> Related (Where Main is EntityId)
@@ -67,7 +67,7 @@ namespace Rvnx.CRM.Tests
                 EntityId = mainContactId,
                 EntityType = EntityTypes.Person,
                 RelatedEntityId = relatedContactId,
-                RelationshipTypeId = friendType.Id
+                RelationshipTypeId = typeId
             };
 
             // 2. Source -> Main (Where Main is RelatedEntityId)
@@ -77,7 +77,7 @@ namespace Rvnx.CRM.Tests
                 EntityId = sourceContactId,
                 EntityType = EntityTypes.Person,
                 RelatedEntityId = mainContactId,
-                RelationshipTypeId = friendType.Id
+                RelationshipTypeId = typeId
             };
 
             context.Set<Relationship>().AddRange(rel1, rel2);
