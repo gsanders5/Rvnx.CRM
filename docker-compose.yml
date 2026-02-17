@@ -1,0 +1,13 @@
+services:
+  rvnx-crm:
+    build: .
+    ports:
+      - "5215:8080"
+    environment:
+      # Override the default connection string to place the DB in the mounted volume
+      - ConnectionStrings__DefaultConnection=Data Source=/data/rvnx-crm.db
+      # Ensure the app listens on port 8080 inside the container
+      - ASPNETCORE_URLS=http://+:8080
+    volumes:
+      # Mount the current directory to /data in the container so the DB file is persisted locally
+      - ./:/data
