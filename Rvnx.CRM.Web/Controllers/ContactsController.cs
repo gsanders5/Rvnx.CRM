@@ -66,7 +66,7 @@ namespace Rvnx.CRM.Web.Controllers
 
         public async Task<IActionResult> CreateSelf()
         {
-             if (!_currentUserService.IsAuthenticated)
+            if (!_currentUserService.IsAuthenticated)
             {
                 return RedirectToAction("Index", "Home");
             }
@@ -217,19 +217,33 @@ namespace Rvnx.CRM.Web.Controllers
 
             // Relationships
             List<Relationship> relationships = await _repository.ListAsync<Relationship>(r => r.EntityId == id.Value && r.EntityType == EntityTypes.Person);
-            foreach (Relationship rel in relationships)
-            {
-                rel.RelationshipType = types.FirstOrDefault(t => t.Id == rel.RelationshipTypeId);
-                rel.RelatedPerson = await _repository.GetByIdAsync<Contact>(rel.RelatedEntityId);
-            }
-            contact.Relationships = relationships;
 
             // RelatedTo
             List<Relationship> relatedTo = await _repository.ListAsync<Relationship>(r => r.RelatedEntityId == id.Value && r.EntityType == EntityTypes.Person);
+
+            // Fetch all related contacts in one go
+            List<Guid> relatedIds = relationships.Select(r => r.RelatedEntityId)
+                .Concat(relatedTo.Select(r => r.EntityId))
+                .Distinct()
+                .ToList();
+
+            List<Contact> relatedContacts = new();
+            if (relatedIds.Any())
+            {
+                relatedContacts = await _repository.ListAsync<Contact>(c => relatedIds.Contains(c.Id));
+            }
+
+            foreach (Relationship rel in relationships)
+            {
+                rel.RelationshipType = types.FirstOrDefault(t => t.Id == rel.RelationshipTypeId);
+                rel.RelatedPerson = relatedContacts.FirstOrDefault(c => c.Id == rel.RelatedEntityId);
+            }
+            contact.Relationships = relationships;
+
             foreach (Relationship rel in relatedTo)
             {
                 rel.RelationshipType = types.FirstOrDefault(t => t.Id == rel.RelationshipTypeId);
-                rel.Person = await _repository.GetByIdAsync<Contact>(rel.EntityId);
+                rel.Person = relatedContacts.FirstOrDefault(c => c.Id == rel.EntityId);
             }
             contact.RelatedTo = relatedTo;
 
