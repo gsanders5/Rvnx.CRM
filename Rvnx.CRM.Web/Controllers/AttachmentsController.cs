@@ -32,6 +32,11 @@ namespace Rvnx.CRM.Web.Controllers
             await file.CopyToAsync(ms);
             byte[] fileBytes = ms.ToArray();
 
+            if (IsImageExtension(extension) && !IsValidImageSignature(fileBytes, extension))
+            {
+                return BadRequest("Invalid file signature.");
+            }
+
             Attachment attachment = new()
             {
                 Id = Guid.NewGuid(),
@@ -110,6 +115,24 @@ namespace Rvnx.CRM.Web.Controllers
 
             // Otherwise force download
             return File(attachment.AttachmentContent.Content, attachment.ContentType, attachment.FileName);
+        }
+
+        private static bool IsImageExtension(string extension)
+        {
+            return extension is ".jpg" or ".jpeg" or ".png" or ".gif";
+        }
+
+        private static bool IsValidImageSignature(byte[] fileBytes, string extension)
+        {
+            if (fileBytes.Length < 4) return false;
+
+            return extension switch
+            {
+                ".jpg" or ".jpeg" => fileBytes[0] == 0xFF && fileBytes[1] == 0xD8 && fileBytes[2] == 0xFF,
+                ".png" => fileBytes[0] == 0x89 && fileBytes[1] == 0x50 && fileBytes[2] == 0x4E && fileBytes[3] == 0x47,
+                ".gif" => fileBytes[0] == 0x47 && fileBytes[1] == 0x49 && fileBytes[2] == 0x46 && fileBytes[3] == 0x38,
+                _ => false
+            };
         }
     }
 }
