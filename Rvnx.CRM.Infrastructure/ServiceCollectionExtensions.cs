@@ -4,6 +4,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Rvnx.CRM.Core.Interfaces;
 using Rvnx.CRM.Infrastructure.Data;
 using Rvnx.CRM.Infrastructure.Repositories;
+using Rvnx.CRM.Infrastructure.Services;
 
 namespace Rvnx.CRM.Infrastructure;
 
@@ -20,6 +21,9 @@ public static class ServiceCollectionExtensions
 
         // Add Repository
         services.AddScoped<IRepository, Repository>();
+
+        // Add VCard Service
+        services.AddScoped<IVCardService, VCardService>();
 
         return services;
     }

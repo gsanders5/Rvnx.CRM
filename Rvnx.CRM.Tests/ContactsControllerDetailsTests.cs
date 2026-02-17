@@ -42,7 +42,7 @@ namespace Rvnx.CRM.Tests
             Repository repository = new(context);
             Mock<ILogger<ContactsController>> loggerMock = new();
             Mock<ICurrentUserService> userMock = new();
-            ContactsController controller = new(repository, loggerMock.Object, userMock.Object);
+            ContactsController controller = new(repository, loggerMock.Object, userMock.Object, new Mock<IVCardService>().Object);
 
             // Create Contacts
             Guid mainContactId = Guid.NewGuid();

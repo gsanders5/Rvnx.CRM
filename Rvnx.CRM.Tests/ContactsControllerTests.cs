@@ -39,7 +39,7 @@ namespace Rvnx.CRM.Tests
             Repository repository = new(context);
             Mock<ILogger<ContactsController>> loggerMock = new();
             Mock<ICurrentUserService> userMock = new();
-            ContactsController controller = new(repository, loggerMock.Object, userMock.Object);
+            ContactsController controller = new(repository, loggerMock.Object, userMock.Object, new Mock<IVCardService>().Object);
 
             context.Contacts.Add(new Contact { Id = Guid.NewGuid(), FirstName = "John", LastName = "Doe" });
             context.Contacts.Add(new Contact { Id = Guid.NewGuid(), FirstName = "Jane", LastName = "Doe" });
@@ -62,7 +62,7 @@ namespace Rvnx.CRM.Tests
             Repository repository = new(context);
             Mock<ILogger<ContactsController>> loggerMock = new();
             Mock<ICurrentUserService> userMock = new();
-            ContactsController controller = new(repository, loggerMock.Object, userMock.Object);
+            ContactsController controller = new(repository, loggerMock.Object, userMock.Object, new Mock<IVCardService>().Object);
 
             CreateContactDto dto = new()
             {
@@ -107,7 +107,7 @@ namespace Rvnx.CRM.Tests
             Repository repository = new(context);
             Mock<ILogger<ContactsController>> loggerMock = new();
             Mock<ICurrentUserService> userMock = new();
-            ContactsController controller = new(repository, loggerMock.Object, userMock.Object);
+            ContactsController controller = new(repository, loggerMock.Object, userMock.Object, new Mock<IVCardService>().Object);
 
             Guid contactId = Guid.NewGuid();
             Contact contact = new() { Id = contactId, FirstName = "To", LastName = "Delete" };
@@ -136,7 +136,7 @@ namespace Rvnx.CRM.Tests
             Mock<ICurrentUserService> userMock = new();
             userMock.Setup(u => u.UserId).Returns("test-user-id");
             userMock.Setup(u => u.UserName).Returns("Test User");
-            ContactsController controller = new(repository, loggerMock.Object, userMock.Object);
+            ContactsController controller = new(repository, loggerMock.Object, userMock.Object, new Mock<IVCardService>().Object);
 
             Guid contactId = Guid.NewGuid();
             Contact contact = new() { Id = contactId, FirstName = "John", LastName = "Doe" };
@@ -178,7 +178,7 @@ namespace Rvnx.CRM.Tests
             Mock<ICurrentUserService> userMock = new();
             userMock.Setup(u => u.UserId).Returns("test-user-id");
             userMock.Setup(u => u.UserName).Returns("Test User");
-            ContactsController controller = new(repository, loggerMock.Object, userMock.Object);
+            ContactsController controller = new(repository, loggerMock.Object, userMock.Object, new Mock<IVCardService>().Object);
 
             Guid contactId = Guid.NewGuid();
             Contact contact = new() { Id = contactId, FirstName = "John", LastName = "Doe" };

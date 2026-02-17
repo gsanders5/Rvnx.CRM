@@ -17,12 +17,14 @@ namespace Rvnx.CRM.Web.Controllers
         private readonly IRepository _repository;
         private readonly ILogger<ContactsController> _logger;
         private readonly ICurrentUserService _currentUserService;
+        private readonly IVCardService _vCardService;
 
-        public ContactsController(IRepository repository, ILogger<ContactsController> logger, ICurrentUserService currentUserService)
+        public ContactsController(IRepository repository, ILogger<ContactsController> logger, ICurrentUserService currentUserService, IVCardService vCardService)
         {
             _repository = repository;
             _logger = logger;
             _currentUserService = currentUserService;
+            _vCardService = vCardService;
         }
 
         public async Task<IActionResult> Self()
@@ -38,24 +40,13 @@ namespace Rvnx.CRM.Web.Controllers
                 return RedirectToAction("Index", "Home");
             }
 
-            // Find User Entity by SubjectId (UserId in Core.Models.User is SubjectId from claims, usually)
-            // Wait, BaseEntity has UserId string (Owner). Core.Models.User has SubjectId string.
-            // ICurrentUserService.UserId returns the ClaimTypes.NameIdentifier.
-            // Let's assume Core.Models.User.SubjectId == _currentUserService.UserId.
-
-            // Actually, we linked Contact to Core.Models.User via LinkedUserId (Guid).
-            // So we first need to find the Core.Models.User entity that corresponds to the current logged-in user.
-
             Rvnx.CRM.Core.Models.User? user = (await _repository.ListAsync<Rvnx.CRM.Core.Models.User>(u => u.SubjectId == userId)).FirstOrDefault();
 
             if (user == null)
             {
-                // User entity doesn't exist yet? It should be synced by UserSynchronizationService.
-                // If not, we can't link.
                 return RedirectToAction("Index");
             }
 
-            // Find Contact linked to this user
             if (user.SelfContactId.HasValue)
             {
                 return RedirectToAction(nameof(Details), new { id = user.SelfContactId });
@@ -113,7 +104,6 @@ namespace Rvnx.CRM.Web.Controllers
             if (ModelState.IsValid)
             {
                 Contact contact = contactDto.ToEntity();
-                // contact.LinkedUserId = user.Id; // Removed
 
                 await _repository.AddAsync(contact);
 
@@ -177,25 +167,31 @@ namespace Rvnx.CRM.Web.Controllers
             List<Contact> contacts = await _repository.ListAsync<Contact>();
             List<ContactDto> contactDtos = contacts.Select(c => c.ToDto()).ToList();
 
-            // Optimally: Get all profile images for these contacts
             List<Guid> contactIds = contacts.Select(c => c.Id).ToList();
 
-            // 1. Fetch Profile Image Attachments for these contacts
             List<Attachment> profileAttachments = await _repository.ListAsync<Attachment>(a => a.EntityType == EntityTypes.Person
                 && a.AttachmentType == "ProfileImage"
                 && contactIds.Contains(a.EntityId));
 
-            if (profileAttachments.Any())
+            if (profileAttachments != null && profileAttachments.Any())
             {
-                // 2. Map to DTOs
+                var attachmentMap = profileAttachments
+                    .Where(a => a != null)
+                    .GroupBy(a => a.EntityId) // Handle potential duplicates gracefully
+                    .ToDictionary(g => g.Key, g => g.First());
+
                 foreach (ContactDto? dto in contactDtos)
                 {
-                    Attachment? attachment = profileAttachments.FirstOrDefault(a => a.EntityId == dto.Id);
-                    if (attachment != null)
+                    if (dto != null && attachmentMap.TryGetValue(dto.Id, out Attachment? attachment))
                     {
                         dto.ProfileImageId = attachment.Id;
                     }
                 }
+            }
+
+            if (TempData["SuccessMessage"] != null)
+            {
+                ViewBag.SuccessMessage = TempData["SuccessMessage"];
             }
 
             return View(contactDtos);
@@ -601,6 +597,116 @@ namespace Rvnx.CRM.Web.Controllers
         private async Task<bool> ContactExists(Guid id)
         {
             return await _repository.ExistsAsync<Contact>(id);
+        }
+
+        public IActionResult Import()
+        {
+            return View();
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Import(IFormFile file)
+        {
+            if (file == null || file.Length == 0)
+            {
+                ModelState.AddModelError("file", "Please select a file.");
+                return View();
+            }
+
+            if (!Path.GetExtension(file.FileName).Equals(".vcf", StringComparison.OrdinalIgnoreCase))
+            {
+                ModelState.AddModelError("file", "Only .vcf files are allowed.");
+                return View();
+            }
+
+            try
+            {
+                using Stream stream = file.OpenReadStream();
+                IEnumerable<Contact> importedContacts = _vCardService.ParseVCard(stream);
+
+                int addedCount = 0;
+                int skippedCount = 0;
+
+                foreach (var contact in importedContacts)
+                {
+                    if (await IsDuplicateAsync(contact))
+                    {
+                        skippedCount++;
+                        continue;
+                    }
+
+                    // Note: ContactMethods and SignificantDates are [NotMapped] collections on the Contact (Person) entity.
+                    // EF Core's AddAsync(contact) will NOT recursively add these entities because they are not navigation properties mapped to the DB.
+                    // We must add them explicitly and link them to the Contact ID.
+                    await _repository.AddAsync(contact);
+                    await _repository.SaveChangesAsync(); // Save to generate ID and allow next duplicate checks to find it if file has dupes
+
+                    if (contact.ContactMethods != null)
+                    {
+                        foreach(var cm in contact.ContactMethods)
+                        {
+                            cm.EntityId = contact.Id;
+                            await _repository.AddAsync(cm);
+                        }
+                    }
+
+                    if (contact.SignificantDates != null)
+                    {
+                        foreach(var sd in contact.SignificantDates)
+                        {
+                            sd.EntityId = contact.Id;
+                            await _repository.AddAsync(sd);
+                        }
+                    }
+
+                    await _repository.SaveChangesAsync();
+                    addedCount++;
+                }
+
+                TempData["SuccessMessage"] = $"Import successful! Added: {addedCount}, Skipped: {skippedCount}";
+                return RedirectToAction(nameof(Index));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error importing VCF");
+                ModelState.AddModelError("", "An error occurred while parsing the file.");
+                return View();
+            }
+        }
+
+        private async Task<bool> IsDuplicateAsync(Contact candidate)
+        {
+            var existingNames = await _repository.ListAsync<Contact>(c => c.FirstName == candidate.FirstName && c.LastName == candidate.LastName);
+            if (existingNames.Any()) return true;
+
+            if (candidate.ContactMethods != null && candidate.ContactMethods.Any())
+            {
+                var valuesToCheck = candidate.ContactMethods.Select(m => m.Value).ToList();
+                if (valuesToCheck.Any())
+                {
+                    var existingMethods = await _repository.ListAsync<ContactMethod>(cm =>
+                        cm.EntityType == EntityTypes.Person &&
+                        valuesToCheck.Contains(cm.Value));
+
+                    if (existingMethods.Any()) return true;
+                }
+            }
+
+            return false;
+        }
+
+        public async Task<IActionResult> Export(Guid id)
+        {
+            var contact = await _repository.GetByIdAsync<Contact>(id);
+            if (contact == null) return NotFound();
+
+            contact.ContactMethods = await _repository.ListAsync<ContactMethod>(c => c.EntityId == id && c.EntityType == EntityTypes.Person);
+            contact.SignificantDates = await _repository.ListAsync<SignificantDate>(d => d.EntityId == id && d.EntityType == EntityTypes.Person);
+
+            byte[] vcfBytes = _vCardService.ExportVCard(contact);
+            string fileName = $"{contact.FirstName}_{contact.LastName}.vcf";
+            return File(vcfBytes, "text/vcard", fileName);
         }
     }
 }
