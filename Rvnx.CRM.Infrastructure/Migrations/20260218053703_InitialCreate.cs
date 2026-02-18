@@ -1,7 +1,7 @@
-﻿using Microsoft.EntityFrameworkCore.Migrations;
+﻿using System;
+using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
-
 
 namespace Rvnx.CRM.Infrastructure.Migrations
 {
@@ -183,22 +183,26 @@ namespace Rvnx.CRM.Infrastructure.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "RelationshipType",
+                name: "Relationship",
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "TEXT", nullable: false),
-                    Name = table.Column<string>(type: "TEXT", maxLength: 100, nullable: false),
-                    OppositeName = table.Column<string>(type: "TEXT", maxLength: 100, nullable: false),
-                    EntityType = table.Column<string>(type: "TEXT", maxLength: 100, nullable: false),
+                    RelatedEntityId = table.Column<Guid>(type: "TEXT", nullable: false),
+                    RelationshipTypeId = table.Column<Guid>(type: "TEXT", nullable: false),
+                    Description = table.Column<string>(type: "TEXT", nullable: true),
+                    StartDate = table.Column<DateTime>(type: "TEXT", nullable: true),
+                    EndDate = table.Column<DateTime>(type: "TEXT", nullable: true),
                     CreatedBy = table.Column<string>(type: "TEXT", maxLength: 256, nullable: false),
                     LastChangedBy = table.Column<string>(type: "TEXT", maxLength: 256, nullable: false),
                     CreatedDate = table.Column<DateTime>(type: "TEXT", nullable: false),
                     LastChangedDate = table.Column<DateTime>(type: "TEXT", nullable: false),
-                    UserId = table.Column<string>(type: "TEXT", maxLength: 450, nullable: true)
+                    UserId = table.Column<string>(type: "TEXT", maxLength: 450, nullable: true),
+                    EntityId = table.Column<Guid>(type: "TEXT", nullable: false),
+                    EntityType = table.Column<string>(type: "TEXT", maxLength: 50, nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_RelationshipType", x => x.Id);
+                    table.PrimaryKey("PK_Relationship", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
@@ -248,25 +252,6 @@ namespace Rvnx.CRM.Infrastructure.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_SignificantDate", x => x.Id);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "Users",
-                columns: table => new
-                {
-                    Id = table.Column<Guid>(type: "TEXT", nullable: false),
-                    Email = table.Column<string>(type: "TEXT", maxLength: 256, nullable: false),
-                    SubjectId = table.Column<string>(type: "TEXT", maxLength: 256, nullable: false),
-                    DisplayName = table.Column<string>(type: "TEXT", maxLength: 256, nullable: true),
-                    CreatedBy = table.Column<string>(type: "TEXT", maxLength: 256, nullable: false),
-                    LastChangedBy = table.Column<string>(type: "TEXT", maxLength: 256, nullable: false),
-                    CreatedDate = table.Column<DateTime>(type: "TEXT", nullable: false),
-                    LastChangedDate = table.Column<DateTime>(type: "TEXT", nullable: false),
-                    UserId = table.Column<string>(type: "TEXT", maxLength: 450, nullable: true)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Users", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
@@ -322,47 +307,29 @@ namespace Rvnx.CRM.Infrastructure.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "Relationship",
+                name: "Users",
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "TEXT", nullable: false),
-                    RelatedEntityId = table.Column<Guid>(type: "TEXT", nullable: false),
-                    RelationshipTypeId = table.Column<Guid>(type: "TEXT", nullable: false),
-                    Description = table.Column<string>(type: "TEXT", nullable: true),
-                    StartDate = table.Column<DateTime>(type: "TEXT", nullable: true),
-                    EndDate = table.Column<DateTime>(type: "TEXT", nullable: true),
+                    Email = table.Column<string>(type: "TEXT", maxLength: 256, nullable: false),
+                    SubjectId = table.Column<string>(type: "TEXT", maxLength: 256, nullable: false),
+                    DisplayName = table.Column<string>(type: "TEXT", maxLength: 256, nullable: true),
+                    SelfContactId = table.Column<Guid>(type: "TEXT", nullable: true),
                     CreatedBy = table.Column<string>(type: "TEXT", maxLength: 256, nullable: false),
                     LastChangedBy = table.Column<string>(type: "TEXT", maxLength: 256, nullable: false),
                     CreatedDate = table.Column<DateTime>(type: "TEXT", nullable: false),
                     LastChangedDate = table.Column<DateTime>(type: "TEXT", nullable: false),
-                    UserId = table.Column<string>(type: "TEXT", maxLength: 450, nullable: true),
-                    EntityId = table.Column<Guid>(type: "TEXT", nullable: false),
-                    EntityType = table.Column<string>(type: "TEXT", maxLength: 50, nullable: false)
+                    UserId = table.Column<string>(type: "TEXT", maxLength: 450, nullable: true)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Relationship", x => x.Id);
+                    table.PrimaryKey("PK_Users", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_Relationship_RelationshipType_RelationshipTypeId",
-                        column: x => x.RelationshipTypeId,
-                        principalTable: "RelationshipType",
+                        name: "FK_Users_Contact_SelfContactId",
+                        column: x => x.SelfContactId,
+                        principalTable: "Contact",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                });
-
-            migrationBuilder.InsertData(
-                table: "RelationshipType",
-                columns: new[] { "Id", "CreatedBy", "CreatedDate", "EntityType", "LastChangedBy", "LastChangedDate", "Name", "OppositeName", "UserId" },
-                values: new object[,]
-                {
-                    { new Guid("09876543-210f-edcb-a987-6543210fedcb"), "System", new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), "Person", "System", new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), "Teacher", "Student", null },
-                    { new Guid("1a2b3c4d-5e6f-7890-a1b2-c3d4e5f67890"), "System", new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), "Person", "System", new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), "Manager", "Employee", null },
-                    { new Guid("7c1f8d22-1b6a-4c28-9c1e-3f5a2b8e9d1a"), "System", new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), "Person", "System", new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), "Parent", "Child", null },
-                    { new Guid("a5b6c7d8-9e0f-1a2b-3c4d-5e6f7a8b9c0d"), "System", new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), "Person", "System", new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), "Friend", "Friend", null },
-                    { new Guid("b2e9a5c8-7f4d-4a1b-8c6e-5f9d3a0e2b4c"), "System", new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), "Person", "System", new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), "Spouse", "Spouse", null },
-                    { new Guid("d4f1b8a9-3e2c-4b5d-9a6f-1c0e7d8b5a2f"), "System", new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), "Person", "System", new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), "Sibling", "Sibling", null },
-                    { new Guid("f9e8d7c6-b5a4-3210-9876-543210fedcba"), "System", new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), "Person", "System", new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), "Partner", "Partner", null },
-                    { new Guid("fedcba98-7654-3210-fedc-ba9876543210"), "System", new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), "Company", "System", new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), "Parent Company", "Subsidiary", null }
+                        onDelete: ReferentialAction.SetNull);
                 });
 
             migrationBuilder.CreateIndex(
@@ -472,18 +439,8 @@ namespace Rvnx.CRM.Infrastructure.Migrations
                 columns: new[] { "RelatedEntityId", "EntityType" });
 
             migrationBuilder.CreateIndex(
-                name: "IX_Relationship_RelationshipTypeId",
-                table: "Relationship",
-                column: "RelationshipTypeId");
-
-            migrationBuilder.CreateIndex(
                 name: "IX_Relationship_UserId",
                 table: "Relationship",
-                column: "UserId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_RelationshipType_UserId",
-                table: "RelationshipType",
                 column: "UserId");
 
             migrationBuilder.CreateIndex(
@@ -505,6 +462,12 @@ namespace Rvnx.CRM.Infrastructure.Migrations
                 name: "IX_SignificantDate_UserId",
                 table: "SignificantDate",
                 column: "UserId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Users_SelfContactId",
+                table: "Users",
+                column: "SelfContactId",
+                unique: true);
 
             migrationBuilder.CreateIndex(
                 name: "IX_Users_UserId",
@@ -556,9 +519,6 @@ namespace Rvnx.CRM.Infrastructure.Migrations
 
             migrationBuilder.DropTable(
                 name: "Contact");
-
-            migrationBuilder.DropTable(
-                name: "RelationshipType");
         }
     }
 }
