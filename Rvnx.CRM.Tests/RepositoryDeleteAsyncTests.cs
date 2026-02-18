@@ -1,0 +1,86 @@
+using Microsoft.EntityFrameworkCore;
+using Moq;
+using Rvnx.CRM.Core.Interfaces;
+using Rvnx.CRM.Core.Models.Base;
+using Rvnx.CRM.Infrastructure.Data;
+using Rvnx.CRM.Infrastructure.Repositories;
+using System;
+using System.ComponentModel.DataAnnotations.Schema;
+using System.Threading.Tasks;
+using Xunit;
+
+namespace Rvnx.CRM.Tests
+{
+    public class RepositoryDeleteAsyncTests
+    {
+        // BadEntity has no parameterless constructor
+        public class BadEntity : BaseEntity
+        {
+            public BadEntity(string someParam)
+            {
+                SomeParam = someParam;
+            }
+
+            public string SomeParam { get; set; }
+        }
+
+        public class TestDbContext : CRMDbContext
+        {
+            public TestDbContext(DbContextOptions<CRMDbContext> options, ICurrentUserService currentUserService)
+                : base(options, currentUserService)
+            {
+            }
+
+            protected override void OnModelCreating(ModelBuilder modelBuilder)
+            {
+                base.OnModelCreating(modelBuilder);
+                modelBuilder.Entity<BadEntity>();
+            }
+        }
+
+        private TestDbContext GetInMemoryDbContext()
+        {
+            DbContextOptions<CRMDbContext> options = new DbContextOptionsBuilder<CRMDbContext>()
+                .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
+                .Options;
+
+            Mock<ICurrentUserService> mockUserService = new();
+            mockUserService.Setup(u => u.UserId).Returns((Guid?)null);
+            mockUserService.Setup(u => u.UserName).Returns("TestUser");
+
+            TestDbContext context = new(options, mockUserService.Object);
+            return context;
+        }
+
+        [Fact]
+        public async Task DeleteAsync_ShouldSucceed_WhenEntityDoesNotExist()
+        {
+            using TestDbContext context = GetInMemoryDbContext();
+            Repository repo = new(context);
+            Guid id = Guid.NewGuid();
+
+            // Should not throw
+            await repo.DeleteAsync<BadEntity>(id);
+        }
+
+        [Fact]
+        public async Task DeleteAsync_ShouldDelete_WhenEntityExists()
+        {
+            using TestDbContext context = GetInMemoryDbContext();
+            Repository repo = new(context);
+
+            var entity = new BadEntity("test");
+            await repo.AddAsync(entity);
+            await repo.SaveChangesAsync();
+
+            // Detach to ensure DeleteAsync fetches it or handles it correctly
+            context.Entry(entity).State = EntityState.Detached;
+
+            await repo.DeleteAsync<BadEntity>(entity.Id);
+            await repo.SaveChangesAsync();
+
+            var deleted = await context.Set<BadEntity>().FindAsync(entity.Id);
+            Assert.Null(deleted);
+        }
+    }
+}
