@@ -9,6 +9,7 @@ using Rvnx.CRM.Core.Models.Base;
 using Rvnx.CRM.Core.Models.Contact;
 using Rvnx.CRM.Core.Models.Dates;
 using Rvnx.CRM.Core.Services;
+using Rvnx.CRM.Infrastructure.Data;
 using Rvnx.CRM.Web.Controllers.Base;
 
 namespace Rvnx.CRM.Web.Controllers
@@ -16,15 +17,17 @@ namespace Rvnx.CRM.Web.Controllers
     public class ContactsController : AuthorizedController
     {
         private readonly IRepository _repository;
+        private readonly CRMDbContext _context;
         private readonly ILogger<ContactsController> _logger;
         private readonly ICurrentUserService _currentUserService;
         private readonly IVCardService _vCardService;
         private readonly IFileValidationService _fileValidationService;
         private readonly IUserSynchronizationService _userSynchronizationService;
 
-        public ContactsController(IRepository repository, ILogger<ContactsController> logger, ICurrentUserService currentUserService, IVCardService vCardService, IFileValidationService fileValidationService, IUserSynchronizationService userSynchronizationService)
+        public ContactsController(IRepository repository, CRMDbContext context, ILogger<ContactsController> logger, ICurrentUserService currentUserService, IVCardService vCardService, IFileValidationService fileValidationService, IUserSynchronizationService userSynchronizationService)
         {
             _repository = repository;
+            _context = context;
             _logger = logger;
             _currentUserService = currentUserService;
             _vCardService = vCardService;
@@ -48,15 +51,15 @@ namespace Rvnx.CRM.Web.Controllers
                 return RedirectToAction("Index", "Home");
             }
 
-            Rvnx.CRM.Core.Models.User? user = null;
-            if (Guid.TryParse(userId, out Guid guidId))
-            {
-                user = await _repository.GetByIdAsync<Rvnx.CRM.Core.Models.User>(guidId);
-            }
+            Rvnx.CRM.Core.Models.User? user = await _context.Users.IgnoreQueryFilters().FirstOrDefaultAsync(u => u.SubjectId == userId);
 
-            if (user == null)
+            // Try to find by SubjectId (string) if not found by ID, although UserId usually maps to SubjectId or ID depending on context
+            // But here UserId from service is likely the SubjectId claim value.
+            // Let's rely on IgnoreQueryFilters to find it regardless of ownership.
+
+            if (user == null && Guid.TryParse(userId, out Guid guidId))
             {
-                user = (await _repository.ListAsync<Rvnx.CRM.Core.Models.User>(u => u.SubjectId == userId)).FirstOrDefault();
+                 user = await _context.Users.IgnoreQueryFilters().FirstOrDefaultAsync(u => u.Id == guidId);
             }
 
             if (user == null)
@@ -87,15 +90,11 @@ namespace Rvnx.CRM.Web.Controllers
             string? userId = _currentUserService.UserId;
             if (string.IsNullOrEmpty(userId)) return RedirectToAction("Index", "Home");
 
-            Rvnx.CRM.Core.Models.User? user = null;
-            if (Guid.TryParse(userId, out Guid guidId))
-            {
-                user = await _repository.GetByIdAsync<Rvnx.CRM.Core.Models.User>(guidId);
-            }
+            Rvnx.CRM.Core.Models.User? user = await _context.Users.IgnoreQueryFilters().FirstOrDefaultAsync(u => u.SubjectId == userId);
 
-            if (user == null)
+            if (user == null && Guid.TryParse(userId, out Guid guidId))
             {
-                user = (await _repository.ListAsync<Rvnx.CRM.Core.Models.User>(u => u.SubjectId == userId)).FirstOrDefault();
+                 user = await _context.Users.IgnoreQueryFilters().FirstOrDefaultAsync(u => u.Id == guidId);
             }
 
             if (user == null) return RedirectToAction("Index");
@@ -138,7 +137,12 @@ namespace Rvnx.CRM.Web.Controllers
             string? userId = _currentUserService.UserId;
             if (string.IsNullOrEmpty(userId)) return Unauthorized();
 
-            Rvnx.CRM.Core.Models.User? user = (await _repository.ListAsync<Rvnx.CRM.Core.Models.User>(u => u.SubjectId == userId)).FirstOrDefault();
+            Rvnx.CRM.Core.Models.User? user = await _context.Users.IgnoreQueryFilters().FirstOrDefaultAsync(u => u.SubjectId == userId);
+             if (user == null && Guid.TryParse(userId, out Guid guidId))
+            {
+                 user = await _context.Users.IgnoreQueryFilters().FirstOrDefaultAsync(u => u.Id == guidId);
+            }
+
             if (user == null) return RedirectToAction("Index");
 
             if (user.SelfContactId.HasValue)
