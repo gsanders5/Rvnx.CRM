@@ -41,17 +41,48 @@ namespace Rvnx.CRM.Web.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(Guid id, [Bind("Id,EntityId,EntityType,Type,Value,Label")] ContactMethod contactInfo)
+        public async Task<IActionResult> Edit(Guid id, [Bind("Id,Type,Value,Label")] ContactMethod contactInfoInput)
         {
-            if (id != contactInfo.Id) return NotFound();
+            if (id != contactInfoInput.Id) return NotFound();
 
             if (ModelState.IsValid)
             {
-                await _repository.UpdateAsync(contactInfo);
-                await _repository.SaveChangesAsync();
-                return RedirectToEntity(contactInfo.EntityId, contactInfo.EntityType);
+                try
+                {
+                    // Fetch existing entity to preserve audit fields and prevent tampering
+                    ContactMethod? existingContactInfo = await _repository.GetByIdAsync<ContactMethod>(id);
+                    if (existingContactInfo == null) return NotFound();
+
+                    // Only update user-editable fields
+                    existingContactInfo.Type = contactInfoInput.Type;
+                    existingContactInfo.Value = contactInfoInput.Value;
+                    existingContactInfo.Label = contactInfoInput.Label;
+                    // EntityId, EntityType, CreatedDate, CreatedBy are preserved from existing entity
+
+                    await _repository.UpdateAsync(existingContactInfo);
+                    await _repository.SaveChangesAsync();
+
+                    return RedirectToEntity(existingContactInfo.EntityId, existingContactInfo.EntityType);
+                }
+                catch (Exception)
+                {
+                    if (!await _repository.ExistsAsync<ContactMethod>(contactInfoInput.Id)) return NotFound();
+                    else throw;
+                }
             }
-            return View(contactInfo);
+
+            // Re-fetch to get EntityId/EntityType for view
+            ContactMethod? contactInfo = await _repository.GetByIdAsync<ContactMethod>(id);
+            if (contactInfo != null)
+            {
+                // Merge input values back for display
+                contactInfo.Type = contactInfoInput.Type;
+                contactInfo.Value = contactInfoInput.Value;
+                contactInfo.Label = contactInfoInput.Label;
+                return View(contactInfo);
+            }
+
+            return View(contactInfoInput);
         }
 
         public async Task<IActionResult> Delete(Guid? id)

@@ -14,6 +14,10 @@ namespace Rvnx.CRM.Web.Controllers
         private readonly ILogger<HomeController> _logger;
         private readonly IRepository _repository;
 
+        // Configuration constants
+        private const int MaxUpcomingEvents = 5;
+        private const int MaxEventsToProcess = 500;
+
         public HomeController(ILogger<HomeController> logger, IRepository repository)
         {
             _logger = logger;
@@ -28,66 +32,23 @@ namespace Rvnx.CRM.Web.Controllers
             List<Contact> contacts = await _repository.ListAsNoTrackingAsync<Contact>();
             Dictionary<Guid, Contact> contactDict = contacts.ToDictionary(c => c.Id, c => c);
 
-            // Fetch all reminders and filter in memory because SQLite/EFCore doesn't support TimeSpan comparison > TimeSpan.Zero
-            // Using AsNoTracking since we only read
-            List<Reminder> allReminders = await _repository.ListAsNoTrackingAsync<Reminder>();
-            List<Reminder> reminders = allReminders.Where(r => !r.IsCompleted || r.EventFrequency > TimeSpan.Zero).ToList();
+            // Use a PriorityQueue to efficiently track only the top N events
+            // PriorityQueue in .NET 6+ is a min-heap, so events with smallest dates come first
+            PriorityQueue<UpcomingEventViewModel, DateTime> topEvents = new();
 
-            foreach (Reminder reminder in reminders)
+            // Process reminders
+            await ProcessRemindersAsync(topEvents, contactDict);
+
+            // Process significant dates
+            await ProcessSignificantDatesAsync(topEvents, contactDict);
+
+            // Extract top events from priority queue (already sorted by date)
+            while (topEvents.Count > 0 && model.UpcomingEvents.Count < MaxUpcomingEvents)
             {
-                DateTime nextDate = reminder.GetNextOccurrence();
-
-                if (reminder.IsCompleted && nextDate == reminder.DueDate) continue;
-
-                string entityName = "Unknown";
-                if (reminder.EntityId != Guid.Empty && reminder.EntityType == EntityTypes.Person)
-                {
-                    if (contactDict.TryGetValue(reminder.EntityId, out Contact? contact))
-                    {
-                        entityName = contact.FullName;
-                    }
-                }
-
-                model.UpcomingEvents.Add(new UpcomingEventViewModel
-                {
-                    Title = reminder.Title,
-                    Description = reminder.Description ?? "",
-                    Date = nextDate,
-                    Type = "Reminder",
-                    RelatedEntityId = reminder.EntityId,
-                    RelatedEntityName = entityName,
-                    TimeUntil = GetTimeUntil(nextDate)
-                });
+                model.UpcomingEvents.Add(topEvents.Dequeue());
             }
 
-            // Use ListAsNoTrackingAsync
-            List<SignificantDate> importantDates = await _repository.ListAsNoTrackingAsync<SignificantDate>(d => d.EntityType == EntityTypes.Person);
-
-            foreach (SignificantDate date in importantDates)
-            {
-                if (contactDict.TryGetValue(date.EntityId, out Contact? contact))
-                {
-                    DateTime nextOccurrence = date.GetNextOccurrence();
-
-                    string desc = date.Title?.Equals("Birthday", StringComparison.OrdinalIgnoreCase) == true
-                        ? $"Turns {nextOccurrence.Year - date.Date.Year}"
-                        : $"{date.Title} ({date.Date.ToShortDateString()})";
-
-                    model.UpcomingEvents.Add(new UpcomingEventViewModel
-                    {
-                        Title = $"{contact.FirstName}'s {date.Title}",
-                        Description = desc,
-                        Date = nextOccurrence,
-                        Type = date.Title?.Equals("Birthday", StringComparison.OrdinalIgnoreCase) == true ? "Birthday" : "Event",
-                        RelatedEntityId = contact.Id,
-                        RelatedEntityName = contact.FullName,
-                        TimeUntil = GetTimeUntil(nextOccurrence)
-                    });
-                }
-            }
-
-            model.UpcomingEvents = model.UpcomingEvents.OrderBy(e => e.Date).Take(5).ToList();
-
+            // Build graph data
             foreach (Contact contact in contacts)
             {
                 model.GraphNodes.Add(new GraphNode
@@ -113,18 +74,113 @@ namespace Rvnx.CRM.Web.Controllers
             return View(model);
         }
 
-        // Removed GetNextOccurrence helper methods as logic is now in Models
+        private async Task ProcessRemindersAsync(
+            PriorityQueue<UpcomingEventViewModel, DateTime> topEvents,
+            Dictionary<Guid, Contact> contactDict)
+        {
+            // Fetch all reminders - SQLite/EFCore doesn't support TimeSpan comparison in queries
+            List<Reminder> allReminders = await _repository.ListAsNoTrackingAsync<Reminder>();
 
-        private string GetTimeUntil(DateTime date)
+            // Filter and process with early termination awareness
+            int processedCount = 0;
+            foreach (Reminder reminder in allReminders)
+            {
+                // Skip completed non-recurring reminders
+                if (reminder.IsCompleted && reminder.EventFrequency <= TimeSpan.Zero)
+                    continue;
+
+                DateTime nextDate = reminder.GetNextOccurrence();
+
+                // Skip if completed and next occurrence is the same as due date (already done)
+                if (reminder.IsCompleted && nextDate == reminder.DueDate)
+                    continue;
+
+                string entityName = "Unknown";
+                if (reminder.EntityId != Guid.Empty && reminder.EntityType == EntityTypes.Person)
+                {
+                    if (contactDict.TryGetValue(reminder.EntityId, out Contact? contact))
+                    {
+                        entityName = contact.FullName;
+                    }
+                }
+
+                UpcomingEventViewModel eventVm = new()
+                {
+                    Title = reminder.Title,
+                    Description = reminder.Description ?? "",
+                    Date = nextDate,
+                    Type = "Reminder",
+                    RelatedEntityId = reminder.EntityId,
+                    RelatedEntityName = entityName,
+                    TimeUntil = GetTimeUntil(nextDate)
+                };
+
+                // Add to priority queue - it automatically maintains order
+                topEvents.Enqueue(eventVm, nextDate);
+
+                processedCount++;
+                if (processedCount >= MaxEventsToProcess)
+                {
+                    _logger.LogWarning("Reminder processing limit reached ({Limit}). Some reminders may not appear in dashboard.", MaxEventsToProcess);
+                    break;
+                }
+            }
+        }
+
+        private async Task ProcessSignificantDatesAsync(
+            PriorityQueue<UpcomingEventViewModel, DateTime> topEvents,
+            Dictionary<Guid, Contact> contactDict)
+        {
+            List<SignificantDate> importantDates = await _repository.ListAsNoTrackingAsync<SignificantDate>(
+                d => d.EntityType == EntityTypes.Person);
+
+            int processedCount = 0;
+            foreach (SignificantDate date in importantDates)
+            {
+                if (!contactDict.TryGetValue(date.EntityId, out Contact? contact))
+                    continue;
+
+                DateTime nextOccurrence = date.GetNextOccurrence();
+
+                bool isBirthday = date.Title?.Equals("Birthday", StringComparison.OrdinalIgnoreCase) == true;
+                string desc = isBirthday
+                    ? $"Turns {nextOccurrence.Year - date.Date.Year}"
+                    : $"{date.Title} ({date.Date.ToShortDateString()})";
+
+                UpcomingEventViewModel eventVm = new()
+                {
+                    Title = $"{contact.FirstName}'s {date.Title}",
+                    Description = desc,
+                    Date = nextOccurrence,
+                    Type = isBirthday ? "Birthday" : "Event",
+                    RelatedEntityId = contact.Id,
+                    RelatedEntityName = contact.FullName,
+                    TimeUntil = GetTimeUntil(nextOccurrence)
+                };
+
+                topEvents.Enqueue(eventVm, nextOccurrence);
+
+                processedCount++;
+                if (processedCount >= MaxEventsToProcess)
+                {
+                    _logger.LogWarning("Significant date processing limit reached ({Limit}). Some dates may not appear in dashboard.", MaxEventsToProcess);
+                    break;
+                }
+            }
+        }
+
+        private static string GetTimeUntil(DateTime date)
         {
             TimeSpan span = date.Date - DateTime.Today;
-            return span.Days == 0
-                ? "Today"
-                : span.Days == 1
-                ? "Tomorrow"
-                : span.Days < 0
-                ? "Overdue"
-                : span.Days < 7 ? $"In {span.Days} days" : span.Days < 14 ? "In 1 week" : $"In {span.Days / 7} weeks";
+            return span.Days switch
+            {
+                0 => "Today",
+                1 => "Tomorrow",
+                < 0 => "Overdue",
+                < 7 => $"In {span.Days} days",
+                < 14 => "In 1 week",
+                _ => $"In {span.Days / 7} weeks"
+            };
         }
 
         public IActionResult Privacy()

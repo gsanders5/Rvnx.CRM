@@ -20,8 +20,20 @@ public class CurrentUserService : ICurrentUserService
         {
             if (!IsAuthEnabled()) return null;
 
-            string? value = _httpContextAccessor.HttpContext?.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            return Guid.TryParse(value, out Guid guid) ? guid : null;
+            ClaimsPrincipal? user = _httpContextAccessor.HttpContext?.User;
+            if (user == null) return null;
+
+            // First, try to get the internal CRM user ID (set by UserSynchronizationService)
+            string? internalId = user.FindFirst(UserSynchronizationService.InternalUserIdClaimType)?.Value;
+            if (Guid.TryParse(internalId, out Guid internalGuid))
+            {
+                return internalGuid;
+            }
+
+            // Fallback to NameIdentifier for backwards compatibility
+            // This handles cases where UserSynchronizationService hasn't run yet
+            string? nameId = user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            return Guid.TryParse(nameId, out Guid guid) ? guid : null;
         }
     }
 

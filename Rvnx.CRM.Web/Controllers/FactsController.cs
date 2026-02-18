@@ -41,17 +41,46 @@ namespace Rvnx.CRM.Web.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(Guid id, [Bind("Id,EntityId,EntityType,Category,Value")] Fact fact)
+        public async Task<IActionResult> Edit(Guid id, [Bind("Id,Category,Value")] Fact factInput)
         {
-            if (id != fact.Id) return NotFound();
+            if (id != factInput.Id) return NotFound();
 
             if (ModelState.IsValid)
             {
-                await _repository.UpdateAsync(fact);
-                await _repository.SaveChangesAsync();
-                return RedirectToEntity(fact.EntityId, fact.EntityType);
+                try
+                {
+                    // Fetch existing entity to preserve audit fields and prevent tampering
+                    Fact? existingFact = await _repository.GetByIdAsync<Fact>(id);
+                    if (existingFact == null) return NotFound();
+
+                    // Only update user-editable fields
+                    existingFact.Category = factInput.Category;
+                    existingFact.Value = factInput.Value;
+                    // EntityId, EntityType, CreatedDate, CreatedBy are preserved from existing entity
+
+                    await _repository.UpdateAsync(existingFact);
+                    await _repository.SaveChangesAsync();
+
+                    return RedirectToEntity(existingFact.EntityId, existingFact.EntityType);
+                }
+                catch (Exception)
+                {
+                    if (!await _repository.ExistsAsync<Fact>(factInput.Id)) return NotFound();
+                    else throw;
+                }
             }
-            return View(fact);
+
+            // Re-fetch to get EntityId/EntityType for view
+            Fact? fact = await _repository.GetByIdAsync<Fact>(id);
+            if (fact != null)
+            {
+                // Merge input values back for display
+                fact.Category = factInput.Category;
+                fact.Value = factInput.Value;
+                return View(fact);
+            }
+
+            return View(factInput);
         }
 
         public async Task<IActionResult> Delete(Guid? id)

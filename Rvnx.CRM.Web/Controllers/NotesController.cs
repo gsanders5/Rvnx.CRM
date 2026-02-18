@@ -53,27 +53,47 @@ namespace Rvnx.CRM.Web.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(Guid id, [Bind("Id,Title,Value,EntityId,EntityType,CreatedDate,CreatedBy")] Note note)
+        public async Task<IActionResult> Edit(Guid id, [Bind("Id,Title,Value")] Note noteInput)
         {
-            if (id != note.Id) return NotFound();
+            if (id != noteInput.Id) return NotFound();
 
             if (ModelState.IsValid)
             {
                 try
                 {
-                    await _repository.UpdateAsync(note);
+                    // Fetch existing entity to preserve audit fields and prevent tampering
+                    Note? existingNote = await _repository.GetByIdAsync<Note>(id);
+                    if (existingNote == null) return NotFound();
+
+                    // Only update user-editable fields
+                    existingNote.Title = noteInput.Title;
+                    existingNote.Value = noteInput.Value;
+                    // EntityId, EntityType, CreatedDate, CreatedBy are preserved from existing entity
+
+                    await _repository.UpdateAsync(existingNote);
                     await _repository.SaveChangesAsync();
+
+                    return RedirectToEntity(existingNote.EntityId, existingNote.EntityType);
                 }
                 catch (Exception)
                 {
-                    if (!await _repository.ExistsAsync<Note>(note.Id)) return NotFound();
+                    if (!await _repository.ExistsAsync<Note>(noteInput.Id)) return NotFound();
                     else throw;
                 }
-                return RedirectToEntity(note.EntityId, note.EntityType);
             }
 
-            ViewData["EntityName"] = await GetEntityName(note.EntityId, note.EntityType);
-            return View(note);
+            // Re-fetch to get EntityId/EntityType for redirect and ViewData
+            Note? note = await _repository.GetByIdAsync<Note>(id);
+            if (note != null)
+            {
+                ViewData["EntityName"] = await GetEntityName(note.EntityId, note.EntityType);
+                // Merge input values back for display
+                note.Title = noteInput.Title;
+                note.Value = noteInput.Value;
+                return View(note);
+            }
+
+            return View(noteInput);
         }
 
         public async Task<IActionResult> Delete(Guid? id)
