@@ -33,10 +33,10 @@ namespace Rvnx.CRM.Web.Controllers
             {
                 if (string.Equals(dto.Title, "Birthday", StringComparison.OrdinalIgnoreCase))
                 {
-                    bool existingBirthday = (await _repository.ListAsync<SignificantDate>(d =>
+                    bool existingBirthday = (await _repository.CountAsync<SignificantDate>(d =>
                         d.EntityId == dto.EntityId &&
                         d.EntityType == dto.EntityType &&
-                        d.Title == "Birthday")).Any();
+                        string.Equals(d.Title, "Birthday", StringComparison.OrdinalIgnoreCase))) > 0;
 
                     if (existingBirthday)
                     {
@@ -92,10 +92,10 @@ namespace Rvnx.CRM.Web.Controllers
                     {
                         if (!string.Equals(importantDate.Title, "Birthday", StringComparison.OrdinalIgnoreCase))
                         {
-                            bool existingBirthday = (await _repository.ListAsync<SignificantDate>(d =>
+                            bool existingBirthday = (await _repository.CountAsync<SignificantDate>(d =>
                                 d.EntityId == dto.EntityId &&
                                 d.EntityType == dto.EntityType &&
-                                d.Title == "Birthday")).Any();
+                                string.Equals(d.Title, "Birthday", StringComparison.OrdinalIgnoreCase))) > 0;
 
                             if (existingBirthday)
                             {
