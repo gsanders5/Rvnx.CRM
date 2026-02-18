@@ -305,5 +305,57 @@ namespace Rvnx.CRM.Tests
             Assert.Single(attachments);
             Assert.Equal("image.png", attachments[0].FileName);
         }
+
+        [Fact]
+        public async Task Import_ShouldSkipDuplicates_WhenContactExists()
+        {
+            // Arrange
+            using CRMDbContext context = GetInMemoryDbContext();
+            Repository repository = new(context);
+            Mock<ILogger<ContactsController>> loggerMock = new();
+            Mock<ICurrentUserService> userMock = new();
+            Mock<IUserSynchronizationService> syncMock = new();
+            syncMock.Setup(s => s.SyncUserAsync(It.IsAny<System.Security.Claims.ClaimsPrincipal>())).Returns(Task.CompletedTask);
+
+            Mock<IVCardService> vCardServiceMock = new();
+
+            // Existing contact
+            Guid existingId = Guid.NewGuid();
+            context.Contacts.Add(new Contact { Id = existingId, FirstName = "John", LastName = "Doe" });
+            await context.SaveChangesAsync();
+
+            // Incoming contacts (one duplicate, one new)
+            List<Contact> importedContacts = new()
+            {
+                new Contact { Id = Guid.NewGuid(), FirstName = "John", LastName = "Doe" }, // Duplicate
+                new Contact { Id = Guid.NewGuid(), FirstName = "Jane", LastName = "Doe" }  // New
+            };
+
+            vCardServiceMock.Setup(s => s.ParseVCard(It.IsAny<Stream>())).Returns(importedContacts);
+
+            ContactsController controller = new(repository, loggerMock.Object, userMock.Object, vCardServiceMock.Object, new Mock<IFileValidationService>().Object, syncMock.Object);
+            controller.ControllerContext = new ControllerContext { HttpContext = new DefaultHttpContext() };
+            controller.TempData = new TempDataDictionary(controller.HttpContext, Mock.Of<ITempDataProvider>());
+
+            Mock<IFormFile> fileMock = new();
+            fileMock.Setup(f => f.Length).Returns(100);
+            fileMock.Setup(f => f.FileName).Returns("contacts.vcf");
+            fileMock.Setup(f => f.OpenReadStream()).Returns(new MemoryStream());
+
+            // Act
+            IActionResult result = await controller.Import(fileMock.Object);
+
+            // Assert
+            RedirectToActionResult redirectResult = Assert.IsType<RedirectToActionResult>(result);
+            Assert.Equal("Index", redirectResult.ActionName);
+
+            List<Contact> allContacts = await context.Contacts.ToListAsync();
+            Assert.Equal(2, allContacts.Count);
+            Assert.Contains(allContacts, c => c.FirstName == "John" && c.LastName == "Doe");
+            Assert.Contains(allContacts, c => c.FirstName == "Jane" && c.LastName == "Doe");
+
+            // Verify message
+            Assert.Equal("Import successful! Added: 1, Skipped: 1", controller.TempData["SuccessMessage"]);
+        }
     }
 }
