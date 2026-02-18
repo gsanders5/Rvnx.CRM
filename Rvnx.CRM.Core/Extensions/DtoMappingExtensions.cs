@@ -183,8 +183,8 @@ namespace Rvnx.CRM.Core.Extensions
                 LastName = dto.LastName,
                 Nickname = dto.Nickname,
                 JobTitle = dto.JobTitle,
-                Company = dto.Company
-                // Email, Phone, Birthday removed from Contact
+                Company = dto.Company,
+                IsHidden = dto.IsHidden
             };
         }
 
@@ -195,7 +195,7 @@ namespace Rvnx.CRM.Core.Extensions
             entity.Nickname = dto.Nickname;
             entity.JobTitle = dto.JobTitle;
             entity.Company = dto.Company;
-            // Email, Phone, Birthday removed from Contact
+            entity.IsHidden = dto.IsHidden;
         }
 
         public static Pet ToEntity(this CreatePetDto dto)

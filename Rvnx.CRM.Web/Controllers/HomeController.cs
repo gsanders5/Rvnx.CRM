@@ -29,7 +29,7 @@ namespace Rvnx.CRM.Web.Controllers
             DashboardViewModel model = new();
 
             // Optimization: Use ListAsNoTrackingAsync for read-only data to improve performance
-            List<Contact> contacts = await _repository.ListAsNoTrackingAsync<Contact>();
+            List<Contact> contacts = await _repository.ListAsNoTrackingAsync<Contact>(x => x.IsHidden == false);
             Dictionary<Guid, Contact> contactDict = contacts.ToDictionary(c => c.Id, c => c);
 
             // Use a PriorityQueue to efficiently track only the top N events
@@ -80,18 +80,13 @@ namespace Rvnx.CRM.Web.Controllers
         {
             // Fetch all reminders - SQLite/EFCore doesn't support TimeSpan comparison in queries
             List<Reminder> allReminders = await _repository.ListAsNoTrackingAsync<Reminder>();
-
-            // Filter and process with early termination awareness
             int processedCount = 0;
             foreach (Reminder reminder in allReminders)
             {
-                // Skip completed non-recurring reminders
                 if (reminder.IsCompleted && reminder.EventFrequency <= TimeSpan.Zero)
                     continue;
 
                 DateTime nextDate = reminder.GetNextOccurrence();
-
-                // Skip if completed and next occurrence is the same as due date (already done)
                 if (reminder.IsCompleted && nextDate == reminder.DueDate)
                     continue;
 
@@ -115,9 +110,7 @@ namespace Rvnx.CRM.Web.Controllers
                     TimeUntil = GetTimeUntil(nextDate)
                 };
 
-                // Add to priority queue - it automatically maintains order
                 topEvents.Enqueue(eventVm, nextDate);
-
                 processedCount++;
                 if (processedCount >= MaxEventsToProcess)
                 {

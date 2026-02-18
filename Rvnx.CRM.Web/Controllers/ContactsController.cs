@@ -188,14 +188,15 @@ namespace Rvnx.CRM.Web.Controllers
             return View("Create", contactDto);
         }
 
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index(bool showHidden = false)
         {
-            List<Contact> contacts = await _repository.ListAsync<Contact>();
-            List<ContactDto> contactDtos = contacts.Select(c => c.ToDto()).ToList();
+            List<Contact> contacts = [];
+            contacts = await _repository.ListAsNoTrackingAsync<Contact>(x => x.IsHidden == showHidden);
 
-            List<Guid> contactIds = contacts.Select(c => c.Id).ToList();
+            List<ContactDto> contactDtos = [.. contacts.Select(c => c.ToDto())];
+            List<Guid> contactIds = [.. contacts.Select(c => c.Id)];
 
-            List<Attachment> profileAttachments = await _repository.ListAsync<Attachment>(a => a.EntityType == EntityTypes.Person
+            List<Attachment> profileAttachments = await _repository.ListAsNoTrackingAsync<Attachment>(a => a.EntityType == EntityTypes.Person
                 && a.AttachmentType == "ProfileImage"
                 && contactIds.Contains(a.EntityId));
 
@@ -303,7 +304,7 @@ namespace Rvnx.CRM.Web.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("FirstName,LastName,Nickname,Email,Phone,JobTitle,Company,Birthday")] CreateContactDto contactDto)
+        public async Task<IActionResult> Create([Bind("FirstName,LastName,Nickname,Email,Phone,JobTitle,Company,Birthday,IsHidden")] CreateContactDto contactDto)
         {
             if (ModelState.IsValid)
             {
@@ -371,7 +372,8 @@ namespace Rvnx.CRM.Web.Controllers
                 LastName = contact.LastName ?? string.Empty,
                 Nickname = contact.Nickname,
                 JobTitle = contact.JobTitle,
-                Company = contact.Company
+                Company = contact.Company,
+                IsHidden = contact.IsHidden
             };
 
             List<ContactMethod> emails = await _repository.ListAsync<ContactMethod>(c => c.EntityId == contact.Id && c.EntityType == EntityTypes.Person && c.Type == ContactMethodType.Email);
@@ -390,7 +392,7 @@ namespace Rvnx.CRM.Web.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(Guid id, [Bind("Id,FirstName,LastName,Nickname,Email,Phone,JobTitle,Company,Birthday")] UpdateContactDto contactDto, IFormFile? profileImage)
+        public async Task<IActionResult> Edit(Guid id, [Bind("Id,FirstName,LastName,Nickname,Email,Phone,JobTitle,Company,Birthday,IsHidden")] UpdateContactDto contactDto, IFormFile? profileImage)
         {
             if (id != contactDto.Id) return NotFound();
 
