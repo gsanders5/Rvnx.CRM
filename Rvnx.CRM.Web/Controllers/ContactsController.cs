@@ -583,38 +583,25 @@ namespace Rvnx.CRM.Web.Controllers
 
         private async Task DeleteContactDependenciesAsync(Guid contactId)
         {
-            List<Note> notes = await _repository.ListAsync<Note>(n => n.EntityId == contactId && n.EntityType == EntityTypes.Person);
-            if (notes.Any()) await _repository.DeleteRangeAsync(notes);
-
-            List<Reminder> reminders = await _repository.ListAsync<Reminder>(r => r.EntityId == contactId && r.EntityType == EntityTypes.Person);
-            if (reminders.Any()) await _repository.DeleteRangeAsync(reminders);
-
-            List<SignificantDate> importantDates = await _repository.ListAsync<SignificantDate>(d => d.EntityId == contactId && d.EntityType == EntityTypes.Person);
-            if (importantDates.Any()) await _repository.DeleteRangeAsync(importantDates);
-
-            List<Pet> pets = await _repository.ListAsync<Pet>(p => p.EntityId == contactId && p.EntityType == EntityTypes.Person);
-            if (pets.Any()) await _repository.DeleteRangeAsync(pets);
-
-            List<ContactMethod> contactInfos = await _repository.ListAsync<ContactMethod>(i => i.EntityId == contactId && i.EntityType == EntityTypes.Person);
-            if (contactInfos.Any()) await _repository.DeleteRangeAsync(contactInfos);
-
-            List<Fact> facts = await _repository.ListAsync<Fact>(f => f.EntityId == contactId && f.EntityType == EntityTypes.Person);
-            if (facts.Any()) await _repository.DeleteRangeAsync(facts);
-
-            List<Address> addresses = await _repository.ListAsync<Address>(a => a.EntityId == contactId && a.EntityType == EntityTypes.Person);
-            if (addresses.Any()) await _repository.DeleteRangeAsync(addresses);
-
-            List<Attachment> attachments = await _repository.ListAsync<Attachment>(a => a.EntityId == contactId && a.EntityType == EntityTypes.Person);
-            if (attachments.Any()) await _repository.DeleteRangeAsync(attachments);
-
-            List<Relationship> relationships = await _repository.ListAsync<Relationship>(r => r.EntityId == contactId && r.EntityType == EntityTypes.Person);
-            if (relationships.Any()) await _repository.DeleteRangeAsync(relationships);
+            await DeleteRelatedEntitiesAsync<Note>(contactId);
+            await DeleteRelatedEntitiesAsync<Reminder>(contactId);
+            await DeleteRelatedEntitiesAsync<SignificantDate>(contactId);
+            await DeleteRelatedEntitiesAsync<Pet>(contactId);
+            await DeleteRelatedEntitiesAsync<ContactMethod>(contactId);
+            await DeleteRelatedEntitiesAsync<Fact>(contactId);
+            await DeleteRelatedEntitiesAsync<Address>(contactId);
+            await DeleteRelatedEntitiesAsync<Attachment>(contactId);
+            await DeleteRelatedEntitiesAsync<Relationship>(contactId);
+            await DeleteRelatedEntitiesAsync<PhoneNumber>(contactId);
 
             List<Relationship> relatedTo = await _repository.ListAsync<Relationship>(r => r.RelatedEntityId == contactId && r.EntityType == EntityTypes.Person);
             if (relatedTo.Any()) await _repository.DeleteRangeAsync(relatedTo);
+        }
 
-            List<PhoneNumber> phoneNumbers = await _repository.ListAsync<PhoneNumber>(p => p.EntityId == contactId && p.EntityType == EntityTypes.Person);
-            if (phoneNumbers.Any()) await _repository.DeleteRangeAsync(phoneNumbers);
+        private async Task DeleteRelatedEntitiesAsync<T>(Guid contactId) where T : PolymorphicEntity
+        {
+            List<T> entities = await _repository.ListAsync<T>(e => e.EntityId == contactId && e.EntityType == EntityTypes.Person);
+            if (entities.Any()) await _repository.DeleteRangeAsync(entities);
         }
 
         private async Task<bool> ContactExists(Guid id)
