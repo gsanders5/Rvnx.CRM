@@ -542,6 +542,13 @@ namespace Rvnx.CRM.Web.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(Guid id)
         {
+            List<Rvnx.CRM.Core.Models.User> userWithSelfContact = await _repository.ListAsync<Rvnx.CRM.Core.Models.User>(u => u.SelfContactId == id);
+            foreach (Rvnx.CRM.Core.Models.User user in userWithSelfContact)
+            {
+                user.SelfContactId = null;
+                await _repository.UpdateAsync(user);
+            }
+
             await DeleteContactDependenciesAsync(id);
             await _repository.DeleteAsync<Contact>(id);
             await _repository.SaveChangesAsync();

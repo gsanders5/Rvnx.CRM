@@ -43,6 +43,28 @@ namespace Rvnx.CRM.Tests
         }
 
         [Fact]
+        public async Task CreateSelf_Get_ShouldPreFillData()
+        {
+            // Arrange
+            using CRMDbContext context = GetInMemoryDbContext();
+            ContactsController controller = CreateController(context, userId: "test-user-id", isAuthenticated: true);
+
+            User user = new() { Id = Guid.NewGuid(), SubjectId = "test-user-id", Email = "test@example.com" };
+            context.Set<User>().Add(user);
+            await context.SaveChangesAsync();
+
+            // Act
+            IActionResult result = await controller.CreateSelf();
+
+            // Assert
+            ViewResult viewResult = Assert.IsType<ViewResult>(result);
+            CreateContactDto model = Assert.IsType<CreateContactDto>(viewResult.Model);
+            Assert.Equal("test@example.com", model.Email);
+            Assert.Equal("Test User", model.FirstName);
+            Assert.True((bool?)viewResult.ViewData["IsSelfCreate"]);
+        }
+
+        [Fact]
         public async Task Self_ShouldRedirectToDetails_WhenSelfContactExists()
         {
             // Arrange
@@ -140,6 +162,36 @@ namespace Rvnx.CRM.Tests
 
             int count = await context.Set<Contact>().CountAsync();
             Assert.Equal(1, count);
+        }
+
+        [Fact]
+        public async Task Delete_ShouldUnlinkSelfContact_WhenContactIsDeleted()
+        {
+            // Arrange
+            using CRMDbContext context = GetInMemoryDbContext();
+            ContactsController controller = CreateController(context);
+
+            Contact contact = new() { Id = Guid.NewGuid(), FirstName = "Me" };
+            User user = new() { Id = Guid.NewGuid(), SubjectId = "test-user-id", Email = "test@example.com", SelfContactId = contact.Id };
+
+            context.Set<User>().Add(user);
+            context.Set<Contact>().Add(contact);
+            await context.SaveChangesAsync();
+
+            // Act
+            // Note: DeleteConfirmed is a POST action
+            IActionResult result = await controller.DeleteConfirmed(contact.Id);
+
+            // Assert
+            RedirectToActionResult redirectResult = Assert.IsType<RedirectToActionResult>(result);
+            Assert.Equal("Index", redirectResult.ActionName);
+
+            Contact? deletedContact = await context.Set<Contact>().FirstOrDefaultAsync(c => c.Id == contact.Id);
+            Assert.Null(deletedContact);
+
+            User? updatedUser = await context.Set<User>().FirstOrDefaultAsync(u => u.Id == user.Id);
+            Assert.NotNull(updatedUser);
+            Assert.Null(updatedUser.SelfContactId);
         }
     }
 }
