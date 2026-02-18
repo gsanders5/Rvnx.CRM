@@ -4,6 +4,7 @@ using Rvnx.CRM.Core.Constants;
 using Rvnx.CRM.Core.Interfaces;
 using Rvnx.CRM.Core.Models.Business;
 using Rvnx.CRM.Core.Models.Contact;
+using Rvnx.CRM.Core.Services;
 using Rvnx.CRM.Web.Controllers.Base;
 
 namespace Rvnx.CRM.Web.Controllers
@@ -22,30 +23,8 @@ namespace Rvnx.CRM.Web.Controllers
             ViewData["EntityId"] = entityId;
             ViewData["EntityType"] = entityType;
 
-            if (entityType == EntityTypes.Person)
-            {
-                List<Contact> all = await _repository.ListAsync<Contact>();
-                List<Contact> available = all.Where(p => p.Id != entityId).OrderBy(p => p.FullName).ToList();
-                ViewData["RelatedEntityId"] = new SelectList(available, "Id", "FullName");
-            }
-            else if (entityType == EntityTypes.Company)
-            {
-                List<Employer> all = await _repository.ListAsync<Employer>();
-                List<Employer> available = all.Where(c => c.Id != entityId).OrderBy(c => c.CompanyName).ToList();
-                ViewData["RelatedEntityId"] = new SelectList(available, "Id", "CompanyName");
-            }
-
-            List<RelationshipType> types = await _repository.ListAsync<RelationshipType>(t => t.EntityType == entityType);
-            List<SelectListItem> options = new();
-            foreach (RelationshipType t in types)
-            {
-                options.Add(new SelectListItem { Value = $"{t.Id}_Fwd", Text = $"is {t.Name} of" });
-                if (!t.IsSymmetric)
-                {
-                    options.Add(new SelectListItem { Value = $"{t.Id}_Rev", Text = $"is {t.OppositeName} of" });
-                }
-            }
-            ViewData["RelationshipTypeSelection"] = new SelectList(options, "Value", "Text");
+            await PopulateRelatedEntityDropdown(entityId, entityType);
+            ViewData["RelationshipTypeSelection"] = GetRelationshipTypeOptions(entityType);
 
             return View(new Relationship { EntityId = entityId, EntityType = entityType });
         }
@@ -69,10 +48,6 @@ namespace Rvnx.CRM.Web.Controllers
 
                     if (direction == "Rev")
                     {
-                        // Swap logic for generic entities
-                        // A (EntityId) is Child of B (RelatedEntityId).
-                        // Logic: A is Child -> B is Parent.
-                        // Record: EntityId=B, RelatedEntityId=A, Type=Parent.
                         Guid temp = relationship.EntityId;
                         relationship.EntityId = relationship.RelatedEntityId;
                         relationship.RelatedEntityId = temp;
@@ -82,10 +57,6 @@ namespace Rvnx.CRM.Web.Controllers
                     await _repository.AddAsync(relationship);
                     await _repository.SaveChangesAsync();
 
-                    // If direction was Rev, we swapped EntityId.
-                    // But we want to redirect back to the page user was on (the original EntityId).
-                    // If swapped, original EntityId is now relationship.RelatedEntityId.
-                    // If not swapped, original EntityId is relationship.EntityId.
                     Guid redirectId = direction == "Rev" ? relationship.RelatedEntityId : relationship.EntityId;
 
                     return RedirectToEntity(redirectId, relationship.EntityType);
@@ -96,35 +67,12 @@ namespace Rvnx.CRM.Web.Controllers
                 }
             }
 
-            // Reload view data
             ViewData["EntityName"] = await GetEntityName(relationship.EntityId, relationship.EntityType);
             ViewData["EntityId"] = relationship.EntityId;
             ViewData["EntityType"] = relationship.EntityType;
 
-            if (relationship.EntityType == EntityTypes.Person)
-            {
-                List<Contact> all = await _repository.ListAsync<Contact>();
-                List<Contact> available = all.Where(p => p.Id != relationship.EntityId).OrderBy(p => p.FullName).ToList();
-                ViewData["RelatedEntityId"] = new SelectList(available, "Id", "FullName", relationship.RelatedEntityId);
-            }
-            else if (relationship.EntityType == EntityTypes.Company)
-            {
-                List<Employer> all = await _repository.ListAsync<Employer>();
-                List<Employer> available = all.Where(c => c.Id != relationship.EntityId).OrderBy(c => c.CompanyName).ToList();
-                ViewData["RelatedEntityId"] = new SelectList(available, "Id", "CompanyName", relationship.RelatedEntityId);
-            }
-
-            List<RelationshipType> types = await _repository.ListAsync<RelationshipType>(t => t.EntityType == relationship.EntityType);
-            List<SelectListItem> options = new();
-            foreach (RelationshipType t in types)
-            {
-                options.Add(new SelectListItem { Value = $"{t.Id}_Fwd", Text = $"is {t.Name} of" });
-                if (!t.IsSymmetric)
-                {
-                    options.Add(new SelectListItem { Value = $"{t.Id}_Rev", Text = $"is {t.OppositeName} of" });
-                }
-            }
-            ViewData["RelationshipTypeSelection"] = new SelectList(options, "Value", "Text", relationshipTypeSelection);
+            await PopulateRelatedEntityDropdown(relationship.EntityId, relationship.EntityType, relationship.RelatedEntityId);
+            ViewData["RelationshipTypeSelection"] = GetRelationshipTypeOptions(relationship.EntityType, relationshipTypeSelection);
 
             return View(relationship);
         }
@@ -136,47 +84,14 @@ namespace Rvnx.CRM.Web.Controllers
             Relationship? relationship = await _repository.GetByIdAsync<Relationship>(id.Value);
             if (relationship == null) return NotFound();
 
-            // Fetch RelationshipType manually as GetByIdAsync doesn't include
-            RelationshipType? type = await _repository.GetByIdAsync<RelationshipType>(relationship.RelationshipTypeId);
-            relationship.RelationshipType = type;
-
             ViewData["EntityName"] = await GetEntityName(relationship.EntityId, relationship.EntityType);
             ViewData["EntityId"] = relationship.EntityId;
             ViewData["EntityType"] = relationship.EntityType;
 
-            if (relationship.EntityType == EntityTypes.Person)
-            {
-                List<Contact> all = await _repository.ListAsync<Contact>();
-                List<Contact> available = all.Where(p => p.Id != relationship.EntityId).OrderBy(p => p.FullName).ToList();
-                ViewData["RelatedEntityId"] = new SelectList(available, "Id", "FullName", relationship.RelatedEntityId);
-            }
-            else if (relationship.EntityType == EntityTypes.Company)
-            {
-                List<Employer> all = await _repository.ListAsync<Employer>();
-                List<Employer> available = all.Where(c => c.Id != relationship.EntityId).OrderBy(c => c.CompanyName).ToList();
-                ViewData["RelatedEntityId"] = new SelectList(available, "Id", "CompanyName", relationship.RelatedEntityId);
-            }
-
-            List<RelationshipType> types = await _repository.ListAsync<RelationshipType>(t => t.EntityType == relationship.EntityType);
-            List<SelectListItem> options = new();
-            foreach (RelationshipType t in types)
-            {
-                options.Add(new SelectListItem { Value = $"{t.Id}_Fwd", Text = $"is {t.Name} of" });
-                if (!t.IsSymmetric)
-                {
-                    options.Add(new SelectListItem { Value = $"{t.Id}_Rev", Text = $"is {t.OppositeName} of" });
-                }
-            }
+            await PopulateRelatedEntityDropdown(relationship.EntityId, relationship.EntityType, relationship.RelatedEntityId);
 
             string currentSelection = $"{relationship.RelationshipTypeId}_Fwd";
-            // Note: If relationship was created via "Rev", it's stored as "Fwd" (swapped).
-            // So we always edit as "Fwd" relative to the stored EntityId.
-            // But if the user is editing from the perspective of the "RelatedEntity" (reverse view),
-            // we might want to show it as Rev.
-            // But here we are editing the relationship record itself.
-            // Let's keep it simple: always Fwd relative to EntityId.
-
-            ViewData["RelationshipTypeSelection"] = new SelectList(options, "Value", "Text", currentSelection);
+            ViewData["RelationshipTypeSelection"] = GetRelationshipTypeOptions(relationship.EntityType, currentSelection);
 
             return View(relationship);
         }
@@ -218,7 +133,14 @@ namespace Rvnx.CRM.Web.Controllers
                     ModelState.AddModelError("RelationshipTypeSelection", "Invalid Relationship Type.");
                 }
             }
-            // Reload data... (omitted for brevity, assume similar to Create)
+
+            ViewData["EntityName"] = await GetEntityName(relationship.EntityId, relationship.EntityType);
+            ViewData["EntityId"] = relationship.EntityId;
+            ViewData["EntityType"] = relationship.EntityType;
+
+            await PopulateRelatedEntityDropdown(relationship.EntityId, relationship.EntityType, relationship.RelatedEntityId);
+            ViewData["RelationshipTypeSelection"] = GetRelationshipTypeOptions(relationship.EntityType, relationshipTypeSelection);
+
             return View(relationship);
         }
 
@@ -227,10 +149,11 @@ namespace Rvnx.CRM.Web.Controllers
             if (id == null) return NotFound();
             Relationship? relationship = await _repository.GetByIdAsync<Relationship>(id.Value);
             if (relationship == null) return NotFound();
-            // Manually load types/names for display
-            relationship.RelationshipType = await _repository.GetByIdAsync<RelationshipType>(relationship.RelationshipTypeId);
-            relationship.Person = await _repository.GetByIdAsync<Contact>(relationship.EntityId); // Assumption
-            relationship.RelatedPerson = await _repository.GetByIdAsync<Contact>(relationship.RelatedEntityId); // Assumption
+
+            // Populate Person/RelatedPerson so names show up
+            relationship.Person = await _repository.GetByIdAsync<Contact>(relationship.EntityId);
+            relationship.RelatedPerson = await _repository.GetByIdAsync<Contact>(relationship.RelatedEntityId);
+
             return View(relationship);
         }
 
@@ -248,6 +171,64 @@ namespace Rvnx.CRM.Web.Controllers
                 return RedirectToEntity(entityId, entityType);
             }
             return RedirectToAction("Index", "Home");
+        }
+
+        private async Task PopulateRelatedEntityDropdown(Guid entityId, string entityType, Guid? selectedId = null)
+        {
+            if (entityType == EntityTypes.Person)
+            {
+                List<Contact> all = await _repository.ListAsync<Contact>();
+                List<Contact> available = all.Where(p => p.Id != entityId).OrderBy(p => p.FullName).ToList();
+                ViewData["RelatedEntityId"] = new SelectList(available, "Id", "FullName", selectedId);
+            }
+            else if (entityType == EntityTypes.Company)
+            {
+                List<Employer> all = await _repository.ListAsync<Employer>();
+                List<Employer> available = all.Where(c => c.Id != entityId).OrderBy(c => c.CompanyName).ToList();
+                ViewData["RelatedEntityId"] = new SelectList(available, "Id", "CompanyName", selectedId);
+            }
+        }
+
+        private List<SelectListItem> GetRelationshipTypeOptions(string entityType, string? selectedValue = null)
+        {
+            List<RelationshipTypeDefinition> types = RelationshipTypeService.GetByEntityType(entityType);
+            // Sort by Category then Name
+            types = types.OrderBy(t => t.Category).ThenBy(t => t.Name).ToList();
+
+            List<SelectListItem> options = new();
+            var groups = new Dictionary<string, SelectListGroup>();
+
+            foreach (RelationshipTypeDefinition t in types)
+            {
+                if (!groups.ContainsKey(t.Category))
+                {
+                    groups[t.Category] = new SelectListGroup { Name = t.Category };
+                }
+                var group = groups[t.Category];
+
+                string fwdText = t.IsSymmetric ? $"is {t.Name} of" : $"is {t.Name} of ({t.OppositeName})";
+                options.Add(new SelectListItem
+                {
+                    Value = $"{t.Id}_Fwd",
+                    Text = fwdText,
+                    Group = group,
+                    Selected = selectedValue == $"{t.Id}_Fwd"
+                });
+
+                if (!t.IsSymmetric)
+                {
+                    string revText = $"is {t.OppositeName} of ({t.Name})";
+                    options.Add(new SelectListItem
+                    {
+                        Value = $"{t.Id}_Rev",
+                        Text = revText,
+                        Group = group,
+                        Selected = selectedValue == $"{t.Id}_Rev"
+                    });
+                }
+            }
+
+            return options;
         }
     }
 }

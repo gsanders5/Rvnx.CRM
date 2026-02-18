@@ -86,8 +86,7 @@ namespace Rvnx.CRM.Tests
             await repository.AddAsync(c1);
             await repository.AddAsync(c2);
 
-            Guid typeId = Guid.NewGuid(); // Fake Type
-            await repository.AddAsync(new RelationshipType { Id = typeId, Name = "Rel", OppositeName = "RelOp", EntityType = EntityTypes.Person });
+            Guid typeId = Guid.NewGuid(); // Fake Type (doesn't matter if it exists in DB for this test as we don't enforce FK here)
 
             // C1 -> C2
             await repository.AddAsync(new Relationship { Id = Guid.NewGuid(), EntityId = c1.Id, RelatedEntityId = c2.Id, EntityType = EntityTypes.Person, RelationshipTypeId = typeId });

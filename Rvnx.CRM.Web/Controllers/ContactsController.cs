@@ -8,6 +8,7 @@ using Rvnx.CRM.Core.Interfaces;
 using Rvnx.CRM.Core.Models.Base;
 using Rvnx.CRM.Core.Models.Contact;
 using Rvnx.CRM.Core.Models.Dates;
+using Rvnx.CRM.Core.Services;
 using Rvnx.CRM.Web.Controllers.Base;
 
 namespace Rvnx.CRM.Web.Controllers
@@ -38,24 +39,13 @@ namespace Rvnx.CRM.Web.Controllers
                 return RedirectToAction("Index", "Home");
             }
 
-            // Find User Entity by SubjectId (UserId in Core.Models.User is SubjectId from claims, usually)
-            // Wait, BaseEntity has UserId string (Owner). Core.Models.User has SubjectId string.
-            // ICurrentUserService.UserId returns the ClaimTypes.NameIdentifier.
-            // Let's assume Core.Models.User.SubjectId == _currentUserService.UserId.
-
-            // Actually, we linked Contact to Core.Models.User via LinkedUserId (Guid).
-            // So we first need to find the Core.Models.User entity that corresponds to the current logged-in user.
-
             Rvnx.CRM.Core.Models.User? user = (await _repository.ListAsync<Rvnx.CRM.Core.Models.User>(u => u.SubjectId == userId)).FirstOrDefault();
 
             if (user == null)
             {
-                // User entity doesn't exist yet? It should be synced by UserSynchronizationService.
-                // If not, we can't link.
                 return RedirectToAction("Index");
             }
 
-            // Find Contact linked to this user
             if (user.SelfContactId.HasValue)
             {
                 return RedirectToAction(nameof(Details), new { id = user.SelfContactId });
@@ -104,7 +94,6 @@ namespace Rvnx.CRM.Web.Controllers
             Rvnx.CRM.Core.Models.User? user = (await _repository.ListAsync<Rvnx.CRM.Core.Models.User>(u => u.SubjectId == userId)).FirstOrDefault();
             if (user == null) return RedirectToAction("Index");
 
-            // Double check existence
             if (user.SelfContactId.HasValue)
             {
                 return RedirectToAction(nameof(Details), new { id = user.SelfContactId });
@@ -113,11 +102,9 @@ namespace Rvnx.CRM.Web.Controllers
             if (ModelState.IsValid)
             {
                 Contact contact = contactDto.ToEntity();
-                // contact.LinkedUserId = user.Id; // Removed
 
                 await _repository.AddAsync(contact);
 
-                // Link User to Contact
                 user.SelfContactId = contact.Id;
                 await _repository.UpdateAsync(user);
 
@@ -177,17 +164,14 @@ namespace Rvnx.CRM.Web.Controllers
             List<Contact> contacts = await _repository.ListAsync<Contact>();
             List<ContactDto> contactDtos = contacts.Select(c => c.ToDto()).ToList();
 
-            // Optimally: Get all profile images for these contacts
             List<Guid> contactIds = contacts.Select(c => c.Id).ToList();
 
-            // 1. Fetch Profile Image Attachments for these contacts
             List<Attachment> profileAttachments = await _repository.ListAsync<Attachment>(a => a.EntityType == EntityTypes.Person
                 && a.AttachmentType == "ProfileImage"
                 && contactIds.Contains(a.EntityId));
 
             if (profileAttachments.Any())
             {
-                // 2. Map to DTOs
                 foreach (ContactDto? dto in contactDtos)
                 {
                     Attachment? attachment = profileAttachments.FirstOrDefault(a => a.EntityId == dto.Id);
@@ -213,8 +197,6 @@ namespace Rvnx.CRM.Web.Controllers
             contact.Reminders = await _repository.ListAsync<Reminder>(r => r.EntityId == id.Value && r.EntityType == EntityTypes.Person);
             contact.SignificantDates = await _repository.ListAsync<SignificantDate>(d => d.EntityId == id.Value && d.EntityType == EntityTypes.Person);
 
-            List<RelationshipType> types = await _repository.ListAsync<RelationshipType>();
-
             // Relationships
             List<Relationship> relationships = await _repository.ListAsync<Relationship>(r => r.EntityId == id.Value && r.EntityType == EntityTypes.Person);
 
@@ -233,16 +215,17 @@ namespace Rvnx.CRM.Web.Controllers
                 relatedContacts = await _repository.ListAsync<Contact>(c => relatedIds.Contains(c.Id));
             }
 
+            // Manually populate navigation properties for display (since we don't have LazyLoading or Include for generic relationship yet)
+            // And use static service to fill relationship names (or rely on NotMapped properties)
             foreach (Relationship rel in relationships)
             {
-                rel.RelationshipType = types.FirstOrDefault(t => t.Id == rel.RelationshipTypeId);
+                // No DB lookup for type anymore. Property `RelationshipTypeName` etc. handles it.
                 rel.RelatedPerson = relatedContacts.FirstOrDefault(c => c.Id == rel.RelatedEntityId);
             }
             contact.Relationships = relationships;
 
             foreach (Relationship rel in relatedTo)
             {
-                rel.RelationshipType = types.FirstOrDefault(t => t.Id == rel.RelationshipTypeId);
                 rel.Person = relatedContacts.FirstOrDefault(c => c.Id == rel.EntityId);
             }
             contact.RelatedTo = relatedTo;
@@ -287,7 +270,6 @@ namespace Rvnx.CRM.Web.Controllers
             {
                 Contact contact = contactDto.ToEntity();
                 await _repository.AddAsync(contact);
-                // Save first to get ID (though GUID is generated in ToEntity, it's safer to ensure DB existence)
                 await _repository.SaveChangesAsync();
 
                 if (!string.IsNullOrEmpty(contactDto.Email))
@@ -353,18 +335,14 @@ namespace Rvnx.CRM.Web.Controllers
                 Company = contact.Company
             };
 
-            // Fetch Email (Primary)
             List<ContactMethod> emails = await _repository.ListAsync<ContactMethod>(c => c.EntityId == contact.Id && c.EntityType == EntityTypes.Person && c.Type == ContactMethodType.Email);
-            // Prioritize one labeled "Primary" or just take the first one
             ContactMethod? email = emails.FirstOrDefault(e => e.Label == "Primary") ?? emails.FirstOrDefault();
             dto.Email = email?.Value;
 
-            // Fetch Phone
             List<ContactMethod> phones = await _repository.ListAsync<ContactMethod>(c => c.EntityId == contact.Id && c.EntityType == EntityTypes.Person && c.Type == ContactMethodType.Phone);
             ContactMethod? phone = phones.FirstOrDefault(p => p.Label == "Primary") ?? phones.FirstOrDefault();
             dto.Phone = phone?.Value;
 
-            // Fetch Birthday
             List<SignificantDate> bdays = await _repository.ListAsync<SignificantDate>(d => d.EntityId == contact.Id && d.EntityType == EntityTypes.Person && d.Title == "Birthday");
             dto.Birthday = bdays.FirstOrDefault()?.Date;
 
@@ -472,10 +450,8 @@ namespace Rvnx.CRM.Web.Controllers
                         await _repository.DeleteAsync<SignificantDate>(existingBday.Id);
                     }
 
-                    // --- Profile Image ---
                     if (profileImage != null && profileImage.Length > 0)
                     {
-                        // Validate file type
                         string[] allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".gif" };
                         string extension = Path.GetExtension(profileImage.FileName).ToLowerInvariant();
                         if (!allowedExtensions.Contains(extension) || !profileImage.ContentType.StartsWith("image/"))
@@ -493,7 +469,6 @@ namespace Rvnx.CRM.Web.Controllers
 
                         if (existingAttachment != null)
                         {
-                            // Load content to update it
                             existingAttachment = await _repository.GetByIdWithIncludesAsync<Attachment>(existingAttachment.Id, "AttachmentContent");
                             if (existingAttachment != null)
                             {
@@ -555,10 +530,6 @@ namespace Rvnx.CRM.Web.Controllers
             return RedirectToAction(nameof(Index));
         }
 
-        /// <summary>
-        /// Manually deletes related generic entities.
-        /// Due to polymorphic relationships (EntityId/EntityType), these cannot be handled by database cascade deletes.
-        /// </summary>
         private async Task DeleteContactDependenciesAsync(Guid contactId)
         {
             List<Note> notes = await _repository.ListAsync<Note>(n => n.EntityId == contactId && n.EntityType == EntityTypes.Person);
@@ -585,15 +556,12 @@ namespace Rvnx.CRM.Web.Controllers
             List<Attachment> attachments = await _repository.ListAsync<Attachment>(a => a.EntityId == contactId && a.EntityType == EntityTypes.Person);
             if (attachments.Any()) await _repository.DeleteRangeAsync(attachments);
 
-            // Relationships where this contact is the Source
             List<Relationship> relationships = await _repository.ListAsync<Relationship>(r => r.EntityId == contactId && r.EntityType == EntityTypes.Person);
             if (relationships.Any()) await _repository.DeleteRangeAsync(relationships);
 
-            // Relationships where this contact is the Target
             List<Relationship> relatedTo = await _repository.ListAsync<Relationship>(r => r.RelatedEntityId == contactId && r.EntityType == EntityTypes.Person);
             if (relatedTo.Any()) await _repository.DeleteRangeAsync(relatedTo);
 
-            // PhoneNumbers
             List<PhoneNumber> phoneNumbers = await _repository.ListAsync<PhoneNumber>(p => p.EntityId == contactId && p.EntityType == EntityTypes.Person);
             if (phoneNumbers.Any()) await _repository.DeleteRangeAsync(phoneNumbers);
         }

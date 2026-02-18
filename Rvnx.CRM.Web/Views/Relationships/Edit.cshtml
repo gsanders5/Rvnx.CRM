@@ -21,7 +21,7 @@
 
             <div class="mb-3">
                 <label for="relationshipTypeSelection" class="form-label">Relationship Type</label>
-                <select name="relationshipTypeSelection" class="form-control" asp-items="ViewBag.RelationshipTypeSelection">
+                <select name="relationshipTypeSelection" class="form-control" asp-items="ViewBag.RelationshipTypeSelection" id="relationshipTypeSelection">
                      <option value="">-- Select Type --</option>
                 </select>
                 @Html.ValidationMessage("RelationshipTypeSelection", new { @class = "text-danger" })
@@ -33,6 +33,10 @@
                 </select>
                 <label asp-for="RelatedEntityId">Related Entity</label>
                 <span asp-validation-for="RelatedEntityId" class="text-danger"></span>
+            </div>
+
+            <div class="alert alert-info" id="relationshipPreview" style="display: none;">
+                <!-- Preview text will be injected here -->
             </div>
 
             <div class="form-floating mb-3">
@@ -70,4 +74,47 @@
 
 @section Scripts {
     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const typeSelect = document.getElementById('relationshipTypeSelection');
+            const relatedSelect = document.getElementById('RelatedEntityId');
+            const preview = document.getElementById('relationshipPreview');
+            // Safely serialize entityName to JS string
+            const entityName = @Html.Raw(Json.Serialize(entityName));
+
+            function updatePreview() {
+                if (!typeSelect.value || !relatedSelect.value) {
+                     preview.style.display = 'none';
+                     return;
+                }
+
+                // Get selected text but remove any text in parentheses at the end, e.g. " (Sister)"
+                let typeText = typeSelect.options[typeSelect.selectedIndex].text;
+                typeText = typeText.replace(/\s*\(.*\)$/, '');
+
+                const relatedText = relatedSelect.options[relatedSelect.selectedIndex].text;
+
+                preview.style.display = 'block';
+                preview.textContent = ''; // Clear previous content
+
+                const strong1 = document.createElement('strong');
+                strong1.textContent = entityName;
+                preview.appendChild(strong1);
+
+                preview.appendChild(document.createTextNode(` ${typeText} `));
+
+                const strong2 = document.createElement('strong');
+                strong2.textContent = relatedText;
+                preview.appendChild(strong2);
+
+                preview.appendChild(document.createTextNode('.'));
+            }
+
+            typeSelect.addEventListener('change', updatePreview);
+            relatedSelect.addEventListener('change', updatePreview);
+
+            // Initial call
+            updatePreview();
+        });
+    </script>
 }

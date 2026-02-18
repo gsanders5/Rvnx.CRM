@@ -22,7 +22,6 @@ public class CRMDbContext(DbContextOptions<CRMDbContext> options, ICurrentUserSe
     public DbSet<AttachmentContent> AttachmentContents { get; set; }
     public DbSet<SignificantDate> SignificantDates { get; set; }
     public DbSet<Relationship> Relationships { get; set; }
-    public DbSet<RelationshipType> RelationshipTypes { get; set; }
     public DbSet<Reminder> Reminders { get; set; }
     public DbSet<Pet> Pets { get; set; }
     public DbSet<ContactMethod> ContactMethods { get; set; }
@@ -73,18 +72,6 @@ public class CRMDbContext(DbContextOptions<CRMDbContext> options, ICurrentUserSe
                 method?.Invoke(this, new object[] { modelBuilder });
             }
         }
-
-        DateTime seedDate = new(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc);
-        modelBuilder.Entity<RelationshipType>().HasData(
-            new RelationshipType { Id = Guid.Parse("7c1f8d22-1b6a-4c28-9c1e-3f5a2b8e9d1a"), Name = "Parent", OppositeName = "Child", EntityType = EntityTypes.Person, CreatedBy = "System", LastChangedBy = "System", CreatedDate = seedDate, LastChangedDate = seedDate },
-            new RelationshipType { Id = Guid.Parse("b2e9a5c8-7f4d-4a1b-8c6e-5f9d3a0e2b4c"), Name = "Spouse", OppositeName = "Spouse", EntityType = EntityTypes.Person, CreatedBy = "System", LastChangedBy = "System", CreatedDate = seedDate, LastChangedDate = seedDate },
-            new RelationshipType { Id = Guid.Parse("d4f1b8a9-3e2c-4b5d-9a6f-1c0e7d8b5a2f"), Name = "Sibling", OppositeName = "Sibling", EntityType = EntityTypes.Person, CreatedBy = "System", LastChangedBy = "System", CreatedDate = seedDate, LastChangedDate = seedDate },
-            new RelationshipType { Id = Guid.Parse("a5b6c7d8-9e0f-1a2b-3c4d-5e6f7a8b9c0d"), Name = "Friend", OppositeName = "Friend", EntityType = EntityTypes.Person, CreatedBy = "System", LastChangedBy = "System", CreatedDate = seedDate, LastChangedDate = seedDate },
-            new RelationshipType { Id = Guid.Parse("f9e8d7c6-b5a4-3210-9876-543210fedcba"), Name = "Partner", OppositeName = "Partner", EntityType = EntityTypes.Person, CreatedBy = "System", LastChangedBy = "System", CreatedDate = seedDate, LastChangedDate = seedDate },
-            new RelationshipType { Id = Guid.Parse("1a2b3c4d-5e6f-7890-a1b2-c3d4e5f67890"), Name = "Manager", OppositeName = "Employee", EntityType = EntityTypes.Person, CreatedBy = "System", LastChangedBy = "System", CreatedDate = seedDate, LastChangedDate = seedDate },
-            new RelationshipType { Id = Guid.Parse("09876543-210f-edcb-a987-6543210fedcb"), Name = "Teacher", OppositeName = "Student", EntityType = EntityTypes.Person, CreatedBy = "System", LastChangedBy = "System", CreatedDate = seedDate, LastChangedDate = seedDate },
-            new RelationshipType { Id = Guid.Parse("fedcba98-7654-3210-fedc-ba9876543210"), Name = "Parent Company", OppositeName = "Subsidiary", EntityType = EntityTypes.Company, CreatedBy = "System", LastChangedBy = "System", CreatedDate = seedDate, LastChangedDate = seedDate }
-        );
     }
 
     private void ConfigureGlobalFilter<T>(ModelBuilder modelBuilder) where T : BaseEntity
