@@ -91,7 +91,10 @@ namespace Rvnx.CRM.Web.Controllers
             // 2. Check Cache
             if (!string.IsNullOrEmpty(Request.Headers["If-Modified-Since"]))
             {
-                if (DateTime.TryParse(Request.Headers["If-Modified-Since"], out DateTime ifModifiedSince))
+                if (DateTime.TryParse(Request.Headers["If-Modified-Since"],
+                    System.Globalization.CultureInfo.InvariantCulture,
+                    System.Globalization.DateTimeStyles.AdjustToUniversal | System.Globalization.DateTimeStyles.AssumeUniversal,
+                    out DateTime ifModifiedSince))
                 {
                     // Truncate milliseconds as HTTP headers don't support them
                     if (ifModifiedSince >= attachment.LastChangedDate.AddTicks(-(attachment.LastChangedDate.Ticks % TimeSpan.TicksPerSecond)))

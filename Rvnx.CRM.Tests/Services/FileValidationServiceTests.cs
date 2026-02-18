@@ -29,7 +29,7 @@ namespace Rvnx.CRM.Tests.Services
         [InlineData(".php")]
         [InlineData("")]
         [InlineData(null)]
-        public void IsImageExtension_ShouldReturnFalse_ForInvalidExtensions(string extension)
+        public void IsImageExtension_ShouldReturnFalse_ForInvalidExtensions(string? extension)
         {
             Assert.False(_service.IsImageExtension(extension));
         }

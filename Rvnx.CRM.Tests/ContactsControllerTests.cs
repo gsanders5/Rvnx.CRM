@@ -26,7 +26,7 @@ namespace Rvnx.CRM.Tests
                 .Options;
 
             Mock<ICurrentUserService> mockCurrentUserService = new();
-            mockCurrentUserService.Setup(s => s.UserId).Returns("test-user-id");
+            mockCurrentUserService.Setup(s => s.UserId).Returns(Guid.Parse("c5b50a20-34b2-44b2-8b9c-aa4135f60938"));
             mockCurrentUserService.Setup(s => s.UserName).Returns("test-user");
 
             return new CRMDbContext(options, mockCurrentUserService.Object);
@@ -40,8 +40,12 @@ namespace Rvnx.CRM.Tests
             Repository repository = new(context);
             Mock<ILogger<ContactsController>> loggerMock = new();
             Mock<ICurrentUserService> userMock = new();
-            ContactsController controller = new(repository, loggerMock.Object, userMock.Object, new Mock<IVCardService>().Object, new Mock<IFileValidationService>().Object);
-            controller.TempData = new TempDataDictionary(new DefaultHttpContext(), Mock.Of<ITempDataProvider>());
+            Mock<IUserSynchronizationService> syncMock = new();
+            syncMock.Setup(s => s.SyncUserAsync(It.IsAny<System.Security.Claims.ClaimsPrincipal>())).Returns(Task.CompletedTask);
+
+            ContactsController controller = new(repository, loggerMock.Object, userMock.Object, new Mock<IVCardService>().Object, new Mock<IFileValidationService>().Object, syncMock.Object);
+            controller.ControllerContext = new ControllerContext { HttpContext = new DefaultHttpContext() };
+            controller.TempData = new TempDataDictionary(controller.HttpContext, Mock.Of<ITempDataProvider>());
 
             context.Contacts.Add(new Contact { Id = Guid.NewGuid(), FirstName = "John", LastName = "Doe" });
             context.Contacts.Add(new Contact { Id = Guid.NewGuid(), FirstName = "Jane", LastName = "Doe" });
@@ -64,7 +68,11 @@ namespace Rvnx.CRM.Tests
             Repository repository = new(context);
             Mock<ILogger<ContactsController>> loggerMock = new();
             Mock<ICurrentUserService> userMock = new();
-            ContactsController controller = new(repository, loggerMock.Object, userMock.Object, new Mock<IVCardService>().Object, new Mock<IFileValidationService>().Object);
+            Mock<IUserSynchronizationService> syncMock = new();
+            syncMock.Setup(s => s.SyncUserAsync(It.IsAny<System.Security.Claims.ClaimsPrincipal>())).Returns(Task.CompletedTask);
+
+            ContactsController controller = new(repository, loggerMock.Object, userMock.Object, new Mock<IVCardService>().Object, new Mock<IFileValidationService>().Object, syncMock.Object);
+            controller.ControllerContext = new ControllerContext { HttpContext = new DefaultHttpContext() };
 
             CreateContactDto dto = new()
             {
@@ -109,7 +117,11 @@ namespace Rvnx.CRM.Tests
             Repository repository = new(context);
             Mock<ILogger<ContactsController>> loggerMock = new();
             Mock<ICurrentUserService> userMock = new();
-            ContactsController controller = new(repository, loggerMock.Object, userMock.Object, new Mock<IVCardService>().Object, new Mock<IFileValidationService>().Object);
+            Mock<IUserSynchronizationService> syncMock = new();
+            syncMock.Setup(s => s.SyncUserAsync(It.IsAny<System.Security.Claims.ClaimsPrincipal>())).Returns(Task.CompletedTask);
+
+            ContactsController controller = new(repository, loggerMock.Object, userMock.Object, new Mock<IVCardService>().Object, new Mock<IFileValidationService>().Object, syncMock.Object);
+            controller.ControllerContext = new ControllerContext { HttpContext = new DefaultHttpContext() };
 
             Guid contactId = Guid.NewGuid();
             Contact contact = new() { Id = contactId, FirstName = "To", LastName = "Delete" };
@@ -136,13 +148,17 @@ namespace Rvnx.CRM.Tests
             Repository repository = new(context);
             Mock<ILogger<ContactsController>> loggerMock = new();
             Mock<ICurrentUserService> userMock = new();
-            userMock.Setup(u => u.UserId).Returns("test-user-id");
+            userMock.Setup(u => u.UserId).Returns(Guid.Parse("c5b50a20-34b2-44b2-8b9c-aa4135f60938"));
             userMock.Setup(u => u.UserName).Returns("Test User");
 
             Mock<IFileValidationService> fileValidationServiceMock = new();
             fileValidationServiceMock.Setup(f => f.IsImageExtension(It.IsAny<string>())).Returns(false);
 
-            ContactsController controller = new(repository, loggerMock.Object, userMock.Object, new Mock<IVCardService>().Object, fileValidationServiceMock.Object);
+            Mock<IUserSynchronizationService> syncMock = new();
+            syncMock.Setup(s => s.SyncUserAsync(It.IsAny<System.Security.Claims.ClaimsPrincipal>())).Returns(Task.CompletedTask);
+
+            ContactsController controller = new(repository, loggerMock.Object, userMock.Object, new Mock<IVCardService>().Object, fileValidationServiceMock.Object, syncMock.Object);
+            controller.ControllerContext = new ControllerContext { HttpContext = new DefaultHttpContext() };
 
             Guid contactId = Guid.NewGuid();
             Contact contact = new() { Id = contactId, FirstName = "John", LastName = "Doe" };
@@ -182,14 +198,18 @@ namespace Rvnx.CRM.Tests
             Repository repository = new(context);
             Mock<ILogger<ContactsController>> loggerMock = new();
             Mock<ICurrentUserService> userMock = new();
-            userMock.Setup(u => u.UserId).Returns("test-user-id");
+            userMock.Setup(u => u.UserId).Returns(Guid.Parse("c5b50a20-34b2-44b2-8b9c-aa4135f60938"));
             userMock.Setup(u => u.UserName).Returns("Test User");
 
             Mock<IFileValidationService> fileValidationServiceMock = new();
             fileValidationServiceMock.Setup(f => f.IsImageExtension(It.IsAny<string>())).Returns(true);
             fileValidationServiceMock.Setup(f => f.IsValidImageSignature(It.IsAny<byte[]>(), It.IsAny<string>())).Returns(false);
 
-            ContactsController controller = new(repository, loggerMock.Object, userMock.Object, new Mock<IVCardService>().Object, fileValidationServiceMock.Object);
+            Mock<IUserSynchronizationService> syncMock = new();
+            syncMock.Setup(s => s.SyncUserAsync(It.IsAny<System.Security.Claims.ClaimsPrincipal>())).Returns(Task.CompletedTask);
+
+            ContactsController controller = new(repository, loggerMock.Object, userMock.Object, new Mock<IVCardService>().Object, fileValidationServiceMock.Object, syncMock.Object);
+            controller.ControllerContext = new ControllerContext { HttpContext = new DefaultHttpContext() };
 
             Guid contactId = Guid.NewGuid();
             Contact contact = new() { Id = contactId, FirstName = "John", LastName = "Doe" };
@@ -235,14 +255,18 @@ namespace Rvnx.CRM.Tests
             Repository repository = new(context);
             Mock<ILogger<ContactsController>> loggerMock = new();
             Mock<ICurrentUserService> userMock = new();
-            userMock.Setup(u => u.UserId).Returns("test-user-id");
+            userMock.Setup(u => u.UserId).Returns(Guid.Parse("c5b50a20-34b2-44b2-8b9c-aa4135f60938"));
             userMock.Setup(u => u.UserName).Returns("Test User");
 
             Mock<IFileValidationService> fileValidationServiceMock = new();
             fileValidationServiceMock.Setup(f => f.IsImageExtension(It.IsAny<string>())).Returns(true);
             fileValidationServiceMock.Setup(f => f.IsValidImageSignature(It.IsAny<byte[]>(), It.IsAny<string>())).Returns(true);
 
-            ContactsController controller = new(repository, loggerMock.Object, userMock.Object, new Mock<IVCardService>().Object, fileValidationServiceMock.Object);
+            Mock<IUserSynchronizationService> syncMock = new();
+            syncMock.Setup(s => s.SyncUserAsync(It.IsAny<System.Security.Claims.ClaimsPrincipal>())).Returns(Task.CompletedTask);
+
+            ContactsController controller = new(repository, loggerMock.Object, userMock.Object, new Mock<IVCardService>().Object, fileValidationServiceMock.Object, syncMock.Object);
+            controller.ControllerContext = new ControllerContext { HttpContext = new DefaultHttpContext() };
 
             Guid contactId = Guid.NewGuid();
             Contact contact = new() { Id = contactId, FirstName = "John", LastName = "Doe" };

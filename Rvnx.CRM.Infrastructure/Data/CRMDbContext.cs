@@ -97,7 +97,7 @@ public class CRMDbContext(DbContextOptions<CRMDbContext> options, ICurrentUserSe
             .Where(e => e.State is EntityState.Added or EntityState.Modified);
 
         string username = GetUsername();
-        string? userId = GetUserId();
+        Guid? userId = GetUserId();
 
         foreach (Microsoft.EntityFrameworkCore.ChangeTracking.EntityEntry<BaseEntity>? entry in entries)
         {
@@ -110,7 +110,7 @@ public class CRMDbContext(DbContextOptions<CRMDbContext> options, ICurrentUserSe
                 entry.Entity.CreatedBy = username;
                 entry.Entity.LastChangedBy = username;
 
-                if (string.IsNullOrEmpty(entry.Entity.UserId))
+                if (entry.Entity.UserId == null)
                 {
                     entry.Entity.UserId = userId;
                 }
@@ -121,7 +121,6 @@ public class CRMDbContext(DbContextOptions<CRMDbContext> options, ICurrentUserSe
                 entry.Entity.LastChangedBy = username;
                 entry.Property(nameof(BaseEntity.CreatedDate)).IsModified = false;
                 entry.Property(nameof(BaseEntity.CreatedBy)).IsModified = false;
-                entry.Property(nameof(BaseEntity.UserId)).IsModified = false;
             }
         }
     }
@@ -131,7 +130,7 @@ public class CRMDbContext(DbContextOptions<CRMDbContext> options, ICurrentUserSe
         return _currentUserService.UserName ?? "System";
     }
 
-    private string? GetUserId()
+    private Guid? GetUserId()
     {
         return _currentUserService.UserId;
     }

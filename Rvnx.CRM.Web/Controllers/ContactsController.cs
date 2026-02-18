@@ -8,7 +8,6 @@ using Rvnx.CRM.Core.Interfaces;
 using Rvnx.CRM.Core.Models.Base;
 using Rvnx.CRM.Core.Models.Contact;
 using Rvnx.CRM.Core.Models.Dates;
-using Rvnx.CRM.Core.Services;
 using Rvnx.CRM.Web.Controllers.Base;
 
 namespace Rvnx.CRM.Web.Controllers
@@ -20,14 +19,16 @@ namespace Rvnx.CRM.Web.Controllers
         private readonly ICurrentUserService _currentUserService;
         private readonly IVCardService _vCardService;
         private readonly IFileValidationService _fileValidationService;
+        private readonly IUserSynchronizationService _userSynchronizationService;
 
-        public ContactsController(IRepository repository, ILogger<ContactsController> logger, ICurrentUserService currentUserService, IVCardService vCardService, IFileValidationService fileValidationService)
+        public ContactsController(IRepository repository, ILogger<ContactsController> logger, ICurrentUserService currentUserService, IVCardService vCardService, IFileValidationService fileValidationService, IUserSynchronizationService userSynchronizationService)
         {
             _repository = repository;
             _logger = logger;
             _currentUserService = currentUserService;
             _vCardService = vCardService;
             _fileValidationService = fileValidationService;
+            _userSynchronizationService = userSynchronizationService;
         }
 
         public async Task<IActionResult> Self()
@@ -37,25 +38,29 @@ namespace Rvnx.CRM.Web.Controllers
                 return RedirectToAction("Index", "Home");
             }
 
-            string? userId = _currentUserService.UserId;
-            if (string.IsNullOrEmpty(userId))
+            // Sync user to ensure existence in DB
+            await _userSynchronizationService.SyncUserAsync(HttpContext.User);
+
+            Guid? userId = _currentUserService.UserId;
+            if (!userId.HasValue)
             {
                 return RedirectToAction("Index", "Home");
             }
 
-            Rvnx.CRM.Core.Models.User? user = (await _repository.ListAsync<Rvnx.CRM.Core.Models.User>(u => u.SubjectId == userId)).FirstOrDefault();
+            Rvnx.CRM.Core.Models.User? user = await _repository.GetByIdAsync<Rvnx.CRM.Core.Models.User>(userId.Value);
+
+            user ??= (await _repository.ListAsync<Rvnx.CRM.Core.Models.User>(u => u.SubjectId == userId.Value.ToString())).FirstOrDefault();
 
             if (user == null)
             {
+                // Fallback: This should ideally not happen if SyncUserAsync works.
+                // But if it does, redirects to Index is confusing.
                 return RedirectToAction("Index");
             }
 
-            if (user.SelfContactId.HasValue)
-            {
-                return RedirectToAction(nameof(Details), new { id = user.SelfContactId });
-            }
-
-            return RedirectToAction(nameof(CreateSelf));
+            return user.SelfContactId.HasValue
+                ? RedirectToAction(nameof(Details), new { id = user.SelfContactId })
+                : RedirectToAction(nameof(CreateSelf));
         }
 
         public async Task<IActionResult> CreateSelf()
@@ -65,10 +70,16 @@ namespace Rvnx.CRM.Web.Controllers
                 return RedirectToAction("Index", "Home");
             }
 
-            string? userId = _currentUserService.UserId;
-            if (string.IsNullOrEmpty(userId)) return RedirectToAction("Index", "Home");
+            // Sync user here too, just in case
+            await _userSynchronizationService.SyncUserAsync(HttpContext.User);
 
-            Rvnx.CRM.Core.Models.User? user = (await _repository.ListAsync<Rvnx.CRM.Core.Models.User>(u => u.SubjectId == userId)).FirstOrDefault();
+            Guid? userId = _currentUserService.UserId;
+            if (!userId.HasValue) return RedirectToAction("Index", "Home");
+
+            Rvnx.CRM.Core.Models.User? user = await _repository.GetByIdAsync<Rvnx.CRM.Core.Models.User>(userId.Value);
+
+            user ??= (await _repository.ListAsync<Rvnx.CRM.Core.Models.User>(u => u.SubjectId == userId.Value.ToString())).FirstOrDefault();
+
             if (user == null) return RedirectToAction("Index");
 
             if (user.SelfContactId.HasValue)
@@ -78,9 +89,23 @@ namespace Rvnx.CRM.Web.Controllers
 
             CreateContactDto dto = new()
             {
-                Email = user.Email,
-                FirstName = _currentUserService.UserName ?? string.Empty
+                Email = user.Email
             };
+
+            string userName = _currentUserService.UserName ?? string.Empty;
+            if (!string.IsNullOrEmpty(userName))
+            {
+                int firstSpaceIndex = userName.IndexOf(' ');
+                if (firstSpaceIndex > 0)
+                {
+                    dto.FirstName = userName[..firstSpaceIndex];
+                    dto.LastName = userName[(firstSpaceIndex + 1)..];
+                }
+                else
+                {
+                    dto.FirstName = userName;
+                }
+            }
 
             ViewBag.IsSelfCreate = true;
             return View("Create", dto);
@@ -92,10 +117,10 @@ namespace Rvnx.CRM.Web.Controllers
         {
             if (!_currentUserService.IsAuthenticated) return Unauthorized();
 
-            string? userId = _currentUserService.UserId;
-            if (string.IsNullOrEmpty(userId)) return Unauthorized();
+            Guid? userId = _currentUserService.UserId;
+            if (!userId.HasValue) return Unauthorized();
+            Rvnx.CRM.Core.Models.User? user = (await _repository.ListAsync<Rvnx.CRM.Core.Models.User>(u => u.SubjectId == userId.Value.ToString())).FirstOrDefault();
 
-            Rvnx.CRM.Core.Models.User? user = (await _repository.ListAsync<Rvnx.CRM.Core.Models.User>(u => u.SubjectId == userId)).FirstOrDefault();
             if (user == null) return RedirectToAction("Index");
 
             if (user.SelfContactId.HasValue)
@@ -173,11 +198,11 @@ namespace Rvnx.CRM.Web.Controllers
             List<Attachment> profileAttachments = await _repository.ListAsync<Attachment>(a => a.EntityType == EntityTypes.Person
                 && a.AttachmentType == "ProfileImage"
                 && contactIds.Contains(a.EntityId));
-                
-                
+
+
             if (profileAttachments != null && profileAttachments.Any())
             {
-                var attachmentMap = profileAttachments
+                Dictionary<Guid, Attachment> attachmentMap = profileAttachments
                     .Where(a => a != null)
                     .GroupBy(a => a.EntityId) // Handle potential duplicates gracefully
                     .ToDictionary(g => g.Key, g => g.First());
@@ -542,6 +567,13 @@ namespace Rvnx.CRM.Web.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(Guid id)
         {
+            List<Rvnx.CRM.Core.Models.User> userWithSelfContact = await _repository.ListAsync<Rvnx.CRM.Core.Models.User>(u => u.SelfContactId == id);
+            foreach (Rvnx.CRM.Core.Models.User user in userWithSelfContact)
+            {
+                user.SelfContactId = null;
+                await _repository.UpdateAsync(user);
+            }
+
             await DeleteContactDependenciesAsync(id);
             await _repository.DeleteAsync<Contact>(id);
             await _repository.SaveChangesAsync();
@@ -619,7 +651,7 @@ namespace Rvnx.CRM.Web.Controllers
                 int addedCount = 0;
                 int skippedCount = 0;
 
-                foreach (var contact in importedContacts)
+                foreach (Contact contact in importedContacts)
                 {
                     if (await IsDuplicateAsync(contact))
                     {
@@ -635,7 +667,7 @@ namespace Rvnx.CRM.Web.Controllers
 
                     if (contact.ContactMethods != null)
                     {
-                        foreach(var cm in contact.ContactMethods)
+                        foreach (ContactMethod cm in contact.ContactMethods)
                         {
                             cm.EntityId = contact.Id;
                             await _repository.AddAsync(cm);
@@ -644,7 +676,7 @@ namespace Rvnx.CRM.Web.Controllers
 
                     if (contact.SignificantDates != null)
                     {
-                        foreach(var sd in contact.SignificantDates)
+                        foreach (SignificantDate sd in contact.SignificantDates)
                         {
                             sd.EntityId = contact.Id;
                             await _repository.AddAsync(sd);
@@ -668,15 +700,15 @@ namespace Rvnx.CRM.Web.Controllers
 
         private async Task<bool> IsDuplicateAsync(Contact candidate)
         {
-            var existingNames = await _repository.ListAsync<Contact>(c => c.FirstName == candidate.FirstName && c.LastName == candidate.LastName);
+            List<Contact> existingNames = await _repository.ListAsync<Contact>(c => c.FirstName == candidate.FirstName && c.LastName == candidate.LastName);
             if (existingNames.Any()) return true;
 
             if (candidate.ContactMethods != null && candidate.ContactMethods.Any())
             {
-                var valuesToCheck = candidate.ContactMethods.Select(m => m.Value).ToList();
+                List<string> valuesToCheck = candidate.ContactMethods.Select(m => m.Value).ToList();
                 if (valuesToCheck.Any())
                 {
-                    var existingMethods = await _repository.ListAsync<ContactMethod>(cm =>
+                    List<ContactMethod> existingMethods = await _repository.ListAsync<ContactMethod>(cm =>
                         cm.EntityType == EntityTypes.Person &&
                         valuesToCheck.Contains(cm.Value));
 
@@ -689,7 +721,7 @@ namespace Rvnx.CRM.Web.Controllers
 
         public async Task<IActionResult> Export(Guid id)
         {
-            var contact = await _repository.GetByIdAsync<Contact>(id);
+            Contact? contact = await _repository.GetByIdAsync<Contact>(id);
             if (contact == null) return NotFound();
 
             contact.ContactMethods = await _repository.ListAsync<ContactMethod>(c => c.EntityId == id && c.EntityType == EntityTypes.Person);

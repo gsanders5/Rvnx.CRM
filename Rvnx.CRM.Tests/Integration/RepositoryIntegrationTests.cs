@@ -10,9 +10,11 @@ namespace Rvnx.CRM.Tests.Integration;
 
 public class RepositoryIntegrationTests : SqliteIntegrationTestBase
 {
+    private static readonly Guid TestUserId = Guid.Parse("c5b50a20-34b2-44b2-8b9c-aa4135f60938");
+
     private readonly Repository _repository;
 
-    public RepositoryIntegrationTests() : base("TestUser")
+    public RepositoryIntegrationTests() : base(TestUserId)
     {
         _repository = new Repository(_context);
     }
@@ -36,7 +38,7 @@ public class RepositoryIntegrationTests : SqliteIntegrationTestBase
         Contact? retrieved = await _context.Contacts.FirstOrDefaultAsync(c => c.FirstName == "Real");
         retrieved.Should().NotBeNull();
         retrieved!.LastName.Should().Be("Database");
-        retrieved.UserId.Should().Be("TestUser"); // Audit field check
+        retrieved.UserId.Should().Be(TestUserId); // Audit field check
     }
 
     [Fact]

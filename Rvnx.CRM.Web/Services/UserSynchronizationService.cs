@@ -39,13 +39,10 @@ public class UserSynchronizationService : IUserSynchronizationService
                     DisplayName = name ?? email,
                     CreatedBy = "System",
                     LastChangedBy = "System",
-                    UserId = "System" // Temporary
                 };
                 _dbContext.Users.Add(user);
                 await _dbContext.SaveChangesAsync();
-
-                // Self-assign ownership
-                user.UserId = user.Id.ToString();
+                user.UserId = user.Id;
                 await _dbContext.SaveChangesAsync();
             }
             else
@@ -59,13 +56,6 @@ public class UserSynchronizationService : IUserSynchronizationService
                 if (name != null && user.DisplayName != name)
                 {
                     user.DisplayName = name;
-                    changed = true;
-                }
-
-                // Ensure legacy/migrated users own their record
-                if (user.UserId == "System")
-                {
-                    user.UserId = user.Id.ToString();
                     changed = true;
                 }
 
