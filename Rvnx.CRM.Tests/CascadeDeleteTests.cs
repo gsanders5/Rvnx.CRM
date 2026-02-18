@@ -23,7 +23,7 @@ namespace Rvnx.CRM.Tests
                 .Options;
 
             Mock<ICurrentUserService> mockUserService = new();
-            mockUserService.Setup(u => u.UserId).Returns("TestUser");
+            mockUserService.Setup(u => u.UserId).Returns((Guid?) null);
             mockUserService.Setup(u => u.UserName).Returns("TestUser");
 
             CRMDbContext context = new(options, mockUserService.Object);
@@ -39,7 +39,7 @@ namespace Rvnx.CRM.Tests
             Repository repository = new(context);
             Mock<ILogger<ContactsController>> logger = new();
             Mock<ICurrentUserService> userMock = new();
-            userMock.Setup(u => u.UserId).Returns("TestUser");
+            userMock.Setup(u => u.UserId).Returns((Guid?) null);
             userMock.Setup(u => u.UserName).Returns("TestUser");
 
             Mock<IUserSynchronizationService> syncMock = new();
@@ -84,7 +84,7 @@ namespace Rvnx.CRM.Tests
             Repository repository = new(context);
             Mock<ILogger<ContactsController>> logger = new();
             Mock<ICurrentUserService> userMock = new();
-            userMock.Setup(u => u.UserId).Returns("TestUser");
+            userMock.Setup(u => u.UserId).Returns((Guid?) null);
             userMock.Setup(u => u.UserName).Returns("TestUser");
 
             Mock<IUserSynchronizationService> syncMock = new();

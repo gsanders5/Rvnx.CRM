@@ -23,5 +23,5 @@ public abstract class BaseEntity
     public DateTime LastChangedDate { get; set; } = DateTime.UtcNow;
 
     [MaxLength(450)]
-    public string? UserId { get; set; }
+    public Guid? UserId { get; set; }
 }

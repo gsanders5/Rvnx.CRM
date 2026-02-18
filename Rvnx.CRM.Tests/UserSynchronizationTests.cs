@@ -16,7 +16,7 @@ namespace Rvnx.CRM.Tests
                 .Options;
 
             Mock<ICurrentUserService> mockUserService = new();
-            mockUserService.Setup(u => u.UserId).Returns((string?) null); // Setup as system for syncing
+            mockUserService.Setup(u => u.UserId).Returns((Guid?) null); // Setup as system for syncing
             mockUserService.Setup(u => u.UserName).Returns("System");
 
             CRMDbContext context = new(options, mockUserService.Object);
@@ -66,7 +66,6 @@ namespace Rvnx.CRM.Tests
                 SubjectId = "sub456",
                 Email = "old@example.com",
                 DisplayName = "Old Name",
-                UserId = "System"
             };
             context.Users.Add(existingUser);
             await context.SaveChangesAsync();

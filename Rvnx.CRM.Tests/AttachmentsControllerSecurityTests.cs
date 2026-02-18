@@ -18,7 +18,7 @@ namespace Rvnx.CRM.Tests
                 .Options;
 
             Mock<ICurrentUserService> mockCurrentUserService = new();
-            mockCurrentUserService.Setup(s => s.UserId).Returns("test-user-id");
+            mockCurrentUserService.Setup(s => s.UserId).Returns(Guid.Parse("c5b50a20-34b2-44b2-8b9c-aa4135f60938"));
             mockCurrentUserService.Setup(s => s.UserName).Returns("test-user");
 
             return new CRMDbContext(options, mockCurrentUserService.Object);

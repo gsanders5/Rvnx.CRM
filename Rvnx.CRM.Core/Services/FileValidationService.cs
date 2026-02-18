@@ -4,14 +4,14 @@ namespace Rvnx.CRM.Core.Services
 {
     public class FileValidationService : IFileValidationService
     {
-        public bool IsImageExtension(string extension)
+        public bool IsImageExtension(string? extension)
         {
             if (string.IsNullOrEmpty(extension)) return false;
             extension = extension.ToLowerInvariant();
             return extension is ".jpg" or ".jpeg" or ".png" or ".gif";
         }
 
-        public bool IsValidImageSignature(byte[] fileBytes, string extension)
+        public bool IsValidImageSignature(byte[] fileBytes, string? extension)
         {
             if (fileBytes == null || fileBytes.Length < 4 || string.IsNullOrEmpty(extension)) return false;
 

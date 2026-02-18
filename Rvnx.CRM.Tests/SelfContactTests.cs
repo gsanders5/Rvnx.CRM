@@ -25,18 +25,21 @@ namespace Rvnx.CRM.Tests
                 .Options;
 
             Mock<ICurrentUserService> mockCurrentUserService = new();
-            mockCurrentUserService.Setup(s => s.UserId).Returns("test-user-id");
+            mockCurrentUserService.Setup(s => s.UserId).Returns(Guid.Parse("c5b50a20-34b2-44b2-8b9c-aa4135f60938"));
             mockCurrentUserService.Setup(s => s.UserName).Returns("test-user");
 
             return new CRMDbContext(options, mockCurrentUserService.Object);
         }
 
-        private ContactsController CreateController(CRMDbContext context, string userId = "test-user-id", bool isAuthenticated = true)
+        private static readonly Guid DefaultTestUserId = Guid.Parse("c5b50a20-34b2-44b2-8b9c-aa4135f60938");
+
+        private ContactsController CreateController(CRMDbContext context, Guid? userId = null, bool isAuthenticated = true)
         {
+            Guid resolvedUserId = userId ?? DefaultTestUserId;
             Repository repository = new(context);
             Mock<ILogger<ContactsController>> loggerMock = new();
             Mock<ICurrentUserService> userMock = new();
-            userMock.Setup(u => u.UserId).Returns(userId);
+            userMock.Setup(u => u.UserId).Returns(resolvedUserId);
             userMock.Setup(u => u.UserName).Returns("Test User");
             userMock.Setup(u => u.IsAuthenticated).Returns(isAuthenticated);
 
@@ -60,9 +63,9 @@ namespace Rvnx.CRM.Tests
         {
             // Arrange
             using CRMDbContext context = GetInMemoryDbContext();
-            ContactsController controller = CreateController(context, userId: "test-user-id", isAuthenticated: true);
+            ContactsController controller = CreateController(context, userId: Guid.Parse("c5b50a20-34b2-44b2-8b9c-aa4135f60938"), isAuthenticated: true);
 
-            User user = new() { Id = Guid.NewGuid(), SubjectId = "test-user-id", Email = "test@example.com" };
+            User user = new() { Id = Guid.NewGuid(), SubjectId = "c5b50a20-34b2-44b2-8b9c-aa4135f60938", Email = "test@example.com" };
             context.Set<User>().Add(user);
             await context.SaveChangesAsync();
 
@@ -75,7 +78,7 @@ namespace Rvnx.CRM.Tests
             Assert.Equal("test@example.com", model.Email);
             Assert.Equal("Test", model.FirstName);
             Assert.Equal("User", model.LastName);
-            Assert.True((bool?)viewResult.ViewData["IsSelfCreate"]);
+            Assert.True(viewResult.ViewData["IsSelfCreate"] as bool?);
         }
 
         [Fact]
@@ -86,7 +89,7 @@ namespace Rvnx.CRM.Tests
             Repository repository = new(context);
             Mock<ILogger<ContactsController>> loggerMock = new();
             Mock<ICurrentUserService> userMock = new();
-            userMock.Setup(u => u.UserId).Returns("test-user-id");
+            userMock.Setup(u => u.UserId).Returns(Guid.Parse("c5b50a20-34b2-44b2-8b9c-aa4135f60938"));
             userMock.Setup(u => u.UserName).Returns("Graham Sanders");
             userMock.Setup(u => u.IsAuthenticated).Returns(true);
 
@@ -96,7 +99,7 @@ namespace Rvnx.CRM.Tests
             ContactsController controller = new ContactsController(repository, loggerMock.Object, userMock.Object, new Mock<IVCardService>().Object, new Mock<IFileValidationService>().Object, syncMock.Object);
             controller.ControllerContext = new ControllerContext { HttpContext = new DefaultHttpContext() };
 
-            User user = new() { Id = Guid.NewGuid(), SubjectId = "test-user-id", Email = "test@example.com" };
+            User user = new() { Id = Guid.NewGuid(), SubjectId = "c5b50a20-34b2-44b2-8b9c-aa4135f60938", Email = "test@example.com" };
             context.Set<User>().Add(user);
             await context.SaveChangesAsync();
 
@@ -118,7 +121,7 @@ namespace Rvnx.CRM.Tests
             ContactsController controller = CreateController(context);
 
             Contact contact = new() { Id = Guid.NewGuid(), FirstName = "Me" };
-            User user = new() { Id = Guid.NewGuid(), SubjectId = "test-user-id", Email = "test@example.com", SelfContactId = contact.Id };
+            User user = new() { Id = Guid.NewGuid(), SubjectId = "c5b50a20-34b2-44b2-8b9c-aa4135f60938", Email = "test@example.com", SelfContactId = contact.Id };
 
             context.Set<User>().Add(user);
             context.Set<Contact>().Add(contact);
@@ -140,7 +143,7 @@ namespace Rvnx.CRM.Tests
             using CRMDbContext context = GetInMemoryDbContext();
             ContactsController controller = CreateController(context);
 
-            User user = new() { Id = Guid.NewGuid(), SubjectId = "test-user-id", Email = "test@example.com", SelfContactId = null };
+            User user = new() { Id = Guid.NewGuid(), SubjectId = "c5b50a20-34b2-44b2-8b9c-aa4135f60938", Email = "test@example.com", SelfContactId = null };
             context.Set<User>().Add(user);
             await context.SaveChangesAsync();
 
@@ -160,7 +163,7 @@ namespace Rvnx.CRM.Tests
             ContactsController controller = CreateController(context);
 
             Guid userId = Guid.NewGuid();
-            User user = new() { Id = userId, SubjectId = "test-user-id", Email = "test@example.com" };
+            User user = new() { Id = userId, SubjectId = "c5b50a20-34b2-44b2-8b9c-aa4135f60938", Email = "test@example.com" };
             context.Set<User>().Add(user);
             await context.SaveChangesAsync();
 
@@ -190,7 +193,7 @@ namespace Rvnx.CRM.Tests
             ContactsController controller = CreateController(context);
 
             Contact existingContact = new() { Id = Guid.NewGuid(), FirstName = "Existing" };
-            User user = new() { Id = Guid.NewGuid(), SubjectId = "test-user-id", Email = "test@example.com", SelfContactId = existingContact.Id };
+            User user = new() { Id = Guid.NewGuid(), SubjectId = "c5b50a20-34b2-44b2-8b9c-aa4135f60938", Email = "test@example.com", SelfContactId = existingContact.Id };
 
             context.Set<User>().Add(user);
             context.Set<Contact>().Add(existingContact);
@@ -218,7 +221,7 @@ namespace Rvnx.CRM.Tests
             ContactsController controller = CreateController(context);
 
             Contact contact = new() { Id = Guid.NewGuid(), FirstName = "Me" };
-            User user = new() { Id = Guid.NewGuid(), SubjectId = "test-user-id", Email = "test@example.com", SelfContactId = contact.Id };
+            User user = new() { Id = Guid.NewGuid(), SubjectId = "c5b50a20-34b2-44b2-8b9c-aa4135f60938", Email = "test@example.com", SelfContactId = contact.Id };
 
             context.Set<User>().Add(user);
             context.Set<Contact>().Add(contact);

@@ -14,7 +14,16 @@ public class CurrentUserService : ICurrentUserService
         _configuration = configuration;
     }
 
-    public string? UserId => !IsAuthEnabled() ? null : (_httpContextAccessor.HttpContext?.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value);
+    public Guid? UserId
+    {
+        get
+        {
+            if (!IsAuthEnabled()) return null;
+
+            var value = _httpContextAccessor.HttpContext?.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            return Guid.TryParse(value, out var guid) ? guid : null;
+        }
+    }
 
     public string? UserName => !IsAuthEnabled()
                 ? "System"

@@ -26,7 +26,7 @@ namespace Rvnx.CRM.Tests
                 .Options;
 
             Mock<ICurrentUserService> mockCurrentUserService = new();
-            mockCurrentUserService.Setup(s => s.UserId).Returns("test-user-id");
+            mockCurrentUserService.Setup(s => s.UserId).Returns(Guid.Parse("c5b50a20-34b2-44b2-8b9c-aa4135f60938"));
             mockCurrentUserService.Setup(s => s.UserName).Returns("test-user");
 
             return new CRMDbContext(options, mockCurrentUserService.Object);
@@ -148,7 +148,7 @@ namespace Rvnx.CRM.Tests
             Repository repository = new(context);
             Mock<ILogger<ContactsController>> loggerMock = new();
             Mock<ICurrentUserService> userMock = new();
-            userMock.Setup(u => u.UserId).Returns("test-user-id");
+            userMock.Setup(u => u.UserId).Returns(Guid.Parse("c5b50a20-34b2-44b2-8b9c-aa4135f60938"));
             userMock.Setup(u => u.UserName).Returns("Test User");
 
             Mock<IFileValidationService> fileValidationServiceMock = new();
@@ -198,7 +198,7 @@ namespace Rvnx.CRM.Tests
             Repository repository = new(context);
             Mock<ILogger<ContactsController>> loggerMock = new();
             Mock<ICurrentUserService> userMock = new();
-            userMock.Setup(u => u.UserId).Returns("test-user-id");
+            userMock.Setup(u => u.UserId).Returns(Guid.Parse("c5b50a20-34b2-44b2-8b9c-aa4135f60938"));
             userMock.Setup(u => u.UserName).Returns("Test User");
 
             Mock<IFileValidationService> fileValidationServiceMock = new();
@@ -255,7 +255,7 @@ namespace Rvnx.CRM.Tests
             Repository repository = new(context);
             Mock<ILogger<ContactsController>> loggerMock = new();
             Mock<ICurrentUserService> userMock = new();
-            userMock.Setup(u => u.UserId).Returns("test-user-id");
+            userMock.Setup(u => u.UserId).Returns(Guid.Parse("c5b50a20-34b2-44b2-8b9c-aa4135f60938"));
             userMock.Setup(u => u.UserName).Returns("Test User");
 
             Mock<IFileValidationService> fileValidationServiceMock = new();

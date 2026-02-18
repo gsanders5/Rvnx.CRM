@@ -11,7 +11,7 @@ public abstract class SqliteIntegrationTestBase : IDisposable
     protected readonly CRMDbContext _context;
     protected readonly Mock<ICurrentUserService> _mockUserService;
 
-    protected SqliteIntegrationTestBase(string? userId = "System")
+    protected SqliteIntegrationTestBase(Guid? userId = null)
     {
         // Use a unique file for each test class/instance to ensure isolation
         _dbPath = $"test_{Guid.NewGuid()}.db";
@@ -23,7 +23,7 @@ public abstract class SqliteIntegrationTestBase : IDisposable
 
         _mockUserService = new Mock<ICurrentUserService>();
         _mockUserService.Setup(u => u.UserId).Returns(userId);
-        _mockUserService.Setup(u => u.UserName).Returns(userId ?? "System");
+        _mockUserService.Setup(u => u.UserName).Returns(userId.HasValue ? userId.Value.ToString() : "System");
 
         _context = new CRMDbContext(options, _mockUserService.Object);
 
