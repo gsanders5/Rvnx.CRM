@@ -687,19 +687,22 @@ namespace Rvnx.CRM.Web.Controllers
 
         private async Task<bool> IsDuplicateAsync(Contact candidate)
         {
-            List<Contact> existingNames = await _repository.ListAsync<Contact>(c => c.FirstName == candidate.FirstName && c.LastName == candidate.LastName);
-            if (existingNames.Any()) return true;
+            if (await _repository.CountAsync<Contact>(c => c.FirstName == candidate.FirstName && c.LastName == candidate.LastName) > 0)
+            {
+                return true;
+            }
 
             if (candidate.ContactMethods != null && candidate.ContactMethods.Any())
             {
                 List<string> valuesToCheck = candidate.ContactMethods.Select(m => m.Value).ToList();
                 if (valuesToCheck.Any())
                 {
-                    List<ContactMethod> existingMethods = await _repository.ListAsync<ContactMethod>(cm =>
+                    if (await _repository.CountAsync<ContactMethod>(cm =>
                         cm.EntityType == EntityTypes.Person &&
-                        valuesToCheck.Contains(cm.Value));
-
-                    if (existingMethods.Any()) return true;
+                        valuesToCheck.Contains(cm.Value)) > 0)
+                    {
+                        return true;
+                    }
                 }
             }
 
