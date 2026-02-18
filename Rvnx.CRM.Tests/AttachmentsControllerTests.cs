@@ -32,7 +32,7 @@ namespace Rvnx.CRM.Tests
             // Arrange
             using CRMDbContext context = GetInMemoryDbContext();
             Repository repo = new(context);
-            AttachmentsController controller = new(repo);
+            AttachmentsController controller = new(repo, new Mock<IFileValidationService>().Object);
             controller.ControllerContext = new ControllerContext
             {
                 HttpContext = new DefaultHttpContext()
@@ -72,7 +72,7 @@ namespace Rvnx.CRM.Tests
             // Arrange
             using CRMDbContext context = GetInMemoryDbContext();
             Repository repo = new(context);
-            AttachmentsController controller = new(repo);
+            AttachmentsController controller = new(repo, new Mock<IFileValidationService>().Object);
             controller.ControllerContext = new ControllerContext
             {
                 HttpContext = new DefaultHttpContext()
@@ -91,7 +91,7 @@ namespace Rvnx.CRM.Tests
             // Arrange
             using CRMDbContext context = GetInMemoryDbContext();
             Repository repo = new(context);
-            AttachmentsController controller = new(repo);
+            AttachmentsController controller = new(repo, new Mock<IFileValidationService>().Object);
             controller.ControllerContext = new ControllerContext
             {
                 HttpContext = new DefaultHttpContext()
@@ -136,7 +136,7 @@ namespace Rvnx.CRM.Tests
             // Arrange
             using CRMDbContext context = GetInMemoryDbContext();
             Repository repo = new(context);
-            AttachmentsController controller = new(repo);
+            AttachmentsController controller = new(repo, new Mock<IFileValidationService>().Object);
             controller.ControllerContext = new ControllerContext
             {
                 HttpContext = new DefaultHttpContext()

@@ -39,7 +39,7 @@ namespace Rvnx.CRM.Tests
             Mock<ICurrentUserService> userMock = new();
             userMock.Setup(u => u.UserId).Returns("TestUser");
             userMock.Setup(u => u.UserName).Returns("TestUser");
-            ContactsController controller = new(repository, logger.Object, userMock.Object, new Mock<IVCardService>().Object);
+            ContactsController controller = new(repository, logger.Object, userMock.Object, new Mock<IVCardService>().Object, new Mock<IFileValidationService>().Object);
 
             Guid contactId = Guid.NewGuid();
             Contact contact = new() { Id = contactId, FirstName = "Test", LastName = "Delete" };
@@ -79,7 +79,7 @@ namespace Rvnx.CRM.Tests
             Mock<ICurrentUserService> userMock = new();
             userMock.Setup(u => u.UserId).Returns("TestUser");
             userMock.Setup(u => u.UserName).Returns("TestUser");
-            ContactsController controller = new(repository, logger.Object, userMock.Object, new Mock<IVCardService>().Object);
+            ContactsController controller = new(repository, logger.Object, userMock.Object, new Mock<IVCardService>().Object, new Mock<IFileValidationService>().Object);
 
             Contact c1 = new() { Id = Guid.NewGuid(), FirstName = "C1" };
             Contact c2 = new() { Id = Guid.NewGuid(), FirstName = "C2" };

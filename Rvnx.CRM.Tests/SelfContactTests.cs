@@ -39,7 +39,7 @@ namespace Rvnx.CRM.Tests
             userMock.Setup(u => u.UserName).Returns("Test User");
             userMock.Setup(u => u.IsAuthenticated).Returns(isAuthenticated);
 
-            return new ContactsController(repository, loggerMock.Object, userMock.Object, new Mock<IVCardService>().Object);
+            return new ContactsController(repository, loggerMock.Object, userMock.Object, new Mock<IVCardService>().Object, new Mock<IFileValidationService>().Object);
         }
 
         [Fact]
