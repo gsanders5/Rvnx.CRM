@@ -13,6 +13,7 @@ namespace Rvnx.CRM.Web
         public static void Main(string[] args)
         {
             WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
+            builder.Configuration.AddJsonFile("appsettings.Local.json", optional: true, reloadOnChange: true);
 
             builder.Services.AddHttpContextAccessor();
             builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
