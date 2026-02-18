@@ -20,14 +20,16 @@ namespace Rvnx.CRM.Web.Controllers
         private readonly ICurrentUserService _currentUserService;
         private readonly IVCardService _vCardService;
         private readonly IFileValidationService _fileValidationService;
+        private readonly IUserSynchronizationService _userSynchronizationService;
 
-        public ContactsController(IRepository repository, ILogger<ContactsController> logger, ICurrentUserService currentUserService, IVCardService vCardService, IFileValidationService fileValidationService)
+        public ContactsController(IRepository repository, ILogger<ContactsController> logger, ICurrentUserService currentUserService, IVCardService vCardService, IFileValidationService fileValidationService, IUserSynchronizationService userSynchronizationService)
         {
             _repository = repository;
             _logger = logger;
             _currentUserService = currentUserService;
             _vCardService = vCardService;
             _fileValidationService = fileValidationService;
+            _userSynchronizationService = userSynchronizationService;
         }
 
         public async Task<IActionResult> Self()
@@ -37,16 +39,30 @@ namespace Rvnx.CRM.Web.Controllers
                 return RedirectToAction("Index", "Home");
             }
 
+            // Sync user to ensure existence in DB
+            await _userSynchronizationService.SyncUserAsync(HttpContext.User);
+
             string? userId = _currentUserService.UserId;
             if (string.IsNullOrEmpty(userId))
             {
                 return RedirectToAction("Index", "Home");
             }
 
-            Rvnx.CRM.Core.Models.User? user = (await _repository.ListAsync<Rvnx.CRM.Core.Models.User>(u => u.SubjectId == userId)).FirstOrDefault();
+            Rvnx.CRM.Core.Models.User? user = null;
+            if (Guid.TryParse(userId, out Guid guidId))
+            {
+                user = await _repository.GetByIdAsync<Rvnx.CRM.Core.Models.User>(guidId);
+            }
 
             if (user == null)
             {
+                user = (await _repository.ListAsync<Rvnx.CRM.Core.Models.User>(u => u.SubjectId == userId)).FirstOrDefault();
+            }
+
+            if (user == null)
+            {
+                // Fallback: This should ideally not happen if SyncUserAsync works.
+                // But if it does, redirects to Index is confusing.
                 return RedirectToAction("Index");
             }
 
@@ -65,10 +81,23 @@ namespace Rvnx.CRM.Web.Controllers
                 return RedirectToAction("Index", "Home");
             }
 
+            // Sync user here too, just in case
+            await _userSynchronizationService.SyncUserAsync(HttpContext.User);
+
             string? userId = _currentUserService.UserId;
             if (string.IsNullOrEmpty(userId)) return RedirectToAction("Index", "Home");
 
-            Rvnx.CRM.Core.Models.User? user = (await _repository.ListAsync<Rvnx.CRM.Core.Models.User>(u => u.SubjectId == userId)).FirstOrDefault();
+            Rvnx.CRM.Core.Models.User? user = null;
+            if (Guid.TryParse(userId, out Guid guidId))
+            {
+                user = await _repository.GetByIdAsync<Rvnx.CRM.Core.Models.User>(guidId);
+            }
+
+            if (user == null)
+            {
+                user = (await _repository.ListAsync<Rvnx.CRM.Core.Models.User>(u => u.SubjectId == userId)).FirstOrDefault();
+            }
+
             if (user == null) return RedirectToAction("Index");
 
             if (user.SelfContactId.HasValue)

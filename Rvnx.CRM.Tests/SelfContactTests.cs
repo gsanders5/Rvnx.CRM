@@ -8,6 +8,7 @@ using Rvnx.CRM.Core.Models.Contact;
 using Rvnx.CRM.Infrastructure.Data;
 using Rvnx.CRM.Infrastructure.Repositories;
 using Rvnx.CRM.Web.Controllers;
+using Microsoft.AspNetCore.Http;
 using System;
 using System.Threading.Tasks;
 using Xunit;
@@ -39,7 +40,19 @@ namespace Rvnx.CRM.Tests
             userMock.Setup(u => u.UserName).Returns("Test User");
             userMock.Setup(u => u.IsAuthenticated).Returns(isAuthenticated);
 
-            return new ContactsController(repository, loggerMock.Object, userMock.Object, new Mock<IVCardService>().Object, new Mock<IFileValidationService>().Object);
+            Mock<IUserSynchronizationService> syncMock = new();
+            // Setup sync to do nothing by default, or verify it is called
+            syncMock.Setup(s => s.SyncUserAsync(It.IsAny<System.Security.Claims.ClaimsPrincipal>())).Returns(Task.CompletedTask);
+
+            ContactsController controller = new ContactsController(repository, loggerMock.Object, userMock.Object, new Mock<IVCardService>().Object, new Mock<IFileValidationService>().Object, syncMock.Object);
+
+            // Need to set ControllerContext for HttpContext access (SyncUserAsync accesses it via passed principal, but controller passes HttpContext.User)
+            controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext()
+            };
+
+            return controller;
         }
 
         [Fact]

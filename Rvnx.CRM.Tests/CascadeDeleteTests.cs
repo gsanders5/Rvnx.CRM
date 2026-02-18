@@ -9,6 +9,8 @@ using Rvnx.CRM.Core.Models.Dates;
 using Rvnx.CRM.Infrastructure.Data;
 using Rvnx.CRM.Infrastructure.Repositories;
 using Rvnx.CRM.Web.Controllers;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 
 namespace Rvnx.CRM.Tests
 {
@@ -39,7 +41,12 @@ namespace Rvnx.CRM.Tests
             Mock<ICurrentUserService> userMock = new();
             userMock.Setup(u => u.UserId).Returns("TestUser");
             userMock.Setup(u => u.UserName).Returns("TestUser");
-            ContactsController controller = new(repository, logger.Object, userMock.Object, new Mock<IVCardService>().Object, new Mock<IFileValidationService>().Object);
+
+            Mock<IUserSynchronizationService> syncMock = new();
+            syncMock.Setup(s => s.SyncUserAsync(It.IsAny<System.Security.Claims.ClaimsPrincipal>())).Returns(Task.CompletedTask);
+
+            ContactsController controller = new(repository, logger.Object, userMock.Object, new Mock<IVCardService>().Object, new Mock<IFileValidationService>().Object, syncMock.Object);
+            controller.ControllerContext = new ControllerContext { HttpContext = new DefaultHttpContext() };
 
             Guid contactId = Guid.NewGuid();
             Contact contact = new() { Id = contactId, FirstName = "Test", LastName = "Delete" };
@@ -79,7 +86,12 @@ namespace Rvnx.CRM.Tests
             Mock<ICurrentUserService> userMock = new();
             userMock.Setup(u => u.UserId).Returns("TestUser");
             userMock.Setup(u => u.UserName).Returns("TestUser");
-            ContactsController controller = new(repository, logger.Object, userMock.Object, new Mock<IVCardService>().Object, new Mock<IFileValidationService>().Object);
+
+            Mock<IUserSynchronizationService> syncMock = new();
+            syncMock.Setup(s => s.SyncUserAsync(It.IsAny<System.Security.Claims.ClaimsPrincipal>())).Returns(Task.CompletedTask);
+
+            ContactsController controller = new(repository, logger.Object, userMock.Object, new Mock<IVCardService>().Object, new Mock<IFileValidationService>().Object, syncMock.Object);
+            controller.ControllerContext = new ControllerContext { HttpContext = new DefaultHttpContext() };
 
             Contact c1 = new() { Id = Guid.NewGuid(), FirstName = "C1" };
             Contact c2 = new() { Id = Guid.NewGuid(), FirstName = "C2" };
