@@ -73,8 +73,41 @@ namespace Rvnx.CRM.Tests
             ViewResult viewResult = Assert.IsType<ViewResult>(result);
             CreateContactDto model = Assert.IsType<CreateContactDto>(viewResult.Model);
             Assert.Equal("test@example.com", model.Email);
-            Assert.Equal("Test User", model.FirstName);
+            Assert.Equal("Test", model.FirstName);
+            Assert.Equal("User", model.LastName);
             Assert.True((bool?)viewResult.ViewData["IsSelfCreate"]);
+        }
+
+        [Fact]
+        public async Task CreateSelf_Get_ShouldSplitName_IntoFirstAndLast()
+        {
+            // Arrange
+            using CRMDbContext context = GetInMemoryDbContext();
+            Repository repository = new(context);
+            Mock<ILogger<ContactsController>> loggerMock = new();
+            Mock<ICurrentUserService> userMock = new();
+            userMock.Setup(u => u.UserId).Returns("test-user-id");
+            userMock.Setup(u => u.UserName).Returns("Graham Sanders");
+            userMock.Setup(u => u.IsAuthenticated).Returns(true);
+
+            Mock<IUserSynchronizationService> syncMock = new();
+            syncMock.Setup(s => s.SyncUserAsync(It.IsAny<System.Security.Claims.ClaimsPrincipal>())).Returns(Task.CompletedTask);
+
+            ContactsController controller = new ContactsController(repository, loggerMock.Object, userMock.Object, new Mock<IVCardService>().Object, new Mock<IFileValidationService>().Object, syncMock.Object);
+            controller.ControllerContext = new ControllerContext { HttpContext = new DefaultHttpContext() };
+
+            User user = new() { Id = Guid.NewGuid(), SubjectId = "test-user-id", Email = "test@example.com" };
+            context.Set<User>().Add(user);
+            await context.SaveChangesAsync();
+
+            // Act
+            IActionResult result = await controller.CreateSelf();
+
+            // Assert
+            ViewResult viewResult = Assert.IsType<ViewResult>(result);
+            CreateContactDto model = Assert.IsType<CreateContactDto>(viewResult.Model);
+            Assert.Equal("Graham", model.FirstName);
+            Assert.Equal("Sanders", model.LastName);
         }
 
         [Fact]

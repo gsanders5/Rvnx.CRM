@@ -107,9 +107,23 @@ namespace Rvnx.CRM.Web.Controllers
 
             CreateContactDto dto = new()
             {
-                Email = user.Email,
-                FirstName = _currentUserService.UserName ?? string.Empty
+                Email = user.Email
             };
+
+            string userName = _currentUserService.UserName ?? string.Empty;
+            if (!string.IsNullOrEmpty(userName))
+            {
+                int firstSpaceIndex = userName.IndexOf(' ');
+                if (firstSpaceIndex > 0)
+                {
+                    dto.FirstName = userName.Substring(0, firstSpaceIndex);
+                    dto.LastName = userName.Substring(firstSpaceIndex + 1);
+                }
+                else
+                {
+                    dto.FirstName = userName;
+                }
+            }
 
             ViewBag.IsSelfCreate = true;
             return View("Create", dto);
