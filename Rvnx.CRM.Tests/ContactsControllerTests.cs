@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.ViewFeatures;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Moq;
@@ -39,7 +40,8 @@ namespace Rvnx.CRM.Tests
             Repository repository = new(context);
             Mock<ILogger<ContactsController>> loggerMock = new();
             Mock<ICurrentUserService> userMock = new();
-            ContactsController controller = new(repository, loggerMock.Object, userMock.Object, new Mock<IVCardService>().Object);
+            ContactsController controller = new(repository, loggerMock.Object, userMock.Object, new Mock<IVCardService>().Object, new Mock<IFileValidationService>().Object);
+            controller.TempData = new TempDataDictionary(new DefaultHttpContext(), Mock.Of<ITempDataProvider>());
 
             context.Contacts.Add(new Contact { Id = Guid.NewGuid(), FirstName = "John", LastName = "Doe" });
             context.Contacts.Add(new Contact { Id = Guid.NewGuid(), FirstName = "Jane", LastName = "Doe" });
@@ -62,7 +64,7 @@ namespace Rvnx.CRM.Tests
             Repository repository = new(context);
             Mock<ILogger<ContactsController>> loggerMock = new();
             Mock<ICurrentUserService> userMock = new();
-            ContactsController controller = new(repository, loggerMock.Object, userMock.Object, new Mock<IVCardService>().Object);
+            ContactsController controller = new(repository, loggerMock.Object, userMock.Object, new Mock<IVCardService>().Object, new Mock<IFileValidationService>().Object);
 
             CreateContactDto dto = new()
             {
@@ -107,7 +109,7 @@ namespace Rvnx.CRM.Tests
             Repository repository = new(context);
             Mock<ILogger<ContactsController>> loggerMock = new();
             Mock<ICurrentUserService> userMock = new();
-            ContactsController controller = new(repository, loggerMock.Object, userMock.Object, new Mock<IVCardService>().Object);
+            ContactsController controller = new(repository, loggerMock.Object, userMock.Object, new Mock<IVCardService>().Object, new Mock<IFileValidationService>().Object);
 
             Guid contactId = Guid.NewGuid();
             Contact contact = new() { Id = contactId, FirstName = "To", LastName = "Delete" };
@@ -136,7 +138,11 @@ namespace Rvnx.CRM.Tests
             Mock<ICurrentUserService> userMock = new();
             userMock.Setup(u => u.UserId).Returns("test-user-id");
             userMock.Setup(u => u.UserName).Returns("Test User");
-            ContactsController controller = new(repository, loggerMock.Object, userMock.Object, new Mock<IVCardService>().Object);
+
+            Mock<IFileValidationService> fileValidationServiceMock = new();
+            fileValidationServiceMock.Setup(f => f.IsImageExtension(It.IsAny<string>())).Returns(false);
+
+            ContactsController controller = new(repository, loggerMock.Object, userMock.Object, new Mock<IVCardService>().Object, fileValidationServiceMock.Object);
 
             Guid contactId = Guid.NewGuid();
             Contact contact = new() { Id = contactId, FirstName = "John", LastName = "Doe" };
@@ -169,6 +175,59 @@ namespace Rvnx.CRM.Tests
         }
 
         [Fact]
+        public async Task Edit_Post_ShouldReturnError_WhenFileSignatureInvalid()
+        {
+            // Arrange
+            using CRMDbContext context = GetInMemoryDbContext();
+            Repository repository = new(context);
+            Mock<ILogger<ContactsController>> loggerMock = new();
+            Mock<ICurrentUserService> userMock = new();
+            userMock.Setup(u => u.UserId).Returns("test-user-id");
+            userMock.Setup(u => u.UserName).Returns("Test User");
+
+            Mock<IFileValidationService> fileValidationServiceMock = new();
+            fileValidationServiceMock.Setup(f => f.IsImageExtension(It.IsAny<string>())).Returns(true);
+            fileValidationServiceMock.Setup(f => f.IsValidImageSignature(It.IsAny<byte[]>(), It.IsAny<string>())).Returns(false);
+
+            ContactsController controller = new(repository, loggerMock.Object, userMock.Object, new Mock<IVCardService>().Object, fileValidationServiceMock.Object);
+
+            Guid contactId = Guid.NewGuid();
+            Contact contact = new() { Id = contactId, FirstName = "John", LastName = "Doe" };
+            await repository.AddAsync(contact);
+            await repository.SaveChangesAsync();
+
+            UpdateContactDto dto = new() { Id = contactId, FirstName = "John", LastName = "Doe" };
+
+            Mock<IFormFile> fileMock = new();
+            string content = "Fake Image Content";
+            MemoryStream ms = new();
+            StreamWriter writer = new(ms);
+            writer.Write(content);
+            writer.Flush();
+            ms.Position = 0;
+
+            fileMock.Setup(f => f.OpenReadStream()).Returns(ms);
+            fileMock.Setup(f => f.CopyToAsync(It.IsAny<Stream>(), It.IsAny<CancellationToken>()))
+                .Callback<Stream, CancellationToken>((stream, token) =>
+                {
+                    ms.CopyTo(stream);
+                })
+                .Returns(Task.CompletedTask);
+            fileMock.Setup(f => f.FileName).Returns("fake.png");
+            fileMock.Setup(f => f.Length).Returns(ms.Length);
+            fileMock.Setup(f => f.ContentType).Returns("image/png");
+
+            // Act
+            IActionResult result = await controller.Edit(contactId, dto, fileMock.Object);
+
+            // Assert
+            ViewResult viewResult = Assert.IsType<ViewResult>(result);
+            Assert.False(controller.ModelState.IsValid);
+            Assert.True(controller.ModelState.ContainsKey(string.Empty));
+            Assert.Equal("Invalid file signature.", controller.ModelState[string.Empty]!.Errors[0].ErrorMessage);
+        }
+
+        [Fact]
         public async Task Edit_Post_ShouldSaveAttachment_WhenFileIsImage()
         {
             // Arrange
@@ -178,7 +237,12 @@ namespace Rvnx.CRM.Tests
             Mock<ICurrentUserService> userMock = new();
             userMock.Setup(u => u.UserId).Returns("test-user-id");
             userMock.Setup(u => u.UserName).Returns("Test User");
-            ContactsController controller = new(repository, loggerMock.Object, userMock.Object, new Mock<IVCardService>().Object);
+
+            Mock<IFileValidationService> fileValidationServiceMock = new();
+            fileValidationServiceMock.Setup(f => f.IsImageExtension(It.IsAny<string>())).Returns(true);
+            fileValidationServiceMock.Setup(f => f.IsValidImageSignature(It.IsAny<byte[]>(), It.IsAny<string>())).Returns(true);
+
+            ContactsController controller = new(repository, loggerMock.Object, userMock.Object, new Mock<IVCardService>().Object, fileValidationServiceMock.Object);
 
             Guid contactId = Guid.NewGuid();
             Contact contact = new() { Id = contactId, FirstName = "John", LastName = "Doe" };

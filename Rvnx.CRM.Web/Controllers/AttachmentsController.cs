@@ -8,12 +8,14 @@ namespace Rvnx.CRM.Web.Controllers
     public class AttachmentsController : AuthorizedController
     {
         private readonly IRepository _repository;
+        private readonly IFileValidationService _fileValidationService;
         private static readonly string[] AllowedExtensions = { ".jpg", ".jpeg", ".png", ".gif", ".pdf", ".txt", ".doc", ".docx", ".xls", ".xlsx" };
         private static readonly string[] ImageContentTypes = { "image/jpeg", "image/png", "image/gif" };
 
-        public AttachmentsController(IRepository repository)
+        public AttachmentsController(IRepository repository, IFileValidationService fileValidationService)
         {
             _repository = repository;
+            _fileValidationService = fileValidationService;
         }
 
         [HttpPost]
@@ -32,7 +34,7 @@ namespace Rvnx.CRM.Web.Controllers
             await file.CopyToAsync(ms);
             byte[] fileBytes = ms.ToArray();
 
-            if (IsImageExtension(extension) && !IsValidImageSignature(fileBytes, extension))
+            if (_fileValidationService.IsImageExtension(extension) && !_fileValidationService.IsValidImageSignature(fileBytes, extension))
             {
                 return BadRequest("Invalid file signature.");
             }
@@ -117,22 +119,5 @@ namespace Rvnx.CRM.Web.Controllers
             return File(attachment.AttachmentContent.Content, attachment.ContentType, attachment.FileName);
         }
 
-        private static bool IsImageExtension(string extension)
-        {
-            return extension is ".jpg" or ".jpeg" or ".png" or ".gif";
-        }
-
-        private static bool IsValidImageSignature(byte[] fileBytes, string extension)
-        {
-            if (fileBytes.Length < 4) return false;
-
-            return extension switch
-            {
-                ".jpg" or ".jpeg" => fileBytes[0] == 0xFF && fileBytes[1] == 0xD8 && fileBytes[2] == 0xFF,
-                ".png" => fileBytes[0] == 0x89 && fileBytes[1] == 0x50 && fileBytes[2] == 0x4E && fileBytes[3] == 0x47,
-                ".gif" => fileBytes[0] == 0x47 && fileBytes[1] == 0x49 && fileBytes[2] == 0x46 && fileBytes[3] == 0x38,
-                _ => false
-            };
-        }
     }
 }
