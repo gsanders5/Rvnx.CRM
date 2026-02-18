@@ -626,8 +626,6 @@ namespace Rvnx.CRM.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("RelationshipTypeId");
-
                     b.HasIndex("UserId");
 
                     b.HasIndex("EntityId", "EntityType");
@@ -635,144 +633,6 @@ namespace Rvnx.CRM.Infrastructure.Migrations
                     b.HasIndex("RelatedEntityId", "EntityType");
 
                     b.ToTable("Relationship");
-                });
-
-            modelBuilder.Entity("Rvnx.CRM.Core.Models.Contact.RelationshipType", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("CreatedBy")
-                        .IsRequired()
-                        .HasMaxLength(256)
-                        .HasColumnType("TEXT");
-
-                    b.Property<DateTime>("CreatedDate")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("EntityType")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("LastChangedBy")
-                        .IsRequired()
-                        .HasMaxLength(256)
-                        .HasColumnType("TEXT");
-
-                    b.Property<DateTime>("LastChangedDate")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("OppositeName")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("UserId")
-                        .HasMaxLength(450)
-                        .HasColumnType("TEXT");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("RelationshipType");
-
-                    b.HasData(
-                        new
-                        {
-                            Id = new Guid("7c1f8d22-1b6a-4c28-9c1e-3f5a2b8e9d1a"),
-                            CreatedBy = "System",
-                            CreatedDate = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            EntityType = "Person",
-                            LastChangedBy = "System",
-                            LastChangedDate = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Name = "Parent",
-                            OppositeName = "Child"
-                        },
-                        new
-                        {
-                            Id = new Guid("b2e9a5c8-7f4d-4a1b-8c6e-5f9d3a0e2b4c"),
-                            CreatedBy = "System",
-                            CreatedDate = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            EntityType = "Person",
-                            LastChangedBy = "System",
-                            LastChangedDate = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Name = "Spouse",
-                            OppositeName = "Spouse"
-                        },
-                        new
-                        {
-                            Id = new Guid("d4f1b8a9-3e2c-4b5d-9a6f-1c0e7d8b5a2f"),
-                            CreatedBy = "System",
-                            CreatedDate = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            EntityType = "Person",
-                            LastChangedBy = "System",
-                            LastChangedDate = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Name = "Sibling",
-                            OppositeName = "Sibling"
-                        },
-                        new
-                        {
-                            Id = new Guid("a5b6c7d8-9e0f-1a2b-3c4d-5e6f7a8b9c0d"),
-                            CreatedBy = "System",
-                            CreatedDate = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            EntityType = "Person",
-                            LastChangedBy = "System",
-                            LastChangedDate = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Name = "Friend",
-                            OppositeName = "Friend"
-                        },
-                        new
-                        {
-                            Id = new Guid("f9e8d7c6-b5a4-3210-9876-543210fedcba"),
-                            CreatedBy = "System",
-                            CreatedDate = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            EntityType = "Person",
-                            LastChangedBy = "System",
-                            LastChangedDate = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Name = "Partner",
-                            OppositeName = "Partner"
-                        },
-                        new
-                        {
-                            Id = new Guid("1a2b3c4d-5e6f-7890-a1b2-c3d4e5f67890"),
-                            CreatedBy = "System",
-                            CreatedDate = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            EntityType = "Person",
-                            LastChangedBy = "System",
-                            LastChangedDate = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Name = "Manager",
-                            OppositeName = "Employee"
-                        },
-                        new
-                        {
-                            Id = new Guid("09876543-210f-edcb-a987-6543210fedcb"),
-                            CreatedBy = "System",
-                            CreatedDate = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            EntityType = "Person",
-                            LastChangedBy = "System",
-                            LastChangedDate = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Name = "Teacher",
-                            OppositeName = "Student"
-                        },
-                        new
-                        {
-                            Id = new Guid("fedcba98-7654-3210-fedc-ba9876543210"),
-                            CreatedBy = "System",
-                            CreatedDate = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            EntityType = "Company",
-                            LastChangedBy = "System",
-                            LastChangedDate = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Name = "Parent Company",
-                            OppositeName = "Subsidiary"
-                        });
                 });
 
             modelBuilder.Entity("Rvnx.CRM.Core.Models.Dates.Reminder", b =>
@@ -976,17 +836,6 @@ namespace Rvnx.CRM.Infrastructure.Migrations
                         .IsRequired();
 
                     b.Navigation("Employee");
-                });
-
-            modelBuilder.Entity("Rvnx.CRM.Core.Models.Contact.Relationship", b =>
-                {
-                    b.HasOne("Rvnx.CRM.Core.Models.Contact.RelationshipType", "RelationshipType")
-                        .WithMany()
-                        .HasForeignKey("RelationshipTypeId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("RelationshipType");
                 });
 
             modelBuilder.Entity("Rvnx.CRM.Core.Models.User", b =>

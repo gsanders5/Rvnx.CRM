@@ -79,31 +79,38 @@
             const entityName = @Html.Raw(Json.Serialize(entityName));
 
             function updatePreview() {
-                const typeText = typeSelect.options[typeSelect.selectedIndex].text;
+                if (!typeSelect.value || !relatedSelect.value) {
+                     preview.style.display = 'none';
+                     return;
+                }
+
+                // Get selected text but remove any text in parentheses at the end, e.g. " (Sister)"
+                let typeText = typeSelect.options[typeSelect.selectedIndex].text;
+                typeText = typeText.replace(/\s*\(.*\)$/, '');
+
                 const relatedText = relatedSelect.options[relatedSelect.selectedIndex].text;
 
-                if (typeSelect.value && relatedSelect.value) {
-                    preview.style.display = 'block';
-                    preview.textContent = ''; // Clear previous content
+                preview.style.display = 'block';
+                preview.textContent = ''; // Clear previous content
 
-                    const strong1 = document.createElement('strong');
-                    strong1.textContent = entityName;
-                    preview.appendChild(strong1);
+                const strong1 = document.createElement('strong');
+                strong1.textContent = entityName;
+                preview.appendChild(strong1);
 
-                    preview.appendChild(document.createTextNode(` ${typeText} `));
+                preview.appendChild(document.createTextNode(` ${typeText} `));
 
-                    const strong2 = document.createElement('strong');
-                    strong2.textContent = relatedText;
-                    preview.appendChild(strong2);
+                const strong2 = document.createElement('strong');
+                strong2.textContent = relatedText;
+                preview.appendChild(strong2);
 
-                    preview.appendChild(document.createTextNode('.'));
-                } else {
-                    preview.style.display = 'none';
-                }
+                preview.appendChild(document.createTextNode('.'));
             }
 
             typeSelect.addEventListener('change', updatePreview);
             relatedSelect.addEventListener('change', updatePreview);
+
+            // Initial call
+            updatePreview();
         });
     </script>
 }

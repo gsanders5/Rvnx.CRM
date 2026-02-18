@@ -35,6 +35,10 @@ public abstract class Person : BaseEntity
     [Display(Name = "Is Hidden")]
     public bool IsHidden { get; set; } = false;
 
+    // Helper for profile image (Not mapped to DB, but useful for DTO mapping if loaded)
+    [NotMapped]
+    public Guid? ProfileImageId { get; set; }
+
     // NotMapped Properties for View Compatibility
     [NotMapped]
     public ICollection<Note> Notes { get; set; } = [];

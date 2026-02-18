@@ -1,4 +1,5 @@
 using Rvnx.CRM.Core.Models.Base;
+using Rvnx.CRM.Core.Services;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -15,9 +16,6 @@ public class Relationship : PolymorphicEntity
     [Display(Name = "Relationship Type")]
     public Guid RelationshipTypeId { get; set; }
 
-    [ForeignKey(nameof(RelationshipTypeId))]
-    public virtual RelationshipType? RelationshipType { get; set; }
-
     [Display(Name = "Description")]
     public string? Description { get; set; }
 
@@ -32,4 +30,17 @@ public class Relationship : PolymorphicEntity
 
     [NotMapped]
     public virtual Person? RelatedPerson { get; set; }
+
+    // Helper properties for UI convenience, looking up from static service
+    [NotMapped]
+    public string RelationshipTypeName =>
+        RelationshipTypeService.GetById(RelationshipTypeId)?.Name ?? "Unknown";
+
+    [NotMapped]
+    public string RelationshipTypeOppositeName =>
+        RelationshipTypeService.GetById(RelationshipTypeId)?.OppositeName ?? "Unknown";
+
+    [NotMapped]
+    public string RelationshipTypeCategory =>
+        RelationshipTypeService.GetById(RelationshipTypeId)?.Category ?? "Other";
 }
