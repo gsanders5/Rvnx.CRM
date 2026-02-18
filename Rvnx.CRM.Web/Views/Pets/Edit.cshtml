@@ -1,8 +1,7 @@
-@model Rvnx.CRM.Core.DTOs.Pet.UpdatePetDto
+@model Rvnx.CRM.Core.DTOs.Pet.PetFormDto
 
 @{
     ViewData["Title"] = "Edit Pet";
-    var entityId = ViewBag.EntityId;
 }
 
 <h1>Edit Pet</h1>
@@ -12,10 +11,7 @@
         <form asp-action="Edit">
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
             <input type="hidden" asp-for="Id" />
-            <!-- We need EntityId to go back, but it's not in UpdatePetDto. Passed via ViewBag or hidden if we want to preserve it?
-                 The Controller fetches EntityId from DB when POSTing, but for "Back" button we need it.
-                 Or we can redirect to Index if we lose it, but ideally we return to Contact Details.
-            -->
+            <input type="hidden" asp-for="EntityId" />
 
             <div class="form-floating mb-3">
     <input asp-for="Name" class="form-control"  placeholder="Name"/>
@@ -49,14 +45,7 @@
 
             <div class="form-group mt-3">
                 <button type="submit" class="btn btn-primary"><i class="bi bi-save"></i> Save</button>
-                @if (entityId != null)
-                {
-                    <a asp-controller="Contacts" asp-action="Details" asp-route-id="@entityId" class="btn btn-secondary">Back to Contact</a>
-                }
-                else
-                {
-                    <a href="javascript:history.back()" class="btn btn-secondary">Back</a>
-                }
+                <a asp-controller="Contacts" asp-action="Details" asp-route-id="@Model.EntityId" class="btn btn-secondary">Back to Contact</a>
             </div>
         </form>
     </div>

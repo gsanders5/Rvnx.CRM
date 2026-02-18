@@ -16,7 +16,7 @@ namespace Rvnx.CRM.Web.Controllers
 
         public IActionResult Create(Guid entityId)
         {
-            CreatePetDto dto = new()
+            PetFormDto dto = new()
             {
                 EntityId = entityId
             };
@@ -25,7 +25,7 @@ namespace Rvnx.CRM.Web.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(CreatePetDto petDto)
+        public async Task<IActionResult> Create(PetFormDto petDto)
         {
             if (ModelState.IsValid)
             {
@@ -44,9 +44,10 @@ namespace Rvnx.CRM.Web.Controllers
             Pet? pet = await _repository.GetByIdAsync<Pet>(id);
             if (pet == null) return NotFound();
 
-            UpdatePetDto dto = new()
+            PetFormDto dto = new()
             {
                 Id = pet.Id,
+                EntityId = pet.EntityId,
                 Name = pet.Name,
                 Species = pet.Species,
                 Breed = pet.Breed,
@@ -61,7 +62,7 @@ namespace Rvnx.CRM.Web.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(Guid id, UpdatePetDto petDto)
+        public async Task<IActionResult> Edit(Guid id, PetFormDto petDto)
         {
             if (id != petDto.Id) return NotFound();
 

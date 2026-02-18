@@ -2,10 +2,12 @@ using System.ComponentModel.DataAnnotations;
 
 namespace Rvnx.CRM.Core.DTOs.Pet
 {
-    public class UpdatePetDto
+    public class PetFormDto
     {
+        public Guid? Id { get; set; }
+
         [Required]
-        public Guid Id { get; set; }
+        public Guid EntityId { get; set; }
 
         [Required]
         [MaxLength(100)]

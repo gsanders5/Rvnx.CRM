@@ -27,7 +27,7 @@ public class HomeControllerPerformanceTests
     public async Task Index_ShouldCallListAsNoTrackingAsync_AfterOptimization()
     {
         // Arrange
-        _repositoryMock.Setup(r => r.ListAsNoTrackingAsync<Contact>(It.IsAny<int?>(), It.IsAny<int?>(), It.IsAny<CancellationToken>()))
+        _repositoryMock.Setup(r => r.ListAsNoTrackingAsync<Contact>(It.IsAny<Expression<Func<Contact, bool>>>(), It.IsAny<CancellationToken>(), It.IsAny<string[]>()))
             .ReturnsAsync(new List<Contact>());
         _repositoryMock.Setup(r => r.ListAsNoTrackingAsync<Reminder>(It.IsAny<int?>(), It.IsAny<int?>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new List<Reminder>());
@@ -50,7 +50,7 @@ public class HomeControllerPerformanceTests
         _repositoryMock.Verify(r => r.ListAsNoTrackingAsync<Relationship>(It.IsAny<Expression<Func<Relationship, bool>>>(), It.IsAny<CancellationToken>(), It.IsAny<string[]>()), Times.Once);
 
         // Verify that ListAsNoTrackingAsync was called for other entities
-        _repositoryMock.Verify(r => r.ListAsNoTrackingAsync<Contact>(It.IsAny<int?>(), It.IsAny<int?>(), It.IsAny<CancellationToken>()), Times.Once);
+        _repositoryMock.Verify(r => r.ListAsNoTrackingAsync<Contact>(It.IsAny<Expression<Func<Contact, bool>>>(), It.IsAny<CancellationToken>(), It.IsAny<string[]>()), Times.Once);
         _repositoryMock.Verify(r => r.ListAsNoTrackingAsync<Reminder>(It.IsAny<int?>(), It.IsAny<int?>(), It.IsAny<CancellationToken>()), Times.Once);
         _repositoryMock.Verify(r => r.ListAsNoTrackingAsync<SignificantDate>(It.IsAny<Expression<Func<SignificantDate, bool>>>(), It.IsAny<CancellationToken>(), It.IsAny<string[]>()), Times.Once);
 

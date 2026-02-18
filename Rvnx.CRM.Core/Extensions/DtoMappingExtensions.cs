@@ -174,7 +174,7 @@ namespace Rvnx.CRM.Core.Extensions
             };
         }
 
-        public static Contact ToEntity(this CreateContactDto dto)
+        public static Contact ToEntity(this ContactFormDto dto)
         {
             return new Contact
             {
@@ -188,7 +188,7 @@ namespace Rvnx.CRM.Core.Extensions
             };
         }
 
-        public static void UpdateEntity(this Contact entity, UpdateContactDto dto)
+        public static void UpdateEntity(this Contact entity, ContactFormDto dto)
         {
             entity.FirstName = dto.FirstName;
             entity.LastName = dto.LastName;
@@ -198,7 +198,7 @@ namespace Rvnx.CRM.Core.Extensions
             entity.IsHidden = dto.IsHidden;
         }
 
-        public static Pet ToEntity(this CreatePetDto dto)
+        public static Pet ToEntity(this PetFormDto dto)
         {
             return new Pet
             {
@@ -213,7 +213,7 @@ namespace Rvnx.CRM.Core.Extensions
             };
         }
 
-        public static void UpdateEntity(this Pet entity, UpdatePetDto dto)
+        public static void UpdateEntity(this Pet entity, PetFormDto dto)
         {
             entity.Name = dto.Name;
             entity.Species = dto.Species;

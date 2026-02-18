@@ -87,7 +87,7 @@ namespace Rvnx.CRM.Web.Controllers
                 return RedirectToAction(nameof(Details), new { id = user.SelfContactId });
             }
 
-            CreateContactDto dto = new()
+            ContactFormDto dto = new()
             {
                 Email = user.Email
             };
@@ -113,7 +113,7 @@ namespace Rvnx.CRM.Web.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> CreateSelf([Bind("FirstName,LastName,Nickname,Email,Phone,JobTitle,Company,Birthday")] CreateContactDto contactDto)
+        public async Task<IActionResult> CreateSelf([Bind("FirstName,LastName,Nickname,Email,Phone,JobTitle,Company,Birthday")] ContactFormDto contactDto)
         {
             if (!_currentUserService.IsAuthenticated) return Unauthorized();
 
@@ -299,12 +299,12 @@ namespace Rvnx.CRM.Web.Controllers
 
         public IActionResult Create()
         {
-            return View(new CreateContactDto());
+            return View(new ContactFormDto());
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("FirstName,LastName,Nickname,Email,Phone,JobTitle,Company,Birthday,IsHidden")] CreateContactDto contactDto)
+        public async Task<IActionResult> Create([Bind("FirstName,LastName,Nickname,Email,Phone,JobTitle,Company,Birthday,IsHidden")] ContactFormDto contactDto)
         {
             if (ModelState.IsValid)
             {
@@ -365,7 +365,7 @@ namespace Rvnx.CRM.Web.Controllers
             Contact? contact = await _repository.GetByIdAsync<Contact>(id.Value);
             if (contact == null) return NotFound();
 
-            UpdateContactDto dto = new()
+            ContactFormDto dto = new()
             {
                 Id = contact.Id,
                 FirstName = contact.FirstName,
@@ -392,7 +392,7 @@ namespace Rvnx.CRM.Web.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(Guid id, [Bind("Id,FirstName,LastName,Nickname,Email,Phone,JobTitle,Company,Birthday,IsHidden")] UpdateContactDto contactDto, IFormFile? profileImage)
+        public async Task<IActionResult> Edit(Guid id, [Bind("Id,FirstName,LastName,Nickname,Email,Phone,JobTitle,Company,Birthday,IsHidden")] ContactFormDto contactDto, IFormFile? profileImage)
         {
             if (id != contactDto.Id) return NotFound();
 
@@ -550,7 +550,7 @@ namespace Rvnx.CRM.Web.Controllers
                 }
                 catch (DbUpdateConcurrencyException)
                 {
-                    if (!await ContactExists(contactDto.Id)) return NotFound();
+                    if (!await ContactExists(id)) return NotFound();
                     else throw;
                 }
                 return RedirectToAction(nameof(Index));
