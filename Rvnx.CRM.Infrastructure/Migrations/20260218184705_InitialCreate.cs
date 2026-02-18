@@ -26,7 +26,7 @@ namespace Rvnx.CRM.Infrastructure.Migrations
                     LastChangedBy = table.Column<string>(type: "TEXT", maxLength: 256, nullable: false),
                     CreatedDate = table.Column<DateTime>(type: "TEXT", nullable: false),
                     LastChangedDate = table.Column<DateTime>(type: "TEXT", nullable: false),
-                    UserId = table.Column<string>(type: "TEXT", maxLength: 450, nullable: true),
+                    UserId = table.Column<Guid>(type: "TEXT", maxLength: 450, nullable: true),
                     EntityId = table.Column<Guid>(type: "TEXT", nullable: false),
                     EntityType = table.Column<string>(type: "TEXT", maxLength: 50, nullable: false)
                 },
@@ -47,7 +47,7 @@ namespace Rvnx.CRM.Infrastructure.Migrations
                     LastChangedBy = table.Column<string>(type: "TEXT", maxLength: 256, nullable: false),
                     CreatedDate = table.Column<DateTime>(type: "TEXT", nullable: false),
                     LastChangedDate = table.Column<DateTime>(type: "TEXT", nullable: false),
-                    UserId = table.Column<string>(type: "TEXT", maxLength: 450, nullable: true),
+                    UserId = table.Column<Guid>(type: "TEXT", maxLength: 450, nullable: true),
                     EntityId = table.Column<Guid>(type: "TEXT", nullable: false),
                     EntityType = table.Column<string>(type: "TEXT", maxLength: 50, nullable: false)
                 },
@@ -65,7 +65,7 @@ namespace Rvnx.CRM.Infrastructure.Migrations
                     LastChangedBy = table.Column<string>(type: "TEXT", maxLength: 256, nullable: false),
                     CreatedDate = table.Column<DateTime>(type: "TEXT", nullable: false),
                     LastChangedDate = table.Column<DateTime>(type: "TEXT", nullable: false),
-                    UserId = table.Column<string>(type: "TEXT", maxLength: 450, nullable: true),
+                    UserId = table.Column<Guid>(type: "TEXT", maxLength: 450, nullable: true),
                     FirstName = table.Column<string>(type: "TEXT", maxLength: 100, nullable: false),
                     LastName = table.Column<string>(type: "TEXT", maxLength: 100, nullable: true),
                     Nickname = table.Column<string>(type: "TEXT", maxLength: 100, nullable: true),
@@ -90,7 +90,7 @@ namespace Rvnx.CRM.Infrastructure.Migrations
                     LastChangedBy = table.Column<string>(type: "TEXT", maxLength: 256, nullable: false),
                     CreatedDate = table.Column<DateTime>(type: "TEXT", nullable: false),
                     LastChangedDate = table.Column<DateTime>(type: "TEXT", nullable: false),
-                    UserId = table.Column<string>(type: "TEXT", maxLength: 450, nullable: true),
+                    UserId = table.Column<Guid>(type: "TEXT", maxLength: 450, nullable: true),
                     EntityId = table.Column<Guid>(type: "TEXT", nullable: false),
                     EntityType = table.Column<string>(type: "TEXT", maxLength: 50, nullable: false)
                 },
@@ -110,7 +110,7 @@ namespace Rvnx.CRM.Infrastructure.Migrations
                     LastChangedBy = table.Column<string>(type: "TEXT", maxLength: 256, nullable: false),
                     CreatedDate = table.Column<DateTime>(type: "TEXT", nullable: false),
                     LastChangedDate = table.Column<DateTime>(type: "TEXT", nullable: false),
-                    UserId = table.Column<string>(type: "TEXT", maxLength: 450, nullable: true),
+                    UserId = table.Column<Guid>(type: "TEXT", maxLength: 450, nullable: true),
                     EntityId = table.Column<Guid>(type: "TEXT", nullable: false),
                     EntityType = table.Column<string>(type: "TEXT", maxLength: 50, nullable: false)
                 },
@@ -130,7 +130,7 @@ namespace Rvnx.CRM.Infrastructure.Migrations
                     LastChangedBy = table.Column<string>(type: "TEXT", maxLength: 256, nullable: false),
                     CreatedDate = table.Column<DateTime>(type: "TEXT", nullable: false),
                     LastChangedDate = table.Column<DateTime>(type: "TEXT", nullable: false),
-                    UserId = table.Column<string>(type: "TEXT", maxLength: 450, nullable: true),
+                    UserId = table.Column<Guid>(type: "TEXT", maxLength: 450, nullable: true),
                     EntityId = table.Column<Guid>(type: "TEXT", nullable: false),
                     EntityType = table.Column<string>(type: "TEXT", maxLength: 50, nullable: false)
                 },
@@ -153,7 +153,7 @@ namespace Rvnx.CRM.Infrastructure.Migrations
                     LastChangedBy = table.Column<string>(type: "TEXT", maxLength: 256, nullable: false),
                     CreatedDate = table.Column<DateTime>(type: "TEXT", nullable: false),
                     LastChangedDate = table.Column<DateTime>(type: "TEXT", nullable: false),
-                    UserId = table.Column<string>(type: "TEXT", maxLength: 450, nullable: true),
+                    UserId = table.Column<Guid>(type: "TEXT", maxLength: 450, nullable: true),
                     EntityId = table.Column<Guid>(type: "TEXT", nullable: false),
                     EntityType = table.Column<string>(type: "TEXT", maxLength: 50, nullable: false)
                 },
@@ -173,7 +173,7 @@ namespace Rvnx.CRM.Infrastructure.Migrations
                     LastChangedBy = table.Column<string>(type: "TEXT", maxLength: 256, nullable: false),
                     CreatedDate = table.Column<DateTime>(type: "TEXT", nullable: false),
                     LastChangedDate = table.Column<DateTime>(type: "TEXT", nullable: false),
-                    UserId = table.Column<string>(type: "TEXT", maxLength: 450, nullable: true),
+                    UserId = table.Column<Guid>(type: "TEXT", maxLength: 450, nullable: true),
                     EntityId = table.Column<Guid>(type: "TEXT", nullable: false),
                     EntityType = table.Column<string>(type: "TEXT", maxLength: 50, nullable: false)
                 },
@@ -196,7 +196,7 @@ namespace Rvnx.CRM.Infrastructure.Migrations
                     LastChangedBy = table.Column<string>(type: "TEXT", maxLength: 256, nullable: false),
                     CreatedDate = table.Column<DateTime>(type: "TEXT", nullable: false),
                     LastChangedDate = table.Column<DateTime>(type: "TEXT", nullable: false),
-                    UserId = table.Column<string>(type: "TEXT", maxLength: 450, nullable: true),
+                    UserId = table.Column<Guid>(type: "TEXT", maxLength: 450, nullable: true),
                     EntityId = table.Column<Guid>(type: "TEXT", nullable: false),
                     EntityType = table.Column<string>(type: "TEXT", maxLength: 50, nullable: false)
                 },
@@ -218,7 +218,7 @@ namespace Rvnx.CRM.Infrastructure.Migrations
                     LastChangedBy = table.Column<string>(type: "TEXT", maxLength: 256, nullable: false),
                     CreatedDate = table.Column<DateTime>(type: "TEXT", nullable: false),
                     LastChangedDate = table.Column<DateTime>(type: "TEXT", nullable: false),
-                    UserId = table.Column<string>(type: "TEXT", maxLength: 450, nullable: true),
+                    UserId = table.Column<Guid>(type: "TEXT", maxLength: 450, nullable: true),
                     EntityId = table.Column<Guid>(type: "TEXT", nullable: false),
                     EntityType = table.Column<string>(type: "TEXT", maxLength: 50, nullable: false),
                     RemindMe = table.Column<bool>(type: "INTEGER", nullable: false),
@@ -242,7 +242,7 @@ namespace Rvnx.CRM.Infrastructure.Migrations
                     LastChangedBy = table.Column<string>(type: "TEXT", maxLength: 256, nullable: false),
                     CreatedDate = table.Column<DateTime>(type: "TEXT", nullable: false),
                     LastChangedDate = table.Column<DateTime>(type: "TEXT", nullable: false),
-                    UserId = table.Column<string>(type: "TEXT", maxLength: 450, nullable: true),
+                    UserId = table.Column<Guid>(type: "TEXT", maxLength: 450, nullable: true),
                     EntityId = table.Column<Guid>(type: "TEXT", nullable: false),
                     EntityType = table.Column<string>(type: "TEXT", maxLength: 50, nullable: false),
                     RemindMe = table.Column<bool>(type: "INTEGER", nullable: false),
@@ -265,7 +265,7 @@ namespace Rvnx.CRM.Infrastructure.Migrations
                     LastChangedBy = table.Column<string>(type: "TEXT", maxLength: 256, nullable: false),
                     CreatedDate = table.Column<DateTime>(type: "TEXT", nullable: false),
                     LastChangedDate = table.Column<DateTime>(type: "TEXT", nullable: false),
-                    UserId = table.Column<string>(type: "TEXT", maxLength: 450, nullable: true)
+                    UserId = table.Column<Guid>(type: "TEXT", maxLength: 450, nullable: true)
                 },
                 constraints: table =>
                 {
@@ -291,7 +291,7 @@ namespace Rvnx.CRM.Infrastructure.Migrations
                     LastChangedBy = table.Column<string>(type: "TEXT", maxLength: 256, nullable: false),
                     CreatedDate = table.Column<DateTime>(type: "TEXT", nullable: false),
                     LastChangedDate = table.Column<DateTime>(type: "TEXT", nullable: false),
-                    UserId = table.Column<string>(type: "TEXT", maxLength: 450, nullable: true),
+                    UserId = table.Column<Guid>(type: "TEXT", maxLength: 450, nullable: true),
                     CompanyName = table.Column<string>(type: "TEXT", maxLength: 200, nullable: false),
                     Website = table.Column<string>(type: "TEXT", nullable: true)
                 },
@@ -319,7 +319,7 @@ namespace Rvnx.CRM.Infrastructure.Migrations
                     LastChangedBy = table.Column<string>(type: "TEXT", maxLength: 256, nullable: false),
                     CreatedDate = table.Column<DateTime>(type: "TEXT", nullable: false),
                     LastChangedDate = table.Column<DateTime>(type: "TEXT", nullable: false),
-                    UserId = table.Column<string>(type: "TEXT", maxLength: 450, nullable: true)
+                    UserId = table.Column<Guid>(type: "TEXT", maxLength: 450, nullable: true)
                 },
                 constraints: table =>
                 {
