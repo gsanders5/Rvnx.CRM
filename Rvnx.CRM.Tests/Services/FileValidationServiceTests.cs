@@ -1,5 +1,4 @@
 using Rvnx.CRM.Core.Services;
-using Xunit;
 
 namespace Rvnx.CRM.Tests.Services
 {

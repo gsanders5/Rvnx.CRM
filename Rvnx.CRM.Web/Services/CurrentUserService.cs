@@ -20,8 +20,8 @@ public class CurrentUserService : ICurrentUserService
         {
             if (!IsAuthEnabled()) return null;
 
-            var value = _httpContextAccessor.HttpContext?.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            return Guid.TryParse(value, out var guid) ? guid : null;
+            string? value = _httpContextAccessor.HttpContext?.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            return Guid.TryParse(value, out Guid guid) ? guid : null;
         }
     }
 

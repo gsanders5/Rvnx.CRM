@@ -1,5 +1,5 @@
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Moq;
 using Rvnx.CRM.Core.Interfaces;
@@ -11,161 +11,161 @@ using System.Text;
 
 namespace Rvnx.CRM.Tests
 {
-	public class AttachmentsControllerTests
-	{
-		private CRMDbContext GetInMemoryDbContext()
-		{
-			DbContextOptions<CRMDbContext> options = new DbContextOptionsBuilder<CRMDbContext>()
-				.UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
-				.Options;
+    public class AttachmentsControllerTests
+    {
+        private CRMDbContext GetInMemoryDbContext()
+        {
+            DbContextOptions<CRMDbContext> options = new DbContextOptionsBuilder<CRMDbContext>()
+                .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
+                .Options;
 
-			Mock<ICurrentUserService> mockCurrentUserService = new();
-			mockCurrentUserService.Setup(s => s.UserId).Returns(Guid.Parse("c5b50a20-34b2-44b2-8b9c-aa4135f60938"));
-			mockCurrentUserService.Setup(s => s.UserName).Returns("test-user");
+            Mock<ICurrentUserService> mockCurrentUserService = new();
+            mockCurrentUserService.Setup(s => s.UserId).Returns(Guid.Parse("c5b50a20-34b2-44b2-8b9c-aa4135f60938"));
+            mockCurrentUserService.Setup(s => s.UserName).Returns("test-user");
 
-			return new CRMDbContext(options, mockCurrentUserService.Object);
-		}
+            return new CRMDbContext(options, mockCurrentUserService.Object);
+        }
 
-		[Fact]
-		public async Task View_ShouldReturnFileContentResult_WhenImageExists()
-		{
-			// Arrange
-			using CRMDbContext context = GetInMemoryDbContext();
-			Repository repo = new(context);
-			AttachmentsController controller = new(repo, new Mock<IFileValidationService>().Object);
-			controller.ControllerContext = new ControllerContext
-			{
-				HttpContext = new DefaultHttpContext()
-			};
+        [Fact]
+        public async Task View_ShouldReturnFileContentResult_WhenImageExists()
+        {
+            // Arrange
+            using CRMDbContext context = GetInMemoryDbContext();
+            Repository repo = new(context);
+            AttachmentsController controller = new(repo, new Mock<IFileValidationService>().Object);
+            controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext()
+            };
 
-			Guid attachmentId = Guid.NewGuid();
-			byte[] content = Encoding.UTF8.GetBytes("fake image content");
-			string contentType = "image/png";
+            Guid attachmentId = Guid.NewGuid();
+            byte[] content = Encoding.UTF8.GetBytes("fake image content");
+            string contentType = "image/png";
 
-			Attachment attachment = new()
-			{
-				Id = attachmentId,
-				FileName = "test.png",
-				ContentType = contentType,
-				AttachmentContent = new AttachmentContent
-				{
-					AttachmentId = attachmentId,
-					Content = content
-				}
-			};
+            Attachment attachment = new()
+            {
+                Id = attachmentId,
+                FileName = "test.png",
+                ContentType = contentType,
+                AttachmentContent = new AttachmentContent
+                {
+                    AttachmentId = attachmentId,
+                    Content = content
+                }
+            };
 
-			await repo.AddAsync(attachment);
-			await repo.SaveChangesAsync();
+            await repo.AddAsync(attachment);
+            await repo.SaveChangesAsync();
 
-			// Act
-			IActionResult result = await controller.View(attachmentId);
+            // Act
+            IActionResult result = await controller.View(attachmentId);
 
-			// Assert
-			FileContentResult fileResult = Assert.IsType<FileContentResult>(result);
-			Assert.Equal(contentType, fileResult.ContentType);
-			Assert.Equal(content, fileResult.FileContents);
-		}
+            // Assert
+            FileContentResult fileResult = Assert.IsType<FileContentResult>(result);
+            Assert.Equal(contentType, fileResult.ContentType);
+            Assert.Equal(content, fileResult.FileContents);
+        }
 
-		[Fact]
-		public async Task View_ShouldReturnNotFound_WhenAttachmentDoesNotExist()
-		{
-			// Arrange
-			using CRMDbContext context = GetInMemoryDbContext();
-			Repository repo = new(context);
-			AttachmentsController controller = new(repo, new Mock<IFileValidationService>().Object);
-			controller.ControllerContext = new ControllerContext
-			{
-				HttpContext = new DefaultHttpContext()
-			};
+        [Fact]
+        public async Task View_ShouldReturnNotFound_WhenAttachmentDoesNotExist()
+        {
+            // Arrange
+            using CRMDbContext context = GetInMemoryDbContext();
+            Repository repo = new(context);
+            AttachmentsController controller = new(repo, new Mock<IFileValidationService>().Object);
+            controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext()
+            };
 
-			// Act
-			IActionResult result = await controller.View(Guid.NewGuid());
+            // Act
+            IActionResult result = await controller.View(Guid.NewGuid());
 
-			// Assert
-			Assert.IsType<NotFoundResult>(result);
-		}
+            // Assert
+            Assert.IsType<NotFoundResult>(result);
+        }
 
-		[Fact]
-		public async Task View_ShouldReturn304_WhenIfModifiedSinceIsCurrent()
-		{
-			// Arrange
-			using CRMDbContext context = GetInMemoryDbContext();
-			Repository repo = new(context);
-			AttachmentsController controller = new(repo, new Mock<IFileValidationService>().Object);
-			controller.ControllerContext = new ControllerContext
-			{
-				HttpContext = new DefaultHttpContext()
-			};
+        [Fact]
+        public async Task View_ShouldReturn304_WhenIfModifiedSinceIsCurrent()
+        {
+            // Arrange
+            using CRMDbContext context = GetInMemoryDbContext();
+            Repository repo = new(context);
+            AttachmentsController controller = new(repo, new Mock<IFileValidationService>().Object);
+            controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext()
+            };
 
-			Guid attachmentId = Guid.NewGuid();
-			Attachment attachment = new()
-			{
-				Id = attachmentId,
-				FileName = "test.png",
-				ContentType = "image/png",
-				AttachmentContent = new AttachmentContent
-				{
-					AttachmentId = attachmentId,
-					Content = [1, 2, 3]
-				}
-			};
+            Guid attachmentId = Guid.NewGuid();
+            Attachment attachment = new()
+            {
+                Id = attachmentId,
+                FileName = "test.png",
+                ContentType = "image/png",
+                AttachmentContent = new AttachmentContent
+                {
+                    AttachmentId = attachmentId,
+                    Content = [1, 2, 3]
+                }
+            };
 
-			await repo.AddAsync(attachment);
-			await repo.SaveChangesAsync();
+            await repo.AddAsync(attachment);
+            await repo.SaveChangesAsync();
 
-			// Read back the actual persisted date - SaveChanges overwrites LastChangedDate with UtcNow.
-			// Floor to seconds then add 1 to ensure the header is >= the sub-second stored value.
-			DateTime savedDate = attachment.LastChangedDate;
-			savedDate = savedDate.AddTicks(-(savedDate.Ticks % TimeSpan.TicksPerSecond)).AddSeconds(1);
+            // Read back the actual persisted date - SaveChanges overwrites LastChangedDate with UtcNow.
+            // Floor to seconds then add 1 to ensure the header is >= the sub-second stored value.
+            DateTime savedDate = attachment.LastChangedDate;
+            savedDate = savedDate.AddTicks(-(savedDate.Ticks % TimeSpan.TicksPerSecond)).AddSeconds(1);
 
-			controller.Request.Headers["If-Modified-Since"] = savedDate.ToString("R");
+            controller.Request.Headers["If-Modified-Since"] = savedDate.ToString("R");
 
-			// Act
-			IActionResult result = await controller.View(attachmentId);
+            // Act
+            IActionResult result = await controller.View(attachmentId);
 
-			// Assert
-			StatusCodeResult statusCodeResult = Assert.IsType<StatusCodeResult>(result);
-			Assert.Equal(304, statusCodeResult.StatusCode);
-		}
+            // Assert
+            StatusCodeResult statusCodeResult = Assert.IsType<StatusCodeResult>(result);
+            Assert.Equal(304, statusCodeResult.StatusCode);
+        }
 
-		[Fact]
-		public async Task View_ShouldReturnFile_WhenIfModifiedSinceIsOld()
-		{
-			// Arrange
-			using CRMDbContext context = GetInMemoryDbContext();
-			Repository repo = new(context);
-			AttachmentsController controller = new(repo, new Mock<IFileValidationService>().Object);
-			controller.ControllerContext = new ControllerContext
-			{
-				HttpContext = new DefaultHttpContext()
-			};
+        [Fact]
+        public async Task View_ShouldReturnFile_WhenIfModifiedSinceIsOld()
+        {
+            // Arrange
+            using CRMDbContext context = GetInMemoryDbContext();
+            Repository repo = new(context);
+            AttachmentsController controller = new(repo, new Mock<IFileValidationService>().Object);
+            controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext()
+            };
 
-			Guid attachmentId = Guid.NewGuid();
-			Attachment attachment = new()
-			{
-				Id = attachmentId,
-				FileName = "test.png",
-				ContentType = "image/png",
-				AttachmentContent = new AttachmentContent
-				{
-					AttachmentId = attachmentId,
-					Content = [1, 2, 3]
-				}
-			};
+            Guid attachmentId = Guid.NewGuid();
+            Attachment attachment = new()
+            {
+                Id = attachmentId,
+                FileName = "test.png",
+                ContentType = "image/png",
+                AttachmentContent = new AttachmentContent
+                {
+                    AttachmentId = attachmentId,
+                    Content = [1, 2, 3]
+                }
+            };
 
-			await repo.AddAsync(attachment);
-			await repo.SaveChangesAsync();
+            await repo.AddAsync(attachment);
+            await repo.SaveChangesAsync();
 
-			// Header is 10 minutes in the past - unambiguously older than LastChangedDate
-			controller.Request.Headers["If-Modified-Since"] = DateTime.UtcNow.AddMinutes(-10).ToString("R");
+            // Header is 10 minutes in the past - unambiguously older than LastChangedDate
+            controller.Request.Headers["If-Modified-Since"] = DateTime.UtcNow.AddMinutes(-10).ToString("R");
 
-			// Act
-			IActionResult result = await controller.View(attachmentId);
+            // Act
+            IActionResult result = await controller.View(attachmentId);
 
-			// Assert
-			Assert.IsType<FileContentResult>(result);
-			Assert.True(controller.Response.Headers.ContainsKey("Last-Modified"));
-			Assert.True(controller.Response.Headers.ContainsKey("Cache-Control"));
-		}
-	}
+            // Assert
+            Assert.IsType<FileContentResult>(result);
+            Assert.True(controller.Response.Headers.ContainsKey("Last-Modified"));
+            Assert.True(controller.Response.Headers.ContainsKey("Cache-Control"));
+        }
+    }
 }

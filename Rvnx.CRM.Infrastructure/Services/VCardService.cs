@@ -6,7 +6,6 @@ using Rvnx.CRM.Core.Enumerations;
 using Rvnx.CRM.Core.Interfaces;
 using Rvnx.CRM.Core.Models.Contact;
 using Rvnx.CRM.Core.Models.Dates;
-using System.Text;
 
 namespace Rvnx.CRM.Infrastructure.Services;
 
@@ -17,7 +16,7 @@ public class VCardService : IVCardService
         IList<VCard> vCards;
         try
         {
-            using StreamReader reader = new StreamReader(fileStream);
+            using StreamReader reader = new(fileStream);
             vCards = VCard.DeserializeVcf(reader);
         }
         catch
@@ -37,7 +36,7 @@ public class VCardService : IVCardService
             };
 
             // 1. Name
-            var nameProp = vc.NameViews?.FirstOrDefault();
+            NameProperty? nameProp = vc.NameViews?.FirstOrDefault();
             if (nameProp != null && nameProp.Value != null)
             {
                 Name n = nameProp.Value;
@@ -48,7 +47,7 @@ public class VCardService : IVCardService
             // Name Fallback using Display Name
             if (string.IsNullOrEmpty(contact.FirstName) && string.IsNullOrEmpty(contact.LastName))
             {
-                var displayProp = vc.DisplayNames?.FirstOrDefault();
+                TextProperty? displayProp = vc.DisplayNames?.FirstOrDefault();
                 if (displayProp != null && !string.IsNullOrWhiteSpace(displayProp.Value))
                 {
                     string displayName = displayProp.Value;
@@ -78,7 +77,7 @@ public class VCardService : IVCardService
             }
 
             // Nickname
-            var nicknameProp = vc.NickNames?.FirstOrDefault();
+            StringCollectionProperty? nicknameProp = vc.NickNames?.FirstOrDefault();
             if (nicknameProp != null)
             {
                 if (nicknameProp.Value is IEnumerable<string> list)
@@ -88,7 +87,7 @@ public class VCardService : IVCardService
             }
 
             // Org
-            var orgProp = vc.Organizations?.FirstOrDefault();
+            OrganizationProperty? orgProp = vc.Organizations?.FirstOrDefault();
             if (orgProp != null && orgProp.Value != null)
             {
                 Organization org = orgProp.Value;
@@ -96,7 +95,7 @@ public class VCardService : IVCardService
             }
 
             // Title
-            var titleProp = vc.Titles?.FirstOrDefault();
+            TextProperty? titleProp = vc.Titles?.FirstOrDefault();
             if (titleProp != null)
             {
                 contact.JobTitle = titleProp.Value;
@@ -105,7 +104,7 @@ public class VCardService : IVCardService
             // Emails
             if (vc.EMails != null)
             {
-                foreach (var emailProp in vc.EMails)
+                foreach (TextProperty? emailProp in vc.EMails)
                 {
                     if (emailProp?.Value is string email && !string.IsNullOrWhiteSpace(email))
                     {
@@ -125,7 +124,7 @@ public class VCardService : IVCardService
             // Phones
             if (vc.Phones != null)
             {
-                foreach (var phoneProp in vc.Phones)
+                foreach (TextProperty? phoneProp in vc.Phones)
                 {
                     if (phoneProp?.Value is string phone && !string.IsNullOrWhiteSpace(phone))
                     {
@@ -145,14 +144,14 @@ public class VCardService : IVCardService
             // Birthday
             if (vc.BirthDayViews != null)
             {
-                var bdayProp = vc.BirthDayViews.FirstOrDefault();
+                DateAndOrTimeProperty? bdayProp = vc.BirthDayViews.FirstOrDefault();
                 if (bdayProp != null && bdayProp.Value != null)
                 {
-                     DateAndOrTime val = bdayProp.Value;
-                     if (val.DateTimeOffset.HasValue)
-                     {
-                         contact.SignificantDates.Add(new SignificantDate
-                         {
+                    DateAndOrTime val = bdayProp.Value;
+                    if (val.DateTimeOffset.HasValue)
+                    {
+                        contact.SignificantDates.Add(new SignificantDate
+                        {
                             Id = Guid.NewGuid(),
                             EntityId = contact.Id,
                             EntityType = EntityTypes.Person,
@@ -161,13 +160,13 @@ public class VCardService : IVCardService
                             Description = "Birthday from VCard",
                             RemindMe = true,
                             EventFrequency = TimeSpan.FromDays(365)
-                         });
-                     }
-                     else if (val.DateOnly.HasValue)
-                     {
-                         DateOnly d = val.DateOnly.Value;
-                         contact.SignificantDates.Add(new SignificantDate
-                         {
+                        });
+                    }
+                    else if (val.DateOnly.HasValue)
+                    {
+                        DateOnly d = val.DateOnly.Value;
+                        contact.SignificantDates.Add(new SignificantDate
+                        {
                             Id = Guid.NewGuid(),
                             EntityId = contact.Id,
                             EntityType = EntityTypes.Person,
@@ -176,8 +175,8 @@ public class VCardService : IVCardService
                             Description = "Birthday from VCard",
                             RemindMe = true,
                             EventFrequency = TimeSpan.FromDays(365)
-                         });
-                     }
+                        });
+                    }
                 }
             }
 
@@ -189,10 +188,10 @@ public class VCardService : IVCardService
 
     public byte[] ExportVCard(Contact contact)
     {
-        VCard vc = new VCard();
+        VCard vc = new();
 
         // Name
-        vc.NameViews = new []
+        vc.NameViews = new[]
         {
             new NameProperty(
                 lastName: new [] { contact.LastName ?? "" },
@@ -204,7 +203,7 @@ public class VCardService : IVCardService
             )
         };
 
-        vc.DisplayNames = new []
+        vc.DisplayNames = new[]
         {
             new TextProperty(contact.FullName)
         };
@@ -212,19 +211,19 @@ public class VCardService : IVCardService
         // Org
         if (!string.IsNullOrEmpty(contact.Company))
         {
-            vc.Organizations = new [] { new OrganizationProperty(contact.Company, null, null) };
+            vc.Organizations = new[] { new OrganizationProperty(contact.Company, null, null) };
         }
 
         // Title
         if (!string.IsNullOrEmpty(contact.JobTitle))
         {
-            vc.Titles = new [] { new TextProperty(contact.JobTitle) };
+            vc.Titles = new[] { new TextProperty(contact.JobTitle) };
         }
 
         // Emails
         if (contact.ContactMethods != null)
         {
-            var emails = contact.ContactMethods
+            List<TextProperty> emails = contact.ContactMethods
                 .Where(m => m.Type == ContactMethodType.Email && !string.IsNullOrEmpty(m.Value))
                 .Select(m => new TextProperty(m.Value))
                 .ToList();
@@ -235,7 +234,7 @@ public class VCardService : IVCardService
         // Phones
         if (contact.ContactMethods != null)
         {
-            var phones = contact.ContactMethods
+            List<TextProperty> phones = contact.ContactMethods
                 .Where(m => m.Type == ContactMethodType.Phone && !string.IsNullOrEmpty(m.Value))
                 .Select(m => new TextProperty(m.Value))
                 .ToList();
@@ -246,10 +245,10 @@ public class VCardService : IVCardService
         // Birthday
         if (contact.SignificantDates != null)
         {
-            var bday = contact.SignificantDates.FirstOrDefault(d => d.Title == "Birthday");
+            SignificantDate? bday = contact.SignificantDates.FirstOrDefault(d => d.Title == "Birthday");
             if (bday != null)
             {
-                vc.BirthDayViews = new [] { DateAndOrTimeProperty.FromDate(DateOnly.FromDateTime(bday.Date)) };
+                vc.BirthDayViews = new[] { DateAndOrTimeProperty.FromDate(DateOnly.FromDateTime(bday.Date)) };
             }
         }
 

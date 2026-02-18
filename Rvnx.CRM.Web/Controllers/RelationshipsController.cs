@@ -196,7 +196,7 @@ namespace Rvnx.CRM.Web.Controllers
             types = types.OrderBy(t => t.Category).ThenBy(t => t.Name).ToList();
 
             List<SelectListItem> options = new();
-            var groups = new Dictionary<string, SelectListGroup>();
+            Dictionary<string, SelectListGroup> groups = new();
 
             foreach (RelationshipTypeDefinition t in types)
             {
@@ -204,7 +204,7 @@ namespace Rvnx.CRM.Web.Controllers
                 {
                     groups[t.Category] = new SelectListGroup { Name = t.Category };
                 }
-                var group = groups[t.Category];
+                SelectListGroup group = groups[t.Category];
 
                 string fwdText = t.IsSymmetric ? $"is {t.Name} of" : $"is {t.Name} of ({t.OppositeName})";
                 options.Add(new SelectListItem

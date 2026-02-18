@@ -1,12 +1,8 @@
-using System.Text;
-using FolkerKinzel.VCards;
-using FolkerKinzel.VCards.Models;
-using Rvnx.CRM.Core.Constants;
 using Rvnx.CRM.Core.Enumerations;
 using Rvnx.CRM.Core.Models.Contact;
 using Rvnx.CRM.Core.Models.Dates;
 using Rvnx.CRM.Infrastructure.Services;
-using Xunit;
+using System.Text;
 
 namespace Rvnx.CRM.Tests
 {
@@ -34,14 +30,14 @@ ORG:Acme Corp
 TITLE:Manager
 END:VCARD";
 
-            using MemoryStream stream = new MemoryStream(Encoding.UTF8.GetBytes(vcfContent));
+            using MemoryStream stream = new(Encoding.UTF8.GetBytes(vcfContent));
 
             // Act
-            var contacts = _service.ParseVCard(stream).ToList();
+            List<Contact> contacts = _service.ParseVCard(stream).ToList();
 
             // Assert
             Assert.Single(contacts);
-            var contact = contacts.First();
+            Contact contact = contacts.First();
             Assert.Equal("John", contact.FirstName);
             Assert.Equal("Doe", contact.LastName);
             Assert.Equal("Acme Corp", contact.Company);
@@ -50,7 +46,7 @@ END:VCARD";
             Assert.Contains(contact.ContactMethods, cm => cm.Type == ContactMethodType.Email && cm.Value == "john.doe@example.com");
             Assert.Contains(contact.ContactMethods, cm => cm.Type == ContactMethodType.Phone && cm.Value == "1234567890");
 
-            var bday = contact.SignificantDates.FirstOrDefault(sd => sd.Title == "Birthday");
+            SignificantDate? bday = contact.SignificantDates.FirstOrDefault(sd => sd.Title == "Birthday");
             Assert.NotNull(bday);
             Assert.Equal(new DateTime(1990, 1, 1), bday.Date);
         }
@@ -59,7 +55,7 @@ END:VCARD";
         public void ExportVCard_ShouldReturnValidVcf_WhenContactProvided()
         {
             // Arrange
-            var contact = new Contact
+            Contact contact = new()
             {
                 Id = Guid.NewGuid(),
                 FirstName = "Jane",

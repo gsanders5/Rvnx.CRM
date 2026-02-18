@@ -2,14 +2,11 @@ using FluentAssertions;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Moq;
-using Rvnx.CRM.Core.Constants;
 using Rvnx.CRM.Core.Interfaces;
 using Rvnx.CRM.Core.Models.Contact;
 using Rvnx.CRM.Core.Models.Dates;
 using Rvnx.CRM.Web.Controllers;
-using Rvnx.CRM.Web.Models;
 using System.Linq.Expressions;
-using Xunit;
 
 namespace Rvnx.CRM.Tests;
 

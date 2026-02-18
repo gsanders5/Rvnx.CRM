@@ -55,8 +55,8 @@ namespace Rvnx.CRM.Tests
             fileMock.Setup(f => f.CopyToAsync(It.IsAny<Stream>(), It.IsAny<CancellationToken>()))
                 .Callback<Stream, CancellationToken>((stream, token) =>
                 {
-                   ms.Position = 0;
-                   ms.CopyTo(stream);
+                    ms.Position = 0;
+                    ms.CopyTo(stream);
                 })
                 .Returns(Task.CompletedTask);
             fileMock.Setup(f => f.FileName).Returns("exploit.png");
@@ -98,8 +98,8 @@ namespace Rvnx.CRM.Tests
             fileMock.Setup(f => f.CopyToAsync(It.IsAny<Stream>(), It.IsAny<CancellationToken>()))
                 .Callback<Stream, CancellationToken>((stream, token) =>
                 {
-                   ms.Position = 0;
-                   ms.CopyTo(stream);
+                    ms.Position = 0;
+                    ms.CopyTo(stream);
                 })
                 .Returns(Task.CompletedTask);
             fileMock.Setup(f => f.FileName).Returns("valid.png");

@@ -41,11 +41,18 @@ public static class RelationshipTypeService
         new(Guid.Parse("fedcba98-7654-3210-fedc-ba9876543210"), "Parent Company", "Subsidiary", "Company", EntityTypes.Company)
     };
 
-    public static List<RelationshipTypeDefinition> GetAll() => _types;
+    public static List<RelationshipTypeDefinition> GetAll()
+    {
+        return _types;
+    }
 
-    public static List<RelationshipTypeDefinition> GetByEntityType(string entityType) =>
-        _types.Where(t => t.EntityType == entityType).ToList();
+    public static List<RelationshipTypeDefinition> GetByEntityType(string entityType)
+    {
+        return _types.Where(t => t.EntityType == entityType).ToList();
+    }
 
-    public static RelationshipTypeDefinition? GetById(Guid id) =>
-        _types.FirstOrDefault(t => t.Id == id);
+    public static RelationshipTypeDefinition? GetById(Guid id)
+    {
+        return _types.FirstOrDefault(t => t.Id == id);
+    }
 }
