@@ -19,13 +19,15 @@ namespace Rvnx.CRM.Web.Controllers
         private readonly ILogger<ContactsController> _logger;
         private readonly ICurrentUserService _currentUserService;
         private readonly IVCardService _vCardService;
+        private readonly IFileValidationService _fileValidationService;
 
-        public ContactsController(IRepository repository, ILogger<ContactsController> logger, ICurrentUserService currentUserService, IVCardService vCardService)
+        public ContactsController(IRepository repository, ILogger<ContactsController> logger, ICurrentUserService currentUserService, IVCardService vCardService, IFileValidationService fileValidationService)
         {
             _repository = repository;
             _logger = logger;
             _currentUserService = currentUserService;
             _vCardService = vCardService;
+            _fileValidationService = fileValidationService;
         }
 
         public async Task<IActionResult> Self()
@@ -464,9 +466,8 @@ namespace Rvnx.CRM.Web.Controllers
 
                     if (profileImage != null && profileImage.Length > 0)
                     {
-                        string[] allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".gif" };
                         string extension = Path.GetExtension(profileImage.FileName).ToLowerInvariant();
-                        if (!allowedExtensions.Contains(extension) || !profileImage.ContentType.StartsWith("image/"))
+                        if (!_fileValidationService.IsImageExtension(extension) || !profileImage.ContentType.StartsWith("image/"))
                         {
                             ModelState.AddModelError("", "Only image files (jpg, jpeg, png, gif) are allowed.");
                             return View(contactDto);
@@ -475,6 +476,12 @@ namespace Rvnx.CRM.Web.Controllers
                         using MemoryStream ms = new();
                         await profileImage.CopyToAsync(ms);
                         byte[] fileBytes = ms.ToArray();
+
+                        if (!_fileValidationService.IsValidImageSignature(fileBytes, extension))
+                        {
+                            ModelState.AddModelError("", "Invalid file signature.");
+                            return View(contactDto);
+                        }
 
                         List<Attachment> existingAttachments = await _repository.ListAsync<Attachment>(a => a.EntityId == id && a.EntityType == EntityTypes.Person && a.AttachmentType == "ProfileImage");
                         Attachment? existingAttachment = existingAttachments.FirstOrDefault();

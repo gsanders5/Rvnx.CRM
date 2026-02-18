@@ -30,7 +30,12 @@ namespace Rvnx.CRM.Tests
             // Arrange
             using CRMDbContext context = GetInMemoryDbContext();
             Repository repo = new(context);
-            AttachmentsController controller = new(repo);
+
+            Mock<IFileValidationService> fileServiceMock = new();
+            fileServiceMock.Setup(s => s.IsImageExtension(It.IsAny<string>())).Returns(true);
+            fileServiceMock.Setup(s => s.IsValidImageSignature(It.IsAny<byte[]>(), It.IsAny<string>())).Returns(false);
+
+            AttachmentsController controller = new(repo, fileServiceMock.Object);
             controller.ControllerContext = new ControllerContext
             {
                 HttpContext = new DefaultHttpContext()
@@ -72,7 +77,12 @@ namespace Rvnx.CRM.Tests
             // Arrange
             using CRMDbContext context = GetInMemoryDbContext();
             Repository repo = new(context);
-            AttachmentsController controller = new(repo);
+
+            Mock<IFileValidationService> fileServiceMock = new();
+            fileServiceMock.Setup(s => s.IsImageExtension(It.IsAny<string>())).Returns(true);
+            fileServiceMock.Setup(s => s.IsValidImageSignature(It.IsAny<byte[]>(), It.IsAny<string>())).Returns(true);
+
+            AttachmentsController controller = new(repo, fileServiceMock.Object);
             controller.ControllerContext = new ControllerContext
             {
                 HttpContext = new DefaultHttpContext()
