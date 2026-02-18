@@ -20,7 +20,7 @@ namespace Rvnx.CRM.Web.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Upload(Guid entityId, string entityType, IFormFile file)
+        public async Task<IActionResult> Upload(Guid entityId, string entityType, IFormFile file, string? returnUrl = null)
         {
             if (file == null || file.Length == 0) return BadRequest("File is empty.");
 
@@ -56,12 +56,12 @@ namespace Rvnx.CRM.Web.Controllers
             await _repository.AddAsync(attachment);
             await _repository.SaveChangesAsync();
 
-            return Redirect(Request.Headers["Referer"].ToString());
+            return SafeRedirect(returnUrl);
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Delete(Guid id)
+        public async Task<IActionResult> Delete(Guid id, string? returnUrl = null)
         {
             Attachment? attachment = await _repository.GetByIdAsync<Attachment>(id);
             if (attachment != null)
@@ -69,7 +69,23 @@ namespace Rvnx.CRM.Web.Controllers
                 await _repository.DeleteAsync<Attachment>(id);
                 await _repository.SaveChangesAsync();
             }
-            return Redirect(Request.Headers["Referer"].ToString());
+            return SafeRedirect(returnUrl);
+        }
+
+        private IActionResult SafeRedirect(string? returnUrl)
+        {
+            if (Url.IsLocalUrl(returnUrl))
+            {
+                return LocalRedirect(returnUrl);
+            }
+
+            string referer = Request.Headers["Referer"].ToString();
+            if (Uri.TryCreate(referer, UriKind.Absolute, out Uri? uri) && string.Equals(uri.Host, Request.Host.Host, StringComparison.OrdinalIgnoreCase))
+            {
+                return Redirect(referer);
+            }
+
+            return RedirectToAction("Index", "Home");
         }
 
         public async Task<IActionResult> Download(Guid id)

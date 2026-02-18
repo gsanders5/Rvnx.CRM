@@ -88,6 +88,11 @@ namespace Rvnx.CRM.Tests
                 HttpContext = new DefaultHttpContext()
             };
             controller.Request.Headers["Referer"] = "http://localhost/Contacts";
+            controller.Request.Host = new HostString("localhost");
+
+            var urlHelperMock = new Mock<IUrlHelper>();
+            urlHelperMock.Setup(x => x.IsLocalUrl(It.IsAny<string>())).Returns(false);
+            controller.Url = urlHelperMock.Object;
 
             Mock<IFormFile> fileMock = new();
             // PNG signature

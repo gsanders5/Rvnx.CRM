@@ -389,7 +389,7 @@
                 </div>
                 <div class="card-body">
                     <div class="collapse mb-3" id="uploadAttachmentForm">
-                        <form asp-controller="Attachments" asp-action="Upload" method="post" enctype="multipart/form-data" class="border p-3 rounded bg-body-tertiary">
+                        <form asp-controller="Attachments" asp-action="Upload" asp-route-returnUrl="@(Context.Request.Path + Context.Request.QueryString)" method="post" enctype="multipart/form-data" class="border p-3 rounded bg-body-tertiary">
                             <input type="hidden" name="entityId" value="@Model.Id" />
                             <input type="hidden" name="entityType" value="Person" />
                             <div class="mb-2">
@@ -422,7 +422,7 @@
                                     </div>
                                     <div class="btn-group btn-group-sm ms-2 align-self-start">
                                         <a asp-controller="Attachments" asp-action="Download" asp-route-id="@attachment.Id" class="btn btn-outline-secondary" title="Download" aria-label="Download @attachment.FileName"><i class="bi bi-download"></i></a>
-                                        <form asp-controller="Attachments" asp-action="Delete" asp-route-id="@attachment.Id" method="post" class="d-inline" onsubmit="return confirm('Are you sure?');">
+                                        <form asp-controller="Attachments" asp-action="Delete" asp-route-id="@attachment.Id" asp-route-returnUrl="@(Context.Request.Path + Context.Request.QueryString)" method="post" class="d-inline" onsubmit="return confirm('Are you sure?');">
                                             <button type="submit" class="btn btn-outline-danger" title="Delete" aria-label="Delete @attachment.FileName"><i class="bi bi-trash"></i></button>
                                         </form>
                                     </div>
