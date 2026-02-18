@@ -24,11 +24,13 @@ namespace Rvnx.CRM.Web.Controllers
         {
             DashboardViewModel model = new();
 
-            List<Contact> contacts = await _repository.ListAsync<Contact>();
+            // Optimization: Use ListAsNoTrackingAsync for read-only data to improve performance
+            List<Contact> contacts = await _repository.ListAsNoTrackingAsync<Contact>();
             Dictionary<Guid, Contact> contactDict = contacts.ToDictionary(c => c.Id, c => c);
 
             // Fetch all reminders and filter in memory because SQLite/EFCore doesn't support TimeSpan comparison > TimeSpan.Zero
-            List<Reminder> allReminders = await _repository.ListAsync<Reminder>();
+            // Using AsNoTracking since we only read
+            List<Reminder> allReminders = await _repository.ListAsNoTrackingAsync<Reminder>();
             List<Reminder> reminders = allReminders.Where(r => !r.IsCompleted || r.EventFrequency > TimeSpan.Zero).ToList();
 
             foreach (Reminder reminder in reminders)
@@ -58,7 +60,8 @@ namespace Rvnx.CRM.Web.Controllers
                 });
             }
 
-            List<SignificantDate> importantDates = await _repository.ListAsync<SignificantDate>(d => d.EntityType == EntityTypes.Person);
+            // Use ListAsNoTrackingAsync
+            List<SignificantDate> importantDates = await _repository.ListAsNoTrackingAsync<SignificantDate>(d => d.EntityType == EntityTypes.Person);
 
             foreach (SignificantDate date in importantDates)
             {
@@ -95,18 +98,16 @@ namespace Rvnx.CRM.Web.Controllers
                 });
             }
 
-            List<Relationship> relationships = await _repository.ListAsync<Relationship>();
+            // Optimization: Filter relationships in the database query and use AsNoTracking
+            List<Relationship> relationships = await _repository.ListAsNoTrackingAsync<Relationship>(r => r.EntityType == EntityTypes.Person);
             foreach (Relationship rel in relationships)
             {
-                if (rel.EntityType == EntityTypes.Person)
+                model.GraphLinks.Add(new GraphLink
                 {
-                    model.GraphLinks.Add(new GraphLink
-                    {
-                        Source = rel.EntityId.ToString(),
-                        Target = rel.RelatedEntityId.ToString(),
-                        Type = "Relationship"
-                    });
-                }
+                    Source = rel.EntityId.ToString(),
+                    Target = rel.RelatedEntityId.ToString(),
+                    Type = "Relationship"
+                });
             }
 
             return View(model);
