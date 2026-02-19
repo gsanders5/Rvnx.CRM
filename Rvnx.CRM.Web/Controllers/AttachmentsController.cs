@@ -1,6 +1,9 @@
 using Microsoft.AspNetCore.Mvc;
+using Rvnx.CRM.Core.Constants;
 using Rvnx.CRM.Core.Interfaces;
 using Rvnx.CRM.Core.Models.Base;
+using Rvnx.CRM.Core.Models.Contact;
+using Rvnx.CRM.Core.Models.Dates;
 using Rvnx.CRM.Web.Controllers.Base;
 
 namespace Rvnx.CRM.Web.Controllers
@@ -16,6 +19,8 @@ namespace Rvnx.CRM.Web.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Upload(Guid entityId, string entityType, IFormFile file, string? returnUrl = null)
         {
+            if (!await VerifyEntityAccessAsync(entityId, entityType)) return NotFound();
+
             if (file == null || file.Length == 0) return BadRequest("File is empty.");
 
             string extension = Path.GetExtension(file.FileName).ToLowerInvariant();
@@ -120,5 +125,17 @@ namespace Rvnx.CRM.Web.Controllers
                 : File(attachment.AttachmentContent.Content, attachment.ContentType, attachment.FileName);
         }
 
+        private async Task<bool> VerifyEntityAccessAsync(Guid entityId, string entityType)
+        {
+            return entityType switch
+            {
+                EntityTypes.Person => await _repository.ExistsAsync<Contact>(entityId),
+                EntityTypes.Note => await _repository.ExistsAsync<Note>(entityId),
+                EntityTypes.Reminder => await _repository.ExistsAsync<Reminder>(entityId),
+                EntityTypes.SignificantDate => await _repository.ExistsAsync<SignificantDate>(entityId),
+                EntityTypes.Relationship => await _repository.ExistsAsync<Relationship>(entityId),
+                _ => false
+            };
+        }
     }
 }
