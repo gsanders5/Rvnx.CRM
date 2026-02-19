@@ -49,7 +49,7 @@ namespace Rvnx.CRM.Web.Controllers
                     relationshipDto.RelationshipTypeId = typeId;
 
                     Relationship relationship = relationshipDto.ToEntity();
-                    
+
                     if (direction == "Rev")
                     {
                         Guid temp = relationship.EntityId;
@@ -96,7 +96,7 @@ namespace Rvnx.CRM.Web.Controllers
             string currentSelection = $"{relationship.RelationshipTypeId}_Fwd";
             ViewData["RelationshipTypeSelection"] = GetRelationshipTypeOptions(relationship.EntityType, currentSelection);
 
-            var dto = new RelationshipFormDto
+            RelationshipFormDto dto = new()
             {
                 Id = relationship.Id,
                 EntityId = relationship.EntityId,

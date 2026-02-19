@@ -15,15 +15,15 @@
             <input type="hidden" asp-for="EntityType" />
 
             <div class="form-floating mb-3">
-    <input asp-for="Category" class="form-control"  placeholder="Category"/>
-    <label asp-for="Category"></label>
-    <span asp-validation-for="Category" class="text-danger"></span>
-</div>
+                <input asp-for="Category" class="form-control" id="Category" placeholder=" " />
+                <label asp-for="Category">Category</label>
+                <span asp-validation-for="Category" class="text-danger"></span>
+            </div>
             <div class="form-floating mb-3">
-    <textarea asp-for="Value" class="form-control" rows="3" placeholder="Value"></textarea>
-    <label asp-for="Value"></label>
-    <span asp-validation-for="Value" class="text-danger"></span>
-</div>
+                <textarea asp-for="Value" class="form-control" style="height: 100px" id="Value" placeholder=" "></textarea>
+                <label asp-for="Value">Value</label>
+                <span asp-validation-for="Value" class="text-danger"></span>
+            </div>
             <div class="form-group mt-3">
                 <input type="submit" value="Save" class="btn btn-primary" />
                 <a asp-controller="Contacts" asp-action="Details" asp-route-id="@Model.EntityId" class="btn btn-secondary">Cancel</a>

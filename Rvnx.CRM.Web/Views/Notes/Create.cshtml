@@ -17,16 +17,16 @@
             <input type="hidden" asp-for="EntityType" value="@entityType" />
 
             <div class="form-floating mb-3">
-    <input asp-for="Title" class="form-control"  placeholder="Title"/>
-    <label asp-for="Title"></label>
-    <span asp-validation-for="Title" class="text-danger"></span>
-</div>
+                <input asp-for="Title" class="form-control" id="Title" placeholder=" " />
+                <label asp-for="Title">Title</label>
+                <span asp-validation-for="Title" class="text-danger"></span>
+            </div>
 
             <div class="form-floating mb-3">
-    <textarea asp-for="Value" class="form-control" style="height: 150px" placeholder="Note Content"></textarea>
-    <label asp-for="Value">Note Content</label>
-    <span asp-validation-for="Value" class="text-danger"></span>
-</div>
+                <textarea asp-for="Value" class="form-control" style="height: 150px" id="Value" placeholder=" "></textarea>
+                <label asp-for="Value">Note Content</label>
+                <span asp-validation-for="Value" class="text-danger"></span>
+            </div>
 
             <div class="mt-3">
                 <button type="submit" class="btn btn-primary"><i class="bi bi-save"></i> Save Note</button>

@@ -20,20 +20,20 @@
                 <div class="card-body p-4">
 
                     <div class="form-floating mb-3">
-    <input asp-for="Title" class="form-control form-control-lg"  placeholder="Title"/>
-    <label asp-for="Title"></label>
-    <span asp-validation-for="Title" class="text-danger"></span>
-</div>
+                        <input asp-for="Title" class="form-control form-control-lg" id="Title" placeholder=" " />
+                        <label asp-for="Title">Title</label>
+                        <span asp-validation-for="Title" class="text-danger"></span>
+                    </div>
 
                     <div class="form-floating mb-3">
-    <input asp-for="Date" class="form-control" type="date" onchange="updateSummary()"  placeholder="Date"/>
-    <label asp-for="Date"></label>
-    <span asp-validation-for="Date" class="text-danger"></span>
-</div>
+                        <input asp-for="Date" class="form-control" type="date" onchange="updateSummary()" id="Date" placeholder=" " />
+                        <label asp-for="Date">Date</label>
+                        <span asp-validation-for="Date" class="text-danger"></span>
+                    </div>
 
-                    <div class="mb-4">
-                        <label asp-for="Description" class="form-label fw-bold"></label>
-                        <textarea asp-for="Description" class="form-control" rows="3"></textarea>
+                    <div class="form-floating mb-4">
+                        <textarea asp-for="Description" class="form-control" style="height: 100px" id="Description" placeholder=" "></textarea>
+                        <label asp-for="Description">Description</label>
                         <span asp-validation-for="Description" class="text-danger"></span>
                     </div>
 

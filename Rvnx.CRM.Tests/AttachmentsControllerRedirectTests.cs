@@ -40,7 +40,7 @@ namespace Rvnx.CRM.Tests
             // Set Request Host to localhost
             controller.Request.Host = new HostString("localhost");
 
-            var urlHelperMock = new Mock<IUrlHelper>();
+            Mock<IUrlHelper> urlHelperMock = new();
             // IsLocalUrl logic: starts with /
             urlHelperMock.Setup(x => x.IsLocalUrl(It.IsAny<string>()))
                 .Returns((string url) => !string.IsNullOrEmpty(url) && url.StartsWith("/"));

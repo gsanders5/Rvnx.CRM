@@ -1,5 +1,4 @@
 using Microsoft.AspNetCore.Mvc;
-using Rvnx.CRM.Core.Constants;
 using Rvnx.CRM.Core.DTOs.Common;
 using Rvnx.CRM.Core.Extensions;
 using Rvnx.CRM.Core.Interfaces;
@@ -51,8 +50,8 @@ namespace Rvnx.CRM.Web.Controllers
             if (note == null) return NotFound();
 
             ViewData["EntityName"] = await GetEntityName(note.EntityId, note.EntityType);
-            
-            var dto = new NoteFormDto
+
+            NoteFormDto dto = new()
             {
                 Id = note.Id,
                 Title = note.Title,

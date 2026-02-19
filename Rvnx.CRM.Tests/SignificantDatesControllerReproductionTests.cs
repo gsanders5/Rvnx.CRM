@@ -9,7 +9,6 @@ using Rvnx.CRM.Core.Models.Dates;
 using Rvnx.CRM.Infrastructure.Data;
 using Rvnx.CRM.Infrastructure.Repositories;
 using Rvnx.CRM.Web.Controllers;
-using Xunit;
 
 namespace Rvnx.CRM.Tests
 {

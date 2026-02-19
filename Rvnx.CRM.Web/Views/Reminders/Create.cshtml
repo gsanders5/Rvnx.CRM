@@ -24,22 +24,22 @@
 
                     <!-- Title -->
                     <div class="form-floating mb-3">
-    <input asp-for="Title" class="form-control form-control-lg" placeholder="e.g. Contract Renewal"/>
-    <label asp-for="Title"></label>
-    <span asp-validation-for="Title" class="text-danger"></span>
-</div>
+                        <input asp-for="Title" class="form-control form-control-lg" id="Title" placeholder=" " />
+                        <label asp-for="Title">Title</label>
+                        <span asp-validation-for="Title" class="text-danger"></span>
+                    </div>
 
                     <!-- Date -->
                     <div class="form-floating mb-3">
-    <input asp-for="DueDate" class="form-control" type="date" onchange="updateSummary()"  placeholder="DueDate"/>
-    <label asp-for="DueDate">Date of Event</label>
-    <span asp-validation-for="DueDate" class="text-danger"></span>
-</div>
+                        <input asp-for="DueDate" class="form-control" type="date" onchange="updateSummary()" id="DueDate" placeholder=" " />
+                        <label asp-for="DueDate">Date of Event</label>
+                        <span asp-validation-for="DueDate" class="text-danger"></span>
+                    </div>
 
                     <!-- Description -->
                     <div class="form-floating mb-4">
-                        <textarea asp-for="Description" class="form-control" style="height: 100px" placeholder="Enter optional details..."></textarea>
-                        <label asp-for="Description"></label>
+                        <textarea asp-for="Description" class="form-control" style="height: 100px" id="Description" placeholder=" "></textarea>
+                        <label asp-for="Description">Description</label>
                         <span asp-validation-for="Description" class="text-danger"></span>
                     </div>
 

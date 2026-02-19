@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Moq;
 using Rvnx.CRM.Core.Interfaces;
+using Rvnx.CRM.Core.Models.Contact;
 using Rvnx.CRM.Infrastructure.Data;
 using Rvnx.CRM.Infrastructure.Repositories;
 using Rvnx.CRM.Web.Controllers;
@@ -63,8 +64,12 @@ namespace Rvnx.CRM.Tests
             fileMock.Setup(f => f.Length).Returns(ms.Length);
             fileMock.Setup(f => f.ContentType).Returns("image/png");
 
+            Contact contact = new() { Id = Guid.NewGuid(), FirstName = "Test", LastName = "User" };
+            context.Contacts.Add(contact);
+            context.SaveChanges();
+
             // Act
-            IActionResult result = await controller.Upload(Guid.NewGuid(), "Person", fileMock.Object);
+            IActionResult result = await controller.Upload(contact.Id, "Person", fileMock.Object);
 
             // Assert
             BadRequestObjectResult badRequest = Assert.IsType<BadRequestObjectResult>(result);
@@ -90,7 +95,7 @@ namespace Rvnx.CRM.Tests
             controller.Request.Headers["Referer"] = "http://localhost/Contacts";
             controller.Request.Host = new HostString("localhost");
 
-            var urlHelperMock = new Mock<IUrlHelper>();
+            Mock<IUrlHelper> urlHelperMock = new();
             urlHelperMock.Setup(x => x.IsLocalUrl(It.IsAny<string>())).Returns(false);
             controller.Url = urlHelperMock.Object;
 
@@ -111,8 +116,12 @@ namespace Rvnx.CRM.Tests
             fileMock.Setup(f => f.Length).Returns(ms.Length);
             fileMock.Setup(f => f.ContentType).Returns("image/png");
 
+            Contact contact = new() { Id = Guid.NewGuid(), FirstName = "Test", LastName = "User" };
+            context.Contacts.Add(contact);
+            context.SaveChanges();
+
             // Act
-            IActionResult result = await controller.Upload(Guid.NewGuid(), "Person", fileMock.Object);
+            IActionResult result = await controller.Upload(contact.Id, "Person", fileMock.Object);
 
             // Assert
             Assert.IsType<RedirectResult>(result);

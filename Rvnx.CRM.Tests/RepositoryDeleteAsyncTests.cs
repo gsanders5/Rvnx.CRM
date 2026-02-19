@@ -4,10 +4,6 @@ using Rvnx.CRM.Core.Interfaces;
 using Rvnx.CRM.Core.Models.Base;
 using Rvnx.CRM.Infrastructure.Data;
 using Rvnx.CRM.Infrastructure.Repositories;
-using System;
-using System.ComponentModel.DataAnnotations.Schema;
-using System.Threading.Tasks;
-using Xunit;
 
 namespace Rvnx.CRM.Tests
 {
@@ -45,7 +41,7 @@ namespace Rvnx.CRM.Tests
                 .Options;
 
             Mock<ICurrentUserService> mockUserService = new();
-            mockUserService.Setup(u => u.UserId).Returns((Guid?)null);
+            mockUserService.Setup(u => u.UserId).Returns((Guid?) null);
             mockUserService.Setup(u => u.UserName).Returns("TestUser");
 
             TestDbContext context = new(options, mockUserService.Object);
@@ -69,7 +65,7 @@ namespace Rvnx.CRM.Tests
             using TestDbContext context = GetInMemoryDbContext();
             Repository repo = new(context);
 
-            var entity = new BadEntity("test");
+            BadEntity entity = new("test");
             await repo.AddAsync(entity);
             await repo.SaveChangesAsync();
 
@@ -79,7 +75,7 @@ namespace Rvnx.CRM.Tests
             await repo.DeleteAsync<BadEntity>(entity.Id);
             await repo.SaveChangesAsync();
 
-            var deleted = await context.Set<BadEntity>().FindAsync(entity.Id);
+            BadEntity? deleted = await context.Set<BadEntity>().FindAsync(entity.Id);
             Assert.Null(deleted);
         }
     }

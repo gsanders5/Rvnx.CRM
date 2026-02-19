@@ -105,7 +105,8 @@
                     {
                         <div class="text-center py-4 text-muted">
                             <i class="bi bi-person-badge display-6 d-block mb-3 opacity-25"></i>
-                            <p class="mb-0">No additional info.</p>
+                            <p class="mb-2">No additional info.</p>
+                            <a asp-controller="ContactMethods" asp-action="Create" asp-route-entityId="@Model.Id" asp-route-entityType="Person" class="btn btn-sm btn-primary mt-2"><i class="bi bi-plus-lg"></i> Add Info</a>
                         </div>
                     }
                 </div>
@@ -144,7 +145,8 @@
                     {
                         <div class="text-center py-4 text-muted">
                             <i class="bi bi-lightbulb display-6 d-block mb-3 opacity-25"></i>
-                            <p class="mb-0">No facts added.</p>
+                            <p class="mb-2">No facts added.</p>
+                            <a asp-controller="Facts" asp-action="Create" asp-route-entityId="@Model.Id" asp-route-entityType="Person" class="btn btn-sm btn-primary mt-2"><i class="bi bi-plus-lg"></i> Add Fact</a>
                         </div>
                     }
                 </div>
@@ -200,14 +202,18 @@
                         {
                             <div class="text-center py-4 text-muted">
                                 <i class="bi bi-people display-6 d-block mb-3 opacity-25"></i>
-                                <p class="mb-0">No relationships found.</p>
+                                <p class="mb-2">No relationships found.</p>
+                                <a asp-controller="Relationships" asp-action="Create" asp-route-entityId="@Model.Id" asp-route-entityType="Person" class="btn btn-sm btn-primary mt-2"><i class="bi bi-plus-lg"></i> Add Relationship</a>
                             </div>
                         }
                      </div>
 
-                     <div class="text-end">
-                        <a asp-controller="Relationships" asp-action="Create" asp-route-entityId="@Model.Id" asp-route-entityType="Person" class="btn btn-primary btn-sm">Add Relationship</a>
-                     </div>
+                     @if ((Model.Relationships != null && Model.Relationships.Any()) || (Model.RelatedTo != null && Model.RelatedTo.Any()))
+                     {
+                         <div class="text-end">
+                            <a asp-controller="Relationships" asp-action="Create" asp-route-entityId="@Model.Id" asp-route-entityType="Person" class="btn btn-primary btn-sm">Add Relationship</a>
+                         </div>
+                     }
                 </div>
             </div>
 
@@ -240,7 +246,8 @@
                     {
                         <div class="text-center py-4 text-muted">
                             <i class="bi bi-emoji-smile display-6 d-block mb-3 opacity-25"></i>
-                            <p class="mb-0">No pets.</p>
+                            <p class="mb-2">No pets.</p>
+                            <a asp-controller="Pets" asp-action="Create" asp-route-entityId="@Model.Id" class="btn btn-sm btn-primary mt-2"><i class="bi bi-plus-lg"></i> Add Pet</a>
                         </div>
                     }
                 </div>
@@ -298,7 +305,8 @@
                     {
                         <div class="text-center py-4 text-muted">
                             <i class="bi bi-calendar-event display-6 d-block mb-3 opacity-25"></i>
-                            <p class="mb-0">No important dates recorded.</p>
+                            <p class="mb-2">No important dates recorded.</p>
+                            <a asp-controller="SignificantDates" asp-action="Create" asp-route-entityId="@Model.Id" asp-route-entityType="Person" class="btn btn-sm btn-primary mt-2"><i class="bi bi-plus-lg"></i> Add Date</a>
                         </div>
                     }
                 </div>
@@ -338,7 +346,8 @@
                     {
                         <div class="text-center py-4 text-muted">
                             <i class="bi bi-alarm display-6 d-block mb-3 opacity-25"></i>
-                            <p class="mb-0">No reminders set.</p>
+                            <p class="mb-2">No reminders set.</p>
+                            <a asp-controller="Reminders" asp-action="Create" asp-route-entityId="@Model.Id" asp-route-entityType="Person" class="btn btn-sm btn-primary mt-2"><i class="bi bi-plus-lg"></i> Add Reminder</a>
                         </div>
                     }
                 </div>
@@ -374,7 +383,8 @@
                     {
                         <div class="text-center py-4 text-muted">
                             <i class="bi bi-journal-text display-6 d-block mb-3 opacity-25"></i>
-                            <p class="mb-0">No notes available.</p>
+                            <p class="mb-2">No notes available.</p>
+                            <a asp-controller="Notes" asp-action="Create" asp-route-entityId="@Model.Id" asp-route-entityType="Person" class="btn btn-sm btn-primary mt-2"><i class="bi bi-plus-lg"></i> Add Note</a>
                         </div>
                     }
                 </div>
@@ -435,7 +445,10 @@
                     {
                         <div class="text-center py-4 text-muted">
                             <i class="bi bi-paperclip display-6 d-block mb-3 opacity-25"></i>
-                            <p class="mb-0">No attachments.</p>
+                            <p class="mb-2">No attachments.</p>
+                            <button type="button" class="btn btn-sm btn-primary mt-2" data-bs-toggle="collapse" data-bs-target="#uploadAttachmentForm">
+                                <i class="bi bi-plus-lg"></i> Add Attachment
+                            </button>
                         </div>
                     }
                 </div>

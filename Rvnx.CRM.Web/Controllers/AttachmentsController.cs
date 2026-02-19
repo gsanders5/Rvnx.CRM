@@ -1,6 +1,9 @@
 using Microsoft.AspNetCore.Mvc;
+using Rvnx.CRM.Core.Constants;
 using Rvnx.CRM.Core.Interfaces;
 using Rvnx.CRM.Core.Models.Base;
+using Rvnx.CRM.Core.Models.Contact;
+using Rvnx.CRM.Core.Models.Dates;
 using Rvnx.CRM.Web.Controllers.Base;
 
 namespace Rvnx.CRM.Web.Controllers
@@ -16,6 +19,8 @@ namespace Rvnx.CRM.Web.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Upload(Guid entityId, string entityType, IFormFile file, string? returnUrl = null)
         {
+            if (!await VerifyEntityAccessAsync(entityId, entityType)) return NotFound();
+
             if (file == null || file.Length == 0) return BadRequest("File is empty.");
 
             string extension = Path.GetExtension(file.FileName).ToLowerInvariant();
@@ -74,12 +79,9 @@ namespace Rvnx.CRM.Web.Controllers
             }
 
             string referer = Request.Headers.Referer.ToString();
-            if (Uri.TryCreate(referer, UriKind.Absolute, out Uri? uri) && string.Equals(uri.Host, Request.Host.Host, StringComparison.OrdinalIgnoreCase))
-            {
-                return Redirect(referer);
-            }
-
-            return RedirectToAction("Index", "Home");
+            return Uri.TryCreate(referer, UriKind.Absolute, out Uri? uri) && string.Equals(uri.Host, Request.Host.Host, StringComparison.OrdinalIgnoreCase)
+                ? Redirect(referer)
+                : RedirectToAction("Index", "Home");
         }
 
         public async Task<IActionResult> Download(Guid id)
@@ -116,15 +118,24 @@ namespace Rvnx.CRM.Web.Controllers
             Response.Headers.CacheControl = "public, max-age=31536000";
 
             attachment = await _repository.GetByIdWithIncludesAsync<Attachment>(id, "AttachmentContent");
-            if (attachment == null || attachment.AttachmentContent == null) return NotFound();
-
-            if (ImageContentTypes.Contains(attachment.ContentType))
-            {
-                return File(attachment.AttachmentContent.Content, attachment.ContentType);
-            }
-
-            return File(attachment.AttachmentContent.Content, attachment.ContentType, attachment.FileName);
+            return attachment == null || attachment.AttachmentContent == null
+                ? NotFound()
+                : ImageContentTypes.Contains(attachment.ContentType)
+                ? File(attachment.AttachmentContent.Content, attachment.ContentType)
+                : File(attachment.AttachmentContent.Content, attachment.ContentType, attachment.FileName);
         }
 
+        private async Task<bool> VerifyEntityAccessAsync(Guid entityId, string entityType)
+        {
+            return entityType switch
+            {
+                EntityTypes.Person => await _repository.ExistsAsync<Contact>(entityId),
+                EntityTypes.Note => await _repository.ExistsAsync<Note>(entityId),
+                EntityTypes.Reminder => await _repository.ExistsAsync<Reminder>(entityId),
+                EntityTypes.SignificantDate => await _repository.ExistsAsync<SignificantDate>(entityId),
+                EntityTypes.Relationship => await _repository.ExistsAsync<Relationship>(entityId),
+                _ => false
+            };
+        }
     }
 }
