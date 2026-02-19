@@ -13,60 +13,60 @@
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
 
             <div class="form-floating mb-3">
-                <input asp-for="FirstName" class="form-control"  placeholder="FirstName"/>
+                <input asp-for="FirstName" class="form-control" placeholder="FirstName"/>
                 <label asp-for="FirstName"></label>
                 <span asp-validation-for="FirstName" class="text-danger"></span>
             </div>
 
             <div class="form-floating mb-3">
-                <input asp-for="LastName" class="form-control"  placeholder="LastName"/>
+                <input asp-for="LastName" class="form-control" placeholder="LastName"/>
                 <label asp-for="LastName"></label>
                 <span asp-validation-for="LastName" class="text-danger"></span>
             </div>
 
-             <div class="form-floating mb-3">
-                <input asp-for="Nickname" class="form-control"  placeholder="Nickname"/>
+            <div class="form-floating mb-3">
+                <input asp-for="Nickname" class="form-control" placeholder="Nickname"/>
                 <label asp-for="Nickname"></label>
                 <span asp-validation-for="Nickname" class="text-danger"></span>
             </div>
 
             <div class="form-floating mb-3">
-                <input asp-for="Email" class="form-control"  placeholder="Email"/>
+                <input asp-for="Email" class="form-control" placeholder="Email"/>
                 <label asp-for="Email"></label>
                 <span asp-validation-for="Email" class="text-danger"></span>
             </div>
 
             <div class="form-floating mb-3">
-                <input asp-for="Phone" class="form-control"  placeholder="Phone"/>
+                <input asp-for="Phone" class="form-control" placeholder="Phone"/>
                 <label asp-for="Phone"></label>
                 <span asp-validation-for="Phone" class="text-danger"></span>
             </div>
 
             <div class="form-floating mb-3">
-                <input asp-for="Company" class="form-control"  placeholder="Company"/>
+                <input asp-for="Company" class="form-control" placeholder="Company"/>
                 <label asp-for="Company"></label>
                 <span asp-validation-for="Company" class="text-danger"></span>
             </div>
 
             <div class="form-floating mb-3">
-                <input asp-for="JobTitle" class="form-control"  placeholder="JobTitle"/>
+                <input asp-for="JobTitle" class="form-control" placeholder="JobTitle"/>
                 <label asp-for="JobTitle"></label>
                 <span asp-validation-for="JobTitle" class="text-danger"></span>
             </div>
 
             <div class="form-floating mb-3">
-                <input asp-for="Birthday" class="form-control" type="date"  placeholder="Birthday"/>
+                <input asp-for="Birthday" class="form-control" type="date" placeholder="Birthday"/>
                 <label asp-for="Birthday"></label>
                 <span asp-validation-for="Birthday" class="text-danger"></span>
             </div>
 
             <div class="mb-3 form-check">
-                <input asp-for="IsHidden" class="form-check-input" />
+                <input asp-for="IsHidden" class="form-check-input"/>
                 <label asp-for="IsHidden" class="form-check-label"></label>
             </div>
 
             <div class="form-group mt-3">
-                <input type="submit" value="Create" class="btn btn-primary" />
+                <input type="submit" value="Create" class="btn btn-primary"/>
                 <a asp-action="Index" class="btn btn-secondary">Back to List</a>
             </div>
         </form>
@@ -74,5 +74,5 @@
 </div>
 
 @section Scripts {
-    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    @{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); }
 }

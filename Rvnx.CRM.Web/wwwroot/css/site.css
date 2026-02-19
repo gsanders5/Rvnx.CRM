@@ -36,6 +36,6 @@ body {
 }
 
 .hover-shadow:hover {
-  box-shadow: 0 .5rem 1rem rgba(0, 0, 0, .15) !important;
-  transition: box-shadow .3s;
+  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
+  transition: box-shadow 0.3s;
 }

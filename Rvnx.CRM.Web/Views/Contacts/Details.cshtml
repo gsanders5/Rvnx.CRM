@@ -8,454 +8,495 @@
 }
 
 <div class="container">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1>@Model.FullName</h1>
-        <div>
-            <a asp-action="Export" asp-route-id="@Model.Id" class="btn btn-outline-primary me-2"><i class="fa-solid fa-file-export"></i> Export VCF</a>
-            <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-primary"><i class="bi bi-pencil-square"></i> Edit</a>
-            <a asp-action="Index" class="btn btn-secondary"><i class="bi bi-arrow-left"></i> Back to List</a>
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>@Model.FullName</h1>
+    <div>
+        <a asp-action="Export" asp-route-id="@Model.Id" class="btn btn-outline-primary me-2"><i class="fa-solid fa-file-export"></i> Export VCF</a>
+        <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-primary"><i class="bi bi-pencil-square"></i> Edit</a>
+        <a asp-action="Index" class="btn btn-secondary"><i class="bi bi-arrow-left"></i> Back to List</a>
+    </div>
+</div>
+
+<div class="row">
+<!-- Main Info -->
+<div class="col-md-4">
+    <!-- Profile Card -->
+    <div class="card mb-4 shadow-sm">
+        @if (Model.ProfileImageId.HasValue)
+        {
+            <img src="@Url.Action("View", "Attachments", new { id = Model.ProfileImageId })" class="card-img-top card-img-profile" alt="Profile Image">
+        }
+        else
+        {
+            <div class="card-img-top d-flex align-items-center justify-content-center bg-body-tertiary text-muted" style="height: 300px;">
+                <i class="bi bi-person-fill display-1"></i>
+            </div>
+        }
+        <div class="card-header">
+            <h5 class="card-title mb-0"><i class="bi bi-person-lines-fill"></i> Primary Info</h5>
+        </div>
+        <div class="card-body">
+            <dl class="row mb-0">
+                @if (!string.IsNullOrEmpty(Model.Nickname))
+                {
+                    <dt class="col-sm-4">Nickname</dt>
+                    <dd class="col-sm-8">@Model.Nickname</dd>
+                }
+
+                @if (!string.IsNullOrEmpty(Model.Company))
+                {
+                    <dt class="col-sm-4">Company</dt>
+                    <dd class="col-sm-8">@Model.Company</dd>
+                }
+
+                @if (!string.IsNullOrEmpty(Model.JobTitle))
+                {
+                    <dt class="col-sm-4">Job Title</dt>
+                    <dd class="col-sm-8">@Model.JobTitle</dd>
+                }
+            </dl>
         </div>
     </div>
 
-    <div class="row">
-        <!-- Main Info -->
-        <div class="col-md-4">
-            <!-- Profile Card -->
-            <div class="card mb-4 shadow-sm">
-                @if (Model.ProfileImageId.HasValue)
-                {
-                    <img src="@Url.Action("View", "Attachments", new { id = Model.ProfileImageId })" class="card-img-top card-img-profile" alt="Profile Image">
-                }
-                else
-                {
-                    <div class="card-img-top d-flex align-items-center justify-content-center bg-body-tertiary text-muted" style="height: 300px;">
-                        <i class="bi bi-person-fill display-1"></i>
-                    </div>
-                }
-                <div class="card-header">
-                    <h5 class="card-title mb-0"><i class="bi bi-person-lines-fill"></i> Primary Info</h5>
-                </div>
-                <div class="card-body">
-                    <dl class="row mb-0">
-                        @if (!string.IsNullOrEmpty(Model.Nickname))
-                        {
-                            <dt class="col-sm-4">Nickname</dt>
-                            <dd class="col-sm-8">@Model.Nickname</dd>
-                        }
-
-                        @if (!string.IsNullOrEmpty(Model.Company))
-                        {
-                            <dt class="col-sm-4">Company</dt>
-                            <dd class="col-sm-8">@Model.Company</dd>
-                        }
-
-                        @if (!string.IsNullOrEmpty(Model.JobTitle))
-                        {
-                            <dt class="col-sm-4">Job Title</dt>
-                            <dd class="col-sm-8">@Model.JobTitle</dd>
-                        }
-                    </dl>
-                </div>
-            </div>
-
-            <!-- Additional Contact Info -->
-            <div class="card mb-4 border shadow-sm">
-                <div class="card-header bg-transparent border-0 pt-3 px-3 d-flex justify-content-between align-items-center">
-                    <h5 class="card-title mb-0 fw-bold"><i class="bi bi-person-badge"></i> Contact Info</h5>
-                    <a asp-controller="ContactMethods" asp-action="Create" asp-route-entityId="@Model.Id" asp-route-entityType="Person" class="btn btn-sm btn-outline-primary"><i class="bi bi-plus-lg"></i> Add</a>
-                </div>
-                <div class="card-body px-3 pb-3">
-                    @if (Model.ContactMethods != null && Model.ContactMethods.Any())
-                    {
-                        <ul class="list-group list-group-flush">
-                            @foreach (var info in Model.ContactMethods)
-                            {
-                                <li class="list-group-item d-flex justify-content-between align-items-center px-0">
-                                    <div>
-                                        <div class="fw-bold">@info.Type @(string.IsNullOrEmpty(info.Label) ? "" : $"({info.Label})")</div>
-                                        <div class="text-break">
-                                            @if (info.Type == ContactMethodType.Email)
-                                            {
-                                                <a href="mailto:@info.Value">@info.Value</a>
-                                            }
-                                            else if (info.Type == ContactMethodType.Phone)
-                                            {
-                                                <a href="tel:@info.Value">@info.Value</a>
-                                            }
-                                            else if (info.Type == ContactMethodType.Website || info.Value.StartsWith("http"))
-                                            {
-                                                <a href="@info.Value" target="_blank">@info.Value</a>
-                                            }
-                                            else
-                                            {
-                                                @info.Value
-                                            }
-                                        </div>
-                                    </div>
-                                    <div class="btn-group btn-group-sm">
-                                        <button type="button" class="btn btn-outline-secondary btn-copy" data-clipboard-text="@info.Value" title="Copy to clipboard" aria-label="Copy @info.Value to clipboard"><i class="bi bi-clipboard"></i></button>
-                                        <a asp-controller="ContactMethods" asp-action="Edit" asp-route-id="@info.Id" class="btn btn-outline-secondary" title="Edit" aria-label="Edit @info.Type @info.Value"><i class="bi bi-pencil-square"></i></a>
-                                        <a asp-controller="ContactMethods" asp-action="Delete" asp-route-id="@info.Id" class="btn btn-outline-danger" title="Delete" aria-label="Delete @info.Type @info.Value"><i class="bi bi-trash"></i></a>
-                                    </div>
-                                </li>
-                            }
-                        </ul>
-                    }
-                    else
-                    {
-                        <div class="text-center py-4 text-muted">
-                            <i class="bi bi-person-badge display-6 d-block mb-3 opacity-25"></i>
-                            <p class="mb-2">No additional info.</p>
-                            <a asp-controller="ContactMethods" asp-action="Create" asp-route-entityId="@Model.Id" asp-route-entityType="Person" class="btn btn-sm btn-primary mt-2"><i class="bi bi-plus-lg"></i> Add Info</a>
-                        </div>
-                    }
-                </div>
-            </div>
-
-            <!-- Quick Facts -->
-            <div class="card mb-4 border shadow-sm">
-                <div class="card-header bg-transparent border-0 pt-3 px-3 d-flex justify-content-between align-items-center">
-                    <h5 class="card-title mb-0 fw-bold"><i class="bi bi-lightbulb"></i> Quick Facts</h5>
-                    <a asp-controller="Facts" asp-action="Create" asp-route-entityId="@Model.Id" asp-route-entityType="Person" class="btn btn-sm btn-outline-primary"><i class="bi bi-plus-lg"></i> Add</a>
-                </div>
-                <div class="card-body px-3 pb-3">
-                    @if (Model.Facts != null && Model.Facts.Any())
-                    {
-                        var groups = Model.Facts.GroupBy(f => f.Category).OrderBy(g => g.Key);
-
-                        foreach (var group in groups)
-                        {
-                            <h6 class="text-primary small fw-bold mt-2 mb-1 border-bottom pb-1">@group.Key</h6>
-                            <ul class="list-group list-group-flush mb-2">
-                                @foreach (var fact in group)
-                                {
-                                    <li class="list-group-item d-flex justify-content-between align-items-center px-0 py-1 border-0 bg-transparent">
-                                        <div class="d-none note-source">@fact.Value</div>
-                                        <div class="note-render"></div>
-                                        <div class="btn-group btn-group-sm opacity-50 hover-opacity-100">
-                                            <a asp-controller="Facts" asp-action="Edit" asp-route-id="@fact.Id" class="text-secondary me-2" title="Edit fact" aria-label="Edit fact"><i class="bi bi-pencil-square"></i></a>
-                                            <a asp-controller="Facts" asp-action="Delete" asp-route-id="@fact.Id" class="text-danger" title="Delete fact" aria-label="Delete fact"><i class="bi bi-trash"></i></a>
-                                        </div>
-                                    </li>
-                                }
-                            </ul>
-                        }
-                    }
-                    else
-                    {
-                        <div class="text-center py-4 text-muted">
-                            <i class="bi bi-lightbulb display-6 d-block mb-3 opacity-25"></i>
-                            <p class="mb-2">No facts added.</p>
-                            <a asp-controller="Facts" asp-action="Create" asp-route-entityId="@Model.Id" asp-route-entityType="Person" class="btn btn-sm btn-primary mt-2"><i class="bi bi-plus-lg"></i> Add Fact</a>
-                        </div>
-                    }
-                </div>
-            </div>
-
-            <!-- Relationships -->
-            <div class="card mb-4 border shadow-sm">
-                <div class="card-header bg-transparent border-0 pt-3 px-3">
-                    <h5 class="card-title mb-0 fw-bold"><i class="bi bi-people"></i> Relationships</h5>
-                </div>
-                <div class="card-body px-3 pb-3">
-                     <div class="d-grid gap-2 mb-3">
-                        @if ((Model.Relationships != null && Model.Relationships.Any()) || (Model.RelatedTo != null && Model.RelatedTo.Any()))
-                        {
-                            @if (Model.Relationships != null)
-                            {
-                                foreach (var rel in Model.Relationships)
-                                {
-                                    <div class="d-flex justify-content-between align-items-center p-3 rounded border hover-shadow" style="background-color: var(--bs-tertiary-bg);">
-                                        <div class="d-flex align-items-center">
-                                            <a asp-action="Details" asp-route-id="@rel.RelatedEntityId" class="text-decoration-none fw-bold text-body me-2">
-                                                @rel.RelatedEntityName
-                                            </a>
-                                            <span class="badge rounded-pill bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25">@rel.RelationshipTypeOppositeName</span>
-                                        </div>
-                                        <div>
-                                             <a asp-controller="Relationships" asp-action="Edit" asp-route-id="@rel.Id" class="text-secondary me-2" title="Edit relationship" aria-label="Edit relationship with @rel.RelatedEntityName"><i class="bi bi-pencil-square"></i></a>
-                                             <a asp-controller="Relationships" asp-action="Delete" asp-route-id="@rel.Id" class="text-danger" title="Delete relationship" aria-label="Delete relationship with @rel.RelatedEntityName"><i class="bi bi-trash"></i></a>
-                                        </div>
-                                    </div>
-                                }
-                            }
-                            @if (Model.RelatedTo != null)
-                            {
-                                foreach (var rel in Model.RelatedTo)
-                                {
-                                    <div class="d-flex justify-content-between align-items-center p-3 rounded border hover-shadow" style="background-color: var(--bs-tertiary-bg);">
-                                        <div class="d-flex align-items-center">
-                                            <a asp-action="Details" asp-route-id="@rel.EntityId" class="text-decoration-none fw-bold text-body me-2">
-                                                @rel.EntityName
-                                            </a>
-                                            <span class="badge rounded-pill bg-info bg-opacity-10 text-info border border-info border-opacity-25">@rel.RelationshipTypeName</span>
-                                        </div>
-                                        <div>
-                                             <a asp-controller="Relationships" asp-action="Edit" asp-route-id="@rel.Id" class="text-secondary me-2" title="Edit relationship" aria-label="Edit relationship with @rel.EntityName"><i class="bi bi-pencil-square"></i></a>
-                                             <a asp-controller="Relationships" asp-action="Delete" asp-route-id="@rel.Id" class="text-danger" title="Delete relationship" aria-label="Delete relationship with @rel.EntityName"><i class="bi bi-trash"></i></a>
-                                        </div>
-                                    </div>
-                                }
-                            }
-                        }
-                        else
-                        {
-                            <div class="text-center py-4 text-muted">
-                                <i class="bi bi-people display-6 d-block mb-3 opacity-25"></i>
-                                <p class="mb-2">No relationships found.</p>
-                                <a asp-controller="Relationships" asp-action="Create" asp-route-entityId="@Model.Id" asp-route-entityType="Person" class="btn btn-sm btn-primary mt-2"><i class="bi bi-plus-lg"></i> Add Relationship</a>
-                            </div>
-                        }
-                     </div>
-
-                     @if ((Model.Relationships != null && Model.Relationships.Any()) || (Model.RelatedTo != null && Model.RelatedTo.Any()))
-                     {
-                         <div class="text-end">
-                            <a asp-controller="Relationships" asp-action="Create" asp-route-entityId="@Model.Id" asp-route-entityType="Person" class="btn btn-primary btn-sm">Add Relationship</a>
-                         </div>
-                     }
-                </div>
-            </div>
-
-            <!-- Pets -->
-            <div class="card mb-4 border shadow-sm">
-                <div class="card-header bg-transparent border-0 pt-3 px-3 d-flex justify-content-between align-items-center">
-                    <h5 class="card-title mb-0 fw-bold"><i class="bi bi-emoji-smile"></i> Pets</h5>
-                    <a asp-controller="Pets" asp-action="Create" asp-route-entityId="@Model.Id" class="btn btn-sm btn-outline-primary"><i class="bi bi-plus-lg"></i> Add</a>
-                </div>
-                <div class="card-body px-3 pb-3">
-                    @if (Model.Pets != null && Model.Pets.Any())
-                    {
-                        <ul class="list-group list-group-flush">
-                            @foreach (var pet in Model.Pets)
-                            {
-                                <li class="list-group-item d-flex justify-content-between align-items-center px-0">
-                                    <div>
-                                        <div class="fw-bold">@pet.Name</div>
-                                        <small class="text-muted">@pet.Species @(string.IsNullOrEmpty(pet.Breed) ? "" : $"({pet.Breed})")</small>
-                                    </div>
-                                    <div class="btn-group btn-group-sm">
-                                        <a asp-controller="Pets" asp-action="Edit" asp-route-id="@pet.Id" class="btn btn-outline-secondary" title="Edit" aria-label="Edit @pet.Name"><i class="bi bi-pencil-square"></i></a>
-                                        <a asp-controller="Pets" asp-action="Delete" asp-route-id="@pet.Id" class="btn btn-outline-danger" title="Delete" aria-label="Delete @pet.Name"><i class="bi bi-trash"></i></a>
-                                    </div>
-                                </li>
-                            }
-                        </ul>
-                    }
-                    else
-                    {
-                        <div class="text-center py-4 text-muted">
-                            <i class="bi bi-emoji-smile display-6 d-block mb-3 opacity-25"></i>
-                            <p class="mb-2">No pets.</p>
-                            <a asp-controller="Pets" asp-action="Create" asp-route-entityId="@Model.Id" class="btn btn-sm btn-primary mt-2"><i class="bi bi-plus-lg"></i> Add Pet</a>
-                        </div>
-                    }
-                </div>
-            </div>
+    <!-- Additional Contact Info -->
+    <div class="card mb-4 border shadow-sm">
+        <div class="card-header bg-transparent border-0 pt-3 px-3 d-flex justify-content-between align-items-center">
+            <h5 class="card-title mb-0 fw-bold"><i class="bi bi-person-badge"></i> Contact Info</h5>
+            <a asp-controller="ContactMethods" asp-action="Create" asp-route-entityId="@Model.Id" asp-route-entityType="Person" class="btn btn-sm btn-outline-primary"><i class="bi bi-plus-lg"></i> Add</a>
         </div>
-
-        <!-- Right Column -->
-        <div class="col-md-8">
-            <!-- Important Dates -->
-            <div class="card mb-4">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <h5 class="card-title mb-0"><i class="bi bi-calendar-event"></i> Important Dates</h5>
-                    <a asp-controller="SignificantDates" asp-action="Create" asp-route-entityId="@Model.Id" asp-route-entityType="Person" class="btn btn-sm btn-outline-primary"><i class="bi bi-plus-lg"></i> Add</a>
-                </div>
-                <div class="card-body">
-                    @if (Model.SignificantDates != null && Model.SignificantDates.Any())
+        <div class="card-body px-3 pb-3">
+            @if (Model.ContactMethods != null && Model.ContactMethods.Any())
+            {
+                <ul class="list-group list-group-flush">
+                    @foreach (var info in Model.ContactMethods)
                     {
-                        <ul class="list-group">
-                            @foreach (var date in Model.SignificantDates.OrderBy(d => d.Date))
-                            {
-                                <li class="list-group-item">
-                                    <div class="d-flex w-100 justify-content-between">
-                                        <h6 class="mb-1">@date.Title</h6>
-                                        <div>
-                                            <span class="badge bg-info text-dark">@date.Date.ToShortDateString()</span>
-
-                                            @if(string.Equals(date.Title, SignificantDateTitles.Birthday, StringComparison.OrdinalIgnoreCase))
-                                            {
-                                                var today = DateTime.Today;
-                                                var age = today.Year - date.Date.Year;
-                                                if (date.Date.Date > today.AddYears(-age)) age--;
-                                                <span class="badge bg-secondary">@age years old</span>
-                                            }
-
-                                        @if(date.RemindMe)
-                                        {
-                                            <span class="badge bg-warning text-dark">Remind Me</span>
-                                        }
-
-                                            <div class="btn-group btn-group-sm ml-2">
-                                                <a asp-controller="SignificantDates" asp-action="Edit" asp-route-id="@date.Id" class="btn btn-outline-secondary" title="Edit" aria-label="Edit @date.Title"><i class="bi bi-pencil-square"></i></a>
-                                                <a asp-controller="SignificantDates" asp-action="Delete" asp-route-id="@date.Id" class="btn btn-outline-danger" title="Delete" aria-label="Delete @date.Title"><i class="bi bi-trash"></i></a>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    @if(!string.IsNullOrEmpty(date.Description) && date.Description != date.Title)
+                        <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+                            <div>
+                                <div class="fw-bold">@info.Type @(string.IsNullOrEmpty(info.Label) ? "" : $"({info.Label})")</div>
+                                <div class="text-break">
+                                    @if (info.Type == ContactMethodType.Email)
                                     {
-                                        <p class="mb-1 text-muted small">@date.Description</p>
+                                        <a href="mailto:@info.Value">@info.Value</a>
                                     }
-                                </li>
-                            }
-                        </ul>
+                                    else if (info.Type == ContactMethodType.Phone)
+                                    {
+                                        <a href="tel:@info.Value">@info.Value</a>
+                                    }
+                                    else if (info.Type == ContactMethodType.Website || info.Value.StartsWith("http"))
+                                    {
+                                        <a href="@info.Value" target="_blank">@info.Value</a>
+                                    }
+                                    else
+                                    {
+                                        @info.Value
+                                    }
+                                </div>
+                            </div>
+                            <div class="btn-group btn-group-sm">
+                                <button type="button" class="btn btn-outline-secondary btn-copy" data-clipboard-text="@info.Value" title="Copy to clipboard" aria-label="Copy @info.Value to clipboard">
+                                    <i class="bi bi-clipboard"></i>
+                                </button>
+                                <a asp-controller="ContactMethods" asp-action="Edit" asp-route-id="@info.Id" class="btn btn-outline-secondary" title="Edit" aria-label="Edit @info.Type @info.Value">
+                                    <i class="bi bi-pencil-square"></i>
+                                </a>
+                                <a asp-controller="ContactMethods" asp-action="Delete" asp-route-id="@info.Id" class="btn btn-outline-danger" title="Delete" aria-label="Delete @info.Type @info.Value">
+                                    <i class="bi bi-trash"></i>
+                                </a>
+                            </div>
+                        </li>
                     }
-                    else
-                    {
-                        <div class="text-center py-4 text-muted">
-                            <i class="bi bi-calendar-event display-6 d-block mb-3 opacity-25"></i>
-                            <p class="mb-2">No important dates recorded.</p>
-                            <a asp-controller="SignificantDates" asp-action="Create" asp-route-entityId="@Model.Id" asp-route-entityType="Person" class="btn btn-sm btn-primary mt-2"><i class="bi bi-plus-lg"></i> Add Date</a>
-                        </div>
-                    }
+                </ul>
+            }
+            else
+            {
+                <div class="text-center py-4 text-muted">
+                    <i class="bi bi-person-badge display-6 d-block mb-3 opacity-25"></i>
+                    <p class="mb-2">No additional info.</p>
+                    <a asp-controller="ContactMethods" asp-action="Create" asp-route-entityId="@Model.Id" asp-route-entityType="Person" class="btn btn-sm btn-primary mt-2"><i class="bi bi-plus-lg"></i> Add Info</a>
                 </div>
-            </div>
+            }
+        </div>
+    </div>
 
-            <!-- Reminders -->
-            <div class="card mb-4">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <h5 class="card-title mb-0"><i class="bi bi-alarm"></i> Reminders</h5>
-                    <a asp-controller="Reminders" asp-action="Create" asp-route-entityId="@Model.Id" asp-route-entityType="Person" class="btn btn-sm btn-outline-primary"><i class="bi bi-plus-lg"></i> Add</a>
-                </div>
-                <div class="card-body">
-                    @if (Model.Reminders != null && Model.Reminders.Any())
-                    {
-                        <ul class="list-group">
-                            @foreach (var reminder in Model.Reminders.OrderBy(r => r.DueDate))
-                            {
-                                <li class="list-group-item">
-                                    <div class="d-flex w-100 justify-content-between">
-                                        <h6 class="mb-1">@reminder.Title</h6>
-                                        <div>
-                                            <small class="@(reminder.DueDate < DateTime.Now ? "text-danger" : "text-muted")">
-                                                @reminder.DueDate.ToShortDateString()
-                                            </small>
-                                            <div class="btn-group btn-group-sm ml-2">
-                                                <a asp-controller="Reminders" asp-action="Edit" asp-route-id="@reminder.Id" class="btn btn-outline-secondary" title="Edit" aria-label="Edit @reminder.Title"><i class="bi bi-pencil-square"></i></a>
-                                                <a asp-controller="Reminders" asp-action="Delete" asp-route-id="@reminder.Id" class="btn btn-outline-danger" title="Delete" aria-label="Delete @reminder.Title"><i class="bi bi-trash"></i></a>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <p class="mb-1">@reminder.Description</p>
-                                </li>
-                            }
-                        </ul>
-                    }
-                    else
-                    {
-                        <div class="text-center py-4 text-muted">
-                            <i class="bi bi-alarm display-6 d-block mb-3 opacity-25"></i>
-                            <p class="mb-2">No reminders set.</p>
-                            <a asp-controller="Reminders" asp-action="Create" asp-route-entityId="@Model.Id" asp-route-entityType="Person" class="btn btn-sm btn-primary mt-2"><i class="bi bi-plus-lg"></i> Add Reminder</a>
-                        </div>
-                    }
-                </div>
-            </div>
+    <!-- Quick Facts -->
+    <div class="card mb-4 border shadow-sm">
+        <div class="card-header bg-transparent border-0 pt-3 px-3 d-flex justify-content-between align-items-center">
+            <h5 class="card-title mb-0 fw-bold"><i class="bi bi-lightbulb"></i> Quick Facts</h5>
+            <a asp-controller="Facts" asp-action="Create" asp-route-entityId="@Model.Id" asp-route-entityType="Person" class="btn btn-sm btn-outline-primary"><i class="bi bi-plus-lg"></i> Add</a>
+        </div>
+        <div class="card-body px-3 pb-3">
+            @if (Model.Facts != null && Model.Facts.Any())
+            {
+                var groups = Model.Facts.GroupBy(f => f.Category).OrderBy(g => g.Key);
 
-            <!-- Notes -->
-            <div class="card mb-4">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <h5 class="card-title mb-0"><i class="bi bi-journal-text"></i> Notes</h5>
-                    <a asp-controller="Notes" asp-action="Create" asp-route-entityId="@Model.Id" asp-route-entityType="Person" class="btn btn-sm btn-outline-primary"><i class="bi bi-plus-lg"></i> Add</a>
-                </div>
-                <div class="card-body">
-                    @if (Model.Notes != null && Model.Notes.Any())
-                    {
-                        @foreach (var note in Model.Notes.OrderByDescending(n => n.CreatedDate))
+                foreach (var group in groups)
+                {
+                    <h6 class="text-primary small fw-bold mt-2 mb-1 border-bottom pb-1">@group.Key</h6>
+                    <ul class="list-group list-group-flush mb-2">
+                        @foreach (var fact in group)
                         {
-                            <div class="card mb-2">
-                                <div class="card-body">
-                                    <div class="d-flex justify-content-between">
-                                        <h6 class="card-subtitle mb-2 text-muted">@note.Title <small>@note.CreatedDate.ToShortDateString()</small></h6>
-                                        <div class="btn-group btn-group-sm">
-                                            <a asp-controller="Notes" asp-action="Edit" asp-route-id="@note.Id" class="btn btn-outline-secondary" title="Edit" aria-label="Edit @note.Title"><i class="bi bi-pencil-square"></i></a>
-                                            <a asp-controller="Notes" asp-action="Delete" asp-route-id="@note.Id" class="btn btn-outline-danger" title="Delete" aria-label="Delete @note.Title"><i class="bi bi-trash"></i></a>
-                                        </div>
-                                    </div>
-                                    <div class="d-none note-source">@note.Value</div>
-                                    <div class="note-render card-text"></div>
+                            <li class="list-group-item d-flex justify-content-between align-items-center px-0 py-1 border-0 bg-transparent">
+                                <div class="d-none note-source">@fact.Value</div>
+                                <div class="note-render"></div>
+                                <div class="btn-group btn-group-sm opacity-50 hover-opacity-100">
+                                    <a asp-controller="Facts" asp-action="Edit" asp-route-id="@fact.Id" class="text-secondary me-2" title="Edit fact" aria-label="Edit fact">
+                                        <i class="bi bi-pencil-square"></i>
+                                    </a>
+                                    <a asp-controller="Facts" asp-action="Delete" asp-route-id="@fact.Id" class="text-danger" title="Delete fact" aria-label="Delete fact">
+                                        <i class="bi bi-trash"></i>
+                                    </a>
+                                </div>
+                            </li>
+                        }
+                    </ul>
+                }
+            }
+            else
+            {
+                <div class="text-center py-4 text-muted">
+                    <i class="bi bi-lightbulb display-6 d-block mb-3 opacity-25"></i>
+                    <p class="mb-2">No facts added.</p>
+                    <a asp-controller="Facts" asp-action="Create" asp-route-entityId="@Model.Id" asp-route-entityType="Person" class="btn btn-sm btn-primary mt-2"><i class="bi bi-plus-lg"></i> Add Fact</a>
+                </div>
+            }
+        </div>
+    </div>
+
+    <!-- Relationships -->
+    <div class="card mb-4 border shadow-sm">
+        <div class="card-header bg-transparent border-0 pt-3 px-3">
+            <h5 class="card-title mb-0 fw-bold"><i class="bi bi-people"></i> Relationships</h5>
+        </div>
+        <div class="card-body px-3 pb-3">
+            <div class="d-grid gap-2 mb-3">
+                @if ((Model.Relationships != null && Model.Relationships.Any()) || (Model.RelatedTo != null && Model.RelatedTo.Any()))
+                {
+                    @if (Model.Relationships != null)
+                    {
+                        foreach (var rel in Model.Relationships)
+                        {
+                            <div class="d-flex justify-content-between align-items-center p-3 rounded border hover-shadow" style="background-color: var(--bs-tertiary-bg);">
+                                <div class="d-flex align-items-center">
+                                    <a asp-action="Details" asp-route-id="@rel.RelatedEntityId" class="text-decoration-none fw-bold text-body me-2">
+                                        @rel.RelatedEntityName
+                                    </a>
+                                    <span class="badge rounded-pill bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25">@rel.RelationshipTypeOppositeName</span>
+                                </div>
+                                <div>
+                                    <a asp-controller="Relationships" asp-action="Edit" asp-route-id="@rel.Id" class="text-secondary me-2" title="Edit relationship" aria-label="Edit relationship with @rel.RelatedEntityName">
+                                        <i class="bi bi-pencil-square"></i>
+                                    </a>
+                                    <a asp-controller="Relationships" asp-action="Delete" asp-route-id="@rel.Id" class="text-danger" title="Delete relationship" aria-label="Delete relationship with @rel.RelatedEntityName">
+                                        <i class="bi bi-trash"></i>
+                                    </a>
                                 </div>
                             </div>
                         }
                     }
-                    else
-                    {
-                        <div class="text-center py-4 text-muted">
-                            <i class="bi bi-journal-text display-6 d-block mb-3 opacity-25"></i>
-                            <p class="mb-2">No notes available.</p>
-                            <a asp-controller="Notes" asp-action="Create" asp-route-entityId="@Model.Id" asp-route-entityType="Person" class="btn btn-sm btn-primary mt-2"><i class="bi bi-plus-lg"></i> Add Note</a>
-                        </div>
-                    }
-                </div>
-            </div>
 
-            <!-- Attachments -->
-            <div class="card mb-4">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <h5 class="card-title mb-0"><i class="bi bi-paperclip"></i> Attachments</h5>
-                    <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="collapse" data-bs-target="#uploadAttachmentForm">
-                        <i class="bi bi-plus-lg"></i> Add
-                    </button>
-                </div>
-                <div class="card-body">
-                    <div class="collapse mb-3" id="uploadAttachmentForm">
-                        <form asp-controller="Attachments" asp-action="Upload" asp-route-returnUrl="@(Context.Request.Path + Context.Request.QueryString)" method="post" enctype="multipart/form-data" class="border p-3 rounded bg-body-tertiary">
-                            <input type="hidden" name="entityId" value="@Model.Id" />
-                            <input type="hidden" name="entityType" value="Person" />
-                            <div class="mb-2">
-                                <label for="file" class="form-label small">Select File</label>
-                                <input type="file" name="file" class="form-control form-control-sm" required />
+                    @if (Model.RelatedTo != null)
+                    {
+                        foreach (var rel in Model.RelatedTo)
+                        {
+                            <div class="d-flex justify-content-between align-items-center p-3 rounded border hover-shadow" style="background-color: var(--bs-tertiary-bg);">
+                                <div class="d-flex align-items-center">
+                                    <a asp-action="Details" asp-route-id="@rel.EntityId" class="text-decoration-none fw-bold text-body me-2">
+                                        @rel.EntityName
+                                    </a>
+                                    <span class="badge rounded-pill bg-info bg-opacity-10 text-info border border-info border-opacity-25">@rel.RelationshipTypeName</span>
+                                </div>
+                                <div>
+                                    <a asp-controller="Relationships" asp-action="Edit" asp-route-id="@rel.Id" class="text-secondary me-2" title="Edit relationship" aria-label="Edit relationship with @rel.EntityName">
+                                        <i class="bi bi-pencil-square"></i>
+                                    </a>
+                                    <a asp-controller="Relationships" asp-action="Delete" asp-route-id="@rel.Id" class="text-danger" title="Delete relationship" aria-label="Delete relationship with @rel.EntityName">
+                                        <i class="bi bi-trash"></i>
+                                    </a>
+                                </div>
                             </div>
-                            <button type="submit" class="btn btn-primary btn-sm">Upload</button>
-                        </form>
+                        }
+                    }
+                }
+                else
+                {
+                    <div class="text-center py-4 text-muted">
+                        <i class="bi bi-people display-6 d-block mb-3 opacity-25"></i>
+                        <p class="mb-2">No relationships found.</p>
+                        <a asp-controller="Relationships" asp-action="Create" asp-route-entityId="@Model.Id" asp-route-entityType="Person" class="btn btn-sm btn-primary mt-2"><i class="bi bi-plus-lg"></i> Add Relationship</a>
                     </div>
-
-                    @if (Model.Attachments != null && Model.Attachments.Any())
-                    {
-                        <ul class="list-group list-group-flush">
-                            @foreach (var attachment in Model.Attachments)
-                            {
-                                <li class="list-group-item d-flex justify-content-between align-items-center px-0">
-                                    <div class="d-flex flex-column overflow-hidden w-100 me-2">
-                                        @if (!string.IsNullOrEmpty(attachment.ContentType) && attachment.ContentType.StartsWith("image/", StringComparison.OrdinalIgnoreCase))
-                                        {
-                                            <a href="@Url.Action("View", "Attachments", new { id = attachment.Id })" target="_blank" class="mb-2 d-block">
-                                                <img src="@Url.Action("View", "Attachments", new { id = attachment.Id })" class="img-fluid rounded border" alt="@attachment.FileName" loading="lazy" style="max-height: 300px; object-fit: contain;" />
-                                            </a>
-                                        }
-                                        <div class="d-flex align-items-center">
-                                            <i class="bi bi-file-earmark me-2 text-secondary"></i>
-                                            <a asp-controller="Attachments" asp-action="Download" asp-route-id="@attachment.Id" class="text-truncate" title="@attachment.FileName">
-                                                @attachment.FileName
-                                            </a>
-                                        </div>
-                                    </div>
-                                    <div class="btn-group btn-group-sm ms-2 align-self-start">
-                                        <a asp-controller="Attachments" asp-action="Download" asp-route-id="@attachment.Id" class="btn btn-outline-secondary" title="Download" aria-label="Download @attachment.FileName"><i class="bi bi-download"></i></a>
-                                        <form asp-controller="Attachments" asp-action="Delete" asp-route-id="@attachment.Id" asp-route-returnUrl="@(Context.Request.Path + Context.Request.QueryString)" method="post" class="d-inline" onsubmit="return confirm('Are you sure?');">
-                                            <button type="submit" class="btn btn-outline-danger" title="Delete" aria-label="Delete @attachment.FileName"><i class="bi bi-trash"></i></button>
-                                        </form>
-                                    </div>
-                                </li>
-                            }
-                        </ul>
-                    }
-                    else
-                    {
-                        <div class="text-center py-4 text-muted">
-                            <i class="bi bi-paperclip display-6 d-block mb-3 opacity-25"></i>
-                            <p class="mb-2">No attachments.</p>
-                            <button type="button" class="btn btn-sm btn-primary mt-2" data-bs-toggle="collapse" data-bs-target="#uploadAttachmentForm">
-                                <i class="bi bi-plus-lg"></i> Add Attachment
-                            </button>
-                        </div>
-                    }
-                </div>
+                }
             </div>
 
+            @if ((Model.Relationships != null && Model.Relationships.Any()) || (Model.RelatedTo != null && Model.RelatedTo.Any()))
+            {
+                <div class="text-end">
+                    <a asp-controller="Relationships" asp-action="Create" asp-route-entityId="@Model.Id" asp-route-entityType="Person" class="btn btn-primary btn-sm">Add Relationship</a>
+                </div>
+            }
         </div>
     </div>
+
+    <!-- Pets -->
+    <div class="card mb-4 border shadow-sm">
+        <div class="card-header bg-transparent border-0 pt-3 px-3 d-flex justify-content-between align-items-center">
+            <h5 class="card-title mb-0 fw-bold"><i class="bi bi-emoji-smile"></i> Pets</h5>
+            <a asp-controller="Pets" asp-action="Create" asp-route-entityId="@Model.Id" class="btn btn-sm btn-outline-primary"><i class="bi bi-plus-lg"></i> Add</a>
+        </div>
+        <div class="card-body px-3 pb-3">
+            @if (Model.Pets != null && Model.Pets.Any())
+            {
+                <ul class="list-group list-group-flush">
+                    @foreach (var pet in Model.Pets)
+                    {
+                        <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+                            <div>
+                                <div class="fw-bold">@pet.Name</div>
+                                <small class="text-muted">@pet.Species @(string.IsNullOrEmpty(pet.Breed) ? "" : $"({pet.Breed})")</small>
+                            </div>
+                            <div class="btn-group btn-group-sm">
+                                <a asp-controller="Pets" asp-action="Edit" asp-route-id="@pet.Id" class="btn btn-outline-secondary" title="Edit" aria-label="Edit @pet.Name">
+                                    <i class="bi bi-pencil-square"></i>
+                                </a>
+                                <a asp-controller="Pets" asp-action="Delete" asp-route-id="@pet.Id" class="btn btn-outline-danger" title="Delete" aria-label="Delete @pet.Name">
+                                    <i class="bi bi-trash"></i>
+                                </a>
+                            </div>
+                        </li>
+                    }
+                </ul>
+            }
+            else
+            {
+                <div class="text-center py-4 text-muted">
+                    <i class="bi bi-emoji-smile display-6 d-block mb-3 opacity-25"></i>
+                    <p class="mb-2">No pets.</p>
+                    <a asp-controller="Pets" asp-action="Create" asp-route-entityId="@Model.Id" class="btn btn-sm btn-primary mt-2"><i class="bi bi-plus-lg"></i> Add Pet</a>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+<!-- Right Column -->
+<div class="col-md-8">
+    <!-- Important Dates -->
+    <div class="card mb-4">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="card-title mb-0"><i class="bi bi-calendar-event"></i> Important Dates</h5>
+            <a asp-controller="SignificantDates" asp-action="Create" asp-route-entityId="@Model.Id" asp-route-entityType="Person" class="btn btn-sm btn-outline-primary"><i class="bi bi-plus-lg"></i> Add</a>
+        </div>
+        <div class="card-body">
+            @if (Model.SignificantDates != null && Model.SignificantDates.Any())
+            {
+                <ul class="list-group">
+                    @foreach (var date in Model.SignificantDates.OrderBy(d => d.Date))
+                    {
+                        <li class="list-group-item">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h6 class="mb-1">@date.Title</h6>
+                                <div>
+                                    <span class="badge bg-info text-dark">@date.Date.ToShortDateString()</span>
+
+                                    @if (string.Equals(date.Title, SignificantDateTitles.Birthday, StringComparison.OrdinalIgnoreCase))
+                                    {
+                                        var today = DateTime.Today;
+                                        var age = today.Year - date.Date.Year;
+                                        if (date.Date.Date > today.AddYears(-age)) age--;
+                                        <span class="badge bg-secondary">@age years old</span>
+                                    }
+
+                                    @if (date.RemindMe)
+                                    {
+                                        <span class="badge bg-warning text-dark">Remind Me</span>
+                                    }
+
+                                    <div class="btn-group btn-group-sm ml-2">
+                                        <a asp-controller="SignificantDates" asp-action="Edit" asp-route-id="@date.Id" class="btn btn-outline-secondary" title="Edit" aria-label="Edit @date.Title">
+                                            <i class="bi bi-pencil-square"></i>
+                                        </a>
+                                        <a asp-controller="SignificantDates" asp-action="Delete" asp-route-id="@date.Id" class="btn btn-outline-danger" title="Delete" aria-label="Delete @date.Title">
+                                            <i class="bi bi-trash"></i>
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                            @if (!string.IsNullOrEmpty(date.Description) && date.Description != date.Title)
+                            {
+                                <p class="mb-1 text-muted small">@date.Description</p>
+                            }
+                        </li>
+                    }
+                </ul>
+            }
+            else
+            {
+                <div class="text-center py-4 text-muted">
+                    <i class="bi bi-calendar-event display-6 d-block mb-3 opacity-25"></i>
+                    <p class="mb-2">No important dates recorded.</p>
+                    <a asp-controller="SignificantDates" asp-action="Create" asp-route-entityId="@Model.Id" asp-route-entityType="Person" class="btn btn-sm btn-primary mt-2"><i class="bi bi-plus-lg"></i> Add Date</a>
+                </div>
+            }
+        </div>
+    </div>
+
+    <!-- Reminders -->
+    <div class="card mb-4">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="card-title mb-0"><i class="bi bi-alarm"></i> Reminders</h5>
+            <a asp-controller="Reminders" asp-action="Create" asp-route-entityId="@Model.Id" asp-route-entityType="Person" class="btn btn-sm btn-outline-primary"><i class="bi bi-plus-lg"></i> Add</a>
+        </div>
+        <div class="card-body">
+            @if (Model.Reminders != null && Model.Reminders.Any())
+            {
+                <ul class="list-group">
+                    @foreach (var reminder in Model.Reminders.OrderBy(r => r.DueDate))
+                    {
+                        <li class="list-group-item">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h6 class="mb-1">@reminder.Title</h6>
+                                <div>
+                                    <small class="@(reminder.DueDate < DateTime.Now ? "text-danger" : "text-muted")">
+                                        @reminder.DueDate.ToShortDateString()
+                                    </small>
+                                    <div class="btn-group btn-group-sm ml-2">
+                                        <a asp-controller="Reminders" asp-action="Edit" asp-route-id="@reminder.Id" class="btn btn-outline-secondary" title="Edit" aria-label="Edit @reminder.Title">
+                                            <i class="bi bi-pencil-square"></i>
+                                        </a>
+                                        <a asp-controller="Reminders" asp-action="Delete" asp-route-id="@reminder.Id" class="btn btn-outline-danger" title="Delete" aria-label="Delete @reminder.Title">
+                                            <i class="bi bi-trash"></i>
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                            <p class="mb-1">@reminder.Description</p>
+                        </li>
+                    }
+                </ul>
+            }
+            else
+            {
+                <div class="text-center py-4 text-muted">
+                    <i class="bi bi-alarm display-6 d-block mb-3 opacity-25"></i>
+                    <p class="mb-2">No reminders set.</p>
+                    <a asp-controller="Reminders" asp-action="Create" asp-route-entityId="@Model.Id" asp-route-entityType="Person" class="btn btn-sm btn-primary mt-2"><i class="bi bi-plus-lg"></i> Add Reminder</a>
+                </div>
+            }
+        </div>
+    </div>
+
+    <!-- Notes -->
+    <div class="card mb-4">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="card-title mb-0"><i class="bi bi-journal-text"></i> Notes</h5>
+            <a asp-controller="Notes" asp-action="Create" asp-route-entityId="@Model.Id" asp-route-entityType="Person" class="btn btn-sm btn-outline-primary"><i class="bi bi-plus-lg"></i> Add</a>
+        </div>
+        <div class="card-body">
+            @if (Model.Notes != null && Model.Notes.Any())
+            {
+                @foreach (var note in Model.Notes.OrderByDescending(n => n.CreatedDate))
+                {
+                    <div class="card mb-2">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between">
+                                <h6 class="card-subtitle mb-2 text-muted">
+                                    @note.Title <small>@note.CreatedDate.ToShortDateString()</small>
+                                </h6>
+                                <div class="btn-group btn-group-sm">
+                                    <a asp-controller="Notes" asp-action="Edit" asp-route-id="@note.Id" class="btn btn-outline-secondary" title="Edit" aria-label="Edit @note.Title">
+                                        <i class="bi bi-pencil-square"></i>
+                                    </a>
+                                    <a asp-controller="Notes" asp-action="Delete" asp-route-id="@note.Id" class="btn btn-outline-danger" title="Delete" aria-label="Delete @note.Title">
+                                        <i class="bi bi-trash"></i>
+                                    </a>
+                                </div>
+                            </div>
+                            <div class="d-none note-source">@note.Value</div>
+                            <div class="note-render card-text"></div>
+                        </div>
+                    </div>
+                }
+            }
+            else
+            {
+                <div class="text-center py-4 text-muted">
+                    <i class="bi bi-journal-text display-6 d-block mb-3 opacity-25"></i>
+                    <p class="mb-2">No notes available.</p>
+                    <a asp-controller="Notes" asp-action="Create" asp-route-entityId="@Model.Id" asp-route-entityType="Person" class="btn btn-sm btn-primary mt-2"><i class="bi bi-plus-lg"></i> Add Note</a>
+                </div>
+            }
+        </div>
+    </div>
+
+    <!-- Attachments -->
+    <div class="card mb-4">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="card-title mb-0"><i class="bi bi-paperclip"></i> Attachments</h5>
+            <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="collapse" data-bs-target="#uploadAttachmentForm">
+                <i class="bi bi-plus-lg"></i> Add
+            </button>
+        </div>
+        <div class="card-body">
+            <div class="collapse mb-3" id="uploadAttachmentForm">
+                <form asp-controller="Attachments" asp-action="Upload" asp-route-returnUrl="@(Context.Request.Path + Context.Request.QueryString)" method="post" enctype="multipart/form-data" class="border p-3 rounded bg-body-tertiary">
+                    <input type="hidden" name="entityId" value="@Model.Id"/>
+                    <input type="hidden" name="entityType" value="Person"/>
+                    <div class="mb-2">
+                        <label for="file" class="form-label small">Select File</label>
+                        <input type="file" name="file" class="form-control form-control-sm" required/>
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-sm">Upload</button>
+                </form>
+            </div>
+
+            @if (Model.Attachments != null && Model.Attachments.Any())
+            {
+                <ul class="list-group list-group-flush">
+                    @foreach (var attachment in Model.Attachments)
+                    {
+                        <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+                            <div class="d-flex flex-column overflow-hidden w-100 me-2">
+                                @if (!string.IsNullOrEmpty(attachment.ContentType) && attachment.ContentType.StartsWith("image/", StringComparison.OrdinalIgnoreCase))
+                                {
+                                    <a href="@Url.Action("View", "Attachments", new { id = attachment.Id })" target="_blank" class="mb-2 d-block">
+                                        <img src="@Url.Action("View", "Attachments", new { id = attachment.Id })" class="img-fluid rounded border" alt="@attachment.FileName" loading="lazy" style="max-height: 300px; object-fit: contain;"/>
+                                    </a>
+                                }
+                                <div class="d-flex align-items-center">
+                                    <i class="bi bi-file-earmark me-2 text-secondary"></i>
+                                    <a asp-controller="Attachments" asp-action="Download" asp-route-id="@attachment.Id" class="text-truncate" title="@attachment.FileName">
+                                        @attachment.FileName
+                                    </a>
+                                </div>
+                            </div>
+                            <div class="btn-group btn-group-sm ms-2 align-self-start">
+                                <a asp-controller="Attachments" asp-action="Download" asp-route-id="@attachment.Id" class="btn btn-outline-secondary" title="Download" aria-label="Download @attachment.FileName">
+                                    <i class="bi bi-download"></i>
+                                </a>
+                                <form asp-controller="Attachments" asp-action="Delete" asp-route-id="@attachment.Id" asp-route-returnUrl="@(Context.Request.Path + Context.Request.QueryString)" method="post" class="d-inline" onsubmit="return confirm('Are you sure?');">
+                                    <button type="submit" class="btn btn-outline-danger" title="Delete" aria-label="Delete @attachment.FileName">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        </li>
+                    }
+                </ul>
+            }
+            else
+            {
+                <div class="text-center py-4 text-muted">
+                    <i class="bi bi-paperclip display-6 d-block mb-3 opacity-25"></i>
+                    <p class="mb-2">No attachments.</p>
+                    <button type="button" class="btn btn-sm btn-primary mt-2" data-bs-toggle="collapse" data-bs-target="#uploadAttachmentForm">
+                        <i class="bi bi-plus-lg"></i> Add Attachment
+                    </button>
+                </div>
+            }
+        </div>
+    </div>
+
+</div>
+</div>
 </div>
 
 @section Scripts {

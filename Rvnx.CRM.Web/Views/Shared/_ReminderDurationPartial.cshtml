@@ -84,9 +84,15 @@
                 Quick Presets
             </button>
             <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="quickSelect">
-                <li><a class="dropdown-item" href="#" onclick="setDuration(1, 0, 0, 0); return false;">1 Year (Default)</a></li>
-                <li><a class="dropdown-item" href="#" onclick="setDuration(0, 6, 0, 0); return false;">6 Months</a></li>
-                <li><a class="dropdown-item" href="#" onclick="setDuration(0, 0, 30, 0); return false;">30 Days</a></li>
+                <li>
+                    <a class="dropdown-item" href="#" onclick="setDuration(1, 0, 0, 0); return false;">1 Year (Default)</a>
+                </li>
+                <li>
+                    <a class="dropdown-item" href="#" onclick="setDuration(0, 6, 0, 0); return false;">6 Months</a>
+                </li>
+                <li>
+                    <a class="dropdown-item" href="#" onclick="setDuration(0, 0, 30, 0); return false;">30 Days</a>
+                </li>
             </ul>
         </div>
     </div>
@@ -130,7 +136,7 @@
 </div>
 
 <!-- Hidden input to store the calculated TimeSpan string -->
-<input type="hidden" asp-for="EventFrequency" id="EventFrequency" />
+<input type="hidden" asp-for="EventFrequency" id="EventFrequency"/>
 
 <script>
     function toggleReminder() {
