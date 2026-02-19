@@ -37,9 +37,7 @@ namespace Rvnx.CRM.Web.Controllers
                 return RedirectToAction("Index", "Home");
             }
 
-            Rvnx.CRM.Core.Models.User? user = await _repository.GetByIdAsync<Rvnx.CRM.Core.Models.User>(userId.Value);
-
-            user ??= (await _repository.ListAsync<Rvnx.CRM.Core.Models.User>(u => u.SubjectId == userId.Value.ToString())).FirstOrDefault();
+            Rvnx.CRM.Core.Models.User? user = await GetUserAsync(userId.Value);
 
             if (user == null)
             {
@@ -66,9 +64,7 @@ namespace Rvnx.CRM.Web.Controllers
             Guid? userId = _currentUserService.UserId;
             if (!userId.HasValue) return RedirectToAction("Index", "Home");
 
-            Rvnx.CRM.Core.Models.User? user = await _repository.GetByIdAsync<Rvnx.CRM.Core.Models.User>(userId.Value);
-
-            user ??= (await _repository.ListAsync<Rvnx.CRM.Core.Models.User>(u => u.SubjectId == userId.Value.ToString())).FirstOrDefault();
+            Rvnx.CRM.Core.Models.User? user = await GetUserAsync(userId.Value);
 
             if (user == null) return RedirectToAction("Index");
 
@@ -109,7 +105,7 @@ namespace Rvnx.CRM.Web.Controllers
 
             Guid? userId = _currentUserService.UserId;
             if (!userId.HasValue) return Unauthorized();
-            Rvnx.CRM.Core.Models.User? user = (await _repository.ListAsync<Rvnx.CRM.Core.Models.User>(u => u.SubjectId == userId.Value.ToString())).FirstOrDefault();
+            Rvnx.CRM.Core.Models.User? user = await GetUserAsync(userId.Value);
 
             if (user == null) return RedirectToAction("Index");
 
@@ -633,6 +629,12 @@ namespace Rvnx.CRM.Web.Controllers
             }
 
             return false;
+        }
+
+        private async Task<Rvnx.CRM.Core.Models.User?> GetUserAsync(Guid userId)
+        {
+            Rvnx.CRM.Core.Models.User? user = await _repository.GetByIdAsync<Rvnx.CRM.Core.Models.User>(userId);
+            return user ?? (await _repository.ListAsync<Rvnx.CRM.Core.Models.User>(u => u.SubjectId == userId.ToString())).FirstOrDefault();
         }
 
         public async Task<IActionResult> Export(Guid id)
