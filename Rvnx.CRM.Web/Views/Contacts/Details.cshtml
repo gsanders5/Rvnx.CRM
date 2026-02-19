@@ -1,5 +1,6 @@
 @using Rvnx.CRM.Core.DTOs.Contact
 @using Rvnx.CRM.Core.Enumerations
+@using Rvnx.CRM.Core.Constants
 @model ContactDetailDto
 
 @{
@@ -266,7 +267,7 @@
                                         <div>
                                             <span class="badge bg-info text-dark">@date.Date.ToShortDateString()</span>
 
-                                            @if(string.Equals(date.Title, "Birthday", StringComparison.OrdinalIgnoreCase))
+                                            @if(string.Equals(date.Title, SignificantDateTitles.Birthday, StringComparison.OrdinalIgnoreCase))
                                             {
                                                 var today = DateTime.Today;
                                                 var age = today.Year - date.Date.Year;

@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Rvnx.CRM.Core.Constants;
 using Rvnx.CRM.Core.DTOs.Common;
 using Rvnx.CRM.Core.Extensions;
 using Rvnx.CRM.Core.Interfaces;
@@ -31,12 +32,12 @@ namespace Rvnx.CRM.Web.Controllers
         {
             if (ModelState.IsValid)
             {
-                if (string.Equals(dto.Title, "Birthday", StringComparison.OrdinalIgnoreCase))
+                if (string.Equals(dto.Title, SignificantDateTitles.Birthday, StringComparison.OrdinalIgnoreCase))
                 {
                     bool existingBirthday = (await _repository.CountAsync<SignificantDate>(d =>
                         d.EntityId == dto.EntityId &&
                         d.EntityType == dto.EntityType &&
-                        string.Equals(d.Title, "Birthday", StringComparison.OrdinalIgnoreCase))) > 0;
+                        string.Equals(d.Title, SignificantDateTitles.Birthday, StringComparison.OrdinalIgnoreCase))) > 0;
 
                     if (existingBirthday)
                     {
@@ -88,14 +89,14 @@ namespace Rvnx.CRM.Web.Controllers
                     SignificantDate? importantDate = await _repository.GetByIdAsync<SignificantDate>(id);
                     if (importantDate == null) return NotFound();
 
-                    if (string.Equals(dto.Title, "Birthday", StringComparison.OrdinalIgnoreCase))
+                    if (string.Equals(dto.Title, SignificantDateTitles.Birthday, StringComparison.OrdinalIgnoreCase))
                     {
-                        if (!string.Equals(importantDate.Title, "Birthday", StringComparison.OrdinalIgnoreCase))
+                        if (!string.Equals(importantDate.Title, SignificantDateTitles.Birthday, StringComparison.OrdinalIgnoreCase))
                         {
                             bool existingBirthday = (await _repository.CountAsync<SignificantDate>(d =>
                                 d.EntityId == dto.EntityId &&
                                 d.EntityType == dto.EntityType &&
-                                string.Equals(d.Title, "Birthday", StringComparison.OrdinalIgnoreCase))) > 0;
+                                string.Equals(d.Title, SignificantDateTitles.Birthday, StringComparison.OrdinalIgnoreCase))) > 0;
 
                             if (existingBirthday)
                             {

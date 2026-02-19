@@ -104,7 +104,7 @@ namespace Rvnx.CRM.Tests
             Assert.Equal("1234567890", phone.Value);
 
             // Check Birthday
-            SignificantDate? birthday = await context.Set<SignificantDate>().FirstOrDefaultAsync(d => d.EntityId == contact.Id && d.Title == "Birthday");
+            SignificantDate? birthday = await context.Set<SignificantDate>().FirstOrDefaultAsync(d => d.EntityId == contact.Id && d.Title == SignificantDateTitles.Birthday);
             Assert.NotNull(birthday);
             Assert.Equal(new DateTime(1990, 1, 1), birthday.Date);
         }
@@ -301,7 +301,7 @@ namespace Rvnx.CRM.Tests
             RedirectToActionResult redirectResult = Assert.IsType<RedirectToActionResult>(result);
             Assert.Equal("Index", redirectResult.ActionName);
 
-            List<Attachment> attachments = await repository.ListAsync<Attachment>(a => a.EntityId == contactId && a.AttachmentType == "ProfileImage");
+            List<Attachment> attachments = await repository.ListAsync<Attachment>(a => a.EntityId == contactId && a.AttachmentType == AttachmentTypes.ProfileImage);
             Assert.Single(attachments);
             Assert.Equal("image.png", attachments[0].FileName);
         }

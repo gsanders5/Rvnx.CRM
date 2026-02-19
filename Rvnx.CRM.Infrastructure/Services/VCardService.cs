@@ -155,7 +155,7 @@ public class VCardService : IVCardService
                             Id = Guid.NewGuid(),
                             EntityId = contact.Id,
                             EntityType = EntityTypes.Person,
-                            Title = "Birthday",
+                            Title = SignificantDateTitles.Birthday,
                             Date = val.DateTimeOffset.Value.DateTime,
                             Description = "Birthday from VCard",
                             RemindMe = true,
@@ -170,7 +170,7 @@ public class VCardService : IVCardService
                             Id = Guid.NewGuid(),
                             EntityId = contact.Id,
                             EntityType = EntityTypes.Person,
-                            Title = "Birthday",
+                            Title = SignificantDateTitles.Birthday,
                             Date = d.ToDateTime(TimeOnly.MinValue),
                             Description = "Birthday from VCard",
                             RemindMe = true,
@@ -245,7 +245,7 @@ public class VCardService : IVCardService
         // Birthday
         if (contact.SignificantDates != null)
         {
-            SignificantDate? bday = contact.SignificantDates.FirstOrDefault(d => d.Title == "Birthday");
+            SignificantDate? bday = contact.SignificantDates.FirstOrDefault(d => d.Title == SignificantDateTitles.Birthday);
             if (bday != null)
             {
                 vc.BirthDayViews = new[] { DateAndOrTimeProperty.FromDate(DateOnly.FromDateTime(bday.Date)) };

@@ -1,3 +1,4 @@
+using Rvnx.CRM.Core.Constants;
 ﻿using Rvnx.CRM.Core.Enumerations;
 using Rvnx.CRM.Core.Models.Contact;
 using Rvnx.CRM.Core.Models.Dates;
@@ -215,7 +216,7 @@ END:VCARD";
             // Assert
             Assert.Single(contacts);
             Contact contact = contacts.First();
-            SignificantDate? bday = contact.SignificantDates.FirstOrDefault(d => d.Title == "Birthday");
+            SignificantDate? bday = contact.SignificantDates.FirstOrDefault(d => d.Title == SignificantDateTitles.Birthday);
             Assert.NotNull(bday);
             Assert.Equal(new DateTime(1990, 1, 15), bday.Date);
         }
@@ -238,7 +239,7 @@ END:VCARD";
             // Assert
             Assert.Single(contacts);
             Contact contact = contacts.First();
-            SignificantDate? bday = contact.SignificantDates.FirstOrDefault(d => d.Title == "Birthday");
+            SignificantDate? bday = contact.SignificantDates.FirstOrDefault(d => d.Title == SignificantDateTitles.Birthday);
             Assert.NotNull(bday);
             Assert.True(bday.RemindMe);
             Assert.Equal(TimeSpan.FromDays(365), bday.EventFrequency);
@@ -314,7 +315,7 @@ END:VCARD";
                 FirstName = "Test",
                 SignificantDates = new List<SignificantDate>
                 {
-                    new() { Title = "Birthday", Date = new DateTime(1990, 1, 1) },
+                    new() { Title = SignificantDateTitles.Birthday, Date = new DateTime(1990, 1, 1) },
                     new() { Title = "Anniversary", Date = new DateTime(2020, 6, 15) }
                 }
             };

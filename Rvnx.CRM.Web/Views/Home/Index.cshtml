@@ -1,3 +1,4 @@
+@using Rvnx.CRM.Core.Constants
 @model Rvnx.CRM.Web.Models.DashboardViewModel
 
 @{
@@ -19,7 +20,7 @@
                         <a href="@(evt.RelatedEntityId.HasValue ? Url.Action("Details", "Contacts", new { id = evt.RelatedEntityId }) : "#")" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center rounded mb-2 border hover-shadow" style="background-color: var(--bs-body-bg);">
                             <div class="d-flex align-items-center">
                                 <div class="p-3 rounded shadow-sm me-3 text-primary bg-primary bg-opacity-10">
-                                    @if (evt.Type == "Birthday")
+                                    @if (evt.Type == SignificantDateTitles.Birthday)
                                     {
                                         <i class="bi bi-gift-fill fs-5"></i>
                                     }
