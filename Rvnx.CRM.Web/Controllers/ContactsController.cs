@@ -159,9 +159,21 @@ namespace Rvnx.CRM.Web.Controllers
             List<ContactDto> contactDtos = [.. contacts.Select(c => c.ToDto())];
             List<Guid> contactIds = [.. contacts.Select(c => c.Id)];
 
-            List<Attachment> profileAttachments = await _repository.ListAsNoTrackingAsync<Attachment>(a => a.EntityType == EntityTypes.Person
-                && a.AttachmentType == "ProfileImage"
-                && contactIds.Contains(a.EntityId));
+            List<Attachment> profileAttachments;
+
+            // Optimization: If contact list is large, avoid sending large list of IDs to SQL (which can hit parameter limits).
+            // Instead, fetch all profile images for Person entities (scoped by user via global filter) and filter in memory.
+            if (contactIds.Count < 2000)
+            {
+                profileAttachments = await _repository.ListAsNoTrackingAsync<Attachment>(a => a.EntityType == EntityTypes.Person
+                    && a.AttachmentType == "ProfileImage"
+                    && contactIds.Contains(a.EntityId));
+            }
+            else
+            {
+                profileAttachments = await _repository.ListAsNoTrackingAsync<Attachment>(a => a.EntityType == EntityTypes.Person
+                    && a.AttachmentType == "ProfileImage");
+            }
 
 
             if (profileAttachments != null && profileAttachments.Any())
