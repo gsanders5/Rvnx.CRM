@@ -32,7 +32,7 @@ namespace Rvnx.CRM.Tests
             // Arrange
             using CRMDbContext context = GetInMemoryDbContext();
             Repository repo = new(context);
-            AttachmentsController controller = new(repo, new Mock<IFileValidationService>().Object);
+            AttachmentsController controller = new(repo, new Mock<IFileValidationService>().Object, new Mock<IEntityService>().Object);
             controller.ControllerContext = new ControllerContext
             {
                 HttpContext = new DefaultHttpContext()
@@ -72,7 +72,7 @@ namespace Rvnx.CRM.Tests
             // Arrange
             using CRMDbContext context = GetInMemoryDbContext();
             Repository repo = new(context);
-            AttachmentsController controller = new(repo, new Mock<IFileValidationService>().Object);
+            AttachmentsController controller = new(repo, new Mock<IFileValidationService>().Object, new Mock<IEntityService>().Object);
             controller.ControllerContext = new ControllerContext
             {
                 HttpContext = new DefaultHttpContext()
@@ -91,7 +91,7 @@ namespace Rvnx.CRM.Tests
             // Arrange
             using CRMDbContext context = GetInMemoryDbContext();
             Repository repo = new(context);
-            AttachmentsController controller = new(repo, new Mock<IFileValidationService>().Object);
+            AttachmentsController controller = new(repo, new Mock<IFileValidationService>().Object, new Mock<IEntityService>().Object);
             controller.ControllerContext = new ControllerContext
             {
                 HttpContext = new DefaultHttpContext()
@@ -134,7 +134,7 @@ namespace Rvnx.CRM.Tests
             // Arrange
             using CRMDbContext context = GetInMemoryDbContext();
             Repository repo = new(context);
-            AttachmentsController controller = new(repo, new Mock<IFileValidationService>().Object);
+            AttachmentsController controller = new(repo, new Mock<IFileValidationService>().Object, new Mock<IEntityService>().Object);
             controller.ControllerContext = new ControllerContext
             {
                 HttpContext = new DefaultHttpContext()

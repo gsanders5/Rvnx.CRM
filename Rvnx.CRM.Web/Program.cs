@@ -18,6 +18,7 @@ namespace Rvnx.CRM.Web
             builder.Services.AddHttpContextAccessor();
             builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
             builder.Services.AddScoped<IFileValidationService, FileValidationService>();
+            builder.Services.AddScoped<IEntityService, EntityService>();
 
             IConfigurationSection authConfig = builder.Configuration.GetSection("Authentication");
             bool authEnabled = authConfig.GetValue<bool>("Enabled");
