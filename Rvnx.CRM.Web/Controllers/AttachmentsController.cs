@@ -5,18 +5,12 @@ using Rvnx.CRM.Web.Controllers.Base;
 
 namespace Rvnx.CRM.Web.Controllers
 {
-    public class AttachmentsController : AuthorizedController
+    public class AttachmentsController(IRepository repository, IFileValidationService fileValidationService) : AuthorizedController
     {
-        private readonly IRepository _repository;
-        private readonly IFileValidationService _fileValidationService;
+        private readonly IRepository _repository = repository;
+        private readonly IFileValidationService _fileValidationService = fileValidationService;
         private static readonly string[] AllowedExtensions = { ".jpg", ".jpeg", ".png", ".gif", ".pdf", ".txt", ".doc", ".docx", ".xls", ".xlsx" };
         private static readonly string[] ImageContentTypes = { "image/jpeg", "image/png", "image/gif" };
-
-        public AttachmentsController(IRepository repository, IFileValidationService fileValidationService)
-        {
-            _repository = repository;
-            _fileValidationService = fileValidationService;
-        }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
@@ -79,7 +73,7 @@ namespace Rvnx.CRM.Web.Controllers
                 return LocalRedirect(returnUrl);
             }
 
-            string referer = Request.Headers["Referer"].ToString();
+            string referer = Request.Headers.Referer.ToString();
             if (Uri.TryCreate(referer, UriKind.Absolute, out Uri? uri) && string.Equals(uri.Host, Request.Host.Host, StringComparison.OrdinalIgnoreCase))
             {
                 return Redirect(referer);
@@ -100,14 +94,12 @@ namespace Rvnx.CRM.Web.Controllers
 
         public async Task<IActionResult> View(Guid id)
         {
-            // 1. Fetch metadata only (fast)
             Attachment? attachment = await _repository.GetByIdAsync<Attachment>(id);
             if (attachment == null) return NotFound();
 
-            // 2. Check Cache
-            if (!string.IsNullOrEmpty(Request.Headers["If-Modified-Since"]))
+            if (!string.IsNullOrEmpty(Request.Headers.IfModifiedSince))
             {
-                if (DateTime.TryParse(Request.Headers["If-Modified-Since"],
+                if (DateTime.TryParse(Request.Headers.IfModifiedSince,
                     System.Globalization.CultureInfo.InvariantCulture,
                     System.Globalization.DateTimeStyles.AdjustToUniversal | System.Globalization.DateTimeStyles.AssumeUniversal,
                     out DateTime ifModifiedSince))
@@ -120,21 +112,17 @@ namespace Rvnx.CRM.Web.Controllers
                 }
             }
 
-            // 3. Set Cache Headers
-            Response.Headers["Last-Modified"] = attachment.LastChangedDate.ToString("R");
-            Response.Headers["Cache-Control"] = "public, max-age=31536000";
+            Response.Headers.LastModified = attachment.LastChangedDate.ToString("R");
+            Response.Headers.CacheControl = "public, max-age=31536000";
 
-            // 4. Fetch content (if not cached)
             attachment = await _repository.GetByIdWithIncludesAsync<Attachment>(id, "AttachmentContent");
             if (attachment == null || attachment.AttachmentContent == null) return NotFound();
 
-            // Only allow inline viewing for safe image types
             if (ImageContentTypes.Contains(attachment.ContentType))
             {
                 return File(attachment.AttachmentContent.Content, attachment.ContentType);
             }
 
-            // Otherwise force download
             return File(attachment.AttachmentContent.Content, attachment.ContentType, attachment.FileName);
         }
 

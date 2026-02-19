@@ -8,6 +8,7 @@ using Rvnx.CRM.Core.Models.Contact;
 using Rvnx.CRM.Infrastructure.Data;
 using Rvnx.CRM.Infrastructure.Repositories;
 using Rvnx.CRM.Web.Controllers;
+using Rvnx.CRM.Core.DTOs.Common;
 
 namespace Rvnx.CRM.Tests
 {
@@ -38,7 +39,7 @@ namespace Rvnx.CRM.Tests
             context.Contacts.Add(new Contact { Id = contactId, FirstName = "Test" });
             await context.SaveChangesAsync();
 
-            Note note = new()
+            NoteFormDto note = new()
             {
                 EntityId = contactId,
                 EntityType = EntityTypes.Person,
@@ -75,7 +76,7 @@ namespace Rvnx.CRM.Tests
             await context.SaveChangesAsync();
             context.ChangeTracker.Clear();
 
-            Note update = new()
+            NoteFormDto update = new()
             {
                 Id = noteId,
                 EntityId = contactId,

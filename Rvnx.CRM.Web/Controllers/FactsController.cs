@@ -1,4 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
+using Rvnx.CRM.Core.Constants;
+using Rvnx.CRM.Core.DTOs.Contact;
+using Rvnx.CRM.Core.Extensions;
 using Rvnx.CRM.Core.Interfaces;
 using Rvnx.CRM.Core.Models.Contact;
 using Rvnx.CRM.Web.Controllers.Base;
@@ -15,35 +18,47 @@ namespace Rvnx.CRM.Web.Controllers
         {
             return entityId == Guid.Empty || string.IsNullOrEmpty(entityType)
                 ? NotFound()
-                : View(new Fact { EntityId = entityId, EntityType = entityType });
+                : View(new FactFormDto { EntityId = entityId, EntityType = entityType });
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("EntityId,EntityType,Category,Value")] Fact fact)
+        public async Task<IActionResult> Create(FactFormDto factDto)
         {
             if (ModelState.IsValid)
             {
-                fact.Id = Guid.NewGuid();
+                Fact fact = factDto.ToEntity();
                 await _repository.AddAsync(fact);
                 await _repository.SaveChangesAsync();
                 return RedirectToEntity(fact.EntityId, fact.EntityType);
             }
-            return View(fact);
+            return View(factDto);
         }
 
         public async Task<IActionResult> Edit(Guid? id)
         {
             if (id == null) return NotFound();
             Fact? fact = await _repository.GetByIdAsync<Fact>(id.Value);
-            return fact == null ? NotFound() : View(fact);
+            
+            if (fact == null) return NotFound();
+
+            var dto = new FactFormDto
+            {
+                Id = fact.Id,
+                Category = fact.Category,
+                Value = fact.Value,
+                EntityId = fact.EntityId,
+                EntityType = fact.EntityType
+            };
+
+            return View(dto);
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(Guid id, [Bind("Id,Category,Value")] Fact factInput)
+        public async Task<IActionResult> Edit(Guid id, FactFormDto factDto)
         {
-            if (id != factInput.Id) return NotFound();
+            if (id != factDto.Id) return NotFound();
 
             if (ModelState.IsValid)
             {
@@ -53,10 +68,7 @@ namespace Rvnx.CRM.Web.Controllers
                     Fact? existingFact = await _repository.GetByIdAsync<Fact>(id);
                     if (existingFact == null) return NotFound();
 
-                    // Only update user-editable fields
-                    existingFact.Category = factInput.Category;
-                    existingFact.Value = factInput.Value;
-                    // EntityId, EntityType, CreatedDate, CreatedBy are preserved from existing entity
+                    existingFact.UpdateEntity(factDto);
 
                     await _repository.UpdateAsync(existingFact);
                     await _repository.SaveChangesAsync();
@@ -65,22 +77,12 @@ namespace Rvnx.CRM.Web.Controllers
                 }
                 catch (Exception)
                 {
-                    if (!await _repository.ExistsAsync<Fact>(factInput.Id)) return NotFound();
+                    if (!await _repository.ExistsAsync<Fact>(factDto.Id.Value)) return NotFound();
                     else throw;
                 }
             }
 
-            // Re-fetch to get EntityId/EntityType for view
-            Fact? fact = await _repository.GetByIdAsync<Fact>(id);
-            if (fact != null)
-            {
-                // Merge input values back for display
-                fact.Category = factInput.Category;
-                fact.Value = factInput.Value;
-                return View(fact);
-            }
-
-            return View(factInput);
+            return View(factDto);
         }
 
         public async Task<IActionResult> Delete(Guid? id)

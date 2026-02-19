@@ -4,6 +4,8 @@ using Moq;
 using Rvnx.CRM.Core.Constants;
 using Rvnx.CRM.Core.Interfaces;
 using Rvnx.CRM.Core.Models.Base;
+using Rvnx.CRM.Core.DTOs.Contact;
+using Rvnx.CRM.Core.DTOs.Common;
 using Rvnx.CRM.Core.Models.Contact;
 using Rvnx.CRM.Infrastructure.Data;
 using Rvnx.CRM.Infrastructure.Repositories;
@@ -61,7 +63,7 @@ namespace Rvnx.CRM.Tests
             context.ChangeTracker.Clear();
 
             // Attacker tries to change EntityId via form submission
-            Note tamperAttempt = new()
+            NoteFormDto tamperAttempt = new()
             {
                 Id = noteId,
                 EntityId = attackerContactId, // Attempting to move note to different contact
@@ -118,13 +120,12 @@ namespace Rvnx.CRM.Tests
             context.ChangeTracker.Clear();
 
             // 4. Attacker constructs a payload trying to overwrite the audit fields
-            Note tamperAttempt = new()
+            NoteFormDto tamperAttempt = new()
             {
                 Id = noteId,
                 Title = "Updated",
-                Value = "Updated Content",
-                CreatedDate = assignedCreatedDate.AddYears(5), // Attacker tries to change date
-                CreatedBy = "hacker" // Attacker tries to change owner
+                Value = "Updated Content"
+                // CreatedDate and CreatedBy are not on the DTO, effectively testing that they can't be bound
             };
 
             // Act
@@ -176,7 +177,7 @@ namespace Rvnx.CRM.Tests
             context.ChangeTracker.Clear();
 
             // Attacker tries to change EntityId
-            Fact tamperAttempt = new()
+            FactFormDto tamperAttempt = new()
             {
                 Id = factId,
                 EntityId = attackerContactId,
@@ -229,7 +230,7 @@ namespace Rvnx.CRM.Tests
             context.ChangeTracker.Clear();
 
             // Attacker tries to change EntityId
-            ContactMethod tamperAttempt = new()
+            ContactMethodFormDto tamperAttempt = new()
             {
                 Id = contactMethodId,
                 EntityId = attackerContactId,
@@ -264,7 +265,7 @@ namespace Rvnx.CRM.Tests
             NotesController controller = new(repository);
 
             Guid nonExistentId = Guid.NewGuid();
-            Note note = new()
+            NoteFormDto note = new()
             {
                 Id = nonExistentId,
                 Title = "Test",
@@ -288,7 +289,7 @@ namespace Rvnx.CRM.Tests
 
             Guid routeId = Guid.NewGuid();
             Guid bodyId = Guid.NewGuid();
-            Fact fact = new()
+            FactFormDto fact = new()
             {
                 Id = bodyId,
                 Category = "Test",

@@ -8,6 +8,7 @@ using Rvnx.CRM.Core.Models.Contact;
 using Rvnx.CRM.Infrastructure.Data;
 using Rvnx.CRM.Infrastructure.Repositories;
 using Rvnx.CRM.Web.Controllers;
+using Rvnx.CRM.Core.DTOs.Common;
 
 namespace Rvnx.CRM.Tests
 {
@@ -43,7 +44,7 @@ namespace Rvnx.CRM.Tests
             // Use a real static ID from Service
             Guid typeId = Guid.Parse("7c1f8d22-1b6a-4c28-9c1e-3f5a2b8e9d1a"); // Parent
 
-            Relationship rel = new()
+            RelationshipFormDto rel = new()
             {
                 EntityId = p1Id,
                 RelatedEntityId = p2Id,
@@ -84,7 +85,7 @@ namespace Rvnx.CRM.Tests
             // Use a real static ID from Service
             Guid typeId = Guid.Parse("7c1f8d22-1b6a-4c28-9c1e-3f5a2b8e9d1a"); // Parent
 
-            Relationship rel = new()
+            RelationshipFormDto rel = new()
             {
                 EntityId = p1Id,
                 RelatedEntityId = p2Id,

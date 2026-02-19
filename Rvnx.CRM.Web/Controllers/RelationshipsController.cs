@@ -1,6 +1,8 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Rvnx.CRM.Core.Constants;
+using Rvnx.CRM.Core.DTOs.Common;
+using Rvnx.CRM.Core.Extensions;
 using Rvnx.CRM.Core.Interfaces;
 using Rvnx.CRM.Core.Models.Business;
 using Rvnx.CRM.Core.Models.Contact;
@@ -26,12 +28,12 @@ namespace Rvnx.CRM.Web.Controllers
             await PopulateRelatedEntityDropdown(entityId, entityType);
             ViewData["RelationshipTypeSelection"] = GetRelationshipTypeOptions(entityType);
 
-            return View(new Relationship { EntityId = entityId, EntityType = entityType });
+            return View(new RelationshipFormDto { EntityId = entityId, EntityType = entityType });
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("EntityId,RelatedEntityId,EntityType,Description,StartDate,EndDate")] Relationship relationship, string relationshipTypeSelection)
+        public async Task<IActionResult> Create(RelationshipFormDto relationshipDto, string relationshipTypeSelection)
         {
             if (string.IsNullOrEmpty(relationshipTypeSelection))
             {
@@ -44,8 +46,10 @@ namespace Rvnx.CRM.Web.Controllers
                 if (parts.Length == 2 && Guid.TryParse(parts[0], out Guid typeId))
                 {
                     string direction = parts[1];
-                    relationship.RelationshipTypeId = typeId;
+                    relationshipDto.RelationshipTypeId = typeId;
 
+                    Relationship relationship = relationshipDto.ToEntity();
+                    
                     if (direction == "Rev")
                     {
                         Guid temp = relationship.EntityId;
@@ -53,7 +57,6 @@ namespace Rvnx.CRM.Web.Controllers
                         relationship.RelatedEntityId = temp;
                     }
 
-                    relationship.Id = Guid.NewGuid();
                     await _repository.AddAsync(relationship);
                     await _repository.SaveChangesAsync();
 
@@ -67,14 +70,14 @@ namespace Rvnx.CRM.Web.Controllers
                 }
             }
 
-            ViewData["EntityName"] = await GetEntityName(relationship.EntityId, relationship.EntityType);
-            ViewData["EntityId"] = relationship.EntityId;
-            ViewData["EntityType"] = relationship.EntityType;
+            ViewData["EntityName"] = await GetEntityName(relationshipDto.EntityId, relationshipDto.EntityType);
+            ViewData["EntityId"] = relationshipDto.EntityId;
+            ViewData["EntityType"] = relationshipDto.EntityType;
 
-            await PopulateRelatedEntityDropdown(relationship.EntityId, relationship.EntityType, relationship.RelatedEntityId);
-            ViewData["RelationshipTypeSelection"] = GetRelationshipTypeOptions(relationship.EntityType, relationshipTypeSelection);
+            await PopulateRelatedEntityDropdown(relationshipDto.EntityId, relationshipDto.EntityType, relationshipDto.RelatedEntityId);
+            ViewData["RelationshipTypeSelection"] = GetRelationshipTypeOptions(relationshipDto.EntityType, relationshipTypeSelection);
 
-            return View(relationship);
+            return View(relationshipDto);
         }
 
         public async Task<IActionResult> Edit(Guid? id)
@@ -93,14 +96,26 @@ namespace Rvnx.CRM.Web.Controllers
             string currentSelection = $"{relationship.RelationshipTypeId}_Fwd";
             ViewData["RelationshipTypeSelection"] = GetRelationshipTypeOptions(relationship.EntityType, currentSelection);
 
-            return View(relationship);
+            var dto = new RelationshipFormDto
+            {
+                Id = relationship.Id,
+                EntityId = relationship.EntityId,
+                RelatedEntityId = relationship.RelatedEntityId,
+                EntityType = relationship.EntityType,
+                RelationshipTypeId = relationship.RelationshipTypeId,
+                Description = relationship.Description,
+                StartDate = relationship.StartDate,
+                EndDate = relationship.EndDate
+            };
+
+            return View(dto);
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(Guid id, [Bind("Id,EntityId,RelatedEntityId,EntityType,RelationshipTypeId,Description,StartDate,EndDate")] Relationship relationship, string relationshipTypeSelection)
+        public async Task<IActionResult> Edit(Guid id, RelationshipFormDto relationshipDto, string relationshipTypeSelection)
         {
-            if (id != relationship.Id) return NotFound();
+            if (id != relationshipDto.Id) return NotFound();
 
             if (string.IsNullOrEmpty(relationshipTypeSelection))
             {
@@ -113,20 +128,27 @@ namespace Rvnx.CRM.Web.Controllers
                 if (parts.Length == 2 && Guid.TryParse(parts[0], out Guid typeId))
                 {
                     string direction = parts[1];
-                    relationship.RelationshipTypeId = typeId;
+                    // Update DTO with selected type ID
+                    relationshipDto.RelationshipTypeId = typeId;
+
+                    Relationship? existingRelationship = await _repository.GetByIdAsync<Relationship>(id);
+                    if (existingRelationship == null) return NotFound();
+
+                    // Apply DTO updates to entity
+                    existingRelationship.UpdateEntity(relationshipDto);
 
                     if (direction == "Rev")
                     {
-                        Guid temp = relationship.EntityId;
-                        relationship.EntityId = relationship.RelatedEntityId;
-                        relationship.RelatedEntityId = temp;
+                        Guid temp = existingRelationship.EntityId;
+                        existingRelationship.EntityId = existingRelationship.RelatedEntityId;
+                        existingRelationship.RelatedEntityId = temp;
                     }
 
-                    await _repository.UpdateAsync(relationship);
+                    await _repository.UpdateAsync(existingRelationship);
                     await _repository.SaveChangesAsync();
 
-                    Guid redirectId = direction == "Rev" ? relationship.RelatedEntityId : relationship.EntityId;
-                    return RedirectToEntity(redirectId, relationship.EntityType);
+                    Guid redirectId = direction == "Rev" ? existingRelationship.RelatedEntityId : existingRelationship.EntityId;
+                    return RedirectToEntity(redirectId, existingRelationship.EntityType);
                 }
                 else
                 {
@@ -134,14 +156,14 @@ namespace Rvnx.CRM.Web.Controllers
                 }
             }
 
-            ViewData["EntityName"] = await GetEntityName(relationship.EntityId, relationship.EntityType);
-            ViewData["EntityId"] = relationship.EntityId;
-            ViewData["EntityType"] = relationship.EntityType;
+            ViewData["EntityName"] = await GetEntityName(relationshipDto.EntityId, relationshipDto.EntityType);
+            ViewData["EntityId"] = relationshipDto.EntityId;
+            ViewData["EntityType"] = relationshipDto.EntityType;
 
-            await PopulateRelatedEntityDropdown(relationship.EntityId, relationship.EntityType, relationship.RelatedEntityId);
-            ViewData["RelationshipTypeSelection"] = GetRelationshipTypeOptions(relationship.EntityType, relationshipTypeSelection);
+            await PopulateRelatedEntityDropdown(relationshipDto.EntityId, relationshipDto.EntityType, relationshipDto.RelatedEntityId);
+            ViewData["RelationshipTypeSelection"] = GetRelationshipTypeOptions(relationshipDto.EntityType, relationshipTypeSelection);
 
-            return View(relationship);
+            return View(relationshipDto);
         }
 
         public async Task<IActionResult> Delete(Guid? id)

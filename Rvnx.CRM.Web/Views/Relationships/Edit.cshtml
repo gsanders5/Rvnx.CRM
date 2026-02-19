@@ -1,5 +1,5 @@
 @using Rvnx.CRM.Core.Constants
-@model Rvnx.CRM.Core.Models.Contact.Relationship
+@model Rvnx.CRM.Core.DTOs.Common.RelationshipFormDto
 
 @{
     ViewData["Title"] = "Edit Relationship";
@@ -15,9 +15,6 @@
             <input type="hidden" asp-for="Id" />
             <input type="hidden" asp-for="EntityId" />
             <input type="hidden" asp-for="EntityType" />
-            <input type="hidden" asp-for="CreatedDate" />
-            <input type="hidden" asp-for="CreatedBy" />
-            <input type="hidden" asp-for="UserId" />
 
             <div class="mb-3">
                 <label for="relationshipTypeSelection" class="form-label">Relationship Type</label>

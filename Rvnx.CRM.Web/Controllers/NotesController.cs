@@ -1,4 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
+using Rvnx.CRM.Core.Constants;
+using Rvnx.CRM.Core.DTOs.Common;
+using Rvnx.CRM.Core.Extensions;
 using Rvnx.CRM.Core.Interfaces;
 using Rvnx.CRM.Core.Models.Base;
 using Rvnx.CRM.Web.Controllers.Base;
@@ -19,25 +22,25 @@ namespace Rvnx.CRM.Web.Controllers
             ViewData["EntityId"] = entityId;
             ViewData["EntityType"] = entityType;
 
-            return View(new Note { EntityId = entityId, EntityType = entityType });
+            return View(new NoteFormDto { EntityId = entityId, EntityType = entityType });
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Title,Value,EntityId,EntityType")] Note note)
+        public async Task<IActionResult> Create(NoteFormDto noteDto)
         {
             if (ModelState.IsValid)
             {
-                note.Id = Guid.NewGuid();
+                Note note = noteDto.ToEntity();
                 await _repository.AddAsync(note);
                 await _repository.SaveChangesAsync();
                 return RedirectToEntity(note.EntityId, note.EntityType);
             }
 
-            ViewData["EntityName"] = await GetEntityName(note.EntityId, note.EntityType);
-            ViewData["EntityId"] = note.EntityId;
-            ViewData["EntityType"] = note.EntityType;
-            return View(note);
+            ViewData["EntityName"] = await GetEntityName(noteDto.EntityId, noteDto.EntityType);
+            ViewData["EntityId"] = noteDto.EntityId;
+            ViewData["EntityType"] = noteDto.EntityType;
+            return View(noteDto);
         }
 
         public async Task<IActionResult> Edit(Guid? id)
@@ -48,14 +51,24 @@ namespace Rvnx.CRM.Web.Controllers
             if (note == null) return NotFound();
 
             ViewData["EntityName"] = await GetEntityName(note.EntityId, note.EntityType);
-            return View(note);
+            
+            var dto = new NoteFormDto
+            {
+                Id = note.Id,
+                Title = note.Title,
+                Value = note.Value,
+                EntityId = note.EntityId,
+                EntityType = note.EntityType
+            };
+
+            return View(dto);
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(Guid id, [Bind("Id,Title,Value")] Note noteInput)
+        public async Task<IActionResult> Edit(Guid id, NoteFormDto noteDto)
         {
-            if (id != noteInput.Id) return NotFound();
+            if (id != noteDto.Id) return NotFound();
 
             if (ModelState.IsValid)
             {
@@ -65,10 +78,7 @@ namespace Rvnx.CRM.Web.Controllers
                     Note? existingNote = await _repository.GetByIdAsync<Note>(id);
                     if (existingNote == null) return NotFound();
 
-                    // Only update user-editable fields
-                    existingNote.Title = noteInput.Title;
-                    existingNote.Value = noteInput.Value;
-                    // EntityId, EntityType, CreatedDate, CreatedBy are preserved from existing entity
+                    existingNote.UpdateEntity(noteDto);
 
                     await _repository.UpdateAsync(existingNote);
                     await _repository.SaveChangesAsync();
@@ -77,23 +87,18 @@ namespace Rvnx.CRM.Web.Controllers
                 }
                 catch (Exception)
                 {
-                    if (!await _repository.ExistsAsync<Note>(noteInput.Id)) return NotFound();
+                    if (!await _repository.ExistsAsync<Note>(noteDto.Id.Value)) return NotFound();
                     else throw;
                 }
             }
 
             // Re-fetch to get EntityId/EntityType for redirect and ViewData
-            Note? note = await _repository.GetByIdAsync<Note>(id);
-            if (note != null)
+            if (noteDto.EntityId != Guid.Empty)
             {
-                ViewData["EntityName"] = await GetEntityName(note.EntityId, note.EntityType);
-                // Merge input values back for display
-                note.Title = noteInput.Title;
-                note.Value = noteInput.Value;
-                return View(note);
+                ViewData["EntityName"] = await GetEntityName(noteDto.EntityId, noteDto.EntityType);
             }
 
-            return View(noteInput);
+            return View(noteDto);
         }
 
         public async Task<IActionResult> Delete(Guid? id)

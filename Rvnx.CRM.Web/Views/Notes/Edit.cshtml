@@ -1,4 +1,4 @@
-@model Rvnx.CRM.Core.Models.Base.Note
+@model Rvnx.CRM.Core.DTOs.Common.NoteFormDto
 
 @{
     ViewData["Title"] = "Edit Note";
@@ -14,9 +14,6 @@
             <input type="hidden" asp-for="Id" />
             <input type="hidden" asp-for="EntityId" />
             <input type="hidden" asp-for="EntityType" />
-            <input type="hidden" asp-for="CreatedDate" />
-            <input type="hidden" asp-for="CreatedBy" />
-            <input type="hidden" asp-for="UserId" />
 
             <div class="form-floating mb-3">
     <input asp-for="Title" class="form-control"  placeholder="Title"/>

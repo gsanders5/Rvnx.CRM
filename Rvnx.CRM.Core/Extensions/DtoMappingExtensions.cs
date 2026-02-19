@@ -221,5 +221,85 @@ namespace Rvnx.CRM.Core.Extensions
             entity.Birthday = dto.Birthday;
             entity.Notes = dto.Notes;
         }
+        public static ContactMethod ToEntity(this ContactMethodFormDto dto)
+        {
+            return new ContactMethod
+            {
+                Id = Guid.NewGuid(),
+                Type = dto.Type,
+                Value = dto.Value,
+                Label = dto.Label,
+                EntityId = dto.EntityId,
+                EntityType = dto.EntityType
+            };
+        }
+
+        public static void UpdateEntity(this ContactMethod entity, ContactMethodFormDto dto)
+        {
+            entity.Type = dto.Type;
+            entity.Value = dto.Value;
+            entity.Label = dto.Label;
+            // EntityId and EntityType should not be changeable
+        }
+        public static Note ToEntity(this NoteFormDto dto)
+        {
+            return new Note
+            {
+                Id = Guid.NewGuid(),
+                Title = dto.Title,
+                Value = dto.Value,
+                EntityId = dto.EntityId,
+                EntityType = dto.EntityType
+            };
+        }
+
+        public static void UpdateEntity(this Note entity, NoteFormDto dto)
+        {
+            entity.Title = dto.Title;
+            entity.Value = dto.Value;
+        }
+
+        public static Fact ToEntity(this FactFormDto dto)
+        {
+            return new Fact
+            {
+                Id = Guid.NewGuid(),
+                Category = dto.Category,
+                Value = dto.Value,
+                EntityId = dto.EntityId,
+                EntityType = dto.EntityType
+            };
+        }
+
+        public static void UpdateEntity(this Fact entity, FactFormDto dto)
+        {
+            entity.Category = dto.Category;
+            entity.Value = dto.Value;
+        }
+
+        public static Relationship ToEntity(this RelationshipFormDto dto)
+        {
+            return new Relationship
+            {
+                Id = Guid.NewGuid(),
+                EntityId = dto.EntityId,
+                RelatedEntityId = dto.RelatedEntityId,
+                EntityType = dto.EntityType,
+                RelationshipTypeId = dto.RelationshipTypeId,
+                Description = dto.Description,
+                StartDate = dto.StartDate,
+                EndDate = dto.EndDate
+            };
+        }
+
+        public static void UpdateEntity(this Relationship entity, RelationshipFormDto dto)
+        {
+            entity.EntityId = dto.EntityId;
+            entity.RelatedEntityId = dto.RelatedEntityId;
+            entity.RelationshipTypeId = dto.RelationshipTypeId;
+            entity.Description = dto.Description;
+            entity.StartDate = dto.StartDate;
+            entity.EndDate = dto.EndDate;
+        }
     }
 }

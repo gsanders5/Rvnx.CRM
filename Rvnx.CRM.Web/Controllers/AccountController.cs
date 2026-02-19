@@ -19,7 +19,6 @@ public class AccountController : BaseController
     [HttpGet]
     public IActionResult Logout()
     {
-        // SignOutResult handles clearing cookies and redirecting to the IDP for sign-out
         return SignOut(
             new AuthenticationProperties { RedirectUri = "/" },
             CookieAuthenticationDefaults.AuthenticationScheme,
