@@ -139,46 +139,9 @@ namespace Rvnx.CRM.Web.Controllers
 
                 await _repository.SaveChangesAsync();
 
-                if (!string.IsNullOrEmpty(contactDto.Email))
-                {
-                    await _repository.AddAsync(new ContactMethod
-                    {
-                        Id = Guid.NewGuid(),
-                        EntityId = contact.Id,
-                        EntityType = EntityTypes.Person,
-                        Type = ContactMethodType.Email,
-                        Value = contactDto.Email,
-                        Label = "Primary"
-                    });
-                }
-
-                if (!string.IsNullOrEmpty(contactDto.Phone))
-                {
-                    await _repository.AddAsync(new ContactMethod
-                    {
-                        Id = Guid.NewGuid(),
-                        EntityId = contact.Id,
-                        EntityType = EntityTypes.Person,
-                        Type = ContactMethodType.Phone,
-                        Value = contactDto.Phone,
-                        Label = "Primary"
-                    });
-                }
-
-                if (contactDto.Birthday.HasValue)
-                {
-                    await _repository.AddAsync(new SignificantDate
-                    {
-                        Id = Guid.NewGuid(),
-                        EntityId = contact.Id,
-                        EntityType = EntityTypes.Person,
-                        Title = "Birthday",
-                        Date = contactDto.Birthday.Value,
-                        Description = "Birthday",
-                        RemindMe = true,
-                        EventFrequency = TimeSpan.FromDays(365)
-                    });
-                }
+                await UpdateOrAddContactMethod(contact.Id, ContactMethodType.Email, contactDto.Email, null);
+                await UpdateOrAddContactMethod(contact.Id, ContactMethodType.Phone, contactDto.Phone, null);
+                await UpdateOrAddBirthday(contact.Id, contactDto.Birthday, null);
 
                 await _repository.SaveChangesAsync();
                 return RedirectToAction(nameof(Details), new { id = contact.Id });
@@ -312,46 +275,9 @@ namespace Rvnx.CRM.Web.Controllers
                 await _repository.AddAsync(contact);
                 await _repository.SaveChangesAsync();
 
-                if (!string.IsNullOrEmpty(contactDto.Email))
-                {
-                    await _repository.AddAsync(new ContactMethod
-                    {
-                        Id = Guid.NewGuid(),
-                        EntityId = contact.Id,
-                        EntityType = EntityTypes.Person,
-                        Type = ContactMethodType.Email,
-                        Value = contactDto.Email,
-                        Label = "Primary"
-                    });
-                }
-
-                if (!string.IsNullOrEmpty(contactDto.Phone))
-                {
-                    await _repository.AddAsync(new ContactMethod
-                    {
-                        Id = Guid.NewGuid(),
-                        EntityId = contact.Id,
-                        EntityType = EntityTypes.Person,
-                        Type = ContactMethodType.Phone,
-                        Value = contactDto.Phone,
-                        Label = "Primary"
-                    });
-                }
-
-                if (contactDto.Birthday.HasValue)
-                {
-                    await _repository.AddAsync(new SignificantDate
-                    {
-                        Id = Guid.NewGuid(),
-                        EntityId = contact.Id,
-                        EntityType = EntityTypes.Person,
-                        Title = "Birthday",
-                        Date = contactDto.Birthday.Value,
-                        Description = "Birthday",
-                        RemindMe = true,
-                        EventFrequency = TimeSpan.FromDays(365)
-                    });
-                }
+                await UpdateOrAddContactMethod(contact.Id, ContactMethodType.Email, contactDto.Email, null);
+                await UpdateOrAddContactMethod(contact.Id, ContactMethodType.Phone, contactDto.Phone, null);
+                await UpdateOrAddBirthday(contact.Id, contactDto.Birthday, null);
 
                 await _repository.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
@@ -405,91 +331,20 @@ namespace Rvnx.CRM.Web.Controllers
 
                     existingContact.UpdateEntity(contactDto);
 
+                    // Handle Email
                     List<ContactMethod> emails = await _repository.ListAsync<ContactMethod>(c => c.EntityId == id && c.EntityType == EntityTypes.Person && c.Type == ContactMethodType.Email);
                     ContactMethod? existingEmail = emails.FirstOrDefault(e => e.Label == "Primary") ?? emails.FirstOrDefault();
+                    await UpdateOrAddContactMethod(id, ContactMethodType.Email, contactDto.Email, existingEmail);
 
-                    if (!string.IsNullOrEmpty(contactDto.Email))
-                    {
-                        if (existingEmail != null)
-                        {
-                            existingEmail.Value = contactDto.Email;
-                            await _repository.UpdateAsync(existingEmail);
-                        }
-                        else
-                        {
-                            await _repository.AddAsync(new ContactMethod
-                            {
-                                Id = Guid.NewGuid(),
-                                EntityId = id,
-                                EntityType = EntityTypes.Person,
-                                Type = ContactMethodType.Email,
-                                Value = contactDto.Email,
-                                Label = "Primary"
-                            });
-                        }
-                    }
-                    else if (existingEmail != null)
-                    {
-                        await _repository.DeleteAsync<ContactMethod>(existingEmail.Id);
-                    }
-
+                    // Handle Phone
                     List<ContactMethod> phones = await _repository.ListAsync<ContactMethod>(c => c.EntityId == id && c.EntityType == EntityTypes.Person && c.Type == ContactMethodType.Phone);
                     ContactMethod? existingPhone = phones.FirstOrDefault(p => p.Label == "Primary") ?? phones.FirstOrDefault();
+                    await UpdateOrAddContactMethod(id, ContactMethodType.Phone, contactDto.Phone, existingPhone);
 
-                    if (!string.IsNullOrEmpty(contactDto.Phone))
-                    {
-                        if (existingPhone != null)
-                        {
-                            existingPhone.Value = contactDto.Phone;
-                            await _repository.UpdateAsync(existingPhone);
-                        }
-                        else
-                        {
-                            await _repository.AddAsync(new ContactMethod
-                            {
-                                Id = Guid.NewGuid(),
-                                EntityId = id,
-                                EntityType = EntityTypes.Person,
-                                Type = ContactMethodType.Phone,
-                                Value = contactDto.Phone,
-                                Label = "Primary"
-                            });
-                        }
-                    }
-                    else if (existingPhone != null)
-                    {
-                        await _repository.DeleteAsync<ContactMethod>(existingPhone.Id);
-                    }
-
+                    // Handle Birthday
                     List<SignificantDate> bdays = await _repository.ListAsync<SignificantDate>(d => d.EntityId == id && d.EntityType == EntityTypes.Person && d.Title == "Birthday");
                     SignificantDate? existingBday = bdays.FirstOrDefault();
-
-                    if (contactDto.Birthday.HasValue)
-                    {
-                        if (existingBday != null)
-                        {
-                            existingBday.Date = contactDto.Birthday.Value;
-                            await _repository.UpdateAsync(existingBday);
-                        }
-                        else
-                        {
-                            await _repository.AddAsync(new SignificantDate
-                            {
-                                Id = Guid.NewGuid(),
-                                EntityId = id,
-                                EntityType = EntityTypes.Person,
-                                Title = "Birthday",
-                                Date = contactDto.Birthday.Value,
-                                Description = "Birthday",
-                                RemindMe = true,
-                                EventFrequency = TimeSpan.FromDays(365)
-                            });
-                        }
-                    }
-                    else if (existingBday != null)
-                    {
-                        await _repository.DeleteAsync<SignificantDate>(existingBday.Id);
-                    }
+                    await UpdateOrAddBirthday(id, contactDto.Birthday, existingBday);
 
                     if (profileImage != null && profileImage.Length > 0)
                     {
@@ -556,6 +411,70 @@ namespace Rvnx.CRM.Web.Controllers
                 return RedirectToAction(nameof(Index));
             }
             return View(contactDto);
+        }
+
+        private async Task UpdateOrAddContactMethod(Guid contactId, ContactMethodType type, string? newValue, ContactMethod? existingMethod)
+        {
+            if (!string.IsNullOrEmpty(newValue))
+            {
+                if (existingMethod != null)
+                {
+                    if (existingMethod.Value != newValue)
+                    {
+                        existingMethod.Value = newValue;
+                        await _repository.UpdateAsync(existingMethod);
+                    }
+                }
+                else
+                {
+                    await _repository.AddAsync(new ContactMethod
+                    {
+                        Id = Guid.NewGuid(),
+                        EntityId = contactId,
+                        EntityType = EntityTypes.Person,
+                        Type = type,
+                        Value = newValue,
+                        Label = "Primary"
+                    });
+                }
+            }
+            else if (existingMethod != null)
+            {
+                await _repository.DeleteAsync<ContactMethod>(existingMethod.Id);
+            }
+        }
+
+        private async Task UpdateOrAddBirthday(Guid contactId, DateTime? newDate, SignificantDate? existingDate)
+        {
+            if (newDate.HasValue)
+            {
+                if (existingDate != null)
+                {
+                    if (existingDate.Date != newDate.Value)
+                    {
+                        existingDate.Date = newDate.Value;
+                        await _repository.UpdateAsync(existingDate);
+                    }
+                }
+                else
+                {
+                    await _repository.AddAsync(new SignificantDate
+                    {
+                        Id = Guid.NewGuid(),
+                        EntityId = contactId,
+                        EntityType = EntityTypes.Person,
+                        Title = "Birthday",
+                        Date = newDate.Value,
+                        Description = "Birthday",
+                        RemindMe = true,
+                        EventFrequency = TimeSpan.FromDays(365)
+                    });
+                }
+            }
+            else if (existingDate != null)
+            {
+                await _repository.DeleteAsync<SignificantDate>(existingDate.Id);
+            }
         }
 
         public async Task<IActionResult> Delete(Guid? id)
