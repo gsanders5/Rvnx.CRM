@@ -12,7 +12,7 @@ namespace Rvnx.CRM.Tests
 {
     public class AttachmentsControllerRedirectTests
     {
-        private CRMDbContext GetInMemoryDbContext()
+        private static CRMDbContext GetInMemoryDbContext()
         {
             DbContextOptions<CRMDbContext> options = new DbContextOptionsBuilder<CRMDbContext>()
                 .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())

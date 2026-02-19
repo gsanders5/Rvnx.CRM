@@ -12,24 +12,14 @@ using Rvnx.CRM.Web.Controllers.Base;
 
 namespace Rvnx.CRM.Web.Controllers
 {
-    public class ContactsController : AuthorizedController
+    public class ContactsController(IRepository repository, ILogger<ContactsController> logger, ICurrentUserService currentUserService, IVCardService vCardService, IFileValidationService fileValidationService, IUserSynchronizationService userSynchronizationService) : AuthorizedController
     {
-        private readonly IRepository _repository;
-        private readonly ILogger<ContactsController> _logger;
-        private readonly ICurrentUserService _currentUserService;
-        private readonly IVCardService _vCardService;
-        private readonly IFileValidationService _fileValidationService;
-        private readonly IUserSynchronizationService _userSynchronizationService;
-
-        public ContactsController(IRepository repository, ILogger<ContactsController> logger, ICurrentUserService currentUserService, IVCardService vCardService, IFileValidationService fileValidationService, IUserSynchronizationService userSynchronizationService)
-        {
-            _repository = repository;
-            _logger = logger;
-            _currentUserService = currentUserService;
-            _vCardService = vCardService;
-            _fileValidationService = fileValidationService;
-            _userSynchronizationService = userSynchronizationService;
-        }
+        private readonly IRepository _repository = repository;
+        private readonly ILogger<ContactsController> _logger = logger;
+        private readonly ICurrentUserService _currentUserService = currentUserService;
+        private readonly IVCardService _vCardService = vCardService;
+        private readonly IFileValidationService _fileValidationService = fileValidationService;
+        private readonly IUserSynchronizationService _userSynchronizationService = userSynchronizationService;
 
         public async Task<IActionResult> Self()
         {

@@ -8,12 +8,8 @@ using Rvnx.CRM.Web.Controllers.Base;
 
 namespace Rvnx.CRM.Web.Controllers
 {
-    public class SignificantDatesController : RepositoryController
+    public class SignificantDatesController(IRepository repository) : RepositoryController(repository)
     {
-        public SignificantDatesController(IRepository repository) : base(repository)
-        {
-        }
-
         public IActionResult Create(Guid entityId, string entityType)
         {
             return View(new SignificantDateDto

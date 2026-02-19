@@ -10,16 +10,10 @@ using Rvnx.CRM.Web.Controllers.Base;
 
 namespace Rvnx.CRM.Web.Controllers
 {
-    public class DebugOperationsController : AuthorizedController
+    public class DebugOperationsController(IRepository repository, IHostEnvironment environment) : AuthorizedController
     {
-        private readonly IRepository _repository;
-        private readonly IHostEnvironment _environment;
-
-        public DebugOperationsController(IRepository repository, IHostEnvironment environment)
-        {
-            _repository = repository;
-            _environment = environment;
-        }
+        private readonly IRepository _repository = repository;
+        private readonly IHostEnvironment _environment = environment;
 
         public override void OnActionExecuting(ActionExecutingContext context)
         {

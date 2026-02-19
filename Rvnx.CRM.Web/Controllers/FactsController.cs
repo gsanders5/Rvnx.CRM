@@ -7,12 +7,8 @@ using Rvnx.CRM.Web.Controllers.Base;
 
 namespace Rvnx.CRM.Web.Controllers
 {
-    public class FactsController : RepositoryController
+    public class FactsController(IRepository repository) : RepositoryController(repository)
     {
-        public FactsController(IRepository repository) : base(repository)
-        {
-        }
-
         public IActionResult Create(Guid entityId, string entityType)
         {
             return entityId == Guid.Empty || string.IsNullOrEmpty(entityType)

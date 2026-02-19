@@ -9,20 +9,14 @@ using System.Diagnostics;
 
 namespace Rvnx.CRM.Web.Controllers
 {
-    public class HomeController : AuthorizedController
+    public class HomeController(ILogger<HomeController> logger, IRepository repository) : AuthorizedController
     {
-        private readonly ILogger<HomeController> _logger;
-        private readonly IRepository _repository;
+        private readonly ILogger<HomeController> _logger = logger;
+        private readonly IRepository _repository = repository;
 
         // Configuration constants
         private const int MaxUpcomingEvents = 5;
         private const int MaxEventsToProcess = 500;
-
-        public HomeController(ILogger<HomeController> logger, IRepository repository)
-        {
-            _logger = logger;
-            _repository = repository;
-        }
 
         public async Task<IActionResult> Index()
         {

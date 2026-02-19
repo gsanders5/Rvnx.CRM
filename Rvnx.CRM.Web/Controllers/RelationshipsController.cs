@@ -11,12 +11,8 @@ using Rvnx.CRM.Web.Controllers.Base;
 
 namespace Rvnx.CRM.Web.Controllers
 {
-    public class RelationshipsController : RepositoryController
+    public class RelationshipsController(IRepository repository) : RepositoryController(repository)
     {
-        public RelationshipsController(IRepository repository) : base(repository)
-        {
-        }
-
         public async Task<IActionResult> Create(Guid entityId, string entityType)
         {
             if (entityId == Guid.Empty || string.IsNullOrEmpty(entityType)) return NotFound();

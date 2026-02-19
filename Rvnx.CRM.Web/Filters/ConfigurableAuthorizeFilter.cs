@@ -3,14 +3,9 @@ using Microsoft.AspNetCore.Mvc.Filters;
 
 namespace Rvnx.CRM.Web.Filters;
 
-public class ConfigurableAuthorizeFilter : IAsyncAuthorizationFilter
+public class ConfigurableAuthorizeFilter(IConfiguration configuration) : IAsyncAuthorizationFilter
 {
-    private readonly IConfiguration _configuration;
-
-    public ConfigurableAuthorizeFilter(IConfiguration configuration)
-    {
-        _configuration = configuration;
-    }
+    private readonly IConfiguration _configuration = configuration;
 
     public Task OnAuthorizationAsync(AuthorizationFilterContext context)
     {

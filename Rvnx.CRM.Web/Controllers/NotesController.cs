@@ -7,12 +7,8 @@ using Rvnx.CRM.Web.Controllers.Base;
 
 namespace Rvnx.CRM.Web.Controllers
 {
-    public class NotesController : RepositoryController
+    public class NotesController(IRepository repository) : RepositoryController(repository)
     {
-        public NotesController(IRepository repository) : base(repository)
-        {
-        }
-
         public async Task<IActionResult> Create(Guid entityId, string entityType)
         {
             if (entityId == Guid.Empty || string.IsNullOrEmpty(entityType)) return NotFound();

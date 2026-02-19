@@ -6,12 +6,8 @@ using Rvnx.CRM.Web.Controllers.Base;
 
 namespace Rvnx.CRM.Web.Controllers
 {
-    public class RemindersController : RepositoryController
+    public class RemindersController(IRepository repository) : RepositoryController(repository)
     {
-        public RemindersController(IRepository repository) : base(repository)
-        {
-        }
-
         public async Task<IActionResult> Create(Guid entityId, string entityType)
         {
             if (entityId == Guid.Empty || string.IsNullOrEmpty(entityType)) return NotFound();

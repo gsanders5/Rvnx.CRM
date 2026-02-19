@@ -8,12 +8,8 @@ using Rvnx.CRM.Web.Controllers.Base;
 
 namespace Rvnx.CRM.Web.Controllers
 {
-    public class PetsController : RepositoryController
+    public class PetsController(IRepository repository) : RepositoryController(repository)
     {
-        public PetsController(IRepository repository) : base(repository)
-        {
-        }
-
         public IActionResult Create(Guid entityId)
         {
             PetFormDto dto = new()
