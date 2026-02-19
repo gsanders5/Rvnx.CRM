@@ -304,16 +304,14 @@ namespace Rvnx.CRM.Web.Controllers
                 IsHidden = contact.IsHidden
             };
 
-            List<ContactMethod> emails = await _repository.ListAsync<ContactMethod>(c => c.EntityId == contact.Id && c.EntityType == EntityTypes.Person && c.Type == ContactMethodType.Email);
-            ContactMethod? email = emails.FirstOrDefault(e => e.Label == ContactMethodLabels.Primary) ?? emails.FirstOrDefault();
+            ContactMethod? email = await GetPrimaryContactMethodAsync(contact.Id, ContactMethodType.Email);
             dto.Email = email?.Value;
 
-            List<ContactMethod> phones = await _repository.ListAsync<ContactMethod>(c => c.EntityId == contact.Id && c.EntityType == EntityTypes.Person && c.Type == ContactMethodType.Phone);
-            ContactMethod? phone = phones.FirstOrDefault(p => p.Label == ContactMethodLabels.Primary) ?? phones.FirstOrDefault();
+            ContactMethod? phone = await GetPrimaryContactMethodAsync(contact.Id, ContactMethodType.Phone);
             dto.Phone = phone?.Value;
 
-            List<SignificantDate> bdays = await _repository.ListAsync<SignificantDate>(d => d.EntityId == contact.Id && d.EntityType == EntityTypes.Person && d.Title == SignificantDateTitles.Birthday);
-            dto.Birthday = bdays.FirstOrDefault()?.Date;
+            SignificantDate? bday = await GetBirthdayAsync(contact.Id);
+            dto.Birthday = bday?.Date;
 
             return View(dto);
         }
@@ -333,19 +331,13 @@ namespace Rvnx.CRM.Web.Controllers
 
                     existingContact.UpdateEntity(contactDto);
 
-                    // Handle Email
-                    List<ContactMethod> emails = await _repository.ListAsync<ContactMethod>(c => c.EntityId == id && c.EntityType == EntityTypes.Person && c.Type == ContactMethodType.Email);
-                    ContactMethod? existingEmail = emails.FirstOrDefault(e => e.Label == ContactMethodLabels.Primary) ?? emails.FirstOrDefault();
+                    ContactMethod? existingEmail = await GetPrimaryContactMethodAsync(id, ContactMethodType.Email);
                     await UpdateOrAddContactMethod(id, ContactMethodType.Email, contactDto.Email, existingEmail);
 
-                    // Handle Phone
-                    List<ContactMethod> phones = await _repository.ListAsync<ContactMethod>(c => c.EntityId == id && c.EntityType == EntityTypes.Person && c.Type == ContactMethodType.Phone);
-                    ContactMethod? existingPhone = phones.FirstOrDefault(p => p.Label == ContactMethodLabels.Primary) ?? phones.FirstOrDefault();
+                    ContactMethod? existingPhone = await GetPrimaryContactMethodAsync(id, ContactMethodType.Phone);
                     await UpdateOrAddContactMethod(id, ContactMethodType.Phone, contactDto.Phone, existingPhone);
 
-                    // Handle Birthday
-                    List<SignificantDate> bdays = await _repository.ListAsync<SignificantDate>(d => d.EntityId == id && d.EntityType == EntityTypes.Person && d.Title == SignificantDateTitles.Birthday);
-                    SignificantDate? existingBday = bdays.FirstOrDefault();
+                    SignificantDate? existingBday = await GetBirthdayAsync(id);
                     await UpdateOrAddBirthday(id, contactDto.Birthday, existingBday);
 
                     if (profileImage != null && profileImage.Length > 0)
@@ -413,6 +405,18 @@ namespace Rvnx.CRM.Web.Controllers
                 return RedirectToAction(nameof(Index));
             }
             return View(contactDto);
+        }
+
+        private async Task<ContactMethod?> GetPrimaryContactMethodAsync(Guid contactId, ContactMethodType type)
+        {
+            List<ContactMethod> methods = await _repository.ListAsync<ContactMethod>(c => c.EntityId == contactId && c.EntityType == EntityTypes.Person && c.Type == type);
+            return methods.FirstOrDefault(e => e.Label == ContactMethodLabels.Primary) ?? methods.FirstOrDefault();
+        }
+
+        private async Task<SignificantDate?> GetBirthdayAsync(Guid contactId)
+        {
+            List<SignificantDate> bdays = await _repository.ListAsync<SignificantDate>(d => d.EntityId == contactId && d.EntityType == EntityTypes.Person && d.Title == SignificantDateTitles.Birthday);
+            return bdays.FirstOrDefault();
         }
 
         private async Task UpdateOrAddContactMethod(Guid contactId, ContactMethodType type, string? newValue, ContactMethod? existingMethod)
