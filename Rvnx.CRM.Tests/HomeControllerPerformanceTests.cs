@@ -27,35 +27,56 @@ public class HomeControllerPerformanceTests
     public async Task Index_ShouldCallListAsNoTrackingAsync_AfterOptimization()
     {
         // Arrange
-        _repositoryMock.Setup(r => r.ListAsNoTrackingAsync<Contact>(It.IsAny<Expression<Func<Contact, bool>>>(), It.IsAny<CancellationToken>(), It.IsAny<string[]>()))
+        // Contact uses predicate overload
+        _repositoryMock.Setup(r => r.ListAsNoTrackingAsync<Contact>(
+                It.IsAny<Expression<Func<Contact, bool>>>(),
+                It.IsAny<CancellationToken>(),
+                It.IsAny<string[]>()))
             .ReturnsAsync(new List<Contact>());
 
-        _repositoryMock.Setup(r => r.ListAsNoTrackingAsync<Reminder>(It.IsAny<int?>(), It.IsAny<int?>(), It.IsAny<CancellationToken>()))
+        // Reminder uses pagination overload (no predicate, just skip/take/cancellation)
+        _repositoryMock.Setup(r => r.ListAsNoTrackingAsync<Reminder>(
+                It.IsAny<int?>(),
+                It.IsAny<int?>(),
+                It.IsAny<CancellationToken>()))
             .ReturnsAsync(new List<Reminder>());
 
-        // Note: SignificantDate and Relationship use the predicate overload.
-        // The mock must match the exact signature used.
-        // public Task<List<T>> ListAsNoTrackingAsync<T>(Expression<Func<T, bool>> predicate, CancellationToken cancellationToken = default, params string[] includes)
-
-        _repositoryMock.Setup(r => r.ListAsNoTrackingAsync<SignificantDate>(It.IsAny<Expression<Func<SignificantDate, bool>>>(), It.IsAny<CancellationToken>(), It.IsAny<string[]>()))
+        _repositoryMock.Setup(r => r.ListAsNoTrackingAsync<SignificantDate>(
+                It.IsAny<Expression<Func<SignificantDate, bool>>>(),
+                It.IsAny<CancellationToken>(),
+                It.IsAny<string[]>()))
             .ReturnsAsync(new List<SignificantDate>());
 
-        _repositoryMock.Setup(r => r.ListAsNoTrackingAsync<Relationship>(It.IsAny<Expression<Func<Relationship, bool>>>(), It.IsAny<CancellationToken>(), It.IsAny<string[]>()))
+        _repositoryMock.Setup(r => r.ListAsNoTrackingAsync<Relationship>(
+                It.IsAny<Expression<Func<Relationship, bool>>>(),
+                It.IsAny<CancellationToken>(),
+                It.IsAny<string[]>()))
             .ReturnsAsync(new List<Relationship>());
 
         // Act
         IActionResult result = await _controller.Index();
 
         // Assert
-        // Verify that ListAsNoTrackingAsync was called for Relationships WITH a predicate
-        _repositoryMock.Verify(r => r.ListAsNoTrackingAsync<Relationship>(It.IsAny<Expression<Func<Relationship, bool>>>(), It.IsAny<CancellationToken>(), It.IsAny<string[]>()), Times.Once);
+        _repositoryMock.Verify(r => r.ListAsNoTrackingAsync<Contact>(
+            It.IsAny<Expression<Func<Contact, bool>>>(),
+            It.IsAny<CancellationToken>(),
+            It.IsAny<string[]>()), Times.Once);
 
-        // Verify that ListAsNoTrackingAsync was called for other entities
-        _repositoryMock.Verify(r => r.ListAsNoTrackingAsync<Contact>(It.IsAny<Expression<Func<Contact, bool>>>(), It.IsAny<CancellationToken>(), It.IsAny<string[]>()), Times.Once);
-        _repositoryMock.Verify(r => r.ListAsNoTrackingAsync<Reminder>(It.IsAny<int?>(), It.IsAny<int?>(), It.IsAny<CancellationToken>()), Times.Once);
-        _repositoryMock.Verify(r => r.ListAsNoTrackingAsync<SignificantDate>(It.IsAny<Expression<Func<SignificantDate, bool>>>(), It.IsAny<CancellationToken>(), It.IsAny<string[]>()), Times.Once);
+        _repositoryMock.Verify(r => r.ListAsNoTrackingAsync<Reminder>(
+            It.IsAny<int?>(),
+            It.IsAny<int?>(),
+            It.IsAny<CancellationToken>()), Times.Once);
 
-        // Verify result is ViewResult
+        _repositoryMock.Verify(r => r.ListAsNoTrackingAsync<SignificantDate>(
+            It.IsAny<Expression<Func<SignificantDate, bool>>>(),
+            It.IsAny<CancellationToken>(),
+            It.IsAny<string[]>()), Times.Once);
+
+        _repositoryMock.Verify(r => r.ListAsNoTrackingAsync<Relationship>(
+            It.IsAny<Expression<Func<Relationship, bool>>>(),
+            It.IsAny<CancellationToken>(),
+            It.IsAny<string[]>()), Times.Once);
+
         result.Should().BeOfType<ViewResult>();
     }
 }

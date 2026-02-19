@@ -2,8 +2,10 @@ using System.ComponentModel.DataAnnotations;
 
 namespace Rvnx.CRM.Core.DTOs.Contact
 {
-    public class CreateContactDto
+    public class ContactFormDto
     {
+        public Guid? Id { get; set; }
+
         [Required]
         [MaxLength(100)]
         [Display(Name = "First Name")]
@@ -31,7 +33,6 @@ namespace Rvnx.CRM.Core.DTOs.Contact
 
         [DataType(DataType.Date)]
         public DateTime? Birthday { get; set; }
-
         public bool IsHidden { get; set; }
     }
 }

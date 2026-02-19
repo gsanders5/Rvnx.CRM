@@ -74,7 +74,7 @@ namespace Rvnx.CRM.Tests
             ContactsController controller = new(repository, loggerMock.Object, userMock.Object, new Mock<IVCardService>().Object, new Mock<IFileValidationService>().Object, syncMock.Object);
             controller.ControllerContext = new ControllerContext { HttpContext = new DefaultHttpContext() };
 
-            CreateContactDto dto = new()
+            ContactFormDto dto = new()
             {
                 FirstName = "New",
                 LastName = "User",
@@ -165,7 +165,7 @@ namespace Rvnx.CRM.Tests
             await repository.AddAsync(contact);
             await repository.SaveChangesAsync();
 
-            UpdateContactDto dto = new() { Id = contactId, FirstName = "John", LastName = "Doe" };
+            ContactFormDto dto = new() { Id = contactId, FirstName = "John", LastName = "Doe" };
 
             Mock<IFormFile> fileMock = new();
             string content = "This is not an image";
@@ -216,7 +216,7 @@ namespace Rvnx.CRM.Tests
             await repository.AddAsync(contact);
             await repository.SaveChangesAsync();
 
-            UpdateContactDto dto = new() { Id = contactId, FirstName = "John", LastName = "Doe" };
+            ContactFormDto dto = new() { Id = contactId, FirstName = "John", LastName = "Doe" };
 
             Mock<IFormFile> fileMock = new();
             string content = "Fake Image Content";
@@ -273,7 +273,7 @@ namespace Rvnx.CRM.Tests
             await repository.AddAsync(contact);
             await repository.SaveChangesAsync();
 
-            UpdateContactDto dto = new() { Id = contactId, FirstName = "John", LastName = "Doe" };
+            ContactFormDto dto = new() { Id = contactId, FirstName = "John", LastName = "Doe" };
 
             Mock<IFormFile> fileMock = new();
             string content = "Fake Image Content";

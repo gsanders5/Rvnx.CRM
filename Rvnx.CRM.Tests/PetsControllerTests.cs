@@ -41,7 +41,7 @@ namespace Rvnx.CRM.Tests
 
             // Assert
             ViewResult viewResult = Assert.IsType<ViewResult>(result);
-            CreatePetDto? model = viewResult.Model as CreatePetDto;
+            PetFormDto? model = viewResult.Model as PetFormDto;
             Assert.NotNull(model);
             Assert.Equal(contactId, model.EntityId);
         }
@@ -58,7 +58,7 @@ namespace Rvnx.CRM.Tests
             context.Contacts.Add(new Contact { Id = contactId, FirstName = "John" });
             await context.SaveChangesAsync();
 
-            CreatePetDto dto = new()
+            PetFormDto dto = new()
             {
                 EntityId = contactId,
                 Name = "Buddy",
@@ -112,7 +112,7 @@ namespace Rvnx.CRM.Tests
 
             // Assert
             ViewResult viewResult = Assert.IsType<ViewResult>(result);
-            UpdatePetDto? model = viewResult.Model as UpdatePetDto;
+            PetFormDto? model = viewResult.Model as PetFormDto;
             Assert.NotNull(model);
             Assert.Equal(petId, model.Id);
             Assert.Equal("Whiskers", model.Name);
@@ -158,9 +158,10 @@ namespace Rvnx.CRM.Tests
             await context.SaveChangesAsync();
             context.ChangeTracker.Clear();
 
-            UpdatePetDto dto = new()
+            PetFormDto dto = new()
             {
                 Id = petId,
+                EntityId = contactId,
                 Name = "New Name",
                 Species = "Dog",
                 Breed = "Labrador",
@@ -189,7 +190,7 @@ namespace Rvnx.CRM.Tests
             Repository repository = new(context);
             PetsController controller = new(repository);
 
-            UpdatePetDto dto = new() { Id = Guid.NewGuid(), Name = "Test" };
+            PetFormDto dto = new() { Id = Guid.NewGuid(), Name = "Test" };
 
             // Act
             IActionResult result = await controller.Edit(Guid.NewGuid(), dto);
@@ -288,7 +289,7 @@ namespace Rvnx.CRM.Tests
             context.Contacts.Add(new Contact { Id = contactId, FirstName = "Test" });
             await context.SaveChangesAsync();
 
-            CreatePetDto dto = new()
+            PetFormDto dto = new()
             {
                 EntityId = contactId,
                 Name = "Test Pet",

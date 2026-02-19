@@ -71,7 +71,7 @@ namespace Rvnx.CRM.Tests
 
             // Assert
             ViewResult viewResult = Assert.IsType<ViewResult>(result);
-            CreateContactDto model = Assert.IsType<CreateContactDto>(viewResult.Model);
+            ContactFormDto model = Assert.IsType<ContactFormDto>(viewResult.Model);
             Assert.Equal("test@example.com", model.Email);
             Assert.Equal("Test", model.FirstName);
             Assert.Equal("User", model.LastName);
@@ -105,7 +105,7 @@ namespace Rvnx.CRM.Tests
 
             // Assert
             ViewResult viewResult = Assert.IsType<ViewResult>(result);
-            CreateContactDto model = Assert.IsType<CreateContactDto>(viewResult.Model);
+            ContactFormDto model = Assert.IsType<ContactFormDto>(viewResult.Model);
             Assert.Equal("Graham", model.FirstName);
             Assert.Equal("Sanders", model.LastName);
         }
@@ -164,7 +164,7 @@ namespace Rvnx.CRM.Tests
             context.Set<User>().Add(user);
             await context.SaveChangesAsync();
 
-            CreateContactDto dto = new() { FirstName = "My Self", Email = "myself@example.com" };
+            ContactFormDto dto = new() { FirstName = "My Self", Email = "myself@example.com" };
 
             // Act
             IActionResult result = await controller.CreateSelf(dto);
@@ -196,7 +196,7 @@ namespace Rvnx.CRM.Tests
             context.Set<Contact>().Add(existingContact);
             await context.SaveChangesAsync();
 
-            CreateContactDto dto = new() { FirstName = "New Self", Email = "new@example.com" };
+            ContactFormDto dto = new() { FirstName = "New Self", Email = "new@example.com" };
 
             // Act
             IActionResult result = await controller.CreateSelf(dto);
