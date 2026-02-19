@@ -12,9 +12,12 @@ using Rvnx.CRM.Web.Controllers;
 
 namespace Rvnx.CRM.Tests
 {
-    public class RelationshipsControllerTests
+    public class RelationshipsControllerTests : IDisposable
     {
-        private CRMDbContext GetInMemoryDbContext()
+        private readonly CRMDbContext _context;
+        private readonly RelationshipsController _controller;
+
+        public RelationshipsControllerTests()
         {
             DbContextOptions<CRMDbContext> options = new DbContextOptionsBuilder<CRMDbContext>()
                 .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
@@ -24,22 +27,26 @@ namespace Rvnx.CRM.Tests
             mockCurrentUserService.Setup(s => s.UserId).Returns(Guid.Parse("c5b50a20-34b2-44b2-8b9c-aa4135f60938"));
             mockCurrentUserService.Setup(s => s.UserName).Returns("test-user");
 
-            return new CRMDbContext(options, mockCurrentUserService.Object);
+            _context = new CRMDbContext(options, mockCurrentUserService.Object);
+            Repository repository = new Repository(_context);
+            _controller = new RelationshipsController(repository);
+        }
+
+        public void Dispose()
+        {
+            _context.Database.EnsureDeleted();
+            _context.Dispose();
         }
 
         [Fact]
-        public async Task Create_Post_ShouldCreateRelationship_ForwardDirection()
+        public async Task Create_Post_WithForwardDirection_ShouldCreateRelationship()
         {
             // Arrange
-            using CRMDbContext context = GetInMemoryDbContext();
-            Repository repository = new(context);
-            RelationshipsController controller = new(repository);
-
             Guid p1Id = Guid.NewGuid();
             Guid p2Id = Guid.NewGuid();
-            context.Contacts.Add(new Contact { Id = p1Id, FirstName = "P1" });
-            context.Contacts.Add(new Contact { Id = p2Id, FirstName = "P2" });
-            await context.SaveChangesAsync();
+            _context.Contacts.Add(new Contact { Id = p1Id, FirstName = "P1" });
+            _context.Contacts.Add(new Contact { Id = p2Id, FirstName = "P2" });
+            await _context.SaveChangesAsync();
 
             // Use a real static ID from Service
             Guid typeId = Guid.Parse("7c1f8d22-1b6a-4c28-9c1e-3f5a2b8e9d1a"); // Parent
@@ -53,7 +60,7 @@ namespace Rvnx.CRM.Tests
             string selection = $"{typeId}_Fwd";
 
             // Act
-            IActionResult result = await controller.Create(rel, selection);
+            IActionResult result = await _controller.Create(rel, selection);
 
             // Assert
             RedirectToActionResult redirectResult = Assert.IsType<RedirectToActionResult>(result);
@@ -61,7 +68,7 @@ namespace Rvnx.CRM.Tests
             Assert.Equal("Contacts", redirectResult.ControllerName);
             Assert.Equal(p1Id, redirectResult.RouteValues?["id"]);
 
-            Relationship? created = await context.Set<Relationship>().FirstOrDefaultAsync();
+            Relationship? created = await _context.Set<Relationship>().FirstOrDefaultAsync();
             Assert.NotNull(created);
             Assert.Equal(p1Id, created.EntityId);
             Assert.Equal(p2Id, created.RelatedEntityId);
@@ -69,18 +76,14 @@ namespace Rvnx.CRM.Tests
         }
 
         [Fact]
-        public async Task Create_Post_ShouldCreateRelationship_ReverseDirection_SwapsEntities()
+        public async Task Create_Post_WithReverseDirection_ShouldSwapEntitiesAndCreateRelationship()
         {
             // Arrange
-            using CRMDbContext context = GetInMemoryDbContext();
-            Repository repository = new(context);
-            RelationshipsController controller = new(repository);
-
             Guid p1Id = Guid.NewGuid(); // User is on P1 page
             Guid p2Id = Guid.NewGuid(); // User selects P2 as related
-            context.Contacts.Add(new Contact { Id = p1Id, FirstName = "P1" });
-            context.Contacts.Add(new Contact { Id = p2Id, FirstName = "P2" });
-            await context.SaveChangesAsync();
+            _context.Contacts.Add(new Contact { Id = p1Id, FirstName = "P1" });
+            _context.Contacts.Add(new Contact { Id = p2Id, FirstName = "P2" });
+            await _context.SaveChangesAsync();
 
             // Use a real static ID from Service
             Guid typeId = Guid.Parse("7c1f8d22-1b6a-4c28-9c1e-3f5a2b8e9d1a"); // Parent
@@ -94,14 +97,14 @@ namespace Rvnx.CRM.Tests
             string selection = $"{typeId}_Rev";
 
             // Act
-            IActionResult result = await controller.Create(rel, selection);
+            IActionResult result = await _controller.Create(rel, selection);
 
             // Assert
             // Should redirect back to P1 (original EntityId)
             RedirectToActionResult redirectResult = Assert.IsType<RedirectToActionResult>(result);
             Assert.Equal(p1Id, redirectResult.RouteValues?["id"]);
 
-            Relationship? created = await context.Set<Relationship>().FirstOrDefaultAsync();
+            Relationship? created = await _context.Set<Relationship>().FirstOrDefaultAsync();
             Assert.NotNull(created);
             // Swapped
             Assert.Equal(p2Id, created.EntityId);
@@ -110,16 +113,12 @@ namespace Rvnx.CRM.Tests
         }
 
         [Fact]
-        public async Task Delete_Post_ShouldDeleteRelationship()
+        public async Task DeleteConfirmed_WithValidId_ShouldDeleteRelationship()
         {
             // Arrange
-            using CRMDbContext context = GetInMemoryDbContext();
-            Repository repository = new(context);
-            RelationshipsController controller = new(repository);
-
             Guid relId = Guid.NewGuid();
             Guid p1Id = Guid.NewGuid();
-            context.Set<Relationship>().Add(new Relationship
+            _context.Set<Relationship>().Add(new Relationship
             {
                 Id = relId,
                 EntityId = p1Id,
@@ -127,30 +126,26 @@ namespace Rvnx.CRM.Tests
                 EntityType = EntityTypes.Person,
                 RelationshipTypeId = Guid.Parse("7c1f8d22-1b6a-4c28-9c1e-3f5a2b8e9d1a")
             });
-            await context.SaveChangesAsync();
+            await _context.SaveChangesAsync();
 
             // Act
-            IActionResult result = await controller.DeleteConfirmed(relId);
+            IActionResult result = await _controller.DeleteConfirmed(relId);
 
             // Assert
             Assert.IsType<RedirectToActionResult>(result);
-            Assert.Null(await context.Set<Relationship>().FindAsync(relId));
+            Assert.Null(await _context.Set<Relationship>().FindAsync(relId));
         }
 
         [Fact]
-        public async Task Create_Get_PopulatesGroupedOptions()
+        public async Task Create_Get_ShouldPopulateGroupedOptions()
         {
             // Arrange
-            using CRMDbContext context = GetInMemoryDbContext();
-            Repository repository = new(context);
-            RelationshipsController controller = new(repository);
-
             Guid p1Id = Guid.NewGuid();
-            context.Contacts.Add(new Contact { Id = p1Id, FirstName = "P1" });
-            await context.SaveChangesAsync();
+            _context.Contacts.Add(new Contact { Id = p1Id, FirstName = "P1" });
+            await _context.SaveChangesAsync();
 
             // Act
-            IActionResult result = await controller.Create(p1Id, EntityTypes.Person);
+            IActionResult result = await _controller.Create(p1Id, EntityTypes.Person);
 
             // Assert
             ViewResult viewResult = Assert.IsType<ViewResult>(result);
@@ -170,16 +165,12 @@ namespace Rvnx.CRM.Tests
         }
 
         [Fact]
-        public async Task Create_Post_ShouldReturnViewWithPopulatedOptions_WhenRelationshipTypeSelectionIsNullOrEmpty()
+        public async Task Create_Post_WhenRelationshipTypeSelectionIsEmpty_ShouldReturnViewWithPopulatedOptions()
         {
             // Arrange
-            using CRMDbContext context = GetInMemoryDbContext();
-            Repository repository = new(context);
-            RelationshipsController controller = new(repository);
-
             Guid p1Id = Guid.NewGuid();
-            context.Contacts.Add(new Contact { Id = p1Id, FirstName = "P1", LastName = "User" });
-            await context.SaveChangesAsync();
+            _context.Contacts.Add(new Contact { Id = p1Id, FirstName = "P1", LastName = "User" });
+            await _context.SaveChangesAsync();
 
             RelationshipFormDto rel = new()
             {
@@ -189,13 +180,13 @@ namespace Rvnx.CRM.Tests
             };
 
             // Act - Submit with empty selection
-            IActionResult result = await controller.Create(rel, string.Empty);
+            IActionResult result = await _controller.Create(rel, string.Empty);
 
             // Assert
             ViewResult viewResult = Assert.IsType<ViewResult>(result);
             Assert.Equal(rel, viewResult.Model);
-            Assert.False(controller.ModelState.IsValid);
-            Assert.True(controller.ModelState.ContainsKey("RelationshipTypeSelection"));
+            Assert.False(_controller.ModelState.IsValid);
+            Assert.True(_controller.ModelState.ContainsKey("RelationshipTypeSelection"));
 
             // Verifying that ViewData options are repopulated so the View doesn't crash on render
             Assert.NotNull(viewResult.ViewData["RelatedEntityId"]);

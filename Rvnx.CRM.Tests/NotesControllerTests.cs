@@ -12,9 +12,12 @@ using Rvnx.CRM.Web.Controllers;
 
 namespace Rvnx.CRM.Tests
 {
-    public class NotesControllerTests
+    public class NotesControllerTests : IDisposable
     {
-        private CRMDbContext GetInMemoryDbContext()
+        private readonly CRMDbContext _context;
+        private readonly NotesController _controller;
+
+        public NotesControllerTests()
         {
             DbContextOptions<CRMDbContext> options = new DbContextOptionsBuilder<CRMDbContext>()
                 .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
@@ -24,20 +27,24 @@ namespace Rvnx.CRM.Tests
             mockCurrentUserService.Setup(s => s.UserId).Returns(Guid.Parse("c5b50a20-34b2-44b2-8b9c-aa4135f60938"));
             mockCurrentUserService.Setup(s => s.UserName).Returns("test-user");
 
-            return new CRMDbContext(options, mockCurrentUserService.Object);
+            _context = new CRMDbContext(options, mockCurrentUserService.Object);
+            Repository repository = new Repository(_context);
+            _controller = new NotesController(repository);
+        }
+
+        public void Dispose()
+        {
+            _context.Database.EnsureDeleted();
+            _context.Dispose();
         }
 
         [Fact]
-        public async Task Create_Post_ShouldCreateNote()
+        public async Task Create_Post_WithValidData_ShouldCreateNote()
         {
             // Arrange
-            using CRMDbContext context = GetInMemoryDbContext();
-            Repository repository = new(context);
-            NotesController controller = new(repository);
-
             Guid contactId = Guid.NewGuid();
-            context.Contacts.Add(new Contact { Id = contactId, FirstName = "Test" });
-            await context.SaveChangesAsync();
+            _context.Contacts.Add(new Contact { Id = contactId, FirstName = "Test" });
+            await _context.SaveChangesAsync();
 
             NoteFormDto note = new()
             {
@@ -48,33 +55,29 @@ namespace Rvnx.CRM.Tests
             };
 
             // Act
-            IActionResult result = await controller.Create(note);
+            IActionResult result = await _controller.Create(note);
 
             // Assert
             RedirectToActionResult redirectResult = Assert.IsType<RedirectToActionResult>(result);
             Assert.Equal("Details", redirectResult.ActionName);
             Assert.Equal("Contacts", redirectResult.ControllerName);
 
-            Note? created = await context.Set<Note>().FirstOrDefaultAsync();
+            Note? created = await _context.Set<Note>().FirstOrDefaultAsync();
             Assert.NotNull(created);
             Assert.Equal("Test Note", created.Title);
             Assert.Equal(contactId, created.EntityId);
         }
 
         [Fact]
-        public async Task Edit_Post_ShouldUpdateNote()
+        public async Task Edit_Post_WithValidData_ShouldUpdateNote()
         {
             // Arrange
-            using CRMDbContext context = GetInMemoryDbContext();
-            Repository repository = new(context);
-            NotesController controller = new(repository);
-
             Guid noteId = Guid.NewGuid();
             Guid contactId = Guid.NewGuid();
-            context.Contacts.Add(new Contact { Id = contactId, FirstName = "Test" });
-            context.Set<Note>().Add(new Note { Id = noteId, EntityId = contactId, EntityType = EntityTypes.Person, Title = "Old", Value = "OldVal" });
-            await context.SaveChangesAsync();
-            context.ChangeTracker.Clear();
+            _context.Contacts.Add(new Contact { Id = contactId, FirstName = "Test" });
+            _context.Set<Note>().Add(new Note { Id = noteId, EntityId = contactId, EntityType = EntityTypes.Person, Title = "Old", Value = "OldVal" });
+            await _context.SaveChangesAsync();
+            _context.ChangeTracker.Clear();
 
             NoteFormDto update = new()
             {
@@ -86,37 +89,33 @@ namespace Rvnx.CRM.Tests
             };
 
             // Act
-            IActionResult result = await controller.Edit(noteId, update);
+            IActionResult result = await _controller.Edit(noteId, update);
 
             // Assert
             RedirectToActionResult redirectResult = Assert.IsType<RedirectToActionResult>(result);
             Assert.Equal("Details", redirectResult.ActionName);
 
-            Note? updated = await context.Set<Note>().FindAsync(noteId);
+            Note? updated = await _context.Set<Note>().FindAsync(noteId);
             Assert.NotNull(updated);
             Assert.Equal("New", updated.Title);
         }
 
         [Fact]
-        public async Task Delete_Post_ShouldDeleteNote()
+        public async Task DeleteConfirmed_WithValidId_ShouldDeleteNote()
         {
             // Arrange
-            using CRMDbContext context = GetInMemoryDbContext();
-            Repository repository = new(context);
-            NotesController controller = new(repository);
-
             Guid noteId = Guid.NewGuid();
             Guid contactId = Guid.NewGuid();
-            context.Contacts.Add(new Contact { Id = contactId, FirstName = "Test" });
-            context.Set<Note>().Add(new Note { Id = noteId, EntityId = contactId, EntityType = EntityTypes.Person, Title = "Del", Value = "Val" });
-            await context.SaveChangesAsync();
+            _context.Contacts.Add(new Contact { Id = contactId, FirstName = "Test" });
+            _context.Set<Note>().Add(new Note { Id = noteId, EntityId = contactId, EntityType = EntityTypes.Person, Title = "Del", Value = "Val" });
+            await _context.SaveChangesAsync();
 
             // Act
-            IActionResult result = await controller.DeleteConfirmed(noteId);
+            IActionResult result = await _controller.DeleteConfirmed(noteId);
 
             // Assert
-            RedirectToActionResult redirectResult = Assert.IsType<RedirectToActionResult>(result);
-            Assert.Null(await context.Set<Note>().FindAsync(noteId));
+            Assert.IsType<RedirectToActionResult>(result);
+            Assert.Null(await _context.Set<Note>().FindAsync(noteId));
         }
     }
 }

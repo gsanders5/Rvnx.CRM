@@ -12,9 +12,12 @@ using Rvnx.CRM.Web.Controllers;
 
 namespace Rvnx.CRM.Tests
 {
-    public class SignificantDatesControllerTests
+    public class SignificantDatesControllerTests : IDisposable
     {
-        private CRMDbContext GetInMemoryDbContext()
+        private readonly CRMDbContext _context;
+        private readonly SignificantDatesController _controller;
+
+        public SignificantDatesControllerTests()
         {
             DbContextOptions<CRMDbContext> options = new DbContextOptionsBuilder<CRMDbContext>()
                 .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
@@ -24,20 +27,24 @@ namespace Rvnx.CRM.Tests
             mockCurrentUserService.Setup(s => s.UserId).Returns(Guid.Parse("c5b50a20-34b2-44b2-8b9c-aa4135f60938"));
             mockCurrentUserService.Setup(s => s.UserName).Returns("test-user");
 
-            return new CRMDbContext(options, mockCurrentUserService.Object);
+            _context = new CRMDbContext(options, mockCurrentUserService.Object);
+            Repository repository = new Repository(_context);
+            _controller = new SignificantDatesController(repository);
+        }
+
+        public void Dispose()
+        {
+            _context.Database.EnsureDeleted();
+            _context.Dispose();
         }
 
         [Fact]
-        public async Task Create_Post_ShouldCreateDate_WhenValid()
+        public async Task Create_WithValidData_ShouldCreateDate()
         {
             // Arrange
-            using CRMDbContext context = GetInMemoryDbContext();
-            Repository repository = new(context);
-            SignificantDatesController controller = new(repository);
-
             Guid contactId = Guid.NewGuid();
-            context.Contacts.Add(new Contact { Id = contactId, FirstName = "Test" });
-            await context.SaveChangesAsync();
+            _context.Contacts.Add(new Contact { Id = contactId, FirstName = "Test" });
+            await _context.SaveChangesAsync();
 
             SignificantDateDto dto = new()
             {
@@ -49,29 +56,26 @@ namespace Rvnx.CRM.Tests
             };
 
             // Act
-            IActionResult result = await controller.Create(dto);
+            IActionResult result = await _controller.Create(dto);
 
             // Assert
             RedirectToActionResult redirectResult = Assert.IsType<RedirectToActionResult>(result);
             Assert.Equal("Details", redirectResult.ActionName);
 
-            SignificantDate? created = await context.Set<SignificantDate>().FirstOrDefaultAsync();
+            SignificantDate? created = await _context.Set<SignificantDate>().FirstOrDefaultAsync();
             Assert.NotNull(created);
             Assert.Equal("Anniversary", created.Title);
         }
 
         [Fact]
-        public async Task Create_Post_ShouldFail_WhenDuplicateBirthday()
+        public async Task Create_WhenDuplicateBirthdayExists_ShouldReturnValidationError()
         {
             // Arrange
-            using CRMDbContext context = GetInMemoryDbContext();
-            Repository repository = new(context);
-            SignificantDatesController controller = new(repository);
-
             Guid contactId = Guid.NewGuid();
-            context.Contacts.Add(new Contact { Id = contactId, FirstName = "Test" });
+            _context.Contacts.Add(new Contact { Id = contactId, FirstName = "Test" });
+            
             // Existing Birthday
-            context.Set<SignificantDate>().Add(new SignificantDate
+            _context.Set<SignificantDate>().Add(new SignificantDate
             {
                 Id = Guid.NewGuid(),
                 EntityId = contactId,
@@ -80,7 +84,7 @@ namespace Rvnx.CRM.Tests
                 Date = new DateTime(1990, 1, 1),
                 EventFrequency = TimeSpan.FromDays(365)
             });
-            await context.SaveChangesAsync();
+            await _context.SaveChangesAsync();
 
             SignificantDateDto dto = new()
             {
@@ -91,29 +95,63 @@ namespace Rvnx.CRM.Tests
             };
 
             // Act
-            IActionResult result = await controller.Create(dto);
+            IActionResult result = await _controller.Create(dto);
 
             // Assert
-            ViewResult viewResult = Assert.IsType<ViewResult>(result);
-            Assert.False(controller.ModelState.IsValid);
-            Assert.True(controller.ModelState.ContainsKey("Title"));
-            Assert.Equal("A birthday is already set for this contact.", controller.ModelState["Title"]!.Errors[0].ErrorMessage);
+            Assert.IsType<ViewResult>(result);
+            Assert.False(_controller.ModelState.IsValid);
+            Assert.True(_controller.ModelState.ContainsKey("Title"));
+            Assert.Equal("A birthday is already set for this contact.", _controller.ModelState["Title"]!.Errors[0].ErrorMessage);
 
             // Ensure no new date created
-            Assert.Single(await context.Set<SignificantDate>().ToListAsync());
+            Assert.Single(await _context.Set<SignificantDate>().ToListAsync());
         }
 
         [Fact]
-        public async Task Delete_Post_ShouldDeleteDate()
+        public async Task Create_WhenDuplicateBirthdayExistsWithDifferentCase_ShouldReturnValidationError()
         {
             // Arrange
-            using CRMDbContext context = GetInMemoryDbContext();
-            Repository repository = new(context);
-            SignificantDatesController controller = new(repository);
+            Guid contactId = Guid.NewGuid();
+            _context.Contacts.Add(new Contact { Id = contactId, FirstName = "Test" });
+            
+            // Existing Birthday with lowercase 'birthday'
+            _context.Set<SignificantDate>().Add(new SignificantDate
+            {
+                Id = Guid.NewGuid(),
+                EntityId = contactId,
+                EntityType = EntityTypes.Person,
+                Title = "birthday", // Lowercase
+                Date = new DateTime(1990, 1, 1),
+                EventFrequency = TimeSpan.FromDays(365)
+            });
+            await _context.SaveChangesAsync();
 
+            SignificantDateDto dto = new()
+            {
+                EntityId = contactId,
+                EntityType = EntityTypes.Person,
+                Title = SignificantDateTitles.Birthday, // Uppercase (Standard)
+                Date = DateTime.Today
+            };
+
+            // Act
+            IActionResult result = await _controller.Create(dto);
+
+            // Assert
+            // This expects failure (duplicate detection), but currently it will succeed because "birthday" != "Birthday"
+            Assert.IsType<ViewResult>(result);
+            Assert.False(_controller.ModelState.IsValid, "Model state should be invalid due to duplicate birthday");
+            Assert.True(_controller.ModelState.ContainsKey("Title"));
+            Assert.Equal("A birthday is already set for this contact.", _controller.ModelState["Title"]!.Errors[0].ErrorMessage);
+        }
+
+        [Fact]
+        public async Task DeleteConfirmed_ShouldDeleteDate()
+        {
+            // Arrange
             Guid dateId = Guid.NewGuid();
             Guid contactId = Guid.NewGuid();
-            context.Set<SignificantDate>().Add(new SignificantDate
+            _context.Set<SignificantDate>().Add(new SignificantDate
             {
                 Id = dateId,
                 EntityId = contactId,
@@ -121,14 +159,14 @@ namespace Rvnx.CRM.Tests
                 Title = "Del",
                 Date = DateTime.Today
             });
-            await context.SaveChangesAsync();
+            await _context.SaveChangesAsync();
 
             // Act
-            IActionResult result = await controller.DeleteConfirmed(dateId);
+            IActionResult result = await _controller.DeleteConfirmed(dateId);
 
             // Assert
-            RedirectToActionResult redirectResult = Assert.IsType<RedirectToActionResult>(result);
-            Assert.Null(await context.Set<SignificantDate>().FindAsync(dateId));
+            Assert.IsType<RedirectToActionResult>(result);
+            Assert.Null(await _context.Set<SignificantDate>().FindAsync(dateId));
         }
     }
 }

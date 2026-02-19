@@ -11,9 +11,12 @@ using Rvnx.CRM.Web.Controllers;
 
 namespace Rvnx.CRM.Tests
 {
-    public class PetsControllerTests
+    public class PetsControllerTests : IDisposable
     {
-        private CRMDbContext GetInMemoryDbContext()
+        private readonly CRMDbContext _context;
+        private readonly PetsController _controller;
+
+        public PetsControllerTests()
         {
             DbContextOptions<CRMDbContext> options = new DbContextOptionsBuilder<CRMDbContext>()
                 .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
@@ -23,21 +26,25 @@ namespace Rvnx.CRM.Tests
             mockCurrentUserService.Setup(s => s.UserId).Returns(Guid.Parse("c5b50a20-34b2-44b2-8b9c-aa4135f60938"));
             mockCurrentUserService.Setup(s => s.UserName).Returns("test-user");
 
-            return new CRMDbContext(options, mockCurrentUserService.Object);
+            _context = new CRMDbContext(options, mockCurrentUserService.Object);
+            Repository repository = new Repository(_context);
+            _controller = new PetsController(repository);
+        }
+
+        public void Dispose()
+        {
+            _context.Database.EnsureDeleted();
+            _context.Dispose();
         }
 
         [Fact]
-        public void Create_Get_ShouldReturnViewWithDto()
+        public void Create_Get_WithValidContactId_ShouldReturnViewWithDto()
         {
             // Arrange
-            using CRMDbContext context = GetInMemoryDbContext();
-            Repository repository = new(context);
-            PetsController controller = new(repository);
-
             Guid contactId = Guid.NewGuid();
 
             // Act
-            IActionResult result = controller.Create(contactId);
+            IActionResult result = _controller.Create(contactId);
 
             // Assert
             ViewResult viewResult = Assert.IsType<ViewResult>(result);
@@ -47,16 +54,12 @@ namespace Rvnx.CRM.Tests
         }
 
         [Fact]
-        public async Task Create_Post_ShouldCreatePet()
+        public async Task Create_Post_WithValidData_ShouldCreatePet()
         {
             // Arrange
-            using CRMDbContext context = GetInMemoryDbContext();
-            Repository repository = new(context);
-            PetsController controller = new(repository);
-
             Guid contactId = Guid.NewGuid();
-            context.Contacts.Add(new Contact { Id = contactId, FirstName = "John" });
-            await context.SaveChangesAsync();
+            _context.Contacts.Add(new Contact { Id = contactId, FirstName = "John" });
+            await _context.SaveChangesAsync();
 
             PetFormDto dto = new()
             {
@@ -69,14 +72,14 @@ namespace Rvnx.CRM.Tests
             };
 
             // Act
-            IActionResult result = await controller.Create(dto);
+            IActionResult result = await _controller.Create(dto);
 
             // Assert
             RedirectToActionResult redirectResult = Assert.IsType<RedirectToActionResult>(result);
             Assert.Equal("Details", redirectResult.ActionName);
             Assert.Equal("Contacts", redirectResult.ControllerName);
 
-            Pet? created = await context.Set<Pet>().FirstOrDefaultAsync();
+            Pet? created = await _context.Set<Pet>().FirstOrDefaultAsync();
             Assert.NotNull(created);
             Assert.Equal("Buddy", created.Name);
             Assert.Equal("Dog", created.Species);
@@ -86,17 +89,13 @@ namespace Rvnx.CRM.Tests
         }
 
         [Fact]
-        public async Task Edit_Get_ShouldReturnViewWithPetData()
+        public async Task Edit_Get_WithValidId_ShouldReturnViewWithPetData()
         {
             // Arrange
-            using CRMDbContext context = GetInMemoryDbContext();
-            Repository repository = new(context);
-            PetsController controller = new(repository);
-
             Guid petId = Guid.NewGuid();
             Guid contactId = Guid.NewGuid();
-            context.Contacts.Add(new Contact { Id = contactId, FirstName = "Test" });
-            context.Set<Pet>().Add(new Pet
+            _context.Contacts.Add(new Contact { Id = contactId, FirstName = "Test" });
+            _context.Set<Pet>().Add(new Pet
             {
                 Id = petId,
                 EntityId = contactId,
@@ -105,10 +104,10 @@ namespace Rvnx.CRM.Tests
                 Species = "Cat",
                 Breed = "Siamese"
             });
-            await context.SaveChangesAsync();
+            await _context.SaveChangesAsync();
 
             // Act
-            IActionResult result = await controller.Edit(petId);
+            IActionResult result = await _controller.Edit(petId);
 
             // Assert
             ViewResult viewResult = Assert.IsType<ViewResult>(result);
@@ -122,32 +121,23 @@ namespace Rvnx.CRM.Tests
         }
 
         [Fact]
-        public async Task Edit_Get_ShouldReturnNotFound_WhenPetDoesNotExist()
+        public async Task Edit_Get_WhenPetDoesNotExist_ShouldReturnNotFound()
         {
-            // Arrange
-            using CRMDbContext context = GetInMemoryDbContext();
-            Repository repository = new(context);
-            PetsController controller = new(repository);
-
             // Act
-            IActionResult result = await controller.Edit(Guid.NewGuid());
+            IActionResult result = await _controller.Edit(Guid.NewGuid());
 
             // Assert
             Assert.IsType<NotFoundResult>(result);
         }
 
         [Fact]
-        public async Task Edit_Post_ShouldUpdatePet()
+        public async Task Edit_Post_WithValidData_ShouldUpdatePet()
         {
             // Arrange
-            using CRMDbContext context = GetInMemoryDbContext();
-            Repository repository = new(context);
-            PetsController controller = new(repository);
-
             Guid petId = Guid.NewGuid();
             Guid contactId = Guid.NewGuid();
-            context.Contacts.Add(new Contact { Id = contactId, FirstName = "Test" });
-            context.Set<Pet>().Add(new Pet
+            _context.Contacts.Add(new Contact { Id = contactId, FirstName = "Test" });
+            _context.Set<Pet>().Add(new Pet
             {
                 Id = petId,
                 EntityId = contactId,
@@ -155,8 +145,8 @@ namespace Rvnx.CRM.Tests
                 Name = "Old Name",
                 Species = "Dog"
             });
-            await context.SaveChangesAsync();
-            context.ChangeTracker.Clear();
+            await _context.SaveChangesAsync();
+            _context.ChangeTracker.Clear();
 
             PetFormDto dto = new()
             {
@@ -169,13 +159,13 @@ namespace Rvnx.CRM.Tests
             };
 
             // Act
-            IActionResult result = await controller.Edit(petId, dto);
+            IActionResult result = await _controller.Edit(petId, dto);
 
             // Assert
             RedirectToActionResult redirectResult = Assert.IsType<RedirectToActionResult>(result);
             Assert.Equal("Details", redirectResult.ActionName);
 
-            Pet? updated = await context.Set<Pet>().FindAsync(petId);
+            Pet? updated = await _context.Set<Pet>().FindAsync(petId);
             Assert.NotNull(updated);
             Assert.Equal("New Name", updated.Name);
             Assert.Equal("Labrador", updated.Breed);
@@ -183,33 +173,25 @@ namespace Rvnx.CRM.Tests
         }
 
         [Fact]
-        public async Task Edit_Post_ShouldReturnNotFound_WhenIdMismatch()
+        public async Task Edit_Post_WhenIdMismatch_ShouldReturnNotFound()
         {
             // Arrange
-            using CRMDbContext context = GetInMemoryDbContext();
-            Repository repository = new(context);
-            PetsController controller = new(repository);
-
             PetFormDto dto = new() { Id = Guid.NewGuid(), Name = "Test" };
 
             // Act
-            IActionResult result = await controller.Edit(Guid.NewGuid(), dto);
+            IActionResult result = await _controller.Edit(Guid.NewGuid(), dto);
 
             // Assert
             Assert.IsType<NotFoundResult>(result);
         }
 
         [Fact]
-        public async Task Delete_Get_ShouldReturnViewWithPet()
+        public async Task Delete_Get_WithValidId_ShouldReturnViewWithPet()
         {
             // Arrange
-            using CRMDbContext context = GetInMemoryDbContext();
-            Repository repository = new(context);
-            PetsController controller = new(repository);
-
             Guid petId = Guid.NewGuid();
             Guid contactId = Guid.NewGuid();
-            context.Set<Pet>().Add(new Pet
+            _context.Set<Pet>().Add(new Pet
             {
                 Id = petId,
                 EntityId = contactId,
@@ -217,10 +199,10 @@ namespace Rvnx.CRM.Tests
                 Name = "ToDelete",
                 Species = "Fish"
             });
-            await context.SaveChangesAsync();
+            await _context.SaveChangesAsync();
 
             // Act
-            IActionResult result = await controller.Delete(petId);
+            IActionResult result = await _controller.Delete(petId);
 
             // Assert
             ViewResult viewResult = Assert.IsType<ViewResult>(result);
@@ -230,46 +212,37 @@ namespace Rvnx.CRM.Tests
         }
 
         [Fact]
-        public async Task DeleteConfirmed_ShouldRemovePet()
+        public async Task DeleteConfirmed_WithValidId_ShouldRemovePet()
         {
             // Arrange
-            using CRMDbContext context = GetInMemoryDbContext();
-            Repository repository = new(context);
-            PetsController controller = new(repository);
-
             Guid petId = Guid.NewGuid();
             Guid contactId = Guid.NewGuid();
-            context.Contacts.Add(new Contact { Id = contactId, FirstName = "Test" });
-            context.Set<Pet>().Add(new Pet
+            _context.Contacts.Add(new Contact { Id = contactId, FirstName = "Test" });
+            _context.Set<Pet>().Add(new Pet
             {
                 Id = petId,
                 EntityId = contactId,
                 EntityType = EntityTypes.Person,
                 Name = "ToDelete"
             });
-            await context.SaveChangesAsync();
+            await _context.SaveChangesAsync();
 
             // Act
-            IActionResult result = await controller.DeleteConfirmed(petId);
+            IActionResult result = await _controller.DeleteConfirmed(petId);
 
             // Assert
             RedirectToActionResult redirectResult = Assert.IsType<RedirectToActionResult>(result);
             Assert.Equal("Details", redirectResult.ActionName);
             Assert.Equal("Contacts", redirectResult.ControllerName);
 
-            Assert.Null(await context.Set<Pet>().FindAsync(petId));
+            Assert.Null(await _context.Set<Pet>().FindAsync(petId));
         }
 
         [Fact]
-        public async Task DeleteConfirmed_ShouldRedirectToContacts_WhenPetNotFound()
+        public async Task DeleteConfirmed_WhenPetNotFound_ShouldRedirectToContacts()
         {
-            // Arrange
-            using CRMDbContext context = GetInMemoryDbContext();
-            Repository repository = new(context);
-            PetsController controller = new(repository);
-
             // Act
-            IActionResult result = await controller.DeleteConfirmed(Guid.NewGuid());
+            IActionResult result = await _controller.DeleteConfirmed(Guid.NewGuid());
 
             // Assert
             RedirectToActionResult redirectResult = Assert.IsType<RedirectToActionResult>(result);
@@ -278,16 +251,12 @@ namespace Rvnx.CRM.Tests
         }
 
         [Fact]
-        public async Task Create_Post_ShouldSetEntityTypeToPerson()
+        public async Task Create_Post_AlwaysSetsEntityTypeToPerson()
         {
             // Arrange
-            using CRMDbContext context = GetInMemoryDbContext();
-            Repository repository = new(context);
-            PetsController controller = new(repository);
-
             Guid contactId = Guid.NewGuid();
-            context.Contacts.Add(new Contact { Id = contactId, FirstName = "Test" });
-            await context.SaveChangesAsync();
+            _context.Contacts.Add(new Contact { Id = contactId, FirstName = "Test" });
+            await _context.SaveChangesAsync();
 
             PetFormDto dto = new()
             {
@@ -297,10 +266,10 @@ namespace Rvnx.CRM.Tests
             };
 
             // Act
-            await controller.Create(dto);
+            await _controller.Create(dto);
 
             // Assert
-            Pet? created = await context.Set<Pet>().FirstOrDefaultAsync();
+            Pet? created = await _context.Set<Pet>().FirstOrDefaultAsync();
             Assert.NotNull(created);
             Assert.Equal(EntityTypes.Person, created.EntityType);
         }
