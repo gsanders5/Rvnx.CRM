@@ -198,12 +198,12 @@ namespace Rvnx.CRM.Web.Controllers
             if (contact == null) return NotFound();
 
 
-            contact.Notes = await _repository.ListAsync<Note>(n => n.EntityId == id.Value && n.EntityType == EntityTypes.Person);
-            contact.Reminders = await _repository.ListAsync<Reminder>(r => r.EntityId == id.Value && r.EntityType == EntityTypes.Person);
-            contact.SignificantDates = await _repository.ListAsync<SignificantDate>(d => d.EntityId == id.Value && d.EntityType == EntityTypes.Person);
+            contact.Notes = await GetRelatedEntitiesAsync<Note>(id.Value);
+            contact.Reminders = await GetRelatedEntitiesAsync<Reminder>(id.Value);
+            contact.SignificantDates = await GetRelatedEntitiesAsync<SignificantDate>(id.Value);
 
             // Relationships
-            List<Relationship> relationships = await _repository.ListAsync<Relationship>(r => r.EntityId == id.Value && r.EntityType == EntityTypes.Person);
+            List<Relationship> relationships = await GetRelatedEntitiesAsync<Relationship>(id.Value);
 
             // RelatedTo
             List<Relationship> relatedTo = await _repository.ListAsync<Relationship>(r => r.RelatedEntityId == id.Value && r.EntityType == EntityTypes.Person);
@@ -236,13 +236,13 @@ namespace Rvnx.CRM.Web.Controllers
             contact.RelatedTo = relatedTo;
 
             // Pets
-            List<Pet> pets = await _repository.ListAsync<Pet>(p => p.EntityId == id.Value && p.EntityType == EntityTypes.Person);
+            List<Pet> pets = await GetRelatedEntitiesAsync<Pet>(id.Value);
 
             // Contact Infos
-            contact.ContactMethods = await _repository.ListAsync<ContactMethod>(i => i.EntityId == id.Value && i.EntityType == EntityTypes.Person);
+            contact.ContactMethods = await GetRelatedEntitiesAsync<ContactMethod>(id.Value);
 
             // Facts
-            contact.Facts = await _repository.ListAsync<Fact>(f => f.EntityId == id.Value && f.EntityType == EntityTypes.Person);
+            contact.Facts = await GetRelatedEntitiesAsync<Fact>(id.Value);
 
             // Attachments
             contact.Attachments = await _repository.ListAsync<Attachment>(a => a.EntityId == id.Value && a.EntityType == EntityTypes.Person && a.AttachmentType != AttachmentTypes.ProfileImage);
@@ -521,9 +521,14 @@ namespace Rvnx.CRM.Web.Controllers
             if (relatedTo.Any()) await _repository.DeleteRangeAsync(relatedTo);
         }
 
+        private async Task<List<T>> GetRelatedEntitiesAsync<T>(Guid contactId) where T : PolymorphicEntity
+        {
+            return await _repository.ListAsync<T>(e => e.EntityId == contactId && e.EntityType == EntityTypes.Person);
+        }
+
         private async Task DeleteRelatedEntitiesAsync<T>(Guid contactId) where T : PolymorphicEntity
         {
-            List<T> entities = await _repository.ListAsync<T>(e => e.EntityId == contactId && e.EntityType == EntityTypes.Person);
+            List<T> entities = await GetRelatedEntitiesAsync<T>(contactId);
             if (entities.Any()) await _repository.DeleteRangeAsync(entities);
         }
 
@@ -615,18 +620,12 @@ namespace Rvnx.CRM.Web.Controllers
                 return true;
             }
 
-            if (candidate.ContactMethods != null && candidate.ContactMethods.Any())
+            if (candidate.ContactMethods?.Any() == true)
             {
                 List<string> valuesToCheck = candidate.ContactMethods.Select(m => m.Value).ToList();
-                if (valuesToCheck.Any())
-                {
-                    if (await _repository.CountAsync<ContactMethod>(cm =>
-                        cm.EntityType == EntityTypes.Person &&
-                        valuesToCheck.Contains(cm.Value)) > 0)
-                    {
-                        return true;
-                    }
-                }
+                return await _repository.CountAsync<ContactMethod>(cm =>
+                    cm.EntityType == EntityTypes.Person &&
+                    valuesToCheck.Contains(cm.Value)) > 0;
             }
 
             return false;
@@ -637,8 +636,8 @@ namespace Rvnx.CRM.Web.Controllers
             Contact? contact = await _repository.GetByIdAsync<Contact>(id);
             if (contact == null) return NotFound();
 
-            contact.ContactMethods = await _repository.ListAsync<ContactMethod>(c => c.EntityId == id && c.EntityType == EntityTypes.Person);
-            contact.SignificantDates = await _repository.ListAsync<SignificantDate>(d => d.EntityId == id && d.EntityType == EntityTypes.Person);
+            contact.ContactMethods = await GetRelatedEntitiesAsync<ContactMethod>(id);
+            contact.SignificantDates = await GetRelatedEntitiesAsync<SignificantDate>(id);
 
             byte[] vcfBytes = _vCardService.ExportVCard(contact);
             string fileName = $"{contact.FirstName}_{contact.LastName}.vcf";

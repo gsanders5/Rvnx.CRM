@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Moq;
 using Rvnx.CRM.Core.Interfaces;
 using Rvnx.CRM.Core.Models.Base;
+using Rvnx.CRM.Core.Models.Contact;
 using Rvnx.CRM.Infrastructure.Data;
 using Rvnx.CRM.Infrastructure.Repositories;
 using Rvnx.CRM.Web.Controllers;
@@ -27,14 +28,18 @@ namespace Rvnx.CRM.Tests
 
         private AttachmentsController GetController(CRMDbContext context)
         {
-            Repository repo = new(context);
+            Mock<IRepository> repoMock = new();
+            repoMock.Setup(r => r.ExistsAsync<Contact>(It.IsAny<Guid>(), It.IsAny<CancellationToken>())).ReturnsAsync(true);
+            repoMock.Setup(r => r.AddAsync(It.IsAny<Attachment>(), It.IsAny<CancellationToken>())).ReturnsAsync(new Attachment());
+            repoMock.Setup(r => r.SaveChangesAsync(It.IsAny<CancellationToken>())).ReturnsAsync(1);
+
             Mock<IFileValidationService> fileServiceMock = new();
             fileServiceMock.Setup(s => s.IsImageExtension(It.IsAny<string>())).Returns(false);
 
             Mock<IEntityService> entityServiceMock = new();
             entityServiceMock.Setup(s => s.ExistsAsync(It.IsAny<string>(), It.IsAny<Guid>())).ReturnsAsync(true);
 
-            AttachmentsController controller = new(repo, fileServiceMock.Object, entityServiceMock.Object);
+            AttachmentsController controller = new(repoMock.Object, fileServiceMock.Object, entityServiceMock.Object);
             controller.ControllerContext = new ControllerContext
             {
                 HttpContext = new DefaultHttpContext()
