@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Rvnx.CRM.Core.Constants;
 using Rvnx.CRM.Core.Interfaces;
 using Rvnx.CRM.Core.Models;
 using Rvnx.CRM.Infrastructure.Data;
@@ -9,13 +10,6 @@ namespace Rvnx.CRM.Web.Services;
 public class UserSynchronizationService : IUserSynchronizationService
 {
     private readonly CRMDbContext _dbContext;
-
-    /// <summary>
-    /// Custom claim type for the internal CRM user ID.
-    /// Using a separate claim type avoids side effects of modifying NameIdentifier,
-    /// which other middleware or logging systems may have already read.
-    /// </summary>
-    public const string InternalUserIdClaimType = "urn:crm:internal-user-id";
 
     public UserSynchronizationService(CRMDbContext dbContext)
     {
@@ -78,14 +72,14 @@ public class UserSynchronizationService : IUserSynchronizationService
         if (principal.Identity is ClaimsIdentity identity)
         {
             // Remove any existing internal user ID claim (in case of re-sync)
-            Claim? existingInternalClaim = identity.FindFirst(InternalUserIdClaimType);
+            Claim? existingInternalClaim = identity.FindFirst(ClaimConstants.InternalUserIdClaimType);
             if (existingInternalClaim != null)
             {
                 identity.RemoveClaim(existingInternalClaim);
             }
 
             // Add the internal user ID claim
-            identity.AddClaim(new Claim(InternalUserIdClaimType, user.Id.ToString()));
+            identity.AddClaim(new Claim(ClaimConstants.InternalUserIdClaimType, user.Id.ToString()));
 
             // Add display name if not already present
             if (!identity.HasClaim(c => c.Type == ClaimTypes.Name) && !string.IsNullOrEmpty(user.DisplayName))
