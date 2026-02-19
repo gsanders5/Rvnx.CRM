@@ -3,7 +3,7 @@ using Moq;
 using Rvnx.CRM.Core.Constants;
 using Rvnx.CRM.Core.Interfaces;
 using Rvnx.CRM.Infrastructure.Data;
-using Rvnx.CRM.Web.Services;
+using Rvnx.CRM.Infrastructure.Services;
 using System.Security.Claims;
 
 namespace Rvnx.CRM.Tests

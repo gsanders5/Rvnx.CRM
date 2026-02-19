@@ -5,7 +5,7 @@ using Rvnx.CRM.Core.Models;
 using Rvnx.CRM.Infrastructure.Data;
 using System.Security.Claims;
 
-namespace Rvnx.CRM.Web.Services;
+namespace Rvnx.CRM.Infrastructure.Services;
 
 public class UserSynchronizationService : IUserSynchronizationService
 {
