@@ -25,6 +25,9 @@ public static class ServiceCollectionExtensions
         // Add VCard Service
         services.AddScoped<IVCardService, VCardService>();
 
+        // Add User Synchronization Service
+        services.AddScoped<IUserSynchronizationService, UserSynchronizationService>();
+
         return services;
     }
 }

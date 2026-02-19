@@ -1,3 +1,4 @@
+using Rvnx.CRM.Core.Constants;
 using Rvnx.CRM.Core.Interfaces;
 using System.Security.Claims;
 
@@ -24,7 +25,7 @@ public class CurrentUserService : ICurrentUserService
             if (user == null) return null;
 
             // First, try to get the internal CRM user ID (set by UserSynchronizationService)
-            string? internalId = user.FindFirst(UserSynchronizationService.InternalUserIdClaimType)?.Value;
+            string? internalId = user.FindFirst(ClaimConstants.InternalUserIdClaimType)?.Value;
             if (Guid.TryParse(internalId, out Guid internalGuid))
             {
                 return internalGuid;

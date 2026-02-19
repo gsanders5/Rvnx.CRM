@@ -1,8 +1,9 @@
 using Microsoft.EntityFrameworkCore;
 using Moq;
+using Rvnx.CRM.Core.Constants;
 using Rvnx.CRM.Core.Interfaces;
 using Rvnx.CRM.Infrastructure.Data;
-using Rvnx.CRM.Web.Services;
+using Rvnx.CRM.Infrastructure.Services;
 using System.Security.Claims;
 
 namespace Rvnx.CRM.Tests
@@ -51,7 +52,7 @@ namespace Rvnx.CRM.Tests
 
             // Check that internal user ID claim is added
             Assert.Contains(principal.Claims, c =>
-                c.Type == UserSynchronizationService.InternalUserIdClaimType &&
+                c.Type == ClaimConstants.InternalUserIdClaimType &&
                 c.Value == user.Id.ToString());
         }
 
@@ -83,7 +84,7 @@ namespace Rvnx.CRM.Tests
             Core.Models.User? user = await context.Users.IgnoreQueryFilters().FirstOrDefaultAsync(u => u.SubjectId == originalSubject);
             Assert.NotNull(user);
             Assert.Contains(principal.Claims, c =>
-                c.Type == UserSynchronizationService.InternalUserIdClaimType &&
+                c.Type == ClaimConstants.InternalUserIdClaimType &&
                 c.Value == user.Id.ToString());
         }
 
@@ -129,7 +130,7 @@ namespace Rvnx.CRM.Tests
 
             // Internal ID should be in separate claim
             Assert.Contains(principal.Claims, c =>
-                c.Type == UserSynchronizationService.InternalUserIdClaimType &&
+                c.Type == ClaimConstants.InternalUserIdClaimType &&
                 c.Value == existingUser.Id.ToString());
         }
 
@@ -213,7 +214,7 @@ namespace Rvnx.CRM.Tests
 
             // No internal ID claim added
             Assert.DoesNotContain(principal.Claims, c =>
-                c.Type == UserSynchronizationService.InternalUserIdClaimType);
+                c.Type == ClaimConstants.InternalUserIdClaimType);
         }
 
         [Fact]
@@ -238,7 +239,7 @@ namespace Rvnx.CRM.Tests
 
             // Assert - Should only have one internal ID claim
             List<Claim> internalIdClaims = principal.Claims
-                .Where(c => c.Type == UserSynchronizationService.InternalUserIdClaimType)
+                .Where(c => c.Type == ClaimConstants.InternalUserIdClaimType)
                 .ToList();
             Assert.Single(internalIdClaims);
         }
