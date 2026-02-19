@@ -1,0 +1,10 @@
+{
+    "dotrush.roslyn.projectOrSolutionFiles": [
+        "c:\\Users\\Graham Sanders\\source\\repos\\Rvnx.CRM.Web\\Rvnx.CRM.sln",
+        "c:\\Users\\Graham Sanders\\source\\repos\\Rvnx.CRM.Web\\Rvnx.CRM.Core\\Rvnx.CRM.Core.csproj",
+        "c:\\Users\\Graham Sanders\\source\\repos\\Rvnx.CRM.Web\\Rvnx.CRM.Infrastructure\\Rvnx.CRM.Infrastructure.csproj",
+        "c:\\Users\\Graham Sanders\\source\\repos\\Rvnx.CRM.Web\\Rvnx.CRM.Shared\\Rvnx.CRM.Shared.csproj",
+        "c:\\Users\\Graham Sanders\\source\\repos\\Rvnx.CRM.Web\\Rvnx.CRM.Tests\\Rvnx.CRM.Tests.csproj",
+        "c:\\Users\\Graham Sanders\\source\\repos\\Rvnx.CRM.Web\\Rvnx.CRM.Web\\Rvnx.CRM.Web.csproj"
+    ]
+}
