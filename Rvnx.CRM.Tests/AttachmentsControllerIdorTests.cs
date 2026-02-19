@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Moq;
 using Rvnx.CRM.Core.Interfaces;
 using Rvnx.CRM.Core.Models.Contact;
+using Rvnx.CRM.Core.Services;
 using Rvnx.CRM.Infrastructure.Data;
 using Rvnx.CRM.Infrastructure.Repositories;
 using Rvnx.CRM.Web.Controllers;
@@ -38,7 +39,7 @@ namespace Rvnx.CRM.Tests
             // Allow any file for this test
             fileServiceMock.Setup(s => s.IsImageExtension(It.IsAny<string>())).Returns(false);
 
-            AttachmentsController controller = new(repo, fileServiceMock.Object);
+            AttachmentsController controller = new(repo, fileServiceMock.Object, new EntityService(repo));
             controller.ControllerContext = new ControllerContext
             {
                 HttpContext = new DefaultHttpContext()

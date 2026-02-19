@@ -36,7 +36,10 @@ namespace Rvnx.CRM.Tests
             Mock<IFileValidationService> fileServiceMock = new();
             fileServiceMock.Setup(s => s.IsImageExtension(It.IsAny<string>())).Returns(false);
 
-            AttachmentsController controller = new(repoMock.Object, fileServiceMock.Object);
+            Mock<IEntityService> entityServiceMock = new();
+            entityServiceMock.Setup(s => s.ExistsAsync(It.IsAny<string>(), It.IsAny<Guid>())).ReturnsAsync(true);
+
+            AttachmentsController controller = new(repoMock.Object, fileServiceMock.Object, entityServiceMock.Object);
             controller.ControllerContext = new ControllerContext
             {
                 HttpContext = new DefaultHttpContext()

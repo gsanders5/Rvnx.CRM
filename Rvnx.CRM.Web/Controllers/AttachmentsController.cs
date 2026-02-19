@@ -2,16 +2,15 @@ using Microsoft.AspNetCore.Mvc;
 using Rvnx.CRM.Core.Constants;
 using Rvnx.CRM.Core.Interfaces;
 using Rvnx.CRM.Core.Models.Base;
-using Rvnx.CRM.Core.Models.Contact;
-using Rvnx.CRM.Core.Models.Dates;
 using Rvnx.CRM.Web.Controllers.Base;
 
 namespace Rvnx.CRM.Web.Controllers
 {
-    public class AttachmentsController(IRepository repository, IFileValidationService fileValidationService) : AuthorizedController
+    public class AttachmentsController(IRepository repository, IFileValidationService fileValidationService, IEntityService entityService) : AuthorizedController
     {
         private readonly IRepository _repository = repository;
         private readonly IFileValidationService _fileValidationService = fileValidationService;
+        private readonly IEntityService _entityService = entityService;
         private static readonly string[] AllowedExtensions = { ".jpg", ".jpeg", ".png", ".gif", ".pdf", ".txt", ".doc", ".docx", ".xls", ".xlsx" };
         private static readonly string[] ImageContentTypes = { "image/jpeg", "image/png", "image/gif" };
 
@@ -19,7 +18,7 @@ namespace Rvnx.CRM.Web.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Upload(Guid entityId, string entityType, IFormFile file, string? returnUrl = null)
         {
-            if (!await VerifyEntityAccessAsync(entityId, entityType)) return NotFound();
+            if (!await _entityService.ExistsAsync(entityType, entityId)) return NotFound();
 
             if (file == null || file.Length == 0) return BadRequest("File is empty.");
 
@@ -123,19 +122,6 @@ namespace Rvnx.CRM.Web.Controllers
                 : ImageContentTypes.Contains(attachment.ContentType)
                 ? File(attachment.AttachmentContent.Content, attachment.ContentType)
                 : File(attachment.AttachmentContent.Content, attachment.ContentType, attachment.FileName);
-        }
-
-        private async Task<bool> VerifyEntityAccessAsync(Guid entityId, string entityType)
-        {
-            return entityType switch
-            {
-                EntityTypes.Person => await _repository.ExistsAsync<Contact>(entityId),
-                EntityTypes.Note => await _repository.ExistsAsync<Note>(entityId),
-                EntityTypes.Reminder => await _repository.ExistsAsync<Reminder>(entityId),
-                EntityTypes.SignificantDate => await _repository.ExistsAsync<SignificantDate>(entityId),
-                EntityTypes.Relationship => await _repository.ExistsAsync<Relationship>(entityId),
-                _ => false
-            };
         }
     }
 }
