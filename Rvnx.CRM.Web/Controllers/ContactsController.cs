@@ -615,18 +615,12 @@ namespace Rvnx.CRM.Web.Controllers
                 return true;
             }
 
-            if (candidate.ContactMethods != null && candidate.ContactMethods.Any())
+            if (candidate.ContactMethods?.Any() == true)
             {
                 List<string> valuesToCheck = candidate.ContactMethods.Select(m => m.Value).ToList();
-                if (valuesToCheck.Any())
-                {
-                    if (await _repository.CountAsync<ContactMethod>(cm =>
-                        cm.EntityType == EntityTypes.Person &&
-                        valuesToCheck.Contains(cm.Value)) > 0)
-                    {
-                        return true;
-                    }
-                }
+                return await _repository.CountAsync<ContactMethod>(cm =>
+                    cm.EntityType == EntityTypes.Person &&
+                    valuesToCheck.Contains(cm.Value)) > 0;
             }
 
             return false;
