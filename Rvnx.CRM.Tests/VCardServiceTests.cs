@@ -1,3 +1,4 @@
+using Rvnx.CRM.Core.Constants;
 using Rvnx.CRM.Core.Enumerations;
 using Rvnx.CRM.Core.Models.Contact;
 using Rvnx.CRM.Core.Models.Dates;
@@ -46,7 +47,7 @@ END:VCARD";
             Assert.Contains(contact.ContactMethods, cm => cm.Type == ContactMethodType.Email && cm.Value == "john.doe@example.com");
             Assert.Contains(contact.ContactMethods, cm => cm.Type == ContactMethodType.Phone && cm.Value == "1234567890");
 
-            SignificantDate? bday = contact.SignificantDates.FirstOrDefault(sd => sd.Title == "Birthday");
+            SignificantDate? bday = contact.SignificantDates.FirstOrDefault(sd => sd.Title == SignificantDateTitles.Birthday);
             Assert.NotNull(bday);
             Assert.Equal(new DateTime(1990, 1, 1), bday.Date);
         }
@@ -72,7 +73,7 @@ END:VCARD";
 
             contact.SignificantDates.Add(new SignificantDate
             {
-                Title = "Birthday",
+                Title = SignificantDateTitles.Birthday,
                 Date = new DateTime(1995, 5, 20)
             });
 

@@ -53,7 +53,7 @@ namespace Rvnx.CRM.Tests
             {
                 EntityId = contactId,
                 EntityType = EntityTypes.Person,
-                Title = "Birthday", // Uppercase (Standard)
+                Title = SignificantDateTitles.Birthday, // Uppercase (Standard)
                 Date = DateTime.Today
             };
 

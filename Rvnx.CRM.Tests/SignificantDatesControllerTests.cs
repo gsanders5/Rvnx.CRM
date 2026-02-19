@@ -76,7 +76,7 @@ namespace Rvnx.CRM.Tests
                 Id = Guid.NewGuid(),
                 EntityId = contactId,
                 EntityType = EntityTypes.Person,
-                Title = "Birthday",
+                Title = SignificantDateTitles.Birthday,
                 Date = new DateTime(1990, 1, 1),
                 EventFrequency = TimeSpan.FromDays(365)
             });
@@ -86,7 +86,7 @@ namespace Rvnx.CRM.Tests
             {
                 EntityId = contactId,
                 EntityType = EntityTypes.Person,
-                Title = "Birthday", // Duplicate Title
+                Title = SignificantDateTitles.Birthday, // Duplicate Title
                 Date = DateTime.Today
             };
 

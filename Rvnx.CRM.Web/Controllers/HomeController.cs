@@ -135,7 +135,7 @@ namespace Rvnx.CRM.Web.Controllers
 
                 DateTime nextOccurrence = date.GetNextOccurrence();
 
-                bool isBirthday = date.Title?.Equals("Birthday", StringComparison.OrdinalIgnoreCase) == true;
+                bool isBirthday = date.Title?.Equals(SignificantDateTitles.Birthday, StringComparison.OrdinalIgnoreCase) == true;
                 string desc = isBirthday
                     ? $"Turns {nextOccurrence.Year - date.Date.Year}"
                     : $"{date.Title} ({date.Date.ToShortDateString()})";
@@ -145,7 +145,7 @@ namespace Rvnx.CRM.Web.Controllers
                     Title = $"{contact.FirstName}'s {date.Title}",
                     Description = desc,
                     Date = nextOccurrence,
-                    Type = isBirthday ? "Birthday" : "Event",
+                    Type = isBirthday ? SignificantDateTitles.Birthday : "Event",
                     RelatedEntityId = contact.Id,
                     RelatedEntityName = contact.FullName,
                     TimeUntil = GetTimeUntil(nextOccurrence)

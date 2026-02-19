@@ -166,13 +166,13 @@ namespace Rvnx.CRM.Web.Controllers
             if (contactIds.Count < 2000)
             {
                 profileAttachments = await _repository.ListAsNoTrackingAsync<Attachment>(a => a.EntityType == EntityTypes.Person
-                    && a.AttachmentType == "ProfileImage"
+                    && a.AttachmentType == AttachmentTypes.ProfileImage
                     && contactIds.Contains(a.EntityId));
             }
             else
             {
                 profileAttachments = await _repository.ListAsNoTrackingAsync<Attachment>(a => a.EntityType == EntityTypes.Person
-                    && a.AttachmentType == "ProfileImage");
+                    && a.AttachmentType == AttachmentTypes.ProfileImage);
             }
 
 
@@ -255,13 +255,13 @@ namespace Rvnx.CRM.Web.Controllers
             contact.Facts = await _repository.ListAsync<Fact>(f => f.EntityId == id.Value && f.EntityType == EntityTypes.Person);
 
             // Attachments
-            contact.Attachments = await _repository.ListAsync<Attachment>(a => a.EntityId == id.Value && a.EntityType == EntityTypes.Person && a.AttachmentType != "ProfileImage");
+            contact.Attachments = await _repository.ListAsync<Attachment>(a => a.EntityId == id.Value && a.EntityType == EntityTypes.Person && a.AttachmentType != AttachmentTypes.ProfileImage);
 
             ContactDetailDto contactDto = contact.ToDetailDto();
             contactDto.Pets = pets.Select(p => p.ToDto()).ToList();
 
             // Profile Image
-            List<Attachment> profileAttachments = await _repository.ListAsync<Attachment>(a => a.EntityId == id.Value && a.EntityType == EntityTypes.Person && a.AttachmentType == "ProfileImage");
+            List<Attachment> profileAttachments = await _repository.ListAsync<Attachment>(a => a.EntityId == id.Value && a.EntityType == EntityTypes.Person && a.AttachmentType == AttachmentTypes.ProfileImage);
             Attachment? profileAttachment = profileAttachments.FirstOrDefault();
 
             if (profileAttachment != null)
@@ -315,14 +315,14 @@ namespace Rvnx.CRM.Web.Controllers
             };
 
             List<ContactMethod> emails = await _repository.ListAsync<ContactMethod>(c => c.EntityId == contact.Id && c.EntityType == EntityTypes.Person && c.Type == ContactMethodType.Email);
-            ContactMethod? email = emails.FirstOrDefault(e => e.Label == "Primary") ?? emails.FirstOrDefault();
+            ContactMethod? email = emails.FirstOrDefault(e => e.Label == ContactMethodLabels.Primary) ?? emails.FirstOrDefault();
             dto.Email = email?.Value;
 
             List<ContactMethod> phones = await _repository.ListAsync<ContactMethod>(c => c.EntityId == contact.Id && c.EntityType == EntityTypes.Person && c.Type == ContactMethodType.Phone);
-            ContactMethod? phone = phones.FirstOrDefault(p => p.Label == "Primary") ?? phones.FirstOrDefault();
+            ContactMethod? phone = phones.FirstOrDefault(p => p.Label == ContactMethodLabels.Primary) ?? phones.FirstOrDefault();
             dto.Phone = phone?.Value;
 
-            List<SignificantDate> bdays = await _repository.ListAsync<SignificantDate>(d => d.EntityId == contact.Id && d.EntityType == EntityTypes.Person && d.Title == "Birthday");
+            List<SignificantDate> bdays = await _repository.ListAsync<SignificantDate>(d => d.EntityId == contact.Id && d.EntityType == EntityTypes.Person && d.Title == SignificantDateTitles.Birthday);
             dto.Birthday = bdays.FirstOrDefault()?.Date;
 
             return View(dto);
@@ -345,16 +345,16 @@ namespace Rvnx.CRM.Web.Controllers
 
                     // Handle Email
                     List<ContactMethod> emails = await _repository.ListAsync<ContactMethod>(c => c.EntityId == id && c.EntityType == EntityTypes.Person && c.Type == ContactMethodType.Email);
-                    ContactMethod? existingEmail = emails.FirstOrDefault(e => e.Label == "Primary") ?? emails.FirstOrDefault();
+                    ContactMethod? existingEmail = emails.FirstOrDefault(e => e.Label == ContactMethodLabels.Primary) ?? emails.FirstOrDefault();
                     await UpdateOrAddContactMethod(id, ContactMethodType.Email, contactDto.Email, existingEmail);
 
                     // Handle Phone
                     List<ContactMethod> phones = await _repository.ListAsync<ContactMethod>(c => c.EntityId == id && c.EntityType == EntityTypes.Person && c.Type == ContactMethodType.Phone);
-                    ContactMethod? existingPhone = phones.FirstOrDefault(p => p.Label == "Primary") ?? phones.FirstOrDefault();
+                    ContactMethod? existingPhone = phones.FirstOrDefault(p => p.Label == ContactMethodLabels.Primary) ?? phones.FirstOrDefault();
                     await UpdateOrAddContactMethod(id, ContactMethodType.Phone, contactDto.Phone, existingPhone);
 
                     // Handle Birthday
-                    List<SignificantDate> bdays = await _repository.ListAsync<SignificantDate>(d => d.EntityId == id && d.EntityType == EntityTypes.Person && d.Title == "Birthday");
+                    List<SignificantDate> bdays = await _repository.ListAsync<SignificantDate>(d => d.EntityId == id && d.EntityType == EntityTypes.Person && d.Title == SignificantDateTitles.Birthday);
                     SignificantDate? existingBday = bdays.FirstOrDefault();
                     await UpdateOrAddBirthday(id, contactDto.Birthday, existingBday);
 
@@ -377,7 +377,7 @@ namespace Rvnx.CRM.Web.Controllers
                             return View(contactDto);
                         }
 
-                        List<Attachment> existingAttachments = await _repository.ListAsync<Attachment>(a => a.EntityId == id && a.EntityType == EntityTypes.Person && a.AttachmentType == "ProfileImage");
+                        List<Attachment> existingAttachments = await _repository.ListAsync<Attachment>(a => a.EntityId == id && a.EntityType == EntityTypes.Person && a.AttachmentType == AttachmentTypes.ProfileImage);
                         Attachment? existingAttachment = existingAttachments.FirstOrDefault();
 
                         if (existingAttachment != null)
@@ -400,7 +400,7 @@ namespace Rvnx.CRM.Web.Controllers
                                 Id = Guid.NewGuid(),
                                 EntityId = id,
                                 EntityType = EntityTypes.Person,
-                                AttachmentType = "ProfileImage",
+                                AttachmentType = AttachmentTypes.ProfileImage,
                                 ContentType = profileImage.ContentType,
                                 FileName = profileImage.FileName,
                                 AttachmentContent = new AttachmentContent
@@ -446,7 +446,7 @@ namespace Rvnx.CRM.Web.Controllers
                         EntityType = EntityTypes.Person,
                         Type = type,
                         Value = newValue,
-                        Label = "Primary"
+                        Label = ContactMethodLabels.Primary
                     });
                 }
             }
@@ -475,7 +475,7 @@ namespace Rvnx.CRM.Web.Controllers
                         Id = Guid.NewGuid(),
                         EntityId = contactId,
                         EntityType = EntityTypes.Person,
-                        Title = "Birthday",
+                        Title = SignificantDateTitles.Birthday,
                         Date = newDate.Value,
                         Description = "Birthday",
                         RemindMe = true,
