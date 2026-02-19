@@ -1,5 +1,4 @@
 using Microsoft.AspNetCore.Mvc;
-using Rvnx.CRM.Core.Constants;
 using Rvnx.CRM.Core.DTOs.Contact;
 using Rvnx.CRM.Core.Extensions;
 using Rvnx.CRM.Core.Interfaces;
@@ -39,10 +38,10 @@ namespace Rvnx.CRM.Web.Controllers
         {
             if (id == null) return NotFound();
             Fact? fact = await _repository.GetByIdAsync<Fact>(id.Value);
-            
+
             if (fact == null) return NotFound();
 
-            var dto = new FactFormDto
+            FactFormDto dto = new()
             {
                 Id = fact.Id,
                 Category = fact.Category,

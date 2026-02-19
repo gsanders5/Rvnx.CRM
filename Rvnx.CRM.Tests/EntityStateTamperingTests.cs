@@ -2,10 +2,10 @@
 using Microsoft.EntityFrameworkCore;
 using Moq;
 using Rvnx.CRM.Core.Constants;
+using Rvnx.CRM.Core.DTOs.Common;
+using Rvnx.CRM.Core.DTOs.Contact;
 using Rvnx.CRM.Core.Interfaces;
 using Rvnx.CRM.Core.Models.Base;
-using Rvnx.CRM.Core.DTOs.Contact;
-using Rvnx.CRM.Core.DTOs.Common;
 using Rvnx.CRM.Core.Models.Contact;
 using Rvnx.CRM.Infrastructure.Data;
 using Rvnx.CRM.Infrastructure.Repositories;

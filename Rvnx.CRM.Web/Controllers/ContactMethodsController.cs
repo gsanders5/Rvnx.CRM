@@ -37,7 +37,7 @@ namespace Rvnx.CRM.Web.Controllers
 
             if (contactInfo == null) return NotFound();
 
-            var dto = new ContactMethodFormDto
+            ContactMethodFormDto dto = new()
             {
                 Id = contactInfo.Id,
                 Type = contactInfo.Type,

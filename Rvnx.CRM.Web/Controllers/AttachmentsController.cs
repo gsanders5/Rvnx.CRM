@@ -74,12 +74,9 @@ namespace Rvnx.CRM.Web.Controllers
             }
 
             string referer = Request.Headers.Referer.ToString();
-            if (Uri.TryCreate(referer, UriKind.Absolute, out Uri? uri) && string.Equals(uri.Host, Request.Host.Host, StringComparison.OrdinalIgnoreCase))
-            {
-                return Redirect(referer);
-            }
-
-            return RedirectToAction("Index", "Home");
+            return Uri.TryCreate(referer, UriKind.Absolute, out Uri? uri) && string.Equals(uri.Host, Request.Host.Host, StringComparison.OrdinalIgnoreCase)
+                ? Redirect(referer)
+                : RedirectToAction("Index", "Home");
         }
 
         public async Task<IActionResult> Download(Guid id)
@@ -116,14 +113,11 @@ namespace Rvnx.CRM.Web.Controllers
             Response.Headers.CacheControl = "public, max-age=31536000";
 
             attachment = await _repository.GetByIdWithIncludesAsync<Attachment>(id, "AttachmentContent");
-            if (attachment == null || attachment.AttachmentContent == null) return NotFound();
-
-            if (ImageContentTypes.Contains(attachment.ContentType))
-            {
-                return File(attachment.AttachmentContent.Content, attachment.ContentType);
-            }
-
-            return File(attachment.AttachmentContent.Content, attachment.ContentType, attachment.FileName);
+            return attachment == null || attachment.AttachmentContent == null
+                ? NotFound()
+                : ImageContentTypes.Contains(attachment.ContentType)
+                ? File(attachment.AttachmentContent.Content, attachment.ContentType)
+                : File(attachment.AttachmentContent.Content, attachment.ContentType, attachment.FileName);
         }
 
     }

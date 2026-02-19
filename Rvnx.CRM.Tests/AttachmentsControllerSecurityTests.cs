@@ -90,7 +90,7 @@ namespace Rvnx.CRM.Tests
             controller.Request.Headers["Referer"] = "http://localhost/Contacts";
             controller.Request.Host = new HostString("localhost");
 
-            var urlHelperMock = new Mock<IUrlHelper>();
+            Mock<IUrlHelper> urlHelperMock = new();
             urlHelperMock.Setup(x => x.IsLocalUrl(It.IsAny<string>())).Returns(false);
             controller.Url = urlHelperMock.Object;
 

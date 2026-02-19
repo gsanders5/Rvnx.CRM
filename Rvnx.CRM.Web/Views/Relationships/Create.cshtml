@@ -36,20 +36,20 @@
             </div>
 
             <div class="form-floating mb-3">
-                <input asp-for="StartDate" class="form-control" type="date"  placeholder="StartDate"/>
-                <label asp-for="StartDate"></label>
+                <input asp-for="StartDate" class="form-control" type="date" id="StartDate" placeholder=" " />
+                <label asp-for="StartDate">StartDate</label>
                 <span asp-validation-for="StartDate" class="text-danger"></span>
             </div>
 
-             <div class="form-floating mb-3">
-                <input asp-for="EndDate" class="form-control" type="date"  placeholder="EndDate"/>
-                <label asp-for="EndDate"></label>
+            <div class="form-floating mb-3">
+                <input asp-for="EndDate" class="form-control" type="date" id="EndDate" placeholder=" " />
+                <label asp-for="EndDate">EndDate</label>
                 <span asp-validation-for="EndDate" class="text-danger"></span>
             </div>
 
             <div class="form-floating mb-3">
-                <textarea asp-for="Description" class="form-control" style="height: 100px" placeholder="Description"></textarea>
-                <label asp-for="Description"></label>
+                <textarea asp-for="Description" class="form-control" style="height: 100px" id="Description" placeholder=" "></textarea>
+                <label asp-for="Description">Description</label>
                 <span asp-validation-for="Description" class="text-danger"></span>
             </div>
 
