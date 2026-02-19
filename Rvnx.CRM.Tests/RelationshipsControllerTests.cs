@@ -133,7 +133,7 @@ namespace Rvnx.CRM.Tests
             IActionResult result = await controller.DeleteConfirmed(relId);
 
             // Assert
-            RedirectToActionResult redirectResult = Assert.IsType<RedirectToActionResult>(result);
+            Assert.IsType<RedirectToActionResult>(result);
             Assert.Null(await context.Set<Relationship>().FindAsync(relId));
         }
 
@@ -167,6 +167,46 @@ namespace Rvnx.CRM.Tests
             Guid parentId = Guid.Parse("7c1f8d22-1b6a-4c28-9c1e-3f5a2b8e9d1a");
             Assert.Contains(options, o => o.Value == $"{parentId}_Fwd" && o.Text == "is Parent of (Child)");
             Assert.Contains(options, o => o.Value == $"{parentId}_Rev" && o.Text == "is Child of (Parent)");
+        }
+
+        [Fact]
+        public async Task Create_Post_ShouldReturnViewWithPopulatedOptions_WhenRelationshipTypeSelectionIsNullOrEmpty()
+        {
+            // Arrange
+            using CRMDbContext context = GetInMemoryDbContext();
+            Repository repository = new(context);
+            RelationshipsController controller = new(repository);
+
+            Guid p1Id = Guid.NewGuid();
+            context.Contacts.Add(new Contact { Id = p1Id, FirstName = "P1", LastName = "User" });
+            await context.SaveChangesAsync();
+
+            RelationshipFormDto rel = new()
+            {
+                EntityId = p1Id,
+                RelatedEntityId = Guid.NewGuid(),
+                EntityType = EntityTypes.Person
+            };
+
+            // Act - Submit with empty selection
+            IActionResult result = await controller.Create(rel, string.Empty);
+
+            // Assert
+            ViewResult viewResult = Assert.IsType<ViewResult>(result);
+            Assert.Equal(rel, viewResult.Model);
+            Assert.False(controller.ModelState.IsValid);
+            Assert.True(controller.ModelState.ContainsKey("RelationshipTypeSelection"));
+
+            // Verifying that ViewData options are repopulated so the View doesn't crash on render
+            Assert.NotNull(viewResult.ViewData["RelatedEntityId"]);
+            Assert.IsType<SelectList>(viewResult.ViewData["RelatedEntityId"]);
+            
+            Assert.NotNull(viewResult.ViewData["RelationshipTypeSelection"]);
+            Assert.IsType<List<SelectListItem>>(viewResult.ViewData["RelationshipTypeSelection"]);
+            
+            Assert.Equal(p1Id, viewResult.ViewData["EntityId"]);
+            Assert.Equal(EntityTypes.Person, viewResult.ViewData["EntityType"]);
+            Assert.Equal("P1 User", viewResult.ViewData["EntityName"]);
         }
     }
 }
