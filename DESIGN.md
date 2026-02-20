@@ -4,72 +4,63 @@
 
 ```
 .
-├── Rvnx.CRM.Core/              # Domain layer (business entities, interfaces)
-│   ├── Interfaces/
-│   │   └── IRepository.cs      # Generic repository interface
-│   ├── Models/
-│   │   ├── CRMBaseEntity.cs    # Base entity with audit trail
-│   │   └── Person.cs           # Person entity
+├── Rvnx.CRM.Core/              # Domain layer (business entities, interfaces, core services)
+│   ├── DTOs/                   # Data Transfer Objects
+│   ├── Enumerations/           # Domain enums
+│   ├── Interfaces/             # Service and Repository interfaces
+│   ├── Models/                 # Domain entities (organized by feature)
+│   │   ├── Base/               # Base classes (BaseEntity, Person)
+│   │   ├── Contact/            # Contact-related entities (Contact, ContactMethod)
+│   │   ├── Dates/              # SignificantDate, Reminder
+│   │   └── Business/           # Employer, etc.
+│   ├── Services/               # Pure domain logic services (e.g. FileValidation)
 │   └── Rvnx.CRM.Core.csproj
-├── Rvnx.CRM.Infrastructure/    # Data access layer
+├── Rvnx.CRM.Infrastructure/    # Data access & Implementation layer
 │   ├── Data/
 │   │   └── CRMDbContext.cs     # EF Core DbContext
 │   ├── Migrations/             # EF Core migrations
 │   ├── Repositories/
 │   │   └── Repository.cs       # Generic repository implementation
+│   ├── Services/               # Infrastructure-dependent services (e.g. UserSync, VCard)
 │   ├── ServiceCollectionExtensions.cs
 │   └── Rvnx.CRM.Infrastructure.csproj
-├── Rvnx.CRM.Shared/           # Shared models/DTOs (future use)
+├── Rvnx.CRM.Shared/            # Shared components (Currently empty/reserved)
 │   └── Rvnx.CRM.Shared.csproj
-└── Rvnx.CRM.Web/              # Presentation layer
-    ├── Controllers/
-    │   └── HomeController.cs   # Main controller with repository demo
-    ├── Views/
-    │   └── Home/
-    │       └── Index.cshtml    # People listing view
-    ├── Program.cs              # Application startup
-    ├── appsettings.json        # Configuration
+└── Rvnx.CRM.Web/               # Presentation layer
+    ├── Controllers/            # MVC Controllers (Orchestration logic)
+    ├── Services/               # UI-specific services (CurrentUserService)
+    ├── Views/                  # Razor Views
+    ├── Program.cs              # Composition Root and Service Registration
     └── Rvnx.CRM.Web.csproj
 ```
 
 ## Architecture
 
-### Clean Architecture Principles
-- **Core**: Contains business entities and interfaces. No dependencies on other projects.
-- **Infrastructure**: Implements Core interfaces, handles data access. Depends on Core.
-- **Shared**: DTOs and view models. Depends on Core.
-- **Web**: Presentation layer. Depends on all other projects.
+### Clean Architecture Principles (Actual)
+- **Core**: Contains domain entities, interfaces, and pure logic. Depends on **Entity Framework Core** (for data annotations).
+- **Infrastructure**: Implements Core interfaces, handles data access and external integrations. Depends on **Core** and **FolkerKinzel.VCards**.
+- **Shared**: Currently unused (placeholder).
+- **Web**: Presentation layer. Orchestrates user interactions. Depends on all other projects.
 
 ### Key Patterns
-- **Generic Repository Pattern**: Single `IRepository` interface works with any `CRMBaseEntity`
-- **Dependency Injection**: All dependencies managed through built-in DI container
-- **Data Annotations**: Entity configuration done directly on model classes
-- **Automatic Audit Trail**: CreatedBy, LastChangedBy, CreatedDate, LastChangedDate handled automatically
+- **Generic Repository Pattern**: `IRepository` handles basic CRUD for `BaseEntity` types.
+- **Polymorphic Relationships**: Entities like `Note`, `Reminder`, `Attachment`, `Pet`, `ContactMethod` are linked to parent entities via `EntityId` + `EntityType` (discriminator), often managed manually in controllers.
+- **User Isolation**: `CRMDbContext` applies global query filters to restrict access to data based on the current user (`ICurrentUserService`).
+- **Fat Controllers**: (Deviation) Controllers currently handle significant orchestration logic, especially for managing related polymorphic entities.
 
 ## Technology Stack
 
 - **.NET 8.0**
 - **ASP.NET Core MVC** for web interface
 - **Entity Framework Core 8.0** for data access
-- **SQLite** for development database (configurable for SQL Server/PostgreSQL)
+- **SQLite** for development database
 - **Bootstrap 5** for UI styling
-
-## Database Configuration
-
-### Supported Database Providers
-- **SQLite** (current): Development/testing
-- **SQL Server** (future): Production deployment
-- **PostgreSQL** (future): Alternative production option
-
-To switch databases:
-1. Update `appsettings.json` DatabaseProvider
-2. Add appropriate EF Core provider package
-3. Create new migration
+- **FolkerKinzel.VCards** for vCard import/export
 
 ## Core Entities
 
-### CRMBaseEntity
-Abstract base class for all domain entities with built-in audit trail:
+### BaseEntity
+Abstract base class for all domain entities with built-in audit trail and ownership:
 
 ```csharp
 [Key, Required] Guid Id
@@ -77,74 +68,54 @@ Abstract base class for all domain entities with built-in audit trail:
 [Required, MaxLength(256)] string LastChangedBy
 [Required] DateTime CreatedDate
 [Required] DateTime LastChangedDate
+[MaxLength(450)] Guid? UserId // Owner for isolation
 ```
 
 ### Person
-CRM contact entity extending CRMBaseEntity:
+Abstract base class for contact entities:
 
 ```csharp
 [Required, MaxLength(100)] string FirstName
-[Required, MaxLength(100)] string LastName
-[Required, MaxLength(256)] string Email (unique index)
-[MaxLength(20)] string? PhoneNumber
-[MaxLength(100)] string? JobTitle
-[MaxLength(200)] string? Company
+[MaxLength(100)] string? LastName
 string FullName (computed property)
+// Has many [NotMapped] collections for related entities
 ```
+
+### Contact
+Concrete entity inheriting `Person`.
+- Stores `Employers` via navigation property.
+- Links to `ContactMethod`, `SignificantDate`, `Relationship` via polymorphic association.
 
 ## Repository Usage
 
-The generic repository provides type-safe CRUD operations:
+The generic repository provides type-safe CRUD operations.
+Special care is needed for polymorphic entities:
 
 ```csharp
-// Inject repository in controller
-public HomeController(IRepository repository) { ... }
-
-// Usage examples
-var people = await _repository.ListAsync<Person>();
-var person = await _repository.GetByIdAsync<Person>(id);
-var count = await _repository.CountAsync<Person>();
-await _repository.AddAsync(newPerson);
-await _repository.UpdateAsync(person);
-await _repository.DeleteAsync<Person>(id);
-await _repository.SaveChangesAsync();
+// Fetch related entities manually
+var notes = await _repository.ListAsync<Note>(n => n.EntityId == parentId && n.EntityType == EntityTypes.Person);
 ```
 
-## Development Notes
+## Service Layer
 
-### Package References
-- **Core**: No external dependencies
-- **Infrastructure**: EF Core + SQLite provider
-- **Shared**: References Core
-- **Web**: References all projects + EF Core Design tools
+- **Core Services**: Pure logic implementations (e.g., `FileValidationService`).
+- **Infrastructure Services**: Implementations requiring external dependencies or DB access (e.g., `UserSynchronizationService`, `VCardService`).
+- **Web Services**: Implementations requiring HTTP Context (e.g., `CurrentUserService`).
 
-### Data Annotations Used
-```csharp
-[Key], [Required], [MaxLength(n)]
-[Index(nameof(Email), IsUnique = true)]
-```
+## Database Configuration
 
-### Audit Trail Implementation
-- Automatically populated in `CRMDbContext.UpdateAuditFields()`
-- Triggered on `SaveChanges()` and `SaveChangesAsync()`
-- Currently uses "Environment.Username" placeholder for user identification
+### Global Query Filters
+- Automatically applied to all `BaseEntity` types in `CRMDbContext`.
+- Filter: `e => e.UserId == _currentUserService.UserId`.
+- Ensures users only see their own data.
 
-## File Locations
+### Audit Trail
+- Automatically populated in `CRMDbContext.SaveChanges()`.
+- Sets `CreatedBy`, `LastChangedBy`, `CreatedDate`, `LastChangedDate`.
+- Sets `UserId` on creation if null.
 
-### Key Configuration Files
-- `appsettings.json`: Database configuration
-- `Program.cs`: Dependency injection setup
-- `ServiceCollectionExtensions.cs`: Infrastructure service registration
+## Known Deviations from Pure Architecture
+1. **Core Dependency on EF Core**: Pragmatic choice to use Data Annotations (`[Key]`, `[Table]`) directly on domain models.
+2. **Controller Logic**: `ContactsController` contains complex logic for importing, exporting, and managing related entities that ideally belongs in a domain service.
+3. **Service Registration**: Split between `Program.cs` (Web) and `ServiceCollectionExtensions.cs` (Infrastructure).
 
-### Database Files
-- `rvnx-crm.db`: SQLite database file (created automatically in `Rvnx.CRM.Web/`)
-- `Migrations/`: EF Core migration files (in `Rvnx.CRM.Infrastructure/`)
-
-## Database Schema
-
-Current schema includes:
-- **People** table with audit trail columns
-- **Unique index** on Email column
-- **GUID primary keys** for all entities
-
-The generic repository pattern and base entity ensure consistent schema patterns for future entities.
