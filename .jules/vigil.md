@@ -9,3 +9,7 @@
 
 **Learning:** Many POST actions in controllers (like `RelationshipsController.Create`) have logic that gracefully returns `View(dto)` when validation fails. However, if tests do not verify that reference data (`SelectLists`, `ViewData` identifiers) are re-populated on this failure path, future refactoring could easily drop the re-population code. This would cause the rendered View to silently crash in production with a `NullReferenceException` when it attempts to rebuild its dropdowns.
 **Action:** Always add a failure-path validation test for any POST endpoint that returns a View populated with drop-downs. Assert that `ModelState.IsValid` is false AND importantly, that `ViewData["<YourSelectList>"]` is `NotNull` when the `ViewResult` is returned.
+
+## 2026-02-20 - [Controller Testing Strategy]
+**Learning:** Testing controllers inheriting from `RepositoryController` is more effective when using `CRMDbContext` with `InMemoryDatabase` and a real `Repository` instance, rather than mocking `IRepository`. This approach validates actual query logic (like global query filters and includes) while remaining fast. Mocking `IRepository` would require duplicating complex filter logic in setups, making tests brittle and less valuable.
+**Action:** When testing standard CRUD controllers, prefer `InMemoryDatabase` + Real Repository over `Mock<IRepository>` to catch integration issues and validate query behavior.
