@@ -19,6 +19,7 @@ namespace Rvnx.CRM.Web
             builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
             builder.Services.AddScoped<IFileValidationService, FileValidationService>();
             builder.Services.AddScoped<IEntityService, EntityService>();
+            builder.Services.AddScoped<IContactImportService, ContactImportService>();
 
             IConfigurationSection authConfig = builder.Configuration.GetSection("Authentication");
             bool authEnabled = authConfig.GetValue<bool>("Enabled");

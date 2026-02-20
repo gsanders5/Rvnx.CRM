@@ -40,7 +40,7 @@ namespace Rvnx.CRM.Tests
             Mock<IUserSynchronizationService> syncMock = new();
             syncMock.Setup(s => s.SyncUserAsync(It.IsAny<System.Security.Claims.ClaimsPrincipal>())).Returns(Task.CompletedTask);
 
-            ContactsController controller = new(repository, loggerMock.Object, userMock.Object, new Mock<IVCardService>().Object, new Mock<IFileValidationService>().Object, syncMock.Object);
+            ContactsController controller = new(repository, loggerMock.Object, userMock.Object, new Mock<IVCardService>().Object, new Mock<IFileValidationService>().Object, syncMock.Object, new Mock<IContactImportService>().Object);
             controller.ControllerContext = new ControllerContext { HttpContext = new DefaultHttpContext() };
 
             // Create Contacts

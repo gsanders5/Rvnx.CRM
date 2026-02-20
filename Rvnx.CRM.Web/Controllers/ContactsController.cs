@@ -12,7 +12,7 @@ using Rvnx.CRM.Web.Controllers.Base;
 
 namespace Rvnx.CRM.Web.Controllers
 {
-    public class ContactsController(IRepository repository, ILogger<ContactsController> logger, ICurrentUserService currentUserService, IVCardService vCardService, IFileValidationService fileValidationService, IUserSynchronizationService userSynchronizationService) : AuthorizedController
+    public class ContactsController(IRepository repository, ILogger<ContactsController> logger, ICurrentUserService currentUserService, IVCardService vCardService, IFileValidationService fileValidationService, IUserSynchronizationService userSynchronizationService, IContactImportService contactImportService) : AuthorizedController
     {
         private readonly IRepository _repository = repository;
         private readonly ILogger<ContactsController> _logger = logger;
@@ -20,6 +20,7 @@ namespace Rvnx.CRM.Web.Controllers
         private readonly IVCardService _vCardService = vCardService;
         private readonly IFileValidationService _fileValidationService = fileValidationService;
         private readonly IUserSynchronizationService _userSynchronizationService = userSynchronizationService;
+        private readonly IContactImportService _contactImportService = contactImportService;
 
         public async Task<IActionResult> Self()
         {
@@ -560,48 +561,9 @@ namespace Rvnx.CRM.Web.Controllers
             try
             {
                 using Stream stream = file.OpenReadStream();
-                IEnumerable<Contact> importedContacts = _vCardService.ParseVCard(stream);
+                (int Added, int Skipped) result = await _contactImportService.ImportContactsAsync(stream);
 
-                int addedCount = 0;
-                int skippedCount = 0;
-
-                foreach (Contact contact in importedContacts)
-                {
-                    if (await IsDuplicateAsync(contact))
-                    {
-                        skippedCount++;
-                        continue;
-                    }
-
-                    // Note: ContactMethods and SignificantDates are [NotMapped] collections on the Contact (Person) entity.
-                    // EF Core's AddAsync(contact) will NOT recursively add these entities because they are not navigation properties mapped to the DB.
-                    // We must add them explicitly and link them to the Contact ID.
-                    await _repository.AddAsync(contact);
-                    await _repository.SaveChangesAsync(); // Save to generate ID and allow next duplicate checks to find it if file has dupes
-
-                    if (contact.ContactMethods != null)
-                    {
-                        foreach (ContactMethod cm in contact.ContactMethods)
-                        {
-                            cm.EntityId = contact.Id;
-                            await _repository.AddAsync(cm);
-                        }
-                    }
-
-                    if (contact.SignificantDates != null)
-                    {
-                        foreach (SignificantDate sd in contact.SignificantDates)
-                        {
-                            sd.EntityId = contact.Id;
-                            await _repository.AddAsync(sd);
-                        }
-                    }
-
-                    await _repository.SaveChangesAsync();
-                    addedCount++;
-                }
-
-                TempData["SuccessMessage"] = $"Import successful! Added: {addedCount}, Skipped: {skippedCount}";
+                TempData["SuccessMessage"] = $"Import successful! Added: {result.Added}, Skipped: {result.Skipped}";
                 return RedirectToAction(nameof(Index));
             }
             catch (Exception ex)
@@ -610,24 +572,6 @@ namespace Rvnx.CRM.Web.Controllers
                 ModelState.AddModelError("", "An error occurred while parsing the file.");
                 return View();
             }
-        }
-
-        private async Task<bool> IsDuplicateAsync(Contact candidate)
-        {
-            if (await _repository.CountAsync<Contact>(c => c.FirstName == candidate.FirstName && c.LastName == candidate.LastName) > 0)
-            {
-                return true;
-            }
-
-            if (candidate.ContactMethods?.Any() == true)
-            {
-                List<string> valuesToCheck = candidate.ContactMethods.Select(m => m.Value).ToList();
-                return await _repository.CountAsync<ContactMethod>(cm =>
-                    cm.EntityType == EntityTypes.Person &&
-                    valuesToCheck.Contains(cm.Value)) > 0;
-            }
-
-            return false;
         }
 
         private async Task<Rvnx.CRM.Core.Models.User?> GetUserAsync(Guid userId)

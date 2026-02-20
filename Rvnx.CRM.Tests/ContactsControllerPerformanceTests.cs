@@ -34,7 +34,7 @@ namespace Rvnx.CRM.Tests
             repositoryMock.Setup(r => r.ListAsNoTrackingAsync<Attachment>(It.IsAny<Expression<Func<Attachment, bool>>>(), It.IsAny<CancellationToken>(), It.IsAny<string[]>()))
                 .ReturnsAsync(new List<Attachment>());
 
-            ContactsController controller = new(repositoryMock.Object, loggerMock.Object, userMock.Object, Mock.Of<IVCardService>(), Mock.Of<IFileValidationService>(), syncMock.Object);
+            ContactsController controller = new(repositoryMock.Object, loggerMock.Object, userMock.Object, Mock.Of<IVCardService>(), Mock.Of<IFileValidationService>(), syncMock.Object, Mock.Of<IContactImportService>());
             controller.ControllerContext = new ControllerContext { HttpContext = new DefaultHttpContext() };
             controller.TempData = new TempDataDictionary(controller.HttpContext, Mock.Of<ITempDataProvider>());
 
@@ -69,7 +69,7 @@ namespace Rvnx.CRM.Tests
             repositoryMock.Setup(r => r.ListAsNoTrackingAsync<Attachment>(It.IsAny<Expression<Func<Attachment, bool>>>(), It.IsAny<CancellationToken>(), It.IsAny<string[]>()))
                 .ReturnsAsync(new List<Attachment>());
 
-            ContactsController controller = new(repositoryMock.Object, loggerMock.Object, userMock.Object, Mock.Of<IVCardService>(), Mock.Of<IFileValidationService>(), syncMock.Object);
+            ContactsController controller = new(repositoryMock.Object, loggerMock.Object, userMock.Object, Mock.Of<IVCardService>(), Mock.Of<IFileValidationService>(), syncMock.Object, Mock.Of<IContactImportService>());
             controller.ControllerContext = new ControllerContext { HttpContext = new DefaultHttpContext() };
             controller.TempData = new TempDataDictionary(controller.HttpContext, Mock.Of<ITempDataProvider>());
 
