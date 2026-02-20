@@ -139,8 +139,7 @@ namespace Rvnx.CRM.Web.Controllers
 
         public async Task<IActionResult> Index(bool showHidden = false)
         {
-            List<Contact> contacts = [];
-            contacts = await _repository.ListAsNoTrackingAsync<Contact>(x => x.IsHidden == showHidden);
+            List<Contact> contacts = await _repository.ListAsNoTrackingAsync<Contact>(x => x.IsHidden == showHidden);
 
             List<ContactDto> contactDtos = [.. contacts.Select(c => c.ToDto())];
             List<Guid> contactIds = [.. contacts.Select(c => c.Id)];
