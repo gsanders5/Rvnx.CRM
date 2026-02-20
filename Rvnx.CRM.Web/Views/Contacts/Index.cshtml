@@ -28,70 +28,81 @@
     </div>
 }
 
-<div class="table-responsive">
-    <table class="table table-striped table-hover align-middle">
-        <thead class="table-dark">
-        <tr>
-            <th style="width: 60px;">Photo</th>
-            <th>Name</th>
-            <th>Company</th>
-            <th>Job Title</th>
-            <th>Created</th>
-            <th>Actions</th>
-        </tr>
-        </thead>
-        <tbody>
-        @foreach (var item in Model)
-        {
-            <tr>
-                <td>
-                    @if (item.ProfileImageId.HasValue)
-                    {
-                        <img src="@Url.Action("View", "Attachments", new { id = item.ProfileImageId })" class="rounded-circle" width="40" height="40" alt="@item.FullName" style="object-fit: cover;" loading="lazy"/>
-                    }
-                    else
-                    {
-                        <div class="rounded-circle bg-secondary text-white d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
-                            <i class="bi bi-person-fill"></i>
-                        </div>
-                    }
-                </td>
-                <td>
-                    <a asp-action="Details" asp-route-id="@item.Id" class="fw-bold text-decoration-none">
-                        @item.FullName
-                    </a>
-                    @if (item.IsHidden)
-                    {
-                        <span class="badge bg-secondary ms-2" title="Hidden">
-                            <i class="bi bi-eye-slash"></i>
-                        </span>
-                    }
-                </td>
-                <td>@item.Company</td>
-                <td>@item.JobTitle</td>
-                <td>@item.CreatedDate.ToShortDateString()</td>
-                <td>
-                    <div class="btn-group btn-group-sm">
-                        <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-outline-secondary" title="Edit" aria-label="Edit @item.FullName">
-                            <i class="bi bi-pencil-square"></i>
-                        </a>
-                        <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-outline-info" title="Details" aria-label="Details for @item.FullName">
-                            <i class="bi bi-info-circle"></i>
-                        </a>
-                        <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-outline-danger" title="Delete" aria-label="Delete @item.FullName">
-                            <i class="bi bi-trash"></i>
-                        </a>
-                    </div>
-                </td>
-            </tr>
-        }
-        </tbody>
-    </table>
-</div>
-
-@if (!Model.Any())
+@if (Model.Any())
 {
-    <div class="alert alert-info">
-        No contacts found. Click "Create New" to add one.
+    <div class="table-responsive">
+        <table class="table table-striped table-hover align-middle">
+            <thead class="table-dark">
+            <tr>
+                <th scope="col" style="width: 60px;">Photo</th>
+                <th scope="col">Name</th>
+                <th scope="col">Company</th>
+                <th scope="col">Job Title</th>
+                <th scope="col">Created</th>
+                <th scope="col">Actions</th>
+            </tr>
+            </thead>
+            <tbody>
+            @foreach (var item in Model)
+            {
+                <tr>
+                    <td>
+                        @if (item.ProfileImageId.HasValue)
+                        {
+                            <img src="@Url.Action("View", "Attachments", new { id = item.ProfileImageId })" class="rounded-circle" width="40" height="40" alt="@item.FullName" style="object-fit: cover;" loading="lazy"/>
+                        }
+                        else
+                        {
+                            <div class="rounded-circle bg-secondary text-white d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                <i class="bi bi-person-fill" aria-hidden="true"></i>
+                            </div>
+                        }
+                    </td>
+                    <td>
+                        <a asp-action="Details" asp-route-id="@item.Id" class="fw-bold text-decoration-none">
+                            @item.FullName
+                        </a>
+                        @if (item.IsHidden)
+                        {
+                            <span class="badge bg-secondary ms-2" title="Hidden">
+                                <i class="bi bi-eye-slash"></i>
+                            </span>
+                        }
+                    </td>
+                    <td>@item.Company</td>
+                    <td>@item.JobTitle</td>
+                    <td>@item.CreatedDate.ToShortDateString()</td>
+                    <td>
+                        <div class="btn-group btn-group-sm">
+                            <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-outline-secondary" title="Edit" aria-label="Edit @item.FullName">
+                                <i class="bi bi-pencil-square"></i>
+                            </a>
+                            <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-outline-info" title="Details" aria-label="Details for @item.FullName">
+                                <i class="bi bi-info-circle"></i>
+                            </a>
+                            <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-outline-danger" title="Delete" aria-label="Delete @item.FullName">
+                                <i class="bi bi-trash"></i>
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    </div>
+}
+else
+{
+    <div class="text-center py-5 my-5">
+        <i class="bi bi-person-rolodex display-1 text-muted opacity-25 mb-3"></i>
+        <h3 class="h4 text-secondary mt-3">No contacts found</h3>
+        <p class="text-muted mb-4">
+            @(Context.Request.Query["showHidden"] == "True"
+                ? "There are no hidden contacts at the moment."
+                : "Get started by adding your first contact to the system.")
+        </p>
+        <a asp-action="Create" class="btn btn-primary btn-lg px-4">
+            <i class="bi bi-plus-lg me-2"></i>Create Contact
+        </a>
     </div>
 }
