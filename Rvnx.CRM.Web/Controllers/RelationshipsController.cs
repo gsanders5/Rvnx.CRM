@@ -195,14 +195,18 @@ namespace Rvnx.CRM.Web.Controllers
         {
             if (entityType == EntityTypes.Person)
             {
-                List<Contact> all = await _repository.ListAsync<Contact>();
-                List<Contact> available = all.Where(p => p.Id != entityId).OrderBy(p => p.FullName).ToList();
+                // Optimization: Use ListAsNoTrackingAsync to avoid change tracking overhead for large lists.
+                // Also filter by ID in the database query instead of in memory.
+                List<Contact> available = await _repository.ListAsNoTrackingAsync<Contact>(p => p.Id != entityId);
+                available = available.OrderBy(p => p.FullName).ToList();
                 ViewData["RelatedEntityId"] = new SelectList(available, "Id", "FullName", selectedId);
             }
             else if (entityType == EntityTypes.Company)
             {
-                List<Employer> all = await _repository.ListAsync<Employer>();
-                List<Employer> available = all.Where(c => c.Id != entityId).OrderBy(c => c.CompanyName).ToList();
+                // Optimization: Use ListAsNoTrackingAsync to avoid change tracking overhead for large lists.
+                // Also filter by ID in the database query instead of in memory.
+                List<Employer> available = await _repository.ListAsNoTrackingAsync<Employer>(c => c.Id != entityId);
+                available = available.OrderBy(c => c.CompanyName).ToList();
                 ViewData["RelatedEntityId"] = new SelectList(available, "Id", "CompanyName", selectedId);
             }
         }
