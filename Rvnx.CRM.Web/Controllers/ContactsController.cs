@@ -573,31 +573,7 @@ namespace Rvnx.CRM.Web.Controllers
                         continue;
                     }
 
-                    // Note: ContactMethods and SignificantDates are [NotMapped] collections on the Contact (Person) entity.
-                    // EF Core's AddAsync(contact) will NOT recursively add these entities because they are not navigation properties mapped to the DB.
-                    // We must add them explicitly and link them to the Contact ID.
-                    await _repository.AddAsync(contact);
-                    await _repository.SaveChangesAsync(); // Save to generate ID and allow next duplicate checks to find it if file has dupes
-
-                    if (contact.ContactMethods != null)
-                    {
-                        foreach (ContactMethod cm in contact.ContactMethods)
-                        {
-                            cm.EntityId = contact.Id;
-                            await _repository.AddAsync(cm);
-                        }
-                    }
-
-                    if (contact.SignificantDates != null)
-                    {
-                        foreach (SignificantDate sd in contact.SignificantDates)
-                        {
-                            sd.EntityId = contact.Id;
-                            await _repository.AddAsync(sd);
-                        }
-                    }
-
-                    await _repository.SaveChangesAsync();
+                    await AddImportedContactAsync(contact);
                     addedCount++;
                 }
 
@@ -610,6 +586,35 @@ namespace Rvnx.CRM.Web.Controllers
                 ModelState.AddModelError("", "An error occurred while parsing the file.");
                 return View();
             }
+        }
+
+        private async Task AddImportedContactAsync(Contact contact)
+        {
+            // Note: ContactMethods and SignificantDates are [NotMapped] collections on the Contact (Person) entity.
+            // EF Core's AddAsync(contact) will NOT recursively add these entities because they are not navigation properties mapped to the DB.
+            // We must add them explicitly and link them to the Contact ID.
+            await _repository.AddAsync(contact);
+            await _repository.SaveChangesAsync(); // Save to generate ID and allow next duplicate checks to find it if file has dupes
+
+            if (contact.ContactMethods != null)
+            {
+                foreach (ContactMethod cm in contact.ContactMethods)
+                {
+                    cm.EntityId = contact.Id;
+                    await _repository.AddAsync(cm);
+                }
+            }
+
+            if (contact.SignificantDates != null)
+            {
+                foreach (SignificantDate sd in contact.SignificantDates)
+                {
+                    sd.EntityId = contact.Id;
+                    await _repository.AddAsync(sd);
+                }
+            }
+
+            await _repository.SaveChangesAsync();
         }
 
         private async Task<bool> IsDuplicateAsync(Contact candidate)
