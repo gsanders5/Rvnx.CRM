@@ -32,7 +32,7 @@ namespace Rvnx.CRM.Web.Controllers
             await file.CopyToAsync(ms);
             byte[] fileBytes = ms.ToArray();
 
-            if (_fileValidationService.IsImageExtension(extension) && !_fileValidationService.IsValidImageSignature(fileBytes, extension))
+            if (!_fileValidationService.IsValidFileSignature(fileBytes, extension))
             {
                 return BadRequest("Invalid file signature.");
             }
