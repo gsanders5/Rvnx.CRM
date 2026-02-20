@@ -86,12 +86,7 @@ namespace Rvnx.CRM.Web.Controllers
                     Reminder? reminder = await _repository.GetByIdAsync<Reminder>(id);
                     if (reminder == null) return NotFound();
 
-                    reminder.Title = reminderDto.Title;
-                    reminder.Description = reminderDto.Description;
-                    reminder.DueDate = reminderDto.DueDate;
-                    reminder.IsCompleted = reminderDto.IsCompleted;
-                    reminder.RemindMe = reminderDto.RemindMe;
-                    reminder.EventFrequency = reminderDto.EventFrequency;
+                    reminder.UpdateEntity(reminderDto);
 
                     await _repository.UpdateAsync(reminder);
                     await _repository.SaveChangesAsync();

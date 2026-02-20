@@ -40,6 +40,16 @@ namespace Rvnx.CRM.Core.Extensions
             };
         }
 
+        public static void UpdateEntity(this Reminder entity, ReminderDto dto)
+        {
+            entity.Title = dto.Title;
+            entity.Description = dto.Description;
+            entity.DueDate = dto.DueDate;
+            entity.IsCompleted = dto.IsCompleted;
+            entity.RemindMe = dto.RemindMe;
+            entity.EventFrequency = dto.EventFrequency;
+        }
+
         public static SignificantDateDto ToDto(this SignificantDate entity)
         {
             return new SignificantDateDto
