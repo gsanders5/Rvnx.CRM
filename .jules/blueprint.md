@@ -10,7 +10,7 @@
 **Learning:** Controller unit tests instantiate controllers directly via `new Controller(...)` rather than using a test fixture or DI container. This makes constructor injection changes ripple across all test files immediately.
 **Action:** When adding dependencies to controllers, expect to update multiple test files manually. Consider introducing a test builder pattern if the pain becomes too high, but respect the current direct instantiation for consistency.
 
-## 2026-02-20 - DashboardViewModel Types Used by Razor Views via Json.Serialize
+## 2026-02-20 - ErrorViewModel shares namespace with deleted ViewModels
 
-**Learning:** The Razor views in `Views/Home/Index.cshtml` consume `GraphNodes` and `GraphLinks` via `@Json.Serialize(Model.GraphNodes)`. When moving DTO types between namespaces, the JSON property names must remain identical or the client-side JavaScript will break silently.
-**Action:** When moving DTOs that are serialized to JSON for client-side consumption, verify property names match exactly. The Razor views don't use `@using` for the DTO types — they flow through the ViewModel properties.
+**Learning:** `ErrorViewModel` lives in `Rvnx.CRM.Web.Models` alongside any ViewModels. When deleting a ViewModel from that namespace, the `using Rvnx.CRM.Web.Models` directive must remain if `ErrorViewModel` (or other types) is still referenced in the same file.
+**Action:** Before removing a `using` after deleting a class, grep for all types from that namespace in the consuming file.

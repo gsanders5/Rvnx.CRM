@@ -14,15 +14,7 @@ namespace Rvnx.CRM.Web.Controllers
         public async Task<IActionResult> Index()
         {
             DashboardDto data = await _dashboardService.GetDashboardDataAsync();
-
-            DashboardViewModel model = new()
-            {
-                UpcomingEvents = data.UpcomingEvents,
-                GraphNodes = data.GraphNodes,
-                GraphLinks = data.GraphLinks,
-            };
-
-            return View(model);
+            return View(data);
         }
 
         public IActionResult Privacy()
