@@ -11,6 +11,9 @@ public static class ServiceCollectionExtensions
         // Add Contact Management Service
         services.AddScoped<IContactManagementService, ContactManagementService>();
 
+        // Add Contact Read Service
+        services.AddScoped<IContactReadService, ContactReadService>();
+
         return services;
     }
 }

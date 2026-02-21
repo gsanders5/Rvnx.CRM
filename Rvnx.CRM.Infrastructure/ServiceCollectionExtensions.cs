@@ -34,9 +34,6 @@ public static class ServiceCollectionExtensions
         // Add Contact Export Service
         services.AddScoped<IContactExportService, ContactExportService>();
 
-        // Add Contact Read Service
-        services.AddScoped<IContactReadService, ContactReadService>();
-
         // Add Self Contact Service
         services.AddScoped<ISelfContactService, SelfContactService>();
 
