@@ -129,7 +129,7 @@ namespace Rvnx.CRM.Web.Controllers
             }
 
             // 2. Get Contacts
-            List<Contact> contacts = await _repository.ListAsync<Contact>();
+            List<Contact> contacts = await _repository.ListAsNoTrackingAsync<Contact>();
             if (contacts.Count < 2)
             {
                 TempData["Message"] = "Not enough contacts to create relationships.";
@@ -150,7 +150,7 @@ namespace Rvnx.CRM.Web.Controllers
 
                 RelationshipTypeDefinition type = types[random.Next(types.Count)];
 
-                List<Relationship> existing = await _repository.ListAsync<Relationship>(r =>
+                List<Relationship> existing = await _repository.ListAsNoTrackingAsync<Relationship>(r =>
                     r.EntityId == c1.Id && r.RelatedEntityId == c2.Id && r.RelationshipTypeId == type.Id);
 
                 if (existing.Any()) continue;
