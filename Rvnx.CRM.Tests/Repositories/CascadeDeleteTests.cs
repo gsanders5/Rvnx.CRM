@@ -8,7 +8,7 @@ using Rvnx.CRM.Core.Models.Contact;
 using Rvnx.CRM.Infrastructure.Data;
 using Rvnx.CRM.Web.Controllers;
 
-namespace Rvnx.CRM.Tests
+namespace Rvnx.CRM.Tests.Repositories
 {
     public class CascadeDeleteTests
     {

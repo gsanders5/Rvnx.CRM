@@ -6,7 +6,7 @@ using Rvnx.CRM.Infrastructure.Data;
 using Rvnx.CRM.Infrastructure.Services;
 using System.Security.Claims;
 
-namespace Rvnx.CRM.Tests
+namespace Rvnx.CRM.Tests.Services
 {
     public class UserSynchronizationTests
     {

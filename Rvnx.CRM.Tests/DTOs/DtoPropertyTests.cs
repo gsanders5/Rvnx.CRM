@@ -2,13 +2,12 @@ using Rvnx.CRM.Core.DTOs.Common;
 using Rvnx.CRM.Core.DTOs.Dates;
 using Rvnx.CRM.Core.DTOs.Base;
 using Rvnx.CRM.Core.DTOs.Contact;
-using Rvnx.CRM.Core.DTOs.Contact;
 using Rvnx.CRM.Core.Models.Base;
 using Rvnx.CRM.Core.Models.Contact;
 using Rvnx.CRM.Core.Models.Dates;
 using System.Reflection;
 
-namespace Rvnx.CRM.Tests
+namespace Rvnx.CRM.Tests.DTOs
 {
     public class DtoPropertyTests
     {

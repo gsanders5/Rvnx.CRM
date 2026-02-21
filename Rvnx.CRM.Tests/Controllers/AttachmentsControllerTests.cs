@@ -9,7 +9,7 @@ using Rvnx.CRM.Infrastructure.Repositories;
 using Rvnx.CRM.Web.Controllers;
 using System.Text;
 
-namespace Rvnx.CRM.Tests
+namespace Rvnx.CRM.Tests.Controllers
 {
     public class AttachmentsControllerTests
     {

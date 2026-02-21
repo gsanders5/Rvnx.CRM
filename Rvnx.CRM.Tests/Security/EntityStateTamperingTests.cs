@@ -12,7 +12,7 @@ using Rvnx.CRM.Infrastructure.Data;
 using Rvnx.CRM.Infrastructure.Repositories;
 using Rvnx.CRM.Web.Controllers;
 
-namespace Rvnx.CRM.Tests
+namespace Rvnx.CRM.Tests.Security
 {
     /// <summary>
     /// Tests to verify that Edit actions properly protect audit fields

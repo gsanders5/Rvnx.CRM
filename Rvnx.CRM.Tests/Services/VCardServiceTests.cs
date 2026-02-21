@@ -5,7 +5,7 @@ using Rvnx.CRM.Core.Models.Dates;
 using Rvnx.CRM.Infrastructure.Services;
 using System.Text;
 
-namespace Rvnx.CRM.Tests
+namespace Rvnx.CRM.Tests.Services
 {
     public class VCardServiceTests
     {

@@ -7,7 +7,7 @@ using Moq;
 using Rvnx.CRM.Core.Interfaces;
 using Rvnx.CRM.Web.Controllers;
 
-namespace Rvnx.CRM.Tests
+namespace Rvnx.CRM.Tests.Controllers
 {
     public class DebugOperationsControllerTests
     {

@@ -1,19 +1,19 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.ViewFeatures;
 using Microsoft.Extensions.Logging;
 using Moq;
-using Rvnx.CRM.Core.DTOs.Common;
 using Rvnx.CRM.Core.DTOs.Contact;
 using Rvnx.CRM.Core.Interfaces;
 using Rvnx.CRM.Core.Models.Contact;
 using Rvnx.CRM.Web.Controllers;
 
-namespace Rvnx.CRM.Tests
+namespace Rvnx.CRM.Tests.Controllers
 {
-    public class ContactsControllerDetailsTests
+    public class ContactsControllerPerformanceTests
     {
         [Fact]
-        public async Task Details_ShouldReturnViewWithMappedRelationships()
+        public async Task Index_DelegatesToService()
         {
             // Arrange
             Mock<IRepository> repositoryMock = new();
@@ -22,27 +22,22 @@ namespace Rvnx.CRM.Tests
             Mock<IUserSynchronizationService> syncMock = new();
             Mock<IContactReadService> readServiceMock = new();
 
-            Guid contactId = Guid.NewGuid();
-            ContactDetailDto detailDto = new()
+            List<ContactDto> contactDtos = new()
             {
-                Id = contactId,
-                FirstName = "Test",
-                Relationships = new List<RelationshipDto>(),
-                RelatedTo = new List<RelationshipDto>()
+                new ContactDto { Id = Guid.NewGuid(), FirstName = "Test" }
             };
 
-            readServiceMock.Setup(s => s.GetContactDetailsAsync(contactId)).ReturnsAsync(detailDto);
+            readServiceMock.Setup(s => s.GetIndexDataAsync(It.IsAny<bool>())).ReturnsAsync(contactDtos);
 
             ContactsController controller = new(repositoryMock.Object, loggerMock.Object, userMock.Object, Mock.Of<IContactImportService>(), Mock.Of<IContactExportService>(), Mock.Of<IContactManagementService>(), readServiceMock.Object, Mock.Of<ISelfContactService>());
             controller.ControllerContext = new ControllerContext { HttpContext = new DefaultHttpContext() };
+            controller.TempData = new TempDataDictionary(controller.HttpContext, Mock.Of<ITempDataProvider>());
 
             // Act
-            IActionResult result = await controller.Details(contactId);
+            await controller.Index();
 
             // Assert
-            ViewResult viewResult = Assert.IsType<ViewResult>(result);
-            ContactDetailDto model = Assert.IsAssignableFrom<ContactDetailDto>(viewResult.Model);
-            Assert.Equal(contactId, model.Id);
+            readServiceMock.Verify(s => s.GetIndexDataAsync(false), Times.Once);
         }
     }
 }

@@ -5,7 +5,7 @@ using Rvnx.CRM.Core.Models.Base;
 using Rvnx.CRM.Infrastructure.Data;
 using Rvnx.CRM.Infrastructure.Repositories;
 
-namespace Rvnx.CRM.Tests
+namespace Rvnx.CRM.Tests.Repositories
 {
     public class RepositoryDeleteAsyncTests
     {

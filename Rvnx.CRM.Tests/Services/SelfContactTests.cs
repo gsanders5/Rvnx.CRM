@@ -8,7 +8,7 @@ using Rvnx.CRM.Core.Models.Contact;
 using Rvnx.CRM.Web.Controllers;
 using System.Security.Claims;
 
-namespace Rvnx.CRM.Tests
+namespace Rvnx.CRM.Tests.Services
 {
     public class SelfContactTests
     {

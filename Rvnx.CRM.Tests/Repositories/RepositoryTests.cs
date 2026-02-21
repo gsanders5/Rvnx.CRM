@@ -6,7 +6,7 @@ using Rvnx.CRM.Core.Models.Contact;
 using Rvnx.CRM.Infrastructure.Data;
 using Rvnx.CRM.Infrastructure.Repositories;
 
-namespace Rvnx.CRM.Tests
+namespace Rvnx.CRM.Tests.Repositories
 {
     public class RepositoryTests
     {

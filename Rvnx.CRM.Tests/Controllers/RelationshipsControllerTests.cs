@@ -12,7 +12,7 @@ using Rvnx.CRM.Infrastructure.Repositories;
 using Rvnx.CRM.Core.Services;
 using Rvnx.CRM.Web.Controllers;
 
-namespace Rvnx.CRM.Tests
+namespace Rvnx.CRM.Tests.Controllers
 {
     public class RelationshipsControllerTests : IDisposable
     {
