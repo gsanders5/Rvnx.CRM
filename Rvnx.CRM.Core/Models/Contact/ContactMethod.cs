@@ -6,8 +6,13 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace Rvnx.CRM.Core.Models.Contact
 {
     [Table("ContactMethod")]
-    public class ContactMethod : PolymorphicEntity
+    public class ContactMethod : BaseEntity
     {
+        public Guid? ContactId { get; set; }
+
+        [ForeignKey(nameof(ContactId))]
+        public virtual Contact? Contact { get; set; }
+
         [Required]
         [Display(Name = "Type")]
         public ContactMethodType Type { get; set; }

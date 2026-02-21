@@ -21,10 +21,10 @@ public class ContactReadService(IRepository repository) : IContactReadService
         List<Guid> contactIds = [.. contacts.Select(c => c.Id)];
 
         List<Attachment> profileAttachments = contactIds.Count < 2000
-            ? await _repository.ListAsNoTrackingAsync<Attachment>(a => a.EntityType == EntityTypes.Person
+            ? await _repository.ListAsNoTrackingAsync<Attachment>(a => a.ContactId != null
                 && a.AttachmentType == AttachmentTypes.ProfileImage
-                && contactIds.Contains(a.EntityId))
-            : await _repository.ListAsNoTrackingAsync<Attachment>(a => a.EntityType == EntityTypes.Person
+                && contactIds.Contains(a.ContactId.Value))
+            : await _repository.ListAsNoTrackingAsync<Attachment>(a => a.ContactId != null
                 && a.AttachmentType == AttachmentTypes.ProfileImage);
 
         // Optimization: If contact list is large, avoid sending large list of IDs to SQL (which can hit parameter limits).
@@ -33,8 +33,8 @@ public class ContactReadService(IRepository repository) : IContactReadService
         if (profileAttachments != null && profileAttachments.Any())
         {
             Dictionary<Guid, Attachment> attachmentMap = profileAttachments
-                .Where(a => a != null)
-                .GroupBy(a => a.EntityId) // Handle potential duplicates gracefully
+                .Where(a => a != null && a.ContactId.HasValue)
+                .GroupBy(a => a.ContactId!.Value) // Handle potential duplicates gracefully
                 .ToDictionary(g => g.Key, g => g.First());
 
             foreach (ContactDto? dto in contactDtos)
@@ -52,13 +52,19 @@ public class ContactReadService(IRepository repository) : IContactReadService
     public async Task<ContactDetailDto?> GetContactDetailsAsync(Guid id)
     {
         // Optimization: Use ListAsNoTrackingAsync to avoid change tracking overhead for read-only operation
-        List<Contact> contacts = await _repository.ListAsNoTrackingAsync<Contact>(c => c.Id == id, default, "Employers");
+        List<Contact> contacts = await _repository.ListAsNoTrackingAsync<Contact>(c => c.Id == id, default,
+            nameof(Contact.Employers),
+            nameof(Contact.Pets),
+            nameof(Contact.Notes),
+            nameof(Contact.Reminders),
+            nameof(Contact.SignificantDates),
+            nameof(Contact.ContactMethods),
+            nameof(Contact.Facts),
+            nameof(Contact.Addresses),
+            nameof(Contact.Attachments));
+
         Contact? contact = contacts.FirstOrDefault();
         if (contact == null) return null;
-
-        contact.Notes = await GetRelatedEntitiesAsync<Note>(id);
-        contact.Reminders = await GetRelatedEntitiesAsync<Reminder>(id);
-        contact.SignificantDates = await GetRelatedEntitiesAsync<SignificantDate>(id);
 
         // Relationships Optimization: Fetch both outgoing and incoming relationships in one query
         List<Relationship> allRelationships = await _repository.ListAsNoTrackingAsync<Relationship>(r =>
@@ -93,32 +99,20 @@ public class ContactReadService(IRepository repository) : IContactReadService
         }
         contact.RelatedTo = relatedTo;
 
-        // Pets
-        List<Pet> pets = await GetRelatedEntitiesAsync<Pet>(id);
-
-        // Contact Infos
-        contact.ContactMethods = await GetRelatedEntitiesAsync<ContactMethod>(id);
-
-        // Facts
-        contact.Facts = await GetRelatedEntitiesAsync<Fact>(id);
-
-        // Attachments Optimization: Fetch all attachments (profile & others) in one query
-        List<Attachment> allAttachments = await _repository.ListAsNoTrackingAsync<Attachment>(a => a.EntityId == id && a.EntityType == EntityTypes.Person);
-
-        contact.Attachments = allAttachments
-            .Where(a => a.AttachmentType != AttachmentTypes.ProfileImage)
-            .ToList();
-
         ContactDetailDto contactDto = contact.ToDetailDto();
-        contactDto.Pets = pets.Select(p => p.ToDto()).ToList();
+        contactDto.Pets = contact.Pets.Select(p => p.ToDto()).ToList();
 
-        Attachment? profileAttachment = allAttachments
+        Attachment? profileAttachment = contact.Attachments
             .FirstOrDefault(a => a.AttachmentType == AttachmentTypes.ProfileImage);
 
         if (profileAttachment != null)
         {
             contactDto.ProfileImageId = profileAttachment.Id;
         }
+
+        contactDto.Attachments = contactDto.Attachments
+            .Where(a => a.AttachmentType != AttachmentTypes.ProfileImage)
+            .ToList();
 
         return contactDto;
     }
@@ -156,20 +150,15 @@ public class ContactReadService(IRepository repository) : IContactReadService
         return await _repository.ExistsAsync<Contact>(id);
     }
 
-    private async Task<List<T>> GetRelatedEntitiesAsync<T>(Guid contactId) where T : PolymorphicEntity
-    {
-        return await _repository.ListAsNoTrackingAsync<T>(e => e.EntityId == contactId && e.EntityType == EntityTypes.Person);
-    }
-
     private async Task<ContactMethod?> GetPrimaryContactMethodAsync(Guid contactId, ContactMethodType type)
     {
-        List<ContactMethod> methods = await _repository.ListAsNoTrackingAsync<ContactMethod>(c => c.EntityId == contactId && c.EntityType == EntityTypes.Person && c.Type == type);
+        List<ContactMethod> methods = await _repository.ListAsNoTrackingAsync<ContactMethod>(c => c.ContactId == contactId && c.Type == type);
         return methods.FirstOrDefault(e => e.Label == ContactMethodLabels.Primary) ?? methods.FirstOrDefault();
     }
 
     private async Task<SignificantDate?> GetBirthdayAsync(Guid contactId)
     {
-        List<SignificantDate> bdays = await _repository.ListAsNoTrackingAsync<SignificantDate>(d => d.EntityId == contactId && d.EntityType == EntityTypes.Person && d.Title == SignificantDateTitles.Birthday);
+        List<SignificantDate> bdays = await _repository.ListAsNoTrackingAsync<SignificantDate>(d => d.ContactId == contactId && d.Title == SignificantDateTitles.Birthday);
         return bdays.FirstOrDefault();
     }
 }

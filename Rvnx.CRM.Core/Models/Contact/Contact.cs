@@ -8,6 +8,8 @@ namespace Rvnx.CRM.Core.Models.Contact
     [Table("Contact")]
     public class Contact : Person
     {
+        public virtual ICollection<Pet> Pets { get; set; } = [];
+
         [Display(Name = "Employers")]
         [InverseProperty(nameof(Employer.Employee))]
         public virtual ICollection<Employer> Employers { get; set; } = [];

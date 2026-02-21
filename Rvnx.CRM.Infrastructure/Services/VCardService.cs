@@ -111,8 +111,7 @@ public class VCardService : IVCardService
                         contact.ContactMethods.Add(new ContactMethod
                         {
                             Id = Guid.NewGuid(),
-                            EntityId = contact.Id,
-                            EntityType = EntityTypes.Person,
+                            ContactId = contact.Id,
                             Type = ContactMethodType.Email,
                             Value = email,
                             Label = "Imported"
@@ -131,8 +130,7 @@ public class VCardService : IVCardService
                         contact.ContactMethods.Add(new ContactMethod
                         {
                             Id = Guid.NewGuid(),
-                            EntityId = contact.Id,
-                            EntityType = EntityTypes.Person,
+                            ContactId = contact.Id,
                             Type = ContactMethodType.Phone,
                             Value = phone,
                             Label = "Imported"
@@ -153,8 +151,7 @@ public class VCardService : IVCardService
                         contact.SignificantDates.Add(new SignificantDate
                         {
                             Id = Guid.NewGuid(),
-                            EntityId = contact.Id,
-                            EntityType = EntityTypes.Person,
+                            ContactId = contact.Id,
                             Title = SignificantDateTitles.Birthday,
                             Date = val.DateTimeOffset.Value.DateTime,
                             Description = "Birthday from VCard",
@@ -168,8 +165,7 @@ public class VCardService : IVCardService
                         contact.SignificantDates.Add(new SignificantDate
                         {
                             Id = Guid.NewGuid(),
-                            EntityId = contact.Id,
-                            EntityType = EntityTypes.Person,
+                            ContactId = contact.Id,
                             Title = SignificantDateTitles.Birthday,
                             Date = d.ToDateTime(TimeOnly.MinValue),
                             Description = "Birthday from VCard",

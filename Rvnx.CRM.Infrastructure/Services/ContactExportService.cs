@@ -19,8 +19,8 @@ public class ContactExportService(IRepository repository, IVCardService vCardSer
             throw new KeyNotFoundException($"Contact with ID {contactId} not found.");
         }
 
-        contact.ContactMethods = await _repository.ListAsNoTrackingAsync<ContactMethod>(e => e.EntityId == contactId && e.EntityType == EntityTypes.Person);
-        contact.SignificantDates = await _repository.ListAsNoTrackingAsync<SignificantDate>(e => e.EntityId == contactId && e.EntityType == EntityTypes.Person);
+        contact.ContactMethods = await _repository.ListAsNoTrackingAsync<ContactMethod>(e => e.ContactId == contactId);
+        contact.SignificantDates = await _repository.ListAsNoTrackingAsync<SignificantDate>(e => e.ContactId == contactId);
 
         byte[] vcfBytes = _vCardService.ExportVCard(contact);
         string fileName = $"{contact.FirstName}_{contact.LastName}.vcf";

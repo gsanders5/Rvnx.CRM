@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Rvnx.CRM.Core.Constants;
 using Rvnx.CRM.Core.DTOs.Contact;
 using Rvnx.CRM.Core.Extensions;
 using Rvnx.CRM.Core.Interfaces;
@@ -11,7 +12,7 @@ namespace Rvnx.CRM.Web.Controllers
     {
         public IActionResult Create(Guid entityId, string entityType)
         {
-            return entityId == Guid.Empty || string.IsNullOrEmpty(entityType)
+            return entityId == Guid.Empty
                 ? NotFound()
                 : View(new ContactMethodFormDto { EntityId = entityId, EntityType = entityType });
         }
@@ -25,7 +26,7 @@ namespace Rvnx.CRM.Web.Controllers
                 ContactMethod contactInfo = contactInfoInput.ToEntity();
                 await _repository.AddAsync(contactInfo);
                 await _repository.SaveChangesAsync();
-                return RedirectToEntity(contactInfo.EntityId, contactInfo.EntityType);
+                return RedirectToEntity(contactInfo.ContactId ?? Guid.Empty, EntityTypes.Person);
             }
             return View(contactInfoInput);
         }
@@ -43,8 +44,8 @@ namespace Rvnx.CRM.Web.Controllers
                 Type = contactInfo.Type,
                 Value = contactInfo.Value,
                 Label = contactInfo.Label,
-                EntityId = contactInfo.EntityId,
-                EntityType = contactInfo.EntityType
+                EntityId = contactInfo.ContactId ?? Guid.Empty,
+                EntityType = EntityTypes.Person
             };
 
             return View(dto);
@@ -68,7 +69,7 @@ namespace Rvnx.CRM.Web.Controllers
                     await _repository.UpdateAsync(existingContactInfo);
                     await _repository.SaveChangesAsync();
 
-                    return RedirectToEntity(existingContactInfo.EntityId, existingContactInfo.EntityType);
+                    return RedirectToEntity(existingContactInfo.ContactId ?? Guid.Empty, EntityTypes.Person);
                 }
                 catch (Exception)
                 {
@@ -94,8 +95,8 @@ namespace Rvnx.CRM.Web.Controllers
             ContactMethod? contactInfo = await _repository.GetByIdAsync<ContactMethod>(id);
             if (contactInfo != null)
             {
-                Guid entityId = contactInfo.EntityId;
-                string entityType = contactInfo.EntityType;
+                Guid entityId = contactInfo.ContactId ?? Guid.Empty;
+                string entityType = EntityTypes.Person;
                 await _repository.DeleteAsync<ContactMethod>(id);
                 await _repository.SaveChangesAsync();
                 return RedirectToEntity(entityId, entityType);

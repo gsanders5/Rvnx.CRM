@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Rvnx.CRM.Core.Constants;
 using Rvnx.CRM.Core.DTOs.Common;
 using Rvnx.CRM.Core.DTOs.Base;
 using Rvnx.CRM.Core.Extensions;
@@ -12,7 +13,7 @@ namespace Rvnx.CRM.Web.Controllers
     {
         public async Task<IActionResult> Create(Guid entityId, string entityType)
         {
-            if (entityId == Guid.Empty || string.IsNullOrEmpty(entityType)) return NotFound();
+            if (entityId == Guid.Empty) return NotFound();
 
             var viewModel = new NoteFormViewModel
             {
@@ -33,7 +34,7 @@ namespace Rvnx.CRM.Web.Controllers
                 Note note = viewModel.ToEntity();
                 await _repository.AddAsync(note);
                 await _repository.SaveChangesAsync();
-                return RedirectToEntity(note.EntityId, note.EntityType);
+                return RedirectToEntity(note.ContactId ?? Guid.Empty, EntityTypes.Person);
             }
 
             viewModel.EntityName = await GetEntityName(viewModel.EntityId, viewModel.EntityType);
@@ -52,9 +53,9 @@ namespace Rvnx.CRM.Web.Controllers
                 Id = note.Id,
                 Title = note.Title,
                 Value = note.Value,
-                EntityId = note.EntityId,
-                EntityType = note.EntityType,
-                EntityName = await GetEntityName(note.EntityId, note.EntityType)
+                EntityId = note.ContactId ?? Guid.Empty,
+                EntityType = EntityTypes.Person,
+                EntityName = await GetEntityName(note.ContactId ?? Guid.Empty, EntityTypes.Person)
             };
 
             return View(viewModel);
@@ -78,7 +79,7 @@ namespace Rvnx.CRM.Web.Controllers
                     await _repository.UpdateAsync(existingNote);
                     await _repository.SaveChangesAsync();
 
-                    return RedirectToEntity(existingNote.EntityId, existingNote.EntityType);
+                    return RedirectToEntity(existingNote.ContactId ?? Guid.Empty, EntityTypes.Person);
                 }
                 catch (Exception)
                 {
@@ -107,10 +108,10 @@ namespace Rvnx.CRM.Web.Controllers
                 Id = note.Id,
                 Title = note.Title,
                 Value = note.Value,
-                EntityId = note.EntityId,
-                EntityType = note.EntityType,
+                EntityId = note.ContactId ?? Guid.Empty,
+                EntityType = EntityTypes.Person,
                 CreatedDate = note.CreatedDate,
-                EntityName = await GetEntityName(note.EntityId, note.EntityType)
+                EntityName = await GetEntityName(note.ContactId ?? Guid.Empty, EntityTypes.Person)
             };
             return View(viewModel);
         }
@@ -122,8 +123,8 @@ namespace Rvnx.CRM.Web.Controllers
             Note? note = await _repository.GetByIdAsync<Note>(id);
             if (note != null)
             {
-                Guid entityId = note.EntityId;
-                string entityType = note.EntityType;
+                Guid entityId = note.ContactId ?? Guid.Empty;
+                string entityType = EntityTypes.Person;
                 await _repository.DeleteAsync<Note>(id);
                 await _repository.SaveChangesAsync();
                 return RedirectToEntity(entityId, entityType);

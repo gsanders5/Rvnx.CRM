@@ -72,9 +72,9 @@ public class DashboardService(IRepository repository, ILogger<DashboardService> 
                 continue;
 
             string entityName = "Unknown";
-            if (reminder.EntityId != Guid.Empty && reminder.EntityType == EntityTypes.Person)
+            if (reminder.ContactId.HasValue)
             {
-                if (contactDict.TryGetValue(reminder.EntityId, out Contact? contact))
+                if (contactDict.TryGetValue(reminder.ContactId.Value, out Contact? contact))
                 {
                     entityName = contact.FullName;
                 }
@@ -86,7 +86,7 @@ public class DashboardService(IRepository repository, ILogger<DashboardService> 
                 Description = reminder.Description ?? "",
                 Date = nextDate,
                 Type = "Reminder",
-                RelatedEntityId = reminder.EntityId,
+                RelatedEntityId = reminder.ContactId ?? Guid.Empty,
                 RelatedEntityName = entityName,
                 TimeUntil = GetTimeUntil(nextDate)
             };
@@ -106,12 +106,12 @@ public class DashboardService(IRepository repository, ILogger<DashboardService> 
         Dictionary<Guid, Contact> contactDict)
     {
         List<SignificantDate> importantDates = await _repository.ListAsNoTrackingAsync<SignificantDate>(
-            d => d.EntityType == EntityTypes.Person);
+            d => d.ContactId != null);
 
         int processedCount = 0;
         foreach (SignificantDate date in importantDates)
         {
-            if (!contactDict.TryGetValue(date.EntityId, out Contact? contact))
+            if (!contactDict.TryGetValue(date.ContactId ?? Guid.Empty, out Contact? contact))
                 continue;
 
             DateTime nextOccurrence = date.GetNextOccurrence();

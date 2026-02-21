@@ -39,8 +39,7 @@ namespace Rvnx.CRM.Web.Controllers
             Attachment attachment = new()
             {
                 Id = Guid.NewGuid(),
-                EntityId = entityId,
-                EntityType = entityType,
+                ContactId = entityId,
                 AttachmentType = "General",
                 ContentType = file.ContentType,
                 FileName = file.FileName,

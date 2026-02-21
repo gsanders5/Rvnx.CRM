@@ -110,8 +110,7 @@ public class SelfContactService(IRepository repository, ICurrentUserService curr
                 await _repository.AddAsync(new ContactMethod
                 {
                     Id = Guid.NewGuid(),
-                    EntityId = contactId,
-                    EntityType = EntityTypes.Person,
+                    ContactId = contactId,
                     Type = type,
                     Value = newValue,
                     Label = ContactMethodLabels.Primary
@@ -141,8 +140,7 @@ public class SelfContactService(IRepository repository, ICurrentUserService curr
                 await _repository.AddAsync(new SignificantDate
                 {
                     Id = Guid.NewGuid(),
-                    EntityId = contactId,
-                    EntityType = EntityTypes.Person,
+                    ContactId = contactId,
                     Title = SignificantDateTitles.Birthday,
                     Date = newDate.Value,
                     Description = "Birthday",

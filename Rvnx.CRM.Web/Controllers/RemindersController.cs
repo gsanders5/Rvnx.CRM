@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Rvnx.CRM.Core.Constants;
 using Rvnx.CRM.Core.DTOs.Common;
 using Rvnx.CRM.Core.DTOs.Dates;
 using Rvnx.CRM.Core.Extensions;
@@ -12,12 +13,11 @@ namespace Rvnx.CRM.Web.Controllers
     {
         public async Task<IActionResult> Create(Guid entityId, string entityType)
         {
-            if (entityId == Guid.Empty || string.IsNullOrEmpty(entityType)) return NotFound();
+            if (entityId == Guid.Empty) return NotFound();
 
             var dto = new Reminder
             {
-                EntityId = entityId,
-                EntityType = entityType,
+                ContactId = entityId,
                 DueDate = DateTime.Now.AddDays(1),
                 EventFrequency = TimeSpan.FromDays(365) // Default
             }.ToDto();
@@ -55,15 +55,14 @@ namespace Rvnx.CRM.Web.Controllers
                     Description = viewModel.Description,
                     DueDate = viewModel.DueDate,
                     IsCompleted = viewModel.IsCompleted,
-                    EntityId = viewModel.EntityId,
-                    EntityType = viewModel.EntityType,
+                    ContactId = viewModel.EntityId,
                     RemindMe = viewModel.RemindMe,
                     EventFrequency = viewModel.EventFrequency
                 };
 
                 await _repository.AddAsync(reminder);
                 await _repository.SaveChangesAsync();
-                return RedirectToEntity(reminder.EntityId, reminder.EntityType);
+                return RedirectToEntity(reminder.ContactId ?? Guid.Empty, EntityTypes.Person);
             }
 
             if (viewModel.EntityId != Guid.Empty && !string.IsNullOrEmpty(viewModel.EntityType))
@@ -164,8 +163,8 @@ namespace Rvnx.CRM.Web.Controllers
             Reminder? reminder = await _repository.GetByIdAsync<Reminder>(id);
             if (reminder != null)
             {
-                Guid entityId = reminder.EntityId;
-                string entityType = reminder.EntityType;
+                Guid entityId = reminder.ContactId ?? Guid.Empty;
+                string entityType = EntityTypes.Person;
                 await _repository.DeleteAsync<Reminder>(id);
                 await _repository.SaveChangesAsync();
                 return RedirectToEntity(entityId, entityType);

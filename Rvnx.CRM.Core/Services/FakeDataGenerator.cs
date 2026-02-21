@@ -40,8 +40,7 @@ namespace Rvnx.CRM.Core.Services
                 contact.Addresses.Add(new Address
                 {
                     Id = Guid.NewGuid(),
-                    EntityId = contact.Id,
-                    EntityType = EntityTypes.Person,
+                    ContactId = contact.Id,
                     Street = $"{_random.Next(100, 9999)} {Streets[_random.Next(Streets.Length)]}",
                     City = Cities[cityIndex],
                     State = States[cityIndex],
@@ -57,8 +56,7 @@ namespace Rvnx.CRM.Core.Services
                 contact.ContactMethods.Add(new ContactMethod
                 {
                     Id = Guid.NewGuid(),
-                    EntityId = contact.Id,
-                    EntityType = EntityTypes.Person,
+                    ContactId = contact.Id,
                     Type = ContactMethodType.Phone,
                     Value = $"{_random.Next(200, 999)}-{_random.Next(200, 999)}-{_random.Next(1000, 9999)}",
                     Label = "Mobile"
@@ -71,8 +69,7 @@ namespace Rvnx.CRM.Core.Services
                 contact.ContactMethods.Add(new ContactMethod
                 {
                     Id = Guid.NewGuid(),
-                    EntityId = contact.Id,
-                    EntityType = EntityTypes.Person,
+                    ContactId = contact.Id,
                     Type = ContactMethodType.Email,
                     Value = $"{firstName.ToLower()}.{lastName.ToLower()}@example.com",
                     Label = "Personal"
@@ -88,8 +85,7 @@ namespace Rvnx.CRM.Core.Services
                 contact.SignificantDates.Add(new SignificantDate
                 {
                     Id = Guid.NewGuid(),
-                    EntityId = contact.Id,
-                    EntityType = EntityTypes.Person,
+                    ContactId = contact.Id,
                     Title = "Birthday",
                     Date = new DateTime(year, month, day),
                     Description = "Birthday"

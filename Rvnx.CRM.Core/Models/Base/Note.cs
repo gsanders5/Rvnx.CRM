@@ -1,11 +1,17 @@
+using Rvnx.CRM.Core.Models.Contact;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Rvnx.CRM.Core.Models.Base;
 
 [Table("Note")]
-public class Note : PolymorphicEntity
+public class Note : BaseEntity
 {
+    public Guid? ContactId { get; set; }
+
+    [ForeignKey(nameof(ContactId))]
+    public virtual Rvnx.CRM.Core.Models.Contact.Contact? Contact { get; set; }
+
     [Required]
     [MaxLength(200)]
     [Display(Name = "Title")]

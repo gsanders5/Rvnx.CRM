@@ -46,7 +46,7 @@
 ### Key Patterns
 
 - **Generic Repository Pattern**: `IRepository` handles basic CRUD for `BaseEntity` types.
-- **Polymorphic Relationships**: Entities like `Note`, `Reminder`, `Attachment`, `Pet`, `ContactMethod` are linked to parent entities via `EntityId` + `EntityType` (discriminator), often managed manually in controllers.
+- **Explicit Foreign Keys**: Entities previously using polymorphic associations (`Note`, `Reminder`, `Attachment`, `ContactMethod`, etc.) now use typed nullable foreign keys (e.g., `ContactId`, `CompanyId`) with check constraints to enforce single ownership. `Pet` uses a required `ContactId`.
 - **User Isolation**: `CRMDbContext` applies global query filters to restrict access to data based on the current user (`ICurrentUserService`).
 - **Service Delegation**: Controllers delegate business logic to specialized services (e.g., `IContactManagementService`, `IContactImportService`).
 
@@ -90,16 +90,17 @@ string FullName (computed property)
 Concrete entity inheriting `Person`.
 
 - Stores `Employers` via navigation property.
-- Links to `ContactMethod`, `SignificantDate`, `Relationship` via polymorphic association.
+- Links to `ContactMethod`, `SignificantDate`, `Pet`, `Note`, etc. via standard EF Core navigation properties with Cascade Delete.
 
 ## Repository Usage
 
 The generic repository provides type-safe CRUD operations.
-Special care is needed for polymorphic entities:
+Data loading is now simplified with standard Include support:
 
 ```csharp
-// Fetch related entities manually
-var notes = await _repository.ListAsync<Note>(n => n.EntityId == parentId && n.EntityType == EntityTypes.Person);
+// Fetch related entities via Include or typed FK
+var contacts = await _repository.ListAsync<Contact>(c => c.Id == id, default, nameof(Contact.Notes));
+var notes = await _repository.ListAsync<Note>(n => n.ContactId == parentId);
 ```
 
 ## Service Layer

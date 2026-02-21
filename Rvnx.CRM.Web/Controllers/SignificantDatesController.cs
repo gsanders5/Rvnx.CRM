@@ -32,8 +32,7 @@ namespace Rvnx.CRM.Web.Controllers
                 if (string.Equals(dto.Title, SignificantDateTitles.Birthday, StringComparison.OrdinalIgnoreCase))
                 {
                     bool existingBirthday = (await _repository.CountAsync<SignificantDate>(d =>
-                        d.EntityId == dto.EntityId &&
-                        d.EntityType == dto.EntityType &&
+                        d.ContactId == dto.EntityId &&
                         string.Equals(d.Title, SignificantDateTitles.Birthday, StringComparison.OrdinalIgnoreCase))) > 0;
 
                     if (existingBirthday)
@@ -51,8 +50,7 @@ namespace Rvnx.CRM.Web.Controllers
                     Title = dto.Title,
                     Description = dto.Description,
                     Date = dto.Date,
-                    EntityId = dto.EntityId,
-                    EntityType = dto.EntityType,
+                    ContactId = dto.EntityId,
                     RemindMe = dto.RemindMe,
                     EventFrequency = dto.EventFrequency
                 };
@@ -91,8 +89,7 @@ namespace Rvnx.CRM.Web.Controllers
                         if (!string.Equals(importantDate.Title, SignificantDateTitles.Birthday, StringComparison.OrdinalIgnoreCase))
                         {
                             bool existingBirthday = (await _repository.CountAsync<SignificantDate>(d =>
-                                d.EntityId == dto.EntityId &&
-                                d.EntityType == dto.EntityType &&
+                                d.ContactId == dto.EntityId &&
                                 string.Equals(d.Title, SignificantDateTitles.Birthday, StringComparison.OrdinalIgnoreCase))) > 0;
 
                             if (existingBirthday)
@@ -138,8 +135,8 @@ namespace Rvnx.CRM.Web.Controllers
             SignificantDate? importantDate = await _repository.GetByIdAsync<SignificantDate>(id);
             if (importantDate != null)
             {
-                Guid entityId = importantDate.EntityId;
-                string entityType = importantDate.EntityType;
+                Guid entityId = importantDate.ContactId ?? Guid.Empty;
+                string entityType = EntityTypes.Person;
 
                 await _repository.DeleteAsync<SignificantDate>(id);
                 await _repository.SaveChangesAsync();

@@ -55,7 +55,7 @@ namespace Rvnx.CRM.Web.Controllers
                 {
                     foreach (Address? addr in addresses)
                     {
-                        addr.EntityId = contact.Id;
+                        addr.ContactId = contact.Id;
                         await _repository.AddAsync(addr);
                     }
                 }
@@ -64,7 +64,7 @@ namespace Rvnx.CRM.Web.Controllers
                 {
                     foreach (ContactMethod? info in infos)
                     {
-                        info.EntityId = contact.Id;
+                        info.ContactId = contact.Id;
                         await _repository.AddAsync(info);
                     }
                 }
@@ -73,7 +73,7 @@ namespace Rvnx.CRM.Web.Controllers
                 {
                     foreach (SignificantDate? date in dates)
                     {
-                        date.EntityId = contact.Id;
+                        date.ContactId = contact.Id;
                         await _repository.AddAsync(date);
                     }
                 }

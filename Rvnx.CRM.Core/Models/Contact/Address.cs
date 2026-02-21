@@ -5,8 +5,13 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace Rvnx.CRM.Core.Models.Contact
 {
     [Table("Address")]
-    public class Address : PolymorphicEntity
+    public class Address : BaseEntity
     {
+        public Guid? ContactId { get; set; }
+
+        [ForeignKey(nameof(ContactId))]
+        public virtual Contact? Contact { get; set; }
+
         [Required]
         [MaxLength(200)]
         [Display(Name = "Street Address")]
