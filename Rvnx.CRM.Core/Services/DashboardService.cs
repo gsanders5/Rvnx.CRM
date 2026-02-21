@@ -5,7 +5,7 @@ using Rvnx.CRM.Core.Interfaces;
 using Rvnx.CRM.Core.Models.Contact;
 using Rvnx.CRM.Core.Models.Dates;
 
-namespace Rvnx.CRM.Infrastructure.Services;
+namespace Rvnx.CRM.Core.Services;
 
 public class DashboardService(IRepository repository, ILogger<DashboardService> logger) : IDashboardService
 {

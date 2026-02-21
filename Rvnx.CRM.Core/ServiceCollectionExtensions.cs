@@ -17,6 +17,9 @@ public static class ServiceCollectionExtensions
         // Add Self Contact Service
         services.AddScoped<ISelfContactService, SelfContactService>();
 
+        // Add Dashboard Service
+        services.AddScoped<IDashboardService, DashboardService>();
+
         return services;
     }
 }
