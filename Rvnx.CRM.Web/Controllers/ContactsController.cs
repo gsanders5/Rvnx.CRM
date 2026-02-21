@@ -235,12 +235,6 @@ namespace Rvnx.CRM.Web.Controllers
             }
         }
 
-        private async Task<Rvnx.CRM.Core.Models.User?> GetUserAsync(Guid userId)
-        {
-            Rvnx.CRM.Core.Models.User? user = await _repository.GetByIdAsync<Rvnx.CRM.Core.Models.User>(userId);
-            return user ?? (await _repository.ListAsync<Rvnx.CRM.Core.Models.User>(u => u.SubjectId == userId.ToString())).FirstOrDefault();
-        }
-
         public async Task<IActionResult> Export(Guid id)
         {
             try
