@@ -37,12 +37,14 @@
 ## Architecture
 
 ### Clean Architecture Principles (Actual)
+
 - **Core**: Contains domain entities, interfaces, and pure logic. Depends on **Entity Framework Core** (for data annotations).
 - **Infrastructure**: Implements Core interfaces, handles data access and external integrations. Depends on **Core** and **FolkerKinzel.VCards**.
 - **Shared**: Currently unused (placeholder).
 - **Web**: Presentation layer. Orchestrates user interactions. Depends on all other projects.
 
 ### Key Patterns
+
 - **Generic Repository Pattern**: `IRepository` handles basic CRUD for `BaseEntity` types.
 - **Polymorphic Relationships**: Entities like `Note`, `Reminder`, `Attachment`, `Pet`, `ContactMethod` are linked to parent entities via `EntityId` + `EntityType` (discriminator), often managed manually in controllers.
 - **User Isolation**: `CRMDbContext` applies global query filters to restrict access to data based on the current user (`ICurrentUserService`).
@@ -54,12 +56,13 @@
 - **ASP.NET Core MVC** for web interface
 - **Entity Framework Core 8.0** for data access
 - **SQLite** for development database
-- **Bootstrap 5** for UI styling
+- **MDB Bootstrap 5** (MDBootstrap) for UI styling
 - **FolkerKinzel.VCards** for vCard import/export
 
 ## Core Entities
 
 ### BaseEntity
+
 Abstract base class for all domain entities with built-in audit trail and ownership:
 
 ```csharp
@@ -72,6 +75,7 @@ Abstract base class for all domain entities with built-in audit trail and owners
 ```
 
 ### Person
+
 Abstract base class for contact entities:
 
 ```csharp
@@ -82,7 +86,9 @@ string FullName (computed property)
 ```
 
 ### Contact
+
 Concrete entity inheriting `Person`.
+
 - Stores `Employers` via navigation property.
 - Links to `ContactMethod`, `SignificantDate`, `Relationship` via polymorphic association.
 
@@ -100,27 +106,30 @@ var notes = await _repository.ListAsync<Note>(n => n.EntityId == parentId && n.E
 
 - **Core Services**: Pure logic implementations (e.g., `FileValidationService`).
 - **Infrastructure Services**: Implementations requiring external dependencies or DB access.
-    - `UserSynchronizationService`
-    - `VCardService`
-    - `ContactImportService`
-    - `ContactExportService`
-    - `ContactManagementService`
-    - `ContactReadService`
-    - `SelfContactService`
+  - `UserSynchronizationService`
+  - `VCardService`
+  - `ContactImportService`
+  - `ContactExportService`
+  - `ContactManagementService`
+  - `ContactReadService`
+  - `SelfContactService`
 - **Web Services**: Implementations requiring HTTP Context (e.g., `CurrentUserService`).
 
 ## Database Configuration
 
 ### Global Query Filters
+
 - Automatically applied to all `BaseEntity` types in `CRMDbContext`.
 - Filter: `e => e.UserId == _currentUserService.UserId`.
 - Ensures users only see their own data.
 
 ### Audit Trail
+
 - Automatically populated in `CRMDbContext.SaveChanges()`.
 - Sets `CreatedBy`, `LastChangedBy`, `CreatedDate`, `LastChangedDate`.
 - Sets `UserId` on creation if null.
 
 ## Known Deviations from Pure Architecture
+
 1. **Core Dependency on EF Core**: Pragmatic choice to use Data Annotations (`[Key]`, `[Table]`) directly on domain models.
 2. **Service Registration**: Split between `Program.cs` (Web) and `ServiceCollectionExtensions.cs` (Infrastructure).

@@ -5,24 +5,25 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <title>@ViewData["Title"] - Rvnx.CRM.Web</title>
     <script type="importmap"></script>
-    <!-- Material Style CSS -->
-    <link rel="stylesheet"
-          href="https://cdn.jsdelivr.net/npm/@@materialstyle/materialstyle@3.1.1/dist/css/materialstyle.min.css"
-          integrity="sha384-TveZ4SBMG9Zwu44Pq5aK2bgL+4CaFRTtx6pSSsxmQKWhIRKoONDSRW+k+NA9A0Gk"
-          crossorigin="anonymous">
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet"/>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap" rel="stylesheet"/>
+    <!-- MDB -->
+    <link href="https://cdn.jsdelivr.net/npm/mdb-ui-kit@9.3.0/css/mdb.min.css" rel="stylesheet"/>
+    <!-- Bootstrap Icons -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true"/>
     <link rel="stylesheet" href="~/Rvnx.CRM.Web.styles.css" asp-append-version="true"/>
     <script>
         // Apply theme immediately to avoid flash
         const savedTheme = localStorage.getItem('theme') || 'light';
-        document.documentElement.setAttribute('data-bs-theme', savedTheme);
+        document.documentElement.setAttribute('data-mdb-theme', savedTheme);
     </script>
 </head>
 <body>
 <header>
-    <nav class="navbar navbar-expand-sm navbar-toggleable-sm border-bottom box-shadow mb-3 bg-primary" data-bs-theme="dark">
+    <nav class="navbar navbar-expand-sm navbar-toggleable-sm border-bottom box-shadow mb-3 bg-primary" data-mdb-theme="dark">
         <div class="container-fluid">
             <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">Rvnx.CRM.Web</a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
@@ -84,20 +85,8 @@
     </div>
 </footer>
 <script src="~/lib/jquery/dist/jquery.min.js"></script>
-<!-- Popper JS -->
-<script src="https://cdn.jsdelivr.net/npm/@@popperjs/core@2.11.8/dist/umd/popper.min.js"
-        integrity="sha384-I7E8VVD/ismYTF4hNIPjVp/Zjvgyol6VFvRkX/vR+Vc4jQkC+hVqc2pM8ODewa9r"
-        crossorigin="anonymous"></script>
-
-<!-- MDC Ripple JS (Only for Ripple effects) -->
-<script src="https://cdn.jsdelivr.net/npm/@@material/ripple@14.0.0/dist/mdc.ripple.min.js"
-        integrity="sha384-9QANVmWxL3S8VRs8x1Q+bF1Zzogpy7P/Qw1+y5qHLdC1ig0EuoHg9VbB1SXyecdZ"
-        crossorigin="anonymous"></script>
-
-<!-- Material Style JS -->
-<script src="https://cdn.jsdelivr.net/npm/@@materialstyle/materialstyle@3.1.1/dist/js/materialstyle.min.js"
-        integrity="sha384-rqhP61M9WSmzd7+ssgyoWP2I+R68vVHx7o+UmmIs6/Nxe8Lt1DoF6+0CKptZIXC0"
-        crossorigin="anonymous"></script>
+<!-- MDB -->
+<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/mdb-ui-kit@9.3.0/js/mdb.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.10/purify.min.js"></script>
 <script src="~/js/site.js" asp-append-version="true"></script>
@@ -117,14 +106,14 @@
             }
 
             // Initialize icon
-            const currentTheme = document.documentElement.getAttribute('data-bs-theme');
+            const currentTheme = document.documentElement.getAttribute('data-mdb-theme');
             updateIcon(currentTheme);
 
             toggleButton.addEventListener('click', () => {
-                const currentTheme = document.documentElement.getAttribute('data-bs-theme');
+                const currentTheme = document.documentElement.getAttribute('data-mdb-theme');
                 const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
 
-                document.documentElement.setAttribute('data-bs-theme', newTheme);
+                document.documentElement.setAttribute('data-mdb-theme', newTheme);
                 localStorage.setItem('theme', newTheme);
                 updateIcon(newTheme);
             });
