@@ -52,12 +52,15 @@
     </div>
 
     <!-- Your Network Graph Section -->
-    <div class="card shadow-sm mb-4 border-primary border-opacity-25" style="border-width: 2px;">
-        <div class="card-header bg-transparent border-0 pt-4 px-4">
+    <div class="card shadow-sm mb-4 border-primary border-opacity-25" style="border-width: 2px;" id="network-card">
+        <div class="card-header bg-transparent border-0 pt-4 px-4 d-flex justify-content-between align-items-center">
             <h2 class="text-primary font-weight-bold mb-0">Your Network</h2>
+            <button id="fullscreen-btn" class="btn btn-outline-primary btn-sm">
+                <i class="bi bi-arrows-fullscreen"></i>
+            </button>
         </div>
         <div class="card-body p-0 position-relative">
-            <div id="network-graph" style="width: 100%; height: 500px; background-color: var(--bs-body-bg);"></div>
+            <div id="network-graph" style="width: 100%; height: 500px; background-color: var(--bs-body-bg); overflow: hidden;"></div>
         </div>
     </div>
 </div>

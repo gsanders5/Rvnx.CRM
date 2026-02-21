@@ -12,13 +12,88 @@ function initializeNetworkGraph(nodes, links) {
     svg.setAttribute("viewBox", `0 0 ${width} ${height}`);
     container.appendChild(svg);
 
+    // Fullscreen behavior
+    const fullscreenBtn = document.getElementById('fullscreen-btn');
+    const networkCard = document.getElementById('network-card');
+    
+    if (fullscreenBtn && networkCard) {
+        fullscreenBtn.addEventListener('click', () => {
+            if (!document.fullscreenElement) {
+                if (networkCard.requestFullscreen) {
+                    networkCard.requestFullscreen();
+                } else if (networkCard.webkitRequestFullscreen) { /* Safari */
+                    networkCard.webkitRequestFullscreen();
+                } else if (networkCard.msRequestFullscreen) { /* IE11 */
+                    networkCard.msRequestFullscreen();
+                }
+            } else {
+                if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                } else if (document.webkitExitFullscreen) { /* Safari */
+                    document.webkitExitFullscreen();
+                } else if (document.msExitFullscreen) { /* IE11 */
+                    document.msExitFullscreen();
+                }
+            }
+        });
+
+        document.addEventListener('fullscreenchange', () => {
+            if (document.fullscreenElement) {
+                networkCard.classList.add('fixed-top', 'w-100', 'h-100', 'z-3', 'm-0');
+                container.style.height = "calc(100vh - 72px)"; // Account for card header
+                fullscreenBtn.innerHTML = '<i class="bi bi-fullscreen-exit"></i>';
+            } else {
+                networkCard.classList.remove('fixed-top', 'w-100', 'h-100', 'z-3', 'm-0');
+                container.style.height = "500px";
+                fullscreenBtn.innerHTML = '<i class="bi bi-arrows-fullscreen"></i>';
+            }
+        });
+    }
+
+    // Drag to Pan State
+    let isPanning = false;
+    let panStartX = 0;
+    let panStartY = 0;
+    let currentPanX = 0;
+    let currentPanY = 0;
+
+    // A group to hold everything so we can pan the camera
+    const cameraLayer = document.createElementNS(svgNS, "g");
+    svg.appendChild(cameraLayer);
+
+    // Apply panning listener to the SVG itself
+    svg.style.cursor = "grab";
+    svg.addEventListener('mousedown', (e) => {
+        if (e.target === svg) { // Ensure we didn't click a node
+            isPanning = true;
+            svg.style.cursor = "grabbing";
+            panStartX = e.clientX - currentPanX;
+            panStartY = e.clientY - currentPanY;
+        }
+    });
+
+    document.addEventListener('mousemove', (e) => {
+        if (isPanning) {
+            currentPanX = e.clientX - panStartX;
+            currentPanY = e.clientY - panStartY;
+            cameraLayer.setAttribute("transform", `translate(${currentPanX}, ${currentPanY})`);
+        }
+    });
+
+    document.addEventListener('mouseup', () => {
+        if (isPanning) {
+            isPanning = false;
+            svg.style.cursor = "grab";
+        }
+    });
+
     // Create Link elements first
     const linkElements = links.map(link => {
         const line = document.createElementNS(svgNS, "line");
         line.setAttribute("stroke", "#6c757d");
         line.setAttribute("stroke-width", "2");
         line.setAttribute("stroke-opacity", "0.5");
-        svg.appendChild(line);
+        cameraLayer.appendChild(line);
         return { data: link, el: line };
     });
 
@@ -43,7 +118,7 @@ function initializeNetworkGraph(nodes, links) {
         text.textContent = node.name;
         g.appendChild(text);
 
-        svg.appendChild(g);
+        cameraLayer.appendChild(g);
 
         // Drag logic
         g.addEventListener('mousedown', (e) => startDrag(e, node));
@@ -69,6 +144,9 @@ function initializeNetworkGraph(nodes, links) {
 
     function startDrag(e, node) {
         e.preventDefault();
+        // Prevent pan start
+        e.stopPropagation();
+        
         draggedNode = node;
         node.wasDragged = false;
         document.addEventListener('mousemove', drag);
@@ -79,8 +157,11 @@ function initializeNetworkGraph(nodes, links) {
         if (!draggedNode) return;
         draggedNode.wasDragged = true;
         const rect = svg.getBoundingClientRect();
-        draggedNode.x = e.clientX - rect.left;
-        draggedNode.y = e.clientY - rect.top;
+        
+        // Subtract current pan offset to convert screen space to SVG space
+        draggedNode.x = (e.clientX - rect.left) - currentPanX;
+        draggedNode.y = (e.clientY - rect.top) - currentPanY;
+        
         draggedNode.vx = 0; // Stop velocity while dragging
         draggedNode.vy = 0;
     }
@@ -93,10 +174,10 @@ function initializeNetworkGraph(nodes, links) {
 
     function tick() {
         // Simulation Parameters
-        const k = 2000; // Repulsion constant
-        const linkDistance = 150;
+        const k = 3000; // Repulsion constant
+        const linkDistance = 180;
         const damping = 0.9;
-        const centerForce = 0.02;
+        const centerForce = 0.005;
 
         // Repulsion
         for (let i = 0; i < nodes.length; i++) {
@@ -162,12 +243,7 @@ function initializeNetworkGraph(nodes, links) {
             node.vx *= damping;
             node.vy *= damping;
 
-            // Bounds
-             const r = 20;
-             if (node.x < r) node.x = r;
-             if (node.x > width - r) node.x = width - r;
-             if (node.y < r) node.y = r;
-             if (node.y > height - r) node.y = height - r;
+            // Bounds - Removed to allow nodes to spread into the panned space!
         });
 
         // Render Updates
