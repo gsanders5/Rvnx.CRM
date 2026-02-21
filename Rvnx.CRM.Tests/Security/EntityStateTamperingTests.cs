@@ -55,8 +55,7 @@ namespace Rvnx.CRM.Tests.Security
             context.Set<Note>().Add(new Note
             {
                 Id = noteId,
-                EntityId = originalContactId,
-                EntityType = EntityTypes.Person,
+                ContactId = originalContactId,
                 Title = "Original Title",
                 Value = "Original Content"
             });
@@ -79,8 +78,7 @@ namespace Rvnx.CRM.Tests.Security
             // Assert - EntityId and EntityType should NOT have changed
             Note? updatedNote = await context.Set<Note>().FindAsync(noteId);
             Assert.NotNull(updatedNote);
-            Assert.Equal(originalContactId, updatedNote.EntityId); // Should stay original
-            Assert.Equal(EntityTypes.Person, updatedNote.EntityType); // Should stay original
+            Assert.Equal(originalContactId, updatedNote.ContactId); // Should stay original
             Assert.Equal("Updated Title", updatedNote.Title); // Content should update
             Assert.Equal("Updated Content", updatedNote.Value); // Content should update
         }
@@ -101,8 +99,7 @@ namespace Rvnx.CRM.Tests.Security
             Note originalNote = new()
             {
                 Id = noteId,
-                EntityId = contactId,
-                EntityType = EntityTypes.Person,
+                ContactId = contactId,
                 Title = "Original",
                 Value = "Content"
                 // We do not set CreatedDate/CreatedBy here because CRMDbContext 
@@ -169,8 +166,7 @@ namespace Rvnx.CRM.Tests.Security
             context.Set<Fact>().Add(new Fact
             {
                 Id = factId,
-                EntityId = originalContactId,
-                EntityType = EntityTypes.Person,
+                ContactId = originalContactId,
                 Category = "Favorites",
                 Value = "Blue"
             });
@@ -193,8 +189,7 @@ namespace Rvnx.CRM.Tests.Security
             // Assert
             Fact? updatedFact = await context.Set<Fact>().FindAsync(factId);
             Assert.NotNull(updatedFact);
-            Assert.Equal(originalContactId, updatedFact.EntityId);
-            Assert.Equal(EntityTypes.Person, updatedFact.EntityType);
+            Assert.Equal(originalContactId, updatedFact.ContactId);
             Assert.Equal("Updated Category", updatedFact.Category);
             Assert.Equal("Updated Value", updatedFact.Value);
         }
@@ -221,8 +216,7 @@ namespace Rvnx.CRM.Tests.Security
             context.Set<ContactMethod>().Add(new ContactMethod
             {
                 Id = contactMethodId,
-                EntityId = originalContactId,
-                EntityType = EntityTypes.Person,
+                ContactId = originalContactId,
                 Type = Core.Enumerations.ContactMethodType.Email,
                 Value = "original@example.com",
                 Label = "Work"
@@ -247,8 +241,7 @@ namespace Rvnx.CRM.Tests.Security
             // Assert
             ContactMethod? updatedMethod = await context.Set<ContactMethod>().FindAsync(contactMethodId);
             Assert.NotNull(updatedMethod);
-            Assert.Equal(originalContactId, updatedMethod.EntityId);
-            Assert.Equal(EntityTypes.Person, updatedMethod.EntityType);
+            Assert.Equal(originalContactId, updatedMethod.ContactId);
             Assert.Equal("updated@example.com", updatedMethod.Value);
             Assert.Equal("Personal", updatedMethod.Label);
         }

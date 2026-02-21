@@ -154,7 +154,7 @@ namespace Rvnx.CRM.Tests.Controllers
             string returnUrl = "/Contacts/Details/123";
 
             Guid attachmentId = Guid.NewGuid();
-            context.Attachments.Add(new Attachment { Id = attachmentId, EntityType = "Person", ContentType = "text/plain", AttachmentType = "General" });
+            context.Attachments.Add(new Attachment { Id = attachmentId, ContactId = Guid.NewGuid(), ContentType = "text/plain", AttachmentType = "General" });
             context.SaveChanges();
 
             // Act
@@ -175,7 +175,7 @@ namespace Rvnx.CRM.Tests.Controllers
             controller.Request.Headers["Referer"] = unsafeReferer;
 
             Guid attachmentId = Guid.NewGuid();
-            context.Attachments.Add(new Attachment { Id = attachmentId, EntityType = "Person", ContentType = "text/plain", AttachmentType = "General" });
+            context.Attachments.Add(new Attachment { Id = attachmentId, ContactId = Guid.NewGuid(), ContentType = "text/plain", AttachmentType = "General" });
             context.SaveChanges();
 
             // Act

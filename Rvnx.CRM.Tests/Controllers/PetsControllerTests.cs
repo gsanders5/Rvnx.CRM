@@ -84,8 +84,7 @@ namespace Rvnx.CRM.Tests.Controllers
             Assert.Equal("Buddy", created.Name);
             Assert.Equal("Dog", created.Species);
             Assert.Equal("Golden Retriever", created.Breed);
-            Assert.Equal(contactId, created.EntityId);
-            Assert.Equal(EntityTypes.Person, created.EntityType);
+            Assert.Equal(contactId, created.ContactId);
         }
 
         [Fact]
@@ -98,8 +97,7 @@ namespace Rvnx.CRM.Tests.Controllers
             _context.Set<Pet>().Add(new Pet
             {
                 Id = petId,
-                EntityId = contactId,
-                EntityType = EntityTypes.Person,
+                ContactId = contactId,
                 Name = "Whiskers",
                 Species = "Cat",
                 Breed = "Siamese"
@@ -140,8 +138,7 @@ namespace Rvnx.CRM.Tests.Controllers
             _context.Set<Pet>().Add(new Pet
             {
                 Id = petId,
-                EntityId = contactId,
-                EntityType = EntityTypes.Person,
+                ContactId = contactId,
                 Name = "Old Name",
                 Species = "Dog"
             });
@@ -194,8 +191,7 @@ namespace Rvnx.CRM.Tests.Controllers
             _context.Set<Pet>().Add(new Pet
             {
                 Id = petId,
-                EntityId = contactId,
-                EntityType = EntityTypes.Person,
+                ContactId = contactId,
                 Name = "ToDelete",
                 Species = "Fish"
             });
@@ -221,8 +217,7 @@ namespace Rvnx.CRM.Tests.Controllers
             _context.Set<Pet>().Add(new Pet
             {
                 Id = petId,
-                EntityId = contactId,
-                EntityType = EntityTypes.Person,
+                ContactId = contactId,
                 Name = "ToDelete"
             });
             await _context.SaveChangesAsync();
@@ -250,28 +245,5 @@ namespace Rvnx.CRM.Tests.Controllers
             Assert.Equal("Contacts", redirectResult.ControllerName);
         }
 
-        [Fact]
-        public async Task Create_Post_AlwaysSetsEntityTypeToPerson()
-        {
-            // Arrange
-            Guid contactId = Guid.NewGuid();
-            _context.Contacts.Add(new Contact { Id = contactId, FirstName = "Test" });
-            await _context.SaveChangesAsync();
-
-            PetFormDto dto = new()
-            {
-                EntityId = contactId,
-                Name = "Test Pet",
-                Species = "Bird"
-            };
-
-            // Act
-            await _controller.Create(dto);
-
-            // Assert
-            Pet? created = await _context.Set<Pet>().FirstOrDefaultAsync();
-            Assert.NotNull(created);
-            Assert.Equal(EntityTypes.Person, created.EntityType);
-        }
     }
 }
