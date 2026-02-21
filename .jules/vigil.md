@@ -13,3 +13,7 @@
 ## 2026-02-20 - [Controller Testing Strategy]
 **Learning:** Testing controllers inheriting from `RepositoryController` is more effective when using `CRMDbContext` with `InMemoryDatabase` and a real `Repository` instance, rather than mocking `IRepository`. This approach validates actual query logic (like global query filters and includes) while remaining fast. Mocking `IRepository` would require duplicating complex filter logic in setups, making tests brittle and less valuable.
 **Action:** When testing standard CRUD controllers, prefer `InMemoryDatabase` + Real Repository over `Mock<IRepository>` to catch integration issues and validate query behavior.
+
+## 2024-05-24 - [Date Calculation Ambiguity]
+**Learning:** The `DateCalculationService` treats a `TimeSpan` of exactly 365 days as a "Calendar Year" rather than a strict duration of time. This means it uses `AddYears(1)` instead of adding 365 days. While likely intentional for business logic, this creates a hidden dependency on the magic number 365. A duration of 366 days (leap year length) or 730 days (2 years) behaves differently or consistently depending on the implementation details (modulo arithmetic).
+**Action:** When testing date logic, always explicitly test "Yearly" frequencies against both standard and leap years to ensure the "Calendar Year" vs "Fixed Duration" behavior is pinned down. Future refactors must preserve this specific 365-day special casing.
