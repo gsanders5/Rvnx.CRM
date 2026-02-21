@@ -13,6 +13,12 @@ public class AccountController : BaseController
     [HttpGet]
     public IActionResult Login(string returnUrl = "/")
     {
+        // Prevent Open Redirect vulnerability
+        if (!Url.IsLocalUrl(returnUrl))
+        {
+            returnUrl = "/";
+        }
+
         return Challenge(new AuthenticationProperties { RedirectUri = returnUrl }, OpenIdConnectDefaults.AuthenticationScheme);
     }
 
