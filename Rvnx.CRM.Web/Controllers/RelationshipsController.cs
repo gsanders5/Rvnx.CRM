@@ -120,13 +120,11 @@ namespace Rvnx.CRM.Web.Controllers
                 if (parts.Length == 2 && Guid.TryParse(parts[0], out Guid typeId))
                 {
                     string direction = parts[1];
-                    // Update DTO with selected type ID
                     viewModel.RelationshipTypeId = typeId;
 
                     Relationship? existingRelationship = await _repository.GetByIdAsync<Relationship>(id);
                     if (existingRelationship == null) return NotFound();
 
-                    // Apply DTO updates to entity
                     existingRelationship.UpdateEntity(viewModel);
 
                     if (direction == "Rev")
@@ -166,9 +164,6 @@ namespace Rvnx.CRM.Web.Controllers
             relationship.RelatedPerson = await _repository.GetByIdAsync<Contact>(relationship.RelatedEntityId);
 
             var viewModel = relationship.ToDto();
-            // Since ToDto() doesn't include EntityName (it puts it in EntityName property of Dto?), wait.
-            // RelationshipDto has EntityName and RelatedEntityName.
-            // Let's use RelationshipDeleteViewModel which inherits RelationshipDto.
             var deleteViewModel = new RelationshipDeleteViewModel
             {
                 Id = viewModel.Id,
@@ -179,7 +174,6 @@ namespace Rvnx.CRM.Web.Controllers
                 RelationshipTypeName = viewModel.RelationshipTypeName,
                 RelationshipTypeOppositeName = viewModel.RelationshipTypeOppositeName,
                 RelatedEntityName = viewModel.RelatedEntityName,
-                // EntityName in Dto is Person.FullName.
                 EntityName = viewModel.EntityName,
                 Description = viewModel.Description,
                 StartDate = viewModel.StartDate,
@@ -237,7 +231,6 @@ namespace Rvnx.CRM.Web.Controllers
         private List<SelectOptionDto> GetRelationshipTypeOptions(string entityType, string? selectedValue = null)
         {
             List<RelationshipTypeDefinition> types = RelationshipTypeService.GetByEntityType(entityType);
-            // Sort by Category then Name
             types = types.OrderBy(t => t.Category).ThenBy(t => t.Name).ToList();
 
             List<SelectOptionDto> options = new();
