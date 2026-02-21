@@ -2,7 +2,6 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Rvnx.CRM.Core;
 using Rvnx.CRM.Core.Interfaces;
-using Rvnx.CRM.Core.Services;
 using Rvnx.CRM.Infrastructure;
 using Rvnx.CRM.Infrastructure.Data;
 using Rvnx.CRM.Web.Services;
@@ -18,8 +17,6 @@ namespace Rvnx.CRM.Web
 
             builder.Services.AddHttpContextAccessor();
             builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
-            builder.Services.AddScoped<IFileValidationService, FileValidationService>();
-            builder.Services.AddScoped<IEntityService, EntityService>();
 
             IConfigurationSection authConfig = builder.Configuration.GetSection("Authentication");
             bool authEnabled = authConfig.GetValue<bool>("Enabled");
