@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace Rvnx.CRM.Core.DTOs.Common
+namespace Rvnx.CRM.Core.DTOs.Base
 {
     public class NoteFormDto
     {

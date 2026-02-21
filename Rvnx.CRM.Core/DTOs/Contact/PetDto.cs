@@ -1,6 +1,7 @@
 using Rvnx.CRM.Core.DTOs.Common;
+using Rvnx.CRM.Core.DTOs.Base;
 
-namespace Rvnx.CRM.Core.DTOs.Pet
+namespace Rvnx.CRM.Core.DTOs.Contact
 {
     public class PetDto : BaseDto
     {

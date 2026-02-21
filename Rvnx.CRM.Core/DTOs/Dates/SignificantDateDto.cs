@@ -1,6 +1,7 @@
+using Rvnx.CRM.Core.DTOs.Base;
 using Rvnx.CRM.Core.Interfaces;
 
-namespace Rvnx.CRM.Core.DTOs.Common
+namespace Rvnx.CRM.Core.DTOs.Dates
 {
     public class SignificantDateDto : BaseDto, IRemindableDto
     {

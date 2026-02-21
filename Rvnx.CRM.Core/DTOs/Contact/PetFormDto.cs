@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace Rvnx.CRM.Core.DTOs.Pet
+namespace Rvnx.CRM.Core.DTOs.Contact
 {
     public class PetFormDto
     {

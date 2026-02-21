@@ -1,4 +1,4 @@
-namespace Rvnx.CRM.Core.DTOs.Common;
+namespace Rvnx.CRM.Core.DTOs.Contact;
 
 public class RelationshipOperationResult
 {

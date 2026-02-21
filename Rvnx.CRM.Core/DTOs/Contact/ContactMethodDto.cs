@@ -1,4 +1,5 @@
 using Rvnx.CRM.Core.DTOs.Common;
+using Rvnx.CRM.Core.DTOs.Base;
 using Rvnx.CRM.Core.Enumerations;
 
 namespace Rvnx.CRM.Core.DTOs.Contact

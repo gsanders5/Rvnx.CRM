@@ -1,4 +1,4 @@
-namespace Rvnx.CRM.Core.DTOs.Common
+namespace Rvnx.CRM.Core.DTOs.Base
 {
     public class AttachmentDto
     {
