@@ -7,3 +7,8 @@
 
 **Learning:** Fetching the current `User` entity requires checking both the internal ID (`GetByIdAsync`) and falling back to searching by external `SubjectId` (as a string).
 **Action:** Centralise this dual-lookup logic into a single helper method (e.g., `GetUserAsync`) instead of repeating the two repository calls across controller actions.
+
+## 2026-03-01 - Consolidating Entity Creation and Updates
+
+**Learning:** `ToEntity` methods often duplicated property assignments found in `UpdateEntity` methods.
+**Action:** When implementing `ToEntity` for DTOs, initialize the entity with its ID and immutable fields, then call `UpdateEntity` to handle the rest, ensuring single responsibility for property mapping.

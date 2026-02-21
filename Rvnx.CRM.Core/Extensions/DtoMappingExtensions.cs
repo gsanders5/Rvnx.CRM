@@ -187,16 +187,9 @@ namespace Rvnx.CRM.Core.Extensions
 
         public static Contact ToEntity(this ContactFormDto dto)
         {
-            return new Contact
-            {
-                Id = Guid.NewGuid(),
-                FirstName = dto.FirstName,
-                LastName = dto.LastName,
-                Nickname = dto.Nickname,
-                JobTitle = dto.JobTitle,
-                Company = dto.Company,
-                IsHidden = dto.IsHidden
-            };
+            var entity = new Contact { Id = Guid.NewGuid() };
+            entity.UpdateEntity(dto);
+            return entity;
         }
 
         public static void UpdateEntity(this Contact entity, ContactFormDto dto)
@@ -211,17 +204,14 @@ namespace Rvnx.CRM.Core.Extensions
 
         public static Pet ToEntity(this PetFormDto dto)
         {
-            return new Pet
+            var entity = new Pet
             {
                 Id = Guid.NewGuid(),
-                Name = dto.Name,
-                Species = dto.Species,
-                Breed = dto.Breed,
-                Birthday = dto.Birthday,
-                Notes = dto.Notes,
                 EntityId = dto.EntityId,
                 EntityType = EntityTypes.Person
             };
+            entity.UpdateEntity(dto);
+            return entity;
         }
 
         public static void UpdateEntity(this Pet entity, PetFormDto dto)
@@ -234,15 +224,14 @@ namespace Rvnx.CRM.Core.Extensions
         }
         public static ContactMethod ToEntity(this ContactMethodFormDto dto)
         {
-            return new ContactMethod
+            var entity = new ContactMethod
             {
                 Id = Guid.NewGuid(),
-                Type = dto.Type,
-                Value = dto.Value,
-                Label = dto.Label,
                 EntityId = dto.EntityId,
                 EntityType = dto.EntityType
             };
+            entity.UpdateEntity(dto);
+            return entity;
         }
 
         public static void UpdateEntity(this ContactMethod entity, ContactMethodFormDto dto)
@@ -254,14 +243,14 @@ namespace Rvnx.CRM.Core.Extensions
         }
         public static Note ToEntity(this NoteFormDto dto)
         {
-            return new Note
+            var entity = new Note
             {
                 Id = Guid.NewGuid(),
-                Title = dto.Title,
-                Value = dto.Value,
                 EntityId = dto.EntityId,
                 EntityType = dto.EntityType
             };
+            entity.UpdateEntity(dto);
+            return entity;
         }
 
         public static void UpdateEntity(this Note entity, NoteFormDto dto)
@@ -272,14 +261,14 @@ namespace Rvnx.CRM.Core.Extensions
 
         public static Fact ToEntity(this FactFormDto dto)
         {
-            return new Fact
+            var entity = new Fact
             {
                 Id = Guid.NewGuid(),
-                Category = dto.Category,
-                Value = dto.Value,
                 EntityId = dto.EntityId,
                 EntityType = dto.EntityType
             };
+            entity.UpdateEntity(dto);
+            return entity;
         }
 
         public static void UpdateEntity(this Fact entity, FactFormDto dto)
@@ -290,17 +279,15 @@ namespace Rvnx.CRM.Core.Extensions
 
         public static Relationship ToEntity(this RelationshipFormDto dto)
         {
-            return new Relationship
+            var entity = new Relationship
             {
                 Id = Guid.NewGuid(),
                 EntityId = dto.EntityId,
                 RelatedEntityId = dto.RelatedEntityId,
-                EntityType = dto.EntityType,
-                RelationshipTypeId = dto.RelationshipTypeId,
-                Description = dto.Description,
-                StartDate = dto.StartDate,
-                EndDate = dto.EndDate
+                EntityType = dto.EntityType
             };
+            entity.UpdateEntity(dto);
+            return entity;
         }
 
         public static void UpdateEntity(this Relationship entity, RelationshipFormDto dto)
