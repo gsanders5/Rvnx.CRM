@@ -13,29 +13,30 @@ namespace Rvnx.CRM.Web.Controllers
         {
             if (entityId == Guid.Empty || string.IsNullOrEmpty(entityType)) return NotFound();
 
-            ViewData["EntityName"] = await GetEntityName(entityId, entityType);
-            ViewData["EntityId"] = entityId;
-            ViewData["EntityType"] = entityType;
+            var viewModel = new NoteFormViewModel
+            {
+                EntityId = entityId,
+                EntityType = entityType,
+                EntityName = await GetEntityName(entityId, entityType)
+            };
 
-            return View(new NoteFormDto { EntityId = entityId, EntityType = entityType });
+            return View(viewModel);
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(NoteFormDto noteDto)
+        public async Task<IActionResult> Create(NoteFormViewModel viewModel)
         {
             if (ModelState.IsValid)
             {
-                Note note = noteDto.ToEntity();
+                Note note = viewModel.ToEntity();
                 await _repository.AddAsync(note);
                 await _repository.SaveChangesAsync();
                 return RedirectToEntity(note.EntityId, note.EntityType);
             }
 
-            ViewData["EntityName"] = await GetEntityName(noteDto.EntityId, noteDto.EntityType);
-            ViewData["EntityId"] = noteDto.EntityId;
-            ViewData["EntityType"] = noteDto.EntityType;
-            return View(noteDto);
+            viewModel.EntityName = await GetEntityName(viewModel.EntityId, viewModel.EntityType);
+            return View(viewModel);
         }
 
         public async Task<IActionResult> Edit(Guid? id)
@@ -45,35 +46,33 @@ namespace Rvnx.CRM.Web.Controllers
             Note? note = await _repository.GetByIdAsync<Note>(id.Value);
             if (note == null) return NotFound();
 
-            ViewData["EntityName"] = await GetEntityName(note.EntityId, note.EntityType);
-
-            NoteFormDto dto = new()
+            var viewModel = new NoteFormViewModel
             {
                 Id = note.Id,
                 Title = note.Title,
                 Value = note.Value,
                 EntityId = note.EntityId,
-                EntityType = note.EntityType
+                EntityType = note.EntityType,
+                EntityName = await GetEntityName(note.EntityId, note.EntityType)
             };
 
-            return View(dto);
+            return View(viewModel);
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(Guid id, NoteFormDto noteDto)
+        public async Task<IActionResult> Edit(Guid id, NoteFormViewModel viewModel)
         {
-            if (id != noteDto.Id) return NotFound();
+            if (id != viewModel.Id) return NotFound();
 
             if (ModelState.IsValid)
             {
                 try
                 {
-                    // Fetch existing entity to preserve audit fields and prevent tampering
                     Note? existingNote = await _repository.GetByIdAsync<Note>(id);
                     if (existingNote == null) return NotFound();
 
-                    existingNote.UpdateEntity(noteDto);
+                    existingNote.UpdateEntity(viewModel);
 
                     await _repository.UpdateAsync(existingNote);
                     await _repository.SaveChangesAsync();
@@ -82,18 +81,17 @@ namespace Rvnx.CRM.Web.Controllers
                 }
                 catch (Exception)
                 {
-                    if (!await _repository.ExistsAsync<Note>(noteDto.Id.Value)) return NotFound();
+                    if (!await _repository.ExistsAsync<Note>(viewModel.Id.Value)) return NotFound();
                     else throw;
                 }
             }
 
-            // Re-fetch to get EntityId/EntityType for redirect and ViewData
-            if (noteDto.EntityId != Guid.Empty)
+            if (viewModel.EntityId != Guid.Empty)
             {
-                ViewData["EntityName"] = await GetEntityName(noteDto.EntityId, noteDto.EntityType);
+                viewModel.EntityName = await GetEntityName(viewModel.EntityId, viewModel.EntityType);
             }
 
-            return View(noteDto);
+            return View(viewModel);
         }
 
         public async Task<IActionResult> Delete(Guid? id)
@@ -103,8 +101,17 @@ namespace Rvnx.CRM.Web.Controllers
             Note? note = await _repository.GetByIdAsync<Note>(id.Value);
             if (note == null) return NotFound();
 
-            ViewData["EntityName"] = await GetEntityName(note.EntityId, note.EntityType);
-            return View(note);
+            var viewModel = new NoteDeleteViewModel
+            {
+                Id = note.Id,
+                Title = note.Title,
+                Value = note.Value,
+                EntityId = note.EntityId,
+                EntityType = note.EntityType,
+                CreatedDate = note.CreatedDate,
+                EntityName = await GetEntityName(note.EntityId, note.EntityType)
+            };
+            return View(viewModel);
         }
 
         [HttpPost, ActionName("Delete")]

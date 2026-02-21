@@ -66,15 +66,15 @@ namespace Rvnx.CRM.Tests
 
             // Assert
             ViewResult viewResult = Assert.IsType<ViewResult>(result);
-            List<ContactDto> model = Assert.IsAssignableFrom<List<ContactDto>>(viewResult.Model);
-            Assert.Equal(2, model.Count);
+            ContactIndexViewModel model = Assert.IsAssignableFrom<ContactIndexViewModel>(viewResult.Model);
+            Assert.Equal(2, model.Contacts.Count());
         }
 
         [Fact]
         public async Task Create_Post_WithValidData_ShouldCreateContactAndRelatedEntities()
         {
             // Arrange
-            ContactFormDto dto = new()
+            ContactCreateViewModel dto = new()
             {
                 FirstName = "New",
                 LastName = "User",

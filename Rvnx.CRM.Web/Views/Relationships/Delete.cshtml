@@ -1,5 +1,5 @@
 @using Rvnx.CRM.Core.Constants
-@model Rvnx.CRM.Core.Models.Contact.Relationship
+@model Rvnx.CRM.Core.DTOs.Common.RelationshipDeleteViewModel
 
 @{
     ViewData["Title"] = "Delete Relationship";
@@ -16,14 +16,7 @@
             Related Entity
         </dt>
         <dd class="col-sm-10">
-            @if (Model.RelatedPerson != null)
-            {
-                @Model.RelatedPerson.FullName
-            }
-            else
-            {
-                @Model.RelatedEntityId
-            }
+            @Model.RelatedEntityName
         </dd>
         <dt class="col-sm-2">
             Relationship Type

@@ -53,10 +53,10 @@ namespace Rvnx.CRM.Tests
 
             // Assert
             ViewResult viewResult = Assert.IsType<ViewResult>(result);
-            ContactFormDto model = Assert.IsType<ContactFormDto>(viewResult.Model);
+            ContactCreateViewModel model = Assert.IsType<ContactCreateViewModel>(viewResult.Model);
             Assert.Equal("test@example.com", model.Email);
             Assert.Equal("Test", model.FirstName);
-            Assert.True(viewResult.ViewData["IsSelfCreate"] as bool?);
+            Assert.True(model.IsSelfCreate);
         }
 
         [Fact]
@@ -107,7 +107,7 @@ namespace Rvnx.CRM.Tests
                 .ReturnsAsync(ContactOperationResult.Ok(newContactId));
 
             ContactsController controller = CreateController(selfContactMock);
-            ContactFormDto dto = new() { FirstName = "My Self", Email = "myself@example.com" };
+            ContactCreateViewModel dto = new() { FirstName = "My Self", Email = "myself@example.com" };
 
             // Act
             IActionResult result = await controller.CreateSelf(dto);

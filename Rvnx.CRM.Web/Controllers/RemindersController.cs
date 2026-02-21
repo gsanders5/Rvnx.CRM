@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Rvnx.CRM.Core.DTOs.Common;
 using Rvnx.CRM.Core.Extensions;
 using Rvnx.CRM.Core.Interfaces;
 using Rvnx.CRM.Core.Models.Dates;
@@ -12,36 +13,51 @@ namespace Rvnx.CRM.Web.Controllers
         {
             if (entityId == Guid.Empty || string.IsNullOrEmpty(entityType)) return NotFound();
 
-            ViewData["EntityName"] = await GetEntityName(entityId, entityType);
-            ViewData["EntityId"] = entityId;
-            ViewData["EntityType"] = entityType;
-
-            return View(new Reminder
+            var dto = new Reminder
             {
                 EntityId = entityId,
                 EntityType = entityType,
                 DueDate = DateTime.Now.AddDays(1),
                 EventFrequency = TimeSpan.FromDays(365) // Default
-            }.ToDto());
+            }.ToDto();
+
+            var viewModel = new ReminderFormViewModel
+            {
+                // Copy properties from dto
+                Id = dto.Id,
+                Title = dto.Title,
+                Description = dto.Description,
+                DueDate = dto.DueDate,
+                IsCompleted = dto.IsCompleted,
+                EntityId = dto.EntityId,
+                EntityType = dto.EntityType,
+                RemindMe = dto.RemindMe,
+                ReminderSent = dto.ReminderSent,
+                EventFrequency = dto.EventFrequency,
+
+                EntityName = await GetEntityName(entityId, entityType)
+            };
+
+            return View(viewModel);
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Title,Description,DueDate,IsCompleted,EntityId,EntityType,RemindMe,EventFrequency")] Core.DTOs.Common.ReminderDto reminderDto)
+        public async Task<IActionResult> Create(ReminderFormViewModel viewModel)
         {
             if (ModelState.IsValid)
             {
                 Reminder reminder = new()
                 {
                     Id = Guid.NewGuid(),
-                    Title = reminderDto.Title,
-                    Description = reminderDto.Description,
-                    DueDate = reminderDto.DueDate,
-                    IsCompleted = reminderDto.IsCompleted,
-                    EntityId = reminderDto.EntityId,
-                    EntityType = reminderDto.EntityType,
-                    RemindMe = reminderDto.RemindMe,
-                    EventFrequency = reminderDto.EventFrequency
+                    Title = viewModel.Title,
+                    Description = viewModel.Description,
+                    DueDate = viewModel.DueDate,
+                    IsCompleted = viewModel.IsCompleted,
+                    EntityId = viewModel.EntityId,
+                    EntityType = viewModel.EntityType,
+                    RemindMe = viewModel.RemindMe,
+                    EventFrequency = viewModel.EventFrequency
                 };
 
                 await _repository.AddAsync(reminder);
@@ -49,13 +65,11 @@ namespace Rvnx.CRM.Web.Controllers
                 return RedirectToEntity(reminder.EntityId, reminder.EntityType);
             }
 
-            if (reminderDto.EntityId != Guid.Empty && !string.IsNullOrEmpty(reminderDto.EntityType))
+            if (viewModel.EntityId != Guid.Empty && !string.IsNullOrEmpty(viewModel.EntityType))
             {
-                ViewData["EntityName"] = await GetEntityName(reminderDto.EntityId, reminderDto.EntityType);
-                ViewData["EntityId"] = reminderDto.EntityId;
-                ViewData["EntityType"] = reminderDto.EntityType;
+                viewModel.EntityName = await GetEntityName(viewModel.EntityId, viewModel.EntityType);
             }
-            return View(reminderDto);
+            return View(viewModel);
         }
 
         public async Task<IActionResult> Edit(Guid? id)
@@ -65,19 +79,30 @@ namespace Rvnx.CRM.Web.Controllers
             Reminder? reminder = await _repository.GetByIdAsync<Reminder>(id.Value);
             if (reminder == null) return NotFound();
 
-            if (reminder.EntityId != Guid.Empty && !string.IsNullOrEmpty(reminder.EntityType))
+            var dto = reminder.ToDto();
+            var viewModel = new ReminderFormViewModel
             {
-                ViewData["EntityName"] = await GetEntityName(reminder.EntityId, reminder.EntityType);
-            }
+                Id = dto.Id,
+                Title = dto.Title,
+                Description = dto.Description,
+                DueDate = dto.DueDate,
+                IsCompleted = dto.IsCompleted,
+                EntityId = dto.EntityId,
+                EntityType = dto.EntityType,
+                RemindMe = dto.RemindMe,
+                ReminderSent = dto.ReminderSent,
+                EventFrequency = dto.EventFrequency,
+                EntityName = await GetEntityName(dto.EntityId, dto.EntityType)
+            };
 
-            return View(reminder.ToDto());
+            return View(viewModel);
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(Guid id, [Bind("Id,Title,Description,DueDate,IsCompleted,EntityId,EntityType,RemindMe,EventFrequency")] Core.DTOs.Common.ReminderDto reminderDto)
+        public async Task<IActionResult> Edit(Guid id, ReminderFormViewModel viewModel)
         {
-            if (id != reminderDto.Id) return NotFound();
+            if (id != viewModel.Id) return NotFound();
 
             if (ModelState.IsValid)
             {
@@ -86,24 +111,25 @@ namespace Rvnx.CRM.Web.Controllers
                     Reminder? reminder = await _repository.GetByIdAsync<Reminder>(id);
                     if (reminder == null) return NotFound();
 
-                    reminder.UpdateEntity(reminderDto);
+                    // UpdateEntity expects ReminderDto. Since viewModel inherits ReminderDto, this works.
+                    reminder.UpdateEntity(viewModel);
 
                     await _repository.UpdateAsync(reminder);
                     await _repository.SaveChangesAsync();
                 }
                 catch (Exception)
                 {
-                    if (!await _repository.ExistsAsync<Reminder>(reminderDto.Id)) return NotFound();
+                    if (!await _repository.ExistsAsync<Reminder>(viewModel.Id)) return NotFound();
                     else throw;
                 }
-                return RedirectToEntity(reminderDto.EntityId, reminderDto.EntityType);
+                return RedirectToEntity(viewModel.EntityId, viewModel.EntityType);
             }
 
-            if (reminderDto.EntityId != Guid.Empty && !string.IsNullOrEmpty(reminderDto.EntityType))
+            if (viewModel.EntityId != Guid.Empty && !string.IsNullOrEmpty(viewModel.EntityType))
             {
-                ViewData["EntityName"] = await GetEntityName(reminderDto.EntityId, reminderDto.EntityType);
+                viewModel.EntityName = await GetEntityName(viewModel.EntityId, viewModel.EntityType);
             }
-            return View(reminderDto);
+            return View(viewModel);
         }
 
         public async Task<IActionResult> Delete(Guid? id)
@@ -112,11 +138,22 @@ namespace Rvnx.CRM.Web.Controllers
             Reminder? reminder = await _repository.GetByIdAsync<Reminder>(id.Value);
             if (reminder == null) return NotFound();
 
-            if (reminder.EntityId != Guid.Empty && !string.IsNullOrEmpty(reminder.EntityType))
+            var dto = reminder.ToDto();
+            var viewModel = new ReminderDeleteViewModel
             {
-                ViewData["EntityName"] = await GetEntityName(reminder.EntityId, reminder.EntityType);
-            }
-            return View(reminder.ToDto());
+                Id = dto.Id,
+                Title = dto.Title,
+                Description = dto.Description,
+                DueDate = dto.DueDate,
+                IsCompleted = dto.IsCompleted,
+                EntityId = dto.EntityId,
+                EntityType = dto.EntityType,
+                RemindMe = dto.RemindMe,
+                ReminderSent = dto.ReminderSent,
+                EventFrequency = dto.EventFrequency,
+                EntityName = await GetEntityName(dto.EntityId, dto.EntityType)
+            };
+            return View(viewModel);
         }
 
         [HttpPost, ActionName("Delete")]

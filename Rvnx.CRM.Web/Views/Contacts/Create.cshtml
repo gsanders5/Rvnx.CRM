@@ -1,16 +1,19 @@
-@model Rvnx.CRM.Core.DTOs.Contact.ContactFormDto
+@model Rvnx.CRM.Core.DTOs.Contact.ContactCreateViewModel
 
 @{
-    bool isSelfCreate = ViewBag.IsSelfCreate == true;
-    ViewData["Title"] = isSelfCreate ? "Create Self Contact" : "Create Contact";
+    ViewData["Title"] = Model.IsSelfCreate ? "Create Self Contact" : "Create Contact";
 }
 
 <h1>@ViewData["Title"]</h1>
 
 <div class="row">
     <div class="col-md-6">
-        <form asp-action="@(isSelfCreate ? "CreateSelf" : "Create")">
+        <form asp-action="@(Model.IsSelfCreate ? "CreateSelf" : "Create")">
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            @if (Model.IsSelfCreate)
+            {
+                <input type="hidden" asp-for="IsSelfCreate" value="true" />
+            }
 
             <div class="form-floating mb-3">
                 <input asp-for="FirstName" class="form-control" placeholder="FirstName"/>

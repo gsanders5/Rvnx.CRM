@@ -46,7 +46,7 @@ namespace Rvnx.CRM.Tests
             _context.Contacts.Add(new Contact { Id = contactId, FirstName = "Test" });
             await _context.SaveChangesAsync();
 
-            NoteFormDto note = new()
+            NoteFormViewModel note = new()
             {
                 EntityId = contactId,
                 EntityType = EntityTypes.Person,
@@ -79,7 +79,7 @@ namespace Rvnx.CRM.Tests
             await _context.SaveChangesAsync();
             _context.ChangeTracker.Clear();
 
-            NoteFormDto update = new()
+            NoteFormViewModel update = new()
             {
                 Id = noteId,
                 EntityId = contactId,

@@ -1,9 +1,8 @@
 @using Rvnx.CRM.Core.Constants
-@model Rvnx.CRM.Core.DTOs.Common.ReminderDto
+@model Rvnx.CRM.Core.DTOs.Common.ReminderFormViewModel
 
 @{
     ViewData["Title"] = "Edit Reminder";
-    var entityName = ViewData["EntityName"] as string;
 }
 
 <div class="row justify-content-center">
@@ -13,13 +12,11 @@
             <input type="hidden" asp-for="Id"/>
             <input type="hidden" asp-for="EntityId"/>
             <input type="hidden" asp-for="EntityType"/>
-            <input type="hidden" asp-for="CreatedDate"/>
-            <input type="hidden" asp-for="CreatedBy"/>
-            <input type="hidden" asp-for="UserId"/>
+            <input type="hidden" asp-for="EntityName"/>
 
             <div class="card border-0 shadow-sm rounded-3">
                 <div class="card-header bg-body-tertiary border-bottom p-3 rounded-top-3">
-                    <h4 class="mb-0"><i class="bi bi-pencil-square me-2 text-primary"></i>Edit Reminder for @entityName</h4>
+                    <h4 class="mb-0"><i class="bi bi-pencil-square me-2 text-primary"></i>Edit Reminder for @Model.EntityName</h4>
                 </div>
 
                 <div class="card-body p-4">

@@ -17,34 +17,36 @@ namespace Rvnx.CRM.Web.Controllers
         {
             if (entityId == Guid.Empty || string.IsNullOrEmpty(entityType)) return NotFound();
 
-            ViewData["EntityName"] = await GetEntityName(entityId, entityType);
-            ViewData["EntityId"] = entityId;
-            ViewData["EntityType"] = entityType;
+            var viewModel = new RelationshipCreateViewModel
+            {
+                EntityId = entityId,
+                EntityType = entityType,
+                EntityName = await GetEntityName(entityId, entityType),
+                RelatedEntityOptions = await GetRelatedEntityOptions(entityId, entityType),
+                RelationshipTypeOptions = GetRelationshipTypeOptions(entityType)
+            };
 
-            await PopulateRelatedEntityDropdown(entityId, entityType);
-            ViewData["RelationshipTypeSelection"] = GetRelationshipTypeOptions(entityType);
-
-            return View(new RelationshipFormDto { EntityId = entityId, EntityType = entityType });
+            return View(viewModel);
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(RelationshipFormDto relationshipDto, string relationshipTypeSelection)
+        public async Task<IActionResult> Create(RelationshipCreateViewModel viewModel)
         {
-            if (string.IsNullOrEmpty(relationshipTypeSelection))
+            if (string.IsNullOrEmpty(viewModel.SelectedRelationshipType))
             {
-                ModelState.AddModelError("RelationshipTypeSelection", "Relationship Type is required.");
+                ModelState.AddModelError("SelectedRelationshipType", "Relationship Type is required.");
             }
 
             if (ModelState.IsValid)
             {
-                string[] parts = relationshipTypeSelection.Split('_');
+                string[] parts = viewModel.SelectedRelationshipType.Split('_');
                 if (parts.Length == 2 && Guid.TryParse(parts[0], out Guid typeId))
                 {
                     string direction = parts[1];
-                    relationshipDto.RelationshipTypeId = typeId;
+                    viewModel.RelationshipTypeId = typeId;
 
-                    Relationship relationship = relationshipDto.ToEntity();
+                    Relationship relationship = viewModel.ToEntity();
 
                     if (direction == "Rev")
                     {
@@ -62,18 +64,15 @@ namespace Rvnx.CRM.Web.Controllers
                 }
                 else
                 {
-                    ModelState.AddModelError("RelationshipTypeSelection", "Invalid Relationship Type.");
+                    ModelState.AddModelError("SelectedRelationshipType", "Invalid Relationship Type.");
                 }
             }
 
-            ViewData["EntityName"] = await GetEntityName(relationshipDto.EntityId, relationshipDto.EntityType);
-            ViewData["EntityId"] = relationshipDto.EntityId;
-            ViewData["EntityType"] = relationshipDto.EntityType;
+            viewModel.EntityName = await GetEntityName(viewModel.EntityId, viewModel.EntityType);
+            viewModel.RelatedEntityOptions = await GetRelatedEntityOptions(viewModel.EntityId, viewModel.EntityType, viewModel.RelatedEntityId);
+            viewModel.RelationshipTypeOptions = GetRelationshipTypeOptions(viewModel.EntityType, viewModel.SelectedRelationshipType);
 
-            await PopulateRelatedEntityDropdown(relationshipDto.EntityId, relationshipDto.EntityType, relationshipDto.RelatedEntityId);
-            ViewData["RelationshipTypeSelection"] = GetRelationshipTypeOptions(relationshipDto.EntityType, relationshipTypeSelection);
-
-            return View(relationshipDto);
+            return View(viewModel);
         }
 
         public async Task<IActionResult> Edit(Guid? id)
@@ -83,16 +82,9 @@ namespace Rvnx.CRM.Web.Controllers
             Relationship? relationship = await _repository.GetByIdAsync<Relationship>(id.Value);
             if (relationship == null) return NotFound();
 
-            ViewData["EntityName"] = await GetEntityName(relationship.EntityId, relationship.EntityType);
-            ViewData["EntityId"] = relationship.EntityId;
-            ViewData["EntityType"] = relationship.EntityType;
-
-            await PopulateRelatedEntityDropdown(relationship.EntityId, relationship.EntityType, relationship.RelatedEntityId);
-
             string currentSelection = $"{relationship.RelationshipTypeId}_Fwd";
-            ViewData["RelationshipTypeSelection"] = GetRelationshipTypeOptions(relationship.EntityType, currentSelection);
 
-            RelationshipFormDto dto = new()
+            var viewModel = new RelationshipEditViewModel
             {
                 Id = relationship.Id,
                 EntityId = relationship.EntityId,
@@ -101,37 +93,41 @@ namespace Rvnx.CRM.Web.Controllers
                 RelationshipTypeId = relationship.RelationshipTypeId,
                 Description = relationship.Description,
                 StartDate = relationship.StartDate,
-                EndDate = relationship.EndDate
+                EndDate = relationship.EndDate,
+                EntityName = await GetEntityName(relationship.EntityId, relationship.EntityType),
+                RelatedEntityOptions = await GetRelatedEntityOptions(relationship.EntityId, relationship.EntityType, relationship.RelatedEntityId),
+                RelationshipTypeOptions = GetRelationshipTypeOptions(relationship.EntityType, currentSelection),
+                SelectedRelationshipType = currentSelection
             };
 
-            return View(dto);
+            return View(viewModel);
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(Guid id, RelationshipFormDto relationshipDto, string relationshipTypeSelection)
+        public async Task<IActionResult> Edit(Guid id, RelationshipEditViewModel viewModel)
         {
-            if (id != relationshipDto.Id) return NotFound();
+            if (id != viewModel.Id) return NotFound();
 
-            if (string.IsNullOrEmpty(relationshipTypeSelection))
+            if (string.IsNullOrEmpty(viewModel.SelectedRelationshipType))
             {
-                ModelState.AddModelError("RelationshipTypeSelection", "Relationship Type is required.");
+                ModelState.AddModelError("SelectedRelationshipType", "Relationship Type is required.");
             }
 
             if (ModelState.IsValid)
             {
-                string[] parts = relationshipTypeSelection.Split('_');
+                string[] parts = viewModel.SelectedRelationshipType.Split('_');
                 if (parts.Length == 2 && Guid.TryParse(parts[0], out Guid typeId))
                 {
                     string direction = parts[1];
                     // Update DTO with selected type ID
-                    relationshipDto.RelationshipTypeId = typeId;
+                    viewModel.RelationshipTypeId = typeId;
 
                     Relationship? existingRelationship = await _repository.GetByIdAsync<Relationship>(id);
                     if (existingRelationship == null) return NotFound();
 
                     // Apply DTO updates to entity
-                    existingRelationship.UpdateEntity(relationshipDto);
+                    existingRelationship.UpdateEntity(viewModel);
 
                     if (direction == "Rev")
                     {
@@ -148,18 +144,15 @@ namespace Rvnx.CRM.Web.Controllers
                 }
                 else
                 {
-                    ModelState.AddModelError("RelationshipTypeSelection", "Invalid Relationship Type.");
+                    ModelState.AddModelError("SelectedRelationshipType", "Invalid Relationship Type.");
                 }
             }
 
-            ViewData["EntityName"] = await GetEntityName(relationshipDto.EntityId, relationshipDto.EntityType);
-            ViewData["EntityId"] = relationshipDto.EntityId;
-            ViewData["EntityType"] = relationshipDto.EntityType;
+            viewModel.EntityName = await GetEntityName(viewModel.EntityId, viewModel.EntityType);
+            viewModel.RelatedEntityOptions = await GetRelatedEntityOptions(viewModel.EntityId, viewModel.EntityType, viewModel.RelatedEntityId);
+            viewModel.RelationshipTypeOptions = GetRelationshipTypeOptions(viewModel.EntityType, viewModel.SelectedRelationshipType);
 
-            await PopulateRelatedEntityDropdown(relationshipDto.EntityId, relationshipDto.EntityType, relationshipDto.RelatedEntityId);
-            ViewData["RelationshipTypeSelection"] = GetRelationshipTypeOptions(relationshipDto.EntityType, relationshipTypeSelection);
-
-            return View(relationshipDto);
+            return View(viewModel);
         }
 
         public async Task<IActionResult> Delete(Guid? id)
@@ -172,7 +165,28 @@ namespace Rvnx.CRM.Web.Controllers
             relationship.Person = await _repository.GetByIdAsync<Contact>(relationship.EntityId);
             relationship.RelatedPerson = await _repository.GetByIdAsync<Contact>(relationship.RelatedEntityId);
 
-            return View(relationship);
+            var viewModel = relationship.ToDto();
+            // Since ToDto() doesn't include EntityName (it puts it in EntityName property of Dto?), wait.
+            // RelationshipDto has EntityName and RelatedEntityName.
+            // Let's use RelationshipDeleteViewModel which inherits RelationshipDto.
+            var deleteViewModel = new RelationshipDeleteViewModel
+            {
+                Id = viewModel.Id,
+                EntityId = viewModel.EntityId,
+                EntityType = viewModel.EntityType,
+                RelatedEntityId = viewModel.RelatedEntityId,
+                RelationshipTypeId = viewModel.RelationshipTypeId,
+                RelationshipTypeName = viewModel.RelationshipTypeName,
+                RelationshipTypeOppositeName = viewModel.RelationshipTypeOppositeName,
+                RelatedEntityName = viewModel.RelatedEntityName,
+                // EntityName in Dto is Person.FullName.
+                EntityName = viewModel.EntityName,
+                Description = viewModel.Description,
+                StartDate = viewModel.StartDate,
+                EndDate = viewModel.EndDate
+            };
+
+            return View(deleteViewModel);
         }
 
         [HttpPost, ActionName("Delete")]
@@ -191,45 +205,49 @@ namespace Rvnx.CRM.Web.Controllers
             return RedirectToAction("Index", "Home");
         }
 
-        private async Task PopulateRelatedEntityDropdown(Guid entityId, string entityType, Guid? selectedId = null)
+        private async Task<List<SelectOptionDto>> GetRelatedEntityOptions(Guid entityId, string entityType, Guid? selectedId = null)
         {
+            var options = new List<SelectOptionDto>();
+
             if (entityType == EntityTypes.Person)
             {
-                // Optimization: Use ListAsNoTrackingAsync to avoid change tracking overhead for large lists.
-                // Also filter by ID in the database query instead of in memory.
                 List<Contact> available = await _repository.ListAsNoTrackingAsync<Contact>(p => p.Id != entityId);
                 available = available.OrderBy(p => p.FullName).ToList();
-                ViewData["RelatedEntityId"] = new SelectList(available, "Id", "FullName", selectedId);
+                options = available.Select(p => new SelectOptionDto
+                {
+                    Value = p.Id.ToString(),
+                    Text = p.FullName,
+                    Selected = selectedId == p.Id
+                }).ToList();
             }
             else if (entityType == EntityTypes.Company)
             {
-                // Optimization: Use ListAsNoTrackingAsync to avoid change tracking overhead for large lists.
-                // Also filter by ID in the database query instead of in memory.
                 List<Employer> available = await _repository.ListAsNoTrackingAsync<Employer>(c => c.Id != entityId);
                 available = available.OrderBy(c => c.CompanyName).ToList();
-                ViewData["RelatedEntityId"] = new SelectList(available, "Id", "CompanyName", selectedId);
+                options = available.Select(c => new SelectOptionDto
+                {
+                    Value = c.Id.ToString(),
+                    Text = c.CompanyName,
+                    Selected = selectedId == c.Id
+                }).ToList();
             }
+            return options;
         }
 
-        private List<SelectListItem> GetRelationshipTypeOptions(string entityType, string? selectedValue = null)
+        private List<SelectOptionDto> GetRelationshipTypeOptions(string entityType, string? selectedValue = null)
         {
             List<RelationshipTypeDefinition> types = RelationshipTypeService.GetByEntityType(entityType);
             // Sort by Category then Name
             types = types.OrderBy(t => t.Category).ThenBy(t => t.Name).ToList();
 
-            List<SelectListItem> options = new();
-            Dictionary<string, SelectListGroup> groups = new();
+            List<SelectOptionDto> options = new();
 
             foreach (RelationshipTypeDefinition t in types)
             {
-                if (!groups.ContainsKey(t.Category))
-                {
-                    groups[t.Category] = new SelectListGroup { Name = t.Category };
-                }
-                SelectListGroup group = groups[t.Category];
+                string group = t.Category;
 
                 string fwdText = t.IsSymmetric ? $"is {t.Name} of" : $"is {t.Name} of ({t.OppositeName})";
-                options.Add(new SelectListItem
+                options.Add(new SelectOptionDto
                 {
                     Value = $"{t.Id}_Fwd",
                     Text = fwdText,
@@ -240,7 +258,7 @@ namespace Rvnx.CRM.Web.Controllers
                 if (!t.IsSymmetric)
                 {
                     string revText = $"is {t.OppositeName} of ({t.Name})";
-                    options.Add(new SelectListItem
+                    options.Add(new SelectOptionDto
                     {
                         Value = $"{t.Id}_Rev",
                         Text = revText,

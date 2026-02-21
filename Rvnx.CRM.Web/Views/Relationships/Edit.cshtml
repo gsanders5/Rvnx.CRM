@@ -1,12 +1,11 @@
 @using Rvnx.CRM.Core.Constants
-@model Rvnx.CRM.Core.DTOs.Common.RelationshipFormDto
+@model Rvnx.CRM.Core.DTOs.Common.RelationshipEditViewModel
 
 @{
     ViewData["Title"] = "Edit Relationship";
-    var entityName = ViewData["EntityName"] as string;
 }
 
-<h1>Edit Relationship for @entityName</h1>
+<h1>Edit Relationship for @Model.EntityName</h1>
 
 <div class="row">
     <div class="col-md-6">
@@ -15,17 +14,20 @@
             <input type="hidden" asp-for="Id"/>
             <input type="hidden" asp-for="EntityId"/>
             <input type="hidden" asp-for="EntityType"/>
+            <input type="hidden" asp-for="EntityName"/>
+            <!-- RelationshipTypeId will be set on post based on selection -->
+            <input type="hidden" asp-for="RelationshipTypeId" />
 
             <div class="mb-3">
-                <label for="relationshipTypeSelection" class="form-label">Relationship Type</label>
-                <select name="relationshipTypeSelection" class="form-control" asp-items="ViewBag.RelationshipTypeSelection" id="relationshipTypeSelection">
+                <label asp-for="SelectedRelationshipType" class="form-label">Relationship Type</label>
+                <select asp-for="SelectedRelationshipType" class="form-control" asp-items="@(new SelectList(Model.RelationshipTypeOptions, "Value", "Text", null, "Group"))">
                     <option value="">-- Select Type --</option>
                 </select>
-                @Html.ValidationMessage("RelationshipTypeSelection", new { @class = "text-danger" })
+                <span asp-validation-for="SelectedRelationshipType" class="text-danger"></span>
             </div>
 
             <div class="form-floating mb-3">
-                <select asp-for="RelatedEntityId" class="form-select" asp-items="ViewBag.RelatedEntityId">
+                <select asp-for="RelatedEntityId" class="form-select" asp-items="@(new SelectList(Model.RelatedEntityOptions, "Value", "Text"))">
                     <option value="">-- Select Related Entity --</option>
                 </select>
                 <label asp-for="RelatedEntityId">Related Entity</label>
@@ -55,7 +57,7 @@
             </div>
 
             <div class="form-group mt-3">
-                <input type="submit" value="Save Relationship" class="btn btn-primary"/>
+                <button type="submit" class="btn btn-primary"><i class="bi bi-save"></i> Save</button>
                 @if (Model.EntityType == EntityTypes.Person)
                 {
                     <a asp-controller="Contacts" asp-action="Details" asp-route-id="@Model.EntityId" class="btn btn-secondary">Cancel</a>
@@ -73,11 +75,11 @@
     @{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); }
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            const typeSelect = document.getElementById('relationshipTypeSelection');
+            const typeSelect = document.getElementById('SelectedRelationshipType');
             const relatedSelect = document.getElementById('RelatedEntityId');
             const preview = document.getElementById('relationshipPreview');
             // Safely serialize entityName to JS string
-            const entityName = @Html.Raw(Json.Serialize(entityName));
+            const entityName = @Html.Raw(Json.Serialize(Model.EntityName));
 
             function updatePreview() {
                 if (!typeSelect.value || !relatedSelect.value) {
