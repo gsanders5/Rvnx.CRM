@@ -20,6 +20,9 @@ public static class ServiceCollectionExtensions
         // Add Dashboard Service
         services.AddScoped<IDashboardService, DashboardService>();
 
+        // Add Relationship Service
+        services.AddScoped<IRelationshipService, RelationshipService>();
+
         return services;
     }
 }

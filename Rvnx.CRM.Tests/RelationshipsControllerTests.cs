@@ -8,6 +8,7 @@ using Rvnx.CRM.Core.Interfaces;
 using Rvnx.CRM.Core.Models.Contact;
 using Rvnx.CRM.Infrastructure.Data;
 using Rvnx.CRM.Infrastructure.Repositories;
+using Rvnx.CRM.Core.Services;
 using Rvnx.CRM.Web.Controllers;
 
 namespace Rvnx.CRM.Tests
@@ -29,7 +30,8 @@ namespace Rvnx.CRM.Tests
 
             _context = new CRMDbContext(options, mockCurrentUserService.Object);
             Repository repository = new(_context);
-            _controller = new RelationshipsController(repository);
+            RelationshipService relationshipService = new(repository);
+            _controller = new RelationshipsController(repository, relationshipService);
         }
 
         public void Dispose()
