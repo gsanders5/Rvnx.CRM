@@ -6,7 +6,6 @@ using Rvnx.CRM.Core.Interfaces;
 using Rvnx.CRM.Core.Models.Base;
 using Rvnx.CRM.Core.Models.Contact;
 using Rvnx.CRM.Core.Models.Dates;
-using Microsoft.EntityFrameworkCore;
 
 namespace Rvnx.CRM.Infrastructure.Services;
 

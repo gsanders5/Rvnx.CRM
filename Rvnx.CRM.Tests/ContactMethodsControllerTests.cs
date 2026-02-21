@@ -30,7 +30,7 @@ namespace Rvnx.CRM.Tests
             _userMock.Setup(s => s.UserName).Returns("test-user");
 
             _context = new CRMDbContext(options, _userMock.Object);
-            Repository repository = new Repository(_context);
+            Repository repository = new(_context);
 
             _controller = new ContactMethodsController(repository);
 

@@ -28,7 +28,7 @@ namespace Rvnx.CRM.Tests
             mockCurrentUserService.Setup(s => s.UserName).Returns("test-user");
 
             _context = new CRMDbContext(options, mockCurrentUserService.Object);
-            Repository repository = new Repository(_context);
+            Repository repository = new(_context);
             _controller = new NotesController(repository);
         }
 

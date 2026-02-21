@@ -28,7 +28,7 @@ namespace Rvnx.CRM.Tests
             mockCurrentUserService.Setup(s => s.UserName).Returns("test-user");
 
             _context = new CRMDbContext(options, mockCurrentUserService.Object);
-            Repository repository = new Repository(_context);
+            Repository repository = new(_context);
             _controller = new SignificantDatesController(repository);
         }
 
@@ -73,7 +73,7 @@ namespace Rvnx.CRM.Tests
             // Arrange
             Guid contactId = Guid.NewGuid();
             _context.Contacts.Add(new Contact { Id = contactId, FirstName = "Test" });
-            
+
             // Existing Birthday
             _context.Set<SignificantDate>().Add(new SignificantDate
             {
@@ -113,7 +113,7 @@ namespace Rvnx.CRM.Tests
             // Arrange
             Guid contactId = Guid.NewGuid();
             _context.Contacts.Add(new Contact { Id = contactId, FirstName = "Test" });
-            
+
             // Existing Birthday with lowercase 'birthday'
             _context.Set<SignificantDate>().Add(new SignificantDate
             {

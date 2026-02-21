@@ -1,6 +1,4 @@
 using Rvnx.CRM.Core.Services;
-using System;
-using Xunit;
 
 namespace Rvnx.CRM.Tests.Services
 {
@@ -10,12 +8,12 @@ namespace Rvnx.CRM.Tests.Services
         public void GetNextOccurrence_SevenDays_AddsSevenDays()
         {
             // Arrange
-            var start = new DateTime(2023, 1, 1);
-            var frequency = TimeSpan.FromDays(7);
-            var today = new DateTime(2023, 1, 2);
+            DateTime start = new(2023, 1, 1);
+            TimeSpan frequency = TimeSpan.FromDays(7);
+            DateTime today = new(2023, 1, 2);
 
             // Act
-            var result = DateCalculationService.GetNextOccurrence(start, frequency, today);
+            DateTime result = DateCalculationService.GetNextOccurrence(start, frequency, today);
 
             // Assert
             Assert.Equal(new DateTime(2023, 1, 8), result);
@@ -30,12 +28,12 @@ namespace Rvnx.CRM.Tests.Services
             // 2024-01-01 + 365 days = 2024-12-31 (because 2024 has 366 days).
             // BUT the service logic treats 365 days as AddYears(1).
             // So 2024-01-01 + 1 year = 2025-01-01.
-            var start = new DateTime(2024, 1, 1);
-            var frequency = TimeSpan.FromDays(365);
-            var today = new DateTime(2024, 6, 1);
+            DateTime start = new(2024, 1, 1);
+            TimeSpan frequency = TimeSpan.FromDays(365);
+            DateTime today = new(2024, 6, 1);
 
             // Act
-            var result = DateCalculationService.GetNextOccurrence(start, frequency, today);
+            DateTime result = DateCalculationService.GetNextOccurrence(start, frequency, today);
 
             // Assert
             // This assertion proves the "365 days = 1 Calendar Year" logic
@@ -46,12 +44,12 @@ namespace Rvnx.CRM.Tests.Services
         public void GetNextOccurrence_LeapYear_PreservesFeb29()
         {
             // Arrange
-            var start = new DateTime(2020, 2, 29); // Leap day
-            var frequency = TimeSpan.FromDays(365); // "Yearly"
-            var today = new DateTime(2021, 3, 1);
+            DateTime start = new(2020, 2, 29); // Leap day
+            TimeSpan frequency = TimeSpan.FromDays(365); // "Yearly"
+            DateTime today = new(2021, 3, 1);
 
             // Act
-            var result = DateCalculationService.GetNextOccurrence(start, frequency, today);
+            DateTime result = DateCalculationService.GetNextOccurrence(start, frequency, today);
 
             // Assert
             // 2020-02-29 -> 2021-02-28 -> 2022-02-28
@@ -62,12 +60,12 @@ namespace Rvnx.CRM.Tests.Services
         public void GetNextOccurrence_LeapYear_ReturnsToFeb29_OnNextLeapYear()
         {
             // Arrange
-            var start = new DateTime(2020, 2, 29);
-            var frequency = TimeSpan.FromDays(365);
-            var today = new DateTime(2023, 3, 1); // After Feb 2023
+            DateTime start = new(2020, 2, 29);
+            TimeSpan frequency = TimeSpan.FromDays(365);
+            DateTime today = new(2023, 3, 1); // After Feb 2023
 
             // Act
-            var result = DateCalculationService.GetNextOccurrence(start, frequency, today);
+            DateTime result = DateCalculationService.GetNextOccurrence(start, frequency, today);
 
             // Assert
             // 2020 -> 2021 (Feb 28) -> 2022 (Feb 28) -> 2023 (Feb 28).
@@ -79,12 +77,12 @@ namespace Rvnx.CRM.Tests.Services
         public void GetNextOccurrence_FarPastDate_CatchesUp()
         {
             // Arrange
-            var start = new DateTime(2000, 1, 1);
-            var frequency = TimeSpan.FromDays(365);
-            var today = new DateTime(2023, 6, 1);
+            DateTime start = new(2000, 1, 1);
+            TimeSpan frequency = TimeSpan.FromDays(365);
+            DateTime today = new(2023, 6, 1);
 
             // Act
-            var result = DateCalculationService.GetNextOccurrence(start, frequency, today);
+            DateTime result = DateCalculationService.GetNextOccurrence(start, frequency, today);
 
             // Assert
             // Should be next Jan 1 after June 2023
@@ -95,12 +93,12 @@ namespace Rvnx.CRM.Tests.Services
         public void GetNextOccurrence_ZeroFrequency_ReturnsOriginalDate()
         {
             // Arrange
-            var start = new DateTime(2023, 1, 1);
-            var frequency = TimeSpan.Zero;
-            var today = new DateTime(2023, 6, 1);
+            DateTime start = new(2023, 1, 1);
+            TimeSpan frequency = TimeSpan.Zero;
+            DateTime today = new(2023, 6, 1);
 
             // Act
-            var result = DateCalculationService.GetNextOccurrence(start, frequency, today);
+            DateTime result = DateCalculationService.GetNextOccurrence(start, frequency, today);
 
             // Assert
             // Even though it's in the past, zero frequency means no recurrence.
@@ -111,12 +109,12 @@ namespace Rvnx.CRM.Tests.Services
         public void GetNextOccurrence_DueToday_ReturnsToday()
         {
             // Arrange
-            var start = new DateTime(2023, 1, 1);
-            var frequency = TimeSpan.FromDays(1);
-            var today = new DateTime(2023, 1, 5);
+            DateTime start = new(2023, 1, 1);
+            TimeSpan frequency = TimeSpan.FromDays(1);
+            DateTime today = new(2023, 1, 5);
 
             // Act
-            var result = DateCalculationService.GetNextOccurrence(start, frequency, today);
+            DateTime result = DateCalculationService.GetNextOccurrence(start, frequency, today);
 
             // Assert
             Assert.Equal(today, result);
@@ -126,12 +124,12 @@ namespace Rvnx.CRM.Tests.Services
         public void GetNextOccurrence_StandardInterval_DriftsCorrectly()
         {
             // Arrange
-            var start = new DateTime(2023, 1, 1);
-            var frequency = TimeSpan.FromDays(30);
-            var today = new DateTime(2023, 2, 1); // 31 days later
+            DateTime start = new(2023, 1, 1);
+            TimeSpan frequency = TimeSpan.FromDays(30);
+            DateTime today = new(2023, 2, 1); // 31 days later
 
             // Act
-            var result = DateCalculationService.GetNextOccurrence(start, frequency, today);
+            DateTime result = DateCalculationService.GetNextOccurrence(start, frequency, today);
 
             // Assert
             // Jan 1 + 30 days = Jan 31.
@@ -144,12 +142,12 @@ namespace Rvnx.CRM.Tests.Services
         public void GetNextOccurrence_FutureDate_ReturnsOriginal()
         {
             // Arrange
-            var start = new DateTime(2025, 1, 1);
-            var frequency = TimeSpan.FromDays(1);
-            var today = new DateTime(2023, 1, 1);
+            DateTime start = new(2025, 1, 1);
+            TimeSpan frequency = TimeSpan.FromDays(1);
+            DateTime today = new(2023, 1, 1);
 
             // Act
-            var result = DateCalculationService.GetNextOccurrence(start, frequency, today);
+            DateTime result = DateCalculationService.GetNextOccurrence(start, frequency, today);
 
             // Assert
             Assert.Equal(start, result);
@@ -159,12 +157,12 @@ namespace Rvnx.CRM.Tests.Services
         public void GetNextOccurrence_MultipleOf365_ButNotOneYear_CalculatesCorrectly()
         {
             // Arrange
-            var start = new DateTime(2020, 1, 1);
-            var frequency = TimeSpan.FromDays(730); // 2 years
-            var today = new DateTime(2021, 1, 1);
+            DateTime start = new(2020, 1, 1);
+            TimeSpan frequency = TimeSpan.FromDays(730); // 2 years
+            DateTime today = new(2021, 1, 1);
 
             // Act
-            var result = DateCalculationService.GetNextOccurrence(start, frequency, today);
+            DateTime result = DateCalculationService.GetNextOccurrence(start, frequency, today);
 
             // Assert
             // 2020 + 2 years = 2022.
@@ -174,13 +172,13 @@ namespace Rvnx.CRM.Tests.Services
         [Fact]
         public void GetNextOccurrence_LeapYearInterval_DriftsOneDayPerYear()
         {
-             // Arrange
-            var start = new DateTime(2021, 1, 1);
-            var frequency = TimeSpan.FromDays(366); // Leap year length
-            var today = new DateTime(2023, 1, 1);
+            // Arrange
+            DateTime start = new(2021, 1, 1);
+            TimeSpan frequency = TimeSpan.FromDays(366); // Leap year length
+            DateTime today = new(2023, 1, 1);
 
             // Act
-            var result = DateCalculationService.GetNextOccurrence(start, frequency, today);
+            DateTime result = DateCalculationService.GetNextOccurrence(start, frequency, today);
 
             // Assert
             // 2021-01-01 + 366 days = 2022-01-02.

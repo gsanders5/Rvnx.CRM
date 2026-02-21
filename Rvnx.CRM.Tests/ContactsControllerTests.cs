@@ -1,18 +1,11 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ViewFeatures;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Moq;
-using Rvnx.CRM.Core.Constants;
 using Rvnx.CRM.Core.DTOs.Contact;
-using Rvnx.CRM.Core.Enumerations;
 using Rvnx.CRM.Core.Interfaces;
-using Rvnx.CRM.Core.Models.Base;
 using Rvnx.CRM.Core.Models.Contact;
-using Rvnx.CRM.Core.Models.Dates;
-using Rvnx.CRM.Infrastructure.Data;
-using Rvnx.CRM.Infrastructure.Repositories;
 using Rvnx.CRM.Web.Controllers;
 
 namespace Rvnx.CRM.Tests
@@ -40,14 +33,14 @@ namespace Rvnx.CRM.Tests
 
             _controller = new ContactsController(
                 _repositoryMock.Object,
-                _loggerMock.Object, 
-                _userMock.Object, 
+                _loggerMock.Object,
+                _userMock.Object,
                 _contactImportServiceMock.Object,
                 _contactExportServiceMock.Object,
                 _contactManagementServiceMock.Object,
                 _contactReadServiceMock.Object,
                 _selfContactServiceMock.Object);
-                
+
             _controller.ControllerContext = new ControllerContext { HttpContext = new DefaultHttpContext() };
             _controller.TempData = new TempDataDictionary(_controller.HttpContext, Mock.Of<ITempDataProvider>());
         }

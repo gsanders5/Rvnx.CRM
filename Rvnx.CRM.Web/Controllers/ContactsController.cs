@@ -1,14 +1,8 @@
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Rvnx.CRM.Core.Constants;
 using Rvnx.CRM.Core.DTOs.Contact;
-using Rvnx.CRM.Core.Enumerations;
-using Rvnx.CRM.Core.Extensions;
 using Rvnx.CRM.Core.Interfaces;
-using Rvnx.CRM.Core.Models.Base;
 using Rvnx.CRM.Core.Models.Contact;
-using Rvnx.CRM.Core.Models.Dates;
 using Rvnx.CRM.Web.Controllers.Base;
 
 namespace Rvnx.CRM.Web.Controllers
@@ -72,7 +66,7 @@ namespace Rvnx.CRM.Web.Controllers
                 {
                     return RedirectToAction(nameof(Details), new { id = result.ContactId.Value });
                 }
-                 foreach (string error in result.Errors)
+                foreach (string error in result.Errors)
                 {
                     ModelState.AddModelError("", error);
                 }
@@ -99,9 +93,7 @@ namespace Rvnx.CRM.Web.Controllers
             if (id == null) return NotFound();
 
             ContactDetailDto? contactDto = await _contactReadService.GetContactDetailsAsync(id.Value);
-            if (contactDto == null) return NotFound();
-
-            return View(contactDto);
+            return contactDto == null ? NotFound() : View(contactDto);
         }
 
         public IActionResult Create()
@@ -132,9 +124,7 @@ namespace Rvnx.CRM.Web.Controllers
         {
             if (id == null) return NotFound();
             ContactFormDto? dto = await _contactReadService.GetContactFormAsync(id.Value);
-            if (dto == null) return NotFound();
-
-            return View(dto);
+            return dto == null ? NotFound() : View(dto);
         }
 
         [HttpPost]

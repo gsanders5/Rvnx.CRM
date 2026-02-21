@@ -32,19 +32,16 @@ namespace Rvnx.CRM.Core.Services
 
             extension = extension.ToLowerInvariant();
 
-            if (IsImageExtension(extension))
-            {
-                return IsValidImageSignature(fileBytes, extension);
-            }
-
-            return extension switch
-            {
-                ".pdf" => fileBytes[0] == 0x25 && fileBytes[1] == 0x50 && fileBytes[2] == 0x44 && fileBytes[3] == 0x46,
-                ".doc" or ".xls" => fileBytes[0] == 0xD0 && fileBytes[1] == 0xCF && fileBytes[2] == 0x11 && fileBytes[3] == 0xE0,
-                ".docx" or ".xlsx" => fileBytes[0] == 0x50 && fileBytes[1] == 0x4B && fileBytes[2] == 0x03 && fileBytes[3] == 0x04,
-                ".txt" => true,
-                _ => false
-            };
+            return IsImageExtension(extension)
+                ? IsValidImageSignature(fileBytes, extension)
+                : extension switch
+                {
+                    ".pdf" => fileBytes[0] == 0x25 && fileBytes[1] == 0x50 && fileBytes[2] == 0x44 && fileBytes[3] == 0x46,
+                    ".doc" or ".xls" => fileBytes[0] == 0xD0 && fileBytes[1] == 0xCF && fileBytes[2] == 0x11 && fileBytes[3] == 0xE0,
+                    ".docx" or ".xlsx" => fileBytes[0] == 0x50 && fileBytes[1] == 0x4B && fileBytes[2] == 0x03 && fileBytes[3] == 0x04,
+                    ".txt" => true,
+                    _ => false
+                };
         }
     }
 }

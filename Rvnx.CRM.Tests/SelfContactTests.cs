@@ -1,14 +1,10 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Moq;
 using Rvnx.CRM.Core.DTOs.Contact;
 using Rvnx.CRM.Core.Interfaces;
-using Rvnx.CRM.Core.Models;
 using Rvnx.CRM.Core.Models.Contact;
-using Rvnx.CRM.Infrastructure.Data;
-using Rvnx.CRM.Infrastructure.Repositories;
 using Rvnx.CRM.Web.Controllers;
 using System.Security.Claims;
 
@@ -45,7 +41,7 @@ namespace Rvnx.CRM.Tests
         {
             // Arrange
             Mock<ISelfContactService> selfContactMock = new();
-            selfContactMock.Setup(s => s.GetSelfContactIdAsync(It.IsAny<ClaimsPrincipal>())).ReturnsAsync((Guid?)null);
+            selfContactMock.Setup(s => s.GetSelfContactIdAsync(It.IsAny<ClaimsPrincipal>())).ReturnsAsync((Guid?) null);
 
             ContactFormDto formDto = new() { FirstName = "Test", LastName = "User", Email = "test@example.com" };
             selfContactMock.Setup(s => s.GetSelfContactFormAsync(It.IsAny<ClaimsPrincipal>())).ReturnsAsync(formDto);
@@ -87,7 +83,7 @@ namespace Rvnx.CRM.Tests
         {
             // Arrange
             Mock<ISelfContactService> selfContactMock = new();
-            selfContactMock.Setup(s => s.GetSelfContactIdAsync(It.IsAny<ClaimsPrincipal>())).ReturnsAsync((Guid?)null);
+            selfContactMock.Setup(s => s.GetSelfContactIdAsync(It.IsAny<ClaimsPrincipal>())).ReturnsAsync((Guid?) null);
 
             ContactsController controller = CreateController(selfContactMock);
 

@@ -28,7 +28,7 @@ namespace Rvnx.CRM.Tests
             mockCurrentUserService.Setup(s => s.UserName).Returns("test-user");
 
             _context = new CRMDbContext(options, mockCurrentUserService.Object);
-            Repository repository = new Repository(_context);
+            Repository repository = new(_context);
             _controller = new RelationshipsController(repository);
         }
 
@@ -191,10 +191,10 @@ namespace Rvnx.CRM.Tests
             // Verifying that ViewData options are repopulated so the View doesn't crash on render
             Assert.NotNull(viewResult.ViewData["RelatedEntityId"]);
             Assert.IsType<SelectList>(viewResult.ViewData["RelatedEntityId"]);
-            
+
             Assert.NotNull(viewResult.ViewData["RelationshipTypeSelection"]);
             Assert.IsType<List<SelectListItem>>(viewResult.ViewData["RelationshipTypeSelection"]);
-            
+
             Assert.Equal(p1Id, viewResult.ViewData["EntityId"]);
             Assert.Equal(EntityTypes.Person, viewResult.ViewData["EntityType"]);
             Assert.Equal("P1 User", viewResult.ViewData["EntityName"]);
