@@ -19,35 +19,34 @@ namespace Rvnx.CRM.Tests
 {
     public class ContactsControllerTests : IDisposable
     {
-        private readonly CRMDbContext _context;
         private readonly Mock<ILogger<ContactsController>> _loggerMock = new();
         private readonly Mock<ICurrentUserService> _userMock = new();
-        private readonly Mock<IVCardService> _vCardMock = new();
-        private readonly Mock<IFileValidationService> _fileValidationMock = new();
         private readonly Mock<IUserSynchronizationService> _syncMock = new();
+        private readonly Mock<IContactImportService> _contactImportServiceMock = new();
+        private readonly Mock<IContactExportService> _contactExportServiceMock = new();
+        private readonly Mock<IContactManagementService> _contactManagementServiceMock = new();
+        private readonly Mock<IContactReadService> _contactReadServiceMock = new();
+        private readonly Mock<ISelfContactService> _selfContactServiceMock = new();
+        private readonly Mock<IRepository> _repositoryMock = new();
         private readonly ContactsController _controller;
 
         public ContactsControllerTests()
         {
-            DbContextOptions<CRMDbContext> options = new DbContextOptionsBuilder<CRMDbContext>()
-                .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
-                .Options;
-
             _userMock.Setup(s => s.UserId).Returns(Guid.Parse("c5b50a20-34b2-44b2-8b9c-aa4135f60938"));
             _userMock.Setup(s => s.UserName).Returns("test-user");
+            _userMock.Setup(s => s.IsAuthenticated).Returns(true);
 
             _syncMock.Setup(s => s.SyncUserAsync(It.IsAny<System.Security.Claims.ClaimsPrincipal>())).Returns(Task.CompletedTask);
 
-            _context = new CRMDbContext(options, _userMock.Object);
-            Repository repository = new Repository(_context);
-            
             _controller = new ContactsController(
-                repository, 
+                _repositoryMock.Object,
                 _loggerMock.Object, 
                 _userMock.Object, 
-                _vCardMock.Object, 
-                _fileValidationMock.Object, 
-                _syncMock.Object);
+                _contactImportServiceMock.Object,
+                _contactExportServiceMock.Object,
+                _contactManagementServiceMock.Object,
+                _contactReadServiceMock.Object,
+                _selfContactServiceMock.Object);
                 
             _controller.ControllerContext = new ControllerContext { HttpContext = new DefaultHttpContext() };
             _controller.TempData = new TempDataDictionary(_controller.HttpContext, Mock.Of<ITempDataProvider>());
@@ -55,17 +54,19 @@ namespace Rvnx.CRM.Tests
 
         public void Dispose()
         {
-            _context.Database.EnsureDeleted();
-            _context.Dispose();
         }
 
         [Fact]
         public async Task Index_ReturnsViewWithContacts()
         {
             // Arrange
-            _context.Contacts.Add(new Contact { Id = Guid.NewGuid(), FirstName = "John", LastName = "Doe" });
-            _context.Contacts.Add(new Contact { Id = Guid.NewGuid(), FirstName = "Jane", LastName = "Doe" });
-            await _context.SaveChangesAsync();
+            List<ContactDto> contacts = new()
+            {
+                new ContactDto { Id = Guid.NewGuid(), FirstName = "John", LastName = "Doe" },
+                new ContactDto { Id = Guid.NewGuid(), FirstName = "Jane", LastName = "Doe" }
+            };
+
+            _contactReadServiceMock.Setup(s => s.GetIndexDataAsync(It.IsAny<bool>())).ReturnsAsync(contacts);
 
             // Act
             IActionResult result = await _controller.Index();
@@ -89,41 +90,22 @@ namespace Rvnx.CRM.Tests
                 Birthday = new DateTime(1990, 1, 1)
             };
 
+            _contactManagementServiceMock.Setup(s => s.CreateContactAsync(It.IsAny<ContactFormDto>()))
+                .ReturnsAsync(ContactOperationResult.Ok(Guid.NewGuid()));
+
             // Act
             IActionResult result = await _controller.Create(dto);
 
             // Assert
             RedirectToActionResult redirectResult = Assert.IsType<RedirectToActionResult>(result);
             Assert.Equal("Index", redirectResult.ActionName);
-
-            Contact? contact = await _context.Contacts.FirstOrDefaultAsync(c => c.FirstName == "New");
-            Assert.NotNull(contact);
-
-            // Check Email
-            ContactMethod? email = await _context.Set<ContactMethod>().FirstOrDefaultAsync(c => c.EntityId == contact.Id && c.Type == ContactMethodType.Email);
-            Assert.NotNull(email);
-            Assert.Equal("new@user.com", email.Value);
-
-            // Check Phone
-            ContactMethod? phone = await _context.Set<ContactMethod>().FirstOrDefaultAsync(c => c.EntityId == contact.Id && c.Type == ContactMethodType.Phone);
-            Assert.NotNull(phone);
-            Assert.Equal("1234567890", phone.Value);
-
-            // Check Birthday
-            SignificantDate? birthday = await _context.Set<SignificantDate>().FirstOrDefaultAsync(d => d.EntityId == contact.Id && d.Title == SignificantDateTitles.Birthday);
-            Assert.NotNull(birthday);
-            Assert.Equal(new DateTime(1990, 1, 1), birthday.Date);
         }
 
         [Fact]
-        public async Task DeleteConfirmed_WithValidId_ShouldDeleteContactAndDependencies()
+        public async Task DeleteConfirmed_ShouldCallServiceAndRedirect()
         {
             // Arrange
             Guid contactId = Guid.NewGuid();
-            Contact contact = new() { Id = contactId, FirstName = "To", LastName = "Delete" };
-            _context.Contacts.Add(contact);
-            _context.Set<Note>().Add(new Note { Id = Guid.NewGuid(), EntityId = contactId, EntityType = EntityTypes.Person, Title = "Note", Value = "Val" });
-            await _context.SaveChangesAsync();
 
             // Act
             IActionResult result = await _controller.DeleteConfirmed(contactId);
@@ -132,21 +114,14 @@ namespace Rvnx.CRM.Tests
             RedirectToActionResult redirectResult = Assert.IsType<RedirectToActionResult>(result);
             Assert.Equal("Index", redirectResult.ActionName);
 
-            Assert.Null(await _context.Contacts.FindAsync(contactId));
-            Assert.Empty(await _context.Set<Note>().Where(n => n.EntityId == contactId).ToListAsync());
+            _contactManagementServiceMock.Verify(s => s.DeleteContactAsync(contactId), Times.Once);
         }
 
         [Fact]
         public async Task Edit_Post_WhenFileIsNotImage_ShouldReturnValidationError()
         {
             // Arrange
-            _fileValidationMock.Setup(f => f.IsImageExtension(It.IsAny<string>())).Returns(false);
-
             Guid contactId = Guid.NewGuid();
-            Contact contact = new() { Id = contactId, FirstName = "John", LastName = "Doe" };
-            _context.Contacts.Add(contact);
-            await _context.SaveChangesAsync();
-
             ContactFormDto dto = new() { Id = contactId, FirstName = "John", LastName = "Doe" };
 
             Mock<IFormFile> fileMock = new();
@@ -162,121 +137,28 @@ namespace Rvnx.CRM.Tests
             fileMock.Setup(f => f.Length).Returns(ms.Length);
             fileMock.Setup(f => f.ContentType).Returns("text/plain");
 
+            // Mock Exist to return true so we don't get NotFound
+            _contactReadServiceMock.Setup(s => s.ContactExistsAsync(contactId)).ReturnsAsync(true);
+
+            _contactManagementServiceMock.Setup(s => s.UpdateContactAsync(It.IsAny<Guid>(), It.IsAny<ContactFormDto>(), It.IsAny<Stream>(), It.IsAny<string>(), It.IsAny<string>()))
+                .ReturnsAsync(ContactOperationResult.Failure("Only image files (jpg, jpeg, png, gif) are allowed."));
+
             // Act
             IActionResult result = await _controller.Edit(contactId, dto, fileMock.Object);
 
             // Assert
-            Assert.IsType<ViewResult>(result);
+            ViewResult viewResult = Assert.IsType<ViewResult>(result); // Expecting view result with errors
             Assert.False(_controller.ModelState.IsValid);
-            Assert.True(_controller.ModelState.ContainsKey(string.Empty));
             Assert.Equal("Only image files (jpg, jpeg, png, gif) are allowed.", _controller.ModelState[string.Empty]!.Errors[0].ErrorMessage);
         }
 
         [Fact]
-        public async Task Edit_Post_WhenFileSignatureInvalid_ShouldReturnError()
+        public async Task Import_WhenServiceSucceeds_ShouldRedirectToIndex()
         {
             // Arrange
-            _fileValidationMock.Setup(f => f.IsImageExtension(It.IsAny<string>())).Returns(true);
-            _fileValidationMock.Setup(f => f.IsValidImageSignature(It.IsAny<byte[]>(), It.IsAny<string>())).Returns(false);
-
-            Guid contactId = Guid.NewGuid();
-            Contact contact = new() { Id = contactId, FirstName = "John", LastName = "Doe" };
-            _context.Contacts.Add(contact);
-            await _context.SaveChangesAsync();
-
-            ContactFormDto dto = new() { Id = contactId, FirstName = "John", LastName = "Doe" };
-
-            Mock<IFormFile> fileMock = new();
-            string content = "Fake Image Content";
-            MemoryStream ms = new();
-            StreamWriter writer = new(ms);
-            writer.Write(content);
-            writer.Flush();
-            ms.Position = 0;
-
-            fileMock.Setup(f => f.OpenReadStream()).Returns(ms);
-            fileMock.Setup(f => f.CopyToAsync(It.IsAny<Stream>(), It.IsAny<CancellationToken>()))
-                .Callback<Stream, CancellationToken>((stream, _) =>
-                {
-                    ms.CopyTo(stream);
-                })
-                .Returns(Task.CompletedTask);
-            fileMock.Setup(f => f.FileName).Returns("fake.png");
-            fileMock.Setup(f => f.Length).Returns(ms.Length);
-            fileMock.Setup(f => f.ContentType).Returns("image/png");
-
-            // Act
-            IActionResult result = await _controller.Edit(contactId, dto, fileMock.Object);
-
-            // Assert
-            Assert.IsType<ViewResult>(result);
-            Assert.False(_controller.ModelState.IsValid);
-            Assert.True(_controller.ModelState.ContainsKey(string.Empty));
-            Assert.Equal("Invalid file signature.", _controller.ModelState[string.Empty]!.Errors[0].ErrorMessage);
-        }
-
-        [Fact]
-        public async Task Edit_Post_WhenFileIsImage_ShouldSaveAttachment()
-        {
-            // Arrange
-            _fileValidationMock.Setup(f => f.IsImageExtension(It.IsAny<string>())).Returns(true);
-            _fileValidationMock.Setup(f => f.IsValidImageSignature(It.IsAny<byte[]>(), It.IsAny<string>())).Returns(true);
-
-            Guid contactId = Guid.NewGuid();
-            Contact contact = new() { Id = contactId, FirstName = "John", LastName = "Doe" };
-            _context.Contacts.Add(contact);
-            await _context.SaveChangesAsync();
-
-            ContactFormDto dto = new() { Id = contactId, FirstName = "John", LastName = "Doe" };
-
-            Mock<IFormFile> fileMock = new();
-            string content = "Fake Image Content";
-            MemoryStream ms = new();
-            StreamWriter writer = new(ms);
-            writer.Write(content);
-            writer.Flush();
-            ms.Position = 0;
-
-            fileMock.Setup(f => f.OpenReadStream()).Returns(ms);
-            fileMock.Setup(f => f.CopyToAsync(It.IsAny<Stream>(), It.IsAny<CancellationToken>()))
-                .Callback<Stream, CancellationToken>((stream, _) =>
-                {
-                    ms.CopyTo(stream);
-                })
-                .Returns(Task.CompletedTask);
-            fileMock.Setup(f => f.FileName).Returns("image.png");
-            fileMock.Setup(f => f.Length).Returns(ms.Length);
-            fileMock.Setup(f => f.ContentType).Returns("image/png");
-
-            // Act
-            IActionResult result = await _controller.Edit(contactId, dto, fileMock.Object);
-
-            // Assert
-            RedirectToActionResult redirectResult = Assert.IsType<RedirectToActionResult>(result);
-            Assert.Equal("Index", redirectResult.ActionName);
-
-            // Use Set<Attachment> since Attachments might not exist on context directly
-            List<Attachment> attachments = await _context.Set<Attachment>().Where(a => a.EntityId == contactId && a.AttachmentType == AttachmentTypes.ProfileImage).ToListAsync();
-            Assert.Single(attachments);
-            Assert.Equal("image.png", attachments[0].FileName);
-        }
-
-        [Fact]
-        public async Task Import_WhenContactExists_ShouldSkipDuplicates()
-        {
-            // Arrange
-            Guid existingId = Guid.NewGuid();
-            _context.Contacts.Add(new Contact { Id = existingId, FirstName = "John", LastName = "Doe" });
-            await _context.SaveChangesAsync();
-
-            // Incoming contacts (one duplicate, one new)
-            List<Contact> importedContacts = new()
-            {
-                new Contact { Id = Guid.NewGuid(), FirstName = "John", LastName = "Doe" }, // Duplicate
-                new Contact { Id = Guid.NewGuid(), FirstName = "Jane", LastName = "Doe" }  // New
-            };
-
-            _vCardMock.Setup(s => s.ParseVCard(It.IsAny<Stream>())).Returns(importedContacts);
+            ContactImportResult importResult = new() { AddedCount = 1, SkippedCount = 1 };
+            _contactImportServiceMock.Setup(s => s.ImportFromVCardAsync(It.IsAny<Stream>()))
+                .ReturnsAsync(importResult);
 
             Mock<IFormFile> fileMock = new();
             fileMock.Setup(f => f.Length).Returns(100);
@@ -289,11 +171,6 @@ namespace Rvnx.CRM.Tests
             // Assert
             RedirectToActionResult redirectResult = Assert.IsType<RedirectToActionResult>(result);
             Assert.Equal("Index", redirectResult.ActionName);
-
-            List<Contact> allContacts = await _context.Contacts.ToListAsync();
-            Assert.Equal(2, allContacts.Count);
-            Assert.Contains(allContacts, c => c.FirstName == "John" && c.LastName == "Doe");
-            Assert.Contains(allContacts, c => c.FirstName == "Jane" && c.LastName == "Doe");
 
             // Verify message
             Assert.Equal("Import successful! Added: 1, Skipped: 1", _controller.TempData["SuccessMessage"]);

@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Rvnx.CRM.Core.Constants;
@@ -12,14 +13,16 @@ using Rvnx.CRM.Web.Controllers.Base;
 
 namespace Rvnx.CRM.Web.Controllers
 {
-    public class ContactsController(IRepository repository, ILogger<ContactsController> logger, ICurrentUserService currentUserService, IVCardService vCardService, IFileValidationService fileValidationService, IUserSynchronizationService userSynchronizationService) : AuthorizedController
+    public class ContactsController(IRepository repository, ILogger<ContactsController> logger, ICurrentUserService currentUserService, IContactImportService contactImportService, IContactExportService contactExportService, IContactManagementService contactManagementService, IContactReadService contactReadService, ISelfContactService selfContactService) : AuthorizedController
     {
         private readonly IRepository _repository = repository;
         private readonly ILogger<ContactsController> _logger = logger;
         private readonly ICurrentUserService _currentUserService = currentUserService;
-        private readonly IVCardService _vCardService = vCardService;
-        private readonly IFileValidationService _fileValidationService = fileValidationService;
-        private readonly IUserSynchronizationService _userSynchronizationService = userSynchronizationService;
+        private readonly IContactImportService _contactImportService = contactImportService;
+        private readonly IContactExportService _contactExportService = contactExportService;
+        private readonly IContactManagementService _contactManagementService = contactManagementService;
+        private readonly IContactReadService _contactReadService = contactReadService;
+        private readonly ISelfContactService _selfContactService = selfContactService;
 
         public async Task<IActionResult> Self()
         {
@@ -28,26 +31,10 @@ namespace Rvnx.CRM.Web.Controllers
                 return RedirectToAction("Index", "Home");
             }
 
-            // Sync user to ensure existence in DB
-            await _userSynchronizationService.SyncUserAsync(HttpContext.User);
+            Guid? selfContactId = await _selfContactService.GetSelfContactIdAsync(HttpContext.User);
 
-            Guid? userId = _currentUserService.UserId;
-            if (!userId.HasValue)
-            {
-                return RedirectToAction("Index", "Home");
-            }
-
-            Rvnx.CRM.Core.Models.User? user = await GetUserAsync(userId.Value);
-
-            if (user == null)
-            {
-                // Fallback: This should ideally not happen if SyncUserAsync works.
-                // But if it does, redirects to Index is confusing.
-                return RedirectToAction("Index");
-            }
-
-            return user.SelfContactId.HasValue
-                ? RedirectToAction(nameof(Details), new { id = user.SelfContactId })
+            return selfContactId.HasValue
+                ? RedirectToAction(nameof(Details), new { id = selfContactId })
                 : RedirectToAction(nameof(CreateSelf));
         }
 
@@ -58,40 +45,15 @@ namespace Rvnx.CRM.Web.Controllers
                 return RedirectToAction("Index", "Home");
             }
 
-            // Sync user here too, just in case
-            await _userSynchronizationService.SyncUserAsync(HttpContext.User);
+            Guid? selfContactId = await _selfContactService.GetSelfContactIdAsync(HttpContext.User);
 
-            Guid? userId = _currentUserService.UserId;
-            if (!userId.HasValue) return RedirectToAction("Index", "Home");
-
-            Rvnx.CRM.Core.Models.User? user = await GetUserAsync(userId.Value);
-
-            if (user == null) return RedirectToAction("Index");
-
-            if (user.SelfContactId.HasValue)
+            if (selfContactId.HasValue)
             {
-                return RedirectToAction(nameof(Details), new { id = user.SelfContactId });
+                return RedirectToAction(nameof(Details), new { id = selfContactId });
             }
 
-            ContactFormDto dto = new()
-            {
-                Email = user.Email
-            };
-
-            string userName = _currentUserService.UserName ?? string.Empty;
-            if (!string.IsNullOrEmpty(userName))
-            {
-                int firstSpaceIndex = userName.IndexOf(' ');
-                if (firstSpaceIndex > 0)
-                {
-                    dto.FirstName = userName[..firstSpaceIndex];
-                    dto.LastName = userName[(firstSpaceIndex + 1)..];
-                }
-                else
-                {
-                    dto.FirstName = userName;
-                }
-            }
+            ContactFormDto? dto = await _selfContactService.GetSelfContactFormAsync(HttpContext.User);
+            if (dto == null) return RedirectToAction("Index");
 
             ViewBag.IsSelfCreate = true;
             return View("Create", dto);
@@ -103,34 +65,17 @@ namespace Rvnx.CRM.Web.Controllers
         {
             if (!_currentUserService.IsAuthenticated) return Unauthorized();
 
-            Guid? userId = _currentUserService.UserId;
-            if (!userId.HasValue) return Unauthorized();
-            Rvnx.CRM.Core.Models.User? user = await GetUserAsync(userId.Value);
-
-            if (user == null) return RedirectToAction("Index");
-
-            if (user.SelfContactId.HasValue)
-            {
-                return RedirectToAction(nameof(Details), new { id = user.SelfContactId });
-            }
-
             if (ModelState.IsValid)
             {
-                Contact contact = contactDto.ToEntity();
-
-                await _repository.AddAsync(contact);
-
-                user.SelfContactId = contact.Id;
-                await _repository.UpdateAsync(user);
-
-                await _repository.SaveChangesAsync();
-
-                await UpdateOrAddContactMethod(contact.Id, ContactMethodType.Email, contactDto.Email, null);
-                await UpdateOrAddContactMethod(contact.Id, ContactMethodType.Phone, contactDto.Phone, null);
-                await UpdateOrAddBirthday(contact.Id, contactDto.Birthday, null);
-
-                await _repository.SaveChangesAsync();
-                return RedirectToAction(nameof(Details), new { id = contact.Id });
+                ContactOperationResult result = await _selfContactService.CreateSelfContactAsync(HttpContext.User, contactDto);
+                if (result.Success && result.ContactId.HasValue)
+                {
+                    return RedirectToAction(nameof(Details), new { id = result.ContactId.Value });
+                }
+                 foreach (string error in result.Errors)
+                {
+                    ModelState.AddModelError("", error);
+                }
             }
 
             ViewBag.IsSelfCreate = true;
@@ -139,43 +84,7 @@ namespace Rvnx.CRM.Web.Controllers
 
         public async Task<IActionResult> Index(bool showHidden = false)
         {
-            List<Contact> contacts = await _repository.ListAsNoTrackingAsync<Contact>(x => x.IsHidden == showHidden);
-
-            List<ContactDto> contactDtos = [.. contacts.Select(c => c.ToDto())];
-            List<Guid> contactIds = [.. contacts.Select(c => c.Id)];
-
-            List<Attachment> profileAttachments;
-
-            // Optimization: If contact list is large, avoid sending large list of IDs to SQL (which can hit parameter limits).
-            // Instead, fetch all profile images for Person entities (scoped by user via global filter) and filter in memory.
-            if (contactIds.Count < 2000)
-            {
-                profileAttachments = await _repository.ListAsNoTrackingAsync<Attachment>(a => a.EntityType == EntityTypes.Person
-                    && a.AttachmentType == AttachmentTypes.ProfileImage
-                    && contactIds.Contains(a.EntityId));
-            }
-            else
-            {
-                profileAttachments = await _repository.ListAsNoTrackingAsync<Attachment>(a => a.EntityType == EntityTypes.Person
-                    && a.AttachmentType == AttachmentTypes.ProfileImage);
-            }
-
-
-            if (profileAttachments != null && profileAttachments.Any())
-            {
-                Dictionary<Guid, Attachment> attachmentMap = profileAttachments
-                    .Where(a => a != null)
-                    .GroupBy(a => a.EntityId) // Handle potential duplicates gracefully
-                    .ToDictionary(g => g.Key, g => g.First());
-
-                foreach (ContactDto? dto in contactDtos)
-                {
-                    if (dto != null && attachmentMap.TryGetValue(dto.Id, out Attachment? attachment))
-                    {
-                        dto.ProfileImageId = attachment.Id;
-                    }
-                }
-            }
+            List<ContactDto> contactDtos = await _contactReadService.GetIndexDataAsync(showHidden);
 
             if (TempData["SuccessMessage"] != null)
             {
@@ -189,70 +98,8 @@ namespace Rvnx.CRM.Web.Controllers
         {
             if (id == null) return NotFound();
 
-            Contact? contact = await _repository.GetByIdWithIncludesAsync<Contact>(id.Value, "Employers");
-            if (contact == null) return NotFound();
-
-
-            contact.Notes = await GetRelatedEntitiesAsync<Note>(id.Value);
-            contact.Reminders = await GetRelatedEntitiesAsync<Reminder>(id.Value);
-            contact.SignificantDates = await GetRelatedEntitiesAsync<SignificantDate>(id.Value);
-
-            // Relationships
-            List<Relationship> relationships = await GetRelatedEntitiesAsync<Relationship>(id.Value);
-
-            // RelatedTo
-            List<Relationship> relatedTo = await _repository.ListAsync<Relationship>(r => r.RelatedEntityId == id.Value && r.EntityType == EntityTypes.Person);
-
-            // Fetch all related contacts in one go
-            List<Guid> relatedIds = relationships.Select(r => r.RelatedEntityId)
-                .Concat(relatedTo.Select(r => r.EntityId))
-                .Distinct()
-                .ToList();
-
-            List<Contact> relatedContacts = new();
-            if (relatedIds.Any())
-            {
-                relatedContacts = await _repository.ListAsync<Contact>(c => relatedIds.Contains(c.Id));
-            }
-
-            // Manually populate navigation properties for display (since we don't have LazyLoading or Include for generic relationship yet)
-            // And use static service to fill relationship names (or rely on NotMapped properties)
-            foreach (Relationship rel in relationships)
-            {
-                // No DB lookup for type anymore. Property `RelationshipTypeName` etc. handles it.
-                rel.RelatedPerson = relatedContacts.FirstOrDefault(c => c.Id == rel.RelatedEntityId);
-            }
-            contact.Relationships = relationships;
-
-            foreach (Relationship rel in relatedTo)
-            {
-                rel.Person = relatedContacts.FirstOrDefault(c => c.Id == rel.EntityId);
-            }
-            contact.RelatedTo = relatedTo;
-
-            // Pets
-            List<Pet> pets = await GetRelatedEntitiesAsync<Pet>(id.Value);
-
-            // Contact Infos
-            contact.ContactMethods = await GetRelatedEntitiesAsync<ContactMethod>(id.Value);
-
-            // Facts
-            contact.Facts = await GetRelatedEntitiesAsync<Fact>(id.Value);
-
-            // Attachments
-            contact.Attachments = await _repository.ListAsync<Attachment>(a => a.EntityId == id.Value && a.EntityType == EntityTypes.Person && a.AttachmentType != AttachmentTypes.ProfileImage);
-
-            ContactDetailDto contactDto = contact.ToDetailDto();
-            contactDto.Pets = pets.Select(p => p.ToDto()).ToList();
-
-            // Profile Image
-            List<Attachment> profileAttachments = await _repository.ListAsync<Attachment>(a => a.EntityId == id.Value && a.EntityType == EntityTypes.Person && a.AttachmentType == AttachmentTypes.ProfileImage);
-            Attachment? profileAttachment = profileAttachments.FirstOrDefault();
-
-            if (profileAttachment != null)
-            {
-                contactDto.ProfileImageId = profileAttachment.Id;
-            }
+            ContactDetailDto? contactDto = await _contactReadService.GetContactDetailsAsync(id.Value);
+            if (contactDto == null) return NotFound();
 
             return View(contactDto);
         }
@@ -268,16 +115,15 @@ namespace Rvnx.CRM.Web.Controllers
         {
             if (ModelState.IsValid)
             {
-                Contact contact = contactDto.ToEntity();
-                await _repository.AddAsync(contact);
-                await _repository.SaveChangesAsync();
-
-                await UpdateOrAddContactMethod(contact.Id, ContactMethodType.Email, contactDto.Email, null);
-                await UpdateOrAddContactMethod(contact.Id, ContactMethodType.Phone, contactDto.Phone, null);
-                await UpdateOrAddBirthday(contact.Id, contactDto.Birthday, null);
-
-                await _repository.SaveChangesAsync();
-                return RedirectToAction(nameof(Index));
+                ContactOperationResult result = await _contactManagementService.CreateContactAsync(contactDto);
+                if (result.Success)
+                {
+                    return RedirectToAction(nameof(Index));
+                }
+                foreach (string error in result.Errors)
+                {
+                    ModelState.AddModelError("", error);
+                }
             }
             return View(contactDto);
         }
@@ -285,28 +131,8 @@ namespace Rvnx.CRM.Web.Controllers
         public async Task<IActionResult> Edit(Guid? id)
         {
             if (id == null) return NotFound();
-            Contact? contact = await _repository.GetByIdAsync<Contact>(id.Value);
-            if (contact == null) return NotFound();
-
-            ContactFormDto dto = new()
-            {
-                Id = contact.Id,
-                FirstName = contact.FirstName,
-                LastName = contact.LastName ?? string.Empty,
-                Nickname = contact.Nickname,
-                JobTitle = contact.JobTitle,
-                Company = contact.Company,
-                IsHidden = contact.IsHidden
-            };
-
-            ContactMethod? email = await GetPrimaryContactMethodAsync(contact.Id, ContactMethodType.Email);
-            dto.Email = email?.Value;
-
-            ContactMethod? phone = await GetPrimaryContactMethodAsync(contact.Id, ContactMethodType.Phone);
-            dto.Phone = phone?.Value;
-
-            SignificantDate? bday = await GetBirthdayAsync(contact.Id);
-            dto.Birthday = bday?.Date;
+            ContactFormDto? dto = await _contactReadService.GetContactFormAsync(id.Value);
+            if (dto == null) return NotFound();
 
             return View(dto);
         }
@@ -321,161 +147,34 @@ namespace Rvnx.CRM.Web.Controllers
             {
                 try
                 {
-                    Contact? existingContact = await _repository.GetByIdAsync<Contact>(id);
-                    if (existingContact == null) return NotFound();
-
-                    existingContact.UpdateEntity(contactDto);
-
-                    ContactMethod? existingEmail = await GetPrimaryContactMethodAsync(id, ContactMethodType.Email);
-                    await UpdateOrAddContactMethod(id, ContactMethodType.Email, contactDto.Email, existingEmail);
-
-                    ContactMethod? existingPhone = await GetPrimaryContactMethodAsync(id, ContactMethodType.Phone);
-                    await UpdateOrAddContactMethod(id, ContactMethodType.Phone, contactDto.Phone, existingPhone);
-
-                    SignificantDate? existingBday = await GetBirthdayAsync(id);
-                    await UpdateOrAddBirthday(id, contactDto.Birthday, existingBday);
-
+                    Stream? stream = null;
                     if (profileImage != null && profileImage.Length > 0)
                     {
-                        string extension = Path.GetExtension(profileImage.FileName).ToLowerInvariant();
-                        if (!_fileValidationService.IsImageExtension(extension) || !profileImage.ContentType.StartsWith("image/"))
-                        {
-                            ModelState.AddModelError("", "Only image files (jpg, jpeg, png, gif) are allowed.");
-                            return View(contactDto);
-                        }
-
-                        using MemoryStream ms = new();
-                        await profileImage.CopyToAsync(ms);
-                        byte[] fileBytes = ms.ToArray();
-
-                        if (!_fileValidationService.IsValidImageSignature(fileBytes, extension))
-                        {
-                            ModelState.AddModelError("", "Invalid file signature.");
-                            return View(contactDto);
-                        }
-
-                        List<Attachment> existingAttachments = await _repository.ListAsync<Attachment>(a => a.EntityId == id && a.EntityType == EntityTypes.Person && a.AttachmentType == AttachmentTypes.ProfileImage);
-                        Attachment? existingAttachment = existingAttachments.FirstOrDefault();
-
-                        if (existingAttachment != null)
-                        {
-                            existingAttachment = await _repository.GetByIdWithIncludesAsync<Attachment>(existingAttachment.Id, "AttachmentContent");
-                            if (existingAttachment != null)
-                            {
-                                existingAttachment.AttachmentContent ??= new AttachmentContent { AttachmentId = existingAttachment.Id };
-                                existingAttachment.AttachmentContent.Content = fileBytes;
-
-                                existingAttachment.ContentType = profileImage.ContentType;
-                                existingAttachment.FileName = profileImage.FileName;
-                                await _repository.UpdateAsync(existingAttachment);
-                            }
-                        }
-                        else
-                        {
-                            Attachment attachment = new()
-                            {
-                                Id = Guid.NewGuid(),
-                                EntityId = id,
-                                EntityType = EntityTypes.Person,
-                                AttachmentType = AttachmentTypes.ProfileImage,
-                                ContentType = profileImage.ContentType,
-                                FileName = profileImage.FileName,
-                                AttachmentContent = new AttachmentContent
-                                {
-                                    Content = fileBytes
-                                }
-                            };
-                            await _repository.AddAsync(attachment);
-                        }
+                        stream = profileImage.OpenReadStream();
                     }
 
-                    await _repository.UpdateAsync(existingContact);
-                    await _repository.SaveChangesAsync();
+                    using (stream)
+                    {
+                        ContactOperationResult result = await _contactManagementService.UpdateContactAsync(id, contactDto, stream, profileImage?.FileName, profileImage?.ContentType);
+
+                        if (result.Success)
+                        {
+                            return RedirectToAction(nameof(Index));
+                        }
+
+                        foreach (string error in result.Errors)
+                        {
+                            ModelState.AddModelError("", error);
+                        }
+                    }
                 }
                 catch (DbUpdateConcurrencyException)
                 {
-                    if (!await ContactExists(id)) return NotFound();
+                    if (!await _contactReadService.ContactExistsAsync(id)) return NotFound();
                     else throw;
                 }
-                return RedirectToAction(nameof(Index));
             }
             return View(contactDto);
-        }
-
-        private async Task<ContactMethod?> GetPrimaryContactMethodAsync(Guid contactId, ContactMethodType type)
-        {
-            List<ContactMethod> methods = await _repository.ListAsync<ContactMethod>(c => c.EntityId == contactId && c.EntityType == EntityTypes.Person && c.Type == type);
-            return methods.FirstOrDefault(e => e.Label == ContactMethodLabels.Primary) ?? methods.FirstOrDefault();
-        }
-
-        private async Task<SignificantDate?> GetBirthdayAsync(Guid contactId)
-        {
-            List<SignificantDate> bdays = await _repository.ListAsync<SignificantDate>(d => d.EntityId == contactId && d.EntityType == EntityTypes.Person && d.Title == SignificantDateTitles.Birthday);
-            return bdays.FirstOrDefault();
-        }
-
-        private async Task UpdateOrAddContactMethod(Guid contactId, ContactMethodType type, string? newValue, ContactMethod? existingMethod)
-        {
-            if (!string.IsNullOrEmpty(newValue))
-            {
-                if (existingMethod != null)
-                {
-                    if (existingMethod.Value != newValue)
-                    {
-                        existingMethod.Value = newValue;
-                        await _repository.UpdateAsync(existingMethod);
-                    }
-                }
-                else
-                {
-                    await _repository.AddAsync(new ContactMethod
-                    {
-                        Id = Guid.NewGuid(),
-                        EntityId = contactId,
-                        EntityType = EntityTypes.Person,
-                        Type = type,
-                        Value = newValue,
-                        Label = ContactMethodLabels.Primary
-                    });
-                }
-            }
-            else if (existingMethod != null)
-            {
-                await _repository.DeleteAsync<ContactMethod>(existingMethod.Id);
-            }
-        }
-
-        private async Task UpdateOrAddBirthday(Guid contactId, DateTime? newDate, SignificantDate? existingDate)
-        {
-            if (newDate.HasValue)
-            {
-                if (existingDate != null)
-                {
-                    if (existingDate.Date != newDate.Value)
-                    {
-                        existingDate.Date = newDate.Value;
-                        await _repository.UpdateAsync(existingDate);
-                    }
-                }
-                else
-                {
-                    await _repository.AddAsync(new SignificantDate
-                    {
-                        Id = Guid.NewGuid(),
-                        EntityId = contactId,
-                        EntityType = EntityTypes.Person,
-                        Title = SignificantDateTitles.Birthday,
-                        Date = newDate.Value,
-                        Description = "Birthday",
-                        RemindMe = true,
-                        EventFrequency = TimeSpan.FromDays(365)
-                    });
-                }
-            }
-            else if (existingDate != null)
-            {
-                await _repository.DeleteAsync<SignificantDate>(existingDate.Id);
-            }
         }
 
         public async Task<IActionResult> Delete(Guid? id)
@@ -489,51 +188,8 @@ namespace Rvnx.CRM.Web.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(Guid id)
         {
-            List<Rvnx.CRM.Core.Models.User> userWithSelfContact = await _repository.ListAsync<Rvnx.CRM.Core.Models.User>(u => u.SelfContactId == id);
-            foreach (Rvnx.CRM.Core.Models.User user in userWithSelfContact)
-            {
-                user.SelfContactId = null;
-                await _repository.UpdateAsync(user);
-            }
-
-            await DeleteContactDependenciesAsync(id);
-            await _repository.DeleteAsync<Contact>(id);
-            await _repository.SaveChangesAsync();
-
+            await _contactManagementService.DeleteContactAsync(id);
             return RedirectToAction(nameof(Index));
-        }
-
-        private async Task DeleteContactDependenciesAsync(Guid contactId)
-        {
-            await DeleteRelatedEntitiesAsync<Note>(contactId);
-            await DeleteRelatedEntitiesAsync<Reminder>(contactId);
-            await DeleteRelatedEntitiesAsync<SignificantDate>(contactId);
-            await DeleteRelatedEntitiesAsync<Pet>(contactId);
-            await DeleteRelatedEntitiesAsync<ContactMethod>(contactId);
-            await DeleteRelatedEntitiesAsync<Fact>(contactId);
-            await DeleteRelatedEntitiesAsync<Address>(contactId);
-            await DeleteRelatedEntitiesAsync<Attachment>(contactId);
-            await DeleteRelatedEntitiesAsync<Relationship>(contactId);
-            await DeleteRelatedEntitiesAsync<PhoneNumber>(contactId);
-
-            List<Relationship> relatedTo = await _repository.ListAsync<Relationship>(r => r.RelatedEntityId == contactId && r.EntityType == EntityTypes.Person);
-            if (relatedTo.Any()) await _repository.DeleteRangeAsync(relatedTo);
-        }
-
-        private async Task<List<T>> GetRelatedEntitiesAsync<T>(Guid contactId) where T : PolymorphicEntity
-        {
-            return await _repository.ListAsync<T>(e => e.EntityId == contactId && e.EntityType == EntityTypes.Person);
-        }
-
-        private async Task DeleteRelatedEntitiesAsync<T>(Guid contactId) where T : PolymorphicEntity
-        {
-            List<T> entities = await GetRelatedEntitiesAsync<T>(contactId);
-            if (entities.Any()) await _repository.DeleteRangeAsync(entities);
-        }
-
-        private async Task<bool> ContactExists(Guid id)
-        {
-            return await _repository.ExistsAsync<Contact>(id);
         }
 
         public IActionResult Import()
@@ -560,48 +216,9 @@ namespace Rvnx.CRM.Web.Controllers
             try
             {
                 using Stream stream = file.OpenReadStream();
-                IEnumerable<Contact> importedContacts = _vCardService.ParseVCard(stream);
+                ContactImportResult result = await _contactImportService.ImportFromVCardAsync(stream);
 
-                int addedCount = 0;
-                int skippedCount = 0;
-
-                foreach (Contact contact in importedContacts)
-                {
-                    if (await IsDuplicateAsync(contact))
-                    {
-                        skippedCount++;
-                        continue;
-                    }
-
-                    // Note: ContactMethods and SignificantDates are [NotMapped] collections on the Contact (Person) entity.
-                    // EF Core's AddAsync(contact) will NOT recursively add these entities because they are not navigation properties mapped to the DB.
-                    // We must add them explicitly and link them to the Contact ID.
-                    await _repository.AddAsync(contact);
-                    await _repository.SaveChangesAsync(); // Save to generate ID and allow next duplicate checks to find it if file has dupes
-
-                    if (contact.ContactMethods != null)
-                    {
-                        foreach (ContactMethod cm in contact.ContactMethods)
-                        {
-                            cm.EntityId = contact.Id;
-                            await _repository.AddAsync(cm);
-                        }
-                    }
-
-                    if (contact.SignificantDates != null)
-                    {
-                        foreach (SignificantDate sd in contact.SignificantDates)
-                        {
-                            sd.EntityId = contact.Id;
-                            await _repository.AddAsync(sd);
-                        }
-                    }
-
-                    await _repository.SaveChangesAsync();
-                    addedCount++;
-                }
-
-                TempData["SuccessMessage"] = $"Import successful! Added: {addedCount}, Skipped: {skippedCount}";
+                TempData["SuccessMessage"] = $"Import successful! Added: {result.AddedCount}, Skipped: {result.SkippedCount}";
                 return RedirectToAction(nameof(Index));
             }
             catch (Exception ex)
@@ -612,24 +229,6 @@ namespace Rvnx.CRM.Web.Controllers
             }
         }
 
-        private async Task<bool> IsDuplicateAsync(Contact candidate)
-        {
-            if (await _repository.CountAsync<Contact>(c => c.FirstName == candidate.FirstName && c.LastName == candidate.LastName) > 0)
-            {
-                return true;
-            }
-
-            if (candidate.ContactMethods?.Any() == true)
-            {
-                List<string> valuesToCheck = candidate.ContactMethods.Select(m => m.Value).ToList();
-                return await _repository.CountAsync<ContactMethod>(cm =>
-                    cm.EntityType == EntityTypes.Person &&
-                    valuesToCheck.Contains(cm.Value)) > 0;
-            }
-
-            return false;
-        }
-
         private async Task<Rvnx.CRM.Core.Models.User?> GetUserAsync(Guid userId)
         {
             Rvnx.CRM.Core.Models.User? user = await _repository.GetByIdAsync<Rvnx.CRM.Core.Models.User>(userId);
@@ -638,15 +237,15 @@ namespace Rvnx.CRM.Web.Controllers
 
         public async Task<IActionResult> Export(Guid id)
         {
-            Contact? contact = await _repository.GetByIdAsync<Contact>(id);
-            if (contact == null) return NotFound();
-
-            contact.ContactMethods = await GetRelatedEntitiesAsync<ContactMethod>(id);
-            contact.SignificantDates = await GetRelatedEntitiesAsync<SignificantDate>(id);
-
-            byte[] vcfBytes = _vCardService.ExportVCard(contact);
-            string fileName = $"{contact.FirstName}_{contact.LastName}.vcf";
-            return File(vcfBytes, "text/vcard", fileName);
+            try
+            {
+                ContactExportResult result = await _contactExportService.ExportToVCardAsync(id);
+                return File(result.FileContent, result.ContentType, result.FileName);
+            }
+            catch (KeyNotFoundException)
+            {
+                return NotFound();
+            }
         }
     }
 }

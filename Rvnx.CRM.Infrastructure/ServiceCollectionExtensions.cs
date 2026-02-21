@@ -28,6 +28,21 @@ public static class ServiceCollectionExtensions
         // Add User Synchronization Service
         services.AddScoped<IUserSynchronizationService, UserSynchronizationService>();
 
+        // Add Contact Import Service
+        services.AddScoped<IContactImportService, ContactImportService>();
+
+        // Add Contact Export Service
+        services.AddScoped<IContactExportService, ContactExportService>();
+
+        // Add Contact Management Service
+        services.AddScoped<IContactManagementService, ContactManagementService>();
+
+        // Add Contact Read Service
+        services.AddScoped<IContactReadService, ContactReadService>();
+
+        // Add Self Contact Service
+        services.AddScoped<ISelfContactService, SelfContactService>();
+
         return services;
     }
 }

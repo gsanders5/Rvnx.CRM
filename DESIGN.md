@@ -46,7 +46,7 @@
 - **Generic Repository Pattern**: `IRepository` handles basic CRUD for `BaseEntity` types.
 - **Polymorphic Relationships**: Entities like `Note`, `Reminder`, `Attachment`, `Pet`, `ContactMethod` are linked to parent entities via `EntityId` + `EntityType` (discriminator), often managed manually in controllers.
 - **User Isolation**: `CRMDbContext` applies global query filters to restrict access to data based on the current user (`ICurrentUserService`).
-- **Fat Controllers**: (Deviation) Controllers currently handle significant orchestration logic, especially for managing related polymorphic entities.
+- **Service Delegation**: Controllers delegate business logic to specialized services (e.g., `IContactManagementService`, `IContactImportService`).
 
 ## Technology Stack
 
@@ -99,7 +99,14 @@ var notes = await _repository.ListAsync<Note>(n => n.EntityId == parentId && n.E
 ## Service Layer
 
 - **Core Services**: Pure logic implementations (e.g., `FileValidationService`).
-- **Infrastructure Services**: Implementations requiring external dependencies or DB access (e.g., `UserSynchronizationService`, `VCardService`).
+- **Infrastructure Services**: Implementations requiring external dependencies or DB access.
+    - `UserSynchronizationService`
+    - `VCardService`
+    - `ContactImportService`
+    - `ContactExportService`
+    - `ContactManagementService`
+    - `ContactReadService`
+    - `SelfContactService`
 - **Web Services**: Implementations requiring HTTP Context (e.g., `CurrentUserService`).
 
 ## Database Configuration
@@ -116,6 +123,4 @@ var notes = await _repository.ListAsync<Note>(n => n.EntityId == parentId && n.E
 
 ## Known Deviations from Pure Architecture
 1. **Core Dependency on EF Core**: Pragmatic choice to use Data Annotations (`[Key]`, `[Table]`) directly on domain models.
-2. **Controller Logic**: `ContactsController` contains complex logic for importing, exporting, and managing related entities that ideally belongs in a domain service.
-3. **Service Registration**: Split between `Program.cs` (Web) and `ServiceCollectionExtensions.cs` (Infrastructure).
-
+2. **Service Registration**: Split between `Program.cs` (Web) and `ServiceCollectionExtensions.cs` (Infrastructure).
