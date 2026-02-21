@@ -138,13 +138,18 @@
                             <li class="list-group-item d-flex justify-content-between align-items-center px-0 py-1 border-0 bg-transparent">
                                 <div class="d-none note-source">@fact.Value</div>
                                 <div class="note-render"></div>
-                                <div class="btn-group btn-group-sm opacity-50 hover-opacity-100">
-                                    <a asp-controller="Facts" asp-action="Edit" asp-route-id="@fact.Id" class="text-secondary me-2" title="Edit fact" aria-label="Edit fact">
+                                <div class="btn-group btn-group-sm">
+                                    <button type="button" class="btn btn-outline-secondary btn-copy" data-clipboard-text="@fact.Value" title="Copy to clipboard" aria-label="Copy fact to clipboard">
+                                        <i class="bi bi-clipboard"></i>
+                                    </button>
+                                    <a asp-controller="Facts" asp-action="Edit" asp-route-id="@fact.Id" class="btn btn-outline-secondary" title="Edit fact" aria-label="Edit fact">
                                         <i class="bi bi-pencil-square"></i>
                                     </a>
-                                    <a asp-controller="Facts" asp-action="Delete" asp-route-id="@fact.Id" class="text-danger" title="Delete fact" aria-label="Delete fact">
-                                        <i class="bi bi-trash"></i>
-                                    </a>
+                                    <form asp-controller="Facts" asp-action="Delete" asp-route-id="@fact.Id" method="post" class="d-inline" onsubmit="return confirm('Are you sure you want to delete this fact?');">
+                                        <button type="submit" class="btn btn-outline-danger" title="Delete fact" aria-label="Delete fact">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </form>
                                 </div>
                             </li>
                         }
