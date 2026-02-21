@@ -1,20 +1,18 @@
-@model Rvnx.CRM.Core.DTOs.Common.NoteFormDto
+@model Rvnx.CRM.Core.DTOs.Common.NoteFormViewModel
 
 @{
     ViewData["Title"] = "Add Note";
-    var entityId = ViewData["EntityId"] as Guid?;
-    var entityType = ViewData["EntityType"] as string;
-    var entityName = ViewData["EntityName"] as string;
 }
 
-<h1>Add Note for @entityName</h1>
+<h1>Add Note for @Model.EntityName</h1>
 
 <div class="row">
     <div class="col-md-6">
         <form asp-action="Create">
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-            <input type="hidden" asp-for="EntityId" value="@entityId"/>
-            <input type="hidden" asp-for="EntityType" value="@entityType"/>
+            <input type="hidden" asp-for="EntityId"/>
+            <input type="hidden" asp-for="EntityType"/>
+            <input type="hidden" asp-for="EntityName"/>
 
             <div class="form-floating mb-3">
                 <input asp-for="Title" class="form-control" id="Title" placeholder=" "/>
@@ -23,14 +21,14 @@
             </div>
 
             <div class="form-floating mb-3">
-                <textarea asp-for="Value" class="form-control" style="height: 150px" id="Value" placeholder=" "></textarea>
-                <label asp-for="Value">Note Content</label>
+                <textarea asp-for="Value" class="form-control" style="height: 100px" id="Value" placeholder=" "></textarea>
+                <label asp-for="Value">Value</label>
                 <span asp-validation-for="Value" class="text-danger"></span>
             </div>
 
-            <div class="mt-3">
-                <button type="submit" class="btn btn-primary"><i class="bi bi-save"></i> Save Note</button>
-                <a asp-controller="Contacts" asp-action="Details" asp-route-id="@entityId" class="btn btn-secondary"><i class="bi bi-x-lg"></i> Cancel</a>
+            <div class="form-group mt-3">
+                <input type="submit" value="Add Note" class="btn btn-primary"/>
+                <a asp-controller="Contacts" asp-action="Details" asp-route-id="@Model.EntityId" class="btn btn-secondary">Cancel</a>
             </div>
         </form>
     </div>

@@ -51,8 +51,6 @@ namespace Rvnx.CRM.Web.Controllers
                 Notes = pet.Notes
             };
 
-            ViewBag.EntityId = pet.EntityId;
-
             return View(dto);
         }
 

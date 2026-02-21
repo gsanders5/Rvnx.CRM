@@ -1,4 +1,4 @@
-@model IEnumerable<Rvnx.CRM.Core.DTOs.Contact.ContactDto>
+@model Rvnx.CRM.Core.DTOs.Contact.ContactIndexViewModel
 
 @{
     ViewData["Title"] = "Contacts";
@@ -20,15 +20,15 @@
     </div>
 </div>
 
-@if (ViewBag.SuccessMessage != null)
+@if (Model.SuccessMessage != null)
 {
     <div class="alert alert-success alert-dismissible fade show" role="alert">
-        @ViewBag.SuccessMessage
+        @Model.SuccessMessage
         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
     </div>
 }
 
-@if (Model.Any())
+@if (Model.Contacts.Any())
 {
     <div class="table-responsive">
         <table class="table table-striped table-hover align-middle">
@@ -43,7 +43,7 @@
             </tr>
             </thead>
             <tbody>
-            @foreach (var item in Model)
+            @foreach (var item in Model.Contacts)
             {
                 <tr>
                     <td>

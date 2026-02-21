@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Moq;
 using Rvnx.CRM.Core.Constants;
@@ -117,7 +117,7 @@ namespace Rvnx.CRM.Tests
             Assert.Equal("Whiskers", model.Name);
             Assert.Equal("Cat", model.Species);
             Assert.Equal("Siamese", model.Breed);
-            Assert.Equal(contactId, viewResult.ViewData["EntityId"]);
+            Assert.Equal(contactId, model.EntityId);
         }
 
         [Fact]

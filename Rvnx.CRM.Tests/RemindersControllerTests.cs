@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Moq;
 using Rvnx.CRM.Core.Constants;
@@ -51,7 +51,7 @@ namespace Rvnx.CRM.Tests
 
             // Assert
             ViewResult viewResult = Assert.IsType<ViewResult>(result);
-            ReminderDto? model = viewResult.Model as ReminderDto;
+            ReminderFormViewModel? model = viewResult.Model as ReminderFormViewModel;
             Assert.NotNull(model);
             Assert.Equal(contactId, model.EntityId);
             Assert.Equal(EntityTypes.Person, model.EntityType);
@@ -86,7 +86,7 @@ namespace Rvnx.CRM.Tests
             _context.Contacts.Add(new Contact { Id = contactId, FirstName = "Test" });
             await _context.SaveChangesAsync();
 
-            ReminderDto dto = new()
+            ReminderFormViewModel dto = new()
             {
                 EntityId = contactId,
                 EntityType = EntityTypes.Person,
@@ -136,7 +136,7 @@ namespace Rvnx.CRM.Tests
 
             // Assert
             ViewResult viewResult = Assert.IsType<ViewResult>(result);
-            ReminderDto? model = viewResult.Model as ReminderDto;
+            ReminderFormViewModel? model = viewResult.Model as ReminderFormViewModel;
             Assert.NotNull(model);
             Assert.Equal(reminderId, model.Id);
             Assert.Equal("Test Reminder", model.Title);
@@ -180,7 +180,7 @@ namespace Rvnx.CRM.Tests
             await _context.SaveChangesAsync();
             _context.ChangeTracker.Clear();
 
-            ReminderDto dto = new()
+            ReminderFormViewModel dto = new()
             {
                 Id = reminderId,
                 EntityId = contactId,
@@ -212,7 +212,7 @@ namespace Rvnx.CRM.Tests
         public async Task Edit_Post_WhenIdMismatch_ShouldReturnNotFound()
         {
             // Arrange
-            ReminderDto dto = new()
+            ReminderFormViewModel dto = new()
             {
                 Id = Guid.NewGuid(),
                 Title = "Test"
@@ -247,7 +247,7 @@ namespace Rvnx.CRM.Tests
 
             // Assert
             ViewResult viewResult = Assert.IsType<ViewResult>(result);
-            ReminderDto? model = viewResult.Model as ReminderDto;
+            ReminderDeleteViewModel? model = viewResult.Model as ReminderDeleteViewModel;
             Assert.NotNull(model);
             Assert.Equal("To Delete", model.Title);
         }
@@ -300,7 +300,7 @@ namespace Rvnx.CRM.Tests
             _context.Contacts.Add(new Contact { Id = contactId, FirstName = "Test" });
             await _context.SaveChangesAsync();
 
-            ReminderDto dto = new()
+            ReminderFormViewModel dto = new()
             {
                 EntityId = contactId,
                 EntityType = EntityTypes.Person,

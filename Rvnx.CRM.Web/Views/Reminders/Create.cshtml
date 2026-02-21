@@ -1,23 +1,21 @@
 @using Rvnx.CRM.Core.Constants
-@model Rvnx.CRM.Core.DTOs.Common.ReminderDto
+@model Rvnx.CRM.Core.DTOs.Common.ReminderFormViewModel
 
 @{
     ViewData["Title"] = "Add Reminder";
-    var entityId = ViewData["EntityId"] as Guid?;
-    var entityType = ViewData["EntityType"] as string;
-    var entityName = ViewData["EntityName"] as string;
 }
 
 <div class="row justify-content-center">
     <div class="col-md-8 col-lg-7">
         <form asp-action="Create" id="eventForm" onsubmit="prepareFrequency()">
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-            <input type="hidden" asp-for="EntityId" value="@entityId"/>
-            <input type="hidden" asp-for="EntityType" value="@entityType"/>
+            <input type="hidden" asp-for="EntityId"/>
+            <input type="hidden" asp-for="EntityType"/>
+            <input type="hidden" asp-for="EntityName"/>
 
             <div class="card border-0 shadow-sm rounded-3">
                 <div class="card-header bg-body-tertiary border-bottom p-3 rounded-top-3">
-                    <h4 class="mb-0"><i class="bi bi-calendar-plus me-2 text-primary"></i>Add Reminder for @entityName</h4>
+                    <h4 class="mb-0"><i class="bi bi-calendar-plus me-2 text-primary"></i>Add Reminder for @Model.EntityName</h4>
                 </div>
 
                 <div class="card-body p-4">
@@ -50,9 +48,9 @@
 
                     <div class="d-grid gap-2 mt-4">
                         <input type="submit" value="Save Reminder" class="btn btn-primary btn-lg"/>
-                        @if (entityType == EntityTypes.Person)
+                        @if (Model.EntityType == EntityTypes.Person)
                         {
-                            <a asp-controller="Contacts" asp-action="Details" asp-route-id="@entityId" class="btn btn-secondary">Cancel</a>
+                            <a asp-controller="Contacts" asp-action="Details" asp-route-id="@Model.EntityId" class="btn btn-secondary">Cancel</a>
                         }
                         else
                         {

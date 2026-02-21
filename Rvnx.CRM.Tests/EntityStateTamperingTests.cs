@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Moq;
 using Rvnx.CRM.Core.Constants;
@@ -63,7 +63,7 @@ namespace Rvnx.CRM.Tests
             context.ChangeTracker.Clear();
 
             // Attacker tries to change EntityId via form submission
-            NoteFormDto tamperAttempt = new()
+            NoteFormViewModel tamperAttempt = new()
             {
                 Id = noteId,
                 EntityId = attackerContactId, // Attempting to move note to different contact
@@ -120,7 +120,7 @@ namespace Rvnx.CRM.Tests
             context.ChangeTracker.Clear();
 
             // 4. Attacker constructs a payload trying to overwrite the audit fields
-            NoteFormDto tamperAttempt = new()
+            NoteFormViewModel tamperAttempt = new()
             {
                 Id = noteId,
                 Title = "Updated",
@@ -265,7 +265,7 @@ namespace Rvnx.CRM.Tests
             NotesController controller = new(repository);
 
             Guid nonExistentId = Guid.NewGuid();
-            NoteFormDto note = new()
+            NoteFormViewModel note = new()
             {
                 Id = nonExistentId,
                 Title = "Test",

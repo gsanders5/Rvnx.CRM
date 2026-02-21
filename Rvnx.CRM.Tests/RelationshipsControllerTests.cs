@@ -51,16 +51,17 @@ namespace Rvnx.CRM.Tests
             // Use a real static ID from Service
             Guid typeId = Guid.Parse("7c1f8d22-1b6a-4c28-9c1e-3f5a2b8e9d1a"); // Parent
 
-            RelationshipFormDto rel = new()
+            string selection = $"{typeId}_Fwd";
+            RelationshipCreateViewModel viewModel = new()
             {
                 EntityId = p1Id,
                 RelatedEntityId = p2Id,
-                EntityType = EntityTypes.Person
+                EntityType = EntityTypes.Person,
+                SelectedRelationshipType = selection
             };
-            string selection = $"{typeId}_Fwd";
 
             // Act
-            IActionResult result = await _controller.Create(rel, selection);
+            IActionResult result = await _controller.Create(viewModel);
 
             // Assert
             RedirectToActionResult redirectResult = Assert.IsType<RedirectToActionResult>(result);
@@ -88,16 +89,17 @@ namespace Rvnx.CRM.Tests
             // Use a real static ID from Service
             Guid typeId = Guid.Parse("7c1f8d22-1b6a-4c28-9c1e-3f5a2b8e9d1a"); // Parent
 
-            RelationshipFormDto rel = new()
+            string selection = $"{typeId}_Rev";
+            RelationshipCreateViewModel viewModel = new()
             {
                 EntityId = p1Id,
                 RelatedEntityId = p2Id,
-                EntityType = EntityTypes.Person
+                EntityType = EntityTypes.Person,
+                SelectedRelationshipType = selection
             };
-            string selection = $"{typeId}_Rev";
 
             // Act
-            IActionResult result = await _controller.Create(rel, selection);
+            IActionResult result = await _controller.Create(viewModel);
 
             // Assert
             // Should redirect back to P1 (original EntityId)
@@ -149,13 +151,15 @@ namespace Rvnx.CRM.Tests
 
             // Assert
             ViewResult viewResult = Assert.IsType<ViewResult>(result);
-            List<SelectListItem>? options = viewResult.ViewData["RelationshipTypeSelection"] as List<SelectListItem>;
+            RelationshipCreateViewModel viewModel = Assert.IsType<RelationshipCreateViewModel>(viewResult.Model);
+
+            var options = viewModel.RelationshipTypeOptions;
             Assert.NotNull(options);
 
             // Check that options from static service are present
             // Spouse
             Guid spouseId = Guid.Parse("b2e9a5c8-7f4d-4a1b-8c6e-5f9d3a0e2b4c");
-            Assert.Contains(options, o => o.Value == $"{spouseId}_Fwd" && o.Text == "is Spouse of" && o.Group?.Name == "Family");
+            Assert.Contains(options, o => o.Value == $"{spouseId}_Fwd" && o.Text == "is Spouse of" && o.Group == "Family");
 
             // Father (Parent/Child is defined as Parent/Child in service, not Father/Child explicitly with that ID, but checking logic)
             // Let's check "Parent"
@@ -170,34 +174,38 @@ namespace Rvnx.CRM.Tests
             // Arrange
             Guid p1Id = Guid.NewGuid();
             _context.Contacts.Add(new Contact { Id = p1Id, FirstName = "P1", LastName = "User" });
+            // Add another contact so RelatedEntityOptions is not empty
+            _context.Contacts.Add(new Contact { Id = Guid.NewGuid(), FirstName = "P2" });
             await _context.SaveChangesAsync();
 
-            RelationshipFormDto rel = new()
+            RelationshipCreateViewModel viewModel = new()
             {
                 EntityId = p1Id,
                 RelatedEntityId = Guid.NewGuid(),
-                EntityType = EntityTypes.Person
+                EntityType = EntityTypes.Person,
+                SelectedRelationshipType = string.Empty
             };
 
             // Act - Submit with empty selection
-            IActionResult result = await _controller.Create(rel, string.Empty);
+            IActionResult result = await _controller.Create(viewModel);
 
             // Assert
             ViewResult viewResult = Assert.IsType<ViewResult>(result);
-            Assert.Equal(rel, viewResult.Model);
+            RelationshipCreateViewModel resultViewModel = Assert.IsType<RelationshipCreateViewModel>(viewResult.Model);
+
             Assert.False(_controller.ModelState.IsValid);
-            Assert.True(_controller.ModelState.ContainsKey("RelationshipTypeSelection"));
+            Assert.True(_controller.ModelState.ContainsKey("SelectedRelationshipType"));
 
-            // Verifying that ViewData options are repopulated so the View doesn't crash on render
-            Assert.NotNull(viewResult.ViewData["RelatedEntityId"]);
-            Assert.IsType<SelectList>(viewResult.ViewData["RelatedEntityId"]);
+            // Verifying that options are repopulated so the View doesn't crash on render
+            Assert.NotNull(resultViewModel.RelatedEntityOptions);
+            Assert.NotEmpty(resultViewModel.RelatedEntityOptions);
 
-            Assert.NotNull(viewResult.ViewData["RelationshipTypeSelection"]);
-            Assert.IsType<List<SelectListItem>>(viewResult.ViewData["RelationshipTypeSelection"]);
+            Assert.NotNull(resultViewModel.RelationshipTypeOptions);
+            Assert.NotEmpty(resultViewModel.RelationshipTypeOptions);
 
-            Assert.Equal(p1Id, viewResult.ViewData["EntityId"]);
-            Assert.Equal(EntityTypes.Person, viewResult.ViewData["EntityType"]);
-            Assert.Equal("P1 User", viewResult.ViewData["EntityName"]);
+            Assert.Equal(p1Id, resultViewModel.EntityId);
+            Assert.Equal(EntityTypes.Person, resultViewModel.EntityType);
+            Assert.Equal("P1 User", resultViewModel.EntityName);
         }
     }
 }

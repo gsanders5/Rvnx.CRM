@@ -49,13 +49,26 @@ namespace Rvnx.CRM.Web.Controllers
             ContactFormDto? dto = await _selfContactService.GetSelfContactFormAsync(HttpContext.User);
             if (dto == null) return RedirectToAction("Index");
 
-            ViewBag.IsSelfCreate = true;
-            return View("Create", dto);
+            var viewModel = new ContactCreateViewModel
+            {
+                FirstName = dto.FirstName,
+                LastName = dto.LastName,
+                Nickname = dto.Nickname,
+                Email = dto.Email,
+                Phone = dto.Phone,
+                JobTitle = dto.JobTitle,
+                Company = dto.Company,
+                Birthday = dto.Birthday,
+                IsHidden = dto.IsHidden,
+                IsSelfCreate = true
+            };
+
+            return View("Create", viewModel);
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> CreateSelf([Bind("FirstName,LastName,Nickname,Email,Phone,JobTitle,Company,Birthday")] ContactFormDto contactDto)
+        public async Task<IActionResult> CreateSelf([Bind("FirstName,LastName,Nickname,Email,Phone,JobTitle,Company,Birthday")] ContactCreateViewModel contactDto)
         {
             if (!_currentUserService.IsAuthenticated) return Unauthorized();
 
@@ -72,7 +85,7 @@ namespace Rvnx.CRM.Web.Controllers
                 }
             }
 
-            ViewBag.IsSelfCreate = true;
+            contactDto.IsSelfCreate = true;
             return View("Create", contactDto);
         }
 
@@ -80,12 +93,13 @@ namespace Rvnx.CRM.Web.Controllers
         {
             List<ContactDto> contactDtos = await _contactReadService.GetIndexDataAsync(showHidden);
 
-            if (TempData["SuccessMessage"] != null)
+            var viewModel = new ContactIndexViewModel
             {
-                ViewBag.SuccessMessage = TempData["SuccessMessage"];
-            }
+                Contacts = contactDtos,
+                SuccessMessage = TempData["SuccessMessage"] as string
+            };
 
-            return View(contactDtos);
+            return View(viewModel);
         }
 
         public async Task<IActionResult> Details(Guid? id)
@@ -98,12 +112,12 @@ namespace Rvnx.CRM.Web.Controllers
 
         public IActionResult Create()
         {
-            return View(new ContactFormDto());
+            return View(new ContactCreateViewModel { IsSelfCreate = false });
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("FirstName,LastName,Nickname,Email,Phone,JobTitle,Company,Birthday,IsHidden")] ContactFormDto contactDto)
+        public async Task<IActionResult> Create([Bind("FirstName,LastName,Nickname,Email,Phone,JobTitle,Company,Birthday,IsHidden")] ContactCreateViewModel contactDto)
         {
             if (ModelState.IsValid)
             {
@@ -117,6 +131,8 @@ namespace Rvnx.CRM.Web.Controllers
                     ModelState.AddModelError("", error);
                 }
             }
+
+            contactDto.IsSelfCreate = false;
             return View(contactDto);
         }
 
