@@ -7,7 +7,7 @@ using Rvnx.CRM.Core.Models.Base;
 using Rvnx.CRM.Core.Models.Contact;
 using Rvnx.CRM.Core.Models.Dates;
 
-namespace Rvnx.CRM.Infrastructure.Services;
+namespace Rvnx.CRM.Core.Services;
 
 public class ContactManagementService(IRepository repository, IFileValidationService fileValidationService) : IContactManagementService
 {

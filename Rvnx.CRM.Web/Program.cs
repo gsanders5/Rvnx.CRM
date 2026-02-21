@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
+using Rvnx.CRM.Core;
 using Rvnx.CRM.Core.Interfaces;
 using Rvnx.CRM.Core.Services;
 using Rvnx.CRM.Infrastructure;
@@ -72,6 +73,7 @@ namespace Rvnx.CRM.Web
 
             builder.Services.AddControllersWithViews();
 
+            builder.Services.AddCoreServices();
             builder.Services.AddInfrastructure(builder.Configuration);
 
             WebApplication app = builder.Build();
