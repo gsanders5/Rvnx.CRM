@@ -104,15 +104,18 @@ var notes = await _repository.ListAsync<Note>(n => n.EntityId == parentId && n.E
 
 ## Service Layer
 
-- **Core Services**: Pure logic implementations (e.g., `FileValidationService`).
+- **Core Services**: Pure logic implementations and domain orchestrations.
+  - `FileValidationService`
+  - `ContactManagementService`
+  - `ContactReadService`
+  - `SelfContactService`
+  - `DashboardService`
+  - `RelationshipService`
 - **Infrastructure Services**: Implementations requiring external dependencies or DB access.
   - `UserSynchronizationService`
   - `VCardService`
   - `ContactImportService`
   - `ContactExportService`
-  - `ContactManagementService`
-  - `ContactReadService`
-  - `SelfContactService`
 - **Web Services**: Implementations requiring HTTP Context (e.g., `CurrentUserService`).
 
 ## Database Configuration
@@ -132,4 +135,4 @@ var notes = await _repository.ListAsync<Note>(n => n.EntityId == parentId && n.E
 ## Known Deviations from Pure Architecture
 
 1. **Core Dependency on EF Core**: Pragmatic choice to use Data Annotations (`[Key]`, `[Table]`) directly on domain models.
-2. **Service Registration**: Split between `Program.cs` (Web) and `ServiceCollectionExtensions.cs` (Infrastructure).
+2. **Service Registration**: Now utilizing `ServiceCollectionExtensions` across `Core` and `Infrastructure` layers to let each layer manage its own registrations.
