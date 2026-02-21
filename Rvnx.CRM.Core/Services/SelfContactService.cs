@@ -7,7 +7,7 @@ using Rvnx.CRM.Core.Models.Contact;
 using Rvnx.CRM.Core.Models.Dates;
 using System.Security.Claims;
 
-namespace Rvnx.CRM.Infrastructure.Services;
+namespace Rvnx.CRM.Core.Services;
 
 public class SelfContactService(IRepository repository, ICurrentUserService currentUserService, IUserSynchronizationService userSynchronizationService) : ISelfContactService
 {
