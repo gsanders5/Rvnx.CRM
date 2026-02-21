@@ -34,8 +34,8 @@ namespace Rvnx.CRM.Tests
             Repository repo = new(context);
 
             Mock<IFileValidationService> fileServiceMock = new();
-            fileServiceMock.Setup(s => s.IsImageExtension(It.IsAny<string>())).Returns(true);
-            fileServiceMock.Setup(s => s.IsValidImageSignature(It.IsAny<byte[]>(), It.IsAny<string>())).Returns(false);
+            // IsValidFileSignature returns false -> Fail
+            fileServiceMock.Setup(s => s.IsValidFileSignature(It.IsAny<byte[]>(), It.IsAny<string>())).Returns(false);
 
             AttachmentsController controller = new(repo, fileServiceMock.Object, new EntityService(repo));
             controller.ControllerContext = new ControllerContext
@@ -85,8 +85,8 @@ namespace Rvnx.CRM.Tests
             Repository repo = new(context);
 
             Mock<IFileValidationService> fileServiceMock = new();
-            fileServiceMock.Setup(s => s.IsImageExtension(It.IsAny<string>())).Returns(true);
-            fileServiceMock.Setup(s => s.IsValidImageSignature(It.IsAny<byte[]>(), It.IsAny<string>())).Returns(true);
+            // IsValidFileSignature returns true -> Success
+            fileServiceMock.Setup(s => s.IsValidFileSignature(It.IsAny<byte[]>(), It.IsAny<string>())).Returns(true);
 
             AttachmentsController controller = new(repo, fileServiceMock.Object, new EntityService(repo));
             controller.ControllerContext = new ControllerContext
@@ -129,6 +129,56 @@ namespace Rvnx.CRM.Tests
 
             // Verify it was added to DB
             Assert.Single(context.Attachments);
+        }
+
+        [Fact]
+        public async Task Upload_ShouldReject_WhenExtensionIsPdfButContentIsNot()
+        {
+            // Arrange
+            using CRMDbContext context = GetInMemoryDbContext();
+            Repository repo = new(context);
+
+            Mock<IFileValidationService> fileServiceMock = new();
+            // IsValidFileSignature returns false for bad PDF
+            fileServiceMock.Setup(s => s.IsValidFileSignature(It.IsAny<byte[]>(), ".pdf")).Returns(false);
+
+            AttachmentsController controller = new(repo, fileServiceMock.Object, new EntityService(repo));
+            controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext()
+            };
+            controller.Request.Headers["Referer"] = "http://localhost/Contacts";
+
+            Mock<IFormFile> fileMock = new();
+            string content = "Not a PDF";
+            MemoryStream ms = new();
+            StreamWriter writer = new(ms);
+            writer.Write(content);
+            writer.Flush();
+            ms.Position = 0;
+
+            fileMock.Setup(f => f.OpenReadStream()).Returns(ms);
+            fileMock.Setup(f => f.CopyToAsync(It.IsAny<Stream>(), It.IsAny<CancellationToken>()))
+                .Callback<Stream, CancellationToken>((stream, token) =>
+                {
+                    ms.Position = 0;
+                    ms.CopyTo(stream);
+                })
+                .Returns(Task.CompletedTask);
+            fileMock.Setup(f => f.FileName).Returns("fake.pdf");
+            fileMock.Setup(f => f.Length).Returns(ms.Length);
+            fileMock.Setup(f => f.ContentType).Returns("application/pdf");
+
+            Contact contact = new() { Id = Guid.NewGuid(), FirstName = "Test", LastName = "User" };
+            context.Contacts.Add(contact);
+            context.SaveChanges();
+
+            // Act
+            IActionResult result = await controller.Upload(contact.Id, "Person", fileMock.Object);
+
+            // Assert
+            BadRequestObjectResult badRequest = Assert.IsType<BadRequestObjectResult>(result);
+            Assert.Equal("Invalid file signature.", badRequest.Value);
         }
     }
 }
