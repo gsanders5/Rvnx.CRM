@@ -16,7 +16,6 @@ namespace Rvnx.CRM.Tests.Controllers
         public async Task Details_ShouldReturnViewWithMappedRelationships()
         {
             // Arrange
-            Mock<IRepository> repositoryMock = new();
             Mock<ILogger<ContactsController>> loggerMock = new();
             Mock<ICurrentUserService> userMock = new();
             Mock<IUserSynchronizationService> syncMock = new();
@@ -33,7 +32,7 @@ namespace Rvnx.CRM.Tests.Controllers
 
             readServiceMock.Setup(s => s.GetContactDetailsAsync(contactId)).ReturnsAsync(detailDto);
 
-            ContactsController controller = new(repositoryMock.Object, loggerMock.Object, userMock.Object, Mock.Of<IContactImportService>(), Mock.Of<IContactExportService>(), Mock.Of<IContactManagementService>(), readServiceMock.Object, Mock.Of<ISelfContactService>());
+            ContactsController controller = new(loggerMock.Object, userMock.Object, Mock.Of<IContactImportService>(), Mock.Of<IContactExportService>(), Mock.Of<IContactManagementService>(), readServiceMock.Object, Mock.Of<ISelfContactService>());
             controller.ControllerContext = new ControllerContext { HttpContext = new DefaultHttpContext() };
 
             // Act

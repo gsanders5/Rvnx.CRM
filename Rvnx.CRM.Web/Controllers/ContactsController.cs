@@ -7,9 +7,8 @@ using Rvnx.CRM.Web.Controllers.Base;
 
 namespace Rvnx.CRM.Web.Controllers
 {
-    public class ContactsController(IRepository repository, ILogger<ContactsController> logger, ICurrentUserService currentUserService, IContactImportService contactImportService, IContactExportService contactExportService, IContactManagementService contactManagementService, IContactReadService contactReadService, ISelfContactService selfContactService) : AuthorizedController
+    public class ContactsController(ILogger<ContactsController> logger, ICurrentUserService currentUserService, IContactImportService contactImportService, IContactExportService contactExportService, IContactManagementService contactManagementService, IContactReadService contactReadService, ISelfContactService selfContactService) : AuthorizedController
     {
-        private readonly IRepository _repository = repository;
         private readonly ILogger<ContactsController> _logger = logger;
         private readonly ICurrentUserService _currentUserService = currentUserService;
         private readonly IContactImportService _contactImportService = contactImportService;
@@ -186,8 +185,8 @@ namespace Rvnx.CRM.Web.Controllers
         public async Task<IActionResult> Delete(Guid? id)
         {
             if (id == null) return NotFound();
-            Contact? contact = await _repository.GetByIdAsync<Contact>(id.Value);
-            return contact == null ? NotFound() : View(contact);
+            ContactDetailDto? contactDto = await _contactReadService.GetContactDetailsAsync(id.Value);
+            return contactDto == null ? NotFound() : View(contactDto);
         }
 
         [HttpPost, ActionName("Delete")]

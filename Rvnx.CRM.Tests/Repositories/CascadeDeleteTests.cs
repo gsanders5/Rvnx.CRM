@@ -16,14 +16,13 @@ namespace Rvnx.CRM.Tests.Repositories
         public async Task DeleteContact_ShouldDelete_Dependencies()
         {
             // Arrange
-            Mock<IRepository> repositoryMock = new();
             Mock<ILogger<ContactsController>> logger = new();
             Mock<ICurrentUserService> userMock = new();
             Mock<IContactManagementService> managementMock = new();
 
             managementMock.Setup(m => m.DeleteContactAsync(It.IsAny<Guid>())).Returns(Task.CompletedTask);
 
-            ContactsController controller = new(repositoryMock.Object, logger.Object, userMock.Object, new Mock<IContactImportService>().Object, new Mock<IContactExportService>().Object, managementMock.Object, new Mock<IContactReadService>().Object, new Mock<ISelfContactService>().Object);
+            ContactsController controller = new(logger.Object, userMock.Object, new Mock<IContactImportService>().Object, new Mock<IContactExportService>().Object, managementMock.Object, new Mock<IContactReadService>().Object, new Mock<ISelfContactService>().Object);
             controller.ControllerContext = new ControllerContext { HttpContext = new DefaultHttpContext() };
 
             Guid contactId = Guid.NewGuid();
@@ -39,14 +38,13 @@ namespace Rvnx.CRM.Tests.Repositories
         public async Task DeleteContact_ShouldDelete_Relationships()
         {
             // Arrange
-            Mock<IRepository> repositoryMock = new();
             Mock<ILogger<ContactsController>> logger = new();
             Mock<ICurrentUserService> userMock = new();
             Mock<IContactManagementService> managementMock = new();
 
             managementMock.Setup(m => m.DeleteContactAsync(It.IsAny<Guid>())).Returns(Task.CompletedTask);
 
-            ContactsController controller = new(repositoryMock.Object, logger.Object, userMock.Object, new Mock<IContactImportService>().Object, new Mock<IContactExportService>().Object, managementMock.Object, new Mock<IContactReadService>().Object, new Mock<ISelfContactService>().Object);
+            ContactsController controller = new(logger.Object, userMock.Object, new Mock<IContactImportService>().Object, new Mock<IContactExportService>().Object, managementMock.Object, new Mock<IContactReadService>().Object, new Mock<ISelfContactService>().Object);
             controller.ControllerContext = new ControllerContext { HttpContext = new DefaultHttpContext() };
 
             Guid contactId = Guid.NewGuid();
