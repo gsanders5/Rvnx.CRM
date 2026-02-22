@@ -16,7 +16,6 @@ namespace Rvnx.CRM.Tests.Services
 
         private ContactsController CreateController(Mock<ISelfContactService> selfContactServiceMock)
         {
-            Mock<IRepository> repositoryMock = new();
             Mock<ILogger<ContactsController>> loggerMock = new();
             Mock<ICurrentUserService> userMock = new();
             userMock.Setup(u => u.UserId).Returns(DefaultTestUserId);
@@ -26,7 +25,7 @@ namespace Rvnx.CRM.Tests.Services
             Mock<IUserSynchronizationService> syncMock = new();
             syncMock.Setup(s => s.SyncUserAsync(It.IsAny<System.Security.Claims.ClaimsPrincipal>())).Returns(Task.CompletedTask);
 
-            ContactsController controller = new(repositoryMock.Object, loggerMock.Object, userMock.Object, new Mock<IContactImportService>().Object, new Mock<IContactExportService>().Object, new Mock<IContactManagementService>().Object, new Mock<IContactReadService>().Object, selfContactServiceMock.Object);
+            ContactsController controller = new(loggerMock.Object, userMock.Object, new Mock<IContactImportService>().Object, new Mock<IContactExportService>().Object, new Mock<IContactManagementService>().Object, new Mock<IContactReadService>().Object, selfContactServiceMock.Object);
 
             controller.ControllerContext = new ControllerContext
             {

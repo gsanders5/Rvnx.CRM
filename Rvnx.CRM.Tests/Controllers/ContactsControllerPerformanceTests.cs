@@ -16,7 +16,6 @@ namespace Rvnx.CRM.Tests.Controllers
         public async Task Index_DelegatesToService()
         {
             // Arrange
-            Mock<IRepository> repositoryMock = new();
             Mock<ILogger<ContactsController>> loggerMock = new();
             Mock<ICurrentUserService> userMock = new();
             Mock<IUserSynchronizationService> syncMock = new();
@@ -29,7 +28,7 @@ namespace Rvnx.CRM.Tests.Controllers
 
             readServiceMock.Setup(s => s.GetIndexDataAsync(It.IsAny<bool>())).ReturnsAsync(contactDtos);
 
-            ContactsController controller = new(repositoryMock.Object, loggerMock.Object, userMock.Object, Mock.Of<IContactImportService>(), Mock.Of<IContactExportService>(), Mock.Of<IContactManagementService>(), readServiceMock.Object, Mock.Of<ISelfContactService>());
+            ContactsController controller = new(loggerMock.Object, userMock.Object, Mock.Of<IContactImportService>(), Mock.Of<IContactExportService>(), Mock.Of<IContactManagementService>(), readServiceMock.Object, Mock.Of<ISelfContactService>());
             controller.ControllerContext = new ControllerContext { HttpContext = new DefaultHttpContext() };
             controller.TempData = new TempDataDictionary(controller.HttpContext, Mock.Of<ITempDataProvider>());
 

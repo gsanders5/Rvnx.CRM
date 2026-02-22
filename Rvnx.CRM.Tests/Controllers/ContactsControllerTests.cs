@@ -20,7 +20,6 @@ namespace Rvnx.CRM.Tests.Controllers
         private readonly Mock<IContactManagementService> _contactManagementServiceMock = new();
         private readonly Mock<IContactReadService> _contactReadServiceMock = new();
         private readonly Mock<ISelfContactService> _selfContactServiceMock = new();
-        private readonly Mock<IRepository> _repositoryMock = new();
         private readonly ContactsController _controller;
 
         public ContactsControllerTests()
@@ -32,7 +31,6 @@ namespace Rvnx.CRM.Tests.Controllers
             _syncMock.Setup(s => s.SyncUserAsync(It.IsAny<System.Security.Claims.ClaimsPrincipal>())).Returns(Task.CompletedTask);
 
             _controller = new ContactsController(
-                _repositoryMock.Object,
                 _loggerMock.Object,
                 _userMock.Object,
                 _contactImportServiceMock.Object,
@@ -167,6 +165,24 @@ namespace Rvnx.CRM.Tests.Controllers
 
             // Verify message
             Assert.Equal("Import successful! Added: 1, Skipped: 1", _controller.TempData["SuccessMessage"]);
+        }
+
+        [Fact]
+        public async Task Delete_ReturnsViewWithContactDetailDto()
+        {
+            // Arrange
+            Guid contactId = Guid.NewGuid();
+            ContactDetailDto contactDto = new() { Id = contactId, FirstName = "John", LastName = "Doe" };
+            _contactReadServiceMock.Setup(s => s.GetContactDetailsAsync(contactId)).ReturnsAsync(contactDto);
+
+            // Act
+            IActionResult result = await _controller.Delete(contactId);
+
+            // Assert
+            ViewResult viewResult = Assert.IsType<ViewResult>(result);
+            ContactDetailDto model = Assert.IsAssignableFrom<ContactDetailDto>(viewResult.Model);
+            Assert.Equal(contactId, model.Id);
+            Assert.Equal("John", model.FirstName);
         }
     }
 }
