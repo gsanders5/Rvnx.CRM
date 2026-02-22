@@ -58,61 +58,74 @@ public class ContactManagementService(IRepository repository, IFileValidationSer
         SignificantDate? existingBday = await GetBirthdayAsync(id);
         await UpdateOrAddBirthday(id, contactDto.Birthday, existingBday);
 
-        if (imageStream != null && !string.IsNullOrEmpty(fileName) && !string.IsNullOrEmpty(contentType))
+        ContactOperationResult imageResult = await HandleProfileImageUpdateAsync(id, imageStream, fileName, contentType);
+        if (!imageResult.Success)
         {
-            string extension = Path.GetExtension(fileName).ToLowerInvariant();
-            if (!_fileValidationService.IsImageExtension(extension) || !contentType.StartsWith("image/"))
-            {
-                return ContactOperationResult.Failure("Only image files (jpg, jpeg, png, gif) are allowed.");
-            }
-
-            using MemoryStream ms = new();
-            await imageStream.CopyToAsync(ms);
-            byte[] fileBytes = ms.ToArray();
-
-            if (!_fileValidationService.IsValidImageSignature(fileBytes, extension))
-            {
-                return ContactOperationResult.Failure("Invalid file signature.");
-            }
-
-            List<Attachment> existingAttachments = await _repository.ListAsync<Attachment>(a => a.ContactId == id && a.AttachmentType == AttachmentTypes.ProfileImage);
-            Attachment? existingAttachment = existingAttachments.FirstOrDefault();
-
-            if (existingAttachment != null)
-            {
-                existingAttachment = await _repository.GetByIdWithIncludesAsync<Attachment>(existingAttachment.Id, "AttachmentContent");
-                if (existingAttachment != null)
-                {
-                    existingAttachment.AttachmentContent ??= new AttachmentContent { AttachmentId = existingAttachment.Id };
-                    existingAttachment.AttachmentContent.Content = fileBytes;
-
-                    existingAttachment.ContentType = contentType;
-                    existingAttachment.FileName = fileName;
-                    await _repository.UpdateAsync(existingAttachment);
-                }
-            }
-            else
-            {
-                Attachment attachment = new()
-                {
-                    Id = Guid.NewGuid(),
-                    ContactId = id,
-                    AttachmentType = AttachmentTypes.ProfileImage,
-                    ContentType = contentType,
-                    FileName = fileName,
-                    AttachmentContent = new AttachmentContent
-                    {
-                        Content = fileBytes
-                    }
-                };
-                await _repository.AddAsync(attachment);
-            }
+            return imageResult;
         }
 
         await _repository.UpdateAsync(existingContact);
         await _repository.SaveChangesAsync();
 
         return ContactOperationResult.Ok(id);
+    }
+
+    private async Task<ContactOperationResult> HandleProfileImageUpdateAsync(Guid contactId, Stream? imageStream, string? fileName, string? contentType)
+    {
+        if (imageStream == null || string.IsNullOrEmpty(fileName) || string.IsNullOrEmpty(contentType))
+        {
+            return ContactOperationResult.Ok(contactId);
+        }
+
+        string extension = Path.GetExtension(fileName).ToLowerInvariant();
+        if (!_fileValidationService.IsImageExtension(extension) || !contentType.StartsWith("image/"))
+        {
+            return ContactOperationResult.Failure("Only image files (jpg, jpeg, png, gif) are allowed.");
+        }
+
+        using MemoryStream ms = new();
+        await imageStream.CopyToAsync(ms);
+        byte[] fileBytes = ms.ToArray();
+
+        if (!_fileValidationService.IsValidImageSignature(fileBytes, extension))
+        {
+            return ContactOperationResult.Failure("Invalid file signature.");
+        }
+
+        List<Attachment> existingAttachments = await _repository.ListAsync<Attachment>(a => a.ContactId == contactId && a.AttachmentType == AttachmentTypes.ProfileImage);
+        Attachment? existingAttachment = existingAttachments.FirstOrDefault();
+
+        if (existingAttachment != null)
+        {
+            existingAttachment = await _repository.GetByIdWithIncludesAsync<Attachment>(existingAttachment.Id, "AttachmentContent");
+            if (existingAttachment != null)
+            {
+                existingAttachment.AttachmentContent ??= new AttachmentContent { AttachmentId = existingAttachment.Id };
+                existingAttachment.AttachmentContent.Content = fileBytes;
+
+                existingAttachment.ContentType = contentType;
+                existingAttachment.FileName = fileName;
+                await _repository.UpdateAsync(existingAttachment);
+            }
+        }
+        else
+        {
+            Attachment attachment = new()
+            {
+                Id = Guid.NewGuid(),
+                ContactId = contactId,
+                AttachmentType = AttachmentTypes.ProfileImage,
+                ContentType = contentType,
+                FileName = fileName,
+                AttachmentContent = new AttachmentContent
+                {
+                    Content = fileBytes
+                }
+            };
+            await _repository.AddAsync(attachment);
+        }
+
+        return ContactOperationResult.Ok(contactId);
     }
 
     private async Task DeleteContactDependenciesAsync(Guid contactId)
