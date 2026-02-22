@@ -67,6 +67,12 @@ namespace Rvnx.CRM.Tests.Services
             byte[] pngSignature = { 0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A };
             Assert.True(_service.IsValidImageSignature(pngSignature, ".PNG"));
         }
+
+        [Fact]
+        public void IsValidImageSignature_ShouldReturnFalse_WhenFileBytesIsNull()
+        {
+            Assert.False(_service.IsValidImageSignature(null!, ".png"));
+        }
     }
 }
 // Also migrated from duplicate tests file
@@ -122,6 +128,12 @@ namespace Rvnx.CRM.Tests.Services
             // PNG
             byte[] bytes = { 0x89, 0x50, 0x4E, 0x47, 0x00 };
             Assert.True(_service.IsValidFileSignature(bytes, ".png"));
+        }
+
+        [Fact]
+        public void IsValidFileSignature_ShouldReturnFalse_WhenFileBytesIsNull()
+        {
+            Assert.False(_service.IsValidFileSignature(null!, ".pdf"));
         }
     }
 }
