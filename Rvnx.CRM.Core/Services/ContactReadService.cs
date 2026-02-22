@@ -119,7 +119,14 @@ public class ContactReadService(IRepository repository) : IContactReadService
 
     public async Task<ContactFormDto?> GetContactFormAsync(Guid id)
     {
-        Contact? contact = await _repository.GetByIdAsync<Contact>(id);
+        List<Contact> contacts = await _repository.ListAsNoTrackingAsync<Contact>(
+             c => c.Id == id,
+             default,
+             nameof(Contact.ContactMethods),
+             nameof(Contact.SignificantDates));
+
+        Contact? contact = contacts.FirstOrDefault();
+
         if (contact == null) return null;
 
         ContactFormDto dto = new()
@@ -133,13 +140,20 @@ public class ContactReadService(IRepository repository) : IContactReadService
             IsHidden = contact.IsHidden
         };
 
-        ContactMethod? email = await GetPrimaryContactMethodAsync(contact.Id, ContactMethodType.Email);
+        ContactMethod? email = contact.ContactMethods
+            .Where(c => c.Type == ContactMethodType.Email)
+            .OrderByDescending(c => c.Label == ContactMethodLabels.Primary)
+            .FirstOrDefault();
         dto.Email = email?.Value;
 
-        ContactMethod? phone = await GetPrimaryContactMethodAsync(contact.Id, ContactMethodType.Phone);
+        ContactMethod? phone = contact.ContactMethods
+            .Where(c => c.Type == ContactMethodType.Phone)
+            .OrderByDescending(c => c.Label == ContactMethodLabels.Primary)
+            .FirstOrDefault();
         dto.Phone = phone?.Value;
 
-        SignificantDate? bday = await GetBirthdayAsync(contact.Id);
+        SignificantDate? bday = contact.SignificantDates
+            .FirstOrDefault(d => d.Title == SignificantDateTitles.Birthday);
         dto.Birthday = bday?.Date;
 
         return dto;
