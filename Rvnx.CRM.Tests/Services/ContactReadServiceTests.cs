@@ -30,7 +30,7 @@ namespace Rvnx.CRM.Tests.Services
                 .ReturnsAsync(new List<Contact>());
 
             // Act
-            var result = await _service.GetContactDetailsAsync(contactId);
+            ContactDetailDto? result = await _service.GetContactDetailsAsync(contactId);
 
             // Assert
             Assert.Null(result);
@@ -41,7 +41,7 @@ namespace Rvnx.CRM.Tests.Services
         {
             // Arrange
             Guid contactId = Guid.NewGuid();
-            var contact = new Contact { Id = contactId, FirstName = "Test", LastName = "User" };
+            Contact contact = new() { Id = contactId, FirstName = "Test", LastName = "User" };
 
             _repositoryMock.Setup(r => r.ListAsNoTrackingAsync<Contact>(
                 It.IsAny<Expression<Func<Contact, bool>>>(),
@@ -68,7 +68,7 @@ namespace Rvnx.CRM.Tests.Services
                 .ReturnsAsync(new List<Attachment>());
 
             // Act
-            var result = await _service.GetContactDetailsAsync(contactId);
+            ContactDetailDto? result = await _service.GetContactDetailsAsync(contactId);
 
             // Assert
             Assert.NotNull(result);
@@ -82,8 +82,8 @@ namespace Rvnx.CRM.Tests.Services
             // Arrange
             Guid contactId = Guid.NewGuid();
             Guid relatedId = Guid.NewGuid();
-            var contact = new Contact { Id = contactId, FirstName = "Main" };
-            var relatedContact = new Contact { Id = relatedId, FirstName = "Related" };
+            Contact contact = new() { Id = contactId, FirstName = "Main" };
+            Contact relatedContact = new() { Id = relatedId, FirstName = "Related" };
 
             _repositoryMock.Setup(r => r.ListAsNoTrackingAsync<Contact>(
                  It.Is<Expression<Func<Contact, bool>>>(expr => expr.Compile().Invoke(contact)), // Matches ID check
@@ -95,7 +95,7 @@ namespace Rvnx.CRM.Tests.Services
             // Using known IDs from RelationshipTypeService
             // Friend: a5b6c7d8-9e0f-1a2b-3c4d-5e6f7a8b9c0d
             // Colleague: 33333333-3333-3333-3333-333333333301
-            var relationships = new List<Relationship>
+            List<Relationship> relationships = new()
             {
                 new Relationship {
                     Id = Guid.NewGuid(),
@@ -135,7 +135,7 @@ namespace Rvnx.CRM.Tests.Services
 
 
             // Act
-            var result = await _service.GetContactDetailsAsync(contactId);
+            ContactDetailDto? result = await _service.GetContactDetailsAsync(contactId);
 
             // Assert
             Assert.NotNull(result);
@@ -148,10 +148,10 @@ namespace Rvnx.CRM.Tests.Services
             // EntityName = entity.Person?.FullName ?? "Unknown",
             // RelatedEntityName = entity.RelatedPerson?.FullName ?? "Unknown",
 
-            var outgoingDto = result.Relationships.First();
+            RelationshipDto outgoingDto = result.Relationships.First();
             Assert.Equal("Related", outgoingDto.RelatedEntityName.Trim());
 
-            var incomingDto = result.RelatedTo.First();
+            RelationshipDto incomingDto = result.RelatedTo.First();
             Assert.Equal("Related", incomingDto.EntityName.Trim());
         }
     }

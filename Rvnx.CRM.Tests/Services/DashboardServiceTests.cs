@@ -6,7 +6,6 @@ using Rvnx.CRM.Core.Models.Contact;
 using Rvnx.CRM.Core.Models.Dates;
 using Rvnx.CRM.Core.Services;
 using System.Linq.Expressions;
-using Xunit;
 
 namespace Rvnx.CRM.Tests.Services
 {
@@ -27,12 +26,12 @@ namespace Rvnx.CRM.Tests.Services
         public async Task GetDashboardDataAsync_FiltersRemindersAtDatabaseLevel()
         {
             // Arrange
-            var contacts = new List<Contact>
+            List<Contact> contacts = new()
             {
                 new Contact { Id = Guid.NewGuid(), FirstName = "John", LastName = "Doe" }
             };
 
-            var reminders = new List<Reminder>
+            List<Reminder> reminders = new()
             {
                 new Reminder
                 {
@@ -92,7 +91,7 @@ namespace Rvnx.CRM.Tests.Services
                 .ReturnsAsync(reminders);
 
             // Act
-            var result = await _dashboardService.GetDashboardDataAsync();
+            Core.DTOs.Dashboard.DashboardDto result = await _dashboardService.GetDashboardDataAsync();
 
             // Assert
             // 1. Verify the parameterless overload is NOT called (this fails initially)

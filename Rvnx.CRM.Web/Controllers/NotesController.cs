@@ -1,6 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
 using Rvnx.CRM.Core.Constants;
-using Rvnx.CRM.Core.DTOs.Common;
 using Rvnx.CRM.Core.DTOs.Base;
 using Rvnx.CRM.Core.Extensions;
 using Rvnx.CRM.Core.Interfaces;
@@ -21,7 +20,7 @@ namespace Rvnx.CRM.Web.Controllers
             // Sentinel: Verify entity existence and access rights to prevent IDOR
             if (!await _repository.ExistsAsync<Contact>(entityId)) return NotFound();
 
-            var viewModel = new NoteFormViewModel
+            NoteFormViewModel viewModel = new()
             {
                 EntityId = entityId,
                 EntityType = entityType,
@@ -59,7 +58,7 @@ namespace Rvnx.CRM.Web.Controllers
             Note? note = await _repository.GetByIdAsync<Note>(id.Value);
             if (note == null) return NotFound();
 
-            var viewModel = new NoteFormViewModel
+            NoteFormViewModel viewModel = new()
             {
                 Id = note.Id,
                 Title = note.Title,
@@ -114,7 +113,7 @@ namespace Rvnx.CRM.Web.Controllers
             Note? note = await _repository.GetByIdAsync<Note>(id.Value);
             if (note == null) return NotFound();
 
-            var viewModel = new NoteDeleteViewModel
+            NoteDeleteViewModel viewModel = new()
             {
                 Id = note.Id,
                 Title = note.Title,

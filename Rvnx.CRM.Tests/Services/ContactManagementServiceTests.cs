@@ -8,7 +8,6 @@ using Rvnx.CRM.Core.Models.Contact;
 using Rvnx.CRM.Core.Models.Dates;
 using Rvnx.CRM.Core.Services;
 using System.Linq.Expressions;
-using Xunit;
 
 namespace Rvnx.CRM.Tests.Services
 {
@@ -47,7 +46,7 @@ namespace Rvnx.CRM.Tests.Services
                     return _significantDates.AsQueryable().Where(predicate).ToList();
                 });
 
-             // Setup ListAsync for Attachment
+            // Setup ListAsync for Attachment
             _repositoryMock.Setup(r => r.ListAsync<Attachment>(
                 It.IsAny<Expression<Func<Attachment, bool>>>(),
                 It.IsAny<CancellationToken>()))
@@ -61,8 +60,8 @@ namespace Rvnx.CRM.Tests.Services
         public async Task UpdateContact_WithEmptyEmail_DeletesExistingPrimaryEmail()
         {
             // Arrange
-            var contactId = Guid.NewGuid();
-            var existingEmail = new ContactMethod
+            Guid contactId = Guid.NewGuid();
+            ContactMethod existingEmail = new()
             {
                 Id = Guid.NewGuid(),
                 ContactId = contactId,
@@ -72,11 +71,11 @@ namespace Rvnx.CRM.Tests.Services
             };
             _contactMethods.Add(existingEmail);
 
-            var contact = new Contact { Id = contactId, FirstName = "Test", LastName = "User" };
+            Contact contact = new() { Id = contactId, FirstName = "Test", LastName = "User" };
             _repositoryMock.Setup(r => r.GetByIdAsync<Contact>(contactId, It.IsAny<CancellationToken>()))
                 .ReturnsAsync(contact);
 
-            var dto = new ContactFormDto
+            ContactFormDto dto = new()
             {
                 Id = contactId,
                 FirstName = "Test",
@@ -85,7 +84,7 @@ namespace Rvnx.CRM.Tests.Services
             };
 
             // Act
-            var result = await _service.UpdateContactAsync(contactId, dto, null, null, null);
+            ContactOperationResult result = await _service.UpdateContactAsync(contactId, dto, null, null, null);
 
             // Assert
             Assert.True(result.Success);
@@ -98,14 +97,14 @@ namespace Rvnx.CRM.Tests.Services
         public async Task UpdateContact_WithNewEmail_AddsContactMethod()
         {
             // Arrange
-            var contactId = Guid.NewGuid();
+            Guid contactId = Guid.NewGuid();
             // No existing email in _contactMethods
 
-            var contact = new Contact { Id = contactId, FirstName = "Test", LastName = "User" };
+            Contact contact = new() { Id = contactId, FirstName = "Test", LastName = "User" };
             _repositoryMock.Setup(r => r.GetByIdAsync<Contact>(contactId, It.IsAny<CancellationToken>()))
                 .ReturnsAsync(contact);
 
-            var dto = new ContactFormDto
+            ContactFormDto dto = new()
             {
                 Id = contactId,
                 FirstName = "Test",
@@ -114,7 +113,7 @@ namespace Rvnx.CRM.Tests.Services
             };
 
             // Act
-            var result = await _service.UpdateContactAsync(contactId, dto, null, null, null);
+            ContactOperationResult result = await _service.UpdateContactAsync(contactId, dto, null, null, null);
 
             // Assert
             Assert.True(result.Success);
@@ -130,8 +129,8 @@ namespace Rvnx.CRM.Tests.Services
         public async Task UpdateContact_WithChangedEmail_UpdatesExistingContactMethod()
         {
             // Arrange
-            var contactId = Guid.NewGuid();
-            var existingEmail = new ContactMethod
+            Guid contactId = Guid.NewGuid();
+            ContactMethod existingEmail = new()
             {
                 Id = Guid.NewGuid(),
                 ContactId = contactId,
@@ -141,11 +140,11 @@ namespace Rvnx.CRM.Tests.Services
             };
             _contactMethods.Add(existingEmail);
 
-            var contact = new Contact { Id = contactId, FirstName = "Test", LastName = "User" };
+            Contact contact = new() { Id = contactId, FirstName = "Test", LastName = "User" };
             _repositoryMock.Setup(r => r.GetByIdAsync<Contact>(contactId, It.IsAny<CancellationToken>()))
                 .ReturnsAsync(contact);
 
-            var dto = new ContactFormDto
+            ContactFormDto dto = new()
             {
                 Id = contactId,
                 FirstName = "Test",
@@ -154,7 +153,7 @@ namespace Rvnx.CRM.Tests.Services
             };
 
             // Act
-            var result = await _service.UpdateContactAsync(contactId, dto, null, null, null);
+            ContactOperationResult result = await _service.UpdateContactAsync(contactId, dto, null, null, null);
 
             // Assert
             Assert.True(result.Success);
@@ -172,8 +171,8 @@ namespace Rvnx.CRM.Tests.Services
         public async Task UpdateContact_WithEmptyBirthday_DeletesExistingBirthday()
         {
             // Arrange
-            var contactId = Guid.NewGuid();
-            var existingBirthday = new SignificantDate
+            Guid contactId = Guid.NewGuid();
+            SignificantDate existingBirthday = new()
             {
                 Id = Guid.NewGuid(),
                 ContactId = contactId,
@@ -182,11 +181,11 @@ namespace Rvnx.CRM.Tests.Services
             };
             _significantDates.Add(existingBirthday);
 
-            var contact = new Contact { Id = contactId, FirstName = "Test", LastName = "User" };
+            Contact contact = new() { Id = contactId, FirstName = "Test", LastName = "User" };
             _repositoryMock.Setup(r => r.GetByIdAsync<Contact>(contactId, It.IsAny<CancellationToken>()))
                 .ReturnsAsync(contact);
 
-            var dto = new ContactFormDto
+            ContactFormDto dto = new()
             {
                 Id = contactId,
                 FirstName = "Test",
@@ -195,7 +194,7 @@ namespace Rvnx.CRM.Tests.Services
             };
 
             // Act
-            var result = await _service.UpdateContactAsync(contactId, dto, null, null, null);
+            ContactOperationResult result = await _service.UpdateContactAsync(contactId, dto, null, null, null);
 
             // Assert
             Assert.True(result.Success);
@@ -206,15 +205,15 @@ namespace Rvnx.CRM.Tests.Services
         public async Task UpdateContact_WithNewBirthday_AddsSignificantDate()
         {
             // Arrange
-            var contactId = Guid.NewGuid();
+            Guid contactId = Guid.NewGuid();
             // No existing birthday
 
-            var contact = new Contact { Id = contactId, FirstName = "Test", LastName = "User" };
+            Contact contact = new() { Id = contactId, FirstName = "Test", LastName = "User" };
             _repositoryMock.Setup(r => r.GetByIdAsync<Contact>(contactId, It.IsAny<CancellationToken>()))
                 .ReturnsAsync(contact);
 
-            var newBirthday = new DateTime(2000, 5, 20);
-            var dto = new ContactFormDto
+            DateTime newBirthday = new(2000, 5, 20);
+            ContactFormDto dto = new()
             {
                 Id = contactId,
                 FirstName = "Test",
@@ -223,7 +222,7 @@ namespace Rvnx.CRM.Tests.Services
             };
 
             // Act
-            var result = await _service.UpdateContactAsync(contactId, dto, null, null, null);
+            ContactOperationResult result = await _service.UpdateContactAsync(contactId, dto, null, null, null);
 
             // Assert
             Assert.True(result.Success);
@@ -240,21 +239,21 @@ namespace Rvnx.CRM.Tests.Services
         public async Task UpdateContact_WithInvalidImageExtension_ReturnsFailure()
         {
             // Arrange
-            var contactId = Guid.NewGuid();
-            var contact = new Contact { Id = contactId, FirstName = "Test", LastName = "User" };
+            Guid contactId = Guid.NewGuid();
+            Contact contact = new() { Id = contactId, FirstName = "Test", LastName = "User" };
             _repositoryMock.Setup(r => r.GetByIdAsync<Contact>(contactId, It.IsAny<CancellationToken>()))
                 .ReturnsAsync(contact);
 
-            var dto = new ContactFormDto { Id = contactId, FirstName = "Test", LastName = "User" };
+            ContactFormDto dto = new() { Id = contactId, FirstName = "Test", LastName = "User" };
 
-            using var stream = new MemoryStream();
-            var fileName = "test.txt";
-            var contentType = "text/plain";
+            using MemoryStream stream = new();
+            string fileName = "test.txt";
+            string contentType = "text/plain";
 
             _fileValidationServiceMock.Setup(f => f.IsImageExtension(".txt")).Returns(false);
 
             // Act
-            var result = await _service.UpdateContactAsync(contactId, dto, stream, fileName, contentType);
+            ContactOperationResult result = await _service.UpdateContactAsync(contactId, dto, stream, fileName, contentType);
 
             // Assert
             Assert.False(result.Success);

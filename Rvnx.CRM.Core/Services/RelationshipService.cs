@@ -4,7 +4,6 @@ using Rvnx.CRM.Core.DTOs.Contact;
 using Rvnx.CRM.Core.Interfaces;
 using Rvnx.CRM.Core.Models.Business;
 using Rvnx.CRM.Core.Models.Contact;
-using Rvnx.CRM.Core.Services;
 
 namespace Rvnx.CRM.Core.Services;
 
@@ -77,7 +76,7 @@ public class RelationshipService(IRepository repository) : IRelationshipService
 
     public async Task<List<SelectOptionDto>> GetRelatedEntityOptionsAsync(Guid entityId, string entityType, Guid? selectedId = null)
     {
-        var options = new List<SelectOptionDto>();
+        List<SelectOptionDto> options = new();
 
         if (entityType == EntityTypes.Person)
         {

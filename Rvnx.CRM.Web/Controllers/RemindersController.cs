@@ -1,6 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
 using Rvnx.CRM.Core.Constants;
-using Rvnx.CRM.Core.DTOs.Common;
 using Rvnx.CRM.Core.DTOs.Dates;
 using Rvnx.CRM.Core.Extensions;
 using Rvnx.CRM.Core.Interfaces;
@@ -15,14 +14,14 @@ namespace Rvnx.CRM.Web.Controllers
         {
             if (entityId == Guid.Empty) return NotFound();
 
-            var dto = new Reminder
+            ReminderDto dto = new Reminder
             {
                 ContactId = entityId,
                 DueDate = DateTime.Now.AddDays(1),
                 EventFrequency = TimeSpan.FromDays(365) // Default
             }.ToDto();
 
-            var viewModel = new ReminderFormViewModel
+            ReminderFormViewModel viewModel = new()
             {
                 // Copy properties from dto
                 Id = dto.Id,
@@ -79,8 +78,8 @@ namespace Rvnx.CRM.Web.Controllers
             Reminder? reminder = await _repository.GetByIdAsync<Reminder>(id.Value);
             if (reminder == null) return NotFound();
 
-            var dto = reminder.ToDto();
-            var viewModel = new ReminderFormViewModel
+            ReminderDto dto = reminder.ToDto();
+            ReminderFormViewModel viewModel = new()
             {
                 Id = dto.Id,
                 Title = dto.Title,
@@ -138,8 +137,8 @@ namespace Rvnx.CRM.Web.Controllers
             Reminder? reminder = await _repository.GetByIdAsync<Reminder>(id.Value);
             if (reminder == null) return NotFound();
 
-            var dto = reminder.ToDto();
-            var viewModel = new ReminderDeleteViewModel
+            ReminderDto dto = reminder.ToDto();
+            ReminderDeleteViewModel viewModel = new()
             {
                 Id = dto.Id,
                 Title = dto.Title,

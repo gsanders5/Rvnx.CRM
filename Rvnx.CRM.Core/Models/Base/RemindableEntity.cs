@@ -1,4 +1,3 @@
-using Rvnx.CRM.Core.Models.Contact;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Rvnx.CRM.Core.Models.Base;

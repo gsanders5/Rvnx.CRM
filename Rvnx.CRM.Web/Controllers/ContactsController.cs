@@ -2,7 +2,6 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Rvnx.CRM.Core.DTOs.Contact;
 using Rvnx.CRM.Core.Interfaces;
-using Rvnx.CRM.Core.Models.Contact;
 using Rvnx.CRM.Web.Controllers.Base;
 
 namespace Rvnx.CRM.Web.Controllers
@@ -48,7 +47,7 @@ namespace Rvnx.CRM.Web.Controllers
             ContactFormDto? dto = await _selfContactService.GetSelfContactFormAsync(HttpContext.User);
             if (dto == null) return RedirectToAction("Index");
 
-            var viewModel = new ContactCreateViewModel
+            ContactCreateViewModel viewModel = new()
             {
                 FirstName = dto.FirstName,
                 LastName = dto.LastName,
@@ -92,7 +91,7 @@ namespace Rvnx.CRM.Web.Controllers
         {
             List<ContactDto> contactDtos = await _contactReadService.GetIndexDataAsync(showHidden);
 
-            var viewModel = new ContactIndexViewModel
+            ContactIndexViewModel viewModel = new()
             {
                 Contacts = contactDtos,
                 SuccessMessage = TempData["SuccessMessage"] as string

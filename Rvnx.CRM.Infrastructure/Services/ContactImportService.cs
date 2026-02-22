@@ -1,9 +1,7 @@
 using Microsoft.Extensions.Logging;
-using Rvnx.CRM.Core.Constants;
 using Rvnx.CRM.Core.DTOs.Contact;
 using Rvnx.CRM.Core.Interfaces;
 using Rvnx.CRM.Core.Models.Contact;
-using Rvnx.CRM.Core.Models.Dates;
 
 namespace Rvnx.CRM.Infrastructure.Services;
 

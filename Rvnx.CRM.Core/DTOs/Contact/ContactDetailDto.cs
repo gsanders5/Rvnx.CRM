@@ -1,8 +1,6 @@
-using Rvnx.CRM.Core.DTOs.Business;
-using Rvnx.CRM.Core.DTOs.Common;
-using Rvnx.CRM.Core.DTOs.Dates;
 using Rvnx.CRM.Core.DTOs.Base;
-using Rvnx.CRM.Core.DTOs.Contact;
+using Rvnx.CRM.Core.DTOs.Business;
+using Rvnx.CRM.Core.DTOs.Dates;
 
 namespace Rvnx.CRM.Core.DTOs.Contact
 {

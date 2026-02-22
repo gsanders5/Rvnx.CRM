@@ -7,6 +7,13 @@ public class RelationshipOperationResult
     public Guid RedirectId { get; private set; }
     public string? EntityType { get; private set; }
 
-    public static RelationshipOperationResult Ok(Guid redirectId, string entityType) => new() { Success = true, RedirectId = redirectId, EntityType = entityType };
-    public static RelationshipOperationResult Failure(string errorMessage) => new() { Success = false, ErrorMessage = errorMessage };
+    public static RelationshipOperationResult Ok(Guid redirectId, string entityType)
+    {
+        return new() { Success = true, RedirectId = redirectId, EntityType = entityType };
+    }
+
+    public static RelationshipOperationResult Failure(string errorMessage)
+    {
+        return new() { Success = false, ErrorMessage = errorMessage };
+    }
 }

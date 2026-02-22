@@ -1,13 +1,8 @@
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
-using Rvnx.CRM.Core.Constants;
-using Rvnx.CRM.Core.DTOs.Common;
 using Rvnx.CRM.Core.DTOs.Contact;
 using Rvnx.CRM.Core.Extensions;
 using Rvnx.CRM.Core.Interfaces;
-using Rvnx.CRM.Core.Models.Business;
 using Rvnx.CRM.Core.Models.Contact;
-using Rvnx.CRM.Core.Services;
 using Rvnx.CRM.Web.Controllers.Base;
 
 namespace Rvnx.CRM.Web.Controllers
@@ -19,7 +14,7 @@ namespace Rvnx.CRM.Web.Controllers
         {
             if (entityId == Guid.Empty || string.IsNullOrEmpty(entityType)) return NotFound();
 
-            var viewModel = new RelationshipCreateViewModel
+            RelationshipCreateViewModel viewModel = new()
             {
                 EntityId = entityId,
                 EntityType = entityType,
@@ -43,7 +38,7 @@ namespace Rvnx.CRM.Web.Controllers
             if (ModelState.IsValid)
             {
                 Relationship relationship = viewModel.ToEntity();
-                var result = await _relationshipService.CreateRelationshipAsync(relationship, viewModel.SelectedRelationshipType);
+                RelationshipOperationResult result = await _relationshipService.CreateRelationshipAsync(relationship, viewModel.SelectedRelationshipType);
                 if (result.Success)
                 {
                     return RedirectToEntity(result.RedirectId, result.EntityType ?? string.Empty);
@@ -70,7 +65,7 @@ namespace Rvnx.CRM.Web.Controllers
 
             string currentSelection = $"{relationship.RelationshipTypeId}_Fwd";
 
-            var viewModel = new RelationshipEditViewModel
+            RelationshipEditViewModel viewModel = new()
             {
                 Id = relationship.Id,
                 EntityId = relationship.EntityId,
@@ -103,7 +98,7 @@ namespace Rvnx.CRM.Web.Controllers
             if (ModelState.IsValid)
             {
                 Relationship relationship = viewModel.ToEntity();
-                var result = await _relationshipService.UpdateRelationshipAsync(id, relationship, viewModel.SelectedRelationshipType);
+                RelationshipOperationResult result = await _relationshipService.UpdateRelationshipAsync(id, relationship, viewModel.SelectedRelationshipType);
                 if (result.Success)
                 {
                     return RedirectToEntity(result.RedirectId, result.EntityType ?? string.Empty);
@@ -131,8 +126,8 @@ namespace Rvnx.CRM.Web.Controllers
             relationship.Person = await _repository.GetByIdAsync<Contact>(relationship.EntityId);
             relationship.RelatedPerson = await _repository.GetByIdAsync<Contact>(relationship.RelatedEntityId);
 
-            var viewModel = relationship.ToDto();
-            var deleteViewModel = new RelationshipDeleteViewModel
+            RelationshipDto viewModel = relationship.ToDto();
+            RelationshipDeleteViewModel deleteViewModel = new()
             {
                 Id = viewModel.Id,
                 EntityId = viewModel.EntityId,

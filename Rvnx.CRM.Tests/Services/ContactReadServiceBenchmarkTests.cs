@@ -3,12 +3,10 @@ using Rvnx.CRM.Core.Constants;
 using Rvnx.CRM.Core.DTOs.Contact;
 using Rvnx.CRM.Core.Enumerations;
 using Rvnx.CRM.Core.Interfaces;
-using Rvnx.CRM.Core.Models.Base;
 using Rvnx.CRM.Core.Models.Contact;
 using Rvnx.CRM.Core.Models.Dates;
 using Rvnx.CRM.Core.Services;
 using System.Linq.Expressions;
-using Xunit;
 
 namespace Rvnx.CRM.Tests.Services
 {
@@ -28,7 +26,7 @@ namespace Rvnx.CRM.Tests.Services
         {
             // Arrange
             Guid contactId = Guid.NewGuid();
-            var contact = new Contact { Id = contactId, FirstName = "Test", LastName = "User" };
+            Contact contact = new() { Id = contactId, FirstName = "Test", LastName = "User" };
 
             // Populate collections for the test to ensure extraction logic works
             contact.ContactMethods.Add(new ContactMethod { Type = ContactMethodType.Email, Value = "test@example.com", Label = ContactMethodLabels.Primary });
@@ -42,7 +40,7 @@ namespace Rvnx.CRM.Tests.Services
                 .ReturnsAsync(new List<Contact> { contact });
 
             // Act
-            var result = await _service.GetContactFormAsync(contactId);
+            ContactFormDto? result = await _service.GetContactFormAsync(contactId);
 
             // Assert
             Assert.NotNull(result);
@@ -58,15 +56,15 @@ namespace Rvnx.CRM.Tests.Services
             _repositoryMock.Verify(r => r.GetByIdAsync<Contact>(It.IsAny<Guid>(), It.IsAny<CancellationToken>()), Times.Never);
 
             // Ensure no other calls (like the old ones)
-             _repositoryMock.Verify(r => r.ListAsNoTrackingAsync<ContactMethod>(
-                It.IsAny<Expression<Func<ContactMethod, bool>>>(),
-                It.IsAny<CancellationToken>(),
-                It.IsAny<string[]>()), Times.Never);
+            _repositoryMock.Verify(r => r.ListAsNoTrackingAsync<ContactMethod>(
+               It.IsAny<Expression<Func<ContactMethod, bool>>>(),
+               It.IsAny<CancellationToken>(),
+               It.IsAny<string[]>()), Times.Never);
 
-             _repositoryMock.Verify(r => r.ListAsNoTrackingAsync<SignificantDate>(
-                It.IsAny<Expression<Func<SignificantDate, bool>>>(),
-                It.IsAny<CancellationToken>(),
-                It.IsAny<string[]>()), Times.Never);
+            _repositoryMock.Verify(r => r.ListAsNoTrackingAsync<SignificantDate>(
+               It.IsAny<Expression<Func<SignificantDate, bool>>>(),
+               It.IsAny<CancellationToken>(),
+               It.IsAny<string[]>()), Times.Never);
         }
     }
 }

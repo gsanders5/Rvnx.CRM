@@ -1,4 +1,3 @@
-using Rvnx.CRM.Core.Constants;
 using Rvnx.CRM.Core.Enumerations;
 using Rvnx.CRM.Core.Models.Contact;
 using Rvnx.CRM.Core.Models.Dates;

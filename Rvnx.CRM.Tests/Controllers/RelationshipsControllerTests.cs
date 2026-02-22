@@ -1,5 +1,4 @@
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using Moq;
 using Rvnx.CRM.Core.Constants;
@@ -7,9 +6,9 @@ using Rvnx.CRM.Core.DTOs.Common;
 using Rvnx.CRM.Core.DTOs.Contact;
 using Rvnx.CRM.Core.Interfaces;
 using Rvnx.CRM.Core.Models.Contact;
+using Rvnx.CRM.Core.Services;
 using Rvnx.CRM.Infrastructure.Data;
 using Rvnx.CRM.Infrastructure.Repositories;
-using Rvnx.CRM.Core.Services;
 using Rvnx.CRM.Web.Controllers;
 
 namespace Rvnx.CRM.Tests.Controllers
@@ -156,7 +155,7 @@ namespace Rvnx.CRM.Tests.Controllers
             ViewResult viewResult = Assert.IsType<ViewResult>(result);
             RelationshipCreateViewModel viewModel = Assert.IsType<RelationshipCreateViewModel>(viewResult.Model);
 
-            var options = viewModel.RelationshipTypeOptions;
+            IEnumerable<SelectOptionDto> options = viewModel.RelationshipTypeOptions;
             Assert.NotNull(options);
 
             // Check that options from static service are present
