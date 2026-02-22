@@ -203,8 +203,8 @@ namespace Rvnx.CRM.Tests.Controllers
             controller.Url = urlHelperMock.Object;
 
             Mock<IFormFile> fileMock = new();
-            // Mock a large file (e.g., 11MB)
-            long fileSize = 11 * 1024 * 1024;
+            // Mock a large file (e.g., 31MB)
+            long fileSize = 31 * 1024 * 1024;
             fileMock.Setup(f => f.Length).Returns(fileSize);
             fileMock.Setup(f => f.FileName).Returns("largefile.pdf");
             fileMock.Setup(f => f.ContentType).Returns("application/pdf");

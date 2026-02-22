@@ -12,7 +12,7 @@ namespace Rvnx.CRM.Web.Controllers
         private readonly IEntityService _entityService = entityService;
         private static readonly HashSet<string> AllowedExtensions = new(StringComparer.OrdinalIgnoreCase) { ".jpg", ".jpeg", ".png", ".gif", ".pdf", ".txt", ".doc", ".docx", ".xls", ".xlsx" };
         private static readonly HashSet<string> ImageContentTypes = new(StringComparer.OrdinalIgnoreCase) { "image/jpeg", "image/png", "image/gif" };
-        private const long MaxFileSize = 10 * 1024 * 1024; // 10 MB
+        private const long MaxFileSize = 30 * 1024 * 1024; // 30 MB
 
         [HttpPost]
         [ValidateAntiForgeryToken]
