@@ -1,16 +1,17 @@
-﻿using Microsoft.EntityFrameworkCore.Migrations;
+﻿using System;
+using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
 namespace Rvnx.CRM.Infrastructure.Migrations
 {
     /// <inheritdoc />
-    public partial class InitialSchema : Migration
+    public partial class InitialCreate : Migration
     {
-        /// <inheritdoc />
-        private static readonly string[] EntityIdIndexColumns = ["EntityId", "EntityType"];
-        private static readonly string[] RelatedEntityIdIndexColumns = ["RelatedEntityId", "EntityType"];
+        private static readonly string[] RelationshipEntityIdColumns = ["EntityId", "EntityType"];
+        private static readonly string[] RelationshipRelatedEntityIdColumns = ["RelatedEntityId", "EntityType"];
 
+        /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.CreateTable(
@@ -30,10 +31,7 @@ namespace Rvnx.CRM.Infrastructure.Migrations
                     Company = table.Column<string>(type: "TEXT", maxLength: 200, nullable: true),
                     IsHidden = table.Column<bool>(type: "INTEGER", nullable: false)
                 },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Contact", x => x.Id);
-                });
+                constraints: table => { table.PrimaryKey("PK_Contact", x => x.Id); });
 
             migrationBuilder.CreateTable(
                 name: "Relationship",
@@ -53,10 +51,7 @@ namespace Rvnx.CRM.Infrastructure.Migrations
                     EntityId = table.Column<Guid>(type: "TEXT", nullable: false),
                     EntityType = table.Column<string>(type: "TEXT", maxLength: 50, nullable: false)
                 },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Relationship", x => x.Id);
-                });
+                constraints: table => { table.PrimaryKey("PK_Relationship", x => x.Id); });
 
             migrationBuilder.CreateTable(
                 name: "Address",
@@ -486,12 +481,12 @@ namespace Rvnx.CRM.Infrastructure.Migrations
             migrationBuilder.CreateIndex(
                 name: "IX_Relationship_EntityId_EntityType",
                 table: "Relationship",
-                columns: EntityIdIndexColumns);
+                columns: RelationshipEntityIdColumns);
 
             migrationBuilder.CreateIndex(
                 name: "IX_Relationship_RelatedEntityId_EntityType",
                 table: "Relationship",
-                columns: RelatedEntityIdIndexColumns);
+                columns: RelationshipRelatedEntityIdColumns);
 
             migrationBuilder.CreateIndex(
                 name: "IX_Relationship_UserId",
