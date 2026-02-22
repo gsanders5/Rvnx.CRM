@@ -180,5 +180,46 @@ namespace Rvnx.CRM.Tests.Controllers
             BadRequestObjectResult badRequest = Assert.IsType<BadRequestObjectResult>(result);
             Assert.Equal("Invalid file signature.", badRequest.Value);
         }
+
+        [Fact]
+        public async Task Upload_ShouldReject_WhenFileExceedsSizeLimit()
+        {
+            // Arrange
+            using CRMDbContext context = GetInMemoryDbContext();
+            Repository repo = new(context);
+
+            Mock<IFileValidationService> fileServiceMock = new();
+            fileServiceMock.Setup(s => s.IsValidFileSignature(It.IsAny<byte[]>(), It.IsAny<string>())).Returns(true);
+
+            AttachmentsController controller = new(repo, fileServiceMock.Object, new EntityService(repo));
+            controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext()
+            };
+            controller.Request.Headers["Referer"] = "http://localhost/Contacts";
+
+            Mock<IUrlHelper> urlHelperMock = new();
+            urlHelperMock.Setup(x => x.IsLocalUrl(It.IsAny<string>())).Returns(false);
+            controller.Url = urlHelperMock.Object;
+
+            Mock<IFormFile> fileMock = new();
+            // Mock a large file (e.g., 11MB)
+            long fileSize = 11 * 1024 * 1024;
+            fileMock.Setup(f => f.Length).Returns(fileSize);
+            fileMock.Setup(f => f.FileName).Returns("largefile.pdf");
+            fileMock.Setup(f => f.ContentType).Returns("application/pdf");
+            fileMock.Setup(f => f.OpenReadStream()).Returns(new MemoryStream()); // Empty stream, length is what matters for this check
+
+            Contact contact = new() { Id = Guid.NewGuid(), FirstName = "Test", LastName = "User" };
+            context.Contacts.Add(contact);
+            context.SaveChanges();
+
+            // Act
+            IActionResult result = await controller.Upload(contact.Id, "Person", fileMock.Object);
+
+            // Assert
+            BadRequestObjectResult badRequest = Assert.IsType<BadRequestObjectResult>(result);
+            Assert.Equal("File is too large.", badRequest.Value);
+        }
     }
 }
