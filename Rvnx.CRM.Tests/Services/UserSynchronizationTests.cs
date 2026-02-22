@@ -10,7 +10,7 @@ namespace Rvnx.CRM.Tests.Services
 {
     public class UserSynchronizationTests
     {
-        private CRMDbContext GetInMemoryDbContext()
+        private static CRMDbContext GetInMemoryDbContext()
         {
             DbContextOptions<CRMDbContext> options = new DbContextOptionsBuilder<CRMDbContext>()
                 .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
@@ -26,7 +26,7 @@ namespace Rvnx.CRM.Tests.Services
         }
 
         [Fact]
-        public async Task SyncUserAsync_NewUser_ShouldCreateUser()
+        public async Task SyncUserAsyncNewUserShouldCreateUser()
         {
             // Arrange
             using CRMDbContext context = GetInMemoryDbContext();
@@ -57,7 +57,7 @@ namespace Rvnx.CRM.Tests.Services
         }
 
         [Fact]
-        public async Task SyncUserAsync_NewUser_ShouldPreserveOriginalNameIdentifier()
+        public async Task SyncUserAsyncNewUserShouldPreserveOriginalNameIdentifier()
         {
             // Arrange
             using CRMDbContext context = GetInMemoryDbContext();
@@ -89,7 +89,7 @@ namespace Rvnx.CRM.Tests.Services
         }
 
         [Fact]
-        public async Task SyncUserAsync_ExistingUser_ShouldUpdateDetailsAndAddInternalIdClaim()
+        public async Task SyncUserAsyncExistingUserShouldUpdateDetailsAndAddInternalIdClaim()
         {
             // Arrange
             using CRMDbContext context = GetInMemoryDbContext();
@@ -135,7 +135,7 @@ namespace Rvnx.CRM.Tests.Services
         }
 
         [Fact]
-        public async Task SyncUserAsync_ShouldAddNameClaim_WhenNotPresent()
+        public async Task SyncUserAsyncShouldAddNameClaimWhenNotPresent()
         {
             // Arrange
             using CRMDbContext context = GetInMemoryDbContext();
@@ -165,7 +165,7 @@ namespace Rvnx.CRM.Tests.Services
         }
 
         [Fact]
-        public async Task SyncUserAsync_ShouldNotAddNameClaim_WhenAlreadyPresent()
+        public async Task SyncUserAsyncShouldNotAddNameClaimWhenAlreadyPresent()
         {
             // Arrange
             using CRMDbContext context = GetInMemoryDbContext();
@@ -191,7 +191,7 @@ namespace Rvnx.CRM.Tests.Services
         }
 
         [Fact]
-        public async Task SyncUserAsync_ShouldDoNothing_WhenNoSubject()
+        public async Task SyncUserAsyncShouldDoNothingWhenNoSubject()
         {
             // Arrange
             using CRMDbContext context = GetInMemoryDbContext();
@@ -218,7 +218,7 @@ namespace Rvnx.CRM.Tests.Services
         }
 
         [Fact]
-        public async Task SyncUserAsync_ShouldReplaceInternalIdClaim_WhenCalledMultipleTimes()
+        public async Task SyncUserAsyncShouldReplaceInternalIdClaimWhenCalledMultipleTimes()
         {
             // Arrange
             using CRMDbContext context = GetInMemoryDbContext();
@@ -245,7 +245,7 @@ namespace Rvnx.CRM.Tests.Services
         }
 
         [Fact]
-        public async Task SyncUserAsync_ShouldUseSubClaim_WhenNameIdentifierNotPresent()
+        public async Task SyncUserAsyncShouldUseSubClaimWhenNameIdentifierNotPresent()
         {
             // Arrange
             using CRMDbContext context = GetInMemoryDbContext();

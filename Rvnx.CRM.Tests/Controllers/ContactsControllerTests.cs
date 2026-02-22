@@ -45,10 +45,12 @@ namespace Rvnx.CRM.Tests.Controllers
 
         public void Dispose()
         {
+
+    GC.SuppressFinalize(this);
         }
 
         [Fact]
-        public async Task Index_ReturnsViewWithContacts()
+        public async Task IndexReturnsViewWithContacts()
         {
             // Arrange
             List<ContactDto> contacts = new()
@@ -69,7 +71,7 @@ namespace Rvnx.CRM.Tests.Controllers
         }
 
         [Fact]
-        public async Task Create_Post_WithValidData_ShouldCreateContactAndRelatedEntities()
+        public async Task CreatePostWithValidDataShouldCreateContactAndRelatedEntities()
         {
             // Arrange
             ContactCreateViewModel dto = new()
@@ -93,7 +95,7 @@ namespace Rvnx.CRM.Tests.Controllers
         }
 
         [Fact]
-        public async Task DeleteConfirmed_ShouldCallServiceAndRedirect()
+        public async Task DeleteConfirmedShouldCallServiceAndRedirect()
         {
             // Arrange
             Guid contactId = Guid.NewGuid();
@@ -109,7 +111,7 @@ namespace Rvnx.CRM.Tests.Controllers
         }
 
         [Fact]
-        public async Task Edit_Post_WhenFileIsNotImage_ShouldReturnValidationError()
+        public async Task EditPostWhenFileIsNotImageShouldReturnValidationError()
         {
             // Arrange
             Guid contactId = Guid.NewGuid();
@@ -144,7 +146,7 @@ namespace Rvnx.CRM.Tests.Controllers
         }
 
         [Fact]
-        public async Task Import_WhenServiceSucceeds_ShouldRedirectToIndex()
+        public async Task ImportWhenServiceSucceedsShouldRedirectToIndex()
         {
             // Arrange
             ContactImportResult importResult = new() { AddedCount = 1, SkippedCount = 1 };
@@ -168,7 +170,7 @@ namespace Rvnx.CRM.Tests.Controllers
         }
 
         [Fact]
-        public async Task Delete_ReturnsViewWithContactDetailDto()
+        public async Task DeleteReturnsViewWithContactDetailDto()
         {
             // Arrange
             Guid contactId = Guid.NewGuid();

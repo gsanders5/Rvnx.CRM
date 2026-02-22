@@ -13,9 +13,9 @@ namespace Rvnx.CRM.Tests.Controllers
 {
     public class AttachmentsControllerIdorTests
     {
-        private readonly Guid _currentUserId = Guid.Parse("c5b50a20-34b2-44b2-8b9c-aa4135f60938");
+        private static readonly Guid _currentUserId = Guid.Parse("c5b50a20-34b2-44b2-8b9c-aa4135f60938");
 
-        private CRMDbContext GetInMemoryDbContext()
+        private static CRMDbContext GetInMemoryDbContext()
         {
             DbContextOptions<CRMDbContext> options = new DbContextOptionsBuilder<CRMDbContext>()
                 .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
@@ -29,7 +29,7 @@ namespace Rvnx.CRM.Tests.Controllers
         }
 
         [Fact]
-        public async Task Upload_ShouldReturnNotFound_WhenEntityBelongsToAnotherUser()
+        public async Task UploadShouldReturnNotFoundWhenEntityBelongsToAnotherUser()
         {
             // Arrange
             using CRMDbContext context = GetInMemoryDbContext();

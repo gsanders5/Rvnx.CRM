@@ -57,7 +57,7 @@ namespace Rvnx.CRM.Tests.Services
         }
 
         [Fact]
-        public async Task UpdateContact_WithEmptyEmail_DeletesExistingPrimaryEmail()
+        public async Task UpdateContactWithEmptyEmailDeletesExistingPrimaryEmail()
         {
             // Arrange
             Guid contactId = Guid.NewGuid();
@@ -94,7 +94,7 @@ namespace Rvnx.CRM.Tests.Services
         }
 
         [Fact]
-        public async Task UpdateContact_WithNewEmail_AddsContactMethod()
+        public async Task UpdateContactWithNewEmailAddsContactMethod()
         {
             // Arrange
             Guid contactId = Guid.NewGuid();
@@ -126,7 +126,7 @@ namespace Rvnx.CRM.Tests.Services
         }
 
         [Fact]
-        public async Task UpdateContact_WithChangedEmail_UpdatesExistingContactMethod()
+        public async Task UpdateContactWithChangedEmailUpdatesExistingContactMethod()
         {
             // Arrange
             Guid contactId = Guid.NewGuid();
@@ -168,7 +168,7 @@ namespace Rvnx.CRM.Tests.Services
         }
 
         [Fact]
-        public async Task UpdateContact_WithEmptyBirthday_DeletesExistingBirthday()
+        public async Task UpdateContactWithEmptyBirthdayDeletesExistingBirthday()
         {
             // Arrange
             Guid contactId = Guid.NewGuid();
@@ -202,7 +202,7 @@ namespace Rvnx.CRM.Tests.Services
         }
 
         [Fact]
-        public async Task UpdateContact_WithNewBirthday_AddsSignificantDate()
+        public async Task UpdateContactWithNewBirthdayAddsSignificantDate()
         {
             // Arrange
             Guid contactId = Guid.NewGuid();
@@ -236,7 +236,7 @@ namespace Rvnx.CRM.Tests.Services
         }
 
         [Fact]
-        public async Task UpdateContact_WithInvalidImageExtension_ReturnsFailure()
+        public async Task UpdateContactWithInvalidImageExtensionReturnsFailure()
         {
             // Arrange
             Guid contactId = Guid.NewGuid();

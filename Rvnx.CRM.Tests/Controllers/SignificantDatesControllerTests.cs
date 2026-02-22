@@ -36,10 +36,12 @@ namespace Rvnx.CRM.Tests.Controllers
         {
             _context.Database.EnsureDeleted();
             _context.Dispose();
+
+    GC.SuppressFinalize(this);
         }
 
         [Fact]
-        public async Task Create_WithValidData_ShouldCreateDate()
+        public async Task CreateWithValidDataShouldCreateDate()
         {
             // Arrange
             Guid contactId = Guid.NewGuid();
@@ -68,7 +70,7 @@ namespace Rvnx.CRM.Tests.Controllers
         }
 
         [Fact]
-        public async Task Create_WhenDuplicateBirthdayExists_ShouldReturnValidationError()
+        public async Task CreateWhenDuplicateBirthdayExistsShouldReturnValidationError()
         {
             // Arrange
             Guid contactId = Guid.NewGuid();
@@ -107,7 +109,7 @@ namespace Rvnx.CRM.Tests.Controllers
         }
 
         [Fact]
-        public async Task Create_WhenDuplicateBirthdayExistsWithDifferentCase_ShouldReturnValidationError()
+        public async Task CreateWhenDuplicateBirthdayExistsWithDifferentCaseShouldReturnValidationError()
         {
             // Arrange
             Guid contactId = Guid.NewGuid();
@@ -144,7 +146,7 @@ namespace Rvnx.CRM.Tests.Controllers
         }
 
         [Fact]
-        public async Task Edit_WhenChangingToBirthdayButOneAlreadyExists_ShouldReturnValidationError()
+        public async Task EditWhenChangingToBirthdayButOneAlreadyExistsShouldReturnValidationError()
         {
             // Arrange
             Guid contactId = Guid.NewGuid();
@@ -189,7 +191,7 @@ namespace Rvnx.CRM.Tests.Controllers
         }
 
         [Fact]
-        public async Task Edit_WhenExistingIsBirthdayAndUpdating_ShouldSucceed()
+        public async Task EditWhenExistingIsBirthdayAndUpdatingShouldSucceed()
         {
             // Arrange
             Guid contactId = Guid.NewGuid();
@@ -227,7 +229,7 @@ namespace Rvnx.CRM.Tests.Controllers
         }
 
         [Fact]
-        public async Task DeleteConfirmed_ShouldDeleteDate()
+        public async Task DeleteConfirmedShouldDeleteDate()
         {
             // Arrange
             Guid dateId = Guid.NewGuid();

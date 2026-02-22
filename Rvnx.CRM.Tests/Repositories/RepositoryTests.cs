@@ -10,7 +10,7 @@ namespace Rvnx.CRM.Tests.Repositories
 {
     public class RepositoryTests
     {
-        private CRMDbContext GetInMemoryDbContext()
+        private static CRMDbContext GetInMemoryDbContext()
         {
             DbContextOptions<CRMDbContext> options = new DbContextOptionsBuilder<CRMDbContext>()
                 .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
@@ -25,7 +25,7 @@ namespace Rvnx.CRM.Tests.Repositories
         }
 
         [Fact]
-        public async Task ListAsync_Predicate_ShouldFilterCorrectly()
+        public async Task ListAsyncPredicateShouldFilterCorrectly()
         {
             using CRMDbContext context = GetInMemoryDbContext();
             Repository repo = new(context);
@@ -43,7 +43,7 @@ namespace Rvnx.CRM.Tests.Repositories
         }
 
         [Fact]
-        public async Task ListAsync_PredicateAndIncludes_ShouldIncludeRelatedEntities()
+        public async Task ListAsyncPredicateAndIncludesShouldIncludeRelatedEntities()
         {
             using CRMDbContext context = GetInMemoryDbContext();
             Repository repo = new(context);
@@ -74,7 +74,7 @@ namespace Rvnx.CRM.Tests.Repositories
         }
 
         [Fact]
-        public async Task CountAsync_Predicate_ShouldCountCorrectly()
+        public async Task CountAsyncPredicateShouldCountCorrectly()
         {
             using CRMDbContext context = GetInMemoryDbContext();
             Repository repo = new(context);

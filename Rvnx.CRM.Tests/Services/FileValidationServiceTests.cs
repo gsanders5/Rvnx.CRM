@@ -24,7 +24,7 @@ namespace Rvnx.CRM.Tests.Services
         [InlineData(".xlsx")]
         [InlineData(".JPG")] // Case insensitive
         [InlineData(".PDF")]
-        public void IsAllowedExtension_ShouldReturnTrue_ForAllowedExtensions(string extension)
+        public void IsAllowedExtensionShouldReturnTrueForAllowedExtensions(string extension)
         {
             Assert.True(_service.IsAllowedExtension(extension));
         }
@@ -37,13 +37,13 @@ namespace Rvnx.CRM.Tests.Services
         [InlineData(".pptx")]
         [InlineData("")]
         [InlineData(null)]
-        public void IsAllowedExtension_ShouldReturnFalse_ForDisallowedExtensions(string? extension)
+        public void IsAllowedExtensionShouldReturnFalseForDisallowedExtensions(string? extension)
         {
             Assert.False(_service.IsAllowedExtension(extension!));
         }
 
         [Fact]
-        public void IsAllowedFileSize_ShouldReturnTrue_ForValidSize()
+        public void IsAllowedFileSizeShouldReturnTrueForValidSize()
         {
             long validSize = 30 * 1024 * 1024; // 30 MB
             Assert.True(_service.IsAllowedFileSize(validSize));
@@ -51,14 +51,14 @@ namespace Rvnx.CRM.Tests.Services
         }
 
         [Fact]
-        public void IsAllowedFileSize_ShouldReturnFalse_ForTooLargeSize()
+        public void IsAllowedFileSizeShouldReturnFalseForTooLargeSize()
         {
             long invalidSize = 30 * 1024 * 1024 + 1; // 30 MB + 1 byte
             Assert.False(_service.IsAllowedFileSize(invalidSize));
         }
 
         [Fact]
-        public void IsAllowedFileSize_ShouldReturnFalse_ForZeroOrNegativeSize()
+        public void IsAllowedFileSizeShouldReturnFalseForZeroOrNegativeSize()
         {
             Assert.False(_service.IsAllowedFileSize(0));
             Assert.False(_service.IsAllowedFileSize(-1));
@@ -70,7 +70,7 @@ namespace Rvnx.CRM.Tests.Services
         [InlineData(".png")]
         [InlineData(".gif")]
         [InlineData(".JPG")]
-        public void IsImageExtension_ShouldReturnTrue_ForValidExtensions(string extension)
+        public void IsImageExtensionShouldReturnTrueForValidExtensions(string extension)
         {
             Assert.True(_service.IsImageExtension(extension));
         }
@@ -81,48 +81,48 @@ namespace Rvnx.CRM.Tests.Services
         [InlineData(".php")]
         [InlineData("")]
         [InlineData(null)]
-        public void IsImageExtension_ShouldReturnFalse_ForInvalidExtensions(string? extension)
+        public void IsImageExtensionShouldReturnFalseForInvalidExtensions(string? extension)
         {
             Assert.False(_service.IsImageExtension(extension));
         }
 
         [Fact]
-        public void IsValidImageSignature_ShouldReturnTrue_ForValidPng()
+        public void IsValidImageSignatureShouldReturnTrueForValidPng()
         {
             byte[] pngSignature = { 0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A };
             Assert.True(_service.IsValidImageSignature(pngSignature, ".png"));
         }
 
         [Fact]
-        public void IsValidImageSignature_ShouldReturnTrue_ForValidJpg()
+        public void IsValidImageSignatureShouldReturnTrueForValidJpg()
         {
             byte[] jpgSignature = { 0xFF, 0xD8, 0xFF, 0xE0 };
             Assert.True(_service.IsValidImageSignature(jpgSignature, ".jpg"));
         }
 
         [Fact]
-        public void IsValidImageSignature_ShouldReturnFalse_ForInvalidSignature()
+        public void IsValidImageSignatureShouldReturnFalseForInvalidSignature()
         {
             byte[] invalidSignature = { 0x00, 0x00, 0x00, 0x00 };
             Assert.False(_service.IsValidImageSignature(invalidSignature, ".png"));
         }
 
         [Fact]
-        public void IsValidImageSignature_ShouldReturnFalse_ForShortFile()
+        public void IsValidImageSignatureShouldReturnFalseForShortFile()
         {
             byte[] shortFile = { 0xFF, 0xD8 };
             Assert.False(_service.IsValidImageSignature(shortFile, ".jpg"));
         }
 
         [Fact]
-        public void IsValidImageSignature_ShouldHandleCaseInsensitiveExtension()
+        public void IsValidImageSignatureShouldHandleCaseInsensitiveExtension()
         {
             byte[] pngSignature = { 0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A };
             Assert.True(_service.IsValidImageSignature(pngSignature, ".PNG"));
         }
 
         [Fact]
-        public void IsValidImageSignature_ShouldReturnFalse_WhenFileBytesIsNull()
+        public void IsValidImageSignatureShouldReturnFalseWhenFileBytesIsNull()
         {
             Assert.False(_service.IsValidImageSignature(null!, ".png"));
         }
@@ -133,49 +133,49 @@ namespace Rvnx.CRM.Tests.Services
     public partial class FileValidationServiceTests
     {
         [Fact]
-        public void IsValidFileSignature_ShouldReturnTrue_ForValidPdf()
+        public void IsValidFileSignatureShouldReturnTrueForValidPdf()
         {
             byte[] bytes = { 0x25, 0x50, 0x44, 0x46, 0x00 };
             Assert.True(_service.IsValidFileSignature(bytes, ".pdf"));
         }
 
         [Fact]
-        public void IsValidFileSignature_ShouldReturnFalse_ForInvalidPdf()
+        public void IsValidFileSignatureShouldReturnFalseForInvalidPdf()
         {
             byte[] bytes = { 0x00, 0x00, 0x00, 0x00, 0x00 };
             Assert.False(_service.IsValidFileSignature(bytes, ".pdf"));
         }
 
         [Fact]
-        public void IsValidFileSignature_ShouldReturnTrue_ForValidDocx()
+        public void IsValidFileSignatureShouldReturnTrueForValidDocx()
         {
             byte[] bytes = { 0x50, 0x4B, 0x03, 0x04, 0x00 };
             Assert.True(_service.IsValidFileSignature(bytes, ".docx"));
         }
 
         [Fact]
-        public void IsValidFileSignature_ShouldReturnTrue_ForValidDoc()
+        public void IsValidFileSignatureShouldReturnTrueForValidDoc()
         {
             byte[] bytes = { 0xD0, 0xCF, 0x11, 0xE0, 0x00 };
             Assert.True(_service.IsValidFileSignature(bytes, ".doc"));
         }
 
         [Fact]
-        public void IsValidFileSignature_ShouldReturnTrue_ForTxt()
+        public void IsValidFileSignatureShouldReturnTrueForTxt()
         {
             byte[] bytes = { 0x00, 0x01, 0x02, 0x03, 0x04 }; // Anything
             Assert.True(_service.IsValidFileSignature(bytes, ".txt"));
         }
 
         [Fact]
-        public void IsValidFileSignature_ShouldReturnFalse_ForUnknownExtension()
+        public void IsValidFileSignatureShouldReturnFalseForUnknownExtension()
         {
             byte[] bytes = { 0x00, 0x00, 0x00, 0x00 };
             Assert.False(_service.IsValidFileSignature(bytes, ".unknown"));
         }
 
         [Fact]
-        public void IsValidFileSignature_ShouldReturnTrue_ForValidImage()
+        public void IsValidFileSignatureShouldReturnTrueForValidImage()
         {
             // PNG
             byte[] bytes = { 0x89, 0x50, 0x4E, 0x47, 0x00 };
@@ -183,7 +183,7 @@ namespace Rvnx.CRM.Tests.Services
         }
 
         [Fact]
-        public void IsValidFileSignature_ShouldReturnFalse_WhenFileBytesIsNull()
+        public void IsValidFileSignatureShouldReturnFalseWhenFileBytesIsNull()
         {
             Assert.False(_service.IsValidFileSignature(null!, ".pdf"));
         }

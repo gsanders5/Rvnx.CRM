@@ -50,8 +50,8 @@ namespace Rvnx.CRM.Web.Controllers
                     EventFrequency = dto.EventFrequency
                 };
 
-                await _repository.AddAsync(importantDate);
-                await _repository.SaveChangesAsync();
+                await Repository.AddAsync(importantDate);
+                await Repository.SaveChangesAsync();
 
                 return RedirectToEntity(dto.EntityId, dto.EntityType);
             }
@@ -62,7 +62,7 @@ namespace Rvnx.CRM.Web.Controllers
         {
             if (id == null) return NotFound();
 
-            SignificantDate? importantDate = await _repository.GetByIdAsync<SignificantDate>(id.Value);
+            SignificantDate? importantDate = await Repository.GetByIdAsync<SignificantDate>(id.Value);
             return importantDate == null ? NotFound() : View(importantDate.ToDto());
         }
 
@@ -76,7 +76,7 @@ namespace Rvnx.CRM.Web.Controllers
             {
                 try
                 {
-                    SignificantDate? importantDate = await _repository.GetByIdAsync<SignificantDate>(id);
+                    SignificantDate? importantDate = await Repository.GetByIdAsync<SignificantDate>(id);
                     if (importantDate == null) return NotFound();
 
                     if (string.Equals(dto.Title, SignificantDateTitles.Birthday, StringComparison.OrdinalIgnoreCase))
@@ -96,12 +96,12 @@ namespace Rvnx.CRM.Web.Controllers
                     importantDate.RemindMe = dto.RemindMe;
                     importantDate.EventFrequency = dto.EventFrequency;
 
-                    await _repository.UpdateAsync(importantDate);
-                    await _repository.SaveChangesAsync();
+                    await Repository.UpdateAsync(importantDate);
+                    await Repository.SaveChangesAsync();
                 }
                 catch (DbUpdateConcurrencyException)
                 {
-                    if (!await _repository.ExistsAsync<SignificantDate>(dto.Id)) return NotFound();
+                    if (!await Repository.ExistsAsync<SignificantDate>(dto.Id)) return NotFound();
                     else throw;
                 }
                 return RedirectToEntity(dto.EntityId, dto.EntityType);
@@ -113,7 +113,7 @@ namespace Rvnx.CRM.Web.Controllers
         {
             if (id == null) return NotFound();
 
-            SignificantDate? importantDate = await _repository.GetByIdAsync<SignificantDate>(id.Value);
+            SignificantDate? importantDate = await Repository.GetByIdAsync<SignificantDate>(id.Value);
             return importantDate == null ? NotFound() : View(importantDate.ToDto());
         }
 
@@ -121,14 +121,14 @@ namespace Rvnx.CRM.Web.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(Guid id)
         {
-            SignificantDate? importantDate = await _repository.GetByIdAsync<SignificantDate>(id);
+            SignificantDate? importantDate = await Repository.GetByIdAsync<SignificantDate>(id);
             if (importantDate != null)
             {
                 Guid entityId = importantDate.ContactId ?? Guid.Empty;
                 string entityType = EntityTypes.Person;
 
-                await _repository.DeleteAsync<SignificantDate>(id);
-                await _repository.SaveChangesAsync();
+                await Repository.DeleteAsync<SignificantDate>(id);
+                await Repository.SaveChangesAsync();
 
                 return RedirectToEntity(entityId, entityType);
             }
@@ -137,7 +137,7 @@ namespace Rvnx.CRM.Web.Controllers
 
         private async Task<bool> IsBirthdayAlreadySetAsync(Guid contactId, Guid? excludeId = null)
         {
-            return (await _repository.CountAsync<SignificantDate>(d =>
+            return (await Repository.CountAsync<SignificantDate>(d =>
                 d.ContactId == contactId &&
                 d.Id != (excludeId ?? Guid.Empty) &&
                 string.Equals(d.Title, SignificantDateTitles.Birthday, StringComparison.OrdinalIgnoreCase))) > 0;

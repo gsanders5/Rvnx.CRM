@@ -1,3 +1,4 @@
+using System.Globalization;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using Rvnx.CRM.Core.Models.Business;
@@ -15,11 +16,11 @@ public class RepositoryIntegrationTests : SqliteIntegrationTestBase
 
     public RepositoryIntegrationTests() : base(TestUserId)
     {
-        _repository = new Repository(_context);
+        _repository = new Repository(Context);
     }
 
     [Fact]
-    public async Task AddAsync_ShouldPersistData_ToRealSqliteDB()
+    public async Task AddAsyncShouldPersistDataToRealSqliteDB()
     {
         // Arrange
         Contact contact = new() { FirstName = "Real", LastName = "Database" };
@@ -31,17 +32,17 @@ public class RepositoryIntegrationTests : SqliteIntegrationTestBase
         // Assert
         // Use a separate context/repo to verify persistence to disk
         // We can't easily create a new context pointing to the same file in the helper without exposing connection string,
-        // but we can query _context directly if we clear change tracker or detach.
-        _context.ChangeTracker.Clear();
+        // but we can query Context directly if we clear change tracker or detach.
+        Context.ChangeTracker.Clear();
 
-        Contact? retrieved = await _context.Contacts.FirstOrDefaultAsync(c => c.FirstName == "Real");
+        Contact? retrieved = await Context.Contacts.FirstOrDefaultAsync(c => c.FirstName == "Real");
         retrieved.Should().NotBeNull();
         retrieved!.LastName.Should().Be("Database");
         retrieved.UserId.Should().Be(TestUserId); // Audit field check
     }
 
     [Fact]
-    public async Task GlobalQueryFilter_ShouldFilterData_OnRealDB()
+    public async Task GlobalQueryFilterShouldFilterDataOnRealDB()
     {
         // 1. Add data as "UserA" (Current Context is TestUser)
         // We will mock TestUser as "UserA" for this test by updating the existing mock setup if possible?
@@ -58,15 +59,15 @@ public class RepositoryIntegrationTests : SqliteIntegrationTestBase
         // Let's just use Raw SQL to seed "Other" data.
 
         Guid otherId = Guid.NewGuid();
-        string now = DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss");
+        string now = DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture);
         // Note: SQLite syntax - Table name is Contact, not Contacts
-        await _context.Database.ExecuteSqlRawAsync(
+        await Context.Database.ExecuteSqlRawAsync(
             "INSERT INTO Contact (Id, FirstName, LastName, IsHidden, CreatedBy, CreatedDate, LastChangedBy, LastChangedDate, UserId) " +
             "VALUES ({0}, 'Other', 'Guy', 0, 'System', {1}, 'System', {1}, 'UserB')",
             otherId, now);
 
         // 3. Act
-        _context.ChangeTracker.Clear();
+        Context.ChangeTracker.Clear();
         List<Contact> visibleContacts = await _repository.ListAsync<Contact>();
 
         // 4. Assert
@@ -75,7 +76,7 @@ public class RepositoryIntegrationTests : SqliteIntegrationTestBase
     }
 
     [Fact]
-    public async Task CascadeDelete_ShouldWork_OnRealDB()
+    public async Task CascadeDeleteShouldWorkOnRealDB()
     {
         // Arrange
         Contact contact = new() { FirstName = "Delete", LastName = "Me" };
@@ -104,14 +105,14 @@ public class RepositoryIntegrationTests : SqliteIntegrationTestBase
         await _repository.SaveChangesAsync();
 
         // Assert
-        _context.ChangeTracker.Clear();
+        Context.ChangeTracker.Clear();
 
         // Employer should be deleted (Cascade)
-        Employer? emp = await _context.Employers.IgnoreQueryFilters().FirstOrDefaultAsync(e => e.CompanyName == "Work");
+        Employer? emp = await Context.Employers.IgnoreQueryFilters().FirstOrDefaultAsync(e => e.CompanyName == "Work");
         emp.Should().BeNull();
 
         // SignificantDate should now be deleted because of the new explicit FK with Cascade Delete
-        SignificantDate? d = await _context.SignificantDates.IgnoreQueryFilters().FirstOrDefaultAsync(x => x.Title == "Bday");
+        SignificantDate? d = await Context.SignificantDates.IgnoreQueryFilters().FirstOrDefaultAsync(x => x.Title == "Bday");
         d.Should().BeNull();
     }
 }

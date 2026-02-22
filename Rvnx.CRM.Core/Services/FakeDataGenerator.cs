@@ -1,3 +1,4 @@
+using System.Globalization;
 using Rvnx.CRM.Core.Enumerations;
 using Rvnx.CRM.Core.Models.Contact;
 using Rvnx.CRM.Core.Models.Dates;
@@ -43,7 +44,7 @@ namespace Rvnx.CRM.Core.Services
                     Street = $"{_random.Next(100, 9999)} {Streets[_random.Next(Streets.Length)]}",
                     City = Cities[cityIndex],
                     State = States[cityIndex],
-                    Zip = _random.Next(10000, 99999).ToString(),
+                    Zip = _random.Next(10000, 99999).ToString(CultureInfo.InvariantCulture),
                     Country = "USA",
                     AddressType = _random.Next(2) == 0 ? "Home" : "Work"
                 });
@@ -70,7 +71,7 @@ namespace Rvnx.CRM.Core.Services
                     Id = Guid.NewGuid(),
                     ContactId = contact.Id,
                     Type = ContactMethodType.Email,
-                    Value = $"{firstName.ToLower()}.{lastName.ToLower()}@example.com",
+                    Value = $"{firstName.ToLowerInvariant()}.{lastName.ToLowerInvariant()}@example.com",
                     Label = "Personal"
                 });
             }

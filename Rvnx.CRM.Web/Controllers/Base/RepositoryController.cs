@@ -8,23 +8,23 @@ namespace Rvnx.CRM.Web.Controllers.Base;
 
 public abstract class RepositoryController : AuthorizedController
 {
-    protected readonly IRepository _repository;
+    protected IRepository Repository { get; }
 
     protected RepositoryController(IRepository repository)
     {
-        _repository = repository;
+        Repository = repository;
     }
 
     protected async Task<string> GetEntityName(Guid id, string type)
     {
         if (type == EntityTypes.Person)
         {
-            Contact? p = await _repository.GetByIdAsync<Contact>(id);
+            Contact? p = await Repository.GetByIdAsync<Contact>(id);
             return p?.FullName ?? "Unknown Person";
         }
         else if (type == EntityTypes.Company)
         {
-            Employer? c = await _repository.GetByIdAsync<Employer>(id);
+            Employer? c = await Repository.GetByIdAsync<Employer>(id);
             return c?.CompanyName ?? "Unknown Company";
         }
         return "Unknown Entity";

@@ -18,7 +18,7 @@ namespace Rvnx.CRM.Web.Controllers
             if (entityType != EntityTypes.Person) return BadRequest("Only Person entities are supported.");
 
             // Sentinel: Verify entity existence and access rights to prevent IDOR
-            if (!await _repository.ExistsAsync<Contact>(entityId)) return NotFound();
+            if (!await Repository.ExistsAsync<Contact>(entityId)) return NotFound();
 
             NoteFormViewModel viewModel = new()
             {
@@ -37,13 +37,13 @@ namespace Rvnx.CRM.Web.Controllers
             if (viewModel.EntityType != EntityTypes.Person) return BadRequest("Only Person entities are supported.");
 
             // Sentinel: Verify entity existence and access rights to prevent IDOR
-            if (!await _repository.ExistsAsync<Contact>(viewModel.EntityId)) return NotFound();
+            if (!await Repository.ExistsAsync<Contact>(viewModel.EntityId)) return NotFound();
 
             if (ModelState.IsValid)
             {
                 Note note = viewModel.ToEntity();
-                await _repository.AddAsync(note);
-                await _repository.SaveChangesAsync();
+                await Repository.AddAsync(note);
+                await Repository.SaveChangesAsync();
                 return RedirectToEntity(note.ContactId ?? Guid.Empty, EntityTypes.Person);
             }
 
@@ -55,7 +55,7 @@ namespace Rvnx.CRM.Web.Controllers
         {
             if (id == null) return NotFound();
 
-            Note? note = await _repository.GetByIdAsync<Note>(id.Value);
+            Note? note = await Repository.GetByIdAsync<Note>(id.Value);
             if (note == null) return NotFound();
 
             NoteFormViewModel viewModel = new()
@@ -81,19 +81,19 @@ namespace Rvnx.CRM.Web.Controllers
             {
                 try
                 {
-                    Note? existingNote = await _repository.GetByIdAsync<Note>(id);
+                    Note? existingNote = await Repository.GetByIdAsync<Note>(id);
                     if (existingNote == null) return NotFound();
 
                     existingNote.UpdateEntity(viewModel);
 
-                    await _repository.UpdateAsync(existingNote);
-                    await _repository.SaveChangesAsync();
+                    await Repository.UpdateAsync(existingNote);
+                    await Repository.SaveChangesAsync();
 
                     return RedirectToEntity(existingNote.ContactId ?? Guid.Empty, EntityTypes.Person);
                 }
                 catch (Exception)
                 {
-                    if (!await _repository.ExistsAsync<Note>(viewModel.Id.Value)) return NotFound();
+                    if (!await Repository.ExistsAsync<Note>(viewModel.Id.Value)) return NotFound();
                     else throw;
                 }
             }
@@ -110,7 +110,7 @@ namespace Rvnx.CRM.Web.Controllers
         {
             if (id == null) return NotFound();
 
-            Note? note = await _repository.GetByIdAsync<Note>(id.Value);
+            Note? note = await Repository.GetByIdAsync<Note>(id.Value);
             if (note == null) return NotFound();
 
             NoteDeleteViewModel viewModel = new()
@@ -130,13 +130,13 @@ namespace Rvnx.CRM.Web.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(Guid id)
         {
-            Note? note = await _repository.GetByIdAsync<Note>(id);
+            Note? note = await Repository.GetByIdAsync<Note>(id);
             if (note != null)
             {
                 Guid entityId = note.ContactId ?? Guid.Empty;
                 string entityType = EntityTypes.Person;
-                await _repository.DeleteAsync<Note>(id);
-                await _repository.SaveChangesAsync();
+                await Repository.DeleteAsync<Note>(id);
+                await Repository.SaveChangesAsync();
                 return RedirectToEntity(entityId, entityType);
             }
             return RedirectToAction("Index", "Home");

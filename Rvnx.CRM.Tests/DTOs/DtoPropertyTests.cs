@@ -10,7 +10,7 @@ namespace Rvnx.CRM.Tests.DTOs
 {
     public class DtoPropertyTests
     {
-        private void VerifyProperties<TModel, TDto>(string[]? ignoreProperties = null)
+        private static void VerifyProperties<TModel, TDto>(string[]? ignoreProperties = null)
         {
             PropertyInfo[] modelProperties = typeof(TModel).GetProperties(BindingFlags.Public | BindingFlags.Instance);
             PropertyInfo[] dtoProperties = typeof(TDto).GetProperties(BindingFlags.Public | BindingFlags.Instance);
@@ -40,47 +40,53 @@ namespace Rvnx.CRM.Tests.DTOs
                 $"Missing properties in {typeof(TDto).Name} from {typeof(TModel).Name}: {string.Join(", ", missingProperties)}");
         }
 
+        private static readonly string[] ContactDetailDtoIgnoredProperties = ["IsHidden", "Addresses", "Attachments"];
         [Fact]
-        public void ContactDetailDto_ShouldHave_All_Contact_Properties()
+        public void ContactDetailDtoShouldHaveAllContactProperties()
         {
             // Contact inherits Person, BaseEntity
-            VerifyProperties<Contact, ContactDetailDto>(new[] { "IsHidden", "Addresses", "Attachments" }); // Handled as collections in DetailDto
+            VerifyProperties<Contact, ContactDetailDto>(ContactDetailDtoIgnoredProperties); // Handled as collections in DetailDto
         }
 
+        private static readonly string[] PetDtoIgnoredProperties = ["ContactId", "Contact"];
         [Fact]
-        public void PetDto_ShouldHave_All_Pet_Properties()
+        public void PetDtoShouldHaveAllPetProperties()
         {
             // Pet inherits BaseEntity
             // ContactId/Contact are navigation/FKs, often not in DTO or named EntityId
-            VerifyProperties<Pet, PetDto>(new[] { "ContactId", "Contact" });
+            VerifyProperties<Pet, PetDto>(PetDtoIgnoredProperties);
         }
 
+        private static readonly string[] NoteDtoIgnoredProperties = ["ContactId", "Contact"];
         [Fact]
-        public void NoteDto_ShouldHave_All_Note_Properties()
+        public void NoteDtoShouldHaveAllNoteProperties()
         {
             // Note inherits BaseEntity
-            VerifyProperties<Note, NoteDto>(new[] { "ContactId", "Contact" });
+            VerifyProperties<Note, NoteDto>(NoteDtoIgnoredProperties);
         }
 
+        private static readonly string[] SignificantDateDtoIgnoredProperties = ["ContactId", "Contact"];
         [Fact]
-        public void SignificantDateDto_ShouldHave_All_SignificantDate_Properties()
+        public void SignificantDateDtoShouldHaveAllSignificantDateProperties()
         {
             // SignificantDate inherits BaseEntity
-            VerifyProperties<SignificantDate, SignificantDateDto>(new[] { "ContactId", "Contact" });
+            VerifyProperties<SignificantDate, SignificantDateDto>(SignificantDateDtoIgnoredProperties);
         }
 
+        private static readonly string[] ReminderDtoIgnoredProperties = ["ContactId", "Contact"];
         [Fact]
-        public void ReminderDto_ShouldHave_All_Reminder_Properties()
+        public void ReminderDtoShouldHaveAllReminderProperties()
         {
             // Reminder inherits BaseEntity
-            VerifyProperties<Reminder, ReminderDto>(new[] { "ContactId", "Contact" });
+            VerifyProperties<Reminder, ReminderDto>(ReminderDtoIgnoredProperties);
         }
 
+        private static readonly string[] RelationshipDtoIgnoredProperties = ["RelationshipType", "Person", "RelatedPerson"];
         [Fact]
-        public void RelationshipDto_ShouldHave_All_Relationship_Properties()
+        public void RelationshipDtoShouldHaveAllRelationshipProperties()
         {
             // Relationship inherits PolymorphicEntity, BaseEntity
-            VerifyProperties<Relationship, RelationshipDto>(new[] { "RelationshipType", "Person", "RelatedPerson" });
+            VerifyProperties<Relationship, RelationshipDto>(RelationshipDtoIgnoredProperties);
         }
     }
 }

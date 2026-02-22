@@ -24,8 +24,8 @@ namespace Rvnx.CRM.Web.Controllers
             if (ModelState.IsValid)
             {
                 ContactMethod contactInfo = contactInfoInput.ToEntity();
-                await _repository.AddAsync(contactInfo);
-                await _repository.SaveChangesAsync();
+                await Repository.AddAsync(contactInfo);
+                await Repository.SaveChangesAsync();
                 return RedirectToEntity(contactInfo.ContactId ?? Guid.Empty, EntityTypes.Person);
             }
             return View(contactInfoInput);
@@ -34,7 +34,7 @@ namespace Rvnx.CRM.Web.Controllers
         public async Task<IActionResult> Edit(Guid? id)
         {
             if (id == null) return NotFound();
-            ContactMethod? contactInfo = await _repository.GetByIdAsync<ContactMethod>(id.Value);
+            ContactMethod? contactInfo = await Repository.GetByIdAsync<ContactMethod>(id.Value);
 
             if (contactInfo == null) return NotFound();
 
@@ -61,19 +61,19 @@ namespace Rvnx.CRM.Web.Controllers
             {
                 try
                 {
-                    ContactMethod? existingContactInfo = await _repository.GetByIdAsync<ContactMethod>(id);
+                    ContactMethod? existingContactInfo = await Repository.GetByIdAsync<ContactMethod>(id);
                     if (existingContactInfo == null) return NotFound();
 
                     existingContactInfo.UpdateEntity(contactInfoInput);
 
-                    await _repository.UpdateAsync(existingContactInfo);
-                    await _repository.SaveChangesAsync();
+                    await Repository.UpdateAsync(existingContactInfo);
+                    await Repository.SaveChangesAsync();
 
                     return RedirectToEntity(existingContactInfo.ContactId ?? Guid.Empty, EntityTypes.Person);
                 }
                 catch (Exception)
                 {
-                    if (!await _repository.ExistsAsync<ContactMethod>(contactInfoInput.Id.Value)) return NotFound();
+                    if (!await Repository.ExistsAsync<ContactMethod>(contactInfoInput.Id.Value)) return NotFound();
                     else throw;
                 }
             }
@@ -84,7 +84,7 @@ namespace Rvnx.CRM.Web.Controllers
         public async Task<IActionResult> Delete(Guid? id)
         {
             if (id == null) return NotFound();
-            ContactMethod? contactInfo = await _repository.GetByIdAsync<ContactMethod>(id.Value);
+            ContactMethod? contactInfo = await Repository.GetByIdAsync<ContactMethod>(id.Value);
             return contactInfo == null ? NotFound() : View(contactInfo);
         }
 
@@ -92,13 +92,13 @@ namespace Rvnx.CRM.Web.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(Guid id)
         {
-            ContactMethod? contactInfo = await _repository.GetByIdAsync<ContactMethod>(id);
+            ContactMethod? contactInfo = await Repository.GetByIdAsync<ContactMethod>(id);
             if (contactInfo != null)
             {
                 Guid entityId = contactInfo.ContactId ?? Guid.Empty;
                 string entityType = EntityTypes.Person;
-                await _repository.DeleteAsync<ContactMethod>(id);
-                await _repository.SaveChangesAsync();
+                await Repository.DeleteAsync<ContactMethod>(id);
+                await Repository.SaveChangesAsync();
                 return RedirectToEntity(entityId, entityType);
             }
             return RedirectToAction("Index", "Home");

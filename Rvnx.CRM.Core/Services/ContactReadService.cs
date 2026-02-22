@@ -30,7 +30,7 @@ public class ContactReadService(IRepository repository) : IContactReadService
         // Optimization: If contact list is large, avoid sending large list of IDs to SQL (which can hit parameter limits).
         // Instead, fetch all profile images for Person entities (scoped by user via global filter) and filter in memory.
 
-        if (profileAttachments != null && profileAttachments.Any())
+        if (profileAttachments != null && profileAttachments.Count > 0)
         {
             Dictionary<Guid, Attachment> attachmentMap = profileAttachments
                 .Where(a => a != null && a.ContactId.HasValue)
@@ -81,7 +81,7 @@ public class ContactReadService(IRepository repository) : IContactReadService
             .ToList();
 
         List<Contact> relatedContacts = new();
-        if (relatedIds.Any())
+        if (relatedIds.Count > 0)
         {
             relatedContacts = await _repository.ListAsNoTrackingAsync<Contact>(c => relatedIds.Contains(c.Id));
         }

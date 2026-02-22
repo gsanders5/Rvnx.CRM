@@ -13,7 +13,7 @@ namespace Rvnx.CRM.Tests.Controllers
 {
     public class AttachmentsControllerSecurityTests
     {
-        private CRMDbContext GetInMemoryDbContext()
+        private static CRMDbContext GetInMemoryDbContext()
         {
             DbContextOptions<CRMDbContext> options = new DbContextOptionsBuilder<CRMDbContext>()
                 .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
@@ -27,7 +27,7 @@ namespace Rvnx.CRM.Tests.Controllers
         }
 
         [Fact]
-        public async Task Upload_ShouldReject_WhenExtensionIsImageButContentIsNot()
+        public async Task UploadShouldRejectWhenExtensionIsImageButContentIsNot()
         {
             // Arrange
             using CRMDbContext context = GetInMemoryDbContext();
@@ -80,7 +80,7 @@ namespace Rvnx.CRM.Tests.Controllers
         }
 
         [Fact]
-        public async Task Upload_ShouldSucceed_WhenExtensionIsImageAndContentIsImage()
+        public async Task UploadShouldSucceedWhenExtensionIsImageAndContentIsImage()
         {
             // Arrange
             using CRMDbContext context = GetInMemoryDbContext();
@@ -136,7 +136,7 @@ namespace Rvnx.CRM.Tests.Controllers
         }
 
         [Fact]
-        public async Task Upload_ShouldReject_WhenExtensionIsPdfButContentIsNot()
+        public async Task UploadShouldRejectWhenExtensionIsPdfButContentIsNot()
         {
             // Arrange
             using CRMDbContext context = GetInMemoryDbContext();
@@ -188,7 +188,7 @@ namespace Rvnx.CRM.Tests.Controllers
         }
 
         [Fact]
-        public async Task Upload_ShouldReject_WhenFileExceedsSizeLimit()
+        public async Task UploadShouldRejectWhenFileExceedsSizeLimit()
         {
             // Arrange
             using CRMDbContext context = GetInMemoryDbContext();

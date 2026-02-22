@@ -5,7 +5,7 @@ namespace Rvnx.CRM.Tests.Services
     public class DateCalculationServiceTests
     {
         [Fact]
-        public void GetNextOccurrence_SevenDays_AddsSevenDays()
+        public void GetNextOccurrenceSevenDaysAddsSevenDays()
         {
             // Arrange
             DateTime start = new(2023, 1, 1);
@@ -20,7 +20,7 @@ namespace Rvnx.CRM.Tests.Services
         }
 
         [Fact]
-        public void GetNextOccurrence_365Days_TreatsAsOneYear()
+        public void GetNextOccurrence365DaysTreatsAsOneYear()
         {
             // Arrange
             // 2024 is a leap year (366 days).
@@ -41,7 +41,7 @@ namespace Rvnx.CRM.Tests.Services
         }
 
         [Fact]
-        public void GetNextOccurrence_LeapYear_PreservesFeb29()
+        public void GetNextOccurrenceLeapYearPreservesFeb29()
         {
             // Arrange
             DateTime start = new(2020, 2, 29); // Leap day
@@ -57,7 +57,7 @@ namespace Rvnx.CRM.Tests.Services
         }
 
         [Fact]
-        public void GetNextOccurrence_LeapYear_ReturnsToFeb29_OnNextLeapYear()
+        public void GetNextOccurrenceLeapYearReturnsToFeb29OnNextLeapYear()
         {
             // Arrange
             DateTime start = new(2020, 2, 29);
@@ -74,7 +74,7 @@ namespace Rvnx.CRM.Tests.Services
         }
 
         [Fact]
-        public void GetNextOccurrence_FarPastDate_CatchesUp()
+        public void GetNextOccurrenceFarPastDateCatchesUp()
         {
             // Arrange
             DateTime start = new(2000, 1, 1);
@@ -90,7 +90,7 @@ namespace Rvnx.CRM.Tests.Services
         }
 
         [Fact]
-        public void GetNextOccurrence_ZeroFrequency_ReturnsOriginalDate()
+        public void GetNextOccurrenceZeroFrequencyReturnsOriginalDate()
         {
             // Arrange
             DateTime start = new(2023, 1, 1);
@@ -106,7 +106,7 @@ namespace Rvnx.CRM.Tests.Services
         }
 
         [Fact]
-        public void GetNextOccurrence_DueToday_ReturnsToday()
+        public void GetNextOccurrenceDueTodayReturnsToday()
         {
             // Arrange
             DateTime start = new(2023, 1, 1);
@@ -121,7 +121,7 @@ namespace Rvnx.CRM.Tests.Services
         }
 
         [Fact]
-        public void GetNextOccurrence_StandardInterval_DriftsCorrectly()
+        public void GetNextOccurrenceStandardIntervalDriftsCorrectly()
         {
             // Arrange
             DateTime start = new(2023, 1, 1);
@@ -139,7 +139,7 @@ namespace Rvnx.CRM.Tests.Services
         }
 
         [Fact]
-        public void GetNextOccurrence_FutureDate_ReturnsOriginal()
+        public void GetNextOccurrenceFutureDateReturnsOriginal()
         {
             // Arrange
             DateTime start = new(2025, 1, 1);
@@ -154,7 +154,7 @@ namespace Rvnx.CRM.Tests.Services
         }
 
         [Fact]
-        public void GetNextOccurrence_MultipleOf365_ButNotOneYear_CalculatesCorrectly()
+        public void GetNextOccurrenceMultipleOf365ButNotOneYearCalculatesCorrectly()
         {
             // Arrange
             DateTime start = new(2020, 1, 1);
@@ -170,7 +170,7 @@ namespace Rvnx.CRM.Tests.Services
         }
 
         [Fact]
-        public void GetNextOccurrence_LeapYearInterval_DriftsOneDayPerYear()
+        public void GetNextOccurrenceLeapYearIntervalDriftsOneDayPerYear()
         {
             // Arrange
             DateTime start = new(2021, 1, 1);

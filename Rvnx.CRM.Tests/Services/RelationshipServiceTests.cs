@@ -23,7 +23,7 @@ namespace Rvnx.CRM.Tests.Services
         }
 
         [Fact]
-        public async Task CreateRelationshipAsync_Forward_CorrectlySetsRelationship()
+        public async Task CreateRelationshipAsyncForwardCorrectlySetsRelationship()
         {
             // Arrange
             Guid originalEntityId = Guid.NewGuid();
@@ -52,7 +52,7 @@ namespace Rvnx.CRM.Tests.Services
         }
 
         [Fact]
-        public async Task CreateRelationshipAsync_Reverse_CorrectlySwapsEntities()
+        public async Task CreateRelationshipAsyncReverseCorrectlySwapsEntities()
         {
             // Arrange
             Guid originalEntityId = Guid.NewGuid();
@@ -85,7 +85,7 @@ namespace Rvnx.CRM.Tests.Services
         }
 
         [Fact]
-        public async Task CreateRelationshipAsync_MissingType_ReturnsFailure()
+        public async Task CreateRelationshipAsyncMissingTypeReturnsFailure()
         {
             // Arrange
             Relationship relationship = new();
@@ -100,7 +100,7 @@ namespace Rvnx.CRM.Tests.Services
         }
 
         [Fact]
-        public async Task CreateRelationshipAsync_InvalidFormat_ReturnsFailure()
+        public async Task CreateRelationshipAsyncInvalidFormatReturnsFailure()
         {
             // Arrange
             Relationship relationship = new();
@@ -115,7 +115,7 @@ namespace Rvnx.CRM.Tests.Services
         }
 
         [Fact]
-        public async Task CreateRelationshipAsync_InvalidGuid_ReturnsFailure()
+        public async Task CreateRelationshipAsyncInvalidGuidReturnsFailure()
         {
             // Arrange
             Relationship relationship = new();
@@ -129,7 +129,7 @@ namespace Rvnx.CRM.Tests.Services
             _repositoryMock.Verify(r => r.AddAsync(It.IsAny<Relationship>(), It.IsAny<CancellationToken>()), Times.Never);
         }
         [Fact]
-        public async Task UpdateRelationshipAsync_Forward_CorrectlyUpdatesRelationship()
+        public async Task UpdateRelationshipAsyncForwardCorrectlyUpdatesRelationship()
         {
             // Arrange
             Guid relationshipId = Guid.NewGuid();
@@ -175,7 +175,7 @@ namespace Rvnx.CRM.Tests.Services
         }
 
         [Fact]
-        public async Task UpdateRelationshipAsync_Reverse_CorrectlySwapsEntities()
+        public async Task UpdateRelationshipAsyncReverseCorrectlySwapsEntities()
         {
             // Arrange
             Guid relationshipId = Guid.NewGuid();
@@ -221,7 +221,7 @@ namespace Rvnx.CRM.Tests.Services
         }
 
         [Fact]
-        public async Task UpdateRelationshipAsync_NotFound_ReturnsFailure()
+        public async Task UpdateRelationshipAsyncNotFoundReturnsFailure()
         {
             // Arrange
             Guid relationshipId = Guid.NewGuid();
@@ -242,7 +242,7 @@ namespace Rvnx.CRM.Tests.Services
         }
 
         [Fact]
-        public async Task UpdateRelationshipAsync_MissingType_ReturnsFailure()
+        public async Task UpdateRelationshipAsyncMissingTypeReturnsFailure()
         {
             // Arrange
             Guid relationshipId = Guid.NewGuid();
@@ -257,7 +257,7 @@ namespace Rvnx.CRM.Tests.Services
         }
 
         [Fact]
-        public async Task UpdateRelationshipAsync_InvalidFormat_ReturnsFailure()
+        public async Task UpdateRelationshipAsyncInvalidFormatReturnsFailure()
         {
             // Arrange
             Guid relationshipId = Guid.NewGuid();
@@ -272,7 +272,7 @@ namespace Rvnx.CRM.Tests.Services
         }
 
         [Fact]
-        public async Task GetRelatedEntityOptionsAsync_Person_ReturnsContactsExcludingSelf_AndSorted()
+        public async Task GetRelatedEntityOptionsAsyncPersonReturnsContactsExcludingSelfAndSorted()
         {
             // Arrange
             Guid entityId = Guid.NewGuid();
@@ -308,7 +308,7 @@ namespace Rvnx.CRM.Tests.Services
         }
 
         [Fact]
-        public async Task GetRelatedEntityOptionsAsync_Company_ReturnsEmployersExcludingSelf_AndSorted()
+        public async Task GetRelatedEntityOptionsAsyncCompanyReturnsEmployersExcludingSelfAndSorted()
         {
             // Arrange
             Guid entityId = Guid.NewGuid();
@@ -343,7 +343,7 @@ namespace Rvnx.CRM.Tests.Services
                 It.IsAny<string[]>()), Times.Once);
         }
 
-        private bool VerifyPredicate<T>(Expression<Func<T, bool>> expr, Guid entityId) where T : BaseEntity, new()
+        private static bool VerifyPredicate<T>(Expression<Func<T, bool>> expr, Guid entityId) where T : BaseEntity, new()
         {
             Func<T, bool> func = expr.Compile();
             T shouldExclude = new() { Id = entityId };
@@ -353,7 +353,7 @@ namespace Rvnx.CRM.Tests.Services
         }
 
         [Fact]
-        public void GetRelationshipTypeOptions_ReturnsCorrectOptions()
+        public void GetRelationshipTypeOptionsReturnsCorrectOptions()
         {
             // Arrange
             // Using "Parent" which is asymmetric. ID: 7c1f8d22-1b6a-4c28-9c1e-3f5a2b8e9d1a

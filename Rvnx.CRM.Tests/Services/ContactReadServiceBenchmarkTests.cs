@@ -22,7 +22,7 @@ namespace Rvnx.CRM.Tests.Services
         }
 
         [Fact]
-        public async Task GetContactFormAsync_Performance_Optimized()
+        public async Task GetContactFormAsyncPerformanceOptimized()
         {
             // Arrange
             Guid contactId = Guid.NewGuid();
