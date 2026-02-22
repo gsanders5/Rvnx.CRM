@@ -11,7 +11,7 @@ namespace Rvnx.CRM.Web.Controllers
         private readonly IFileValidationService _fileValidationService = fileValidationService;
         private readonly IEntityService _entityService = entityService;
         private static readonly string[] AllowedExtensions = { ".jpg", ".jpeg", ".png", ".gif", ".pdf", ".txt", ".doc", ".docx", ".xls", ".xlsx" };
-        private static readonly string[] ImageContentTypes = { "image/jpeg", "image/png", "image/gif" };
+        private static readonly HashSet<string> ImageContentTypes = new(StringComparer.OrdinalIgnoreCase) { "image/jpeg", "image/png", "image/gif" };
 
         [HttpPost]
         [ValidateAntiForgeryToken]
