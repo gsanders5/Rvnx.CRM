@@ -68,21 +68,6 @@ namespace Rvnx.CRM.Tests.Controllers
             Assert.IsType<NotFoundResult>(result);
         }
 
-        [Fact]
-        public async Task Create_Get_WhenEntityTypeEmpty_ShouldReturnNotFound()
-        {
-            // The controller now checks entityId first, but effectively requires valid inputs if used properly.
-            // With the change, entityType is less critical for FK, but the controller method signature still takes it.
-            // We can remove this test or adapt it if the controller removed the check.
-            // Assuming the controller still has `string entityType` param but might not validate it strictly against "Person" if not needed,
-            // BUT the original code returned NotFound if empty.
-            // Let's assume we kept the signature for now.
-            // Act
-            // If the controller was updated to `if (entityId == Guid.Empty) return NotFound();` then entityType empty is allowed?
-            // Checking the diff... I removed `|| string.IsNullOrEmpty(entityType)` from the check.
-            // So this test is no longer valid if checking for NotFound on empty type.
-            // I'll remove it.
-        }
 
         [Fact]
         public async Task Create_Post_WithValidData_ShouldCreateReminder()

@@ -136,13 +136,13 @@ public class ContactManagementService(IRepository repository, IFileValidationSer
         await DeleteRelatedEntitiesAsync<Relationship>(contactId);
 
         List<Relationship> relatedTo = await _repository.ListAsync<Relationship>(r => r.RelatedEntityId == contactId && r.EntityType == EntityTypes.Person);
-        if (relatedTo.Any()) await _repository.DeleteRangeAsync(relatedTo);
+        if (relatedTo.Count != 0) await _repository.DeleteRangeAsync(relatedTo);
     }
 
     private async Task DeleteRelatedEntitiesAsync<T>(Guid contactId) where T : PolymorphicEntity
     {
         List<T> entities = await _repository.ListAsync<T>(e => e.EntityId == contactId && e.EntityType == EntityTypes.Person);
-        if (entities.Any()) await _repository.DeleteRangeAsync(entities);
+        if (entities.Count != 0) await _repository.DeleteRangeAsync(entities);
     }
 
     private async Task<ContactMethod?> GetPrimaryContactMethodAsync(Guid contactId, ContactMethodType type)

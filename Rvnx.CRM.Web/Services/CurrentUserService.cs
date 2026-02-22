@@ -4,16 +4,10 @@ using System.Security.Claims;
 
 namespace Rvnx.CRM.Web.Services;
 
-public class CurrentUserService : ICurrentUserService
+public class CurrentUserService(IHttpContextAccessor httpContextAccessor, IConfiguration configuration) : ICurrentUserService
 {
-    private readonly IHttpContextAccessor _httpContextAccessor;
-    private readonly IConfiguration _configuration;
-
-    public CurrentUserService(IHttpContextAccessor httpContextAccessor, IConfiguration configuration)
-    {
-        _httpContextAccessor = httpContextAccessor;
-        _configuration = configuration;
-    }
+    private readonly IHttpContextAccessor _httpContextAccessor = httpContextAccessor;
+    private readonly IConfiguration _configuration = configuration;
 
     public Guid? UserId
     {
