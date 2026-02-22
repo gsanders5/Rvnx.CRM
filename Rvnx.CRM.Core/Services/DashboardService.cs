@@ -60,9 +60,8 @@ public class DashboardService(IRepository repository, ILogger<DashboardService> 
         PriorityQueue<UpcomingEventDto, DateTime> topEvents,
         Dictionary<Guid, Contact> contactDict)
     {
-        // Optimization: Filter out completed non-recurring reminders at DB level to reduce memory usage and processing time.
         List<Reminder> allReminders = await _repository.ListAsNoTrackingAsync<Reminder>(
-            r => !r.IsCompleted || r.EventFrequency > TimeSpan.Zero);
+            r => !r.IsCompleted);
 
         int processedCount = 0;
         foreach (Reminder reminder in allReminders)
