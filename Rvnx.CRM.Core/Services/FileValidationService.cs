@@ -4,6 +4,19 @@ namespace Rvnx.CRM.Core.Services
 {
     public class FileValidationService : IFileValidationService
     {
+        private static readonly HashSet<string> AllowedExtensions = new(StringComparer.OrdinalIgnoreCase) { ".jpg", ".jpeg", ".png", ".gif", ".pdf", ".txt", ".doc", ".docx", ".xls", ".xlsx" };
+        private const long MaxFileSize = 30 * 1024 * 1024; // 30 MB
+
+        public bool IsAllowedExtension(string extension)
+        {
+            return !string.IsNullOrEmpty(extension) && AllowedExtensions.Contains(extension);
+        }
+
+        public bool IsAllowedFileSize(long length)
+        {
+            return length > 0 && length <= MaxFileSize;
+        }
+
         public bool IsImageExtension(string? extension)
         {
             if (string.IsNullOrEmpty(extension)) return false;
@@ -29,6 +42,8 @@ namespace Rvnx.CRM.Core.Services
         public bool IsValidFileSignature(byte[] fileBytes, string extension)
         {
             if (fileBytes == null || fileBytes.Length < 4 || string.IsNullOrEmpty(extension)) return false;
+
+            if (!IsAllowedExtension(extension)) return false;
 
             extension = extension.ToLowerInvariant();
 
