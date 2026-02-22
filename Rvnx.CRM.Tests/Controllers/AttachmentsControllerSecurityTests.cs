@@ -36,6 +36,8 @@ namespace Rvnx.CRM.Tests.Controllers
             Mock<IFileValidationService> fileServiceMock = new();
             // IsValidFileSignature returns false -> Fail
             fileServiceMock.Setup(s => s.IsValidFileSignature(It.IsAny<byte[]>(), It.IsAny<string>())).Returns(false);
+            fileServiceMock.Setup(s => s.IsAllowedExtension(It.IsAny<string>())).Returns(true);
+            fileServiceMock.Setup(s => s.IsAllowedFileSize(It.IsAny<long>())).Returns(true);
 
             AttachmentsController controller = new(repo, fileServiceMock.Object, new EntityService(repo));
             controller.ControllerContext = new ControllerContext
@@ -87,6 +89,8 @@ namespace Rvnx.CRM.Tests.Controllers
             Mock<IFileValidationService> fileServiceMock = new();
             // IsValidFileSignature returns true -> Success
             fileServiceMock.Setup(s => s.IsValidFileSignature(It.IsAny<byte[]>(), It.IsAny<string>())).Returns(true);
+            fileServiceMock.Setup(s => s.IsAllowedExtension(It.IsAny<string>())).Returns(true);
+            fileServiceMock.Setup(s => s.IsAllowedFileSize(It.IsAny<long>())).Returns(true);
 
             AttachmentsController controller = new(repo, fileServiceMock.Object, new EntityService(repo));
             controller.ControllerContext = new ControllerContext
@@ -141,6 +145,8 @@ namespace Rvnx.CRM.Tests.Controllers
             Mock<IFileValidationService> fileServiceMock = new();
             // IsValidFileSignature returns false for bad PDF
             fileServiceMock.Setup(s => s.IsValidFileSignature(It.IsAny<byte[]>(), ".pdf")).Returns(false);
+            fileServiceMock.Setup(s => s.IsAllowedExtension(It.IsAny<string>())).Returns(true);
+            fileServiceMock.Setup(s => s.IsAllowedFileSize(It.IsAny<long>())).Returns(true);
 
             AttachmentsController controller = new(repo, fileServiceMock.Object, new EntityService(repo));
             controller.ControllerContext = new ControllerContext
@@ -190,6 +196,7 @@ namespace Rvnx.CRM.Tests.Controllers
 
             Mock<IFileValidationService> fileServiceMock = new();
             fileServiceMock.Setup(s => s.IsValidFileSignature(It.IsAny<byte[]>(), It.IsAny<string>())).Returns(true);
+            fileServiceMock.Setup(s => s.IsAllowedFileSize(It.IsAny<long>())).Returns(false);
 
             AttachmentsController controller = new(repo, fileServiceMock.Object, new EntityService(repo));
             controller.ControllerContext = new ControllerContext

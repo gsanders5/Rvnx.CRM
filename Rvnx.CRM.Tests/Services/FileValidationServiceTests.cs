@@ -16,6 +16,59 @@ namespace Rvnx.CRM.Tests.Services
         [InlineData(".jpeg")]
         [InlineData(".png")]
         [InlineData(".gif")]
+        [InlineData(".pdf")]
+        [InlineData(".txt")]
+        [InlineData(".doc")]
+        [InlineData(".docx")]
+        [InlineData(".xls")]
+        [InlineData(".xlsx")]
+        [InlineData(".JPG")] // Case insensitive
+        [InlineData(".PDF")]
+        public void IsAllowedExtension_ShouldReturnTrue_ForAllowedExtensions(string extension)
+        {
+            Assert.True(_service.IsAllowedExtension(extension));
+        }
+
+        [Theory]
+        [InlineData(".exe")]
+        [InlineData(".bat")]
+        [InlineData(".sh")]
+        [InlineData(".ppt")]
+        [InlineData(".pptx")]
+        [InlineData("")]
+        [InlineData(null)]
+        public void IsAllowedExtension_ShouldReturnFalse_ForDisallowedExtensions(string? extension)
+        {
+            Assert.False(_service.IsAllowedExtension(extension!));
+        }
+
+        [Fact]
+        public void IsAllowedFileSize_ShouldReturnTrue_ForValidSize()
+        {
+            long validSize = 30 * 1024 * 1024; // 30 MB
+            Assert.True(_service.IsAllowedFileSize(validSize));
+            Assert.True(_service.IsAllowedFileSize(1));
+        }
+
+        [Fact]
+        public void IsAllowedFileSize_ShouldReturnFalse_ForTooLargeSize()
+        {
+            long invalidSize = 30 * 1024 * 1024 + 1; // 30 MB + 1 byte
+            Assert.False(_service.IsAllowedFileSize(invalidSize));
+        }
+
+        [Fact]
+        public void IsAllowedFileSize_ShouldReturnFalse_ForZeroOrNegativeSize()
+        {
+            Assert.False(_service.IsAllowedFileSize(0));
+            Assert.False(_service.IsAllowedFileSize(-1));
+        }
+
+        [Theory]
+        [InlineData(".jpg")]
+        [InlineData(".jpeg")]
+        [InlineData(".png")]
+        [InlineData(".gif")]
         [InlineData(".JPG")]
         public void IsImageExtension_ShouldReturnTrue_ForValidExtensions(string extension)
         {
@@ -75,7 +128,6 @@ namespace Rvnx.CRM.Tests.Services
         }
     }
 }
-// Also migrated from duplicate tests file
 namespace Rvnx.CRM.Tests.Services
 {
     public partial class FileValidationServiceTests
