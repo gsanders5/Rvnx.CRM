@@ -61,25 +61,34 @@ namespace Rvnx.CRM.Tests.Services
             };
 
             // Setup mocks for other calls
-            _repositoryMock.Setup(r => r.ListAsNoTrackingAsync<Contact>(It.IsAny<Expression<Func<Contact, bool>>>(), It.IsAny<CancellationToken>(),It.IsAny<string[]>()))
+            _repositoryMock.Setup(r => r.ListAsNoTrackingAsync<Contact>(It.IsAny<Expression<Func<Contact, bool>>>(),
+                    It.IsAny<CancellationToken>(), It.IsAny<string[]>()))
                 .ReturnsAsync(contacts);
 
-            _repositoryMock.Setup(r => r.ListAsNoTrackingAsync<Relationship>(It.IsAny<Expression<Func<Relationship, bool>>>(), It.IsAny<CancellationToken>(), It.IsAny<string[]>()))
+            _repositoryMock.Setup(r =>
+                    r.ListAsNoTrackingAsync<Relationship>(It.IsAny<Expression<Func<Relationship, bool>>>(),
+                        It.IsAny<CancellationToken>(), It.IsAny<string[]>()))
                 .ReturnsAsync(new List<Relationship>());
 
-            _repositoryMock.Setup(r => r.ListAsNoTrackingAsync<SignificantDate>(It.IsAny<Expression<Func<SignificantDate, bool>>>(), It.IsAny<CancellationToken>(), It.IsAny<string[]>()))
+            _repositoryMock.Setup(r =>
+                    r.ListAsNoTrackingAsync<SignificantDate>(It.IsAny<Expression<Func<SignificantDate, bool>>>(),
+                        It.IsAny<CancellationToken>(), It.IsAny<string[]>()))
                 .ReturnsAsync(new List<SignificantDate>());
 
 
             // Setup for the EXPECTED new behavior (with predicate)
-            _repositoryMock.Setup(r => r.ListAsNoTrackingAsync<Reminder>(It.IsAny<Expression<Func<Reminder, bool>>>(), It.IsAny<CancellationToken>(), It.IsAny<string[]>()))
-                .ReturnsAsync((Expression<Func<Reminder, bool>> predicate, CancellationToken token, string[] includes) =>
+            _repositoryMock.Setup(r => r.ListAsNoTrackingAsync<Reminder>(It.IsAny<Expression<Func<Reminder, bool>>>(),
+                    It.IsAny<CancellationToken>(), It.IsAny<string[]>()))
+                .ReturnsAsync((Expression<Func<Reminder, bool>> predicate, CancellationToken token,
+                    string[] includes) =>
                 {
                     return reminders.AsQueryable().Where(predicate).ToList();
                 });
 
             // Setup for the OLD behavior (parameterless / skip-take overload)
-            _repositoryMock.Setup(r => r.ListAsNoTrackingAsync<Reminder>(It.IsAny<int?>(), It.IsAny<int?>(), It.IsAny<CancellationToken>()))
+            _repositoryMock.Setup(r =>
+                    r.ListAsNoTrackingAsync<Reminder>(It.IsAny<int?>(), It.IsAny<int?>(),
+                        It.IsAny<CancellationToken>()))
                 .ReturnsAsync(reminders);
 
             // Act
@@ -88,9 +97,10 @@ namespace Rvnx.CRM.Tests.Services
             // Assert
             // 1. Verify the parameterless overload is NOT called (this fails initially)
             _repositoryMock.Verify(r => r.ListAsNoTrackingAsync<Reminder>(
-                It.IsAny<int?>(),
-                It.IsAny<int?>(),
-                It.IsAny<CancellationToken>()), Times.Never, "Should NOT call parameterless ListAsNoTrackingAsync (fetching all records)");
+                    It.IsAny<int?>(),
+                    It.IsAny<int?>(),
+                    It.IsAny<CancellationToken>()), Times.Never,
+                "Should NOT call parameterless ListAsNoTrackingAsync (fetching all records)");
 
             // 2. Verify the predicate overload IS called
             _repositoryMock.Verify(r => r.ListAsNoTrackingAsync<Reminder>(
@@ -98,11 +108,10 @@ namespace Rvnx.CRM.Tests.Services
                 It.IsAny<CancellationToken>(),
                 It.IsAny<string[]>()), Times.Once, "Should call ListAsNoTrackingAsync with a filtering predicate");
 
-            // 3. Verify the correct data is returned (even if we mocked the behavior, the service logic must handle it)
-            // The service currently filters manually in memory.
-            // If we successfully filter in DB, the service should still work correctly.
+            // 3. Verify only incomplete reminders appear — completed reminders should never show
+            //    on the dashboard, regardless of whether they are recurring.
             result.UpcomingEvents.Should().Contain(e => e.Title == "Active Reminder");
-            result.UpcomingEvents.Should().Contain(e => e.Title == "Completed Recurring Reminder");
+            result.UpcomingEvents.Should().NotContain(e => e.Title == "Completed Recurring Reminder");
             result.UpcomingEvents.Should().NotContain(e => e.Title == "Completed One-Time Reminder");
         }
     }
