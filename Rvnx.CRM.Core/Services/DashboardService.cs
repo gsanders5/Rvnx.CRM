@@ -60,13 +60,13 @@ public class DashboardService(IRepository repository, ILogger<DashboardService> 
         PriorityQueue<UpcomingEventDto, DateTime> topEvents,
         Dictionary<Guid, Contact> contactDict)
     {
-        List<Reminder> allReminders = await _repository.ListAsNoTrackingAsync<Reminder>();
+        // Optimization: Filter out completed non-recurring reminders at DB level to reduce memory usage and processing time.
+        List<Reminder> allReminders = await _repository.ListAsNoTrackingAsync<Reminder>(
+            r => !r.IsCompleted || r.EventFrequency > TimeSpan.Zero);
+
         int processedCount = 0;
         foreach (Reminder reminder in allReminders)
         {
-            if (reminder.IsCompleted && reminder.EventFrequency <= TimeSpan.Zero)
-                continue;
-
             DateTime nextDate = reminder.GetNextOccurrence();
             if (reminder.IsCompleted && nextDate == reminder.DueDate)
                 continue;

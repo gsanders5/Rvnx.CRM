@@ -11,3 +11,7 @@
 ## 2024-05-23 - Memory Leak in Read-Only Lookups
 **Learning:** `PopulateRelatedEntityDropdown` was fetching thousands of tracked entities into memory just to filter one out and populate a dropdown.
 **Action:** Use `ListAsNoTrackingAsync` with a predicate for read-only lookups to avoid change tracking overhead and filter at the database level.
+
+## 2026-02-22 - Unbounded Collection Fetch in Dashboard
+**Learning:** DashboardService was fetching the entire `Reminders` table into memory to filter for active ones.
+**Action:** Always apply filters (especially status/completion flags) at the database level using predicates in `ListAsNoTrackingAsync`.
