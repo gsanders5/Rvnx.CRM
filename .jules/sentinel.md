@@ -12,3 +12,8 @@
 **Vulnerability:** `AccountController.Login` directly passed the `returnUrl` query parameter to `AuthenticationProperties.RedirectUri`. This allowed attackers to craft a malicious login link redirecting authenticated users to an external phishing site.
 **Learning:** The OIDC `ChallengeResult` behavior with `RedirectUri` redirects the user *after* successful authentication (via the middleware's callback). This redirection is not automatically validated as local.
 **Prevention:** Always validate return URLs using `Url.IsLocalUrl()` before passing them to authentication properties or any redirection logic. Default to the application root if invalid.
+
+## 2026-03-10 - IDOR in Related Entity Creation
+**Vulnerability:** `NotesController.Create` accepted an `entityId` to link a note to a contact but failed to verify if the current user had access to that contact. This allowed attackers to attach notes to contacts belonging to other users.
+**Learning:** Even non-generic controllers that manage related entities (like Notes, Reminders) are vulnerable to IDOR if they blindly trust the parent `entityId` during creation. `AddAsync` does not trigger query filters.
+**Prevention:** Explicitly verify existence and access to the parent entity using `_repository.ExistsAsync<ParentT>(entityId)` before creating the child entity.
