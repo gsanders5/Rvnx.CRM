@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Rvnx.CRM.Core.Constants;
 using Rvnx.CRM.Core.DTOs.Contact;
 using Rvnx.CRM.Core.Extensions;
 using Rvnx.CRM.Core.Interfaces;
@@ -11,7 +12,7 @@ namespace Rvnx.CRM.Web.Controllers
     {
         public IActionResult Create(Guid entityId, string entityType)
         {
-            return entityId == Guid.Empty || string.IsNullOrEmpty(entityType)
+            return entityId == Guid.Empty
                 ? NotFound()
                 : View(new FactFormDto { EntityId = entityId, EntityType = entityType });
         }
@@ -25,7 +26,7 @@ namespace Rvnx.CRM.Web.Controllers
                 Fact fact = factDto.ToEntity();
                 await _repository.AddAsync(fact);
                 await _repository.SaveChangesAsync();
-                return RedirectToEntity(fact.EntityId, fact.EntityType);
+                return RedirectToEntity(fact.ContactId ?? Guid.Empty, EntityTypes.Person);
             }
             return View(factDto);
         }
@@ -42,8 +43,8 @@ namespace Rvnx.CRM.Web.Controllers
                 Id = fact.Id,
                 Category = fact.Category,
                 Value = fact.Value,
-                EntityId = fact.EntityId,
-                EntityType = fact.EntityType
+                EntityId = fact.ContactId ?? Guid.Empty,
+                EntityType = EntityTypes.Person
             };
 
             return View(dto);
@@ -68,7 +69,7 @@ namespace Rvnx.CRM.Web.Controllers
                     await _repository.UpdateAsync(existingFact);
                     await _repository.SaveChangesAsync();
 
-                    return RedirectToEntity(existingFact.EntityId, existingFact.EntityType);
+                    return RedirectToEntity(existingFact.ContactId ?? Guid.Empty, EntityTypes.Person);
                 }
                 catch (Exception)
                 {
@@ -94,8 +95,8 @@ namespace Rvnx.CRM.Web.Controllers
             Fact? fact = await _repository.GetByIdAsync<Fact>(id);
             if (fact != null)
             {
-                Guid entityId = fact.EntityId;
-                string entityType = fact.EntityType;
+                Guid entityId = fact.ContactId ?? Guid.Empty;
+                string entityType = EntityTypes.Person;
                 await _repository.DeleteAsync<Fact>(id);
                 await _repository.SaveChangesAsync();
                 return RedirectToEntity(entityId, entityType);

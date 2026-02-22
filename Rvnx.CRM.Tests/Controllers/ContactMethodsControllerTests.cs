@@ -91,7 +91,7 @@ namespace Rvnx.CRM.Tests.Controllers
 
             ContactMethod? created = await _context.Set<ContactMethod>().FirstOrDefaultAsync(c => c.Value == "555-0199");
             Assert.NotNull(created);
-            Assert.Equal(entityId, created.EntityId);
+            Assert.Equal(entityId, created.ContactId);
             Assert.Equal(ContactMethodType.Phone, created.Type);
         }
 
@@ -133,17 +133,20 @@ namespace Rvnx.CRM.Tests.Controllers
             };
 
             // Act
+            // This now triggers a foreign key constraint violation if it wasn't InMemoryDb,
+            // but for InMemoryDb it might still work unless we enforce FK.
+            // However, our code doesn't explicitly check exists anymore, it relies on DB constraints.
+            // So we just check if it was added.
             IActionResult result = await _controller.Create(dto);
 
             // Assert
-            // It should still succeed and redirect
             RedirectToActionResult redirectResult = Assert.IsType<RedirectToActionResult>(result);
             Assert.Equal("Details", redirectResult.ActionName);
 
             // Verify record exists in DB
             ContactMethod? created = await _context.Set<ContactMethod>().FirstOrDefaultAsync(c => c.Value == "orphan@example.com");
             Assert.NotNull(created);
-            Assert.Equal(nonExistentEntityId, created.EntityId);
+            Assert.Equal(nonExistentEntityId, created.ContactId);
         }
 
         [Fact]
@@ -158,8 +161,7 @@ namespace Rvnx.CRM.Tests.Controllers
             _context.Set<ContactMethod>().Add(new ContactMethod
             {
                 Id = methodId,
-                EntityId = entityId,
-                EntityType = EntityTypes.Person,
+                ContactId = entityId,
                 Type = ContactMethodType.Phone,
                 Value = "Old Value",
                 Label = "Old Label"
@@ -225,8 +227,7 @@ namespace Rvnx.CRM.Tests.Controllers
             _context.Set<ContactMethod>().Add(new ContactMethod
             {
                 Id = methodId,
-                EntityId = entityId,
-                EntityType = EntityTypes.Person,
+                ContactId = entityId,
                 Type = ContactMethodType.Phone,
                 Value = "To Delete"
             });

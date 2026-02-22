@@ -79,8 +79,7 @@ namespace Rvnx.CRM.Tests.Controllers
             _context.Set<SignificantDate>().Add(new SignificantDate
             {
                 Id = Guid.NewGuid(),
-                EntityId = contactId,
-                EntityType = EntityTypes.Person,
+                ContactId = contactId,
                 Title = SignificantDateTitles.Birthday,
                 Date = new DateTime(1990, 1, 1),
                 EventFrequency = TimeSpan.FromDays(365)
@@ -119,8 +118,7 @@ namespace Rvnx.CRM.Tests.Controllers
             _context.Set<SignificantDate>().Add(new SignificantDate
             {
                 Id = Guid.NewGuid(),
-                EntityId = contactId,
-                EntityType = EntityTypes.Person,
+                ContactId = contactId,
                 Title = "birthday", // Lowercase
                 Date = new DateTime(1990, 1, 1),
                 EventFrequency = TimeSpan.FromDays(365)
@@ -155,8 +153,7 @@ namespace Rvnx.CRM.Tests.Controllers
             _context.Set<SignificantDate>().Add(new SignificantDate
             {
                 Id = dateId,
-                EntityId = contactId,
-                EntityType = EntityTypes.Person,
+                ContactId = contactId,
                 Title = "Del",
                 Date = DateTime.Today
             });

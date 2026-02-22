@@ -26,7 +26,6 @@ namespace Rvnx.CRM.Web.Controllers
             if (ModelState.IsValid)
             {
                 Pet pet = petDto.ToEntity();
-                pet.EntityType = EntityTypes.Person;
                 await _repository.AddAsync(pet);
                 await _repository.SaveChangesAsync();
 
@@ -43,7 +42,7 @@ namespace Rvnx.CRM.Web.Controllers
             PetFormDto dto = new()
             {
                 Id = pet.Id,
-                EntityId = pet.EntityId,
+                EntityId = pet.ContactId,
                 Name = pet.Name,
                 Species = pet.Species,
                 Breed = pet.Breed,
@@ -69,7 +68,7 @@ namespace Rvnx.CRM.Web.Controllers
                 await _repository.UpdateAsync(pet);
                 await _repository.SaveChangesAsync();
 
-                return RedirectToEntity(pet.EntityId, pet.EntityType);
+                return RedirectToEntity(pet.ContactId, EntityTypes.Person);
             }
             return View(petDto);
         }
@@ -87,10 +86,10 @@ namespace Rvnx.CRM.Web.Controllers
             Pet? pet = await _repository.GetByIdAsync<Pet>(id);
             if (pet != null)
             {
-                Guid entityId = pet.EntityId;
+                Guid entityId = pet.ContactId;
                 await _repository.DeleteAsync<Pet>(id);
                 await _repository.SaveChangesAsync();
-                return RedirectToEntity(entityId, pet.EntityType);
+                return RedirectToEntity(entityId, EntityTypes.Person);
             }
             return RedirectToAction("Index", "Contacts");
         }

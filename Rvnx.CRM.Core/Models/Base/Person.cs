@@ -40,14 +40,11 @@ public abstract class Person : BaseEntity
     public Guid? ProfileImageId { get; set; }
 
     // NotMapped Properties for View Compatibility
-    [NotMapped]
-    public ICollection<Note> Notes { get; set; } = [];
+    public virtual ICollection<Note> Notes { get; set; } = [];
 
-    [NotMapped]
-    public ICollection<Reminder> Reminders { get; set; } = [];
+    public virtual ICollection<Reminder> Reminders { get; set; } = [];
 
-    [NotMapped]
-    public ICollection<SignificantDate> SignificantDates { get; set; } = [];
+    public virtual ICollection<SignificantDate> SignificantDates { get; set; } = [];
 
     [NotMapped]
     public ICollection<Relationship> Relationships { get; set; } = [];
@@ -55,15 +52,11 @@ public abstract class Person : BaseEntity
     [NotMapped]
     public ICollection<Relationship> RelatedTo { get; set; } = [];
 
-    [NotMapped]
-    public ICollection<ContactMethod> ContactMethods { get; set; } = [];
+    public virtual ICollection<ContactMethod> ContactMethods { get; set; } = [];
 
-    [NotMapped]
-    public ICollection<Fact> Facts { get; set; } = [];
+    public virtual ICollection<Fact> Facts { get; set; } = [];
 
-    [NotMapped]
-    public ICollection<Address> Addresses { get; set; } = [];
+    public virtual ICollection<Address> Addresses { get; set; } = [];
 
-    [NotMapped]
-    public ICollection<Attachment> Attachments { get; set; } = [];
+    public virtual ICollection<Attachment> Attachments { get; set; } = [];
 }

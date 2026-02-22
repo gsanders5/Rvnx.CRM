@@ -87,27 +87,19 @@ public class RepositoryIntegrationTests : SqliteIntegrationTestBase
         SignificantDate date = new()
         {
             Id = Guid.NewGuid(),
-            EntityId = contact.Id,
-            EntityType = EntityTypes.Person,
+            ContactId = contact.Id,
             Title = "Bday",
             Date = DateTime.Now
         };
         await _repository.AddAsync(date);
         await _repository.SaveChangesAsync();
 
-        // Act
-        // Repository delete for generic entities usually requires manual deletion in logic (Controller),
-        // but let's see if DB cascade is configured?
-        // Our configuration in OnModelCreating doesn't strictly set up DB-level ON DELETE CASCADE for *Polymorphic* relationships
-        // because they don't have FK constraints in the DB pointing to the specific Contact table (EntityId is loose).
-        // So this test confirms that DB Cascade DOES NOT happen for generic entities, verifying we NEED the manual logic.
-        // UNLESS we are testing standard FKs (like Employer -> Contact).
-
         // Let's test Employer (Standard FK)
         Employer employer = new() { CompanyName = "Work", EmployeeId = contact.Id };
         await _repository.AddAsync(employer);
         await _repository.SaveChangesAsync();
 
+        // Act
         // Delete Contact
         await _repository.DeleteAsync<Contact>(contact.Id);
         await _repository.SaveChangesAsync();
@@ -119,8 +111,8 @@ public class RepositoryIntegrationTests : SqliteIntegrationTestBase
         Employer? emp = await _context.Employers.IgnoreQueryFilters().FirstOrDefaultAsync(e => e.CompanyName == "Work");
         emp.Should().BeNull();
 
-        // Generic Entity (SignificantDate) should still exist (No FK)
+        // SignificantDate should now be deleted because of the new explicit FK with Cascade Delete
         SignificantDate? d = await _context.SignificantDates.IgnoreQueryFilters().FirstOrDefaultAsync(x => x.Title == "Bday");
-        d.Should().NotBeNull();
+        d.Should().BeNull();
     }
 }

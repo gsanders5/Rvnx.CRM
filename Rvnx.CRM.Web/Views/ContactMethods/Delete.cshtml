@@ -20,6 +20,6 @@
     <form asp-action="Delete">
         <input type="hidden" asp-for="Id"/>
         <input type="submit" value="Delete" class="btn btn-danger"/>
-        <a asp-controller="Contacts" asp-action="Details" asp-route-id="@Model.EntityId" class="btn btn-secondary">Cancel</a>
+        <a asp-controller="Contacts" asp-action="Details" asp-route-id="@Model.ContactId" class="btn btn-secondary">Cancel</a>
     </form>
 </div>

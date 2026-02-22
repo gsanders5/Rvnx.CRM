@@ -20,8 +20,8 @@ namespace Rvnx.CRM.Core.Extensions
                 Title = entity.Title,
                 Value = entity.Value,
                 CreatedDate = entity.CreatedDate,
-                EntityId = entity.EntityId,
-                EntityType = entity.EntityType
+                EntityId = entity.ContactId ?? Guid.Empty,
+                EntityType = EntityTypes.Person
             };
         }
 
@@ -33,8 +33,8 @@ namespace Rvnx.CRM.Core.Extensions
                 Title = entity.Title,
                 Description = entity.Description,
                 DueDate = entity.DueDate,
-                EntityId = entity.EntityId,
-                EntityType = entity.EntityType,
+                EntityId = entity.ContactId ?? Guid.Empty,
+                EntityType = EntityTypes.Person,
                 RemindMe = entity.RemindMe,
                 ReminderSent = entity.ReminderSent,
                 EventFrequency = entity.EventFrequency
@@ -59,8 +59,8 @@ namespace Rvnx.CRM.Core.Extensions
                 Title = entity.Title ?? string.Empty,
                 Date = entity.Date,
                 Description = entity.Description,
-                EntityId = entity.EntityId,
-                EntityType = entity.EntityType,
+                EntityId = entity.ContactId ?? Guid.Empty,
+                EntityType = EntityTypes.Person,
                 RemindMe = entity.RemindMe,
                 ReminderSent = entity.ReminderSent,
                 EventFrequency = entity.EventFrequency
@@ -97,8 +97,8 @@ namespace Rvnx.CRM.Core.Extensions
                 FileName = entity.FileName ?? string.Empty,
                 ContentType = entity.ContentType,
                 AttachmentType = entity.AttachmentType,
-                EntityId = entity.EntityId,
-                EntityType = entity.EntityType
+                EntityId = entity.ContactId ?? Guid.Empty,
+                EntityType = EntityTypes.Person
             };
         }
 
@@ -112,7 +112,7 @@ namespace Rvnx.CRM.Core.Extensions
                 Breed = entity.Breed,
                 Birthday = entity.Birthday,
                 Notes = entity.Notes,
-                EntityId = entity.EntityId
+                EntityId = entity.ContactId
             };
         }
 
@@ -124,8 +124,8 @@ namespace Rvnx.CRM.Core.Extensions
                 Type = entity.Type,
                 Value = entity.Value,
                 Label = entity.Label,
-                EntityId = entity.EntityId,
-                EntityType = entity.EntityType,
+                EntityId = entity.ContactId ?? Guid.Empty,
+                EntityType = EntityTypes.Person,
                 CreatedDate = entity.CreatedDate
             };
         }
@@ -137,8 +137,8 @@ namespace Rvnx.CRM.Core.Extensions
                 Id = entity.Id,
                 Category = entity.Category,
                 Value = entity.Value,
-                EntityId = entity.EntityId,
-                EntityType = entity.EntityType,
+                EntityId = entity.ContactId ?? Guid.Empty,
+                EntityType = EntityTypes.Person,
                 CreatedDate = entity.CreatedDate
             };
         }
@@ -219,8 +219,7 @@ namespace Rvnx.CRM.Core.Extensions
                 Breed = dto.Breed,
                 Birthday = dto.Birthday,
                 Notes = dto.Notes,
-                EntityId = dto.EntityId,
-                EntityType = EntityTypes.Person
+                ContactId = dto.EntityId
             };
         }
 
@@ -240,8 +239,7 @@ namespace Rvnx.CRM.Core.Extensions
                 Type = dto.Type,
                 Value = dto.Value,
                 Label = dto.Label,
-                EntityId = dto.EntityId,
-                EntityType = dto.EntityType
+                ContactId = dto.EntityId
             };
         }
 
@@ -250,7 +248,7 @@ namespace Rvnx.CRM.Core.Extensions
             entity.Type = dto.Type;
             entity.Value = dto.Value;
             entity.Label = dto.Label;
-            // EntityId and EntityType should not be changeable
+            // ContactId should not be changeable
         }
         public static Note ToEntity(this NoteFormDto dto)
         {
@@ -259,8 +257,7 @@ namespace Rvnx.CRM.Core.Extensions
                 Id = Guid.NewGuid(),
                 Title = dto.Title,
                 Value = dto.Value,
-                EntityId = dto.EntityId,
-                EntityType = dto.EntityType
+                ContactId = dto.EntityId
             };
         }
 
@@ -277,8 +274,7 @@ namespace Rvnx.CRM.Core.Extensions
                 Id = Guid.NewGuid(),
                 Category = dto.Category,
                 Value = dto.Value,
-                EntityId = dto.EntityId,
-                EntityType = dto.EntityType
+                ContactId = dto.EntityId
             };
         }
 

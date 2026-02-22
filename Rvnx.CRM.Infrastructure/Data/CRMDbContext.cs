@@ -43,17 +43,95 @@ public class CRMDbContext(DbContextOptions<CRMDbContext> options, ICurrentUserSe
             .WithOne()
             .OnDelete(DeleteBehavior.SetNull);
 
-        modelBuilder.Entity<Note>().HasIndex(e => new { e.EntityId, e.EntityType });
-        modelBuilder.Entity<Pet>().HasIndex(e => new { e.EntityId, e.EntityType });
-        modelBuilder.Entity<Reminder>().HasIndex(e => new { e.EntityId, e.EntityType });
-        modelBuilder.Entity<SignificantDate>().HasIndex(e => new { e.EntityId, e.EntityType });
-        modelBuilder.Entity<ContactMethod>().HasIndex(e => new { e.EntityId, e.EntityType });
-        modelBuilder.Entity<Fact>().HasIndex(e => new { e.EntityId, e.EntityType });
-        modelBuilder.Entity<Address>().HasIndex(e => new { e.EntityId, e.EntityType });
-        modelBuilder.Entity<Attachment>().HasIndex(e => new { e.EntityId, e.EntityType });
-        modelBuilder.Entity<PhoneNumber>().HasIndex(e => new { e.EntityId, e.EntityType });
         modelBuilder.Entity<Relationship>().HasIndex(e => new { e.EntityId, e.EntityType });
         modelBuilder.Entity<Relationship>().HasIndex(e => new { e.RelatedEntityId, e.EntityType });
+
+        // Pet - Required FK
+        modelBuilder.Entity<Pet>()
+            .HasOne(p => p.Contact)
+            .WithMany(c => c.Pets)
+            .HasForeignKey(p => p.ContactId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        // ContactMethod
+        modelBuilder.Entity<ContactMethod>()
+            .HasOne(e => e.Contact)
+            .WithMany(c => c.ContactMethods)
+            .HasForeignKey(e => e.ContactId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<ContactMethod>()
+            .ToTable(t => t.HasCheckConstraint("CHK_ContactMethod_Owner", "ContactId IS NOT NULL"));
+
+        // Fact
+        modelBuilder.Entity<Fact>()
+            .HasOne(e => e.Contact)
+            .WithMany(c => c.Facts)
+            .HasForeignKey(e => e.ContactId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<Fact>()
+            .ToTable(t => t.HasCheckConstraint("CHK_Fact_Owner", "ContactId IS NOT NULL"));
+
+        // Address
+        modelBuilder.Entity<Address>()
+            .HasOne(e => e.Contact)
+            .WithMany(c => c.Addresses)
+            .HasForeignKey(e => e.ContactId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<Address>()
+            .ToTable(t => t.HasCheckConstraint("CHK_Address_Owner", "ContactId IS NOT NULL"));
+
+        // PhoneNumber
+        modelBuilder.Entity<PhoneNumber>()
+            .HasOne(e => e.Contact)
+            .WithMany()
+            .HasForeignKey(e => e.ContactId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<PhoneNumber>()
+            .ToTable(t => t.HasCheckConstraint("CHK_PhoneNumber_Owner", "ContactId IS NOT NULL"));
+
+        // Note
+        modelBuilder.Entity<Note>()
+            .HasOne(e => e.Contact)
+            .WithMany(c => c.Notes)
+            .HasForeignKey(e => e.ContactId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<Note>()
+            .ToTable(t => t.HasCheckConstraint("CHK_Note_Owner", "ContactId IS NOT NULL"));
+
+        // Reminder
+        modelBuilder.Entity<Reminder>()
+            .HasOne(e => e.Contact)
+            .WithMany(c => c.Reminders)
+            .HasForeignKey(e => e.ContactId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<Reminder>()
+            .ToTable(t => t.HasCheckConstraint("CHK_Reminder_Owner", "ContactId IS NOT NULL"));
+
+        // SignificantDate
+        modelBuilder.Entity<SignificantDate>()
+            .HasOne(e => e.Contact)
+            .WithMany(c => c.SignificantDates)
+            .HasForeignKey(e => e.ContactId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<SignificantDate>()
+            .ToTable(t => t.HasCheckConstraint("CHK_SignificantDate_Owner", "ContactId IS NOT NULL"));
+
+        // Attachment
+        modelBuilder.Entity<Attachment>()
+            .HasOne(e => e.Contact)
+            .WithMany(c => c.Attachments)
+            .HasForeignKey(e => e.ContactId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<Attachment>()
+            .ToTable(t => t.HasCheckConstraint("CHK_Attachment_Owner", "ContactId IS NOT NULL"));
 
         IEnumerable<Microsoft.EntityFrameworkCore.Metadata.IMutableEntityType> entityTypes = modelBuilder.Model.GetEntityTypes()
             .Where(e => typeof(BaseEntity).IsAssignableFrom(e.ClrType));

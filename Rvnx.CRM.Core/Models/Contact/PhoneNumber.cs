@@ -6,8 +6,13 @@ using static Rvnx.CRM.Core.Enumerations.CoreEnumerations;
 namespace Rvnx.CRM.Core.Models.Contact;
 
 [Table(nameof(PhoneNumber))]
-public class PhoneNumber : PolymorphicEntity
+public class PhoneNumber : BaseEntity
 {
+    public Guid? ContactId { get; set; }
+
+    [ForeignKey(nameof(ContactId))]
+    public virtual Contact? Contact { get; set; }
+
     [MaxLength(20)]
     [Display(Name = "Phone Number Type")]
     public PhoneNumberType Type { get; set; } = PhoneNumberType.Unknown;

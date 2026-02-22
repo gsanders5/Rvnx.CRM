@@ -75,7 +75,7 @@ public class ContactManagementService(IRepository repository, IFileValidationSer
                 return ContactOperationResult.Failure("Invalid file signature.");
             }
 
-            List<Attachment> existingAttachments = await _repository.ListAsync<Attachment>(a => a.EntityId == id && a.EntityType == EntityTypes.Person && a.AttachmentType == AttachmentTypes.ProfileImage);
+            List<Attachment> existingAttachments = await _repository.ListAsync<Attachment>(a => a.ContactId == id && a.AttachmentType == AttachmentTypes.ProfileImage);
             Attachment? existingAttachment = existingAttachments.FirstOrDefault();
 
             if (existingAttachment != null)
@@ -96,8 +96,7 @@ public class ContactManagementService(IRepository repository, IFileValidationSer
                 Attachment attachment = new()
                 {
                     Id = Guid.NewGuid(),
-                    EntityId = id,
-                    EntityType = EntityTypes.Person,
+                    ContactId = id,
                     AttachmentType = AttachmentTypes.ProfileImage,
                     ContentType = contentType,
                     FileName = fileName,
@@ -118,16 +117,10 @@ public class ContactManagementService(IRepository repository, IFileValidationSer
 
     private async Task DeleteContactDependenciesAsync(Guid contactId)
     {
-        await DeleteRelatedEntitiesAsync<Note>(contactId);
-        await DeleteRelatedEntitiesAsync<Reminder>(contactId);
-        await DeleteRelatedEntitiesAsync<SignificantDate>(contactId);
-        await DeleteRelatedEntitiesAsync<Pet>(contactId);
-        await DeleteRelatedEntitiesAsync<ContactMethod>(contactId);
-        await DeleteRelatedEntitiesAsync<Fact>(contactId);
-        await DeleteRelatedEntitiesAsync<Address>(contactId);
-        await DeleteRelatedEntitiesAsync<Attachment>(contactId);
+        // Note, Reminder, SignificantDate, Pet, ContactMethod, Fact, Address, Attachment, PhoneNumber
+        // are now configured with Cascade Delete via ContactId foreign key.
+
         await DeleteRelatedEntitiesAsync<Relationship>(contactId);
-        await DeleteRelatedEntitiesAsync<PhoneNumber>(contactId);
 
         List<Relationship> relatedTo = await _repository.ListAsync<Relationship>(r => r.RelatedEntityId == contactId && r.EntityType == EntityTypes.Person);
         if (relatedTo.Any()) await _repository.DeleteRangeAsync(relatedTo);
@@ -141,13 +134,13 @@ public class ContactManagementService(IRepository repository, IFileValidationSer
 
     private async Task<ContactMethod?> GetPrimaryContactMethodAsync(Guid contactId, ContactMethodType type)
     {
-        List<ContactMethod> methods = await _repository.ListAsync<ContactMethod>(c => c.EntityId == contactId && c.EntityType == EntityTypes.Person && c.Type == type);
+        List<ContactMethod> methods = await _repository.ListAsync<ContactMethod>(c => c.ContactId == contactId && c.Type == type);
         return methods.FirstOrDefault(e => e.Label == ContactMethodLabels.Primary) ?? methods.FirstOrDefault();
     }
 
     private async Task<SignificantDate?> GetBirthdayAsync(Guid contactId)
     {
-        List<SignificantDate> bdays = await _repository.ListAsync<SignificantDate>(d => d.EntityId == contactId && d.EntityType == EntityTypes.Person && d.Title == SignificantDateTitles.Birthday);
+        List<SignificantDate> bdays = await _repository.ListAsync<SignificantDate>(d => d.ContactId == contactId && d.Title == SignificantDateTitles.Birthday);
         return bdays.FirstOrDefault();
     }
 
@@ -168,8 +161,7 @@ public class ContactManagementService(IRepository repository, IFileValidationSer
                 await _repository.AddAsync(new ContactMethod
                 {
                     Id = Guid.NewGuid(),
-                    EntityId = contactId,
-                    EntityType = EntityTypes.Person,
+                    ContactId = contactId,
                     Type = type,
                     Value = newValue,
                     Label = ContactMethodLabels.Primary
@@ -199,8 +191,7 @@ public class ContactManagementService(IRepository repository, IFileValidationSer
                 await _repository.AddAsync(new SignificantDate
                 {
                     Id = Guid.NewGuid(),
-                    EntityId = contactId,
-                    EntityType = EntityTypes.Person,
+                    ContactId = contactId,
                     Title = SignificantDateTitles.Birthday,
                     Date = newDate.Value,
                     Description = "Birthday",

@@ -66,7 +66,7 @@ namespace Rvnx.CRM.Tests.Controllers
             Note? created = await _context.Set<Note>().FirstOrDefaultAsync();
             Assert.NotNull(created);
             Assert.Equal("Test Note", created.Title);
-            Assert.Equal(contactId, created.EntityId);
+            Assert.Equal(contactId, created.ContactId);
         }
 
         [Fact]
@@ -76,7 +76,7 @@ namespace Rvnx.CRM.Tests.Controllers
             Guid noteId = Guid.NewGuid();
             Guid contactId = Guid.NewGuid();
             _context.Contacts.Add(new Contact { Id = contactId, FirstName = "Test" });
-            _context.Set<Note>().Add(new Note { Id = noteId, EntityId = contactId, EntityType = EntityTypes.Person, Title = "Old", Value = "OldVal" });
+            _context.Set<Note>().Add(new Note { Id = noteId, ContactId = contactId, Title = "Old", Value = "OldVal" });
             await _context.SaveChangesAsync();
             _context.ChangeTracker.Clear();
 
@@ -108,7 +108,7 @@ namespace Rvnx.CRM.Tests.Controllers
             Guid noteId = Guid.NewGuid();
             Guid contactId = Guid.NewGuid();
             _context.Contacts.Add(new Contact { Id = contactId, FirstName = "Test" });
-            _context.Set<Note>().Add(new Note { Id = noteId, EntityId = contactId, EntityType = EntityTypes.Person, Title = "Del", Value = "Val" });
+            _context.Set<Note>().Add(new Note { Id = noteId, ContactId = contactId, Title = "Del", Value = "Val" });
             await _context.SaveChangesAsync();
 
             // Act

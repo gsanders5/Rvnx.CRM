@@ -35,26 +35,6 @@ public class ContactImportService(IRepository repository, IVCardService vCardSer
                 // We must add them explicitly and link them to the Contact ID.
                 await _repository.AddAsync(contact);
                 await _repository.SaveChangesAsync(); // Save to generate ID and allow next duplicate checks to find it if file has dupes
-
-                if (contact.ContactMethods != null)
-                {
-                    foreach (ContactMethod cm in contact.ContactMethods)
-                    {
-                        cm.EntityId = contact.Id;
-                        await _repository.AddAsync(cm);
-                    }
-                }
-
-                if (contact.SignificantDates != null)
-                {
-                    foreach (SignificantDate sd in contact.SignificantDates)
-                    {
-                        sd.EntityId = contact.Id;
-                        await _repository.AddAsync(sd);
-                    }
-                }
-
-                await _repository.SaveChangesAsync();
                 addedCount++;
             }
 
@@ -82,7 +62,6 @@ public class ContactImportService(IRepository repository, IVCardService vCardSer
         {
             List<string> valuesToCheck = candidate.ContactMethods.Select(m => m.Value).ToList();
             return await _repository.CountAsync<ContactMethod>(cm =>
-                cm.EntityType == EntityTypes.Person &&
                 valuesToCheck.Contains(cm.Value)) > 0;
         }
 

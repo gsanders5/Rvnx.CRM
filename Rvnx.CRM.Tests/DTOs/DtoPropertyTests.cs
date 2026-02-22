@@ -51,29 +51,30 @@ namespace Rvnx.CRM.Tests.DTOs
         [Fact]
         public void PetDto_ShouldHave_All_Pet_Properties()
         {
-            // Pet inherits PolymorphicEntity, BaseEntity
-            VerifyProperties<Pet, PetDto>();
+            // Pet inherits BaseEntity
+            // ContactId/Contact are navigation/FKs, often not in DTO or named EntityId
+            VerifyProperties<Pet, PetDto>(new[] { "ContactId", "Contact" });
         }
 
         [Fact]
         public void NoteDto_ShouldHave_All_Note_Properties()
         {
-            // Note inherits PolymorphicEntity, BaseEntity
-            VerifyProperties<Note, NoteDto>();
+            // Note inherits BaseEntity
+            VerifyProperties<Note, NoteDto>(new[] { "ContactId", "Contact" });
         }
 
         [Fact]
         public void SignificantDateDto_ShouldHave_All_SignificantDate_Properties()
         {
-            // SignificantDate inherits PolymorphicEntity, BaseEntity
-            VerifyProperties<SignificantDate, SignificantDateDto>();
+            // SignificantDate inherits BaseEntity
+            VerifyProperties<SignificantDate, SignificantDateDto>(new[] { "ContactId", "Contact" });
         }
 
         [Fact]
         public void ReminderDto_ShouldHave_All_Reminder_Properties()
         {
-            // Reminder inherits PolymorphicEntity, BaseEntity
-            VerifyProperties<Reminder, ReminderDto>();
+            // Reminder inherits BaseEntity
+            VerifyProperties<Reminder, ReminderDto>(new[] { "ContactId", "Contact" });
         }
 
         [Fact]
