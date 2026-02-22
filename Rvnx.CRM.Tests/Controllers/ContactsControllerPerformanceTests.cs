@@ -13,7 +13,7 @@ namespace Rvnx.CRM.Tests.Controllers
     public class ContactsControllerPerformanceTests
     {
         [Fact]
-        public async Task Index_DelegatesToService()
+        public async Task IndexDelegatesToService()
         {
             // Arrange
             Mock<ILogger<ContactsController>> loggerMock = new();

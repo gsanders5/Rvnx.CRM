@@ -19,7 +19,7 @@ namespace Rvnx.CRM.Tests.Security
     /// </summary>
     public class EntityStateTamperingTests
     {
-        private CRMDbContext GetInMemoryDbContext()
+        private static CRMDbContext GetInMemoryDbContext()
         {
             DbContextOptions<CRMDbContext> options = new DbContextOptionsBuilder<CRMDbContext>()
                 .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
@@ -35,7 +35,7 @@ namespace Rvnx.CRM.Tests.Security
         #region NotesController Tests
 
         [Fact]
-        public async Task NotesController_Edit_ShouldPreserveEntityId()
+        public async Task NotesControllerEditShouldPreserveEntityId()
         {
             // Arrange
             using CRMDbContext context = GetInMemoryDbContext();
@@ -83,7 +83,7 @@ namespace Rvnx.CRM.Tests.Security
         }
 
         [Fact]
-        public async Task NotesController_Edit_ShouldPreserveCreatedDateAndCreatedBy()
+        public async Task NotesControllerEditShouldPreserveCreatedDateAndCreatedBy()
         {
             // Arrange
             using CRMDbContext context = GetInMemoryDbContext();
@@ -148,7 +148,7 @@ namespace Rvnx.CRM.Tests.Security
         #region FactsController Tests
 
         [Fact]
-        public async Task FactsController_Edit_ShouldPreserveEntityId()
+        public async Task FactsControllerEditShouldPreserveEntityId()
         {
             // Arrange
             using CRMDbContext context = GetInMemoryDbContext();
@@ -198,7 +198,7 @@ namespace Rvnx.CRM.Tests.Security
         #region ContactMethodsController Tests
 
         [Fact]
-        public async Task ContactMethodsController_Edit_ShouldPreserveEntityId()
+        public async Task ContactMethodsControllerEditShouldPreserveEntityId()
         {
             // Arrange
             using CRMDbContext context = GetInMemoryDbContext();
@@ -250,7 +250,7 @@ namespace Rvnx.CRM.Tests.Security
         #region General Security Tests
 
         [Fact]
-        public async Task NotesController_Edit_ShouldReturnNotFound_WhenNoteDoesNotExist()
+        public async Task NotesControllerEditShouldReturnNotFoundWhenNoteDoesNotExist()
         {
             // Arrange
             using CRMDbContext context = GetInMemoryDbContext();
@@ -273,7 +273,7 @@ namespace Rvnx.CRM.Tests.Security
         }
 
         [Fact]
-        public async Task FactsController_Edit_ShouldReturnNotFound_WhenIdMismatch()
+        public async Task FactsControllerEditShouldReturnNotFoundWhenIdMismatch()
         {
             // Arrange
             using CRMDbContext context = GetInMemoryDbContext();

@@ -14,7 +14,7 @@ namespace Rvnx.CRM.Tests.Models
         }
 
         [Fact]
-        public void StandardBirthday_ReturnsNextYear_WhenPast()
+        public void StandardBirthdayReturnsNextYearWhenPast()
         {
             // Arrange
             SignificantDate birthday = new()
@@ -35,7 +35,7 @@ namespace Rvnx.CRM.Tests.Models
         }
 
         [Fact]
-        public void StandardBirthday_ReturnsThisYear_WhenFuture()
+        public void StandardBirthdayReturnsThisYearWhenFuture()
         {
             // Arrange
             DateTime birthday = new(2020, 2, 16); // Feb 16
@@ -49,7 +49,7 @@ namespace Rvnx.CRM.Tests.Models
         }
 
         [Fact]
-        public void StandardBirthday_ReturnsToday_WhenToday()
+        public void StandardBirthdayReturnsTodayWhenToday()
         {
             // Arrange
             DateTime birthday = new(2020, 2, 15); // Feb 15
@@ -63,7 +63,7 @@ namespace Rvnx.CRM.Tests.Models
         }
 
         [Fact]
-        public void LeapYearBirthday_ReturnsFeb28_OnNonLeapYear()
+        public void LeapYearBirthdayReturnsFeb28OnNonLeapYear()
         {
             // Arrange
             DateTime birthday = new(2020, 2, 29); // Leap Year
@@ -78,7 +78,7 @@ namespace Rvnx.CRM.Tests.Models
         }
 
         [Fact]
-        public void LeapYearBirthday_ReturnsFeb29_OnFutureLeapYear()
+        public void LeapYearBirthdayReturnsFeb29OnFutureLeapYear()
         {
             // Arrange
             DateTime birthday = new(2020, 2, 29);
@@ -94,7 +94,7 @@ namespace Rvnx.CRM.Tests.Models
         }
 
         [Fact]
-        public void DriftLogic_DriftsDates()
+        public void DriftLogicDriftsDates()
         {
             // Arrange
             DateTime start = new(2026, 1, 1);
@@ -114,7 +114,7 @@ namespace Rvnx.CRM.Tests.Models
         }
 
         [Fact]
-        public void DriftLogic_ReturnsToday_WhenFallsOnToday()
+        public void DriftLogicReturnsTodayWhenFallsOnToday()
         {
             // Arrange
             DateTime start = new(2026, 1, 16); // 1 month before today (approx)
@@ -129,7 +129,7 @@ namespace Rvnx.CRM.Tests.Models
         }
 
         [Fact]
-        public void OneOffReminder_ReturnsOriginalDate_WhenPast()
+        public void OneOffReminderReturnsOriginalDateWhenPast()
         {
             // Arrange
             // Due date in past, no frequency (one-off)

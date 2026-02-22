@@ -15,6 +15,18 @@ public class DashboardService(IRepository repository, ILogger<DashboardService> 
     private const int MaxUpcomingEvents = 5;
     private const int MaxEventsToProcess = 500;
 
+    private static readonly Action<ILogger, int, Exception?> LogReminderProcessingLimitReached =
+        LoggerMessage.Define<int>(
+            LogLevel.Warning,
+            new EventId(1, nameof(LogReminderProcessingLimitReached)),
+            "Reminder processing limit reached ({Limit}). Some reminders may not appear in dashboard.");
+
+    private static readonly Action<ILogger, int, Exception?> LogSignificantDateProcessingLimitReached =
+        LoggerMessage.Define<int>(
+            LogLevel.Warning,
+            new EventId(2, nameof(LogSignificantDateProcessingLimitReached)),
+            "Significant date processing limit reached ({Limit}). Some dates may not appear in dashboard.");
+
     public async Task<DashboardDto> GetDashboardDataAsync()
     {
         DashboardDto result = new();
@@ -94,7 +106,7 @@ public class DashboardService(IRepository repository, ILogger<DashboardService> 
             processedCount++;
             if (processedCount >= MaxEventsToProcess)
             {
-                _logger.LogWarning("Reminder processing limit reached ({Limit}). Some reminders may not appear in dashboard.", MaxEventsToProcess);
+                LogReminderProcessingLimitReached(_logger, MaxEventsToProcess, null);
                 break;
             }
         }
@@ -136,7 +148,7 @@ public class DashboardService(IRepository repository, ILogger<DashboardService> 
             processedCount++;
             if (processedCount >= MaxEventsToProcess)
             {
-                _logger.LogWarning("Significant date processing limit reached ({Limit}). Some dates may not appear in dashboard.", MaxEventsToProcess);
+                LogSignificantDateProcessingLimitReached(_logger, MaxEventsToProcess, null);
                 break;
             }
         }

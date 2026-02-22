@@ -78,7 +78,7 @@ public class ContactManagementService(IRepository repository, IFileValidationSer
         }
 
         string extension = Path.GetExtension(fileName).ToLowerInvariant();
-        if (!_fileValidationService.IsImageExtension(extension) || !contentType.StartsWith("image/"))
+        if (!_fileValidationService.IsImageExtension(extension) || !contentType.StartsWith("image/", StringComparison.OrdinalIgnoreCase))
         {
             return ContactOperationResult.Failure("Only image files (jpg, jpeg, png, gif) are allowed.");
         }

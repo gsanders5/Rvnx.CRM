@@ -12,7 +12,7 @@ namespace Rvnx.CRM.Tests.Controllers
     public class ContactsControllerDetailsTests
     {
         [Fact]
-        public async Task Details_ShouldReturnViewWithMappedRelationships()
+        public async Task DetailsShouldReturnViewWithMappedRelationships()
         {
             // Arrange
             Mock<ILogger<ContactsController>> loggerMock = new();

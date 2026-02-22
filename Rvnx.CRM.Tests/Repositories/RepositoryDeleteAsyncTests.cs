@@ -34,7 +34,7 @@ namespace Rvnx.CRM.Tests.Repositories
             }
         }
 
-        private TestDbContext GetInMemoryDbContext()
+        private static TestDbContext GetInMemoryDbContext()
         {
             DbContextOptions<CRMDbContext> options = new DbContextOptionsBuilder<CRMDbContext>()
                 .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
@@ -49,7 +49,7 @@ namespace Rvnx.CRM.Tests.Repositories
         }
 
         [Fact]
-        public async Task DeleteAsync_ShouldSucceed_WhenEntityDoesNotExist()
+        public async Task DeleteAsyncShouldSucceedWhenEntityDoesNotExist()
         {
             using TestDbContext context = GetInMemoryDbContext();
             Repository repo = new(context);
@@ -60,7 +60,7 @@ namespace Rvnx.CRM.Tests.Repositories
         }
 
         [Fact]
-        public async Task DeleteAsync_ShouldDelete_WhenEntityExists()
+        public async Task DeleteAsyncShouldDeleteWhenEntityExists()
         {
             using TestDbContext context = GetInMemoryDbContext();
             Repository repo = new(context);

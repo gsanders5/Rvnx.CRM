@@ -16,6 +16,12 @@ namespace Rvnx.CRM.Web.Controllers
         private readonly IContactReadService _contactReadService = contactReadService;
         private readonly ISelfContactService _selfContactService = selfContactService;
 
+        private static readonly Action<ILogger, Exception?> LogErrorImportingVcf =
+            LoggerMessage.Define(
+                LogLevel.Error,
+                new EventId(1, nameof(LogErrorImportingVcf)),
+                "Error importing VCF");
+
         public async Task<IActionResult> Self()
         {
             if (!_currentUserService.IsAuthenticated)
@@ -227,7 +233,7 @@ namespace Rvnx.CRM.Web.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error importing VCF");
+                LogErrorImportingVcf(_logger, ex);
                 ModelState.AddModelError("", "An error occurred while parsing the file.");
                 return View();
             }

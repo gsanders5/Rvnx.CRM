@@ -9,7 +9,7 @@ public abstract class RemindableEntity : BaseEntity
     [ForeignKey(nameof(ContactId))]
     public virtual Rvnx.CRM.Core.Models.Contact.Contact? Contact { get; set; }
 
-    public bool RemindMe { get; set; } = false;
+    public bool RemindMe { get; set; }
     public DateTime? ReminderSent { get; set; }
     public TimeSpan EventFrequency { get; set; } = TimeSpan.FromDays(365);
 }

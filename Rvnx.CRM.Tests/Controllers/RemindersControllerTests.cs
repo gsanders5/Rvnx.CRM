@@ -36,10 +36,12 @@ namespace Rvnx.CRM.Tests.Controllers
         {
             _context.Database.EnsureDeleted();
             _context.Dispose();
+
+    GC.SuppressFinalize(this);
         }
 
         [Fact]
-        public async Task Create_Get_WithValidIds_ShouldReturnViewWithDefaultValues()
+        public async Task CreateGetWithValidIdsShouldReturnViewWithDefaultValues()
         {
             // Arrange
             Guid contactId = Guid.NewGuid();
@@ -59,7 +61,7 @@ namespace Rvnx.CRM.Tests.Controllers
         }
 
         [Fact]
-        public async Task Create_Get_WhenEntityIdEmpty_ShouldReturnNotFound()
+        public async Task CreateGetWhenEntityIdEmptyShouldReturnNotFound()
         {
             // Act
             IActionResult result = await _controller.Create(Guid.Empty, EntityTypes.Person);
@@ -70,7 +72,7 @@ namespace Rvnx.CRM.Tests.Controllers
 
 
         [Fact]
-        public async Task Create_Post_WithValidData_ShouldCreateReminder()
+        public async Task CreatePostWithValidDataShouldCreateReminder()
         {
             // Arrange
             Guid contactId = Guid.NewGuid();
@@ -106,7 +108,7 @@ namespace Rvnx.CRM.Tests.Controllers
         }
 
         [Fact]
-        public async Task Edit_Get_WithValidId_ShouldReturnViewWithReminder()
+        public async Task EditGetWithValidIdShouldReturnViewWithReminder()
         {
             // Arrange
             Guid reminderId = Guid.NewGuid();
@@ -133,7 +135,7 @@ namespace Rvnx.CRM.Tests.Controllers
         }
 
         [Fact]
-        public async Task Edit_Get_WhenIdNull_ShouldReturnNotFound()
+        public async Task EditGetWhenIdNullShouldReturnNotFound()
         {
             // Act
             IActionResult result = await _controller.Edit(null);
@@ -143,7 +145,7 @@ namespace Rvnx.CRM.Tests.Controllers
         }
 
         [Fact]
-        public async Task Edit_Get_WhenReminderDoesNotExist_ShouldReturnNotFound()
+        public async Task EditGetWhenReminderDoesNotExistShouldReturnNotFound()
         {
             // Act
             IActionResult result = await _controller.Edit(Guid.NewGuid());
@@ -153,7 +155,7 @@ namespace Rvnx.CRM.Tests.Controllers
         }
 
         [Fact]
-        public async Task Edit_Post_WithValidData_ShouldUpdateReminder()
+        public async Task EditPostWithValidDataShouldUpdateReminder()
         {
             // Arrange
             Guid reminderId = Guid.NewGuid();
@@ -198,7 +200,7 @@ namespace Rvnx.CRM.Tests.Controllers
         }
 
         [Fact]
-        public async Task Edit_Post_WhenIdMismatch_ShouldReturnNotFound()
+        public async Task EditPostWhenIdMismatchShouldReturnNotFound()
         {
             // Arrange
             ReminderFormViewModel dto = new()
@@ -215,7 +217,7 @@ namespace Rvnx.CRM.Tests.Controllers
         }
 
         [Fact]
-        public async Task Delete_Get_WithValidId_ShouldReturnViewWithReminder()
+        public async Task DeleteGetWithValidIdShouldReturnViewWithReminder()
         {
             // Arrange
             Guid reminderId = Guid.NewGuid();
@@ -241,7 +243,7 @@ namespace Rvnx.CRM.Tests.Controllers
         }
 
         [Fact]
-        public async Task DeleteConfirmed_WithValidId_ShouldRemoveReminder()
+        public async Task DeleteConfirmedWithValidIdShouldRemoveReminder()
         {
             // Arrange
             Guid reminderId = Guid.NewGuid();
@@ -268,7 +270,7 @@ namespace Rvnx.CRM.Tests.Controllers
         }
 
         [Fact]
-        public async Task DeleteConfirmed_WhenReminderNotFound_ShouldRedirectToHome()
+        public async Task DeleteConfirmedWhenReminderNotFoundShouldRedirectToHome()
         {
             // Act
             IActionResult result = await _controller.DeleteConfirmed(Guid.NewGuid());
@@ -280,7 +282,7 @@ namespace Rvnx.CRM.Tests.Controllers
         }
 
         [Fact]
-        public async Task Create_Post_WithIsCompletedTrue_ShouldPreserveIsCompleted()
+        public async Task CreatePostWithIsCompletedTrueShouldPreserveIsCompleted()
         {
             // Arrange
             Guid contactId = Guid.NewGuid();

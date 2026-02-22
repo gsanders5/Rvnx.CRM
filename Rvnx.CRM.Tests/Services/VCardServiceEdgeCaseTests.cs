@@ -1,3 +1,4 @@
+using System.Globalization;
 using Rvnx.CRM.Core.Constants;
 using Rvnx.CRM.Core.Enumerations;
 using Rvnx.CRM.Core.Models.Contact;
@@ -17,7 +18,7 @@ namespace Rvnx.CRM.Tests.Services
         }
 
         [Fact]
-        public void ParseVCard_ShouldReturnEmpty_WhenStreamIsEmpty()
+        public void ParseVCardShouldReturnEmptyWhenStreamIsEmpty()
         {
             // Arrange
             using MemoryStream stream = new();
@@ -30,7 +31,7 @@ namespace Rvnx.CRM.Tests.Services
         }
 
         [Fact]
-        public void ParseVCard_ShouldReturnEmpty_WhenInvalidVCardFormat()
+        public void ParseVCardShouldReturnEmptyWhenInvalidVCardFormat()
         {
             // Arrange
             string invalidContent = "This is not a valid VCard content";
@@ -44,7 +45,7 @@ namespace Rvnx.CRM.Tests.Services
         }
 
         [Fact]
-        public void ParseVCard_ShouldUseFallbackName_WhenNoNameProperty()
+        public void ParseVCardShouldUseFallbackNameWhenNoNameProperty()
         {
             // Arrange
             string vcfContent = @"BEGIN:VCARD
@@ -65,7 +66,7 @@ END:VCARD";
         }
 
         [Fact]
-        public void ParseVCard_ShouldHandleCommaFormattedDisplayName()
+        public void ParseVCardShouldHandleCommaFormattedDisplayName()
         {
             // Arrange - Format: "LastName, FirstName"
             string vcfContent = @"BEGIN:VCARD
@@ -86,7 +87,7 @@ END:VCARD";
         }
 
         [Fact]
-        public void ParseVCard_ShouldSetUnknown_WhenNoNameAtAll()
+        public void ParseVCardShouldSetUnknownWhenNoNameAtAll()
         {
             // Arrange
             string vcfContent = @"BEGIN:VCARD
@@ -106,7 +107,7 @@ END:VCARD";
         }
 
         [Fact]
-        public void ParseVCard_ShouldSwapNames_WhenOnlyLastNameProvided()
+        public void ParseVCardShouldSwapNamesWhenOnlyLastNameProvided()
         {
             // Arrange - VCard with only last name should move it to first name
             string vcfContent = @"BEGIN:VCARD
@@ -127,7 +128,7 @@ END:VCARD";
         }
 
         [Fact]
-        public void ParseVCard_ShouldParseMultipleContacts()
+        public void ParseVCardShouldParseMultipleContacts()
         {
             // Arrange
             string vcfContent = @"BEGIN:VCARD
@@ -153,7 +154,7 @@ END:VCARD";
         }
 
         [Fact]
-        public void ParseVCard_ShouldParseMultipleEmails()
+        public void ParseVCardShouldParseMultipleEmails()
         {
             // Arrange
             string vcfContent = @"BEGIN:VCARD
@@ -177,7 +178,7 @@ END:VCARD";
         }
 
         [Fact]
-        public void ParseVCard_ShouldParseMultiplePhones()
+        public void ParseVCardShouldParseMultiplePhones()
         {
             // Arrange
             string vcfContent = @"BEGIN:VCARD
@@ -199,7 +200,7 @@ END:VCARD";
         }
 
         [Fact]
-        public void ParseVCard_ShouldHandleDateOnly_Birthday()
+        public void ParseVCardShouldHandleDateOnlyBirthday()
         {
             // Arrange - Birthday with DateOnly format
             string vcfContent = @"BEGIN:VCARD
@@ -222,7 +223,7 @@ END:VCARD";
         }
 
         [Fact]
-        public void ParseVCard_ShouldSetReminderFlags_ForBirthday()
+        public void ParseVCardShouldSetReminderFlagsForBirthday()
         {
             // Arrange
             string vcfContent = @"BEGIN:VCARD
@@ -246,7 +247,7 @@ END:VCARD";
         }
 
         [Fact]
-        public void ExportVCard_ShouldHandleNullContactMethods()
+        public void ExportVCardShouldHandleNullContactMethods()
         {
             // Arrange
             Contact contact = new()
@@ -268,7 +269,7 @@ END:VCARD";
         }
 
         [Fact]
-        public void ExportVCard_ShouldHandleNullSignificantDates()
+        public void ExportVCardShouldHandleNullSignificantDates()
         {
             // Arrange
             Contact contact = new()
@@ -286,7 +287,7 @@ END:VCARD";
         }
 
         [Fact]
-        public void ExportVCard_ShouldHandleEmptyLastName()
+        public void ExportVCardShouldHandleEmptyLastName()
         {
             // Arrange
             Contact contact = new()
@@ -302,11 +303,11 @@ END:VCARD";
 
             // Assert
             Assert.Contains("Test", vcf);
-            Assert.DoesNotContain("null", vcf.ToLower());
+            Assert.DoesNotContain("null", vcf.ToLower(CultureInfo.InvariantCulture));
         }
 
         [Fact]
-        public void ExportVCard_ShouldIncludeBirthdayOnly_NotOtherDates()
+        public void ExportVCardShouldIncludeBirthdayOnlyNotOtherDates()
         {
             // Arrange
             Contact contact = new()
@@ -331,7 +332,7 @@ END:VCARD";
         }
 
         [Fact]
-        public void ExportVCard_ShouldOnlyIncludeEmailAndPhoneContactMethods()
+        public void ExportVCardShouldOnlyIncludeEmailAndPhoneContactMethods()
         {
             // Arrange
             Contact contact = new()
@@ -357,7 +358,7 @@ END:VCARD";
         }
 
         [Fact]
-        public void ExportVCard_ShouldSkipEmptyEmailValues()
+        public void ExportVCardShouldSkipEmptyEmailValues()
         {
             // Arrange
             Contact contact = new()
@@ -382,7 +383,7 @@ END:VCARD";
         }
 
         [Fact]
-        public void ParseVCard_ShouldExtractNickname()
+        public void ParseVCardShouldExtractNickname()
         {
             // Arrange
             string vcfContent = @"BEGIN:VCARD
@@ -403,7 +404,7 @@ END:VCARD";
         }
 
         [Fact]
-        public void ParseVCard_ShouldExtractOrganizationAndTitle()
+        public void ParseVCardShouldExtractOrganizationAndTitle()
         {
             // Arrange
             string vcfContent = @"BEGIN:VCARD

@@ -40,10 +40,12 @@ namespace Rvnx.CRM.Tests.Controllers
         {
             _context.Database.EnsureDeleted();
             _context.Dispose();
+
+    GC.SuppressFinalize(this);
         }
 
         [Fact]
-        public async Task Create_Post_ShouldReturnNotFound_WhenUserCannotAccessContact()
+        public async Task CreatePostShouldReturnNotFoundWhenUserCannotAccessContact()
         {
             // Arrange
             Guid otherUserContactId = Guid.NewGuid();
@@ -86,7 +88,7 @@ namespace Rvnx.CRM.Tests.Controllers
         }
 
         [Fact]
-        public async Task Create_Get_ShouldReturnNotFound_WhenUserCannotAccessContact()
+        public async Task CreateGetShouldReturnNotFoundWhenUserCannotAccessContact()
         {
             // Arrange
             Guid otherUserContactId = Guid.NewGuid();
@@ -108,7 +110,7 @@ namespace Rvnx.CRM.Tests.Controllers
         }
 
         [Fact]
-        public async Task Create_Get_ShouldReturnBadRequest_WhenEntityTypeIsNotPerson()
+        public async Task CreateGetShouldReturnBadRequestWhenEntityTypeIsNotPerson()
         {
             // Arrange
             Guid entityId = Guid.NewGuid();

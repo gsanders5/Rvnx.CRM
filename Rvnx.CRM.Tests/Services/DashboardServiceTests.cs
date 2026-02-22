@@ -23,7 +23,7 @@ namespace Rvnx.CRM.Tests.Services
         }
 
         [Fact]
-        public async Task GetDashboardDataAsync_FiltersRemindersAtDatabaseLevel()
+        public async Task GetDashboardDataAsyncFiltersRemindersAtDatabaseLevel()
         {
             // Arrange
             List<Contact> contacts = new()

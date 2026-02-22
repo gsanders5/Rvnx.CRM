@@ -51,7 +51,7 @@ public class VCardService : IVCardService
                 if (displayProp != null && !string.IsNullOrWhiteSpace(displayProp.Value))
                 {
                     string displayName = displayProp.Value;
-                    if (displayName.Contains(","))
+                    if (displayName.Contains(','))
                     {
                         string[] parts = displayName.Split(',', StringSplitOptions.RemoveEmptyEntries);
                         if (parts.Length > 0) contact.LastName = parts[0].Trim();
@@ -224,7 +224,7 @@ public class VCardService : IVCardService
                 .Select(m => new TextProperty(m.Value))
                 .ToList();
 
-            if (emails.Any()) vc.EMails = emails;
+            if (emails.Count > 0) vc.EMails = emails;
         }
 
         // Phones
@@ -235,7 +235,7 @@ public class VCardService : IVCardService
                 .Select(m => new TextProperty(m.Value))
                 .ToList();
 
-            if (phones.Any()) vc.Phones = phones;
+            if (phones.Count > 0) vc.Phones = phones;
         }
 
         // Birthday

@@ -7,7 +7,7 @@ using Rvnx.CRM.Web.Controllers;
 
 namespace Rvnx.CRM.Tests.Controllers;
 
-public class HomeControllerPerformanceTests
+public class HomeControllerPerformanceTests : IDisposable
 {
     private readonly Mock<IDashboardService> _dashboardServiceMock;
     private readonly HomeController _controller;
@@ -18,8 +18,14 @@ public class HomeControllerPerformanceTests
         _controller = new HomeController(_dashboardServiceMock.Object);
     }
 
+    public void Dispose()
+    {
+        _controller?.Dispose();
+        GC.SuppressFinalize(this);
+    }
+
     [Fact]
-    public async Task Index_ShouldDelegateToDashboardService()
+    public async Task IndexShouldDelegateToDashboardService()
     {
         // Arrange
         DashboardDto dashboardData = new()

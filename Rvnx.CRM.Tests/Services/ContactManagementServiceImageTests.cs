@@ -56,7 +56,7 @@ namespace Rvnx.CRM.Tests.Services
         }
 
         [Fact]
-        public async Task UpdateContact_WithValidImage_AddsAttachment()
+        public async Task UpdateContactWithValidImageAddsAttachment()
         {
             // Arrange
             Guid contactId = Guid.NewGuid();

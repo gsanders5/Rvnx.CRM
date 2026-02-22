@@ -12,7 +12,7 @@ namespace Rvnx.CRM.Tests.Controllers
     public class DebugOperationsControllerTests
     {
         [Fact]
-        public void OnActionExecuting_ReturnsNotFound_WhenNotDevelopment()
+        public void OnActionExecutingReturnsNotFoundWhenNotDevelopment()
         {
             // Arrange
             Mock<IRepository> repositoryMock = new();
@@ -42,7 +42,7 @@ namespace Rvnx.CRM.Tests.Controllers
         }
 
         [Fact]
-        public void OnActionExecuting_AllowsExecution_WhenDevelopment()
+        public void OnActionExecutingAllowsExecutionWhenDevelopment()
         {
             // Arrange
             Mock<IRepository> repositoryMock = new();

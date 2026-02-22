@@ -42,10 +42,12 @@ namespace Rvnx.CRM.Tests.Controllers
         {
             _context.Database.EnsureDeleted();
             _context.Dispose();
+
+    GC.SuppressFinalize(this);
         }
 
         [Fact]
-        public void Create_Get_ReturnsView_WithCorrectModel()
+        public void CreateGetReturnsViewWithCorrectModel()
         {
             // Arrange
             Guid entityId = Guid.NewGuid();
@@ -62,7 +64,7 @@ namespace Rvnx.CRM.Tests.Controllers
         }
 
         [Fact]
-        public async Task Create_Post_ValidData_CreatesContactMethod()
+        public async Task CreatePostValidDataCreatesContactMethod()
         {
             // Arrange
             Guid entityId = Guid.NewGuid();
@@ -96,7 +98,7 @@ namespace Rvnx.CRM.Tests.Controllers
         }
 
         [Fact]
-        public async Task Create_Post_InvalidData_ReturnsView()
+        public async Task CreatePostInvalidDataReturnsView()
         {
             // Arrange
             ContactMethodFormDto dto = new()
@@ -117,7 +119,7 @@ namespace Rvnx.CRM.Tests.Controllers
         }
 
         [Fact]
-        public async Task Create_Post_WithNonExistentParent_CreatesOrphanedRecord()
+        public async Task CreatePostWithNonExistentParentCreatesOrphanedRecord()
         {
             // Arrange
             // We do NOT create the parent entity
@@ -150,7 +152,7 @@ namespace Rvnx.CRM.Tests.Controllers
         }
 
         [Fact]
-        public async Task Edit_Post_ValidData_UpdatesContactMethod()
+        public async Task EditPostValidDataUpdatesContactMethod()
         {
             // Arrange
             Guid entityId = Guid.NewGuid();
@@ -196,7 +198,7 @@ namespace Rvnx.CRM.Tests.Controllers
         }
 
         [Fact]
-        public async Task Edit_Post_ReturnsNotFound_WhenEntityDoesNotExist()
+        public async Task EditPostReturnsNotFoundWhenEntityDoesNotExist()
         {
             // Arrange
             Guid methodId = Guid.NewGuid();
@@ -217,7 +219,7 @@ namespace Rvnx.CRM.Tests.Controllers
         }
 
         [Fact]
-        public async Task Delete_Post_DeletesContactMethod()
+        public async Task DeletePostDeletesContactMethod()
         {
             // Arrange
             Guid entityId = Guid.NewGuid();

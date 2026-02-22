@@ -22,7 +22,7 @@ namespace Rvnx.CRM.Tests.Services
         }
 
         [Fact]
-        public async Task GetContactDetailsAsync_ReturnsNull_WhenContactNotFound()
+        public async Task GetContactDetailsAsyncReturnsNullWhenContactNotFound()
         {
             // Arrange
             Guid contactId = Guid.NewGuid();
@@ -37,7 +37,7 @@ namespace Rvnx.CRM.Tests.Services
         }
 
         [Fact]
-        public async Task GetContactDetailsAsync_ReturnsDto_WhenContactFound()
+        public async Task GetContactDetailsAsyncReturnsDtoWhenContactFound()
         {
             // Arrange
             Guid contactId = Guid.NewGuid();
@@ -77,7 +77,7 @@ namespace Rvnx.CRM.Tests.Services
         }
 
         [Fact]
-        public async Task GetContactDetailsAsync_PopulatesRelationshipsCorrectly()
+        public async Task GetContactDetailsAsyncPopulatesRelationshipsCorrectly()
         {
             // Arrange
             Guid contactId = Guid.NewGuid();
