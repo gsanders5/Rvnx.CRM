@@ -31,11 +31,7 @@ namespace Rvnx.CRM.Web.Controllers
             {
                 if (string.Equals(dto.Title, SignificantDateTitles.Birthday, StringComparison.OrdinalIgnoreCase))
                 {
-                    bool existingBirthday = (await _repository.CountAsync<SignificantDate>(d =>
-                        d.ContactId == dto.EntityId &&
-                        string.Equals(d.Title, SignificantDateTitles.Birthday, StringComparison.OrdinalIgnoreCase))) > 0;
-
-                    if (existingBirthday)
+                    if (await IsBirthdayAlreadySetAsync(dto.EntityId))
                     {
                         ModelState.AddModelError("Title", "A birthday is already set for this contact.");
                         return View(dto);
@@ -86,18 +82,12 @@ namespace Rvnx.CRM.Web.Controllers
 
                     if (string.Equals(dto.Title, SignificantDateTitles.Birthday, StringComparison.OrdinalIgnoreCase))
                     {
-                        if (!string.Equals(importantDate.Title, SignificantDateTitles.Birthday, StringComparison.OrdinalIgnoreCase))
+                        if (await IsBirthdayAlreadySetAsync(dto.EntityId, dto.Id))
                         {
-                            bool existingBirthday = (await _repository.CountAsync<SignificantDate>(d =>
-                                d.ContactId == dto.EntityId &&
-                                string.Equals(d.Title, SignificantDateTitles.Birthday, StringComparison.OrdinalIgnoreCase))) > 0;
-
-                            if (existingBirthday)
-                            {
-                                ModelState.AddModelError("Title", "A birthday is already set for this contact.");
-                                return View(dto);
-                            }
+                            ModelState.AddModelError("Title", "A birthday is already set for this contact.");
+                            return View(dto);
                         }
+
                         dto.EventFrequency = TimeSpan.FromDays(365);
                     }
 
@@ -144,6 +134,14 @@ namespace Rvnx.CRM.Web.Controllers
                 return RedirectToEntity(entityId, entityType);
             }
             return RedirectToAction("Index", "Home");
+        }
+
+        private async Task<bool> IsBirthdayAlreadySetAsync(Guid contactId, Guid? excludeId = null)
+        {
+            return (await _repository.CountAsync<SignificantDate>(d =>
+                d.ContactId == contactId &&
+                d.Id != (excludeId ?? Guid.Empty) &&
+                string.Equals(d.Title, SignificantDateTitles.Birthday, StringComparison.OrdinalIgnoreCase))) > 0;
         }
     }
 }
