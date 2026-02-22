@@ -35,6 +35,8 @@ namespace Rvnx.CRM.Tests.Controllers
             Mock<IFileValidationService> fileServiceMock = new();
             fileServiceMock.Setup(s => s.IsImageExtension(It.IsAny<string>())).Returns(false);
             fileServiceMock.Setup(s => s.IsValidFileSignature(It.IsAny<byte[]>(), It.IsAny<string>())).Returns(true);
+            fileServiceMock.Setup(s => s.IsAllowedExtension(It.IsAny<string>())).Returns(true);
+            fileServiceMock.Setup(s => s.IsAllowedFileSize(It.IsAny<long>())).Returns(true);
 
             Mock<IEntityService> entityServiceMock = new();
             entityServiceMock.Setup(s => s.ExistsAsync(It.IsAny<string>(), It.IsAny<Guid>())).ReturnsAsync(true);
