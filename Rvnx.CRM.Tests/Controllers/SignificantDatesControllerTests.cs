@@ -145,6 +145,89 @@ namespace Rvnx.CRM.Tests.Controllers
         }
 
         [Fact]
+        public async Task Edit_WhenChangingToBirthdayButOneAlreadyExists_ShouldReturnValidationError()
+        {
+            // Arrange
+            Guid contactId = Guid.NewGuid();
+            _context.Contacts.Add(new Contact { Id = contactId, FirstName = "Test" });
+
+            // Existing Birthday
+            _context.Set<SignificantDate>().Add(new SignificantDate
+            {
+                Id = Guid.NewGuid(),
+                ContactId = contactId,
+                Title = SignificantDateTitles.Birthday,
+                Date = new DateTime(1990, 1, 1)
+            });
+
+            // Another Date we will try to change to Birthday
+            Guid anniversaryId = Guid.NewGuid();
+            _context.Set<SignificantDate>().Add(new SignificantDate
+            {
+                Id = anniversaryId,
+                ContactId = contactId,
+                Title = "Anniversary",
+                Date = new DateTime(2010, 5, 5)
+            });
+            await _context.SaveChangesAsync();
+
+            SignificantDateDto dto = new()
+            {
+                Id = anniversaryId,
+                EntityId = contactId,
+                EntityType = EntityTypes.Person,
+                Title = SignificantDateTitles.Birthday, // Change Anniversary to Birthday
+                Date = new DateTime(2010, 5, 5)
+            };
+
+            // Act
+            IActionResult result = await _controller.Edit(anniversaryId, dto);
+
+            // Assert
+            Assert.IsType<ViewResult>(result);
+            Assert.False(_controller.ModelState.IsValid);
+            Assert.Equal("A birthday is already set for this contact.", _controller.ModelState["Title"]!.Errors[0].ErrorMessage);
+        }
+
+        [Fact]
+        public async Task Edit_WhenExistingIsBirthdayAndUpdating_ShouldSucceed()
+        {
+            // Arrange
+            Guid contactId = Guid.NewGuid();
+            _context.Contacts.Add(new Contact { Id = contactId, FirstName = "Test" });
+
+            Guid birthdayId = Guid.NewGuid();
+            _context.Set<SignificantDate>().Add(new SignificantDate
+            {
+                Id = birthdayId,
+                ContactId = contactId,
+                Title = SignificantDateTitles.Birthday,
+                Date = new DateTime(1990, 1, 1)
+            });
+            await _context.SaveChangesAsync();
+
+            SignificantDateDto dto = new()
+            {
+                Id = birthdayId,
+                EntityId = contactId,
+                EntityType = EntityTypes.Person,
+                Title = SignificantDateTitles.Birthday,
+                Date = new DateTime(1990, 1, 2) // Change date only
+            };
+
+            // Act
+            IActionResult result = await _controller.Edit(birthdayId, dto);
+
+            // Assert
+            RedirectToActionResult redirectResult = Assert.IsType<RedirectToActionResult>(result);
+            Assert.Equal("Details", redirectResult.ActionName);
+
+            SignificantDate? updated = await _context.Set<SignificantDate>().FindAsync(birthdayId);
+            Assert.NotNull(updated);
+            Assert.Equal(new DateTime(1990, 1, 2), updated.Date);
+        }
+
+        [Fact]
         public async Task DeleteConfirmed_ShouldDeleteDate()
         {
             // Arrange
