@@ -5,6 +5,7 @@ using Rvnx.CRM.Core.DTOs.Base;
 using Rvnx.CRM.Core.Extensions;
 using Rvnx.CRM.Core.Interfaces;
 using Rvnx.CRM.Core.Models.Base;
+using Rvnx.CRM.Core.Models.Contact;
 using Rvnx.CRM.Web.Controllers.Base;
 
 namespace Rvnx.CRM.Web.Controllers
@@ -14,6 +15,11 @@ namespace Rvnx.CRM.Web.Controllers
         public async Task<IActionResult> Create(Guid entityId, string entityType)
         {
             if (entityId == Guid.Empty) return NotFound();
+
+            if (entityType != EntityTypes.Person) return BadRequest("Only Person entities are supported.");
+
+            // Sentinel: Verify entity existence and access rights to prevent IDOR
+            if (!await _repository.ExistsAsync<Contact>(entityId)) return NotFound();
 
             var viewModel = new NoteFormViewModel
             {
@@ -29,6 +35,11 @@ namespace Rvnx.CRM.Web.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(NoteFormViewModel viewModel)
         {
+            if (viewModel.EntityType != EntityTypes.Person) return BadRequest("Only Person entities are supported.");
+
+            // Sentinel: Verify entity existence and access rights to prevent IDOR
+            if (!await _repository.ExistsAsync<Contact>(viewModel.EntityId)) return NotFound();
+
             if (ModelState.IsValid)
             {
                 Note note = viewModel.ToEntity();
