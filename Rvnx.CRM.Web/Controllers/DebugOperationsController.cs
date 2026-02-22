@@ -122,7 +122,7 @@ namespace Rvnx.CRM.Web.Controllers
         {
             // 1. Get available Relationship Types (Static)
             List<RelationshipTypeDefinition> types = RelationshipTypeService.GetAll();
-            if (!types.Any())
+            if (types.Count == 0)
             {
                 TempData["Message"] = "No relationship types defined.";
                 return RedirectToAction("Index");
@@ -153,7 +153,7 @@ namespace Rvnx.CRM.Web.Controllers
                 List<Relationship> existing = await _repository.ListAsNoTrackingAsync<Relationship>(r =>
                     r.EntityId == c1.Id && r.RelatedEntityId == c2.Id && r.RelationshipTypeId == type.Id);
 
-                if (existing.Any()) continue;
+                if (existing.Count > 0) continue;
 
                 Relationship rel = new()
                 {

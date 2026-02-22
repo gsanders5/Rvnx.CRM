@@ -8,6 +8,9 @@ namespace Rvnx.CRM.Infrastructure.Migrations
     public partial class InitialSchema : Migration
     {
         /// <inheritdoc />
+        private static readonly string[] EntityIdIndexColumns = ["EntityId", "EntityType"];
+        private static readonly string[] RelatedEntityIdIndexColumns = ["RelatedEntityId", "EntityType"];
+
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.CreateTable(
@@ -483,12 +486,12 @@ namespace Rvnx.CRM.Infrastructure.Migrations
             migrationBuilder.CreateIndex(
                 name: "IX_Relationship_EntityId_EntityType",
                 table: "Relationship",
-                columns: new[] { "EntityId", "EntityType" });
+                columns: EntityIdIndexColumns);
 
             migrationBuilder.CreateIndex(
                 name: "IX_Relationship_RelatedEntityId_EntityType",
                 table: "Relationship",
-                columns: new[] { "RelatedEntityId", "EntityType" });
+                columns: RelatedEntityIdIndexColumns);
 
             migrationBuilder.CreateIndex(
                 name: "IX_Relationship_UserId",

@@ -11,7 +11,7 @@ namespace Rvnx.CRM.Tests.Repositories
     public class CascadeDeleteTests
     {
         [Fact]
-        public async Task DeleteContact_ShouldDelete_Dependencies()
+        public async Task DeleteContactShouldDeleteDependencies()
         {
             // Arrange
             Mock<ILogger<ContactsController>> logger = new();
@@ -33,7 +33,7 @@ namespace Rvnx.CRM.Tests.Repositories
         }
 
         [Fact]
-        public async Task DeleteContact_ShouldDelete_Relationships()
+        public async Task DeleteContactShouldDeleteRelationships()
         {
             // Arrange
             Mock<ILogger<ContactsController>> logger = new();

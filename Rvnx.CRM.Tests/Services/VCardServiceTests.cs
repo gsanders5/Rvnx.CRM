@@ -17,7 +17,7 @@ namespace Rvnx.CRM.Tests.Services
         }
 
         [Fact]
-        public void ParseVCard_ShouldReturnContact_WhenValidVCardProvided()
+        public void ParseVCardShouldReturnContactWhenValidVCardProvided()
         {
             // Arrange
             string vcfContent = @"BEGIN:VCARD
@@ -53,7 +53,7 @@ END:VCARD";
         }
 
         [Fact]
-        public void ExportVCard_ShouldReturnValidVcf_WhenContactProvided()
+        public void ExportVCardShouldReturnValidVcfWhenContactProvided()
         {
             // Arrange
             Contact contact = new()

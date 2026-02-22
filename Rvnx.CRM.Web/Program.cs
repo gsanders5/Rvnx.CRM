@@ -10,6 +10,12 @@ namespace Rvnx.CRM.Web
 {
     public class Program
     {
+        private static readonly Action<ILogger, Exception?> LogDbCreationError =
+            LoggerMessage.Define(
+                LogLevel.Error,
+                new EventId(1, nameof(LogDbCreationError)),
+                "An error occurred creating the DB.");
+
         public static void Main(string[] args)
         {
             WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
@@ -86,7 +92,7 @@ namespace Rvnx.CRM.Web
                 catch (Exception ex)
                 {
                     ILogger<Program> logger = services.GetRequiredService<ILogger<Program>>();
-                    logger.LogError(ex, "An error occurred creating the DB.");
+                    LogDbCreationError(logger, ex);
                 }
             }
 

@@ -36,10 +36,12 @@ namespace Rvnx.CRM.Tests.Controllers
         {
             _context.Database.EnsureDeleted();
             _context.Dispose();
+
+    GC.SuppressFinalize(this);
         }
 
         [Fact]
-        public async Task Create_Post_WithValidData_ShouldCreateNote()
+        public async Task CreatePostWithValidDataShouldCreateNote()
         {
             // Arrange
             Guid contactId = Guid.NewGuid();
@@ -69,7 +71,7 @@ namespace Rvnx.CRM.Tests.Controllers
         }
 
         [Fact]
-        public async Task Edit_Post_WithValidData_ShouldUpdateNote()
+        public async Task EditPostWithValidDataShouldUpdateNote()
         {
             // Arrange
             Guid noteId = Guid.NewGuid();
@@ -101,7 +103,7 @@ namespace Rvnx.CRM.Tests.Controllers
         }
 
         [Fact]
-        public async Task DeleteConfirmed_WithValidId_ShouldDeleteNote()
+        public async Task DeleteConfirmedWithValidIdShouldDeleteNote()
         {
             // Arrange
             Guid noteId = Guid.NewGuid();

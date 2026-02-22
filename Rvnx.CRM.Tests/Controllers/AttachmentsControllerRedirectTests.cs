@@ -25,7 +25,7 @@ namespace Rvnx.CRM.Tests.Controllers
             return new CRMDbContext(options, mockCurrentUserService.Object);
         }
 
-        private AttachmentsController GetController(CRMDbContext context)
+        private static AttachmentsController GetController(CRMDbContext context)
         {
             Mock<IRepository> repoMock = new();
             repoMock.Setup(r => r.ExistsAsync<Contact>(It.IsAny<Guid>(), It.IsAny<CancellationToken>())).ReturnsAsync(true);
@@ -53,14 +53,14 @@ namespace Rvnx.CRM.Tests.Controllers
             Mock<IUrlHelper> urlHelperMock = new();
             // IsLocalUrl logic: starts with /
             urlHelperMock.Setup(x => x.IsLocalUrl(It.IsAny<string>()))
-                .Returns((string url) => !string.IsNullOrEmpty(url) && url.StartsWith("/"));
+                .Returns((string url) => !string.IsNullOrEmpty(url) && url.StartsWith('/'));
 
             controller.Url = urlHelperMock.Object;
 
             return controller;
         }
 
-        private IFormFile CreateMockFile()
+        private static IFormFile CreateMockFile()
         {
             Mock<IFormFile> fileMock = new();
             MemoryStream ms = new(new byte[] { 1, 2, 3 });
@@ -75,7 +75,7 @@ namespace Rvnx.CRM.Tests.Controllers
         }
 
         [Fact]
-        public async Task Upload_ShouldRedirectToReturnUrl_WhenValidLocalUrl()
+        public async Task UploadShouldRedirectToReturnUrlWhenValidLocalUrl()
         {
             // Arrange
             using CRMDbContext context = GetInMemoryDbContext();
@@ -92,7 +92,7 @@ namespace Rvnx.CRM.Tests.Controllers
         }
 
         [Fact]
-        public async Task Upload_ShouldRedirectToReferer_WhenReturnUrlMissing_AndRefererIsSafe()
+        public async Task UploadShouldRedirectToRefererWhenReturnUrlMissingAndRefererIsSafe()
         {
             // Arrange
             using CRMDbContext context = GetInMemoryDbContext();
@@ -111,7 +111,7 @@ namespace Rvnx.CRM.Tests.Controllers
         }
 
         [Fact]
-        public async Task Upload_ShouldRedirectToHome_WhenReturnUrlMissing_AndRefererIsUnsafe()
+        public async Task UploadShouldRedirectToHomeWhenReturnUrlMissingAndRefererIsUnsafe()
         {
             // Arrange
             using CRMDbContext context = GetInMemoryDbContext();
@@ -131,7 +131,7 @@ namespace Rvnx.CRM.Tests.Controllers
         }
 
         [Fact]
-        public async Task Upload_ShouldRedirectToHome_WhenReturnUrlAndRefererAreMissing()
+        public async Task UploadShouldRedirectToHomeWhenReturnUrlAndRefererAreMissing()
         {
             // Arrange
             using CRMDbContext context = GetInMemoryDbContext();
@@ -148,7 +148,7 @@ namespace Rvnx.CRM.Tests.Controllers
         }
 
         [Fact]
-        public async Task Delete_ShouldRedirectToReturnUrl_WhenValidLocalUrl()
+        public async Task DeleteShouldRedirectToReturnUrlWhenValidLocalUrl()
         {
             // Arrange
             using CRMDbContext context = GetInMemoryDbContext();
@@ -168,7 +168,7 @@ namespace Rvnx.CRM.Tests.Controllers
         }
 
         [Fact]
-        public async Task Delete_ShouldRedirectToHome_WhenReturnUrlInvalid_AndRefererUnsafe()
+        public async Task DeleteShouldRedirectToHomeWhenReturnUrlInvalidAndRefererUnsafe()
         {
             // Arrange
             using CRMDbContext context = GetInMemoryDbContext();

@@ -14,7 +14,7 @@ namespace Rvnx.CRM.Tests.Services
     {
         private static readonly Guid DefaultTestUserId = Guid.Parse("c5b50a20-34b2-44b2-8b9c-aa4135f60938");
 
-        private ContactsController CreateController(Mock<ISelfContactService> selfContactServiceMock)
+        private static ContactsController CreateController(Mock<ISelfContactService> selfContactServiceMock)
         {
             Mock<ILogger<ContactsController>> loggerMock = new();
             Mock<ICurrentUserService> userMock = new();
@@ -36,7 +36,7 @@ namespace Rvnx.CRM.Tests.Services
         }
 
         [Fact]
-        public async Task CreateSelf_Get_ShouldPreFillData()
+        public async Task CreateSelfGetShouldPreFillData()
         {
             // Arrange
             Mock<ISelfContactService> selfContactMock = new();
@@ -59,7 +59,7 @@ namespace Rvnx.CRM.Tests.Services
         }
 
         [Fact]
-        public async Task Self_ShouldRedirectToDetails_WhenSelfContactExists()
+        public async Task SelfShouldRedirectToDetailsWhenSelfContactExists()
         {
             // Arrange
             Guid selfContactId = Guid.NewGuid();
@@ -78,7 +78,7 @@ namespace Rvnx.CRM.Tests.Services
         }
 
         [Fact]
-        public async Task Self_ShouldRedirectToCreateSelf_WhenSelfContactDoesNotExist()
+        public async Task SelfShouldRedirectToCreateSelfWhenSelfContactDoesNotExist()
         {
             // Arrange
             Mock<ISelfContactService> selfContactMock = new();
@@ -95,7 +95,7 @@ namespace Rvnx.CRM.Tests.Services
         }
 
         [Fact]
-        public async Task CreateSelf_Post_ShouldCreateContactAndLinkUser()
+        public async Task CreateSelfPostShouldCreateContactAndLinkUser()
         {
             // Arrange
             Guid newContactId = Guid.NewGuid();

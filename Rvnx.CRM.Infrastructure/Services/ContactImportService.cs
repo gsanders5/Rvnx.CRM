@@ -11,6 +11,12 @@ public class ContactImportService(IRepository repository, IVCardService vCardSer
     private readonly IVCardService _vCardService = vCardService;
     private readonly ILogger<ContactImportService> _logger = logger;
 
+    private static readonly Action<ILogger, Exception?> LogErrorImportingVcf =
+        LoggerMessage.Define(
+            LogLevel.Error,
+            new EventId(1, nameof(LogErrorImportingVcf)),
+            "Error importing VCF");
+
     public async Task<ContactImportResult> ImportFromVCardAsync(Stream vCardStream)
     {
         try
@@ -44,7 +50,7 @@ public class ContactImportService(IRepository repository, IVCardService vCardSer
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error importing VCF");
+            LogErrorImportingVcf(_logger, ex);
             throw;
         }
     }
@@ -56,7 +62,7 @@ public class ContactImportService(IRepository repository, IVCardService vCardSer
             return true;
         }
 
-        if (candidate.ContactMethods?.Any() == true)
+        if (candidate.ContactMethods != null && candidate.ContactMethods.Count > 0)
         {
             List<string> valuesToCheck = candidate.ContactMethods.Select(m => m.Value).ToList();
             return await _repository.CountAsync<ContactMethod>(cm =>

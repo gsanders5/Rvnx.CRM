@@ -20,7 +20,7 @@ namespace Rvnx.CRM.Tests.Services
         }
 
         [Fact]
-        public async Task ExistsAsync_Person_CallsRepositoryForContact()
+        public async Task ExistsAsyncPersonCallsRepositoryForContact()
         {
             // Arrange
             Guid id = Guid.NewGuid();
@@ -35,7 +35,7 @@ namespace Rvnx.CRM.Tests.Services
         }
 
         [Fact]
-        public async Task ExistsAsync_Note_CallsRepositoryForNote()
+        public async Task ExistsAsyncNoteCallsRepositoryForNote()
         {
             // Arrange
             Guid id = Guid.NewGuid();
@@ -50,7 +50,7 @@ namespace Rvnx.CRM.Tests.Services
         }
 
         [Fact]
-        public async Task ExistsAsync_Reminder_CallsRepositoryForReminder()
+        public async Task ExistsAsyncReminderCallsRepositoryForReminder()
         {
             // Arrange
             Guid id = Guid.NewGuid();
@@ -65,7 +65,7 @@ namespace Rvnx.CRM.Tests.Services
         }
 
         [Fact]
-        public async Task ExistsAsync_SignificantDate_CallsRepositoryForSignificantDate()
+        public async Task ExistsAsyncSignificantDateCallsRepositoryForSignificantDate()
         {
             // Arrange
             Guid id = Guid.NewGuid();
@@ -80,7 +80,7 @@ namespace Rvnx.CRM.Tests.Services
         }
 
         [Fact]
-        public async Task ExistsAsync_Relationship_CallsRepositoryForRelationship()
+        public async Task ExistsAsyncRelationshipCallsRepositoryForRelationship()
         {
             // Arrange
             Guid id = Guid.NewGuid();
@@ -95,7 +95,7 @@ namespace Rvnx.CRM.Tests.Services
         }
 
         [Fact]
-        public async Task ExistsAsync_UnknownType_ReturnsFalse()
+        public async Task ExistsAsyncUnknownTypeReturnsFalse()
         {
             // Arrange
             Guid id = Guid.NewGuid();

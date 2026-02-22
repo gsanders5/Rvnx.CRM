@@ -38,10 +38,12 @@ namespace Rvnx.CRM.Tests.Controllers
         {
             _context.Database.EnsureDeleted();
             _context.Dispose();
+
+    GC.SuppressFinalize(this);
         }
 
         [Fact]
-        public async Task Create_Post_WithForwardDirection_ShouldCreateRelationship()
+        public async Task CreatePostWithForwardDirectionShouldCreateRelationship()
         {
             // Arrange
             Guid p1Id = Guid.NewGuid();
@@ -79,7 +81,7 @@ namespace Rvnx.CRM.Tests.Controllers
         }
 
         [Fact]
-        public async Task Create_Post_WithReverseDirection_ShouldSwapEntitiesAndCreateRelationship()
+        public async Task CreatePostWithReverseDirectionShouldSwapEntitiesAndCreateRelationship()
         {
             // Arrange
             Guid p1Id = Guid.NewGuid(); // User is on P1 page
@@ -117,7 +119,7 @@ namespace Rvnx.CRM.Tests.Controllers
         }
 
         [Fact]
-        public async Task DeleteConfirmed_WithValidId_ShouldDeleteRelationship()
+        public async Task DeleteConfirmedWithValidIdShouldDeleteRelationship()
         {
             // Arrange
             Guid relId = Guid.NewGuid();
@@ -141,7 +143,7 @@ namespace Rvnx.CRM.Tests.Controllers
         }
 
         [Fact]
-        public async Task Create_Get_ShouldPopulateGroupedOptions()
+        public async Task CreateGetShouldPopulateGroupedOptions()
         {
             // Arrange
             Guid p1Id = Guid.NewGuid();
@@ -171,7 +173,7 @@ namespace Rvnx.CRM.Tests.Controllers
         }
 
         [Fact]
-        public async Task Create_Post_WhenRelationshipTypeSelectionIsEmpty_ShouldReturnViewWithPopulatedOptions()
+        public async Task CreatePostWhenRelationshipTypeSelectionIsEmptyShouldReturnViewWithPopulatedOptions()
         {
             // Arrange
             Guid p1Id = Guid.NewGuid();

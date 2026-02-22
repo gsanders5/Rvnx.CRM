@@ -34,10 +34,12 @@ namespace Rvnx.CRM.Tests.Controllers
         {
             _context.Database.EnsureDeleted();
             _context.Dispose();
+
+    GC.SuppressFinalize(this);
         }
 
         [Fact]
-        public void Create_Get_WithValidContactId_ShouldReturnViewWithDto()
+        public void CreateGetWithValidContactIdShouldReturnViewWithDto()
         {
             // Arrange
             Guid contactId = Guid.NewGuid();
@@ -53,7 +55,7 @@ namespace Rvnx.CRM.Tests.Controllers
         }
 
         [Fact]
-        public async Task Create_Post_WithValidData_ShouldCreatePet()
+        public async Task CreatePostWithValidDataShouldCreatePet()
         {
             // Arrange
             Guid contactId = Guid.NewGuid();
@@ -87,7 +89,7 @@ namespace Rvnx.CRM.Tests.Controllers
         }
 
         [Fact]
-        public async Task Edit_Get_WithValidId_ShouldReturnViewWithPetData()
+        public async Task EditGetWithValidIdShouldReturnViewWithPetData()
         {
             // Arrange
             Guid petId = Guid.NewGuid();
@@ -118,7 +120,7 @@ namespace Rvnx.CRM.Tests.Controllers
         }
 
         [Fact]
-        public async Task Edit_Get_WhenPetDoesNotExist_ShouldReturnNotFound()
+        public async Task EditGetWhenPetDoesNotExistShouldReturnNotFound()
         {
             // Act
             IActionResult result = await _controller.Edit(Guid.NewGuid());
@@ -128,7 +130,7 @@ namespace Rvnx.CRM.Tests.Controllers
         }
 
         [Fact]
-        public async Task Edit_Post_WithValidData_ShouldUpdatePet()
+        public async Task EditPostWithValidDataShouldUpdatePet()
         {
             // Arrange
             Guid petId = Guid.NewGuid();
@@ -169,7 +171,7 @@ namespace Rvnx.CRM.Tests.Controllers
         }
 
         [Fact]
-        public async Task Edit_Post_WhenIdMismatch_ShouldReturnNotFound()
+        public async Task EditPostWhenIdMismatchShouldReturnNotFound()
         {
             // Arrange
             PetFormDto dto = new() { Id = Guid.NewGuid(), Name = "Test" };
@@ -182,7 +184,7 @@ namespace Rvnx.CRM.Tests.Controllers
         }
 
         [Fact]
-        public async Task Delete_Get_WithValidId_ShouldReturnViewWithPet()
+        public async Task DeleteGetWithValidIdShouldReturnViewWithPet()
         {
             // Arrange
             Guid petId = Guid.NewGuid();
@@ -207,7 +209,7 @@ namespace Rvnx.CRM.Tests.Controllers
         }
 
         [Fact]
-        public async Task DeleteConfirmed_WithValidId_ShouldRemovePet()
+        public async Task DeleteConfirmedWithValidIdShouldRemovePet()
         {
             // Arrange
             Guid petId = Guid.NewGuid();
@@ -233,7 +235,7 @@ namespace Rvnx.CRM.Tests.Controllers
         }
 
         [Fact]
-        public async Task DeleteConfirmed_WhenPetNotFound_ShouldRedirectToContacts()
+        public async Task DeleteConfirmedWhenPetNotFoundShouldRedirectToContacts()
         {
             // Act
             IActionResult result = await _controller.DeleteConfirmed(Guid.NewGuid());

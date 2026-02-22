@@ -8,7 +8,7 @@ namespace Rvnx.CRM.Tests.Controllers
     public class AccountControllerTests
     {
         [Fact]
-        public void Login_ShouldDefaultToRoot_WhenReturnUrlIsExternal()
+        public void LoginShouldDefaultToRootWhenReturnUrlIsExternal()
         {
             // Arrange
             AccountController controller = new();
@@ -16,7 +16,7 @@ namespace Rvnx.CRM.Tests.Controllers
 
             Mock<IUrlHelper> urlHelperMock = new();
             urlHelperMock.Setup(x => x.IsLocalUrl(It.IsAny<string>()))
-                .Returns((string url) => !string.IsNullOrEmpty(url) && url.StartsWith("/"));
+                .Returns((string url) => !string.IsNullOrEmpty(url) && url.StartsWith('/'));
 
             controller.Url = urlHelperMock.Object;
 
@@ -30,7 +30,7 @@ namespace Rvnx.CRM.Tests.Controllers
         }
 
         [Fact]
-        public void Login_ShouldUseReturnUrl_WhenValidLocalUrl()
+        public void LoginShouldUseReturnUrlWhenValidLocalUrl()
         {
             // Arrange
             AccountController controller = new();
@@ -38,7 +38,7 @@ namespace Rvnx.CRM.Tests.Controllers
 
             Mock<IUrlHelper> urlHelperMock = new();
             urlHelperMock.Setup(x => x.IsLocalUrl(It.IsAny<string>()))
-                .Returns((string url) => !string.IsNullOrEmpty(url) && url.StartsWith("/"));
+                .Returns((string url) => !string.IsNullOrEmpty(url) && url.StartsWith('/'));
 
             controller.Url = urlHelperMock.Object;
 

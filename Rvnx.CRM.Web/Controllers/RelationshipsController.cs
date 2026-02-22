@@ -60,7 +60,7 @@ namespace Rvnx.CRM.Web.Controllers
         {
             if (id == null) return NotFound();
 
-            Relationship? relationship = await _repository.GetByIdAsync<Relationship>(id.Value);
+            Relationship? relationship = await Repository.GetByIdAsync<Relationship>(id.Value);
             if (relationship == null) return NotFound();
 
             string currentSelection = $"{relationship.RelationshipTypeId}_Fwd";
@@ -119,12 +119,12 @@ namespace Rvnx.CRM.Web.Controllers
         public async Task<IActionResult> Delete(Guid? id)
         {
             if (id == null) return NotFound();
-            Relationship? relationship = await _repository.GetByIdAsync<Relationship>(id.Value);
+            Relationship? relationship = await Repository.GetByIdAsync<Relationship>(id.Value);
             if (relationship == null) return NotFound();
 
             // Populate Person/RelatedPerson so names show up
-            relationship.Person = await _repository.GetByIdAsync<Contact>(relationship.EntityId);
-            relationship.RelatedPerson = await _repository.GetByIdAsync<Contact>(relationship.RelatedEntityId);
+            relationship.Person = await Repository.GetByIdAsync<Contact>(relationship.EntityId);
+            relationship.RelatedPerson = await Repository.GetByIdAsync<Contact>(relationship.RelatedEntityId);
 
             RelationshipDto viewModel = relationship.ToDto();
             RelationshipDeleteViewModel deleteViewModel = new()
@@ -150,13 +150,13 @@ namespace Rvnx.CRM.Web.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(Guid id)
         {
-            Relationship? relationship = await _repository.GetByIdAsync<Relationship>(id);
+            Relationship? relationship = await Repository.GetByIdAsync<Relationship>(id);
             if (relationship != null)
             {
                 Guid entityId = relationship.EntityId;
                 string entityType = relationship.EntityType;
-                await _repository.DeleteAsync<Relationship>(id);
-                await _repository.SaveChangesAsync();
+                await Repository.DeleteAsync<Relationship>(id);
+                await Repository.SaveChangesAsync();
                 return RedirectToEntity(entityId, entityType);
             }
             return RedirectToAction("Index", "Home");

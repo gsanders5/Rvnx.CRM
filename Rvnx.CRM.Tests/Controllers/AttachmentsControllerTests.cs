@@ -13,7 +13,7 @@ namespace Rvnx.CRM.Tests.Controllers
 {
     public class AttachmentsControllerTests
     {
-        private CRMDbContext GetInMemoryDbContext()
+        private static CRMDbContext GetInMemoryDbContext()
         {
             DbContextOptions<CRMDbContext> options = new DbContextOptionsBuilder<CRMDbContext>()
                 .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
@@ -27,7 +27,7 @@ namespace Rvnx.CRM.Tests.Controllers
         }
 
         [Fact]
-        public async Task View_ShouldReturnFileContentResult_WhenImageExists()
+        public async Task ViewShouldReturnFileContentResultWhenImageExists()
         {
             // Arrange
             using CRMDbContext context = GetInMemoryDbContext();
@@ -67,7 +67,7 @@ namespace Rvnx.CRM.Tests.Controllers
         }
 
         [Fact]
-        public async Task View_ShouldReturnNotFound_WhenAttachmentDoesNotExist()
+        public async Task ViewShouldReturnNotFoundWhenAttachmentDoesNotExist()
         {
             // Arrange
             using CRMDbContext context = GetInMemoryDbContext();
@@ -86,7 +86,7 @@ namespace Rvnx.CRM.Tests.Controllers
         }
 
         [Fact]
-        public async Task View_ShouldReturn304_WhenIfModifiedSinceIsCurrent()
+        public async Task ViewShouldReturn304WhenIfModifiedSinceIsCurrent()
         {
             // Arrange
             using CRMDbContext context = GetInMemoryDbContext();
@@ -129,7 +129,7 @@ namespace Rvnx.CRM.Tests.Controllers
         }
 
         [Fact]
-        public async Task View_ShouldReturnFile_WhenIfModifiedSinceIsOld()
+        public async Task ViewShouldReturnFileWhenIfModifiedSinceIsOld()
         {
             // Arrange
             using CRMDbContext context = GetInMemoryDbContext();
