@@ -23,6 +23,12 @@ public static class ServiceCollectionExtensions
         // Add Relationship Service
         services.AddScoped<IRelationshipService, RelationshipService>();
 
+        // Add Entity Service
+        services.AddScoped<IEntityService, EntityService>();
+
+        // Add File Validation Service
+        services.AddScoped<IFileValidationService, FileValidationService>();
+
         return services;
     }
 }
