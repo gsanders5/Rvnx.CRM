@@ -9,7 +9,7 @@ using Rvnx.CRM.Web.Controllers.Base;
 
 namespace Rvnx.CRM.Web.Controllers
 {
-    public class NotesController(IRepository repository) : RepositoryController(repository)
+    public class NotesController(IRepository repository, IEntityService entityService) : RepositoryController(repository)
     {
         public async Task<IActionResult> Create(Guid entityId, string entityType)
         {
@@ -24,7 +24,7 @@ namespace Rvnx.CRM.Web.Controllers
             }
 
             // Sentinel: Verify entity existence and access rights to prevent IDOR
-            if (!await Repository.ExistsAsync<Contact>(entityId) || await IsPartialContactAsync(entityId))
+            if (!await Repository.ExistsAsync<Contact>(entityId) || await entityService.IsPartialAsync(EntityTypes.Person, entityId))
             {
                 return NotFound();
             }
@@ -33,7 +33,7 @@ namespace Rvnx.CRM.Web.Controllers
             {
                 EntityId = entityId,
                 EntityType = entityType,
-                EntityName = await GetEntityName(entityId, entityType)
+                EntityName = await entityService.GetEntityNameAsync(entityType, entityId)
             };
 
             return View(viewModel);
@@ -49,7 +49,7 @@ namespace Rvnx.CRM.Web.Controllers
             }
 
             // Sentinel: Verify entity existence and access rights to prevent IDOR
-            if (!await Repository.ExistsAsync<Contact>(viewModel.EntityId) || await IsPartialContactAsync(viewModel.EntityId))
+            if (!await Repository.ExistsAsync<Contact>(viewModel.EntityId) || await entityService.IsPartialAsync(EntityTypes.Person, viewModel.EntityId))
             {
                 return NotFound();
             }
@@ -62,7 +62,7 @@ namespace Rvnx.CRM.Web.Controllers
                 return RedirectToEntity(note.ContactId ?? Guid.Empty, EntityTypes.Person);
             }
 
-            viewModel.EntityName = await GetEntityName(viewModel.EntityId, viewModel.EntityType);
+            viewModel.EntityName = await entityService.GetEntityNameAsync(viewModel.EntityType, viewModel.EntityId);
             return View(viewModel);
         }
 
@@ -74,7 +74,7 @@ namespace Rvnx.CRM.Web.Controllers
             }
 
             Note? note = await Repository.GetByIdAsync<Note>(id.Value);
-            if (note == null || await IsPartialContactAsync(note.ContactId ?? Guid.Empty))
+            if (note == null || await entityService.IsPartialAsync(EntityTypes.Person, note.ContactId ?? Guid.Empty))
             {
                 return NotFound();
             }
@@ -86,7 +86,7 @@ namespace Rvnx.CRM.Web.Controllers
                 Value = note.Value,
                 EntityId = note.ContactId ?? Guid.Empty,
                 EntityType = EntityTypes.Person,
-                EntityName = await GetEntityName(note.ContactId ?? Guid.Empty, EntityTypes.Person)
+                EntityName = await entityService.GetEntityNameAsync(EntityTypes.Person, note.ContactId ?? Guid.Empty)
             };
 
             return View(viewModel);
@@ -106,7 +106,7 @@ namespace Rvnx.CRM.Web.Controllers
                 try
                 {
                     Note? existingNote = await Repository.GetByIdAsync<Note>(id);
-                    if (existingNote == null || await IsPartialContactAsync(existingNote.ContactId ?? Guid.Empty))
+                    if (existingNote == null || await entityService.IsPartialAsync(EntityTypes.Person, existingNote.ContactId ?? Guid.Empty))
                     {
                         return NotFound();
                     }
@@ -133,7 +133,7 @@ namespace Rvnx.CRM.Web.Controllers
 
             if (viewModel.EntityId != Guid.Empty)
             {
-                viewModel.EntityName = await GetEntityName(viewModel.EntityId, viewModel.EntityType);
+                viewModel.EntityName = await entityService.GetEntityNameAsync(viewModel.EntityType, viewModel.EntityId);
             }
 
             return View(viewModel);
@@ -147,7 +147,7 @@ namespace Rvnx.CRM.Web.Controllers
             }
 
             Note? note = await Repository.GetByIdAsync<Note>(id.Value);
-            if (note == null || await IsPartialContactAsync(note.ContactId ?? Guid.Empty))
+            if (note == null || await entityService.IsPartialAsync(EntityTypes.Person, note.ContactId ?? Guid.Empty))
             {
                 return NotFound();
             }
@@ -160,7 +160,7 @@ namespace Rvnx.CRM.Web.Controllers
                 EntityId = note.ContactId ?? Guid.Empty,
                 EntityType = EntityTypes.Person,
                 CreatedDate = note.CreatedDate,
-                EntityName = await GetEntityName(note.ContactId ?? Guid.Empty, EntityTypes.Person)
+                EntityName = await entityService.GetEntityNameAsync(EntityTypes.Person, note.ContactId ?? Guid.Empty)
             };
             return View(viewModel);
         }

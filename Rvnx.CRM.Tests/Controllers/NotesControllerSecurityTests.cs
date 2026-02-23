@@ -33,7 +33,12 @@ namespace Rvnx.CRM.Tests.Controllers
 
             _context = new CRMDbContext(options, mockCurrentUserService.Object);
             Repository repository = new(_context);
-            _controller = new NotesController(repository);
+
+            Mock<IEntityService> mockEntityService = new();
+            mockEntityService.Setup(s => s.IsPartialAsync(It.IsAny<string>(), It.IsAny<Guid>())).ReturnsAsync(false);
+            mockEntityService.Setup(s => s.GetEntityNameAsync(It.IsAny<string>(), It.IsAny<Guid>())).ReturnsAsync("Test Entity");
+
+            _controller = new NotesController(repository, mockEntityService.Object);
         }
 
         public void Dispose()
