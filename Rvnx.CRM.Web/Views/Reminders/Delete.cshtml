@@ -1,5 +1,5 @@
 @using Rvnx.CRM.Core.Constants
-@model Rvnx.CRM.Core.Models.Dates.Reminder
+@model Rvnx.CRM.Core.DTOs.Dates.ReminderDeleteViewModel
 
 @{
     ViewData["Title"] = "Delete Reminder";
@@ -23,6 +23,6 @@
     <form asp-action="Delete">
         <input type="hidden" asp-for="Id"/>
         <input type="submit" value="Delete" class="btn btn-danger"/> |
-        <a asp-controller="Contacts" asp-action="Details" asp-route-id="@Model.ContactId">Cancel</a>
+        <a asp-controller="Contacts" asp-action="Details" asp-route-id="@Model.EntityId">Cancel</a>
     </form>
 </div>
