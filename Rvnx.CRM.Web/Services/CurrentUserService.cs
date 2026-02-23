@@ -13,10 +13,16 @@ public class CurrentUserService(IHttpContextAccessor httpContextAccessor, IConfi
     {
         get
         {
-            if (!IsAuthEnabled()) return null;
+            if (!IsAuthEnabled())
+            {
+                return null;
+            }
 
             ClaimsPrincipal? user = _httpContextAccessor.HttpContext?.User;
-            if (user == null) return null;
+            if (user == null)
+            {
+                return null;
+            }
 
             // First, try to get the internal CRM user ID (set by UserSynchronizationService)
             string? internalId = user.FindFirst(ClaimConstants.InternalUserIdClaimType)?.Value;

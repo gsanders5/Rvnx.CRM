@@ -26,13 +26,13 @@ namespace Rvnx.CRM.Tests.Services
         public async Task GetDashboardDataAsyncFiltersRemindersAtDatabaseLevel()
         {
             // Arrange
-            List<Contact> contacts = new()
-            {
+            List<Contact> contacts =
+            [
                 new Contact { Id = Guid.NewGuid(), FirstName = "John", LastName = "Doe" }
-            };
+            ];
 
-            List<Reminder> reminders = new()
-            {
+            List<Reminder> reminders =
+            [
                 new Reminder
                 {
                     Id = Guid.NewGuid(),
@@ -57,7 +57,7 @@ namespace Rvnx.CRM.Tests.Services
                     IsCompleted = true,
                     EventFrequency = TimeSpan.FromDays(7)
                 }
-            };
+            ];
 
             // Setup mocks for other calls
             _repositoryMock.Setup(r => r.ListAsNoTrackingAsync<Contact>(It.IsAny<Expression<Func<Contact, bool>>>(),
@@ -67,12 +67,12 @@ namespace Rvnx.CRM.Tests.Services
             _repositoryMock.Setup(r =>
                     r.ListAsNoTrackingAsync<Relationship>(It.IsAny<Expression<Func<Relationship, bool>>>(),
                         It.IsAny<CancellationToken>(), It.IsAny<string[]>()))
-                .ReturnsAsync(new List<Relationship>());
+                .ReturnsAsync([]);
 
             _repositoryMock.Setup(r =>
                     r.ListAsNoTrackingAsync<SignificantDate>(It.IsAny<Expression<Func<SignificantDate, bool>>>(),
                         It.IsAny<CancellationToken>(), It.IsAny<string[]>()))
-                .ReturnsAsync(new List<SignificantDate>());
+                .ReturnsAsync([]);
 
 
             // Setup for the EXPECTED new behavior (with predicate)

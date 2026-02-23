@@ -39,10 +39,12 @@ namespace Rvnx.CRM.Tests.Controllers
             fileServiceMock.Setup(s => s.IsAllowedExtension(It.IsAny<string>())).Returns(true);
             fileServiceMock.Setup(s => s.IsAllowedFileSize(It.IsAny<long>())).Returns(true);
 
-            AttachmentsController controller = new(repo, fileServiceMock.Object, new EntityService(repo));
-            controller.ControllerContext = new ControllerContext
+            AttachmentsController controller = new(repo, fileServiceMock.Object, new EntityService(repo))
             {
-                HttpContext = new DefaultHttpContext()
+                ControllerContext = new ControllerContext
+                {
+                    HttpContext = new DefaultHttpContext()
+                }
             };
             // Mock Referer header
             controller.Request.Headers["Referer"] = "http://localhost/Contacts";
@@ -92,10 +94,12 @@ namespace Rvnx.CRM.Tests.Controllers
             fileServiceMock.Setup(s => s.IsAllowedExtension(It.IsAny<string>())).Returns(true);
             fileServiceMock.Setup(s => s.IsAllowedFileSize(It.IsAny<long>())).Returns(true);
 
-            AttachmentsController controller = new(repo, fileServiceMock.Object, new EntityService(repo));
-            controller.ControllerContext = new ControllerContext
+            AttachmentsController controller = new(repo, fileServiceMock.Object, new EntityService(repo))
             {
-                HttpContext = new DefaultHttpContext()
+                ControllerContext = new ControllerContext
+                {
+                    HttpContext = new DefaultHttpContext()
+                }
             };
             controller.Request.Headers["Referer"] = "http://localhost/Contacts";
             controller.Request.Host = new HostString("localhost");
@@ -148,10 +152,12 @@ namespace Rvnx.CRM.Tests.Controllers
             fileServiceMock.Setup(s => s.IsAllowedExtension(It.IsAny<string>())).Returns(true);
             fileServiceMock.Setup(s => s.IsAllowedFileSize(It.IsAny<long>())).Returns(true);
 
-            AttachmentsController controller = new(repo, fileServiceMock.Object, new EntityService(repo));
-            controller.ControllerContext = new ControllerContext
+            AttachmentsController controller = new(repo, fileServiceMock.Object, new EntityService(repo))
             {
-                HttpContext = new DefaultHttpContext()
+                ControllerContext = new ControllerContext
+                {
+                    HttpContext = new DefaultHttpContext()
+                }
             };
             controller.Request.Headers["Referer"] = "http://localhost/Contacts";
 
@@ -198,10 +204,12 @@ namespace Rvnx.CRM.Tests.Controllers
             fileServiceMock.Setup(s => s.IsValidFileSignature(It.IsAny<byte[]>(), It.IsAny<string>())).Returns(true);
             fileServiceMock.Setup(s => s.IsAllowedFileSize(It.IsAny<long>())).Returns(false);
 
-            AttachmentsController controller = new(repo, fileServiceMock.Object, new EntityService(repo));
-            controller.ControllerContext = new ControllerContext
+            AttachmentsController controller = new(repo, fileServiceMock.Object, new EntityService(repo))
             {
-                HttpContext = new DefaultHttpContext()
+                ControllerContext = new ControllerContext
+                {
+                    HttpContext = new DefaultHttpContext()
+                }
             };
             controller.Request.Headers["Referer"] = "http://localhost/Contacts";
 

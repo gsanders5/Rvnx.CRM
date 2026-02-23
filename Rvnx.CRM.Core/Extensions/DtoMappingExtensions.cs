@@ -172,14 +172,14 @@ namespace Rvnx.CRM.Core.Extensions
                 ProfileImageId = entity.ProfileImageId,
 
                 // Lists will be populated separately or via mapping if loaded
-                Notes = entity.Notes?.Select(n => n.ToDto()) ?? new List<NoteDto>(),
-                Reminders = entity.Reminders?.Select(r => r.ToDto()) ?? new List<ReminderDto>(),
-                SignificantDates = entity.SignificantDates?.Select(d => d.ToDto()) ?? new List<SignificantDateDto>(),
-                Relationships = entity.Relationships?.Select(r => r.ToDto()) ?? new List<RelationshipDto>(),
-                RelatedTo = entity.RelatedTo?.Select(r => r.ToDto()) ?? new List<RelationshipDto>(),
-                ContactMethods = entity.ContactMethods?.Select(i => i.ToDto()) ?? new List<ContactMethodDto>(),
-                Facts = entity.Facts?.Select(f => f.ToDto()) ?? new List<FactDto>(),
-                Attachments = entity.Attachments?.Select(a => a.ToDto()) ?? new List<AttachmentDto>(),
+                Notes = entity.Notes?.Select(n => n.ToDto()) ?? [],
+                Reminders = entity.Reminders?.Select(r => r.ToDto()) ?? [],
+                SignificantDates = entity.SignificantDates?.Select(d => d.ToDto()) ?? [],
+                Relationships = entity.Relationships?.Select(r => r.ToDto()) ?? [],
+                RelatedTo = entity.RelatedTo?.Select(r => r.ToDto()) ?? [],
+                ContactMethods = entity.ContactMethods?.Select(i => i.ToDto()) ?? [],
+                Facts = entity.Facts?.Select(f => f.ToDto()) ?? [],
+                Attachments = entity.Attachments?.Select(a => a.ToDto()) ?? [],
                 // Pets to be populated by caller as they are not on Person
             };
         }

@@ -37,7 +37,10 @@ namespace Rvnx.CRM.Web.Controllers
         public async Task<IActionResult> Edit(Guid id)
         {
             Pet? pet = await Repository.GetByIdAsync<Pet>(id);
-            if (pet == null) return NotFound();
+            if (pet == null)
+            {
+                return NotFound();
+            }
 
             PetFormDto dto = new()
             {
@@ -57,12 +60,18 @@ namespace Rvnx.CRM.Web.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(Guid id, PetFormDto petDto)
         {
-            if (id != petDto.Id) return NotFound();
+            if (id != petDto.Id)
+            {
+                return NotFound();
+            }
 
             if (ModelState.IsValid)
             {
                 Pet? pet = await Repository.GetByIdAsync<Pet>(id);
-                if (pet == null) return NotFound();
+                if (pet == null)
+                {
+                    return NotFound();
+                }
 
                 pet.UpdateEntity(petDto);
                 await Repository.UpdateAsync(pet);

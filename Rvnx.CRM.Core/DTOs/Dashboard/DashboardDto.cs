@@ -2,9 +2,9 @@ namespace Rvnx.CRM.Core.DTOs.Dashboard;
 
 public class DashboardDto
 {
-    public List<UpcomingEventDto> UpcomingEvents { get; set; } = new();
-    public List<GraphNodeDto> GraphNodes { get; set; } = new();
-    public List<GraphLinkDto> GraphLinks { get; set; } = new();
+    public List<UpcomingEventDto> UpcomingEvents { get; set; } = [];
+    public List<GraphNodeDto> GraphNodes { get; set; } = [];
+    public List<GraphLinkDto> GraphLinks { get; set; } = [];
 }
 
 public class UpcomingEventDto

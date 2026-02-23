@@ -41,7 +41,7 @@ namespace Rvnx.CRM.Tests.Repositories
                 .Options;
 
             Mock<ICurrentUserService> mockUserService = new();
-            mockUserService.Setup(u => u.UserId).Returns((Guid?) null);
+            mockUserService.Setup(u => u.UserId).Returns((Guid?)null);
             mockUserService.Setup(u => u.UserName).Returns("TestUser");
 
             TestDbContext context = new(options, mockUserService.Object);

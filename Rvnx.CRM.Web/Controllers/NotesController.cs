@@ -13,12 +13,21 @@ namespace Rvnx.CRM.Web.Controllers
     {
         public async Task<IActionResult> Create(Guid entityId, string entityType)
         {
-            if (entityId == Guid.Empty) return NotFound();
+            if (entityId == Guid.Empty)
+            {
+                return NotFound();
+            }
 
-            if (entityType != EntityTypes.Person) return BadRequest("Only Person entities are supported.");
+            if (entityType != EntityTypes.Person)
+            {
+                return BadRequest("Only Person entities are supported.");
+            }
 
             // Sentinel: Verify entity existence and access rights to prevent IDOR
-            if (!await Repository.ExistsAsync<Contact>(entityId)) return NotFound();
+            if (!await Repository.ExistsAsync<Contact>(entityId))
+            {
+                return NotFound();
+            }
 
             NoteFormViewModel viewModel = new()
             {
@@ -34,10 +43,16 @@ namespace Rvnx.CRM.Web.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(NoteFormViewModel viewModel)
         {
-            if (viewModel.EntityType != EntityTypes.Person) return BadRequest("Only Person entities are supported.");
+            if (viewModel.EntityType != EntityTypes.Person)
+            {
+                return BadRequest("Only Person entities are supported.");
+            }
 
             // Sentinel: Verify entity existence and access rights to prevent IDOR
-            if (!await Repository.ExistsAsync<Contact>(viewModel.EntityId)) return NotFound();
+            if (!await Repository.ExistsAsync<Contact>(viewModel.EntityId))
+            {
+                return NotFound();
+            }
 
             if (ModelState.IsValid)
             {
@@ -53,10 +68,16 @@ namespace Rvnx.CRM.Web.Controllers
 
         public async Task<IActionResult> Edit(Guid? id)
         {
-            if (id == null) return NotFound();
+            if (id == null)
+            {
+                return NotFound();
+            }
 
             Note? note = await Repository.GetByIdAsync<Note>(id.Value);
-            if (note == null) return NotFound();
+            if (note == null)
+            {
+                return NotFound();
+            }
 
             NoteFormViewModel viewModel = new()
             {
@@ -75,14 +96,20 @@ namespace Rvnx.CRM.Web.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(Guid id, NoteFormViewModel viewModel)
         {
-            if (id != viewModel.Id) return NotFound();
+            if (id != viewModel.Id)
+            {
+                return NotFound();
+            }
 
             if (ModelState.IsValid)
             {
                 try
                 {
                     Note? existingNote = await Repository.GetByIdAsync<Note>(id);
-                    if (existingNote == null) return NotFound();
+                    if (existingNote == null)
+                    {
+                        return NotFound();
+                    }
 
                     existingNote.UpdateEntity(viewModel);
 
@@ -93,8 +120,14 @@ namespace Rvnx.CRM.Web.Controllers
                 }
                 catch (Exception)
                 {
-                    if (!await Repository.ExistsAsync<Note>(viewModel.Id.Value)) return NotFound();
-                    else throw;
+                    if (!await Repository.ExistsAsync<Note>(viewModel.Id.Value))
+                    {
+                        return NotFound();
+                    }
+                    else
+                    {
+                        throw;
+                    }
                 }
             }
 
@@ -108,10 +141,16 @@ namespace Rvnx.CRM.Web.Controllers
 
         public async Task<IActionResult> Delete(Guid? id)
         {
-            if (id == null) return NotFound();
+            if (id == null)
+            {
+                return NotFound();
+            }
 
             Note? note = await Repository.GetByIdAsync<Note>(id.Value);
-            if (note == null) return NotFound();
+            if (note == null)
+            {
+                return NotFound();
+            }
 
             NoteDeleteViewModel viewModel = new()
             {

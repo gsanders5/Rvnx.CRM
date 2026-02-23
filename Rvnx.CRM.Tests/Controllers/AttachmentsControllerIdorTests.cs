@@ -39,10 +39,12 @@ namespace Rvnx.CRM.Tests.Controllers
             // Allow any file for this test
             fileServiceMock.Setup(s => s.IsImageExtension(It.IsAny<string>())).Returns(false);
 
-            AttachmentsController controller = new(repo, fileServiceMock.Object, new EntityService(repo));
-            controller.ControllerContext = new ControllerContext
+            AttachmentsController controller = new(repo, fileServiceMock.Object, new EntityService(repo))
             {
-                HttpContext = new DefaultHttpContext()
+                ControllerContext = new ControllerContext
+                {
+                    HttpContext = new DefaultHttpContext()
+                }
             };
             controller.Request.Headers["Referer"] = "http://localhost/Contacts";
 

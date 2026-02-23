@@ -25,11 +25,12 @@ namespace Rvnx.CRM.Tests.Services
             Mock<IUserSynchronizationService> syncMock = new();
             syncMock.Setup(s => s.SyncUserAsync(It.IsAny<System.Security.Claims.ClaimsPrincipal>())).Returns(Task.CompletedTask);
 
-            ContactsController controller = new(loggerMock.Object, userMock.Object, new Mock<IContactImportService>().Object, new Mock<IContactExportService>().Object, new Mock<IContactManagementService>().Object, new Mock<IContactReadService>().Object, selfContactServiceMock.Object);
-
-            controller.ControllerContext = new ControllerContext
+            ContactsController controller = new(loggerMock.Object, userMock.Object, new Mock<IContactImportService>().Object, new Mock<IContactExportService>().Object, new Mock<IContactManagementService>().Object, new Mock<IContactReadService>().Object, selfContactServiceMock.Object)
             {
-                HttpContext = new DefaultHttpContext()
+                ControllerContext = new ControllerContext
+                {
+                    HttpContext = new DefaultHttpContext()
+                }
             };
 
             return controller;
@@ -40,7 +41,7 @@ namespace Rvnx.CRM.Tests.Services
         {
             // Arrange
             Mock<ISelfContactService> selfContactMock = new();
-            selfContactMock.Setup(s => s.GetSelfContactIdAsync(It.IsAny<ClaimsPrincipal>())).ReturnsAsync((Guid?) null);
+            selfContactMock.Setup(s => s.GetSelfContactIdAsync(It.IsAny<ClaimsPrincipal>())).ReturnsAsync((Guid?)null);
 
             ContactFormDto formDto = new() { FirstName = "Test", LastName = "User", Email = "test@example.com" };
             selfContactMock.Setup(s => s.GetSelfContactFormAsync(It.IsAny<ClaimsPrincipal>())).ReturnsAsync(formDto);
@@ -82,7 +83,7 @@ namespace Rvnx.CRM.Tests.Services
         {
             // Arrange
             Mock<ISelfContactService> selfContactMock = new();
-            selfContactMock.Setup(s => s.GetSelfContactIdAsync(It.IsAny<ClaimsPrincipal>())).ReturnsAsync((Guid?) null);
+            selfContactMock.Setup(s => s.GetSelfContactIdAsync(It.IsAny<ClaimsPrincipal>())).ReturnsAsync((Guid?)null);
 
             ContactsController controller = CreateController(selfContactMock);
 

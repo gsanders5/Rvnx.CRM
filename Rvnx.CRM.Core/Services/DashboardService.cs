@@ -80,7 +80,9 @@ public class DashboardService(IRepository repository, ILogger<DashboardService> 
         {
             DateTime nextDate = reminder.GetNextOccurrence();
             if (reminder.IsCompleted && nextDate == reminder.DueDate)
+            {
                 continue;
+            }
 
             string entityName = "Unknown";
             if (reminder.ContactId.HasValue)
@@ -123,7 +125,9 @@ public class DashboardService(IRepository repository, ILogger<DashboardService> 
         foreach (SignificantDate date in importantDates)
         {
             if (!contactDict.TryGetValue(date.ContactId ?? Guid.Empty, out Contact? contact))
+            {
                 continue;
+            }
 
             DateTime nextOccurrence = date.GetNextOccurrence();
 

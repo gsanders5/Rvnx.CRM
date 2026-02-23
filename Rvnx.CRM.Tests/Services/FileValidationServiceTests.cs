@@ -53,7 +53,7 @@ namespace Rvnx.CRM.Tests.Services
         [Fact]
         public void IsAllowedFileSizeShouldReturnFalseForTooLargeSize()
         {
-            long invalidSize = 30 * 1024 * 1024 + 1; // 30 MB + 1 byte
+            long invalidSize = (30 * 1024 * 1024) + 1; // 30 MB + 1 byte
             Assert.False(_service.IsAllowedFileSize(invalidSize));
         }
 

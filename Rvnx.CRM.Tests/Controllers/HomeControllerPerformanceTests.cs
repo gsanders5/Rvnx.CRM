@@ -30,18 +30,18 @@ public class HomeControllerPerformanceTests : IDisposable
         // Arrange
         DashboardDto dashboardData = new()
         {
-            UpcomingEvents = new List<UpcomingEventDto>
-            {
+            UpcomingEvents =
+            [
                 new() { Title = "Test Event", Type = "Reminder", TimeUntil = "Tomorrow" }
-            },
-            GraphNodes = new List<GraphNodeDto>
-            {
+            ],
+            GraphNodes =
+            [
                 new() { Id = "1", Name = "Test Contact", Group = 1 }
-            },
-            GraphLinks = new List<GraphLinkDto>
-            {
+            ],
+            GraphLinks =
+            [
                 new() { Source = "1", Target = "2", Type = "Relationship" }
-            }
+            ]
         };
 
         _dashboardServiceMock

@@ -17,10 +17,20 @@ namespace Rvnx.CRM.Web.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Upload(Guid entityId, string entityType, IFormFile file, string? returnUrl = null)
         {
-            if (!await _entityService.ExistsAsync(entityType, entityId)) return NotFound();
+            if (!await _entityService.ExistsAsync(entityType, entityId))
+            {
+                return NotFound();
+            }
 
-            if (file == null || file.Length == 0) return BadRequest("File is empty.");
-            if (!_fileValidationService.IsAllowedFileSize(file.Length)) return BadRequest("File is too large.");
+            if (file == null || file.Length == 0)
+            {
+                return BadRequest("File is empty.");
+            }
+
+            if (!_fileValidationService.IsAllowedFileSize(file.Length))
+            {
+                return BadRequest("File is too large.");
+            }
 
             string extension = Path.GetExtension(file.FileName);
             if (!_fileValidationService.IsAllowedExtension(extension))
@@ -85,7 +95,10 @@ namespace Rvnx.CRM.Web.Controllers
         public async Task<IActionResult> Download(Guid id)
         {
             Attachment? attachment = await _repository.GetByIdWithIncludesAsync<Attachment>(id, "AttachmentContent");
-            if (attachment == null || attachment.AttachmentContent == null) return NotFound();
+            if (attachment == null || attachment.AttachmentContent == null)
+            {
+                return NotFound();
+            }
 
             // Force download for everything except specific safe types if needed,
             // but 'File' result with filename argument usually sets Content-Disposition to attachment.
@@ -95,7 +108,10 @@ namespace Rvnx.CRM.Web.Controllers
         public async Task<IActionResult> View(Guid id)
         {
             Attachment? attachment = await _repository.GetByIdAsync<Attachment>(id);
-            if (attachment == null) return NotFound();
+            if (attachment == null)
+            {
+                return NotFound();
+            }
 
             if (!string.IsNullOrEmpty(Request.Headers.IfModifiedSince))
             {

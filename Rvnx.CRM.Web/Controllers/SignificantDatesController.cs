@@ -60,7 +60,10 @@ namespace Rvnx.CRM.Web.Controllers
 
         public async Task<IActionResult> Edit(Guid? id)
         {
-            if (id == null) return NotFound();
+            if (id == null)
+            {
+                return NotFound();
+            }
 
             SignificantDate? importantDate = await Repository.GetByIdAsync<SignificantDate>(id.Value);
             return importantDate == null ? NotFound() : View(importantDate.ToDto());
@@ -70,14 +73,20 @@ namespace Rvnx.CRM.Web.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(Guid id, [Bind("Id,Title,Description,Date,EntityId,EntityType,RemindMe,EventFrequency")] SignificantDateDto dto)
         {
-            if (id != dto.Id) return NotFound();
+            if (id != dto.Id)
+            {
+                return NotFound();
+            }
 
             if (ModelState.IsValid)
             {
                 try
                 {
                     SignificantDate? importantDate = await Repository.GetByIdAsync<SignificantDate>(id);
-                    if (importantDate == null) return NotFound();
+                    if (importantDate == null)
+                    {
+                        return NotFound();
+                    }
 
                     if (string.Equals(dto.Title, SignificantDateTitles.Birthday, StringComparison.OrdinalIgnoreCase))
                     {
@@ -101,8 +110,14 @@ namespace Rvnx.CRM.Web.Controllers
                 }
                 catch (DbUpdateConcurrencyException)
                 {
-                    if (!await Repository.ExistsAsync<SignificantDate>(dto.Id)) return NotFound();
-                    else throw;
+                    if (!await Repository.ExistsAsync<SignificantDate>(dto.Id))
+                    {
+                        return NotFound();
+                    }
+                    else
+                    {
+                        throw;
+                    }
                 }
                 return RedirectToEntity(dto.EntityId, dto.EntityType);
             }
@@ -111,7 +126,10 @@ namespace Rvnx.CRM.Web.Controllers
 
         public async Task<IActionResult> Delete(Guid? id)
         {
-            if (id == null) return NotFound();
+            if (id == null)
+            {
+                return NotFound();
+            }
 
             SignificantDate? importantDate = await Repository.GetByIdAsync<SignificantDate>(id.Value);
             return importantDate == null ? NotFound() : View(importantDate.ToDto());

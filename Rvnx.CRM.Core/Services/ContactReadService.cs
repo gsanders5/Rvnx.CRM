@@ -64,7 +64,10 @@ public class ContactReadService(IRepository repository) : IContactReadService
             nameof(Contact.Attachments));
 
         Contact? contact = contacts.FirstOrDefault();
-        if (contact == null) return null;
+        if (contact == null)
+        {
+            return null;
+        }
 
         // Relationships Optimization: Fetch both outgoing and incoming relationships in one query
         List<Relationship> allRelationships = await _repository.ListAsNoTrackingAsync<Relationship>(r =>
@@ -80,7 +83,7 @@ public class ContactReadService(IRepository repository) : IContactReadService
             .Distinct()
             .ToList();
 
-        List<Contact> relatedContacts = new();
+        List<Contact> relatedContacts = [];
         if (relatedIds.Count > 0)
         {
             relatedContacts = await _repository.ListAsNoTrackingAsync<Contact>(c => relatedIds.Contains(c.Id));
@@ -127,7 +130,10 @@ public class ContactReadService(IRepository repository) : IContactReadService
 
         Contact? contact = contacts.FirstOrDefault();
 
-        if (contact == null) return null;
+        if (contact == null)
+        {
+            return null;
+        }
 
         ContactFormDto dto = new()
         {

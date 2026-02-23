@@ -21,15 +21,17 @@ namespace Rvnx.CRM.Tests.Controllers
             Mock<IUserSynchronizationService> syncMock = new();
             Mock<IContactReadService> readServiceMock = new();
 
-            List<ContactDto> contactDtos = new()
-            {
+            List<ContactDto> contactDtos =
+            [
                 new ContactDto { Id = Guid.NewGuid(), FirstName = "Test" }
-            };
+            ];
 
             readServiceMock.Setup(s => s.GetIndexDataAsync(It.IsAny<bool>())).ReturnsAsync(contactDtos);
 
-            ContactsController controller = new(loggerMock.Object, userMock.Object, Mock.Of<IContactImportService>(), Mock.Of<IContactExportService>(), Mock.Of<IContactManagementService>(), readServiceMock.Object, Mock.Of<ISelfContactService>());
-            controller.ControllerContext = new ControllerContext { HttpContext = new DefaultHttpContext() };
+            ContactsController controller = new(loggerMock.Object, userMock.Object, Mock.Of<IContactImportService>(), Mock.Of<IContactExportService>(), Mock.Of<IContactManagementService>(), readServiceMock.Object, Mock.Of<ISelfContactService>())
+            {
+                ControllerContext = new ControllerContext { HttpContext = new DefaultHttpContext() }
+            };
             controller.TempData = new TempDataDictionary(controller.HttpContext, Mock.Of<ITempDataProvider>());
 
             // Act

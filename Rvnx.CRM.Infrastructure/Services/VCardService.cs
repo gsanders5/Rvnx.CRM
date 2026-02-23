@@ -24,7 +24,7 @@ public class VCardService : IVCardService
             return Enumerable.Empty<Contact>();
         }
 
-        List<Contact> contacts = new();
+        List<Contact> contacts = [];
 
         foreach (VCard vc in vCards)
         {
@@ -54,14 +54,28 @@ public class VCardService : IVCardService
                     if (displayName.Contains(','))
                     {
                         string[] parts = displayName.Split(',', StringSplitOptions.RemoveEmptyEntries);
-                        if (parts.Length > 0) contact.LastName = parts[0].Trim();
-                        if (parts.Length > 1) contact.FirstName = parts[1].Trim();
+                        if (parts.Length > 0)
+                        {
+                            contact.LastName = parts[0].Trim();
+                        }
+
+                        if (parts.Length > 1)
+                        {
+                            contact.FirstName = parts[1].Trim();
+                        }
                     }
                     else
                     {
                         string[] parts = displayName.Split(' ', StringSplitOptions.RemoveEmptyEntries);
-                        if (parts.Length > 0) contact.FirstName = parts[0];
-                        if (parts.Length > 1) contact.LastName = string.Join(" ", parts.Skip(1));
+                        if (parts.Length > 0)
+                        {
+                            contact.FirstName = parts[0];
+                        }
+
+                        if (parts.Length > 1)
+                        {
+                            contact.LastName = string.Join(" ", parts.Skip(1));
+                        }
                     }
                 }
             }
@@ -184,24 +198,25 @@ public class VCardService : IVCardService
 
     public byte[] ExportVCard(Contact contact)
     {
-        VCard vc = new();
-
-        // Name
-        vc.NameViews = new[]
+        VCard vc = new()
         {
-            new NameProperty(
-                lastName: new [] { contact.LastName ?? "" },
-                firstName: new [] { contact.FirstName },
-                middleName: null,
-                prefix: null,
-                suffix: null,
-                group: null
-            )
-        };
+            // Name
+            NameViews = new[]
+            {
+                new NameProperty(
+                    lastName: new [] { contact.LastName ?? "" },
+                    firstName: new [] { contact.FirstName },
+                    middleName: null,
+                    prefix: null,
+                    suffix: null,
+                    group: null
+                )
+            },
 
-        vc.DisplayNames = new[]
-        {
-            new TextProperty(contact.FullName)
+            DisplayNames = new[]
+            {
+                new TextProperty(contact.FullName)
+            }
         };
 
         // Org
@@ -224,7 +239,10 @@ public class VCardService : IVCardService
                 .Select(m => new TextProperty(m.Value))
                 .ToList();
 
-            if (emails.Count > 0) vc.EMails = emails;
+            if (emails.Count > 0)
+            {
+                vc.EMails = emails;
+            }
         }
 
         // Phones
@@ -235,7 +253,10 @@ public class VCardService : IVCardService
                 .Select(m => new TextProperty(m.Value))
                 .ToList();
 
-            if (phones.Count > 0) vc.Phones = phones;
+            if (phones.Count > 0)
+            {
+                vc.Phones = phones;
+            }
         }
 
         // Birthday

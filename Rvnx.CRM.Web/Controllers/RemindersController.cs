@@ -12,7 +12,10 @@ namespace Rvnx.CRM.Web.Controllers
     {
         public async Task<IActionResult> Create(Guid entityId, string entityType)
         {
-            if (entityId == Guid.Empty) return NotFound();
+            if (entityId == Guid.Empty)
+            {
+                return NotFound();
+            }
 
             ReminderDto dto = new Reminder
             {
@@ -73,10 +76,16 @@ namespace Rvnx.CRM.Web.Controllers
 
         public async Task<IActionResult> Edit(Guid? id)
         {
-            if (id == null) return NotFound();
+            if (id == null)
+            {
+                return NotFound();
+            }
 
             Reminder? reminder = await Repository.GetByIdAsync<Reminder>(id.Value);
-            if (reminder == null) return NotFound();
+            if (reminder == null)
+            {
+                return NotFound();
+            }
 
             ReminderDto dto = reminder.ToDto();
             ReminderFormViewModel viewModel = new()
@@ -101,14 +110,20 @@ namespace Rvnx.CRM.Web.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(Guid id, ReminderFormViewModel viewModel)
         {
-            if (id != viewModel.Id) return NotFound();
+            if (id != viewModel.Id)
+            {
+                return NotFound();
+            }
 
             if (ModelState.IsValid)
             {
                 try
                 {
                     Reminder? reminder = await Repository.GetByIdAsync<Reminder>(id);
-                    if (reminder == null) return NotFound();
+                    if (reminder == null)
+                    {
+                        return NotFound();
+                    }
 
                     // UpdateEntity expects ReminderDto. Since viewModel inherits ReminderDto, this works.
                     reminder.UpdateEntity(viewModel);
@@ -118,8 +133,14 @@ namespace Rvnx.CRM.Web.Controllers
                 }
                 catch (Exception)
                 {
-                    if (!await Repository.ExistsAsync<Reminder>(viewModel.Id)) return NotFound();
-                    else throw;
+                    if (!await Repository.ExistsAsync<Reminder>(viewModel.Id))
+                    {
+                        return NotFound();
+                    }
+                    else
+                    {
+                        throw;
+                    }
                 }
                 return RedirectToEntity(viewModel.EntityId, viewModel.EntityType);
             }
@@ -133,9 +154,16 @@ namespace Rvnx.CRM.Web.Controllers
 
         public async Task<IActionResult> Delete(Guid? id)
         {
-            if (id == null) return NotFound();
+            if (id == null)
+            {
+                return NotFound();
+            }
+
             Reminder? reminder = await Repository.GetByIdAsync<Reminder>(id.Value);
-            if (reminder == null) return NotFound();
+            if (reminder == null)
+            {
+                return NotFound();
+            }
 
             ReminderDto dto = reminder.ToDto();
             ReminderDeleteViewModel viewModel = new()

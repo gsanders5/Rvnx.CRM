@@ -25,14 +25,16 @@ namespace Rvnx.CRM.Tests.Controllers
             {
                 Id = contactId,
                 FirstName = "Test",
-                Relationships = new List<RelationshipDto>(),
-                RelatedTo = new List<RelationshipDto>()
+                Relationships = [],
+                RelatedTo = []
             };
 
             readServiceMock.Setup(s => s.GetContactDetailsAsync(contactId)).ReturnsAsync(detailDto);
 
-            ContactsController controller = new(loggerMock.Object, userMock.Object, Mock.Of<IContactImportService>(), Mock.Of<IContactExportService>(), Mock.Of<IContactManagementService>(), readServiceMock.Object, Mock.Of<ISelfContactService>());
-            controller.ControllerContext = new ControllerContext { HttpContext = new DefaultHttpContext() };
+            ContactsController controller = new(loggerMock.Object, userMock.Object, Mock.Of<IContactImportService>(), Mock.Of<IContactExportService>(), Mock.Of<IContactManagementService>(), readServiceMock.Object, Mock.Of<ISelfContactService>())
+            {
+                ControllerContext = new ControllerContext { HttpContext = new DefaultHttpContext() }
+            };
 
             // Act
             IActionResult result = await controller.Details(contactId);

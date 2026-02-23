@@ -230,7 +230,7 @@ namespace Rvnx.CRM.Tests.Services
             string selectedType = $"{typeId}_Fwd";
 
             _repositoryMock.Setup(r => r.GetByIdAsync<Relationship>(relationshipId, It.IsAny<CancellationToken>()))
-                .ReturnsAsync((Relationship?) null);
+                .ReturnsAsync((Relationship?)null);
 
             // Act
             RelationshipOperationResult result = await _service.UpdateRelationshipAsync(relationshipId, updatedRelationship, selectedType);
@@ -282,8 +282,7 @@ namespace Rvnx.CRM.Tests.Services
             Contact contact1 = new() { Id = otherId1, FirstName = "Zara", LastName = "Doe" }; // Should be last
             Contact contact2 = new() { Id = otherId2, FirstName = "Adam", LastName = "Smith" }; // Should be first
 
-            List<Contact> returnedList = new()
-            { contact1, contact2 };
+            List<Contact> returnedList = [contact1, contact2];
 
             _repositoryMock.Setup(r => r.ListAsNoTrackingAsync(
                 It.IsAny<Expression<Func<Contact, bool>>>(),
@@ -318,8 +317,7 @@ namespace Rvnx.CRM.Tests.Services
             Employer emp1 = new() { Id = otherId1, CompanyName = "Z Corp" };
             Employer emp2 = new() { Id = otherId2, CompanyName = "A Inc" };
 
-            List<Employer> returnedList = new()
-            { emp1, emp2 };
+            List<Employer> returnedList = [emp1, emp2];
 
             _repositoryMock.Setup(r => r.ListAsNoTrackingAsync(
                 It.IsAny<Expression<Func<Employer, bool>>>(),

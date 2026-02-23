@@ -38,7 +38,10 @@ namespace Rvnx.CRM.Web.Controllers
 
             foreach (Contact contact in contacts)
             {
-                if (contact.Id == Guid.Empty) contact.Id = Guid.NewGuid();
+                if (contact.Id == Guid.Empty)
+                {
+                    contact.Id = Guid.NewGuid();
+                }
 
                 List<Address>? addresses = contact.Addresses?.ToList();
                 List<ContactMethod>? infos = contact.ContactMethods?.ToList();
@@ -146,14 +149,20 @@ namespace Rvnx.CRM.Web.Controllers
                 Contact c1 = contacts[random.Next(contacts.Count)];
                 Contact c2 = contacts[random.Next(contacts.Count)];
 
-                if (c1.Id == c2.Id) continue;
+                if (c1.Id == c2.Id)
+                {
+                    continue;
+                }
 
                 RelationshipTypeDefinition type = types[random.Next(types.Count)];
 
                 List<Relationship> existing = await _repository.ListAsNoTrackingAsync<Relationship>(r =>
                     r.EntityId == c1.Id && r.RelatedEntityId == c2.Id && r.RelationshipTypeId == type.Id);
 
-                if (existing.Count > 0) continue;
+                if (existing.Count > 0)
+                {
+                    continue;
+                }
 
                 Relationship rel = new()
                 {

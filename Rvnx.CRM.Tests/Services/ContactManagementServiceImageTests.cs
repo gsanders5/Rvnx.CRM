@@ -15,9 +15,9 @@ namespace Rvnx.CRM.Tests.Services
         private readonly Mock<IRepository> _repositoryMock;
         private readonly Mock<IFileValidationService> _fileValidationServiceMock;
         private readonly ContactManagementService _service;
-        private readonly List<Attachment> _attachments = new();
-        private readonly List<ContactMethod> _contactMethods = new();
-        private readonly List<SignificantDate> _significantDates = new();
+        private readonly List<Attachment> _attachments = [];
+        private readonly List<ContactMethod> _contactMethods = [];
+        private readonly List<SignificantDate> _significantDates = [];
 
         public ContactManagementServiceImageTests()
         {

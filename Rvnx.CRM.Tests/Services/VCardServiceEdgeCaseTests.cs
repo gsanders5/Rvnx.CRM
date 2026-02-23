@@ -314,11 +314,11 @@ END:VCARD";
             {
                 Id = Guid.NewGuid(),
                 FirstName = "Test",
-                SignificantDates = new List<SignificantDate>
-                {
+                SignificantDates =
+                [
                     new() { Title = SignificantDateTitles.Birthday, Date = new DateTime(1990, 1, 1) },
                     new() { Title = "Anniversary", Date = new DateTime(2020, 6, 15) }
-                }
+                ]
             };
 
             // Act
@@ -339,12 +339,12 @@ END:VCARD";
             {
                 Id = Guid.NewGuid(),
                 FirstName = "Test",
-                ContactMethods = new List<ContactMethod>
-                {
+                ContactMethods =
+                [
                     new() { Type = ContactMethodType.Email, Value = "test@example.com" },
                     new() { Type = ContactMethodType.Phone, Value = "1234567890" },
                     new() { Type = ContactMethodType.Website, Value = "https://example.com" }
-                }
+                ]
             };
 
             // Act
@@ -365,12 +365,12 @@ END:VCARD";
             {
                 Id = Guid.NewGuid(),
                 FirstName = "Test",
-                ContactMethods = new List<ContactMethod>
-                {
+                ContactMethods =
+                [
                     new() { Type = ContactMethodType.Email, Value = "" },
                     new() { Type = ContactMethodType.Email, Value = null! },
                     new() { Type = ContactMethodType.Email, Value = "valid@example.com" }
-                }
+                ]
             };
 
             // Act

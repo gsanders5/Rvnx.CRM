@@ -7,7 +7,10 @@ namespace Rvnx.CRM.Core.Services
             DateTime today = referenceDate ?? DateTime.Today;
             DateTime nextOccurrence = originalDate;
 
-            if (nextOccurrence > today) return nextOccurrence;
+            if (nextOccurrence > today)
+            {
+                return nextOccurrence;
+            }
 
             if (frequency <= TimeSpan.Zero)
             {
@@ -20,7 +23,7 @@ namespace Rvnx.CRM.Core.Services
 
             if (isMultipleOf365Days)
             {
-                int yearsPerCycle = (int) (frequency.TotalDays / 365);
+                int yearsPerCycle = (int)(frequency.TotalDays / 365);
                 int yearsSinceOriginal = today.Year - originalDate.Year;
                 int yearsToAdd = 0;
 

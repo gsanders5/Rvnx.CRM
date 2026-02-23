@@ -46,7 +46,10 @@ public class ContactManagementService(IRepository repository, IFileValidationSer
     public async Task<ContactOperationResult> UpdateContactAsync(Guid id, ContactFormDto contactDto, Stream? imageStream, string? fileName, string? contentType)
     {
         Contact? existingContact = await _repository.GetByIdAsync<Contact>(id);
-        if (existingContact == null) return ContactOperationResult.Failure($"Contact with ID {id} not found.");
+        if (existingContact == null)
+        {
+            return ContactOperationResult.Failure($"Contact with ID {id} not found.");
+        }
 
         existingContact.UpdateEntity(contactDto);
 
@@ -146,13 +149,19 @@ public class ContactManagementService(IRepository repository, IFileValidationSer
         await DeleteRelatedEntitiesAsync<Relationship>(contactId);
 
         List<Relationship> relatedTo = await _repository.ListAsync<Relationship>(r => r.RelatedEntityId == contactId && r.EntityType == EntityTypes.Person);
-        if (relatedTo.Count != 0) await _repository.DeleteRangeAsync(relatedTo);
+        if (relatedTo.Count != 0)
+        {
+            await _repository.DeleteRangeAsync(relatedTo);
+        }
     }
 
     private async Task DeleteRelatedEntitiesAsync<T>(Guid contactId) where T : PolymorphicEntity
     {
         List<T> entities = await _repository.ListAsync<T>(e => e.EntityId == contactId && e.EntityType == EntityTypes.Person);
-        if (entities.Count != 0) await _repository.DeleteRangeAsync(entities);
+        if (entities.Count != 0)
+        {
+            await _repository.DeleteRangeAsync(entities);
+        }
     }
 
     private async Task<ContactMethod?> GetPrimaryContactMethodAsync(Guid contactId, ContactMethodType type)

@@ -32,7 +32,10 @@ public abstract class RepositoryController : AuthorizedController
 
     protected IActionResult RedirectToEntity(Guid id, string? type)
     {
-        if (id == Guid.Empty || string.IsNullOrEmpty(type)) return RedirectToAction("Index", "Home");
+        if (id == Guid.Empty || string.IsNullOrEmpty(type))
+        {
+            return RedirectToAction("Index", "Home");
+        }
 
         if (type == EntityTypes.Person)
         {

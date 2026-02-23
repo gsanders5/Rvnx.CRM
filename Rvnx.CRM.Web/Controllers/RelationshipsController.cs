@@ -12,7 +12,10 @@ namespace Rvnx.CRM.Web.Controllers
         private readonly IRelationshipService _relationshipService = relationshipService;
         public async Task<IActionResult> Create(Guid entityId, string entityType)
         {
-            if (entityId == Guid.Empty || string.IsNullOrEmpty(entityType)) return NotFound();
+            if (entityId == Guid.Empty || string.IsNullOrEmpty(entityType))
+            {
+                return NotFound();
+            }
 
             RelationshipCreateViewModel viewModel = new()
             {
@@ -58,10 +61,16 @@ namespace Rvnx.CRM.Web.Controllers
 
         public async Task<IActionResult> Edit(Guid? id)
         {
-            if (id == null) return NotFound();
+            if (id == null)
+            {
+                return NotFound();
+            }
 
             Relationship? relationship = await Repository.GetByIdAsync<Relationship>(id.Value);
-            if (relationship == null) return NotFound();
+            if (relationship == null)
+            {
+                return NotFound();
+            }
 
             string currentSelection = $"{relationship.RelationshipTypeId}_Fwd";
 
@@ -88,7 +97,10 @@ namespace Rvnx.CRM.Web.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(Guid id, RelationshipEditViewModel viewModel)
         {
-            if (id != viewModel.Id) return NotFound();
+            if (id != viewModel.Id)
+            {
+                return NotFound();
+            }
 
             if (string.IsNullOrEmpty(viewModel.SelectedRelationshipType))
             {
@@ -118,9 +130,16 @@ namespace Rvnx.CRM.Web.Controllers
 
         public async Task<IActionResult> Delete(Guid? id)
         {
-            if (id == null) return NotFound();
+            if (id == null)
+            {
+                return NotFound();
+            }
+
             Relationship? relationship = await Repository.GetByIdAsync<Relationship>(id.Value);
-            if (relationship == null) return NotFound();
+            if (relationship == null)
+            {
+                return NotFound();
+            }
 
             // Populate Person/RelatedPerson so names show up
             relationship.Person = await Repository.GetByIdAsync<Contact>(relationship.EntityId);

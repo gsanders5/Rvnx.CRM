@@ -50,7 +50,10 @@ namespace Rvnx.CRM.Web.Controllers
             }
 
             ContactFormDto? dto = await _selfContactService.GetSelfContactFormAsync(HttpContext.User);
-            if (dto == null) return RedirectToAction("Index");
+            if (dto == null)
+            {
+                return RedirectToAction("Index");
+            }
 
             ContactCreateViewModel viewModel = new()
             {
@@ -73,7 +76,10 @@ namespace Rvnx.CRM.Web.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> CreateSelf([Bind("FirstName,LastName,Nickname,Email,Phone,JobTitle,Company,Birthday")] ContactCreateViewModel contactDto)
         {
-            if (!_currentUserService.IsAuthenticated) return Unauthorized();
+            if (!_currentUserService.IsAuthenticated)
+            {
+                return Unauthorized();
+            }
 
             if (ModelState.IsValid)
             {
@@ -107,7 +113,10 @@ namespace Rvnx.CRM.Web.Controllers
 
         public async Task<IActionResult> Details(Guid? id)
         {
-            if (id == null) return NotFound();
+            if (id == null)
+            {
+                return NotFound();
+            }
 
             ContactDetailDto? contactDto = await _contactReadService.GetContactDetailsAsync(id.Value);
             return contactDto == null ? NotFound() : View(contactDto);
@@ -141,7 +150,11 @@ namespace Rvnx.CRM.Web.Controllers
 
         public async Task<IActionResult> Edit(Guid? id)
         {
-            if (id == null) return NotFound();
+            if (id == null)
+            {
+                return NotFound();
+            }
+
             ContactFormDto? dto = await _contactReadService.GetContactFormAsync(id.Value);
             return dto == null ? NotFound() : View(dto);
         }
@@ -150,7 +163,10 @@ namespace Rvnx.CRM.Web.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(Guid id, [Bind("Id,FirstName,LastName,Nickname,Email,Phone,JobTitle,Company,Birthday,IsHidden")] ContactFormDto contactDto, IFormFile? profileImage)
         {
-            if (id != contactDto.Id) return NotFound();
+            if (id != contactDto.Id)
+            {
+                return NotFound();
+            }
 
             if (ModelState.IsValid)
             {
@@ -185,7 +201,11 @@ namespace Rvnx.CRM.Web.Controllers
 
         public async Task<IActionResult> Delete(Guid? id)
         {
-            if (id == null) return NotFound();
+            if (id == null)
+            {
+                return NotFound();
+            }
+
             ContactDetailDto? contactDto = await _contactReadService.GetContactDetailsAsync(id.Value);
             return contactDto == null ? NotFound() : View(contactDto);
         }

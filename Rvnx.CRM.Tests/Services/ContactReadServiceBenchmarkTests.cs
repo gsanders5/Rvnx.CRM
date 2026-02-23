@@ -37,7 +37,7 @@ namespace Rvnx.CRM.Tests.Services
                 It.IsAny<Expression<Func<Contact, bool>>>(),
                 It.IsAny<CancellationToken>(),
                 It.Is<string[]>(s => s.Contains("ContactMethods") && s.Contains("SignificantDates"))))
-                .ReturnsAsync(new List<Contact> { contact });
+                .ReturnsAsync([contact]);
 
             // Act
             ContactFormDto? result = await _service.GetContactFormAsync(contactId);

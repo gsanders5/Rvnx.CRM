@@ -16,12 +16,12 @@ namespace Rvnx.CRM.Tests.DTOs
             PropertyInfo[] dtoProperties = typeof(TDto).GetProperties(BindingFlags.Public | BindingFlags.Instance);
             HashSet<string> dtoPropertyNames = dtoProperties.Select(p => p.Name).ToHashSet();
 
-            List<string> missingProperties = new();
+            List<string> missingProperties = [];
 
             // Convert ignoreProperties to HashSet for faster lookup if not null
             HashSet<string> ignoredSet = ignoreProperties != null
-                ? new HashSet<string>(ignoreProperties)
-                : new HashSet<string>();
+                ? [.. ignoreProperties]
+                : [];
 
             foreach (PropertyInfo property in modelProperties)
             {

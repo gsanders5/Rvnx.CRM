@@ -19,7 +19,10 @@ public class SelfContactService(IRepository repository, ICurrentUserService curr
     {
         await _userSynchronizationService.SyncUserAsync(user);
         Guid? userId = _currentUserService.UserId;
-        if (!userId.HasValue) return null;
+        if (!userId.HasValue)
+        {
+            return null;
+        }
 
         Rvnx.CRM.Core.Models.User? userEntity = await GetUserAsync(userId.Value);
         return userEntity?.SelfContactId;
@@ -29,10 +32,16 @@ public class SelfContactService(IRepository repository, ICurrentUserService curr
     {
         await _userSynchronizationService.SyncUserAsync(user);
         Guid? userId = _currentUserService.UserId;
-        if (!userId.HasValue) return null;
+        if (!userId.HasValue)
+        {
+            return null;
+        }
 
         Rvnx.CRM.Core.Models.User? userEntity = await GetUserAsync(userId.Value);
-        if (userEntity == null) return null;
+        if (userEntity == null)
+        {
+            return null;
+        }
 
         ContactFormDto dto = new()
         {
@@ -60,10 +69,16 @@ public class SelfContactService(IRepository repository, ICurrentUserService curr
     public async Task<ContactOperationResult> CreateSelfContactAsync(ClaimsPrincipal user, ContactFormDto contactDto)
     {
         Guid? userId = _currentUserService.UserId;
-        if (!userId.HasValue) return ContactOperationResult.Failure("User not authenticated.");
+        if (!userId.HasValue)
+        {
+            return ContactOperationResult.Failure("User not authenticated.");
+        }
 
         Rvnx.CRM.Core.Models.User? userEntity = await GetUserAsync(userId.Value);
-        if (userEntity == null) return ContactOperationResult.Failure("User entity not found.");
+        if (userEntity == null)
+        {
+            return ContactOperationResult.Failure("User entity not found.");
+        }
 
         if (userEntity.SelfContactId.HasValue)
         {

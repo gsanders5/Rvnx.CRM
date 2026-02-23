@@ -63,7 +63,10 @@ public class UserSynchronizationService : IUserSynchronizationService
                 changed = true;
             }
 
-            if (changed) await _dbContext.SaveChangesAsync();
+            if (changed)
+            {
+                await _dbContext.SaveChangesAsync();
+            }
         }
 
         // Add internal user ID as a separate claim instead of replacing NameIdentifier

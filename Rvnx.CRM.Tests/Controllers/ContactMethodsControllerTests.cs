@@ -32,9 +32,10 @@ namespace Rvnx.CRM.Tests.Controllers
             _context = new CRMDbContext(options, _userMock.Object);
             Repository repository = new(_context);
 
-            _controller = new ContactMethodsController(repository);
-
-            _controller.ControllerContext = new ControllerContext { HttpContext = new DefaultHttpContext() };
+            _controller = new ContactMethodsController(repository)
+            {
+                ControllerContext = new ControllerContext { HttpContext = new DefaultHttpContext() }
+            };
             _controller.TempData = new TempDataDictionary(_controller.HttpContext, Mock.Of<ITempDataProvider>());
         }
 

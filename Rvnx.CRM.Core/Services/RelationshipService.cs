@@ -13,11 +13,17 @@ public class RelationshipService(IRepository repository) : IRelationshipService
         string selectedRelationshipType)
     {
         (Guid typeId, bool isReverse, string? error) = ParseRelationshipSelection(selectedRelationshipType);
-        if (error != null) return RelationshipOperationResult.Failure(error);
+        if (error != null)
+        {
+            return RelationshipOperationResult.Failure(error);
+        }
 
         relationship.RelationshipTypeId = typeId;
 
-        if (isReverse) SwapRelationshipEntities(relationship);
+        if (isReverse)
+        {
+            SwapRelationshipEntities(relationship);
+        }
 
         await repository.AddAsync(relationship);
         await repository.SaveChangesAsync();
@@ -30,11 +36,16 @@ public class RelationshipService(IRepository repository) : IRelationshipService
         string selectedRelationshipType)
     {
         (Guid typeId, bool isReverse, string? error) = ParseRelationshipSelection(selectedRelationshipType);
-        if (error != null) return RelationshipOperationResult.Failure(error);
+        if (error != null)
+        {
+            return RelationshipOperationResult.Failure(error);
+        }
 
         Relationship? existingRelationship = await repository.GetByIdAsync<Relationship>(id);
         if (existingRelationship == null)
+        {
             return RelationshipOperationResult.Failure("Relationship not found.");
+        }
 
         existingRelationship.EntityId = updatedRelationship.EntityId;
         existingRelationship.RelatedEntityId = updatedRelationship.RelatedEntityId;
@@ -44,7 +55,10 @@ public class RelationshipService(IRepository repository) : IRelationshipService
         existingRelationship.EndDate = updatedRelationship.EndDate;
         existingRelationship.RelationshipTypeId = typeId;
 
-        if (isReverse) SwapRelationshipEntities(existingRelationship);
+        if (isReverse)
+        {
+            SwapRelationshipEntities(existingRelationship);
+        }
 
         await repository.UpdateAsync(existingRelationship);
         await repository.SaveChangesAsync();
@@ -56,11 +70,15 @@ public class RelationshipService(IRepository repository) : IRelationshipService
     private static (Guid TypeId, bool IsReverse, string? Error) ParseRelationshipSelection(string selection)
     {
         if (string.IsNullOrEmpty(selection))
+        {
             return (Guid.Empty, false, "Relationship Type is required.");
+        }
 
         string[] parts = selection.Split('_');
         if (parts.Length != 2 || !Guid.TryParse(parts[0], out Guid typeId))
+        {
             return (Guid.Empty, false, "Invalid Relationship Type.");
+        }
 
         return (typeId, parts[1] == "Rev", null);
     }
@@ -73,29 +91,29 @@ public class RelationshipService(IRepository repository) : IRelationshipService
     public async Task<List<SelectOptionDto>> GetRelatedEntityOptionsAsync(Guid entityId, string entityType,
         Guid? selectedId = null)
     {
-        List<SelectOptionDto> options = new();
+        List<SelectOptionDto> options = [];
 
         if (entityType == EntityTypes.Person)
         {
             List<Contact> available = await repository.ListAsNoTrackingAsync<Contact>(p => p.Id != entityId);
             available = available.OrderBy(p => p.FullName).ToList();
-            options = available.Select(p => new SelectOptionDto
+            options = [.. available.Select(p => new SelectOptionDto
             {
                 Value = p.Id.ToString(),
                 Text = p.FullName,
                 Selected = selectedId == p.Id
-            }).ToList();
+            })];
         }
         else if (entityType == EntityTypes.Company)
         {
             List<Employer> available = await repository.ListAsNoTrackingAsync<Employer>(c => c.Id != entityId);
             available = available.OrderBy(c => c.CompanyName).ToList();
-            options = available.Select(c => new SelectOptionDto
+            options = [.. available.Select(c => new SelectOptionDto
             {
                 Value = c.Id.ToString(),
                 Text = c.CompanyName,
                 Selected = selectedId == c.Id
-            }).ToList();
+            })];
         }
 
         return options;
@@ -104,9 +122,9 @@ public class RelationshipService(IRepository repository) : IRelationshipService
     public List<SelectOptionDto> GetRelationshipTypeOptions(string entityType, string? selectedValue = null)
     {
         List<RelationshipTypeDefinition> types = RelationshipTypeService.GetByEntityType(entityType);
-        types = types.OrderBy(t => t.Category).ThenBy(t => t.Name).ToList();
+        types = [.. types.OrderBy(t => t.Category).ThenBy(t => t.Name)];
 
-        List<SelectOptionDto> options = new();
+        List<SelectOptionDto> options = [];
 
         foreach (RelationshipTypeDefinition t in types)
         {

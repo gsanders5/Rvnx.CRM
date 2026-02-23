@@ -27,7 +27,7 @@ namespace Rvnx.CRM.Tests.Services
             // Arrange
             Guid contactId = Guid.NewGuid();
             _repositoryMock.Setup(r => r.ListAsNoTrackingAsync<Contact>(It.IsAny<Expression<Func<Contact, bool>>>(), It.IsAny<CancellationToken>(), It.IsAny<string[]>()))
-                .ReturnsAsync(new List<Contact>());
+                .ReturnsAsync([]);
 
             // Act
             ContactDetailDto? result = await _service.GetContactDetailsAsync(contactId);
@@ -47,25 +47,25 @@ namespace Rvnx.CRM.Tests.Services
                 It.IsAny<Expression<Func<Contact, bool>>>(),
                 It.IsAny<CancellationToken>(),
                 It.IsAny<string[]>()))
-                .ReturnsAsync(new List<Contact> { contact });
+                .ReturnsAsync([contact]);
 
             // Setup related entities to return empty lists to avoid null reference if logic assumes lists
             _repositoryMock.Setup(r => r.ListAsNoTrackingAsync<Note>(It.IsAny<Expression<Func<Note, bool>>>(), default))
-                .ReturnsAsync(new List<Note>());
+                .ReturnsAsync([]);
             _repositoryMock.Setup(r => r.ListAsNoTrackingAsync<Reminder>(It.IsAny<Expression<Func<Reminder, bool>>>(), default))
-                .ReturnsAsync(new List<Reminder>());
+                .ReturnsAsync([]);
             _repositoryMock.Setup(r => r.ListAsNoTrackingAsync<SignificantDate>(It.IsAny<Expression<Func<SignificantDate, bool>>>(), default))
-                .ReturnsAsync(new List<SignificantDate>());
+                .ReturnsAsync([]);
             _repositoryMock.Setup(r => r.ListAsNoTrackingAsync<Relationship>(It.IsAny<Expression<Func<Relationship, bool>>>(), default))
-                .ReturnsAsync(new List<Relationship>());
+                .ReturnsAsync([]);
             _repositoryMock.Setup(r => r.ListAsNoTrackingAsync<Pet>(It.IsAny<Expression<Func<Pet, bool>>>(), default))
-                .ReturnsAsync(new List<Pet>());
+                .ReturnsAsync([]);
             _repositoryMock.Setup(r => r.ListAsNoTrackingAsync<ContactMethod>(It.IsAny<Expression<Func<ContactMethod, bool>>>(), default))
-                .ReturnsAsync(new List<ContactMethod>());
+                .ReturnsAsync([]);
             _repositoryMock.Setup(r => r.ListAsNoTrackingAsync<Fact>(It.IsAny<Expression<Func<Fact, bool>>>(), default))
-                .ReturnsAsync(new List<Fact>());
+                .ReturnsAsync([]);
             _repositoryMock.Setup(r => r.ListAsNoTrackingAsync<Attachment>(It.IsAny<Expression<Func<Attachment, bool>>>(), default))
-                .ReturnsAsync(new List<Attachment>());
+                .ReturnsAsync([]);
 
             // Act
             ContactDetailDto? result = await _service.GetContactDetailsAsync(contactId);
@@ -89,14 +89,14 @@ namespace Rvnx.CRM.Tests.Services
                  It.Is<Expression<Func<Contact, bool>>>(expr => expr.Compile().Invoke(contact)), // Matches ID check
                  It.IsAny<CancellationToken>(),
                  It.IsAny<string[]>()))
-                 .ReturnsAsync(new List<Contact> { contact });
+                 .ReturnsAsync([contact]);
 
             // Mock Relationships query
             // Using known IDs from RelationshipTypeService
             // Friend: a5b6c7d8-9e0f-1a2b-3c4d-5e6f7a8b9c0d
             // Colleague: 33333333-3333-3333-3333-333333333301
-            List<Relationship> relationships = new()
-            {
+            List<Relationship> relationships =
+            [
                 new Relationship {
                     Id = Guid.NewGuid(),
                     EntityId = contactId,
@@ -111,7 +111,7 @@ namespace Rvnx.CRM.Tests.Services
                     EntityType = EntityTypes.Person,
                     RelationshipTypeId = Guid.Parse("33333333-3333-3333-3333-333333333301")
                 }
-            };
+            ];
 
             _repositoryMock.Setup(r => r.ListAsNoTrackingAsync<Relationship>(
                 It.IsAny<Expression<Func<Relationship, bool>>>(),
@@ -122,16 +122,16 @@ namespace Rvnx.CRM.Tests.Services
             _repositoryMock.Setup(r => r.ListAsNoTrackingAsync<Contact>(
                 It.IsAny<Expression<Func<Contact, bool>>>(), // This one matches related contacts query
                 default)) // No includes
-                .ReturnsAsync(new List<Contact> { relatedContact });
+                .ReturnsAsync([relatedContact]);
 
             // Other mocks
-            _repositoryMock.Setup(r => r.ListAsNoTrackingAsync<Note>(It.IsAny<Expression<Func<Note, bool>>>(), default)).ReturnsAsync(new List<Note>());
-            _repositoryMock.Setup(r => r.ListAsNoTrackingAsync<Reminder>(It.IsAny<Expression<Func<Reminder, bool>>>(), default)).ReturnsAsync(new List<Reminder>());
-            _repositoryMock.Setup(r => r.ListAsNoTrackingAsync<SignificantDate>(It.IsAny<Expression<Func<SignificantDate, bool>>>(), default)).ReturnsAsync(new List<SignificantDate>());
-            _repositoryMock.Setup(r => r.ListAsNoTrackingAsync<Pet>(It.IsAny<Expression<Func<Pet, bool>>>(), default)).ReturnsAsync(new List<Pet>());
-            _repositoryMock.Setup(r => r.ListAsNoTrackingAsync<ContactMethod>(It.IsAny<Expression<Func<ContactMethod, bool>>>(), default)).ReturnsAsync(new List<ContactMethod>());
-            _repositoryMock.Setup(r => r.ListAsNoTrackingAsync<Fact>(It.IsAny<Expression<Func<Fact, bool>>>(), default)).ReturnsAsync(new List<Fact>());
-            _repositoryMock.Setup(r => r.ListAsNoTrackingAsync<Attachment>(It.IsAny<Expression<Func<Attachment, bool>>>(), default)).ReturnsAsync(new List<Attachment>());
+            _repositoryMock.Setup(r => r.ListAsNoTrackingAsync<Note>(It.IsAny<Expression<Func<Note, bool>>>(), default)).ReturnsAsync([]);
+            _repositoryMock.Setup(r => r.ListAsNoTrackingAsync<Reminder>(It.IsAny<Expression<Func<Reminder, bool>>>(), default)).ReturnsAsync([]);
+            _repositoryMock.Setup(r => r.ListAsNoTrackingAsync<SignificantDate>(It.IsAny<Expression<Func<SignificantDate, bool>>>(), default)).ReturnsAsync([]);
+            _repositoryMock.Setup(r => r.ListAsNoTrackingAsync<Pet>(It.IsAny<Expression<Func<Pet, bool>>>(), default)).ReturnsAsync([]);
+            _repositoryMock.Setup(r => r.ListAsNoTrackingAsync<ContactMethod>(It.IsAny<Expression<Func<ContactMethod, bool>>>(), default)).ReturnsAsync([]);
+            _repositoryMock.Setup(r => r.ListAsNoTrackingAsync<Fact>(It.IsAny<Expression<Func<Fact, bool>>>(), default)).ReturnsAsync([]);
+            _repositoryMock.Setup(r => r.ListAsNoTrackingAsync<Attachment>(It.IsAny<Expression<Func<Attachment, bool>>>(), default)).ReturnsAsync([]);
 
 
             // Act

@@ -41,10 +41,12 @@ namespace Rvnx.CRM.Tests.Controllers
             Mock<IEntityService> entityServiceMock = new();
             entityServiceMock.Setup(s => s.ExistsAsync(It.IsAny<string>(), It.IsAny<Guid>())).ReturnsAsync(true);
 
-            AttachmentsController controller = new(repoMock.Object, fileServiceMock.Object, entityServiceMock.Object);
-            controller.ControllerContext = new ControllerContext
+            AttachmentsController controller = new(repoMock.Object, fileServiceMock.Object, entityServiceMock.Object)
             {
-                HttpContext = new DefaultHttpContext()
+                ControllerContext = new ControllerContext
+                {
+                    HttpContext = new DefaultHttpContext()
+                }
             };
 
             // Set Request Host to localhost

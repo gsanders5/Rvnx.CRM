@@ -32,10 +32,12 @@ namespace Rvnx.CRM.Tests.Controllers
             // Arrange
             using CRMDbContext context = GetInMemoryDbContext();
             Repository repo = new(context);
-            AttachmentsController controller = new(repo, new Mock<IFileValidationService>().Object, new Mock<IEntityService>().Object);
-            controller.ControllerContext = new ControllerContext
+            AttachmentsController controller = new(repo, new Mock<IFileValidationService>().Object, new Mock<IEntityService>().Object)
             {
-                HttpContext = new DefaultHttpContext()
+                ControllerContext = new ControllerContext
+                {
+                    HttpContext = new DefaultHttpContext()
+                }
             };
 
             Guid attachmentId = Guid.NewGuid();
@@ -72,10 +74,12 @@ namespace Rvnx.CRM.Tests.Controllers
             // Arrange
             using CRMDbContext context = GetInMemoryDbContext();
             Repository repo = new(context);
-            AttachmentsController controller = new(repo, new Mock<IFileValidationService>().Object, new Mock<IEntityService>().Object);
-            controller.ControllerContext = new ControllerContext
+            AttachmentsController controller = new(repo, new Mock<IFileValidationService>().Object, new Mock<IEntityService>().Object)
             {
-                HttpContext = new DefaultHttpContext()
+                ControllerContext = new ControllerContext
+                {
+                    HttpContext = new DefaultHttpContext()
+                }
             };
 
             // Act
@@ -91,10 +95,12 @@ namespace Rvnx.CRM.Tests.Controllers
             // Arrange
             using CRMDbContext context = GetInMemoryDbContext();
             Repository repo = new(context);
-            AttachmentsController controller = new(repo, new Mock<IFileValidationService>().Object, new Mock<IEntityService>().Object);
-            controller.ControllerContext = new ControllerContext
+            AttachmentsController controller = new(repo, new Mock<IFileValidationService>().Object, new Mock<IEntityService>().Object)
             {
-                HttpContext = new DefaultHttpContext()
+                ControllerContext = new ControllerContext
+                {
+                    HttpContext = new DefaultHttpContext()
+                }
             };
 
             Guid attachmentId = Guid.NewGuid();
@@ -134,10 +140,12 @@ namespace Rvnx.CRM.Tests.Controllers
             // Arrange
             using CRMDbContext context = GetInMemoryDbContext();
             Repository repo = new(context);
-            AttachmentsController controller = new(repo, new Mock<IFileValidationService>().Object, new Mock<IEntityService>().Object);
-            controller.ControllerContext = new ControllerContext
+            AttachmentsController controller = new(repo, new Mock<IFileValidationService>().Object, new Mock<IEntityService>().Object)
             {
-                HttpContext = new DefaultHttpContext()
+                ControllerContext = new ControllerContext
+                {
+                    HttpContext = new DefaultHttpContext()
+                }
             };
 
             Guid attachmentId = Guid.NewGuid();

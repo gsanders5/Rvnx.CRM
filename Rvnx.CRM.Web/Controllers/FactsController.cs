@@ -33,10 +33,17 @@ namespace Rvnx.CRM.Web.Controllers
 
         public async Task<IActionResult> Edit(Guid? id)
         {
-            if (id == null) return NotFound();
+            if (id == null)
+            {
+                return NotFound();
+            }
+
             Fact? fact = await Repository.GetByIdAsync<Fact>(id.Value);
 
-            if (fact == null) return NotFound();
+            if (fact == null)
+            {
+                return NotFound();
+            }
 
             FactFormDto dto = new()
             {
@@ -54,7 +61,10 @@ namespace Rvnx.CRM.Web.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(Guid id, FactFormDto factDto)
         {
-            if (id != factDto.Id) return NotFound();
+            if (id != factDto.Id)
+            {
+                return NotFound();
+            }
 
             if (ModelState.IsValid)
             {
@@ -62,7 +72,10 @@ namespace Rvnx.CRM.Web.Controllers
                 {
                     // Fetch existing entity to preserve audit fields and prevent tampering
                     Fact? existingFact = await Repository.GetByIdAsync<Fact>(id);
-                    if (existingFact == null) return NotFound();
+                    if (existingFact == null)
+                    {
+                        return NotFound();
+                    }
 
                     existingFact.UpdateEntity(factDto);
 
@@ -73,8 +86,14 @@ namespace Rvnx.CRM.Web.Controllers
                 }
                 catch (Exception)
                 {
-                    if (!await Repository.ExistsAsync<Fact>(factDto.Id.Value)) return NotFound();
-                    else throw;
+                    if (!await Repository.ExistsAsync<Fact>(factDto.Id.Value))
+                    {
+                        return NotFound();
+                    }
+                    else
+                    {
+                        throw;
+                    }
                 }
             }
 
@@ -83,7 +102,11 @@ namespace Rvnx.CRM.Web.Controllers
 
         public async Task<IActionResult> Delete(Guid? id)
         {
-            if (id == null) return NotFound();
+            if (id == null)
+            {
+                return NotFound();
+            }
+
             Fact? fact = await Repository.GetByIdAsync<Fact>(id.Value);
             return fact == null ? NotFound() : View(fact);
         }

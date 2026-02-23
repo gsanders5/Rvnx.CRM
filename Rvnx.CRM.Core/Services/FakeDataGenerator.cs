@@ -97,7 +97,7 @@ namespace Rvnx.CRM.Core.Services
 
         public static List<Contact> GenerateContacts(int count)
         {
-            List<Contact> list = new();
+            List<Contact> list = [];
             for (int i = 0; i < count; i++)
             {
                 list.Add(GenerateContact());

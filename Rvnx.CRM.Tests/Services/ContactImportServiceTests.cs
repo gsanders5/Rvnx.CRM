@@ -31,11 +31,11 @@ namespace Rvnx.CRM.Tests.Services
         public async Task ImportFromVCardAsyncValidContactsAddsToRepository()
         {
             // Arrange
-            List<Contact> contacts = new()
-            {
+            List<Contact> contacts =
+            [
                 new() { FirstName = "John", LastName = "Doe" },
                 new() { FirstName = "Jane", LastName = "Smith" }
-            };
+            ];
 
             _vCardServiceMock.Setup(v => v.ParseVCard(It.IsAny<Stream>()))
                 .Returns(contacts);
@@ -64,10 +64,10 @@ namespace Rvnx.CRM.Tests.Services
         public async Task ImportFromVCardAsyncDuplicateNameSkipsImport()
         {
             // Arrange
-            List<Contact> contacts = new()
-            {
+            List<Contact> contacts =
+            [
                 new() { FirstName = "Duplicate", LastName = "User" }
-            };
+            ];
 
             _vCardServiceMock.Setup(v => v.ParseVCard(It.IsAny<Stream>()))
                 .Returns(contacts);
@@ -97,13 +97,12 @@ namespace Rvnx.CRM.Tests.Services
             {
                 FirstName = "Unique",
                 LastName = "User",
-                ContactMethods = new List<ContactMethod>
-                {
+                ContactMethods =
+                [
                     new() { Type = ContactMethodType.Email, Value = "test@example.com" }
-                }
+                ]
             };
-            List<Contact> contacts = new()
-            { contact };
+            List<Contact> contacts = [contact];
 
             _vCardServiceMock.Setup(v => v.ParseVCard(It.IsAny<Stream>()))
                 .Returns(contacts);

@@ -33,10 +33,17 @@ namespace Rvnx.CRM.Web.Controllers
 
         public async Task<IActionResult> Edit(Guid? id)
         {
-            if (id == null) return NotFound();
+            if (id == null)
+            {
+                return NotFound();
+            }
+
             ContactMethod? contactInfo = await Repository.GetByIdAsync<ContactMethod>(id.Value);
 
-            if (contactInfo == null) return NotFound();
+            if (contactInfo == null)
+            {
+                return NotFound();
+            }
 
             ContactMethodFormDto dto = new()
             {
@@ -55,14 +62,20 @@ namespace Rvnx.CRM.Web.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(Guid id, ContactMethodFormDto contactInfoInput)
         {
-            if (id != contactInfoInput.Id) return NotFound();
+            if (id != contactInfoInput.Id)
+            {
+                return NotFound();
+            }
 
             if (ModelState.IsValid)
             {
                 try
                 {
                     ContactMethod? existingContactInfo = await Repository.GetByIdAsync<ContactMethod>(id);
-                    if (existingContactInfo == null) return NotFound();
+                    if (existingContactInfo == null)
+                    {
+                        return NotFound();
+                    }
 
                     existingContactInfo.UpdateEntity(contactInfoInput);
 
@@ -73,8 +86,14 @@ namespace Rvnx.CRM.Web.Controllers
                 }
                 catch (Exception)
                 {
-                    if (!await Repository.ExistsAsync<ContactMethod>(contactInfoInput.Id.Value)) return NotFound();
-                    else throw;
+                    if (!await Repository.ExistsAsync<ContactMethod>(contactInfoInput.Id.Value))
+                    {
+                        return NotFound();
+                    }
+                    else
+                    {
+                        throw;
+                    }
                 }
             }
 
@@ -83,7 +102,11 @@ namespace Rvnx.CRM.Web.Controllers
 
         public async Task<IActionResult> Delete(Guid? id)
         {
-            if (id == null) return NotFound();
+            if (id == null)
+            {
+                return NotFound();
+            }
+
             ContactMethod? contactInfo = await Repository.GetByIdAsync<ContactMethod>(id.Value);
             return contactInfo == null ? NotFound() : View(contactInfo);
         }

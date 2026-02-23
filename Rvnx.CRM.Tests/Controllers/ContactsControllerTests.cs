@@ -37,9 +37,10 @@ namespace Rvnx.CRM.Tests.Controllers
                 _contactExportServiceMock.Object,
                 _contactManagementServiceMock.Object,
                 _contactReadServiceMock.Object,
-                _selfContactServiceMock.Object);
-
-            _controller.ControllerContext = new ControllerContext { HttpContext = new DefaultHttpContext() };
+                _selfContactServiceMock.Object)
+            {
+                ControllerContext = new ControllerContext { HttpContext = new DefaultHttpContext() }
+            };
             _controller.TempData = new TempDataDictionary(_controller.HttpContext, Mock.Of<ITempDataProvider>());
         }
 
@@ -53,11 +54,11 @@ namespace Rvnx.CRM.Tests.Controllers
         public async Task IndexReturnsViewWithContacts()
         {
             // Arrange
-            List<ContactDto> contacts = new()
-            {
+            List<ContactDto> contacts =
+            [
                 new ContactDto { Id = Guid.NewGuid(), FirstName = "John", LastName = "Doe" },
                 new ContactDto { Id = Guid.NewGuid(), FirstName = "Jane", LastName = "Doe" }
-            };
+            ];
 
             _contactReadServiceMock.Setup(s => s.GetIndexDataAsync(It.IsAny<bool>())).ReturnsAsync(contacts);
 

@@ -17,7 +17,7 @@ namespace Rvnx.CRM.Tests.Services
                 .Options;
 
             Mock<ICurrentUserService> mockUserService = new();
-            mockUserService.Setup(u => u.UserId).Returns((Guid?) null); // Setup as system for syncing
+            mockUserService.Setup(u => u.UserId).Returns((Guid?)null); // Setup as system for syncing
             mockUserService.Setup(u => u.UserName).Returns("System");
 
             CRMDbContext context = new(options, mockUserService.Object);
@@ -32,12 +32,12 @@ namespace Rvnx.CRM.Tests.Services
             using CRMDbContext context = GetInMemoryDbContext();
             UserSynchronizationService service = new(context);
 
-            List<Claim> claims = new()
-            {
+            List<Claim> claims =
+            [
                 new Claim(ClaimTypes.NameIdentifier, "sub123"),
                 new Claim(ClaimTypes.Email, "test@example.com"),
                 new Claim(ClaimTypes.Name, "Test User")
-            };
+            ];
             ClaimsIdentity identity = new(claims, "TestAuth");
             ClaimsPrincipal principal = new(identity);
 
@@ -64,11 +64,11 @@ namespace Rvnx.CRM.Tests.Services
             UserSynchronizationService service = new(context);
 
             const string originalSubject = "external-idp-sub-123";
-            List<Claim> claims = new()
-            {
+            List<Claim> claims =
+            [
                 new Claim(ClaimTypes.NameIdentifier, originalSubject),
                 new Claim(ClaimTypes.Email, "test@example.com")
-            };
+            ];
             ClaimsIdentity identity = new(claims, "TestAuth");
             ClaimsPrincipal principal = new(identity);
 
@@ -105,12 +105,12 @@ namespace Rvnx.CRM.Tests.Services
             context.Users.Add(existingUser);
             await context.SaveChangesAsync();
 
-            List<Claim> claims = new()
-            {
+            List<Claim> claims =
+            [
                 new Claim(ClaimTypes.NameIdentifier, "sub456"),
                 new Claim(ClaimTypes.Email, "new@example.com"),
                 new Claim(ClaimTypes.Name, "New Name")
-            };
+            ];
             ClaimsIdentity identity = new(claims, "TestAuth");
             ClaimsPrincipal principal = new(identity);
 
@@ -142,12 +142,12 @@ namespace Rvnx.CRM.Tests.Services
             UserSynchronizationService service = new(context);
 
             // Create user without Name claim
-            List<Claim> claims = new()
-            {
+            List<Claim> claims =
+            [
                 new Claim(ClaimTypes.NameIdentifier, "sub789"),
                 new Claim(ClaimTypes.Email, "test@example.com")
                 // No ClaimTypes.Name
-            };
+            ];
             ClaimsIdentity identity = new(claims, "TestAuth");
             ClaimsPrincipal principal = new(identity);
 
@@ -172,12 +172,12 @@ namespace Rvnx.CRM.Tests.Services
             UserSynchronizationService service = new(context);
 
             const string existingName = "Existing Name";
-            List<Claim> claims = new()
-            {
+            List<Claim> claims =
+            [
                 new Claim(ClaimTypes.NameIdentifier, "sub999"),
                 new Claim(ClaimTypes.Email, "test@example.com"),
                 new Claim(ClaimTypes.Name, existingName)
-            };
+            ];
             ClaimsIdentity identity = new(claims, "TestAuth");
             ClaimsPrincipal principal = new(identity);
 
@@ -198,10 +198,10 @@ namespace Rvnx.CRM.Tests.Services
             UserSynchronizationService service = new(context);
 
             // No NameIdentifier claim
-            List<Claim> claims = new()
-            {
+            List<Claim> claims =
+            [
                 new Claim(ClaimTypes.Email, "test@example.com")
-            };
+            ];
             ClaimsIdentity identity = new(claims, "TestAuth");
             ClaimsPrincipal principal = new(identity);
 
@@ -224,11 +224,11 @@ namespace Rvnx.CRM.Tests.Services
             using CRMDbContext context = GetInMemoryDbContext();
             UserSynchronizationService service = new(context);
 
-            List<Claim> claims = new()
-            {
+            List<Claim> claims =
+            [
                 new Claim(ClaimTypes.NameIdentifier, "sub-multiple"),
                 new Claim(ClaimTypes.Email, "test@example.com")
-            };
+            ];
             ClaimsIdentity identity = new(claims, "TestAuth");
             ClaimsPrincipal principal = new(identity);
 
@@ -252,11 +252,11 @@ namespace Rvnx.CRM.Tests.Services
             UserSynchronizationService service = new(context);
 
             // Use "sub" claim instead of NameIdentifier (common in OAuth2/OIDC)
-            List<Claim> claims = new()
-            {
+            List<Claim> claims =
+            [
                 new Claim("sub", "oauth-subject-id"),
                 new Claim("email", "oauth@example.com")
-            };
+            ];
             ClaimsIdentity identity = new(claims, "TestAuth");
             ClaimsPrincipal principal = new(identity);
 

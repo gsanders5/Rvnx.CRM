@@ -5,8 +5,8 @@ namespace Rvnx.CRM.Core.Services;
 
 public static class RelationshipTypeService
 {
-    private static readonly List<RelationshipTypeDefinition> _types = new()
-    {
+    private static readonly List<RelationshipTypeDefinition> _types =
+    [
         // Family
         new(Guid.Parse("b2e9a5c8-7f4d-4a1b-8c6e-5f9d3a0e2b4c"), "Spouse", "Spouse", "Family", EntityTypes.Person),
         new(Guid.Parse("11111111-1111-1111-1111-111111111101"), "Husband", "Wife", "Family", EntityTypes.Person),
@@ -39,7 +39,7 @@ public static class RelationshipTypeService
 
         // Company
         new(Guid.Parse("fedcba98-7654-3210-fedc-ba9876543210"), "Parent Company", "Subsidiary", "Company", EntityTypes.Company)
-    };
+    ];
 
     public static List<RelationshipTypeDefinition> GetAll()
     {

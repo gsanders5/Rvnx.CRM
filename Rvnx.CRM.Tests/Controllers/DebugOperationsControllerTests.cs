@@ -29,7 +29,7 @@ namespace Rvnx.CRM.Tests.Controllers
 
             ActionExecutingContext context = new(
                 actionContext,
-                new List<IFilterMetadata>(),
+                [],
                 new Dictionary<string, object?>(),
                 controller
             );
@@ -59,7 +59,7 @@ namespace Rvnx.CRM.Tests.Controllers
 
             ActionExecutingContext context = new(
                 actionContext,
-                new List<IFilterMetadata>(),
+                [],
                 new Dictionary<string, object?>(),
                 controller
             );

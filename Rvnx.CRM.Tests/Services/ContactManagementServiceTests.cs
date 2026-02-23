@@ -18,9 +18,9 @@ namespace Rvnx.CRM.Tests.Services
         private readonly ContactManagementService _service;
 
         // In-memory collections to support ListAsync queries
-        private readonly List<ContactMethod> _contactMethods = new();
-        private readonly List<SignificantDate> _significantDates = new();
-        private readonly List<Attachment> _attachments = new();
+        private readonly List<ContactMethod> _contactMethods = [];
+        private readonly List<SignificantDate> _significantDates = [];
+        private readonly List<Attachment> _attachments = [];
 
         public ContactManagementServiceTests()
         {
