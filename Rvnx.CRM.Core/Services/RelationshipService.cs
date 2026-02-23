@@ -13,40 +13,24 @@ public class RelationshipService(IRepository repository) : IRelationshipService
 
     public async Task<RelationshipOperationResult> CreateRelationshipAsync(Relationship relationship, string selectedRelationshipType)
     {
-        if (string.IsNullOrEmpty(selectedRelationshipType))
-            return RelationshipOperationResult.Failure("Relationship Type is required.");
+        var (typeId, isReverse, error) = ParseRelationshipSelection(selectedRelationshipType);
+        if (error != null) return RelationshipOperationResult.Failure(error);
 
-        string[] parts = selectedRelationshipType.Split('_');
-        if (parts.Length != 2 || !Guid.TryParse(parts[0], out Guid typeId))
-            return RelationshipOperationResult.Failure("Invalid Relationship Type.");
-
-        string direction = parts[1];
         relationship.RelationshipTypeId = typeId;
 
-        if (direction == "Rev")
-        {
-            Guid temp = relationship.EntityId;
-            relationship.EntityId = relationship.RelatedEntityId;
-            relationship.RelatedEntityId = temp;
-        }
+        if (isReverse) SwapRelationshipEntities(relationship);
 
         await _repository.AddAsync(relationship);
         await _repository.SaveChangesAsync();
 
-        Guid redirectId = direction == "Rev" ? relationship.RelatedEntityId : relationship.EntityId;
+        Guid redirectId = isReverse ? relationship.RelatedEntityId : relationship.EntityId;
         return RelationshipOperationResult.Ok(redirectId, relationship.EntityType);
     }
 
     public async Task<RelationshipOperationResult> UpdateRelationshipAsync(Guid id, Relationship updatedRelationship, string selectedRelationshipType)
     {
-        if (string.IsNullOrEmpty(selectedRelationshipType))
-            return RelationshipOperationResult.Failure("Relationship Type is required.");
-
-        string[] parts = selectedRelationshipType.Split('_');
-        if (parts.Length != 2 || !Guid.TryParse(parts[0], out Guid typeId))
-            return RelationshipOperationResult.Failure("Invalid Relationship Type.");
-
-        string direction = parts[1];
+        var (typeId, isReverse, error) = ParseRelationshipSelection(selectedRelationshipType);
+        if (error != null) return RelationshipOperationResult.Failure(error);
 
         Relationship? existingRelationship = await _repository.GetByIdAsync<Relationship>(id);
         if (existingRelationship == null)
@@ -60,18 +44,30 @@ public class RelationshipService(IRepository repository) : IRelationshipService
         existingRelationship.EndDate = updatedRelationship.EndDate;
         existingRelationship.RelationshipTypeId = typeId;
 
-        if (direction == "Rev")
-        {
-            Guid temp = existingRelationship.EntityId;
-            existingRelationship.EntityId = existingRelationship.RelatedEntityId;
-            existingRelationship.RelatedEntityId = temp;
-        }
+        if (isReverse) SwapRelationshipEntities(existingRelationship);
 
         await _repository.UpdateAsync(existingRelationship);
         await _repository.SaveChangesAsync();
 
-        Guid redirectId = direction == "Rev" ? existingRelationship.RelatedEntityId : existingRelationship.EntityId;
+        Guid redirectId = isReverse ? existingRelationship.RelatedEntityId : existingRelationship.EntityId;
         return RelationshipOperationResult.Ok(redirectId, existingRelationship.EntityType);
+    }
+
+    private static (Guid TypeId, bool IsReverse, string? Error) ParseRelationshipSelection(string selection)
+    {
+        if (string.IsNullOrEmpty(selection))
+            return (Guid.Empty, false, "Relationship Type is required.");
+
+        string[] parts = selection.Split('_');
+        if (parts.Length != 2 || !Guid.TryParse(parts[0], out Guid typeId))
+            return (Guid.Empty, false, "Invalid Relationship Type.");
+
+        return (typeId, parts[1] == "Rev", null);
+    }
+
+    private static void SwapRelationshipEntities(Relationship relationship)
+    {
+        (relationship.EntityId, relationship.RelatedEntityId) = (relationship.RelatedEntityId, relationship.EntityId);
     }
 
     public async Task<List<SelectOptionDto>> GetRelatedEntityOptionsAsync(Guid entityId, string entityType, Guid? selectedId = null)
