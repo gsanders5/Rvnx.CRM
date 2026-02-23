@@ -40,7 +40,10 @@ public class ContactManagementService(IRepository repository, IFileValidationSer
         // 2. Perform Orphan Cleanup for Partial Contacts
         if (linkedContactIds.Count > 0)
         {
-            List<Contact> linkedPartialContacts = await _repository.ListAsync<Contact>(c => linkedContactIds.Contains(c.Id) && c.IsPartial);
+            List<Contact> linkedPartialContacts = await _repository.ListByChunkedContainsAsync<Contact, Guid>(
+                linkedContactIds,
+                chunk => c => chunk.Contains(c.Id) && c.IsPartial,
+                asNoTracking: false);
             foreach (Contact partialContact in linkedPartialContacts)
             {
                 List<Relationship> partialRels = await _repository.ListAsync<Relationship>(r =>
@@ -54,7 +57,11 @@ public class ContactManagementService(IRepository repository, IFileValidationSer
                 bool hasFullContactRelationship = false;
                 if (siblings.Count > 0)
                 {
-                    hasFullContactRelationship = (await _repository.ListAsync<Contact>(c => siblings.Contains(c.Id) && !c.IsPartial)).Count > 0;
+                    var fullContacts = await _repository.ListByChunkedContainsAsync<Contact, Guid>(
+                        siblings,
+                        chunk => c => chunk.Contains(c.Id) && !c.IsPartial,
+                        asNoTracking: false);
+                    hasFullContactRelationship = fullContacts.Count > 0;
                 }
 
                 if (!hasFullContactRelationship)

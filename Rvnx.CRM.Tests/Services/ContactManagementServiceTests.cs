@@ -288,8 +288,8 @@ namespace Rvnx.CRM.Tests.Services
                 new Contact { Id = partialContactId, IsPartial = true }
             ];
 
-            _repositoryMock.Setup(r => r.ListAsync<Contact>(It.IsAny<Expression<Func<Contact, bool>>>(), It.IsAny<CancellationToken>()))
-                .ReturnsAsync((Expression<Func<Contact, bool>> predicate, CancellationToken ct) =>
+            _repositoryMock.Setup(r => r.ListAsync<Contact>(It.IsAny<Expression<Func<Contact, bool>>>(), It.IsAny<CancellationToken>(), It.IsAny<string[]>()))
+                .ReturnsAsync((Expression<Func<Contact, bool>> predicate, CancellationToken ct, string[] includes) =>
                 {
                     var func = predicate.Compile();
                     if (func(new Contact { Id = partialContactId, IsPartial = true }))
@@ -347,8 +347,8 @@ namespace Rvnx.CRM.Tests.Services
             ];
             
             // Setup ListAsync<Contact> to return based on the query pattern
-            _repositoryMock.Setup(r => r.ListAsync<Contact>(It.IsAny<Expression<Func<Contact, bool>>>(), It.IsAny<CancellationToken>()))
-                .ReturnsAsync((Expression<Func<Contact, bool>> predicate, CancellationToken ct) =>
+            _repositoryMock.Setup(r => r.ListAsync<Contact>(It.IsAny<Expression<Func<Contact, bool>>>(), It.IsAny<CancellationToken>(), It.IsAny<string[]>()))
+                .ReturnsAsync((Expression<Func<Contact, bool>> predicate, CancellationToken ct, string[] includes) =>
                 {
                     var func = predicate.Compile();
                     

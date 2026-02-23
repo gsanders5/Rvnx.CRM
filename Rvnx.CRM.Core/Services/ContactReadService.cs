@@ -20,19 +20,11 @@ public class ContactReadService(IRepository repository) : IContactReadService
         List<ContactDto> contactDtos = [.. contacts.Select(c => c.ToDto())];
         List<Guid> contactIds = [.. contacts.Select(c => c.Id)];
 
-        // Optimization: Fetch attachments in batches to avoid SQL parameter limits and prevent "fetch all" performance issues.
-        List<Attachment> profileAttachments = [];
-        if (contactIds.Count > 0)
-        {
-            foreach (Guid[] batch in contactIds.Chunk(1000))
-            {
-                List<Guid> batchIds = [.. batch];
-                List<Attachment> batchAttachments = await _repository.ListAsNoTrackingAsync<Attachment>(a => a.ContactId != null
-                    && a.AttachmentType == AttachmentTypes.ProfileImage
-                    && batchIds.Contains(a.ContactId.Value));
-                profileAttachments.AddRange(batchAttachments);
-            }
-        }
+        List<Attachment> profileAttachments = contactIds.Count > 0
+            ? await _repository.ListByChunkedContainsAsync<Attachment, Guid>(
+                contactIds,
+                chunk => a => a.ContactId != null && a.AttachmentType == AttachmentTypes.ProfileImage && chunk.Contains(a.ContactId.Value))
+            : [];
 
         if (profileAttachments.Count > 0)
         {
@@ -50,20 +42,14 @@ public class ContactReadService(IRepository repository) : IContactReadService
             }
         }
 
-        // Optimization: Fetch labels in batches to avoid SQL parameter limits.
-        List<ContactLabel> allContactLabels = [];
-        if (contactIds.Count > 0)
-        {
-            foreach (Guid[] batch in contactIds.Chunk(1000))
-            {
-                List<Guid> batchIds = [.. batch];
-                List<ContactLabel> batchLabels = await _repository.ListAsNoTrackingAsync<ContactLabel>(
-                    cl => batchIds.Contains(cl.ContactId),
-                    default,
-                    nameof(ContactLabel.Label));
-                allContactLabels.AddRange(batchLabels);
-            }
-        }
+        List<ContactLabel> allContactLabels = contactIds.Count > 0
+            ? await _repository.ListByChunkedContainsAsync<ContactLabel, Guid>(
+                contactIds,
+                chunk => cl => chunk.Contains(cl.ContactId),
+                asNoTracking: true,
+                cancellationToken: default,
+                nameof(ContactLabel.Label))
+            : [];
 
         Dictionary<Guid, List<LabelDto>> labelsByContact = allContactLabels
             .GroupBy(cl => cl.ContactId)
@@ -117,7 +103,10 @@ public class ContactReadService(IRepository repository) : IContactReadService
         List<Contact> relatedContacts = [];
         if (relatedIds.Count > 0)
         {
-            relatedContacts = await _repository.ListAsNoTrackingAsync<Contact>(c => relatedIds.Contains(c.Id));
+            relatedContacts = await _repository.ListByChunkedContainsAsync<Contact, Guid>(
+                relatedIds,
+                chunk => c => chunk.Contains(c.Id),
+                asNoTracking: true);
         }
 
         // Manually populate navigation properties for display
