@@ -1,5 +1,5 @@
 @using Rvnx.CRM.Core.Constants
-@model Rvnx.CRM.Core.DTOs.Contact.RelationshipEditViewModel
+@model Rvnx.CRM.Core.DTOs.Contact.RelationshipFormViewModel
 
 @{
     ViewData["Title"] = "Edit Relationship";
@@ -16,7 +16,7 @@
             <input type="hidden" asp-for="EntityType"/>
             <input type="hidden" asp-for="EntityName"/>
             <!-- RelationshipTypeId will be set on post based on selection -->
-            <input type="hidden" asp-for="RelationshipTypeId" />
+            <input type="hidden" asp-for="RelationshipTypeId"/>
 
             <div class="mb-3">
                 <label asp-for="SelectedRelationshipType" class="form-label">Relationship Type</label>
