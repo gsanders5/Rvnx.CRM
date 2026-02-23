@@ -1,3 +1,4 @@
+using System.Collections.Frozen;
 using Microsoft.AspNetCore.Mvc;
 using Rvnx.CRM.Core.Interfaces;
 using Rvnx.CRM.Core.Models.Base;
@@ -10,7 +11,7 @@ namespace Rvnx.CRM.Web.Controllers
         private readonly IRepository _repository = repository;
         private readonly IFileValidationService _fileValidationService = fileValidationService;
         private readonly IEntityService _entityService = entityService;
-        private static readonly HashSet<string> ImageContentTypes = new(StringComparer.OrdinalIgnoreCase) { "image/jpeg", "image/png", "image/gif" };
+        private static readonly FrozenSet<string> ImageContentTypes = new[] { "image/jpeg", "image/png", "image/gif" }.ToFrozenSet(StringComparer.OrdinalIgnoreCase);
 
         [HttpPost]
         [ValidateAntiForgeryToken]
