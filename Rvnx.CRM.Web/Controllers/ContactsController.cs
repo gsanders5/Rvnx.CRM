@@ -306,11 +306,14 @@ namespace Rvnx.CRM.Web.Controllers
         }
 
         [HttpPost]
-        [Route("Contacts/{contactId}/Labels/{labelId}/Assign")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> AssignLabel(Guid contactId, Guid labelId, [FromServices] ILabelService labelService, string? returnUrl = null)
         {
-            await labelService.AssignLabelAsync(contactId, labelId);
+            if (contactId != Guid.Empty && labelId != Guid.Empty)
+            {
+                await labelService.AssignLabelAsync(contactId, labelId);
+            }
+
             if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
             {
                 return Redirect(returnUrl);
@@ -319,11 +322,14 @@ namespace Rvnx.CRM.Web.Controllers
         }
 
         [HttpPost]
-        [Route("Contacts/{contactId}/Labels/{labelId}/Remove")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> RemoveLabel(Guid contactId, Guid labelId, [FromServices] ILabelService labelService, string? returnUrl = null)
         {
-            await labelService.RemoveLabelAsync(contactId, labelId);
+            if (contactId != Guid.Empty && labelId != Guid.Empty)
+            {
+                await labelService.RemoveLabelAsync(contactId, labelId);
+            }
+
             if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
             {
                 return Redirect(returnUrl);
