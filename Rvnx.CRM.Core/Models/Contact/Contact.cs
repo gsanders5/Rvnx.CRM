@@ -24,5 +24,7 @@ namespace Rvnx.CRM.Core.Models.Contact
         [Display(Name = "Employers")]
         [InverseProperty(nameof(Employer.Employee))]
         public virtual ICollection<Employer> Employers { get; set; } = [];
+
+        public virtual ICollection<ContactLabel> ContactLabels { get; set; } = [];
     }
 }

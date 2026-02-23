@@ -40,7 +40,7 @@ namespace Rvnx.CRM.Tests.DTOs
                 $"Missing properties in {typeof(TDto).Name} from {typeof(TModel).Name}: {string.Join(", ", missingProperties)}");
         }
 
-        private static readonly string[] ContactDetailDtoIgnoredProperties = ["IsHidden", "Addresses", "Attachments"];
+        private static readonly string[] ContactDetailDtoIgnoredProperties = ["IsHidden", "Addresses", "Attachments", "ContactLabels"];
         [Fact]
         public void ContactDetailDtoShouldHaveAllContactProperties()
         {

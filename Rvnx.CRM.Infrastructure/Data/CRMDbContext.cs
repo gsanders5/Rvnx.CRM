@@ -27,6 +27,8 @@ public class CRMDbContext(DbContextOptions<CRMDbContext> options, ICurrentUserSe
     public DbSet<Fact> Facts { get; set; }
     public DbSet<Address> Addresses { get; set; }
     public DbSet<User> Users { get; set; }
+    public DbSet<Label> Labels { get; set; }
+    public DbSet<ContactLabel> ContactLabels { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -52,6 +54,21 @@ public class CRMDbContext(DbContextOptions<CRMDbContext> options, ICurrentUserSe
             .WithMany(c => c.Pets)
             .HasForeignKey(p => p.ContactId)
             .OnDelete(DeleteBehavior.Cascade);
+
+        // ContactLabel
+        modelBuilder.Entity<ContactLabel>()
+            .HasOne(cl => cl.Contact)
+            .WithMany(c => c.ContactLabels)
+            .HasForeignKey(cl => cl.ContactId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<ContactLabel>()
+            .HasOne(cl => cl.Label)
+            .WithMany(l => l.ContactLabels)
+            .HasForeignKey(cl => cl.LabelId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<ContactLabel>().HasIndex(cl => new { cl.ContactId, cl.LabelId }).IsUnique();
 
         // ContactMethod
         modelBuilder.Entity<ContactMethod>()
