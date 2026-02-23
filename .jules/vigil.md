@@ -21,3 +21,7 @@
 ## 2026-02-24 - [Testing LoggerMessage Delegates]
 **Learning:** When testing classes that use `LoggerMessage.Define` (high-performance logging delegates), simply mocking `Log` is insufficient. These delegates explicitly check `IsEnabled(LogLevel)` before attempting to log. If the mock for `ILogger.IsEnabled` returns `false` (the default for `bool`), the `Log` method will never be called, causing `Verify` assertions to fail with confusing messages like "Expected 1 invocation, but was 0. Performed invocations: IsEnabled".
 **Action:** When mocking `ILogger<T>` where `LoggerMessage` might be used, always setup `IsEnabled(It.IsAny<LogLevel>())` to return `true`.
+
+## 2026-02-25 - [Bulk Loading Optimization Risks]
+**Learning:** Performance optimizations in read services often involve fetching main entities first, collecting their IDs, and then performing secondary bulk queries for related data (like Profile Images or Labels) to avoid N+1 problems. This pattern manually restitches data in memory using Dictionaries. This logic is prone to bugs: forgetting to check for null keys, assuming a key exists in the dictionary, or mis-mapping IDs. Tests that only check single-entity retrieval often miss these "list view" bugs.
+**Action:** When testing "Index" or "List" methods in services, explicitly test the mapping of these bulk-loaded related entities. Verify that the dictionary lookups handle missing keys gracefully and that the correct related entity is assigned to the correct parent.
