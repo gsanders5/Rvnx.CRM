@@ -50,14 +50,33 @@
 - **User Isolation**: `CRMDbContext` applies global query filters to restrict access to data based on the current user (`ICurrentUserService`).
 - **Service Delegation**: Controllers delegate business logic to specialized services (e.g., `IContactManagementService`, `IContactImportService`).
 
-## Technology Stack
+### Data Loading (The "Stitching" Pattern)
 
-- **.NET 8.0**
-- **ASP.NET Core MVC** for web interface
-- **Entity Framework Core 8.0** for data access
-- **SQLite** for development database
-- **MDB Bootstrap 5** (MDBootstrap) for UI styling
-- **FolkerKinzel.VCards** for vCard import/export
+For complex views (like the Contact Index), the application avoids complex SQL joins or massive Cartesian products. Instead, it uses a "stitching" pattern:
+
+1.  Fetch the main entities (e.g., `Contact`) based on the filter.
+2.  Extract the list of IDs.
+3.  Execute separate, efficient queries to fetch related lightweight data (e.g., `Attachment` for profile images, `ContactLabel` for tags) using `Contains` on the ID list.
+4.  Map the related data to the DTOs in memory using Dictionaries.
+
+This is implemented in `ContactReadService.GetIndexDataAsync`.
+
+### Partial Contacts
+
+The system supports "Partial Contacts" — contacts that exist primarily as a name in a relationship (e.g., "John's Wife") but don't have a full profile yet.
+
+-   **Implementation**: They are standard `Contact` entities in the database.
+-   **Differentiation**: Defined by the `IsPartial` boolean flag on the `Contact` entity.
+-   **Relationships**: `Relationship.RelatedEntityId` points to the partial contact's ID just like any other contact.
+-   **Promotion**: A partial contact can be "promoted" to a full contact, which simply toggles the `IsPartial` flag to `false`.
+
+### Relationship Direction
+
+Relationships are polymorphic but managed via `RelationshipService`.
+
+-   **Storage**: Stored as `EntityId` (Source) -> `RelatedEntityId` (Target).
+-   **Selection**: The UI sends a string like `{TypeId}_Fwd` or `{TypeId}_Rev`.
+-   **Parsing**: `RelationshipService` parses this string. if `Rev` (Reverse) is selected, the service swaps the `EntityId` and `RelatedEntityId` before saving, ensuring the relationship is stored in the semantic direction intended by the user.
 
 ## Core Entities
 
@@ -85,12 +104,23 @@ string FullName (computed property)
 // Has many [NotMapped] collections for related entities
 ```
 
+The `[NotMapped]` collections on `Person` (like `Relationships`, `RelatedTo`) are populated manually by services (e.g., `ContactReadService`) when needed for display, rather than being managed automatically by EF Core navigation properties.
+
 ### Contact
 
 Concrete entity inheriting `Person`.
 
 - Stores `Employers` via navigation property.
 - Links to `ContactMethod`, `SignificantDate`, `Pet`, `Note`, etc. via standard EF Core navigation properties with Cascade Delete.
+- Contains the `IsPartial` flag.
+
+### Relationship
+
+Polymorphic entity linking two entities.
+
+-   **Inheritance**: Inherits `PolymorphicEntity` (`EntityId`, `EntityType`).
+-   **Target**: `RelatedEntityId` (Points to the target entity, usually another `Contact`).
+-   **Navigation**: `Person` and `RelatedPerson` are `[NotMapped]` and populated manually by `ContactReadService`.
 
 ## Repository Usage
 

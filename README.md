@@ -6,35 +6,25 @@ A modern CRM system built with ASP.NET Core 8.0 using clean architecture princip
 
 For technical details, architecture, and design documentation, please see [DESIGN.md](DESIGN.md).
 
-## Updating the Project
+## Features
 
-To update the project to the latest version and apply changes, use the following commands:
+- **Person Management**: Full CRUD operations for contacts, including profile images.
+- **Relationships**: Polymorphic relationship system supporting partial contacts (names without full profiles).
+- **Import/Export**: vCard (.vcf) import and export functionality.
+- **Authentication**: User isolation (multi-tenancy) via `ICurrentUserService` and global query filters.
+- **Labels**: Categorize contacts with custom labels.
+- **Attachments**: Upload and manage files related to contacts.
+- **Notes & Reminders**: Add notes and set reminders for contacts.
+- **Significant Dates**: Track birthdays and other important dates.
+- **Self Contact**: Manage your own profile as a contact within the system.
 
-```bash
-git reset --hard HEAD
-git clean -fd
-git pull
-dotnet ef database update --project Rvnx.CRM.Infrastructure --startup-project Rvnx.CRM.Web
-```
+## Project Structure
 
-## Troubleshooting Migrations
-
-If you encounter migration errors or need to regenerate the base migration, you can reset all migrations.
-**Note: This will delete all existing migration history.**
-
-1. Delete the `Migrations` folder in `Rvnx.CRM.Infrastructure`.
-2. Delete the `rvnx-crm.db` file in `Rvnx.CRM.Web` (if it exists).
-3. Run the following command to create a new initial migration:
-
-```bash
-dotnet ef migrations add InitialCreate --project Rvnx.CRM.Infrastructure --startup-project Rvnx.CRM.Web
-```
-
-4. Apply the migration to create the database:
-
-```bash
-dotnet ef database update --project Rvnx.CRM.Infrastructure --startup-project Rvnx.CRM.Web
-```
+- **Rvnx.CRM.Core**: Domain layer containing entities, interfaces, DTOs, and pure business logic services.
+- **Rvnx.CRM.Infrastructure**: Data access layer with EF Core DbContext, migrations, and repository implementations.
+- **Rvnx.CRM.Web**: ASP.NET Core MVC presentation layer, controllers, and views.
+- **Rvnx.CRM.Shared**: Shared utilities and common models.
+- **Rvnx.CRM.Tests**: Unit and integration tests.
 
 ## Setup Instructions
 
@@ -44,11 +34,11 @@ dotnet ef database update --project Rvnx.CRM.Infrastructure --startup-project Rv
 
 ### Database Setup
 
-The project uses SQLite by default. The database file `rvnx-crm.db` will be created in the `Rvnx.CRM.Web` directory.
+The project is configured to use SQLite by default for development.
 
-#### 1. Initial Setup (No existing database)
+#### 1. Initial Setup
 
-If you are setting up the project for the first time or do not have the `rvnx-crm.db` file:
+If you are setting up the project for the first time:
 
 ```bash
 # Apply migrations to create the database
@@ -62,36 +52,10 @@ This command creates the database file `rvnx-crm.db` in `Rvnx.CRM.Web/` and appl
 dotnet run --project Rvnx.CRM.Web
 ```
 
-## Current Features
+## Running Tests
 
-- **Person Management**: Basic CRUD operations for contacts
-- **Audit Trail**: Automatic tracking of creation/modification
-- **Responsive UI**: Bootstrap-styled person listing
-- **Test Data Seeding**: Sample data generation for testing
-- **Database Migrations**: EF Core migration system configured
+To run the test suite:
 
-## Next Steps / TODOs
-
-### Immediate
-- [ ] Implement user authentication for proper audit trail
-- [ ] Add Person CRUD operations (Create, Edit, Delete views)
-- [ ] Add form validation and error handling
-
-### Architecture Expansion  
-- [ ] Add Company entity
-- [ ] Add Deal/Opportunity entity
-- [ ] Add Task/Activity tracking
-- [ ] Implement relationships between entities
-
-### Production Readiness
-- [ ] Switch to SQL Server/PostgreSQL for production
-- [ ] Add logging and error handling
-- [ ] Implement search and filtering
-- [ ] Add pagination for large datasets
-- [ ] Add API controllers for mobile/SPA consumption
-
-### Advanced Features
-- [ ] Import/Export functionality
-- [ ] Email integration
-- [ ] Reporting and analytics
-- [ ] Role-based security
+```bash
+dotnet test
+```
