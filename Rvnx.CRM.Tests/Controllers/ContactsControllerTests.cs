@@ -186,5 +186,23 @@ namespace Rvnx.CRM.Tests.Controllers
             Assert.Equal(contactId, model.Id);
             Assert.Equal("John", model.FirstName);
         }
+
+        [Fact]
+        public async Task EditPostWhenContactNotFoundShouldReturnNotFound()
+        {
+            // Arrange
+            Guid contactId = Guid.NewGuid();
+            ContactFormDto dto = new() { Id = contactId, FirstName = "John", LastName = "Doe" };
+
+            _contactManagementServiceMock.Setup(s => s.UpdateContactAsync(
+                    contactId, dto, It.IsAny<Stream>(), It.IsAny<string>(), It.IsAny<string>()))
+                .ReturnsAsync(ContactOperationResult.NotFound());
+
+            // Act
+            IActionResult result = await _controller.Edit(contactId, dto, null);
+
+            // Assert
+            Assert.IsType<NotFoundResult>(result);
+        }
     }
 }

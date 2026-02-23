@@ -5,6 +5,7 @@ public class ContactOperationResult
     public bool Success { get; set; }
     public Guid? ContactId { get; set; }
     public List<string> Errors { get; set; } = [];
+    public bool IsNotFound { get; set; }
 
     public static ContactOperationResult Failure(params string[] errors)
     {
@@ -14,5 +15,10 @@ public class ContactOperationResult
     public static ContactOperationResult Ok(Guid contactId)
     {
         return new ContactOperationResult { Success = true, ContactId = contactId };
+    }
+
+    public static ContactOperationResult NotFound(string error = "Contact not found.")
+    {
+        return new ContactOperationResult { Success = false, IsNotFound = true, Errors = { error } };
     }
 }
