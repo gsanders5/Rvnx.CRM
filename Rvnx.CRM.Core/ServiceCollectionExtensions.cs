@@ -29,6 +29,9 @@ public static class ServiceCollectionExtensions
         // Add File Validation Service
         services.AddScoped<IFileValidationService, FileValidationService>();
 
+        // Add Label Service
+        services.AddScoped<ILabelService, LabelService>();
+
         return services;
     }
 }

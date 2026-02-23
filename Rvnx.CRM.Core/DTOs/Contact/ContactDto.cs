@@ -17,5 +17,7 @@ namespace Rvnx.CRM.Core.DTOs.Contact
         public string? Religion { get; set; }
 
         public bool IsPartial { get; set; }
+
+        public IEnumerable<LabelDto> Labels { get; set; } = [];
     }
 }

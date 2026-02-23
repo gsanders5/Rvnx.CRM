@@ -46,6 +46,22 @@ public class ContactReadService(IRepository repository) : IContactReadService
             }
         }
 
+        List<ContactLabel> allContactLabels = contactIds.Count > 0
+            ? await _repository.ListAsNoTrackingAsync<ContactLabel>(cl => contactIds.Contains(cl.ContactId), default, nameof(ContactLabel.Label))
+            : [];
+
+        Dictionary<Guid, List<LabelDto>> labelsByContact = allContactLabels
+            .GroupBy(cl => cl.ContactId)
+            .ToDictionary(g => g.Key, g => g.Select(cl => new LabelDto { Id = cl.Label.Id, Name = cl.Label.Name, Color = cl.Label.Color }).OrderBy(l => l.Name).ToList());
+
+        foreach (ContactDto? dto in contactDtos)
+        {
+            if (dto != null && labelsByContact.TryGetValue(dto.Id, out List<LabelDto>? labels))
+            {
+                dto.Labels = labels;
+            }
+        }
+
         return contactDtos;
     }
 
@@ -117,6 +133,9 @@ public class ContactReadService(IRepository repository) : IContactReadService
             .Where(a => a.AttachmentType != AttachmentTypes.ProfileImage)
             .ToList();
 
+        List<ContactLabel> contactLabels = await _repository.ListAsNoTrackingAsync<ContactLabel>(cl => cl.ContactId == id, default, nameof(ContactLabel.Label)) ?? [];
+        contactDto.Labels = contactLabels.Select(cl => cl.Label).OrderBy(l => l.Name).Select(l => new LabelDto { Id = l.Id, Name = l.Name, Color = l.Color }).ToList();
+
         return contactDto;
     }
 
@@ -164,6 +183,12 @@ public class ContactReadService(IRepository repository) : IContactReadService
         SignificantDate? bday = contact.SignificantDates
             .FirstOrDefault(d => d.Title == SignificantDateTitles.Birthday);
         dto.Birthday = bday?.Date;
+
+        List<Label> allLabels = await _repository.ListAsNoTrackingAsync<Label>(l => true) ?? [];
+        List<ContactLabel> contactLabels = await _repository.ListAsNoTrackingAsync<ContactLabel>(cl => cl.ContactId == id) ?? [];
+
+        dto.AllLabels = allLabels.OrderBy(l => l.Name).Select(l => new LabelDto { Id = l.Id, Name = l.Name, Color = l.Color }).ToList();
+        dto.AssignedLabelIds = contactLabels.Select(cl => cl.LabelId).ToList();
 
         return dto;
     }

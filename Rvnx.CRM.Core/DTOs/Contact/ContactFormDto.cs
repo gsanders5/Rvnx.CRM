@@ -43,5 +43,8 @@ namespace Rvnx.CRM.Core.DTOs.Contact
 
         [MaxLength(100)]
         public string? Religion { get; set; }
+
+        public List<LabelDto> AllLabels { get; set; } = [];
+        public List<Guid> AssignedLabelIds { get; set; } = [];
     }
 }
