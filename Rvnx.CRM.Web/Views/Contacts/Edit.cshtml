@@ -8,12 +8,12 @@
 
 <div class="row">
     <div class="col-md-6">
-        <form asp-action="Edit" enctype="multipart/form-data">
+        <form id="contact-form" asp-action="Edit" enctype="multipart/form-data">
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
             <input type="hidden" asp-for="Id"/>
 
             <div class="form-floating mb-3">
-                <input asp-for="FirstName" class="form-control" placeholder="FirstName" required/>
+                <input asp-for="FirstName" class="form-control" placeholder="FirstName" required autofocus/>
                 <label asp-for="FirstName">First Name <span class="text-danger">*</span></label>
                 <span asp-validation-for="FirstName" class="text-danger"></span>
             </div>
@@ -212,5 +212,19 @@
             initReveal('pronouns-select', 'pronouns-custom');
             initReveal('gender-select', 'gender-custom');
         })();
+
+        // Loading state for submit button
+        $('#contact-form').on('submit', function() {
+            if ($(this).valid()) {
+                var btn = $(this).find('button[type="submit"]');
+                var icon = btn.find('i');
+                if (icon.length) {
+                    icon.removeClass().addClass('spinner-border spinner-border-sm');
+                } else {
+                    btn.prepend('<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>');
+                }
+                btn.prop('disabled', true);
+            }
+        });
     </script>
 }
