@@ -213,16 +213,4 @@ public class ContactReadService(IRepository repository) : IContactReadService
         Contact? c = await _repository.GetByIdAsync<Contact>(id);
         return c != null && !c.IsPartial;
     }
-
-    private async Task<ContactMethod?> GetPrimaryContactMethodAsync(Guid contactId, ContactMethodType type)
-    {
-        List<ContactMethod> methods = await _repository.ListAsNoTrackingAsync<ContactMethod>(c => c.ContactId == contactId && c.Type == type);
-        return methods.FirstOrDefault(e => e.Label == ContactMethodLabels.Primary) ?? methods.FirstOrDefault();
-    }
-
-    private async Task<SignificantDate?> GetBirthdayAsync(Guid contactId)
-    {
-        List<SignificantDate> bdays = await _repository.ListAsNoTrackingAsync<SignificantDate>(d => d.ContactId == contactId && d.Title == SignificantDateTitles.Birthday);
-        return bdays.FirstOrDefault();
-    }
 }
