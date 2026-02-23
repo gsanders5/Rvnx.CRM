@@ -17,3 +17,7 @@
 ## 2024-05-24 - [Date Calculation Ambiguity]
 **Learning:** The `DateCalculationService` treats a `TimeSpan` of exactly 365 days as a "Calendar Year" rather than a strict duration of time. This means it uses `AddYears(1)` instead of adding 365 days. While likely intentional for business logic, this creates a hidden dependency on the magic number 365. A duration of 366 days (leap year length) or 730 days (2 years) behaves differently or consistently depending on the implementation details (modulo arithmetic).
 **Action:** When testing date logic, always explicitly test "Yearly" frequencies against both standard and leap years to ensure the "Calendar Year" vs "Fixed Duration" behavior is pinned down. Future refactors must preserve this specific 365-day special casing.
+
+## 2026-02-24 - [Testing LoggerMessage Delegates]
+**Learning:** When testing classes that use `LoggerMessage.Define` (high-performance logging delegates), simply mocking `Log` is insufficient. These delegates explicitly check `IsEnabled(LogLevel)` before attempting to log. If the mock for `ILogger.IsEnabled` returns `false` (the default for `bool`), the `Log` method will never be called, causing `Verify` assertions to fail with confusing messages like "Expected 1 invocation, but was 0. Performed invocations: IsEnabled".
+**Action:** When mocking `ILogger<T>` where `LoggerMessage` might be used, always setup `IsEnabled(It.IsAny<LogLevel>())` to return `true`.
