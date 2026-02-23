@@ -1,7 +1,7 @@
-using System.Globalization;
 using Rvnx.CRM.Core.Enumerations;
 using Rvnx.CRM.Core.Models.Contact;
 using Rvnx.CRM.Core.Models.Dates;
+using System.Globalization;
 
 namespace Rvnx.CRM.Core.Services
 {

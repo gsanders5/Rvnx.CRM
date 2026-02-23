@@ -14,7 +14,7 @@ namespace Rvnx.CRM.Core.Services
 
         public bool IsAllowedFileSize(long length)
         {
-            return length > 0 && length <= MaxFileSize;
+            return length is > 0 and <= MaxFileSize;
         }
 
         public bool IsImageExtension(string? extension)

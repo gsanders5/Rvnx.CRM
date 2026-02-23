@@ -46,7 +46,7 @@ namespace Rvnx.CRM.Tests.Controllers
         public void Dispose()
         {
 
-    GC.SuppressFinalize(this);
+            GC.SuppressFinalize(this);
         }
 
         [Fact]

@@ -47,6 +47,6 @@ public abstract class SqliteIntegrationTestBase : IDisposable
             catch { /* Ignore if file locked, OS will clean up eventually */ }
         }
 
-    GC.SuppressFinalize(this);
+        GC.SuppressFinalize(this);
     }
 }

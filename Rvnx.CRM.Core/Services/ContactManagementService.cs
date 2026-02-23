@@ -74,14 +74,9 @@ public class ContactManagementService(IRepository repository, IFileValidationSer
         }
         catch (DbUpdateConcurrencyException)
         {
-            if (!await _repository.ExistsAsync<Contact>(id))
-            {
-                return ContactOperationResult.NotFound();
-            }
-            else
-            {
-                return ContactOperationResult.Failure("The contact was modified by another user. Please reload and try again.");
-            }
+            return !await _repository.ExistsAsync<Contact>(id)
+                ? ContactOperationResult.NotFound()
+                : ContactOperationResult.Failure("The contact was modified by another user. Please reload and try again.");
         }
     }
 

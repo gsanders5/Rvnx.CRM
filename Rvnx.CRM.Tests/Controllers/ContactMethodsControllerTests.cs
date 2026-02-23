@@ -43,7 +43,7 @@ namespace Rvnx.CRM.Tests.Controllers
             _context.Database.EnsureDeleted();
             _context.Dispose();
 
-    GC.SuppressFinalize(this);
+            GC.SuppressFinalize(this);
         }
 
         [Fact]

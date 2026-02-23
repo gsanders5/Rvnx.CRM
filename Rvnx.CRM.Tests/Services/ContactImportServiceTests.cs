@@ -6,7 +6,6 @@ using Rvnx.CRM.Core.Interfaces;
 using Rvnx.CRM.Core.Models.Contact;
 using Rvnx.CRM.Infrastructure.Services;
 using System.Linq.Expressions;
-using Xunit;
 
 namespace Rvnx.CRM.Tests.Services
 {
@@ -32,7 +31,7 @@ namespace Rvnx.CRM.Tests.Services
         public async Task ImportFromVCardAsyncValidContactsAddsToRepository()
         {
             // Arrange
-            var contacts = new List<Contact>
+            List<Contact> contacts = new()
             {
                 new() { FirstName = "John", LastName = "Doe" },
                 new() { FirstName = "Jane", LastName = "Smith" }
@@ -47,10 +46,10 @@ namespace Rvnx.CRM.Tests.Services
             _repositoryMock.Setup(r => r.CountAsync(It.IsAny<Expression<Func<ContactMethod, bool>>>(), default))
                 .ReturnsAsync(0);
 
-            using var stream = new MemoryStream();
+            using MemoryStream stream = new();
 
             // Act
-            var result = await _service.ImportFromVCardAsync(stream);
+            ContactImportResult result = await _service.ImportFromVCardAsync(stream);
 
             // Assert
             Assert.Equal(2, result.AddedCount);
@@ -65,7 +64,7 @@ namespace Rvnx.CRM.Tests.Services
         public async Task ImportFromVCardAsyncDuplicateNameSkipsImport()
         {
             // Arrange
-            var contacts = new List<Contact>
+            List<Contact> contacts = new()
             {
                 new() { FirstName = "Duplicate", LastName = "User" }
             };
@@ -77,10 +76,10 @@ namespace Rvnx.CRM.Tests.Services
             _repositoryMock.Setup(r => r.CountAsync(It.IsAny<Expression<Func<Contact, bool>>>(), default))
                 .ReturnsAsync(1);
 
-            using var stream = new MemoryStream();
+            using MemoryStream stream = new();
 
             // Act
-            var result = await _service.ImportFromVCardAsync(stream);
+            ContactImportResult result = await _service.ImportFromVCardAsync(stream);
 
             // Assert
             Assert.Equal(0, result.AddedCount);
@@ -94,7 +93,7 @@ namespace Rvnx.CRM.Tests.Services
         public async Task ImportFromVCardAsyncDuplicateContactMethodSkipsImport()
         {
             // Arrange
-            var contact = new Contact
+            Contact contact = new()
             {
                 FirstName = "Unique",
                 LastName = "User",
@@ -103,7 +102,8 @@ namespace Rvnx.CRM.Tests.Services
                     new() { Type = ContactMethodType.Email, Value = "test@example.com" }
                 }
             };
-            var contacts = new List<Contact> { contact };
+            List<Contact> contacts = new()
+            { contact };
 
             _vCardServiceMock.Setup(v => v.ParseVCard(It.IsAny<Stream>()))
                 .Returns(contacts);
@@ -116,10 +116,10 @@ namespace Rvnx.CRM.Tests.Services
             _repositoryMock.Setup(r => r.CountAsync(It.IsAny<Expression<Func<ContactMethod, bool>>>(), default))
                 .ReturnsAsync(1);
 
-            using var stream = new MemoryStream();
+            using MemoryStream stream = new();
 
             // Act
-            var result = await _service.ImportFromVCardAsync(stream);
+            ContactImportResult result = await _service.ImportFromVCardAsync(stream);
 
             // Assert
             Assert.Equal(0, result.AddedCount);
@@ -135,10 +135,10 @@ namespace Rvnx.CRM.Tests.Services
             _vCardServiceMock.Setup(v => v.ParseVCard(It.IsAny<Stream>()))
                 .Throws(new InvalidOperationException("Parse error"));
 
-            using var stream = new MemoryStream();
+            using MemoryStream stream = new();
 
             // Act & Assert
-            var ex = await Assert.ThrowsAsync<InvalidOperationException>(() => _service.ImportFromVCardAsync(stream));
+            InvalidOperationException ex = await Assert.ThrowsAsync<InvalidOperationException>(() => _service.ImportFromVCardAsync(stream));
             Assert.Equal("Parse error", ex.Message);
 
             // Verify logging

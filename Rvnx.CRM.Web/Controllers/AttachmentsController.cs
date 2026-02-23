@@ -1,8 +1,8 @@
-using System.Collections.Frozen;
 using Microsoft.AspNetCore.Mvc;
 using Rvnx.CRM.Core.Interfaces;
 using Rvnx.CRM.Core.Models.Base;
 using Rvnx.CRM.Web.Controllers.Base;
+using System.Collections.Frozen;
 
 namespace Rvnx.CRM.Web.Controllers
 {

@@ -1,10 +1,10 @@
-using System.Globalization;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using Rvnx.CRM.Core.Models.Business;
 using Rvnx.CRM.Core.Models.Contact;
 using Rvnx.CRM.Core.Models.Dates;
 using Rvnx.CRM.Infrastructure.Repositories;
+using System.Globalization;
 
 namespace Rvnx.CRM.Tests.Integration;
 
