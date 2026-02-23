@@ -6,7 +6,9 @@ namespace Rvnx.CRM.Core.DTOs.Contact
     {
         public Guid? Id { get; set; }
         public Guid EntityId { get; set; }
-        public Guid RelatedEntityId { get; set; }
+
+        public Guid? RelatedEntityId { get; set; }
+
         public string EntityType { get; set; } = string.Empty;
 
         [Required]
@@ -20,5 +22,17 @@ namespace Rvnx.CRM.Core.DTOs.Contact
 
         [DataType(DataType.Date)]
         public DateTime? EndDate { get; set; }
+
+        [MaxLength(100)]
+        public string? PartialContactFirstName { get; set; }
+
+        [MaxLength(100)]
+        public string? PartialContactLastName { get; set; }
+
+        [DataType(DataType.Date)]
+        public DateTime? PartialContactDateOfBirth { get; set; }
+
+        public bool IsPartialContact { get; set; }
+        public bool IsTypeReverse { get; set; }
     }
 }

@@ -212,5 +212,98 @@ namespace Rvnx.CRM.Tests.Controllers
             Assert.Equal(EntityTypes.Person, resultViewModel.EntityType);
             Assert.Equal("P1 User", resultViewModel.EntityName);
         }
+
+        [Fact]
+        public async Task CreatePartialPostValidModelRedirectsToContact()
+        {
+            // Arrange
+            Guid p1Id = Guid.NewGuid();
+            _context.Contacts.Add(new Contact { Id = p1Id, FirstName = "P1" });
+            await _context.SaveChangesAsync();
+
+            Guid typeId = Guid.Parse("7c1f8d22-1b6a-4c28-9c1e-3f5a2b8e9d1a"); // Parent
+            string selection = $"{typeId}_Fwd";
+
+            CreatePartialContactRelationshipDto dto = new()
+            {
+                SelectedRelationshipType = selection,
+                PartialContactFirstName = "John",
+                PartialContactLastName = "Doe",
+                Description = "Partial Son"
+            };
+
+            // Act
+            IActionResult result = await _controller.CreatePartial(p1Id, EntityTypes.Person, dto);
+
+            // Assert
+            RedirectToActionResult redirectResult = Assert.IsType<RedirectToActionResult>(result);
+            Assert.Equal(p1Id, redirectResult.RouteValues?["id"]);
+
+            Relationship? created = await _context.Set<Relationship>().FirstOrDefaultAsync();
+            Assert.NotNull(created);
+            Assert.Equal(p1Id, created.EntityId);
+            Assert.Null(created.RelatedEntityId);
+            Assert.True(created.IsPartialContact);
+            Assert.Equal("John", created.PartialContactFirstName);
+        }
+
+        [Fact]
+        public async Task CreatePartialPostInvalidModelReturnsViewWithErrors()
+        {
+            // Arrange
+            Guid p1Id = Guid.NewGuid();
+            _context.Contacts.Add(new Contact { Id = p1Id, FirstName = "P1" });
+            await _context.SaveChangesAsync();
+
+            CreatePartialContactRelationshipDto dto = new()
+            {
+                SelectedRelationshipType = "", // Invalid
+                PartialContactFirstName = "John"
+            };
+            _controller.ModelState.AddModelError("SelectedRelationshipType", "Required");
+
+            // Act
+            IActionResult result = await _controller.CreatePartial(p1Id, EntityTypes.Person, dto);
+
+            // Assert
+            ViewResult viewResult = Assert.IsType<ViewResult>(result);
+            Assert.Equal("Create", viewResult.ViewName);
+            RelationshipFormViewModel viewModel = Assert.IsType<RelationshipFormViewModel>(viewResult.Model);
+            Assert.True(viewModel.IsPartialContact);
+            Assert.Equal("John", viewModel.PartialContactFirstName);
+            Assert.NotNull(viewModel.RelationshipTypeOptions);
+        }
+
+        [Fact]
+        public async Task PromoteValidIdRedirectsToEdit()
+        {
+            // Arrange
+            Guid relId = Guid.NewGuid();
+            Guid p1Id = Guid.NewGuid();
+            _context.Set<Relationship>().Add(new Relationship
+            {
+                Id = relId,
+                EntityId = p1Id,
+                RelatedEntityId = null,
+                PartialContactFirstName = "John",
+                EntityType = EntityTypes.Person,
+                RelationshipTypeId = Guid.Parse("7c1f8d22-1b6a-4c28-9c1e-3f5a2b8e9d1a")
+            });
+            await _context.SaveChangesAsync();
+
+            // Act
+            IActionResult result = await _controller.Promote(relId);
+
+            // Assert
+            RedirectToActionResult redirectResult = Assert.IsType<RedirectToActionResult>(result);
+            Assert.Equal("Edit", redirectResult.ActionName);
+            Assert.Equal("Contacts", redirectResult.ControllerName);
+
+            // Check that contact was created
+            Guid newContactId = (Guid)redirectResult.RouteValues!["id"]!;
+            Contact? newContact = await _context.Contacts.FindAsync(newContactId);
+            Assert.NotNull(newContact);
+            Assert.Equal("John", newContact.FirstName);
+        }
     }
 }

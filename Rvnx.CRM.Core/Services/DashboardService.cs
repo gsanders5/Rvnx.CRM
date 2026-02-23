@@ -57,10 +57,15 @@ public class DashboardService(IRepository repository, ILogger<DashboardService> 
         List<Relationship> relationships = await _repository.ListAsNoTrackingAsync<Relationship>(r => r.EntityType == EntityTypes.Person);
         foreach (Relationship rel in relationships)
         {
+            if (rel.IsPartialContact || rel.RelatedEntityId == null)
+            {
+                continue;
+            }
+
             result.GraphLinks.Add(new GraphLinkDto
             {
                 Source = rel.EntityId.ToString(),
-                Target = rel.RelatedEntityId.ToString(),
+                Target = rel.RelatedEntityId.Value.ToString(),
                 Type = "Relationship"
             });
         }

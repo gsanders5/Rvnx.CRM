@@ -23,12 +23,49 @@
                 <span asp-validation-for="SelectedRelationshipType" class="text-danger"></span>
             </div>
 
-            <div class="form-floating mb-3">
-                <select asp-for="RelatedEntityId" class="form-select" asp-items="@(new SelectList(Model.RelatedEntityOptions, "Value", "Text"))">
-                    <option value="">-- Select Related Entity --</option>
-                </select>
-                <label asp-for="RelatedEntityId">Related Entity</label>
-                <span asp-validation-for="RelatedEntityId" class="text-danger"></span>
+            <div class="mb-3">
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="radio" name="contactType" id="typeExisting" value="existing" @(!Model.IsPartialContact ? "checked" : "")>
+                    <label class="form-check-label" for="typeExisting">Existing Contact</label>
+                </div>
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="radio" name="contactType" id="typePartial" value="partial" @(Model.IsPartialContact ? "checked" : "")>
+                    <label class="form-check-label" for="typePartial">New Partial Contact</label>
+                </div>
+            </div>
+
+            <div id="existing-contact-section" style="@(Model.IsPartialContact ? "display:none;" : "")">
+                <div class="form-floating mb-3">
+                    <select asp-for="RelatedEntityId" class="form-select" asp-items="@(new SelectList(Model.RelatedEntityOptions, "Value", "Text"))">
+                        <option value="">-- Select Related Entity --</option>
+                    </select>
+                    <label asp-for="RelatedEntityId">Related Entity</label>
+                    <span asp-validation-for="RelatedEntityId" class="text-danger"></span>
+                </div>
+            </div>
+
+            <div id="partial-contact-section" style="@(!Model.IsPartialContact ? "display:none;" : "")">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-floating mb-3">
+                            <input asp-for="PartialContactFirstName" class="form-control" placeholder="First Name" />
+                            <label asp-for="PartialContactFirstName">First Name</label>
+                            <span asp-validation-for="PartialContactFirstName" class="text-danger"></span>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-floating mb-3">
+                            <input asp-for="PartialContactLastName" class="form-control" placeholder="Last Name" />
+                            <label asp-for="PartialContactLastName">Last Name</label>
+                            <span asp-validation-for="PartialContactLastName" class="text-danger"></span>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-floating mb-3">
+                    <input asp-for="PartialContactDateOfBirth" class="form-control" type="date" placeholder="Date of Birth" />
+                    <label asp-for="PartialContactDateOfBirth">Date of Birth</label>
+                    <span asp-validation-for="PartialContactDateOfBirth" class="text-danger"></span>
+                </div>
             </div>
 
             <div class="alert alert-info" id="relationshipPreview" style="display: none;">
@@ -72,14 +109,61 @@
     @{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); }
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+            const form = document.querySelector('form');
             const typeSelect = document.getElementById('SelectedRelationshipType');
             const relatedSelect = document.getElementById('RelatedEntityId');
+            const partialFirstName = document.getElementById('PartialContactFirstName');
+            const partialLastName = document.getElementById('PartialContactLastName');
             const preview = document.getElementById('relationshipPreview');
+
+            const radioExisting = document.getElementById('typeExisting');
+            const radioPartial = document.getElementById('typePartial');
+            const sectionExisting = document.getElementById('existing-contact-section');
+            const sectionPartial = document.getElementById('partial-contact-section');
+
             // Safely serialize entityName to JS string
             const entityName = @Html.Raw(Json.Serialize(Model.EntityName));
 
+            function toggleSections() {
+                if (radioPartial.checked) {
+                    sectionExisting.style.display = 'none';
+                    sectionPartial.style.display = 'block';
+                    form.action = '@Url.Action("CreatePartial", "Relationships")';
+                } else {
+                    sectionExisting.style.display = 'block';
+                    sectionPartial.style.display = 'none';
+                    form.action = '@Url.Action("Create", "Relationships")';
+                }
+                updatePreview();
+            }
+
+            radioExisting.addEventListener('change', toggleSections);
+            radioPartial.addEventListener('change', toggleSections);
+
+            // Initialize form action correctly based on initial state
+            toggleSections();
+
             function updatePreview() {
-                if (!typeSelect.value || !relatedSelect.value) {
+                let relatedText = '';
+
+                if (radioExisting.checked) {
+                    if (!relatedSelect.value) {
+                        preview.style.display = 'none';
+                        return;
+                    }
+                    relatedText = relatedSelect.options[relatedSelect.selectedIndex].text;
+                } else {
+                    const first = partialFirstName.value.trim();
+                    const last = partialLastName.value.trim();
+                    if (!first) {
+                        preview.style.display = 'none';
+                        return;
+                    }
+                    relatedText = last ? `${first} ${last}` : first;
+                    relatedText += ' (Partial)';
+                }
+
+                if (!typeSelect.value) {
                      preview.style.display = 'none';
                      return;
                 }
@@ -87,8 +171,6 @@
                 // Get selected text but remove any text in parentheses at the end, e.g. " (Sister)"
                 let typeText = typeSelect.options[typeSelect.selectedIndex].text;
                 typeText = typeText.replace(/\s*\(.*\)$/, '');
-
-                const relatedText = relatedSelect.options[relatedSelect.selectedIndex].text;
 
                 preview.style.display = 'block';
                 preview.textContent = ''; // Clear previous content
@@ -108,6 +190,8 @@
 
             typeSelect.addEventListener('change', updatePreview);
             relatedSelect.addEventListener('change', updatePreview);
+            partialFirstName.addEventListener('input', updatePreview);
+            partialLastName.addEventListener('input', updatePreview);
 
             // Initial call
             updatePreview();

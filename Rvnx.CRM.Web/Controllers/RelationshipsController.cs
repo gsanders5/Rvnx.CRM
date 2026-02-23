@@ -68,6 +68,73 @@ namespace Rvnx.CRM.Web.Controllers
             return View(viewModel);
         }
 
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> CreatePartial(Guid entityId, string entityType, CreatePartialContactRelationshipDto dto)
+        {
+            if (entityId == Guid.Empty || string.IsNullOrEmpty(entityType))
+            {
+                return NotFound();
+            }
+
+            if (ModelState.IsValid)
+            {
+                Relationship relationship = new()
+                {
+                    Id = Guid.NewGuid(),
+                    EntityId = entityId,
+                    EntityType = entityType,
+                    RelatedEntityId = null,
+                    PartialContactFirstName = dto.PartialContactFirstName,
+                    PartialContactLastName = dto.PartialContactLastName,
+                    PartialContactDateOfBirth = dto.PartialContactDateOfBirth,
+                    Description = dto.Description
+                };
+
+                RelationshipOperationResult result =
+                    await _relationshipService.CreateRelationshipAsync(relationship, dto.SelectedRelationshipType);
+
+                if (result.Success)
+                {
+                    return RedirectToEntity(result.RedirectId, result.EntityType ?? string.Empty);
+                }
+                else
+                {
+                    ModelState.AddModelError("SelectedRelationshipType", result.ErrorMessage ?? "Invalid Relationship Type.");
+                }
+            }
+
+            RelationshipFormViewModel viewModel = new()
+            {
+                EntityId = entityId,
+                EntityType = entityType,
+                EntityName = await GetEntityName(entityId, entityType),
+                RelatedEntityOptions = await _relationshipService.GetRelatedEntityOptionsAsync(entityId, entityType),
+                RelationshipTypeOptions = _relationshipService.GetRelationshipTypeOptions(entityType),
+                SelectedRelationshipType = dto.SelectedRelationshipType,
+                PartialContactFirstName = dto.PartialContactFirstName,
+                PartialContactLastName = dto.PartialContactLastName,
+                PartialContactDateOfBirth = dto.PartialContactDateOfBirth,
+                IsPartialContact = true,
+                Description = dto.Description
+            };
+
+            return View("Create", viewModel);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Promote(Guid id)
+        {
+            RelationshipOperationResult result = await _relationshipService.PromotePartialContactAsync(id);
+            if (result.Success)
+            {
+                return RedirectToAction("Edit", "Contacts", new { id = result.RedirectId });
+            }
+
+            return BadRequest(result.ErrorMessage);
+        }
+
         public async Task<IActionResult> Edit(Guid? id)
         {
             if (id == null)
@@ -161,7 +228,10 @@ namespace Rvnx.CRM.Web.Controllers
 
             // Populate Person/RelatedPerson so names show up
             relationship.Person = await Repository.GetByIdAsync<Contact>(relationship.EntityId);
-            relationship.RelatedPerson = await Repository.GetByIdAsync<Contact>(relationship.RelatedEntityId);
+            if (relationship.RelatedEntityId != null)
+            {
+                relationship.RelatedPerson = await Repository.GetByIdAsync<Contact>(relationship.RelatedEntityId.Value);
+            }
 
             RelationshipDto viewModel = relationship.ToDto();
             RelationshipDeleteViewModel deleteViewModel = new()

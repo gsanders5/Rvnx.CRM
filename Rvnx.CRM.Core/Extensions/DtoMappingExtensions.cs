@@ -84,7 +84,12 @@ namespace Rvnx.CRM.Core.Extensions
                 EntityName = entity.Person?.FullName ?? "Unknown",
                 Description = entity.Description,
                 StartDate = entity.StartDate,
-                EndDate = entity.EndDate
+                EndDate = entity.EndDate,
+                PartialContactFirstName = entity.PartialContactFirstName,
+                PartialContactLastName = entity.PartialContactLastName,
+                PartialContactDateOfBirth = entity.PartialContactDateOfBirth,
+                IsPartialContact = entity.IsPartialContact,
+                IsTypeReverse = entity.IsTypeReverse
             };
         }
 
@@ -306,7 +311,11 @@ namespace Rvnx.CRM.Core.Extensions
                 RelationshipTypeId = dto.RelationshipTypeId,
                 Description = dto.Description,
                 StartDate = dto.StartDate,
-                EndDate = dto.EndDate
+                EndDate = dto.EndDate,
+                PartialContactFirstName = dto.PartialContactFirstName,
+                PartialContactLastName = dto.PartialContactLastName,
+                PartialContactDateOfBirth = dto.PartialContactDateOfBirth,
+                IsTypeReverse = dto.IsTypeReverse
             };
         }
 
@@ -318,6 +327,12 @@ namespace Rvnx.CRM.Core.Extensions
             entity.Description = dto.Description;
             entity.StartDate = dto.StartDate;
             entity.EndDate = dto.EndDate;
+            entity.PartialContactFirstName = dto.PartialContactFirstName;
+            entity.PartialContactLastName = dto.PartialContactLastName;
+            entity.PartialContactDateOfBirth = dto.PartialContactDateOfBirth;
+            // IsTypeReverse is typically managed by service logic during creation/update swaps,
+            // but we map it here for completeness if passed.
+            entity.IsTypeReverse = dto.IsTypeReverse;
         }
     }
 }

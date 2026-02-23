@@ -4,6 +4,7 @@ using Rvnx.CRM.Core.DTOs.Contact;
 using Rvnx.CRM.Core.Interfaces;
 using Rvnx.CRM.Core.Models.Business;
 using Rvnx.CRM.Core.Models.Contact;
+using Rvnx.CRM.Core.Models.Dates;
 
 namespace Rvnx.CRM.Core.Services
 {
@@ -18,6 +19,32 @@ namespace Rvnx.CRM.Core.Services
                 return RelationshipOperationResult.Failure(error);
             }
 
+            // Validation for Partial Contact vs Full Contact
+            if (relationship.IsPartialContact)
+            {
+                if (string.IsNullOrWhiteSpace(relationship.PartialContactFirstName))
+                {
+                    return RelationshipOperationResult.Failure("First Name is required for partial contacts.");
+                }
+
+                // Ensure mutual exclusion (though IsPartialContact is based on RelatedEntityId being null, so this is implicit)
+                // But we should ensure we don't have Partial data if RelatedEntityId is SET.
+            }
+            else
+            {
+                // Full contact
+                if (!string.IsNullOrWhiteSpace(relationship.PartialContactFirstName) ||
+                    !string.IsNullOrWhiteSpace(relationship.PartialContactLastName) ||
+                    relationship.PartialContactDateOfBirth.HasValue)
+                {
+                     // Strict mutual exclusion: if linking to a full contact, partial fields should be empty.
+                     // We can either return error or clear them. Clearing them is safer/friendlier.
+                     relationship.PartialContactFirstName = null;
+                     relationship.PartialContactLastName = null;
+                     relationship.PartialContactDateOfBirth = null;
+                }
+            }
+
             relationship.RelationshipTypeId = typeId;
 
             if (isReverse)
@@ -28,7 +55,18 @@ namespace Rvnx.CRM.Core.Services
             await repository.AddAsync(relationship);
             await repository.SaveChangesAsync();
 
-            Guid redirectId = isReverse ? relationship.RelatedEntityId : relationship.EntityId;
+            Guid redirectId;
+            if (isReverse)
+            {
+                // If partial contact, we didn't swap, so we stay on EntityId.
+                // If full contact, we swapped, so the original EntityId is now in RelatedEntityId.
+                redirectId = relationship.IsPartialContact ? relationship.EntityId : relationship.RelatedEntityId!.Value;
+            }
+            else
+            {
+                redirectId = relationship.EntityId;
+            }
+
             return RelationshipOperationResult.Ok(redirectId, relationship.EntityType);
         }
 
@@ -56,6 +94,12 @@ namespace Rvnx.CRM.Core.Services
             existingRelationship.EndDate = updatedRelationship.EndDate;
             existingRelationship.RelationshipTypeId = typeId;
 
+            existingRelationship.PartialContactFirstName = updatedRelationship.PartialContactFirstName;
+            existingRelationship.PartialContactLastName = updatedRelationship.PartialContactLastName;
+            existingRelationship.PartialContactDateOfBirth = updatedRelationship.PartialContactDateOfBirth;
+            // IsTypeReverse is handled by SwapRelationshipEntities logic below or reset
+            existingRelationship.IsTypeReverse = false;
+
             if (isReverse)
             {
                 SwapRelationshipEntities(existingRelationship);
@@ -64,7 +108,16 @@ namespace Rvnx.CRM.Core.Services
             await repository.UpdateAsync(existingRelationship);
             await repository.SaveChangesAsync();
 
-            Guid redirectId = isReverse ? existingRelationship.RelatedEntityId : existingRelationship.EntityId;
+            Guid redirectId;
+            if (isReverse)
+            {
+                 redirectId = existingRelationship.IsPartialContact ? existingRelationship.EntityId : existingRelationship.RelatedEntityId!.Value;
+            }
+            else
+            {
+                redirectId = existingRelationship.EntityId;
+            }
+
             return RelationshipOperationResult.Ok(redirectId, existingRelationship.EntityType);
         }
 
@@ -86,8 +139,17 @@ namespace Rvnx.CRM.Core.Services
 
         private static void SwapRelationshipEntities(Relationship relationship)
         {
-            (relationship.EntityId, relationship.RelatedEntityId) =
-                (relationship.RelatedEntityId, relationship.EntityId);
+            if (relationship.RelatedEntityId.HasValue)
+            {
+                (relationship.EntityId, relationship.RelatedEntityId) =
+                    (relationship.RelatedEntityId.Value, relationship.EntityId);
+            }
+            else
+            {
+                // Partial contact: cannot swap entities.
+                // Mark as type reverse so we know the relationship direction is inverted.
+                relationship.IsTypeReverse = true;
+            }
         }
 
         public async Task<List<SelectOptionDto>> GetRelatedEntityOptionsAsync(Guid entityId, string entityType,
@@ -164,6 +226,68 @@ namespace Rvnx.CRM.Core.Services
             }
 
             return options;
+        }
+
+        public async Task<RelationshipOperationResult> PromotePartialContactAsync(Guid relationshipId)
+        {
+            Relationship? relationship = await repository.GetByIdAsync<Relationship>(relationshipId);
+            if (relationship == null)
+            {
+                return RelationshipOperationResult.Failure("Relationship not found.");
+            }
+
+            if (!relationship.IsPartialContact)
+            {
+                return RelationshipOperationResult.Failure("Relationship is not a partial contact.");
+            }
+
+            if (string.IsNullOrWhiteSpace(relationship.PartialContactFirstName))
+            {
+                return RelationshipOperationResult.Failure("Partial contact data is incomplete.");
+            }
+
+            // Create new contact
+            Contact newContact = new()
+            {
+                Id = Guid.NewGuid(),
+                FirstName = relationship.PartialContactFirstName,
+                LastName = relationship.PartialContactLastName
+            };
+
+            await repository.AddAsync(newContact);
+
+            // Add Birthday if present
+            if (relationship.PartialContactDateOfBirth.HasValue)
+            {
+                SignificantDate birthday = new()
+                {
+                    Id = Guid.NewGuid(),
+                    ContactId = newContact.Id,
+                    Title = SignificantDateTitles.Birthday,
+                    Date = relationship.PartialContactDateOfBirth.Value,
+                    EventFrequency = TimeSpan.FromDays(365) // Yearly frequency
+                };
+                await repository.AddAsync(birthday);
+            }
+
+            // Update relationship
+            relationship.RelatedEntityId = newContact.Id;
+            relationship.PartialContactFirstName = null;
+            relationship.PartialContactLastName = null;
+            relationship.PartialContactDateOfBirth = null;
+
+            // If the relationship was marked as "Reverse" because we couldn't swap entities (due to Partial Contact),
+            // we should now normalize it by swapping the entities (as both are now Full Contacts) and clearing the flag.
+            if (relationship.IsTypeReverse)
+            {
+                relationship.IsTypeReverse = false;
+                SwapRelationshipEntities(relationship);
+            }
+
+            await repository.UpdateAsync(relationship);
+            await repository.SaveChangesAsync();
+
+            return RelationshipOperationResult.Ok(newContact.Id, EntityTypes.Person);
         }
     }
 }

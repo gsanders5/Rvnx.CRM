@@ -78,7 +78,9 @@ public class ContactReadService(IRepository repository) : IContactReadService
         List<Relationship> relatedTo = allRelationships.Where(r => r.RelatedEntityId == id).ToList();
 
         // Fetch all related contacts in one go
-        List<Guid> relatedIds = relationships.Select(r => r.RelatedEntityId)
+        List<Guid> relatedIds = relationships
+            .Where(r => r.RelatedEntityId.HasValue)
+            .Select(r => r.RelatedEntityId!.Value)
             .Concat(relatedTo.Select(r => r.EntityId))
             .Distinct()
             .ToList();
