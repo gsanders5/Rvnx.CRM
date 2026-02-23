@@ -200,7 +200,9 @@ namespace Rvnx.CRM.Web.Controllers
                 Gender = dto.Gender,
                 Religion = dto.Religion,
                 PronounOptions = PersonalAttributeOptions.Pronouns,
-                GenderOptions = PersonalAttributeOptions.Gender
+                GenderOptions = PersonalAttributeOptions.Gender,
+                AllLabels = dto.AllLabels,
+                AssignedLabelIds = dto.AssignedLabelIds
             };
 
             return View(viewModel);
@@ -253,6 +255,13 @@ namespace Rvnx.CRM.Web.Controllers
                 }
             }
 
+            var formConfig = await _contactReadService.GetContactFormAsync(id);
+            if (formConfig != null)
+            {
+                contactDto.AllLabels = formConfig.AllLabels;
+                contactDto.AssignedLabelIds = formConfig.AssignedLabelIds;
+            }
+
             ContactEditViewModel viewModel = new()
             {
                 Id = contactDto.Id,
@@ -269,7 +278,9 @@ namespace Rvnx.CRM.Web.Controllers
                 Gender = contactDto.Gender,
                 Religion = contactDto.Religion,
                 PronounOptions = PersonalAttributeOptions.Pronouns,
-                GenderOptions = PersonalAttributeOptions.Gender
+                GenderOptions = PersonalAttributeOptions.Gender,
+                AllLabels = contactDto.AllLabels,
+                AssignedLabelIds = contactDto.AssignedLabelIds
             };
 
             return View(viewModel);
