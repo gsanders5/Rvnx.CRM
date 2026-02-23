@@ -143,7 +143,10 @@ public class ContactReadService(IRepository repository) : IContactReadService
             Nickname = contact.Nickname,
             JobTitle = contact.JobTitle,
             Company = contact.Company,
-            IsHidden = contact.IsHidden
+            IsHidden = contact.IsHidden,
+            Pronouns = contact.Pronouns,
+            Gender = contact.Gender,
+            Religion = contact.Religion
         };
 
         ContactMethod? email = contact.ContactMethods

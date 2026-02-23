@@ -8,6 +8,15 @@ namespace Rvnx.CRM.Core.Models.Contact
     [Table("Contact")]
     public class Contact : Person
     {
+        [MaxLength(100)]
+        public string? Pronouns { get; set; }
+
+        [MaxLength(100)]
+        public string? Gender { get; set; }
+
+        [MaxLength(100)]
+        public string? Religion { get; set; }
+
         public virtual ICollection<Pet> Pets { get; set; } = [];
 
         [Display(Name = "Employers")]

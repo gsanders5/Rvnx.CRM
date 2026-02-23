@@ -34,5 +34,14 @@ namespace Rvnx.CRM.Core.DTOs.Contact
         [DataType(DataType.Date)]
         public DateTime? Birthday { get; set; }
         public bool IsHidden { get; set; }
+
+        [MaxLength(100)]
+        public string? Pronouns { get; set; }
+
+        [MaxLength(100)]
+        public string? Gender { get; set; }
+
+        [MaxLength(100)]
+        public string? Religion { get; set; }
     }
 }

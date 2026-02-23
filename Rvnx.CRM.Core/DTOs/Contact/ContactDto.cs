@@ -11,5 +11,9 @@ namespace Rvnx.CRM.Core.DTOs.Contact
         public string? JobTitle { get; set; }
         public bool IsHidden { get; set; }
         public Guid? ProfileImageId { get; set; }
+
+        public string? Pronouns { get; set; }
+        public string? Gender { get; set; }
+        public string? Religion { get; set; }
     }
 }

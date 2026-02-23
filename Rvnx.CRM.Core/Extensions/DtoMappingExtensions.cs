@@ -154,7 +154,10 @@ namespace Rvnx.CRM.Core.Extensions
                 Company = entity.Company,
                 JobTitle = entity.JobTitle,
                 CreatedDate = entity.CreatedDate,
-                ProfileImageId = entity.ProfileImageId
+                ProfileImageId = entity.ProfileImageId,
+                Pronouns = entity.Pronouns,
+                Gender = entity.Gender,
+                Religion = entity.Religion
             };
         }
 
@@ -170,6 +173,9 @@ namespace Rvnx.CRM.Core.Extensions
                 JobTitle = entity.JobTitle,
                 Nickname = entity.Nickname,
                 ProfileImageId = entity.ProfileImageId,
+                Pronouns = entity.Pronouns,
+                Gender = entity.Gender,
+                Religion = entity.Religion,
 
                 // Lists will be populated separately or via mapping if loaded
                 Notes = entity.Notes?.Select(n => n.ToDto()) ?? [],
@@ -194,7 +200,10 @@ namespace Rvnx.CRM.Core.Extensions
                 Nickname = dto.Nickname,
                 JobTitle = dto.JobTitle,
                 Company = dto.Company,
-                IsHidden = dto.IsHidden
+                IsHidden = dto.IsHidden,
+                Pronouns = dto.Pronouns,
+                Gender = dto.Gender,
+                Religion = dto.Religion
             };
         }
 
@@ -206,6 +215,9 @@ namespace Rvnx.CRM.Core.Extensions
             entity.JobTitle = dto.JobTitle;
             entity.Company = dto.Company;
             entity.IsHidden = dto.IsHidden;
+            entity.Pronouns = dto.Pronouns;
+            entity.Gender = dto.Gender;
+            entity.Religion = dto.Religion;
         }
 
         public static Pet ToEntity(this PetFormDto dto)

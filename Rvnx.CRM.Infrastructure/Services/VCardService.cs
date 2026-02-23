@@ -1,5 +1,6 @@
 using FolkerKinzel.VCards;
 using FolkerKinzel.VCards.Models;
+using FolkerKinzel.VCards.Models.Enums;
 using FolkerKinzel.VCards.Models.PropertyParts;
 using Rvnx.CRM.Core.Constants;
 using Rvnx.CRM.Core.Enumerations;
@@ -190,6 +191,20 @@ public class VCardService : IVCardService
                 }
             }
 
+            // Gender
+            GenderProperty? genderProp = vc.GenderViews?.FirstOrDefault();
+            if (genderProp?.Value != null)
+            {
+                // Note: The property on GenderInfo is named 'Gender' and is of type Gender? (enum)
+                contact.Gender = genderProp.Value.Gender switch
+                {
+                    Gender.Male => "Male",
+                    Gender.Female => "Female",
+                    Gender.Other => "Other",
+                    _ => null
+                };
+            }
+
             contacts.Add(contact);
         }
 
@@ -267,6 +282,19 @@ public class VCardService : IVCardService
             {
                 vc.BirthDayViews = new[] { DateAndOrTimeProperty.FromDate(DateOnly.FromDateTime(bday.Date)) };
             }
+        }
+
+        // Gender
+        if (!string.IsNullOrEmpty(contact.Gender))
+        {
+            Gender sex = contact.Gender switch
+            {
+                "Male" => Gender.Male,
+                "Female" => Gender.Female,
+                "Non-Binary" => Gender.Other,
+                _ => Gender.Other
+            };
+            vc.GenderViews = new[] { new GenderProperty(sex) };
         }
 
         using MemoryStream ms = new();

@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Rvnx.CRM.Core.Constants;
 using Rvnx.CRM.Core.DTOs.Contact;
 using Rvnx.CRM.Core.Interfaces;
 using Rvnx.CRM.Web.Controllers.Base;
@@ -66,7 +67,12 @@ namespace Rvnx.CRM.Web.Controllers
                 Company = dto.Company,
                 Birthday = dto.Birthday,
                 IsHidden = dto.IsHidden,
-                IsSelfCreate = true
+                Pronouns = dto.Pronouns,
+                Gender = dto.Gender,
+                Religion = dto.Religion,
+                IsSelfCreate = true,
+                PronounOptions = PersonalAttributeOptions.Pronouns,
+                GenderOptions = PersonalAttributeOptions.Gender
             };
 
             return View("Create", viewModel);
@@ -74,12 +80,16 @@ namespace Rvnx.CRM.Web.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> CreateSelf([Bind("FirstName,LastName,Nickname,Email,Phone,JobTitle,Company,Birthday")] ContactCreateViewModel contactDto)
+        public async Task<IActionResult> CreateSelf([Bind("FirstName,LastName,Nickname,Email,Phone,JobTitle,Company,Birthday,Pronouns,Gender,Religion")] ContactCreateViewModel contactDto)
         {
             if (!_currentUserService.IsAuthenticated)
             {
                 return Unauthorized();
             }
+
+            contactDto.Pronouns = contactDto.Pronouns == "Unspecified" ? null : contactDto.Pronouns;
+            contactDto.Gender = contactDto.Gender == "Unspecified" ? null : contactDto.Gender;
+            contactDto.Religion = string.IsNullOrWhiteSpace(contactDto.Religion) ? null : contactDto.Religion;
 
             if (ModelState.IsValid)
             {
@@ -95,6 +105,8 @@ namespace Rvnx.CRM.Web.Controllers
             }
 
             contactDto.IsSelfCreate = true;
+            contactDto.PronounOptions = PersonalAttributeOptions.Pronouns;
+            contactDto.GenderOptions = PersonalAttributeOptions.Gender;
             return View("Create", contactDto);
         }
 
@@ -124,13 +136,22 @@ namespace Rvnx.CRM.Web.Controllers
 
         public IActionResult Create()
         {
-            return View(new ContactCreateViewModel { IsSelfCreate = false });
+            return View(new ContactCreateViewModel
+            {
+                IsSelfCreate = false,
+                PronounOptions = PersonalAttributeOptions.Pronouns,
+                GenderOptions = PersonalAttributeOptions.Gender
+            });
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("FirstName,LastName,Nickname,Email,Phone,JobTitle,Company,Birthday,IsHidden")] ContactCreateViewModel contactDto)
+        public async Task<IActionResult> Create([Bind("FirstName,LastName,Nickname,Email,Phone,JobTitle,Company,Birthday,IsHidden,Pronouns,Gender,Religion")] ContactCreateViewModel contactDto)
         {
+            contactDto.Pronouns = contactDto.Pronouns == "Unspecified" ? null : contactDto.Pronouns;
+            contactDto.Gender = contactDto.Gender == "Unspecified" ? null : contactDto.Gender;
+            contactDto.Religion = string.IsNullOrWhiteSpace(contactDto.Religion) ? null : contactDto.Religion;
+
             if (ModelState.IsValid)
             {
                 ContactOperationResult result = await _contactManagementService.CreateContactAsync(contactDto);
@@ -145,6 +166,8 @@ namespace Rvnx.CRM.Web.Controllers
             }
 
             contactDto.IsSelfCreate = false;
+            contactDto.PronounOptions = PersonalAttributeOptions.Pronouns;
+            contactDto.GenderOptions = PersonalAttributeOptions.Gender;
             return View(contactDto);
         }
 
@@ -156,17 +179,45 @@ namespace Rvnx.CRM.Web.Controllers
             }
 
             ContactFormDto? dto = await _contactReadService.GetContactFormAsync(id.Value);
-            return dto == null ? NotFound() : View(dto);
+            if (dto == null)
+            {
+                return NotFound();
+            }
+
+            ContactEditViewModel viewModel = new()
+            {
+                Id = dto.Id,
+                FirstName = dto.FirstName,
+                LastName = dto.LastName,
+                Nickname = dto.Nickname,
+                Email = dto.Email,
+                Phone = dto.Phone,
+                JobTitle = dto.JobTitle,
+                Company = dto.Company,
+                Birthday = dto.Birthday,
+                IsHidden = dto.IsHidden,
+                Pronouns = dto.Pronouns,
+                Gender = dto.Gender,
+                Religion = dto.Religion,
+                PronounOptions = PersonalAttributeOptions.Pronouns,
+                GenderOptions = PersonalAttributeOptions.Gender
+            };
+
+            return View(viewModel);
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(Guid id, [Bind("Id,FirstName,LastName,Nickname,Email,Phone,JobTitle,Company,Birthday,IsHidden")] ContactFormDto contactDto, IFormFile? profileImage)
+        public async Task<IActionResult> Edit(Guid id, [Bind("Id,FirstName,LastName,Nickname,Email,Phone,JobTitle,Company,Birthday,IsHidden,Pronouns,Gender,Religion")] ContactFormDto contactDto, IFormFile? profileImage)
         {
             if (id != contactDto.Id)
             {
                 return NotFound();
             }
+
+            contactDto.Pronouns = contactDto.Pronouns == "Unspecified" ? null : contactDto.Pronouns;
+            contactDto.Gender = contactDto.Gender == "Unspecified" ? null : contactDto.Gender;
+            contactDto.Religion = string.IsNullOrWhiteSpace(contactDto.Religion) ? null : contactDto.Religion;
 
             if (ModelState.IsValid)
             {
@@ -196,7 +247,27 @@ namespace Rvnx.CRM.Web.Controllers
                     }
                 }
             }
-            return View(contactDto);
+
+            ContactEditViewModel viewModel = new()
+            {
+                Id = contactDto.Id,
+                FirstName = contactDto.FirstName,
+                LastName = contactDto.LastName,
+                Nickname = contactDto.Nickname,
+                Email = contactDto.Email,
+                Phone = contactDto.Phone,
+                JobTitle = contactDto.JobTitle,
+                Company = contactDto.Company,
+                Birthday = contactDto.Birthday,
+                IsHidden = contactDto.IsHidden,
+                Pronouns = contactDto.Pronouns,
+                Gender = contactDto.Gender,
+                Religion = contactDto.Religion,
+                PronounOptions = PersonalAttributeOptions.Pronouns,
+                GenderOptions = PersonalAttributeOptions.Gender
+            };
+
+            return View(viewModel);
         }
 
         public async Task<IActionResult> Delete(Guid? id)
