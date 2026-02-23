@@ -144,7 +144,10 @@ namespace Rvnx.CRM.Core.Services
                 string fwdText = t.IsSymmetric ? $"is {t.Name} of" : $"is {t.Name} of ({t.OppositeName})";
                 options.Add(new SelectOptionDto
                 {
-                    Value = $"{t.Id}_Fwd", Text = fwdText, Group = group, Selected = selectedValue == $"{t.Id}_Fwd"
+                    Value = $"{t.Id}_Fwd",
+                    Text = fwdText,
+                    Group = group,
+                    Selected = selectedValue == $"{t.Id}_Fwd"
                 });
 
                 if (!t.IsSymmetric)
