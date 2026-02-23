@@ -1,3 +1,4 @@
+using Microsoft.EntityFrameworkCore;
 using Rvnx.CRM.Core.Constants;
 using Rvnx.CRM.Core.DTOs.Contact;
 using Rvnx.CRM.Core.Enumerations;
@@ -65,9 +66,23 @@ public class ContactManagementService(IRepository repository, IFileValidationSer
         }
 
         await _repository.UpdateAsync(existingContact);
-        await _repository.SaveChangesAsync();
 
-        return ContactOperationResult.Ok(id);
+        try
+        {
+            await _repository.SaveChangesAsync();
+            return ContactOperationResult.Ok(id);
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            if (!await _repository.ExistsAsync<Contact>(id))
+            {
+                return ContactOperationResult.NotFound();
+            }
+            else
+            {
+                return ContactOperationResult.Failure("The contact was modified by another user. Please reload and try again.");
+            }
+        }
     }
 
     private async Task<ContactOperationResult> HandleProfileImageUpdateAsync(Guid contactId, Stream? imageStream, string? fileName, string? contentType)

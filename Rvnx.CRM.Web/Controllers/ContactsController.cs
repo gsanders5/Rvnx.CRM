@@ -1,5 +1,4 @@
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using Rvnx.CRM.Core.DTOs.Contact;
 using Rvnx.CRM.Core.Interfaces;
 using Rvnx.CRM.Web.Controllers.Base;
@@ -155,33 +154,30 @@ namespace Rvnx.CRM.Web.Controllers
 
             if (ModelState.IsValid)
             {
-                try
+                Stream? stream = null;
+                if (profileImage != null && profileImage.Length > 0)
                 {
-                    Stream? stream = null;
-                    if (profileImage != null && profileImage.Length > 0)
-                    {
-                        stream = profileImage.OpenReadStream();
-                    }
-
-                    using (stream)
-                    {
-                        ContactOperationResult result = await _contactManagementService.UpdateContactAsync(id, contactDto, stream, profileImage?.FileName, profileImage?.ContentType);
-
-                        if (result.Success)
-                        {
-                            return RedirectToAction(nameof(Index));
-                        }
-
-                        foreach (string error in result.Errors)
-                        {
-                            ModelState.AddModelError("", error);
-                        }
-                    }
+                    stream = profileImage.OpenReadStream();
                 }
-                catch (DbUpdateConcurrencyException)
+
+                using (stream)
                 {
-                    if (!await _contactReadService.ContactExistsAsync(id)) return NotFound();
-                    else throw;
+                    ContactOperationResult result = await _contactManagementService.UpdateContactAsync(id, contactDto, stream, profileImage?.FileName, profileImage?.ContentType);
+
+                    if (result.Success)
+                    {
+                        return RedirectToAction(nameof(Index));
+                    }
+
+                    if (result.IsNotFound)
+                    {
+                        return NotFound();
+                    }
+
+                    foreach (string error in result.Errors)
+                    {
+                        ModelState.AddModelError("", error);
+                    }
                 }
             }
             return View(contactDto);
