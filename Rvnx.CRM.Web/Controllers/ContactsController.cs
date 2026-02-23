@@ -294,6 +294,32 @@ namespace Rvnx.CRM.Web.Controllers
             return RedirectToAction(nameof(Index));
         }
 
+        [HttpPost]
+        [Route("Contacts/{contactId}/Labels/{labelId}/Assign")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> AssignLabel(Guid contactId, Guid labelId, [FromServices] ILabelService labelService, string? returnUrl = null)
+        {
+            await labelService.AssignLabelAsync(contactId, labelId);
+            if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
+            {
+                return Redirect(returnUrl);
+            }
+            return RedirectToAction(nameof(Edit), new { id = contactId });
+        }
+
+        [HttpPost]
+        [Route("Contacts/{contactId}/Labels/{labelId}/Remove")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> RemoveLabel(Guid contactId, Guid labelId, [FromServices] ILabelService labelService, string? returnUrl = null)
+        {
+            await labelService.RemoveLabelAsync(contactId, labelId);
+            if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
+            {
+                return Redirect(returnUrl);
+            }
+            return RedirectToAction(nameof(Edit), new { id = contactId });
+        }
+
         public IActionResult Import()
         {
             return View();
