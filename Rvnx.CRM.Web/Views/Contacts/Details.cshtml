@@ -54,6 +54,24 @@
                     <dt class="col-sm-4">Job Title</dt>
                     <dd class="col-sm-8">@Model.JobTitle</dd>
                 }
+
+                @if (!string.IsNullOrEmpty(Model.Pronouns))
+                {
+                    <dt class="col-sm-4">Pronouns</dt>
+                    <dd class="col-sm-8">@Model.Pronouns</dd>
+                }
+
+                @if (!string.IsNullOrEmpty(Model.Gender))
+                {
+                    <dt class="col-sm-4">Gender</dt>
+                    <dd class="col-sm-8">@Model.Gender</dd>
+                }
+
+                @if (!string.IsNullOrEmpty(Model.Religion))
+                {
+                    <dt class="col-sm-4">Religion</dt>
+                    <dd class="col-sm-8">@Model.Religion</dd>
+                }
             </dl>
         </div>
     </div>

@@ -1,4 +1,4 @@
-@model Rvnx.CRM.Core.DTOs.Contact.ContactFormDto
+@model Rvnx.CRM.Core.DTOs.Contact.ContactEditViewModel
 
 @{
     ViewData["Title"] = "Edit Contact";
@@ -61,6 +61,40 @@
             </div>
 
             <div class="mb-3">
+                <label asp-for="Pronouns" class="form-label">Pronouns</label>
+                <select id="pronouns-select" class="form-select">
+                    @foreach (var option in Model.PronounOptions)
+                    {
+                        <option value="@option">@option</option>
+                    }
+                </select>
+                <div id="pronouns-custom" class="mt-2" style="display:none;">
+                    <input asp-for="Pronouns" class="form-control" placeholder="Enter pronouns" />
+                    <span asp-validation-for="Pronouns" class="text-danger"></span>
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="Gender" class="form-label">Gender</label>
+                <select id="gender-select" class="form-select">
+                    @foreach (var option in Model.GenderOptions)
+                    {
+                        <option value="@option">@option</option>
+                    }
+                </select>
+                <div id="gender-custom" class="mt-2" style="display:none;">
+                    <input asp-for="Gender" class="form-control" placeholder="Enter gender" />
+                    <span asp-validation-for="Gender" class="text-danger"></span>
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="Religion" class="form-label">Religion</label>
+                <input asp-for="Religion" class="form-control" placeholder="Optional" />
+                <span asp-validation-for="Religion" class="text-danger"></span>
+            </div>
+
+            <div class="mb-3">
                 <label for="profileImage" class="form-label">Profile Image</label>
                 <input type="file" name="profileImage" class="form-control" accept="image/*"/>
             </div>
@@ -81,4 +115,39 @@
 
 @section Scripts {
     @{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); }
+    <script>
+        (function () {
+            function initReveal(selectId, customId) {
+                const select = document.getElementById(selectId);
+                const custom = document.getElementById(customId);
+                const input = custom.querySelector('input');
+                const knownOptions = Array.from(select.options).map(o => o.value);
+                const currentValue = input.value;
+
+                if (!currentValue || currentValue === 'Unspecified') {
+                    select.value = 'Unspecified';
+                    custom.style.display = 'none';
+                } else if (knownOptions.includes(currentValue)) {
+                    select.value = currentValue;
+                    custom.style.display = 'none';
+                } else {
+                    select.value = 'Other';
+                    custom.style.display = '';
+                }
+
+                select.addEventListener('change', function () {
+                    if (this.value === 'Other') {
+                        custom.style.display = '';
+                        input.focus();
+                    } else {
+                        custom.style.display = 'none';
+                        input.value = this.value === 'Unspecified' ? '' : this.value;
+                    }
+                });
+            }
+
+            initReveal('pronouns-select', 'pronouns-custom');
+            initReveal('gender-select', 'gender-custom');
+        })();
+    </script>
 }
