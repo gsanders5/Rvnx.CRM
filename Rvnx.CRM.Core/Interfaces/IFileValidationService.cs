@@ -7,5 +7,6 @@ namespace Rvnx.CRM.Core.Interfaces
         bool IsValidFileSignature(byte[] fileBytes, string extension);
         bool IsAllowedExtension(string extension);
         bool IsAllowedFileSize(long length);
+        string GetMimeType(string extension);
     }
 }

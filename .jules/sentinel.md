@@ -17,3 +17,8 @@
 **Vulnerability:** `NotesController.Create` accepted an `entityId` to link a note to a contact but failed to verify if the current user had access to that contact. This allowed attackers to attach notes to contacts belonging to other users.
 **Learning:** Even non-generic controllers that manage related entities (like Notes, Reminders) are vulnerable to IDOR if they blindly trust the parent `entityId` during creation. `AddAsync` does not trigger query filters.
 **Prevention:** Explicitly verify existence and access to the parent entity using `_repository.ExistsAsync<ParentT>(entityId)` before creating the child entity.
+
+## 2026-05-15 - Trusted Content-Type Stored XSS
+**Vulnerability:** `AttachmentsController` trusted the user-provided `Content-Type` header during file upload. An attacker could upload a `.txt` file with `Content-Type: text/html`, which would be served back to users as HTML, executing malicious scripts (Stored XSS).
+**Learning:** Never trust client-provided metadata like `Content-Type`. Browsers often respect this header over file extensions, leading to XSS if not validated.
+**Prevention:** Determine the MIME type server-side based on the file content or extension using a strict whitelist. Ignore the client's `Content-Type` header entirely.

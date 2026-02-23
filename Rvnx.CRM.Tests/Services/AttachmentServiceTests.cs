@@ -36,6 +36,7 @@ namespace Rvnx.CRM.Tests.Services
             fileServiceMock.Setup(s => s.IsAllowedFileSize(It.IsAny<long>())).Returns(true);
             fileServiceMock.Setup(s => s.IsAllowedExtension(It.IsAny<string>())).Returns(true);
             fileServiceMock.Setup(s => s.IsValidFileSignature(It.IsAny<byte[]>(), It.IsAny<string>())).Returns(true);
+            fileServiceMock.Setup(s => s.GetMimeType(It.IsAny<string>())).Returns("image/png");
 
             Mock<IEntityService> entityServiceMock = new();
             entityServiceMock.Setup(s => s.ExistsAsync(It.IsAny<string>(), It.IsAny<Guid>())).ReturnsAsync(true);
@@ -49,7 +50,7 @@ namespace Rvnx.CRM.Tests.Services
             byte[] content = [1, 2, 3];
 
             // Act
-            AttachmentOperationResult result = await service.UploadAttachmentAsync(contactId, EntityTypes.Person, content, "test.png", "image/png");
+            AttachmentOperationResult result = await service.UploadAttachmentAsync(contactId, EntityTypes.Person, content, "test.png");
 
             // Assert
             Assert.True(result.Success);
@@ -72,7 +73,7 @@ namespace Rvnx.CRM.Tests.Services
             AttachmentService service = new(repo, fileServiceMock.Object, entityServiceMock.Object);
 
             // Act
-            AttachmentOperationResult result = await service.UploadAttachmentAsync(Guid.NewGuid(), EntityTypes.Person, [1], "test.png", "image/png");
+            AttachmentOperationResult result = await service.UploadAttachmentAsync(Guid.NewGuid(), EntityTypes.Person, [1], "test.png");
 
             // Assert
             Assert.False(result.Success);
@@ -96,7 +97,7 @@ namespace Rvnx.CRM.Tests.Services
             context.SaveChanges();
 
             // Act
-            AttachmentOperationResult result = await service.UploadAttachmentAsync(contactId, EntityTypes.Person, [1], "test.png", "image/png");
+            AttachmentOperationResult result = await service.UploadAttachmentAsync(contactId, EntityTypes.Person, [1], "test.png");
 
             // Assert
             Assert.False(result.Success);
