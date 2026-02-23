@@ -232,5 +232,51 @@ namespace Rvnx.CRM.Tests.Controllers
             // Assert
             Assert.IsType<NotFoundResult>(result);
         }
+
+        [Fact]
+        public async Task AssignLabelRedirectsToEdit()
+        {
+            // Arrange
+            var contactId = Guid.NewGuid();
+            var labelId = Guid.NewGuid();
+            var mockLabelService = new Mock<ILabelService>();
+            mockLabelService.Setup(s => s.AssignLabelAsync(contactId, labelId)).Returns(Task.CompletedTask);
+
+            var mockUrlHelper = new Mock<IUrlHelper>();
+            mockUrlHelper.Setup(u => u.IsLocalUrl(It.IsAny<string>())).Returns(false);
+            _controller.Url = mockUrlHelper.Object;
+
+            // Act
+            var result = await _controller.AssignLabel(contactId, labelId, mockLabelService.Object);
+
+            // Assert
+            var redirectResult = Assert.IsType<RedirectToActionResult>(result);
+            Assert.Equal("Edit", redirectResult.ActionName);
+            Assert.Equal(contactId, redirectResult.RouteValues!["id"]);
+            mockLabelService.Verify(s => s.AssignLabelAsync(contactId, labelId), Times.Once);
+        }
+
+        [Fact]
+        public async Task RemoveLabelRedirectsToEdit()
+        {
+            // Arrange
+            var contactId = Guid.NewGuid();
+            var labelId = Guid.NewGuid();
+            var mockLabelService = new Mock<ILabelService>();
+            mockLabelService.Setup(s => s.RemoveLabelAsync(contactId, labelId)).Returns(Task.CompletedTask);
+
+            var mockUrlHelper = new Mock<IUrlHelper>();
+            mockUrlHelper.Setup(u => u.IsLocalUrl(It.IsAny<string>())).Returns(false);
+            _controller.Url = mockUrlHelper.Object;
+
+            // Act
+            var result = await _controller.RemoveLabel(contactId, labelId, mockLabelService.Object);
+
+            // Assert
+            var redirectResult = Assert.IsType<RedirectToActionResult>(result);
+            Assert.Equal("Edit", redirectResult.ActionName);
+            Assert.Equal(contactId, redirectResult.RouteValues!["id"]);
+            mockLabelService.Verify(s => s.RemoveLabelAsync(contactId, labelId), Times.Once);
+        }
     }
 }

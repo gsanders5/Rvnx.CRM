@@ -11,7 +11,7 @@ public class LabelService(IRepository repository) : ILabelService
 
     public async Task<List<LabelDto>> GetAllAsync()
     {
-        var labels = await _repository.ListAsNoTrackingAsync<Label>(l => true);
+        var labels = await _repository.ListAsNoTrackingAsync<Label>(l => true) ?? [];
         return labels.OrderBy(l => l.Name).Select(l => new LabelDto
         {
             Id = l.Id,
@@ -28,7 +28,7 @@ public class LabelService(IRepository repository) : ILabelService
         }
 
         var testName = name.ToLower();
-        var candidates = await _repository.ListAsNoTrackingAsync<Label>(l => l.Name.ToLower() == testName);
+        var candidates = await _repository.ListAsNoTrackingAsync<Label>(l => l.Name.ToLower() == testName) ?? [];
         if (candidates.Any(e => e.Name.Equals(name, StringComparison.OrdinalIgnoreCase)))
         {
             return LabelOperationResult.Failure($"A label with the name '{name}' already exists.");
@@ -61,7 +61,7 @@ public class LabelService(IRepository repository) : ILabelService
         }
 
         var testName = name.ToLower();
-        var candidates = await _repository.ListAsNoTrackingAsync<Label>(l => l.Id != id && l.Name.ToLower() == testName);
+        var candidates = await _repository.ListAsNoTrackingAsync<Label>(l => l.Id != id && l.Name.ToLower() == testName) ?? [];
         if (candidates.Any(e => e.Name.Equals(name, StringComparison.OrdinalIgnoreCase)))
         {
             return LabelOperationResult.Failure($"A label with the name '{name}' already exists.");
@@ -88,7 +88,7 @@ public class LabelService(IRepository repository) : ILabelService
 
     public async Task AssignLabelAsync(Guid contactId, Guid labelId)
     {
-        var existing = await _repository.ListAsync<ContactLabel>(cl => cl.ContactId == contactId && cl.LabelId == labelId);
+        var existing = await _repository.ListAsync<ContactLabel>(cl => cl.ContactId == contactId && cl.LabelId == labelId) ?? [];
         if (existing.Count == 0)
         {
             var contactLabel = new ContactLabel
@@ -104,7 +104,7 @@ public class LabelService(IRepository repository) : ILabelService
 
     public async Task RemoveLabelAsync(Guid contactId, Guid labelId)
     {
-        var existing = await _repository.ListAsync<ContactLabel>(cl => cl.ContactId == contactId && cl.LabelId == labelId);
+        var existing = await _repository.ListAsync<ContactLabel>(cl => cl.ContactId == contactId && cl.LabelId == labelId) ?? [];
         var toRemove = existing.FirstOrDefault();
         if (toRemove != null)
         {
@@ -115,7 +115,7 @@ public class LabelService(IRepository repository) : ILabelService
 
     public async Task<List<LabelDto>> GetLabelsForContactAsync(Guid contactId)
     {
-        var contactLabels = await _repository.ListAsNoTrackingAsync<ContactLabel>(cl => cl.ContactId == contactId, default, nameof(ContactLabel.Label));
+        var contactLabels = await _repository.ListAsNoTrackingAsync<ContactLabel>(cl => cl.ContactId == contactId, default, nameof(ContactLabel.Label)) ?? [];
         return contactLabels.Select(cl => cl.Label).OrderBy(l => l.Name).Select(l => new LabelDto
         {
             Id = l.Id,
