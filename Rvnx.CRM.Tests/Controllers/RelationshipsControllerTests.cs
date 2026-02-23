@@ -56,7 +56,7 @@ namespace Rvnx.CRM.Tests.Controllers
             Guid typeId = Guid.Parse("7c1f8d22-1b6a-4c28-9c1e-3f5a2b8e9d1a"); // Parent
 
             string selection = $"{typeId}_Fwd";
-            RelationshipCreateViewModel viewModel = new()
+            RelationshipFormViewModel viewModel = new()
             {
                 EntityId = p1Id,
                 RelatedEntityId = p2Id,
@@ -94,7 +94,7 @@ namespace Rvnx.CRM.Tests.Controllers
             Guid typeId = Guid.Parse("7c1f8d22-1b6a-4c28-9c1e-3f5a2b8e9d1a"); // Parent
 
             string selection = $"{typeId}_Rev";
-            RelationshipCreateViewModel viewModel = new()
+            RelationshipFormViewModel viewModel = new()
             {
                 EntityId = p1Id,
                 RelatedEntityId = p2Id,
@@ -155,7 +155,7 @@ namespace Rvnx.CRM.Tests.Controllers
 
             // Assert
             ViewResult viewResult = Assert.IsType<ViewResult>(result);
-            RelationshipCreateViewModel viewModel = Assert.IsType<RelationshipCreateViewModel>(viewResult.Model);
+            RelationshipFormViewModel viewModel = Assert.IsType<RelationshipFormViewModel>(viewResult.Model);
 
             IEnumerable<SelectOptionDto> options = viewModel.RelationshipTypeOptions;
             Assert.NotNull(options);
@@ -163,7 +163,8 @@ namespace Rvnx.CRM.Tests.Controllers
             // Check that options from static service are present
             // Spouse
             Guid spouseId = Guid.Parse("b2e9a5c8-7f4d-4a1b-8c6e-5f9d3a0e2b4c");
-            Assert.Contains(options, o => o.Value == $"{spouseId}_Fwd" && o.Text == "is Spouse of" && o.Group == "Family");
+            Assert.Contains(options,
+                o => o.Value == $"{spouseId}_Fwd" && o.Text == "is Spouse of" && o.Group == "Family");
 
             // Father (Parent/Child is defined as Parent/Child in service, not Father/Child explicitly with that ID, but checking logic)
             // Let's check "Parent"
@@ -182,7 +183,7 @@ namespace Rvnx.CRM.Tests.Controllers
             _context.Contacts.Add(new Contact { Id = Guid.NewGuid(), FirstName = "P2" });
             await _context.SaveChangesAsync();
 
-            RelationshipCreateViewModel viewModel = new()
+            RelationshipFormViewModel viewModel = new()
             {
                 EntityId = p1Id,
                 RelatedEntityId = Guid.NewGuid(),
@@ -195,7 +196,7 @@ namespace Rvnx.CRM.Tests.Controllers
 
             // Assert
             ViewResult viewResult = Assert.IsType<ViewResult>(result);
-            RelationshipCreateViewModel resultViewModel = Assert.IsType<RelationshipCreateViewModel>(viewResult.Model);
+            RelationshipFormViewModel resultViewModel = Assert.IsType<RelationshipFormViewModel>(viewResult.Model);
 
             Assert.False(_controller.ModelState.IsValid);
             Assert.True(_controller.ModelState.ContainsKey("SelectedRelationshipType"));

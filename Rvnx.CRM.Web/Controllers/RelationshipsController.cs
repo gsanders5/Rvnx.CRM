@@ -7,9 +7,11 @@ using Rvnx.CRM.Web.Controllers.Base;
 
 namespace Rvnx.CRM.Web.Controllers
 {
-    public class RelationshipsController(IRepository repository, IRelationshipService relationshipService) : RepositoryController(repository)
+    public class RelationshipsController(IRepository repository, IRelationshipService relationshipService)
+        : RepositoryController(repository)
     {
         private readonly IRelationshipService _relationshipService = relationshipService;
+
         public async Task<IActionResult> Create(Guid entityId, string entityType)
         {
             if (entityId == Guid.Empty || string.IsNullOrEmpty(entityType))
@@ -17,12 +19,13 @@ namespace Rvnx.CRM.Web.Controllers
                 return NotFound();
             }
 
-            RelationshipCreateViewModel viewModel = new()
+            RelationshipFormViewModel viewModel = new()
             {
                 EntityId = entityId,
                 EntityType = entityType,
                 EntityName = await GetEntityName(entityId, entityType),
-                RelatedEntityOptions = await _relationshipService.GetRelatedEntityOptionsAsync(entityId, entityType),
+                RelatedEntityOptions =
+                    await _relationshipService.GetRelatedEntityOptionsAsync(entityId, entityType),
                 RelationshipTypeOptions = _relationshipService.GetRelationshipTypeOptions(entityType)
             };
 
@@ -31,7 +34,7 @@ namespace Rvnx.CRM.Web.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(RelationshipCreateViewModel viewModel)
+        public async Task<IActionResult> Create(RelationshipFormViewModel viewModel)
         {
             if (string.IsNullOrEmpty(viewModel.SelectedRelationshipType))
             {
@@ -41,20 +44,26 @@ namespace Rvnx.CRM.Web.Controllers
             if (ModelState.IsValid)
             {
                 Relationship relationship = viewModel.ToEntity();
-                RelationshipOperationResult result = await _relationshipService.CreateRelationshipAsync(relationship, viewModel.SelectedRelationshipType);
+                RelationshipOperationResult result =
+                    await _relationshipService.CreateRelationshipAsync(relationship,
+                        viewModel.SelectedRelationshipType);
                 if (result.Success)
                 {
                     return RedirectToEntity(result.RedirectId, result.EntityType ?? string.Empty);
                 }
                 else
                 {
-                    ModelState.AddModelError("SelectedRelationshipType", result.ErrorMessage ?? "Invalid Relationship Type.");
+                    ModelState.AddModelError("SelectedRelationshipType",
+                        result.ErrorMessage ?? "Invalid Relationship Type.");
                 }
             }
 
             viewModel.EntityName = await GetEntityName(viewModel.EntityId, viewModel.EntityType);
-            viewModel.RelatedEntityOptions = await _relationshipService.GetRelatedEntityOptionsAsync(viewModel.EntityId, viewModel.EntityType, viewModel.RelatedEntityId);
-            viewModel.RelationshipTypeOptions = _relationshipService.GetRelationshipTypeOptions(viewModel.EntityType, viewModel.SelectedRelationshipType);
+            viewModel.RelatedEntityOptions = await _relationshipService.GetRelatedEntityOptionsAsync(viewModel.EntityId,
+                viewModel.EntityType, viewModel.RelatedEntityId);
+            viewModel.RelationshipTypeOptions =
+                _relationshipService.GetRelationshipTypeOptions(viewModel.EntityType,
+                    viewModel.SelectedRelationshipType);
 
             return View(viewModel);
         }
@@ -74,7 +83,7 @@ namespace Rvnx.CRM.Web.Controllers
 
             string currentSelection = $"{relationship.RelationshipTypeId}_Fwd";
 
-            RelationshipEditViewModel viewModel = new()
+            RelationshipFormViewModel viewModel = new()
             {
                 Id = relationship.Id,
                 EntityId = relationship.EntityId,
@@ -85,8 +94,11 @@ namespace Rvnx.CRM.Web.Controllers
                 StartDate = relationship.StartDate,
                 EndDate = relationship.EndDate,
                 EntityName = await GetEntityName(relationship.EntityId, relationship.EntityType),
-                RelatedEntityOptions = await _relationshipService.GetRelatedEntityOptionsAsync(relationship.EntityId, relationship.EntityType, relationship.RelatedEntityId),
-                RelationshipTypeOptions = _relationshipService.GetRelationshipTypeOptions(relationship.EntityType, currentSelection),
+                RelatedEntityOptions =
+                    await _relationshipService.GetRelatedEntityOptionsAsync(relationship.EntityId,
+                        relationship.EntityType, relationship.RelatedEntityId),
+                RelationshipTypeOptions =
+                    _relationshipService.GetRelationshipTypeOptions(relationship.EntityType, currentSelection),
                 SelectedRelationshipType = currentSelection
             };
 
@@ -95,7 +107,7 @@ namespace Rvnx.CRM.Web.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(Guid id, RelationshipEditViewModel viewModel)
+        public async Task<IActionResult> Edit(Guid id, RelationshipFormViewModel viewModel)
         {
             if (id != viewModel.Id)
             {
@@ -110,20 +122,26 @@ namespace Rvnx.CRM.Web.Controllers
             if (ModelState.IsValid)
             {
                 Relationship relationship = viewModel.ToEntity();
-                RelationshipOperationResult result = await _relationshipService.UpdateRelationshipAsync(id, relationship, viewModel.SelectedRelationshipType);
+                RelationshipOperationResult result =
+                    await _relationshipService.UpdateRelationshipAsync(id, relationship,
+                        viewModel.SelectedRelationshipType);
                 if (result.Success)
                 {
                     return RedirectToEntity(result.RedirectId, result.EntityType ?? string.Empty);
                 }
                 else
                 {
-                    ModelState.AddModelError("SelectedRelationshipType", result.ErrorMessage ?? "Invalid Relationship Type.");
+                    ModelState.AddModelError("SelectedRelationshipType",
+                        result.ErrorMessage ?? "Invalid Relationship Type.");
                 }
             }
 
             viewModel.EntityName = await GetEntityName(viewModel.EntityId, viewModel.EntityType);
-            viewModel.RelatedEntityOptions = await _relationshipService.GetRelatedEntityOptionsAsync(viewModel.EntityId, viewModel.EntityType, viewModel.RelatedEntityId);
-            viewModel.RelationshipTypeOptions = _relationshipService.GetRelationshipTypeOptions(viewModel.EntityType, viewModel.SelectedRelationshipType);
+            viewModel.RelatedEntityOptions = await _relationshipService.GetRelatedEntityOptionsAsync(viewModel.EntityId,
+                viewModel.EntityType, viewModel.RelatedEntityId);
+            viewModel.RelationshipTypeOptions =
+                _relationshipService.GetRelationshipTypeOptions(viewModel.EntityType,
+                    viewModel.SelectedRelationshipType);
 
             return View(viewModel);
         }
@@ -178,9 +196,8 @@ namespace Rvnx.CRM.Web.Controllers
                 await Repository.SaveChangesAsync();
                 return RedirectToEntity(entityId, entityType);
             }
+
             return RedirectToAction("Index", "Home");
         }
-
-
     }
 }

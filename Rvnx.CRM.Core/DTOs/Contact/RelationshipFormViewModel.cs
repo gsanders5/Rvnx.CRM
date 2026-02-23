@@ -2,7 +2,7 @@ using Rvnx.CRM.Core.DTOs.Common;
 
 namespace Rvnx.CRM.Core.DTOs.Contact
 {
-    public class RelationshipCreateViewModel : RelationshipFormDto
+    public class RelationshipFormViewModel : RelationshipFormDto
     {
         public string EntityName { get; set; } = string.Empty;
         public IEnumerable<SelectOptionDto> RelationshipTypeOptions { get; set; } = [];
