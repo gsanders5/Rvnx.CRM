@@ -20,17 +20,21 @@ public class ContactReadService(IRepository repository) : IContactReadService
         List<ContactDto> contactDtos = [.. contacts.Select(c => c.ToDto())];
         List<Guid> contactIds = [.. contacts.Select(c => c.Id)];
 
-        List<Attachment> profileAttachments = contactIds.Count < 2000
-            ? await _repository.ListAsNoTrackingAsync<Attachment>(a => a.ContactId != null
-                && a.AttachmentType == AttachmentTypes.ProfileImage
-                && contactIds.Contains(a.ContactId.Value))
-            : await _repository.ListAsNoTrackingAsync<Attachment>(a => a.ContactId != null
-                && a.AttachmentType == AttachmentTypes.ProfileImage);
+        // Optimization: Fetch attachments in batches to avoid SQL parameter limits and prevent "fetch all" performance issues.
+        List<Attachment> profileAttachments = [];
+        if (contactIds.Count > 0)
+        {
+            foreach (Guid[] batch in contactIds.Chunk(1000))
+            {
+                List<Guid> batchIds = [.. batch];
+                List<Attachment> batchAttachments = await _repository.ListAsNoTrackingAsync<Attachment>(a => a.ContactId != null
+                    && a.AttachmentType == AttachmentTypes.ProfileImage
+                    && batchIds.Contains(a.ContactId.Value));
+                profileAttachments.AddRange(batchAttachments);
+            }
+        }
 
-        // Optimization: If contact list is large, avoid sending large list of IDs to SQL (which can hit parameter limits).
-        // Instead, fetch all profile images for Person entities (scoped by user via global filter) and filter in memory.
-
-        if (profileAttachments != null && profileAttachments.Count > 0)
+        if (profileAttachments.Count > 0)
         {
             Dictionary<Guid, Attachment> attachmentMap = profileAttachments
                 .Where(a => a != null && a.ContactId.HasValue)
@@ -46,9 +50,20 @@ public class ContactReadService(IRepository repository) : IContactReadService
             }
         }
 
-        List<ContactLabel> allContactLabels = contactIds.Count > 0
-            ? await _repository.ListAsNoTrackingAsync<ContactLabel>(cl => contactIds.Contains(cl.ContactId), default, nameof(ContactLabel.Label))
-            : [];
+        // Optimization: Fetch labels in batches to avoid SQL parameter limits.
+        List<ContactLabel> allContactLabels = [];
+        if (contactIds.Count > 0)
+        {
+            foreach (Guid[] batch in contactIds.Chunk(1000))
+            {
+                List<Guid> batchIds = [.. batch];
+                List<ContactLabel> batchLabels = await _repository.ListAsNoTrackingAsync<ContactLabel>(
+                    cl => batchIds.Contains(cl.ContactId),
+                    default,
+                    nameof(ContactLabel.Label));
+                allContactLabels.AddRange(batchLabels);
+            }
+        }
 
         Dictionary<Guid, List<LabelDto>> labelsByContact = allContactLabels
             .GroupBy(cl => cl.ContactId)
