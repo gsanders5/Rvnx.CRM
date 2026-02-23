@@ -1,80 +1,58 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using Moq;
+using Rvnx.CRM.Core.DTOs.Base;
 using Rvnx.CRM.Core.Interfaces;
-using Rvnx.CRM.Core.Models.Contact;
-using Rvnx.CRM.Core.Services;
-using Rvnx.CRM.Infrastructure.Data;
-using Rvnx.CRM.Infrastructure.Repositories;
 using Rvnx.CRM.Web.Controllers;
 
 namespace Rvnx.CRM.Tests.Controllers
 {
     public class AttachmentsControllerSecurityTests
     {
-        private static CRMDbContext GetInMemoryDbContext()
+        private static AttachmentsController GetController(Mock<IAttachmentService> serviceMock)
         {
-            DbContextOptions<CRMDbContext> options = new DbContextOptionsBuilder<CRMDbContext>()
-                .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
-                .Options;
-
-            Mock<ICurrentUserService> mockCurrentUserService = new();
-            mockCurrentUserService.Setup(s => s.UserId).Returns(Guid.Parse("c5b50a20-34b2-44b2-8b9c-aa4135f60938"));
-            mockCurrentUserService.Setup(s => s.UserName).Returns("test-user");
-
-            return new CRMDbContext(options, mockCurrentUserService.Object);
-        }
-
-        [Fact]
-        public async Task UploadShouldRejectWhenExtensionIsImageButContentIsNot()
-        {
-            // Arrange
-            using CRMDbContext context = GetInMemoryDbContext();
-            Repository repo = new(context);
-
-            Mock<IFileValidationService> fileServiceMock = new();
-            // IsValidFileSignature returns false -> Fail
-            fileServiceMock.Setup(s => s.IsValidFileSignature(It.IsAny<byte[]>(), It.IsAny<string>())).Returns(false);
-            fileServiceMock.Setup(s => s.IsAllowedExtension(It.IsAny<string>())).Returns(true);
-            fileServiceMock.Setup(s => s.IsAllowedFileSize(It.IsAny<long>())).Returns(true);
-
-            AttachmentsController controller = new(repo, fileServiceMock.Object, new EntityService(repo))
+            AttachmentsController controller = new(serviceMock.Object)
             {
                 ControllerContext = new ControllerContext
                 {
                     HttpContext = new DefaultHttpContext()
                 }
             };
-            // Mock Referer header
+            // Mock UrlHelper
+            Mock<IUrlHelper> urlHelperMock = new();
+            urlHelperMock.Setup(x => x.IsLocalUrl(It.IsAny<string>())).Returns(false);
+            controller.Url = urlHelperMock.Object;
+            controller.Request.Host = new HostString("localhost");
+            return controller;
+        }
+
+        private static IFormFile CreateMockFile(string filename, string contentType, long length)
+        {
+            Mock<IFormFile> fileMock = new();
+            fileMock.Setup(f => f.OpenReadStream()).Returns(new MemoryStream());
+            fileMock.Setup(f => f.CopyToAsync(It.IsAny<Stream>(), It.IsAny<CancellationToken>()))
+                .Returns(Task.CompletedTask);
+            fileMock.Setup(f => f.FileName).Returns(filename);
+            fileMock.Setup(f => f.Length).Returns(length);
+            fileMock.Setup(f => f.ContentType).Returns(contentType);
+            return fileMock.Object;
+        }
+
+        [Fact]
+        public async Task UploadShouldRejectWhenExtensionIsImageButContentIsNot()
+        {
+            // Arrange
+            Mock<IAttachmentService> serviceMock = new();
+            serviceMock.Setup(s => s.UploadAttachmentAsync(It.IsAny<Guid>(), It.IsAny<string>(), It.IsAny<byte[]>(), It.IsAny<string>(), It.IsAny<string>()))
+                .ReturnsAsync(AttachmentOperationResult.Failure("Invalid file signature."));
+
+            AttachmentsController controller = GetController(serviceMock);
             controller.Request.Headers["Referer"] = "http://localhost/Contacts";
 
-            Mock<IFormFile> fileMock = new();
-            string content = "<html><script>alert(1)</script></html>";
-            MemoryStream ms = new();
-            StreamWriter writer = new(ms);
-            writer.Write(content);
-            writer.Flush();
-            ms.Position = 0;
-
-            fileMock.Setup(f => f.OpenReadStream()).Returns(ms);
-            fileMock.Setup(f => f.CopyToAsync(It.IsAny<Stream>(), It.IsAny<CancellationToken>()))
-                .Callback<Stream, CancellationToken>((stream, token) =>
-                {
-                    ms.Position = 0;
-                    ms.CopyTo(stream);
-                })
-                .Returns(Task.CompletedTask);
-            fileMock.Setup(f => f.FileName).Returns("exploit.png");
-            fileMock.Setup(f => f.Length).Returns(ms.Length);
-            fileMock.Setup(f => f.ContentType).Returns("image/png");
-
-            Contact contact = new() { Id = Guid.NewGuid(), FirstName = "Test", LastName = "User" };
-            context.Contacts.Add(contact);
-            context.SaveChanges();
+            IFormFile file = CreateMockFile("exploit.png", "image/png", 100);
 
             // Act
-            IActionResult result = await controller.Upload(contact.Id, "Person", fileMock.Object);
+            IActionResult result = await controller.Upload(Guid.NewGuid(), "Person", file);
 
             // Assert
             BadRequestObjectResult badRequest = Assert.IsType<BadRequestObjectResult>(result);
@@ -85,108 +63,37 @@ namespace Rvnx.CRM.Tests.Controllers
         public async Task UploadShouldSucceedWhenExtensionIsImageAndContentIsImage()
         {
             // Arrange
-            using CRMDbContext context = GetInMemoryDbContext();
-            Repository repo = new(context);
+            Mock<IAttachmentService> serviceMock = new();
+            serviceMock.Setup(s => s.UploadAttachmentAsync(It.IsAny<Guid>(), It.IsAny<string>(), It.IsAny<byte[]>(), It.IsAny<string>(), It.IsAny<string>()))
+                .ReturnsAsync(AttachmentOperationResult.Ok(Guid.NewGuid()));
 
-            Mock<IFileValidationService> fileServiceMock = new();
-            // IsValidFileSignature returns true -> Success
-            fileServiceMock.Setup(s => s.IsValidFileSignature(It.IsAny<byte[]>(), It.IsAny<string>())).Returns(true);
-            fileServiceMock.Setup(s => s.IsAllowedExtension(It.IsAny<string>())).Returns(true);
-            fileServiceMock.Setup(s => s.IsAllowedFileSize(It.IsAny<long>())).Returns(true);
-
-            AttachmentsController controller = new(repo, fileServiceMock.Object, new EntityService(repo))
-            {
-                ControllerContext = new ControllerContext
-                {
-                    HttpContext = new DefaultHttpContext()
-                }
-            };
+            AttachmentsController controller = GetController(serviceMock);
             controller.Request.Headers["Referer"] = "http://localhost/Contacts";
-            controller.Request.Host = new HostString("localhost");
 
-            Mock<IUrlHelper> urlHelperMock = new();
-            urlHelperMock.Setup(x => x.IsLocalUrl(It.IsAny<string>())).Returns(false);
-            controller.Url = urlHelperMock.Object;
-
-            Mock<IFormFile> fileMock = new();
-            // PNG signature
-            byte[] content = new byte[] { 0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 1, 2, 3 };
-            MemoryStream ms = new(content);
-
-            fileMock.Setup(f => f.OpenReadStream()).Returns(ms);
-            fileMock.Setup(f => f.CopyToAsync(It.IsAny<Stream>(), It.IsAny<CancellationToken>()))
-                .Callback<Stream, CancellationToken>((stream, token) =>
-                {
-                    ms.Position = 0;
-                    ms.CopyTo(stream);
-                })
-                .Returns(Task.CompletedTask);
-            fileMock.Setup(f => f.FileName).Returns("valid.png");
-            fileMock.Setup(f => f.Length).Returns(ms.Length);
-            fileMock.Setup(f => f.ContentType).Returns("image/png");
-
-            Contact contact = new() { Id = Guid.NewGuid(), FirstName = "Test", LastName = "User" };
-            context.Contacts.Add(contact);
-            context.SaveChanges();
+            IFormFile file = CreateMockFile("valid.png", "image/png", 100);
 
             // Act
-            IActionResult result = await controller.Upload(contact.Id, "Person", fileMock.Object);
+            IActionResult result = await controller.Upload(Guid.NewGuid(), "Person", file);
 
             // Assert
             Assert.IsType<RedirectResult>(result);
-
-            // Verify it was added to DB
-            Assert.Single(context.Attachments);
         }
 
         [Fact]
         public async Task UploadShouldRejectWhenExtensionIsPdfButContentIsNot()
         {
             // Arrange
-            using CRMDbContext context = GetInMemoryDbContext();
-            Repository repo = new(context);
+            Mock<IAttachmentService> serviceMock = new();
+            serviceMock.Setup(s => s.UploadAttachmentAsync(It.IsAny<Guid>(), It.IsAny<string>(), It.IsAny<byte[]>(), It.IsAny<string>(), It.IsAny<string>()))
+                .ReturnsAsync(AttachmentOperationResult.Failure("Invalid file signature."));
 
-            Mock<IFileValidationService> fileServiceMock = new();
-            // IsValidFileSignature returns false for bad PDF
-            fileServiceMock.Setup(s => s.IsValidFileSignature(It.IsAny<byte[]>(), ".pdf")).Returns(false);
-            fileServiceMock.Setup(s => s.IsAllowedExtension(It.IsAny<string>())).Returns(true);
-            fileServiceMock.Setup(s => s.IsAllowedFileSize(It.IsAny<long>())).Returns(true);
-
-            AttachmentsController controller = new(repo, fileServiceMock.Object, new EntityService(repo))
-            {
-                ControllerContext = new ControllerContext
-                {
-                    HttpContext = new DefaultHttpContext()
-                }
-            };
+            AttachmentsController controller = GetController(serviceMock);
             controller.Request.Headers["Referer"] = "http://localhost/Contacts";
 
-            Mock<IFormFile> fileMock = new();
-            string content = "Not a PDF";
-            MemoryStream ms = new();
-            StreamWriter writer = new(ms);
-            writer.Write(content);
-            writer.Flush();
-            ms.Position = 0;
-
-            fileMock.Setup(f => f.OpenReadStream()).Returns(ms);
-            fileMock.Setup(f => f.CopyToAsync(It.IsAny<Stream>(), It.IsAny<CancellationToken>()))
-                .Callback<Stream, CancellationToken>((stream, token) =>
-                {
-                    ms.Position = 0;
-                    ms.CopyTo(stream);
-                })
-                .Returns(Task.CompletedTask);
-            fileMock.Setup(f => f.FileName).Returns("fake.pdf");
-            fileMock.Setup(f => f.Length).Returns(ms.Length);
-            fileMock.Setup(f => f.ContentType).Returns("application/pdf");
-
-            Contact contact = new() { Id = Guid.NewGuid(), FirstName = "Test", LastName = "User" };
-            context.Contacts.Add(contact);
-            context.SaveChanges();
+            IFormFile file = CreateMockFile("fake.pdf", "application/pdf", 100);
 
             // Act
-            IActionResult result = await controller.Upload(contact.Id, "Person", fileMock.Object);
+            IActionResult result = await controller.Upload(Guid.NewGuid(), "Person", file);
 
             // Assert
             BadRequestObjectResult badRequest = Assert.IsType<BadRequestObjectResult>(result);
@@ -197,40 +104,18 @@ namespace Rvnx.CRM.Tests.Controllers
         public async Task UploadShouldRejectWhenFileExceedsSizeLimit()
         {
             // Arrange
-            using CRMDbContext context = GetInMemoryDbContext();
-            Repository repo = new(context);
+            Mock<IAttachmentService> serviceMock = new();
+            serviceMock.Setup(s => s.UploadAttachmentAsync(It.IsAny<Guid>(), It.IsAny<string>(), It.IsAny<byte[]>(), It.IsAny<string>(), It.IsAny<string>()))
+                .ReturnsAsync(AttachmentOperationResult.Failure("File is too large."));
 
-            Mock<IFileValidationService> fileServiceMock = new();
-            fileServiceMock.Setup(s => s.IsValidFileSignature(It.IsAny<byte[]>(), It.IsAny<string>())).Returns(true);
-            fileServiceMock.Setup(s => s.IsAllowedFileSize(It.IsAny<long>())).Returns(false);
-
-            AttachmentsController controller = new(repo, fileServiceMock.Object, new EntityService(repo))
-            {
-                ControllerContext = new ControllerContext
-                {
-                    HttpContext = new DefaultHttpContext()
-                }
-            };
+            AttachmentsController controller = GetController(serviceMock);
             controller.Request.Headers["Referer"] = "http://localhost/Contacts";
 
-            Mock<IUrlHelper> urlHelperMock = new();
-            urlHelperMock.Setup(x => x.IsLocalUrl(It.IsAny<string>())).Returns(false);
-            controller.Url = urlHelperMock.Object;
-
-            Mock<IFormFile> fileMock = new();
-            // Mock a large file (e.g., 31MB)
             long fileSize = 31 * 1024 * 1024;
-            fileMock.Setup(f => f.Length).Returns(fileSize);
-            fileMock.Setup(f => f.FileName).Returns("largefile.pdf");
-            fileMock.Setup(f => f.ContentType).Returns("application/pdf");
-            fileMock.Setup(f => f.OpenReadStream()).Returns(new MemoryStream()); // Empty stream, length is what matters for this check
-
-            Contact contact = new() { Id = Guid.NewGuid(), FirstName = "Test", LastName = "User" };
-            context.Contacts.Add(contact);
-            context.SaveChanges();
+            IFormFile file = CreateMockFile("largefile.pdf", "application/pdf", fileSize);
 
             // Act
-            IActionResult result = await controller.Upload(contact.Id, "Person", fileMock.Object);
+            IActionResult result = await controller.Upload(Guid.NewGuid(), "Person", file);
 
             // Assert
             BadRequestObjectResult badRequest = Assert.IsType<BadRequestObjectResult>(result);

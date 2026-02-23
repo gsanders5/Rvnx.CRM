@@ -1,91 +1,55 @@
 using Microsoft.AspNetCore.Mvc;
+using Rvnx.CRM.Core.DTOs.Base;
 using Rvnx.CRM.Core.Interfaces;
-using Rvnx.CRM.Core.Models.Base;
-using Rvnx.CRM.Core.Models.Contact;
 using Rvnx.CRM.Web.Controllers.Base;
 using System.Collections.Frozen;
 
 namespace Rvnx.CRM.Web.Controllers
 {
-    public class AttachmentsController(IRepository repository, IFileValidationService fileValidationService, IEntityService entityService) : AuthorizedController
+    public class AttachmentsController(IAttachmentService attachmentService) : AuthorizedController
     {
-        private readonly IRepository _repository = repository;
-        private readonly IFileValidationService _fileValidationService = fileValidationService;
-        private readonly IEntityService _entityService = entityService;
+        private readonly IAttachmentService _attachmentService = attachmentService;
         private static readonly FrozenSet<string> ImageContentTypes = new[] { "image/jpeg", "image/png", "image/gif" }.ToFrozenSet(StringComparer.OrdinalIgnoreCase);
 
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Upload(Guid entityId, string entityType, IFormFile file, string? returnUrl = null)
         {
-            if (!await _entityService.ExistsAsync(entityType, entityId))
-            {
-                return NotFound();
-            }
-
-            Contact? c = await _repository.GetByIdAsync<Contact>(entityId);
-            if (c?.IsPartial == true)
-            {
-                return NotFound();
-            }
-
             if (file == null || file.Length == 0)
             {
                 return BadRequest("File is empty.");
-            }
-
-            if (!_fileValidationService.IsAllowedFileSize(file.Length))
-            {
-                return BadRequest("File is too large.");
-            }
-
-            string extension = Path.GetExtension(file.FileName);
-            if (!_fileValidationService.IsAllowedExtension(extension))
-            {
-                return BadRequest("File type not allowed.");
             }
 
             using MemoryStream ms = new();
             await file.CopyToAsync(ms);
             byte[] fileBytes = ms.ToArray();
 
-            if (!_fileValidationService.IsValidFileSignature(fileBytes, extension))
+            AttachmentOperationResult result = await _attachmentService.UploadAttachmentAsync(entityId, entityType, fileBytes, file.FileName, file.ContentType);
+
+            if (result.Success)
             {
-                return BadRequest("Invalid file signature.");
+                return SafeRedirect(returnUrl);
             }
 
-            Attachment attachment = new()
+            if (result.IsNotFound)
             {
-                Id = Guid.NewGuid(),
-                ContactId = entityId,
-                AttachmentType = "General",
-                ContentType = file.ContentType,
-                FileName = file.FileName,
-                AttachmentContent = new AttachmentContent
-                {
-                    Content = fileBytes
-                }
-            };
+                return NotFound(string.Join("; ", result.Errors));
+            }
 
-            await _repository.AddAsync(attachment);
-            await _repository.SaveChangesAsync();
-
-            return SafeRedirect(returnUrl);
+            return BadRequest(string.Join("; ", result.Errors));
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Delete(Guid id, string? returnUrl = null)
         {
-            Attachment? attachment = await _repository.GetByIdAsync<Attachment>(id);
-            if (attachment != null)
-            {
-                Contact? c = await _repository.GetByIdAsync<Contact>(attachment.ContactId ?? Guid.Empty);
-                if (c?.IsPartial == true) return NotFound();
+            AttachmentOperationResult result = await _attachmentService.DeleteAttachmentAsync(id);
 
-                await _repository.DeleteAsync<Attachment>(id);
-                await _repository.SaveChangesAsync();
+            if (result.IsNotFound && result.Errors.Any(e => e.Contains("partial contact", StringComparison.OrdinalIgnoreCase)))
+            {
+                return NotFound();
             }
+
             return SafeRedirect(returnUrl);
         }
 
@@ -104,33 +68,22 @@ namespace Rvnx.CRM.Web.Controllers
 
         public async Task<IActionResult> Download(Guid id)
         {
-            Attachment? attachment = await _repository.GetByIdWithIncludesAsync<Attachment>(id, "AttachmentContent");
-            if (attachment?.AttachmentContent == null)
+            AttachmentContentDto? dto = await _attachmentService.GetAttachmentContentAsync(id);
+            if (dto == null)
             {
                 return NotFound();
             }
 
-            Contact? c = await _repository.GetByIdAsync<Contact>(attachment.ContactId ?? Guid.Empty);
-            if (c?.IsPartial == true)
-            {
-                return NotFound();
-            }
-
-            // Force download for everything except specific safe types if needed,
-            // but 'File' result with filename argument usually sets Content-Disposition to attachment.
-            return File(attachment.AttachmentContent.Content, attachment.ContentType, attachment.FileName);
+            return File(dto.Content, dto.ContentType, dto.FileName);
         }
 
         public async Task<IActionResult> View(Guid id)
         {
-            Attachment? attachment = await _repository.GetByIdAsync<Attachment>(id);
-            if (attachment == null)
+            AttachmentContentDto? dto = await _attachmentService.GetAttachmentContentAsync(id);
+            if (dto == null)
             {
                 return NotFound();
             }
-
-            Contact? c = await _repository.GetByIdAsync<Contact>(attachment.ContactId ?? Guid.Empty);
-            if (c?.IsPartial == true) return NotFound();
 
             if (!string.IsNullOrEmpty(Request.Headers.IfModifiedSince))
             {
@@ -140,22 +93,19 @@ namespace Rvnx.CRM.Web.Controllers
                     out DateTime ifModifiedSince))
                 {
                     // Truncate milliseconds as HTTP headers don't support them
-                    if (ifModifiedSince >= attachment.LastChangedDate.AddTicks(-(attachment.LastChangedDate.Ticks % TimeSpan.TicksPerSecond)))
+                    if (ifModifiedSince >= dto.LastChangedDate.AddTicks(-(dto.LastChangedDate.Ticks % TimeSpan.TicksPerSecond)))
                     {
                         return StatusCode(304);
                     }
                 }
             }
 
-            Response.Headers.LastModified = attachment.LastChangedDate.ToString("R");
+            Response.Headers.LastModified = dto.LastChangedDate.ToString("R");
             Response.Headers.CacheControl = "public, max-age=31536000";
 
-            attachment = await _repository.GetByIdWithIncludesAsync<Attachment>(id, "AttachmentContent");
-            return attachment == null || attachment.AttachmentContent == null
-                ? NotFound()
-                : ImageContentTypes.Contains(attachment.ContentType)
-                ? File(attachment.AttachmentContent.Content, attachment.ContentType)
-                : File(attachment.AttachmentContent.Content, attachment.ContentType, attachment.FileName);
+            return ImageContentTypes.Contains(dto.ContentType)
+                ? File(dto.Content, dto.ContentType)
+                : File(dto.Content, dto.ContentType, dto.FileName);
         }
     }
 }
