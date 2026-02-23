@@ -68,6 +68,15 @@
                                 <i class="bi bi-eye-slash"></i>
                             </span>
                         }
+                        @if (item.Labels != null && item.Labels.Any())
+                        {
+                            <div class="mt-1 d-flex gap-1 flex-wrap">
+                                @foreach (var label in item.Labels)
+                                {
+                                    @await Html.PartialAsync("_LabelBadge", label)
+                                }
+                            </div>
+                        }
                     </td>
                     <td>@item.Company</td>
                     <td>@item.JobTitle</td>

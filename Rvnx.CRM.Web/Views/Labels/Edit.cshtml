@@ -1,0 +1,46 @@
+@model Rvnx.CRM.Core.DTOs.Contact.LabelFormDto
+
+@{
+    ViewData["Title"] = "Edit Label";
+}
+
+<div class="row justify-content-center">
+    <div class="col-md-6 col-lg-5">
+        <div class="card shadow-sm">
+            <div class="card-body p-4">
+                <h4 class="card-title mb-4">
+                    <i class="bi bi-tag me-2 text-primary"></i>Edit Label
+                </h4>
+
+                <form asp-action="Edit" method="post">
+                    <input type="hidden" asp-for="Id" />
+                    <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+                    <div class="form-floating mb-3">
+                        <input asp-for="Name" class="form-control" placeholder="Name" required />
+                        <label asp-for="Name">Name <span class="text-danger">*</span></label>
+                        <span asp-validation-for="Name" class="text-danger"></span>
+                    </div>
+
+                    <div class="mb-4">
+                        <label asp-for="Color" class="form-label d-block text-muted small mb-1">Badge Color</label>
+                        <div class="d-flex align-items-center gap-3">
+                            <input asp-for="Color" type="color" class="form-control form-control-color border-0 p-0" style="width: 4rem; height: 3rem; cursor: pointer;" title="Choose badge color" value="@(Model.Color ?? "#6c757d")" />
+                            <small class="text-muted">Select a background color. Text color adjusts automatically.</small>
+                        </div>
+                        <span asp-validation-for="Color" class="text-danger"></span>
+                    </div>
+
+                    <div class="mt-4">
+                        <button type="submit" class="btn btn-primary"><i class="bi bi-save me-1"></i> Save Changes</button>
+                        <a asp-action="Index" class="btn btn-outline-secondary ms-2"><i class="bi bi-x-lg me-1"></i> Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

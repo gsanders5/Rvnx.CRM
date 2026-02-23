@@ -111,6 +111,69 @@
             </div>
         </form>
     </div>
+    <div class="col-md-6">
+        <div class="card shadow-sm mb-4">
+            <div class="card-body">
+                <h5 class="card-title text-primary"><i class="bi bi-tags"></i> Manage Labels</h5>
+                <hr />
+                <h6 class="mb-3">Assigned Labels</h6>
+                @if (Model.AssignedLabelIds != null && Model.AllLabels != null)
+                {
+                    var assignedLabels = Model.AllLabels.Where(l => Model.AssignedLabelIds.Contains(l.Id)).ToList();
+                    var unassignedLabels = Model.AllLabels.Where(l => !Model.AssignedLabelIds.Contains(l.Id)).ToList();
+
+                    if (assignedLabels.Any())
+                    {
+                        <div class="d-flex flex-wrap gap-2 mb-4">
+                            @foreach (var label in assignedLabels)
+                            {
+                                <div class="d-inline-flex align-items-center bg-light border rounded pe-1">
+                                    <div class="ps-1">
+                                        @await Html.PartialAsync("_LabelBadge", label)
+                                    </div>
+                                    <form asp-action="RemoveLabel" asp-route-contactId="@Model.Id" asp-route-labelId="@label.Id" method="post" class="d-inline ms-1">
+                                        <button type="submit" class="btn btn-sm btn-link text-danger p-0" title="Remove label"><i class="bi bi-x-circle-fill"></i></button>
+                                    </form>
+                                </div>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <p class="text-muted small mb-4">No labels assigned.</p>
+                    }
+
+                    <h6 class="mb-3">Add Label</h6>
+                    if (unassignedLabels.Any())
+                    {
+                        <form asp-action="AssignLabel" method="post" class="d-flex gap-2">
+                            <input type="hidden" name="contactId" value="@Model.Id" />
+                            <select name="labelId" class="form-select form-select-sm" style="max-width: 250px;">
+                                <option value="">Select a label...</option>
+                                @foreach (var label in unassignedLabels)
+                                {
+                                    <option value="@label.Id">@label.Name</option>
+                                }
+                            </select>
+                            <button type="submit" class="btn btn-sm btn-outline-primary"><i class="bi bi-plus"></i> Add</button>
+                        </form>
+                    }
+                    else if (!Model.AllLabels.Any())
+                    {
+                        <p class="text-muted small">No labels exist yet. <a asp-controller="Labels" asp-action="Create">Create one first.</a></p>
+                    }
+                    else
+                    {
+                        <p class="text-muted small">All available labels have been assigned.</p>
+                    }
+
+                    <div class="mt-4 pt-3 border-top">
+                        <a asp-controller="Labels" asp-action="Index" class="small text-decoration-none"><i class="bi bi-gear me-1"></i>Manage all labels</a>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
 </div>
 
 @section Scripts {

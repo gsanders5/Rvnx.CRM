@@ -1,0 +1,10 @@
+@using Rvnx.CRM.Core.Extensions
+@model Rvnx.CRM.Core.DTOs.Contact.LabelDto
+
+@{
+    var bgColor = string.IsNullOrWhiteSpace(Model.Color) ? "#e9ecef" : Model.Color;
+    var textColor = ColorContrastHelper.GetContrastTextColor(bgColor);
+}
+<span class="badge" style="background-color: @bgColor; color: @textColor; border: 1px solid rgba(0,0,0,0.15);">
+    <i class="bi bi-tag-fill me-1" style="opacity: 0.7;"></i>@Model.Name
+</span>
