@@ -32,6 +32,9 @@ public static class ServiceCollectionExtensions
         // Add Label Service
         services.AddScoped<ILabelService, LabelService>();
 
+        // Add Attachment Service
+        services.AddScoped<IAttachmentService, AttachmentService>();
+
         return services;
     }
 }
