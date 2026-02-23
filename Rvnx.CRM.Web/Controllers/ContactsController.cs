@@ -215,6 +215,11 @@ namespace Rvnx.CRM.Web.Controllers
                 return NotFound();
             }
 
+            if (!await _contactReadService.ContactExistsAsync(id))
+            {
+                return NotFound();
+            }
+
             contactDto.Pronouns = contactDto.Pronouns == "Unspecified" ? null : contactDto.Pronouns;
             contactDto.Gender = contactDto.Gender == "Unspecified" ? null : contactDto.Gender;
             contactDto.Religion = string.IsNullOrWhiteSpace(contactDto.Religion) ? null : contactDto.Religion;

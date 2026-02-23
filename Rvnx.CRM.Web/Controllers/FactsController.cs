@@ -10,9 +10,9 @@ namespace Rvnx.CRM.Web.Controllers
 {
     public class FactsController(IRepository repository) : RepositoryController(repository)
     {
-        public IActionResult Create(Guid entityId, string entityType)
+        public async Task<IActionResult> Create(Guid entityId, string entityType)
         {
-            return entityId == Guid.Empty
+            return entityId == Guid.Empty || await IsPartialContactAsync(entityId)
                 ? NotFound()
                 : View(new FactFormDto { EntityId = entityId, EntityType = entityType });
         }
@@ -21,6 +21,8 @@ namespace Rvnx.CRM.Web.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(FactFormDto factDto)
         {
+            if (await IsPartialContactAsync(factDto.EntityId)) return NotFound();
+
             if (ModelState.IsValid)
             {
                 Fact fact = factDto.ToEntity();
@@ -40,7 +42,7 @@ namespace Rvnx.CRM.Web.Controllers
 
             Fact? fact = await Repository.GetByIdAsync<Fact>(id.Value);
 
-            if (fact == null)
+            if (fact == null || await IsPartialContactAsync(fact.ContactId ?? Guid.Empty))
             {
                 return NotFound();
             }
@@ -72,7 +74,7 @@ namespace Rvnx.CRM.Web.Controllers
                 {
                     // Fetch existing entity to preserve audit fields and prevent tampering
                     Fact? existingFact = await Repository.GetByIdAsync<Fact>(id);
-                    if (existingFact == null)
+                    if (existingFact == null || await IsPartialContactAsync(existingFact.ContactId ?? Guid.Empty))
                     {
                         return NotFound();
                     }
@@ -108,7 +110,7 @@ namespace Rvnx.CRM.Web.Controllers
             }
 
             Fact? fact = await Repository.GetByIdAsync<Fact>(id.Value);
-            return fact == null ? NotFound() : View(fact);
+            return fact == null || await IsPartialContactAsync(fact.ContactId ?? Guid.Empty) ? NotFound() : View(fact);
         }
 
         [HttpPost, ActionName("Delete")]

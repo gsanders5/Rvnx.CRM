@@ -205,5 +205,32 @@ namespace Rvnx.CRM.Tests.Controllers
             // Assert
             Assert.IsType<NotFoundResult>(result);
         }
+        [Fact]
+        public async Task DetailsWhenServiceReturnsNullReturnsNotFound()
+        {
+            // Arrange
+            Guid contactId = Guid.NewGuid();
+            _contactReadServiceMock.Setup(s => s.GetContactDetailsAsync(contactId)).ReturnsAsync((ContactDetailDto?)null);
+
+            // Act
+            IActionResult result = await _controller.Details(contactId);
+
+            // Assert
+            Assert.IsType<NotFoundResult>(result);
+        }
+
+        [Fact]
+        public async Task EditGetWhenServiceReturnsNullReturnsNotFound()
+        {
+            // Arrange
+            Guid contactId = Guid.NewGuid();
+            _contactReadServiceMock.Setup(s => s.GetContactFormAsync(contactId)).ReturnsAsync((ContactFormDto?)null);
+
+            // Act
+            IActionResult result = await _controller.Edit(contactId);
+
+            // Assert
+            Assert.IsType<NotFoundResult>(result);
+        }
     }
 }

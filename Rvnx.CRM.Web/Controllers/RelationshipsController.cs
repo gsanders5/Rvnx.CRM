@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Rvnx.CRM.Core.Constants;
 using Rvnx.CRM.Core.DTOs.Contact;
 using Rvnx.CRM.Core.Extensions;
 using Rvnx.CRM.Core.Interfaces;
@@ -68,6 +69,53 @@ namespace Rvnx.CRM.Web.Controllers
             return View(viewModel);
         }
 
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> CreatePartial(Guid entityId, string entityType, CreatePartialContactRelationshipDto dto)
+        {
+            if (entityId == Guid.Empty || string.IsNullOrEmpty(entityType) || entityType != EntityTypes.Person)
+            {
+                return NotFound();
+            }
+
+            if (ModelState.IsValid)
+            {
+                RelationshipOperationResult result = await _relationshipService.CreatePartialContactRelationshipAsync(entityId, dto.SelectedRelationshipType, dto);
+                if (result.Success)
+                {
+                    return RedirectToEntity(result.RedirectId, result.EntityType ?? string.Empty);
+                }
+                
+                ModelState.AddModelError(string.Empty, result.ErrorMessage ?? "Failed to create partial contact relationship.");
+            }
+
+            // If we fail, we need to redirect back to the Create view to show errors, 
+            // but since it's a different action we'll pass an error in TempData and redirect.
+            TempData["ErrorMessage"] = string.Join("; ", ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage));
+            return RedirectToAction(nameof(Create), new { entityId, entityType });
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Promote(Guid contactId)
+        {
+            if (contactId == Guid.Empty)
+            {
+                return NotFound();
+            }
+
+            RelationshipOperationResult result = await _relationshipService.PromotePartialContactAsync(contactId);
+            
+            if (result.Success)
+            {
+                // Redirect to the newly promoted contact's edit page
+                return RedirectToAction("Edit", "Contacts", new { id = result.RedirectId });
+            }
+
+            // If promotion fails (e.g. not found, or not partial), redirect safely
+            return RedirectToAction("Index", "Contacts");
+        }
+
         public async Task<IActionResult> Edit(Guid? id)
         {
             if (id == null)
@@ -99,7 +147,9 @@ namespace Rvnx.CRM.Web.Controllers
                         relationship.EntityType, relationship.RelatedEntityId),
                 RelationshipTypeOptions =
                     _relationshipService.GetRelationshipTypeOptions(relationship.EntityType, currentSelection),
-                SelectedRelationshipType = currentSelection
+                SelectedRelationshipType = currentSelection,
+                IsEntityPartial = await IsPartialContactAsync(relationship.EntityId),
+                IsRelatedEntityPartial = await IsPartialContactAsync(relationship.RelatedEntityId)
             };
 
             return View(viewModel);

@@ -15,6 +15,9 @@ namespace Rvnx.CRM.Core.DTOs.Contact
         public string RelationshipTypeOppositeName { get; set; } = string.Empty;
         public string RelationshipTypeCategory { get; set; } = string.Empty;
 
+        public bool IsEntityPartial { get; set; }
+        public bool IsRelatedEntityPartial { get; set; }
+
         public string? Description { get; set; }
         public DateTime? StartDate { get; set; }
         public DateTime? EndDate { get; set; }

@@ -24,9 +24,47 @@ public class ContactManagementService(IRepository repository, IFileValidationSer
             await _repository.UpdateAsync(user);
         }
 
+        // 1. Identify linked contacts before deleting relationships
+        List<Relationship> userRelationships = await _repository.ListAsync<Relationship>(r =>
+            (r.EntityId == contactId || r.RelatedEntityId == contactId) && r.EntityType == EntityTypes.Person);
+
+        List<Guid> linkedContactIds = userRelationships
+            .Select(r => r.EntityId == contactId ? r.RelatedEntityId : r.EntityId)
+            .Distinct()
+            .ToList();
+
         await DeleteContactDependenciesAsync(contactId);
         await _repository.DeleteAsync<Contact>(contactId);
         await _repository.SaveChangesAsync();
+
+        // 2. Perform Orphan Cleanup for Partial Contacts
+        if (linkedContactIds.Count > 0)
+        {
+            List<Contact> linkedPartialContacts = await _repository.ListAsync<Contact>(c => linkedContactIds.Contains(c.Id) && c.IsPartial);
+            foreach (Contact partialContact in linkedPartialContacts)
+            {
+                List<Relationship> partialRels = await _repository.ListAsync<Relationship>(r =>
+                    (r.EntityId == partialContact.Id || r.RelatedEntityId == partialContact.Id) && r.EntityType == EntityTypes.Person);
+
+                List<Guid> siblings = partialRels
+                    .Select(r => r.EntityId == partialContact.Id ? r.RelatedEntityId : r.EntityId)
+                    .Distinct()
+                    .ToList();
+
+                bool hasFullContactRelationship = false;
+                if (siblings.Count > 0)
+                {
+                    hasFullContactRelationship = (await _repository.ListAsync<Contact>(c => siblings.Contains(c.Id) && !c.IsPartial)).Count > 0;
+                }
+
+                if (!hasFullContactRelationship)
+                {
+                    await DeleteContactDependenciesAsync(partialContact.Id);
+                    await _repository.DeleteAsync<Contact>(partialContact.Id);
+                }
+            }
+            await _repository.SaveChangesAsync();
+        }
     }
 
     public async Task<ContactOperationResult> CreateContactAsync(ContactFormDto contactDto)

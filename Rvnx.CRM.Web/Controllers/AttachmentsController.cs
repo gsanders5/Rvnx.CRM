@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Rvnx.CRM.Core.Interfaces;
 using Rvnx.CRM.Core.Models.Base;
+using Rvnx.CRM.Core.Models.Contact;
 using Rvnx.CRM.Web.Controllers.Base;
 using System.Collections.Frozen;
 
@@ -18,6 +19,12 @@ namespace Rvnx.CRM.Web.Controllers
         public async Task<IActionResult> Upload(Guid entityId, string entityType, IFormFile file, string? returnUrl = null)
         {
             if (!await _entityService.ExistsAsync(entityType, entityId))
+            {
+                return NotFound();
+            }
+
+            Contact? c = await _repository.GetByIdAsync<Contact>(entityId);
+            if (c?.IsPartial == true)
             {
                 return NotFound();
             }
@@ -73,6 +80,9 @@ namespace Rvnx.CRM.Web.Controllers
             Attachment? attachment = await _repository.GetByIdAsync<Attachment>(id);
             if (attachment != null)
             {
+                Contact? c = await _repository.GetByIdAsync<Contact>(attachment.ContactId ?? Guid.Empty);
+                if (c?.IsPartial == true) return NotFound();
+
                 await _repository.DeleteAsync<Attachment>(id);
                 await _repository.SaveChangesAsync();
             }
@@ -95,7 +105,13 @@ namespace Rvnx.CRM.Web.Controllers
         public async Task<IActionResult> Download(Guid id)
         {
             Attachment? attachment = await _repository.GetByIdWithIncludesAsync<Attachment>(id, "AttachmentContent");
-            if (attachment == null || attachment.AttachmentContent == null)
+            if (attachment?.AttachmentContent == null)
+            {
+                return NotFound();
+            }
+
+            Contact? c = await _repository.GetByIdAsync<Contact>(attachment.ContactId ?? Guid.Empty);
+            if (c?.IsPartial == true)
             {
                 return NotFound();
             }
@@ -112,6 +128,9 @@ namespace Rvnx.CRM.Web.Controllers
             {
                 return NotFound();
             }
+
+            Contact? c = await _repository.GetByIdAsync<Contact>(attachment.ContactId ?? Guid.Empty);
+            if (c?.IsPartial == true) return NotFound();
 
             if (!string.IsNullOrEmpty(Request.Headers.IfModifiedSince))
             {

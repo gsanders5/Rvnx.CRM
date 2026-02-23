@@ -11,4 +11,7 @@ public interface IRelationshipService
 
     Task<List<SelectOptionDto>> GetRelatedEntityOptionsAsync(Guid entityId, string entityType, Guid? selectedId = null);
     List<SelectOptionDto> GetRelationshipTypeOptions(string entityType, string? selectedValue = null);
+
+    Task<RelationshipOperationResult> CreatePartialContactRelationshipAsync(Guid parentEntityId, string selectedRelationshipType, CreatePartialContactRelationshipDto dto);
+    Task<RelationshipOperationResult> PromotePartialContactAsync(Guid contactId);
 }

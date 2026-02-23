@@ -48,14 +48,14 @@ namespace Rvnx.CRM.Tests.Controllers
         }
 
         [Fact]
-        public void CreateGetReturnsViewWithCorrectModel()
+        public async Task CreateGetReturnsViewWithCorrectModel()
         {
             // Arrange
             Guid entityId = Guid.NewGuid();
             string entityType = EntityTypes.Person;
 
             // Act
-            IActionResult result = _controller.Create(entityId, entityType);
+            IActionResult result = await _controller.Create(entityId, entityType);
 
             // Assert
             ViewResult viewResult = Assert.IsType<ViewResult>(result);

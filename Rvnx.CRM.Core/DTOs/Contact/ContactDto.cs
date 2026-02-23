@@ -15,5 +15,7 @@ namespace Rvnx.CRM.Core.DTOs.Contact
         public string? Pronouns { get; set; }
         public string? Gender { get; set; }
         public string? Religion { get; set; }
+
+        public bool IsPartial { get; set; }
     }
 }

@@ -15,7 +15,7 @@ public class ContactReadService(IRepository repository) : IContactReadService
 
     public async Task<List<ContactDto>> GetIndexDataAsync(bool showHidden)
     {
-        List<Contact> contacts = await _repository.ListAsNoTrackingAsync<Contact>(x => x.IsHidden == showHidden);
+        List<Contact> contacts = await _repository.ListAsNoTrackingAsync<Contact>(x => x.IsHidden == showHidden && !x.IsPartial);
 
         List<ContactDto> contactDtos = [.. contacts.Select(c => c.ToDto())];
         List<Guid> contactIds = [.. contacts.Select(c => c.Id)];
@@ -52,7 +52,7 @@ public class ContactReadService(IRepository repository) : IContactReadService
     public async Task<ContactDetailDto?> GetContactDetailsAsync(Guid id)
     {
         // Optimization: Use ListAsNoTrackingAsync to avoid change tracking overhead for read-only operation
-        List<Contact> contacts = await _repository.ListAsNoTrackingAsync<Contact>(c => c.Id == id, default,
+        List<Contact> contacts = await _repository.ListAsNoTrackingAsync<Contact>(c => c.Id == id && !c.IsPartial, default,
             nameof(Contact.Employers),
             nameof(Contact.Pets),
             nameof(Contact.Notes),
@@ -123,7 +123,7 @@ public class ContactReadService(IRepository repository) : IContactReadService
     public async Task<ContactFormDto?> GetContactFormAsync(Guid id)
     {
         List<Contact> contacts = await _repository.ListAsNoTrackingAsync<Contact>(
-             c => c.Id == id,
+             c => c.Id == id && !c.IsPartial,
              default,
              nameof(Contact.ContactMethods),
              nameof(Contact.SignificantDates));
@@ -170,7 +170,8 @@ public class ContactReadService(IRepository repository) : IContactReadService
 
     public async Task<bool> ContactExistsAsync(Guid id)
     {
-        return await _repository.ExistsAsync<Contact>(id);
+        Contact? c = await _repository.GetByIdAsync<Contact>(id);
+        return c != null && !c.IsPartial;
     }
 
     private async Task<ContactMethod?> GetPrimaryContactMethodAsync(Guid contactId, ContactMethodType type)

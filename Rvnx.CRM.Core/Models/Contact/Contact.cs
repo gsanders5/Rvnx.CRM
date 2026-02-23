@@ -8,6 +8,8 @@ namespace Rvnx.CRM.Core.Models.Contact
     [Table("Contact")]
     public class Contact : Person
     {
+        public bool IsPartial { get; set; }
+
         [MaxLength(100)]
         public string? Pronouns { get; set; }
 

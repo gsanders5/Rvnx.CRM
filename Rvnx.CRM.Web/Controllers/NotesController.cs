@@ -24,7 +24,7 @@ namespace Rvnx.CRM.Web.Controllers
             }
 
             // Sentinel: Verify entity existence and access rights to prevent IDOR
-            if (!await Repository.ExistsAsync<Contact>(entityId))
+            if (!await Repository.ExistsAsync<Contact>(entityId) || await IsPartialContactAsync(entityId))
             {
                 return NotFound();
             }
@@ -49,7 +49,7 @@ namespace Rvnx.CRM.Web.Controllers
             }
 
             // Sentinel: Verify entity existence and access rights to prevent IDOR
-            if (!await Repository.ExistsAsync<Contact>(viewModel.EntityId))
+            if (!await Repository.ExistsAsync<Contact>(viewModel.EntityId) || await IsPartialContactAsync(viewModel.EntityId))
             {
                 return NotFound();
             }
@@ -74,7 +74,7 @@ namespace Rvnx.CRM.Web.Controllers
             }
 
             Note? note = await Repository.GetByIdAsync<Note>(id.Value);
-            if (note == null)
+            if (note == null || await IsPartialContactAsync(note.ContactId ?? Guid.Empty))
             {
                 return NotFound();
             }
@@ -106,7 +106,7 @@ namespace Rvnx.CRM.Web.Controllers
                 try
                 {
                     Note? existingNote = await Repository.GetByIdAsync<Note>(id);
-                    if (existingNote == null)
+                    if (existingNote == null || await IsPartialContactAsync(existingNote.ContactId ?? Guid.Empty))
                     {
                         return NotFound();
                     }
@@ -147,7 +147,7 @@ namespace Rvnx.CRM.Web.Controllers
             }
 
             Note? note = await Repository.GetByIdAsync<Note>(id.Value);
-            if (note == null)
+            if (note == null || await IsPartialContactAsync(note.ContactId ?? Guid.Empty))
             {
                 return NotFound();
             }

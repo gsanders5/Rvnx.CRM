@@ -11,8 +11,10 @@ namespace Rvnx.CRM.Web.Controllers
 {
     public class SignificantDatesController(IRepository repository) : RepositoryController(repository)
     {
-        public IActionResult Create(Guid entityId, string entityType)
+        public async Task<IActionResult> Create(Guid entityId, string entityType)
         {
+            if (await IsPartialContactAsync(entityId)) return NotFound();
+
             return View(new SignificantDateDto
             {
                 EntityId = entityId,
@@ -26,6 +28,8 @@ namespace Rvnx.CRM.Web.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind("Id,Title,Description,Date,EntityId,EntityType,RemindMe,EventFrequency")] SignificantDateDto dto)
         {
+            if (await IsPartialContactAsync(dto.EntityId)) return NotFound();
+
             if (ModelState.IsValid)
             {
                 if (string.Equals(dto.Title, SignificantDateTitles.Birthday, StringComparison.OrdinalIgnoreCase))
@@ -66,7 +70,7 @@ namespace Rvnx.CRM.Web.Controllers
             }
 
             SignificantDate? importantDate = await Repository.GetByIdAsync<SignificantDate>(id.Value);
-            return importantDate == null ? NotFound() : View(importantDate.ToDto());
+            return importantDate == null || await IsPartialContactAsync(importantDate.ContactId ?? Guid.Empty) ? NotFound() : View(importantDate.ToDto());
         }
 
         [HttpPost]
@@ -83,7 +87,7 @@ namespace Rvnx.CRM.Web.Controllers
                 try
                 {
                     SignificantDate? importantDate = await Repository.GetByIdAsync<SignificantDate>(id);
-                    if (importantDate == null)
+                    if (importantDate == null || await IsPartialContactAsync(importantDate.ContactId ?? Guid.Empty))
                     {
                         return NotFound();
                     }
@@ -132,7 +136,7 @@ namespace Rvnx.CRM.Web.Controllers
             }
 
             SignificantDate? importantDate = await Repository.GetByIdAsync<SignificantDate>(id.Value);
-            return importantDate == null ? NotFound() : View(importantDate.ToDto());
+            return importantDate == null || await IsPartialContactAsync(importantDate.ContactId ?? Guid.Empty) ? NotFound() : View(importantDate.ToDto());
         }
 
         [HttpPost, ActionName("Delete")]

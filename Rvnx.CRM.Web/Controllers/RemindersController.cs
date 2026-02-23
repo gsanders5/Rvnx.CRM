@@ -12,7 +12,7 @@ namespace Rvnx.CRM.Web.Controllers
     {
         public async Task<IActionResult> Create(Guid entityId, string entityType)
         {
-            if (entityId == Guid.Empty)
+            if (entityId == Guid.Empty || await IsPartialContactAsync(entityId))
             {
                 return NotFound();
             }
@@ -48,6 +48,8 @@ namespace Rvnx.CRM.Web.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(ReminderFormViewModel viewModel)
         {
+            if (await IsPartialContactAsync(viewModel.EntityId)) return NotFound();
+
             if (ModelState.IsValid)
             {
                 Reminder reminder = new()
@@ -82,7 +84,7 @@ namespace Rvnx.CRM.Web.Controllers
             }
 
             Reminder? reminder = await Repository.GetByIdAsync<Reminder>(id.Value);
-            if (reminder == null)
+            if (reminder == null || await IsPartialContactAsync(reminder.ContactId ?? Guid.Empty))
             {
                 return NotFound();
             }
@@ -120,7 +122,7 @@ namespace Rvnx.CRM.Web.Controllers
                 try
                 {
                     Reminder? reminder = await Repository.GetByIdAsync<Reminder>(id);
-                    if (reminder == null)
+                    if (reminder == null || await IsPartialContactAsync(reminder.ContactId ?? Guid.Empty))
                     {
                         return NotFound();
                     }
@@ -160,7 +162,7 @@ namespace Rvnx.CRM.Web.Controllers
             }
 
             Reminder? reminder = await Repository.GetByIdAsync<Reminder>(id.Value);
-            if (reminder == null)
+            if (reminder == null || await IsPartialContactAsync(reminder.ContactId ?? Guid.Empty))
             {
                 return NotFound();
             }

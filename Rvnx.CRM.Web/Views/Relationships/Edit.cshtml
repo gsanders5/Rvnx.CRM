@@ -56,8 +56,14 @@
                 <span asp-validation-for="Description" class="text-danger"></span>
             </div>
 
-            <div class="form-group mt-3">
+            <div class="form-group mt-3 flex-wrap d-flex gap-2">
                 <button type="submit" class="btn btn-primary"><i class="bi bi-save"></i> Save</button>
+                @if (Model.IsEntityPartial || Model.IsRelatedEntityPartial)
+                {
+                    <button type="button" class="btn btn-info" data-mdb-modal-init data-mdb-target="#promoteModal">
+                        <i class="bi bi-arrow-up-circle"></i> Promote to contact
+                    </button>
+                }
                 @if (Model.EntityType == EntityTypes.Person)
                 {
                     <a asp-controller="Contacts" asp-action="Details" asp-route-id="@Model.EntityId" class="btn btn-secondary">Cancel</a>
@@ -70,6 +76,31 @@
         </form>
     </div>
 </div>
+
+@if (Model.IsEntityPartial || Model.IsRelatedEntityPartial)
+{
+    <!-- Promote Modal -->
+    <div class="modal fade" id="promoteModal" tabindex="-1" aria-labelledby="promoteModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="promoteModalLabel">Promote Partial Contact</h5>
+                    <button type="button" class="btn-close" data-mdb-ripple-init data-mdb-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Are you sure you want to promote this partial contact to a full contact record?</p>
+                    <p class="text-muted small">Promoting will make them appear in the main contact directory and allow you to add notes, facts, and other details.</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-mdb-ripple-init data-mdb-dismiss="modal">Cancel</button>
+                    <form asp-controller="Relationships" asp-action="Promote" asp-route-contactId="@(Model.IsRelatedEntityPartial ? Model.RelatedEntityId : Model.EntityId)" method="post" class="d-inline">
+                        <button type="submit" class="btn btn-primary" data-mdb-ripple-init>Yes, Promote</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+}
 
 @section Scripts {
     @{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); }

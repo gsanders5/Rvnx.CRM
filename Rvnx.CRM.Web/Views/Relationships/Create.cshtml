@@ -7,64 +7,144 @@
 
 <h1>Add Relationship for @Model.EntityName</h1>
 
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger">
+        @TempData["ErrorMessage"]
+    </div>
+}
+
 <div class="row">
-    <div class="col-md-6">
-        <form asp-action="Create">
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-            <input type="hidden" asp-for="EntityId"/>
-            <input type="hidden" asp-for="EntityType"/>
-            <input type="hidden" asp-for="EntityName"/>
+    <div class="col-md-8">
+        <ul class="nav nav-pills mb-4" id="relationshipTab" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="existing-tab" data-mdb-pill-init data-mdb-target="#existing" type="button" role="tab" aria-controls="existing" aria-selected="true"><i class="bi bi-link"></i> Link Existing Contact</button>
+            </li>
+            @if (Model.EntityType == EntityTypes.Person)
+            {
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="new-tab" data-mdb-pill-init data-mdb-target="#new" type="button" role="tab" aria-controls="new" aria-selected="false"><i class="bi bi-person-plus"></i> Create New Partial Contact</button>
+                </li>
+            }
+        </ul>
 
-            <div class="mb-3">
-                <label asp-for="SelectedRelationshipType" class="form-label">Relationship Type</label>
-                <select asp-for="SelectedRelationshipType" class="form-control" asp-items="@(new SelectList(Model.RelationshipTypeOptions, "Value", "Text", null, "Group"))">
-                    <option value="">-- Select Type --</option>
-                </select>
-                <span asp-validation-for="SelectedRelationshipType" class="text-danger"></span>
+        <div class="tab-content" id="relationshipTabContent">
+            <div class="tab-pane fade show active" id="existing" role="tabpanel" aria-labelledby="existing-tab">
+                <form asp-action="Create">
+                    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                    <input type="hidden" asp-for="EntityId"/>
+                    <input type="hidden" asp-for="EntityType"/>
+                    <input type="hidden" asp-for="EntityName"/>
+
+                    <div class="mb-3">
+                        <label asp-for="SelectedRelationshipType" class="form-label">Relationship Type</label>
+                        <select asp-for="SelectedRelationshipType" class="form-control" asp-items="@(new SelectList(Model.RelationshipTypeOptions, "Value", "Text", null, "Group"))">
+                            <option value="">-- Select Type --</option>
+                        </select>
+                        <span asp-validation-for="SelectedRelationshipType" class="text-danger"></span>
+                    </div>
+
+                    <div class="form-floating mb-3">
+                        <select asp-for="RelatedEntityId" class="form-select" asp-items="@(new SelectList(Model.RelatedEntityOptions, "Value", "Text"))">
+                            <option value="">-- Select Related Entity --</option>
+                        </select>
+                        <label asp-for="RelatedEntityId">Related Entity</label>
+                        <span asp-validation-for="RelatedEntityId" class="text-danger"></span>
+                    </div>
+
+                    <div class="alert alert-info" id="relationshipPreview" style="display: none;">
+                        <!-- Preview text will be injected here -->
+                    </div>
+
+                    <div class="form-floating mb-3">
+                        <input asp-for="StartDate" class="form-control" type="date" id="StartDate" placeholder=" "/>
+                        <label asp-for="StartDate">StartDate</label>
+                        <span asp-validation-for="StartDate" class="text-danger"></span>
+                    </div>
+
+                    <div class="form-floating mb-3">
+                        <input asp-for="EndDate" class="form-control" type="date" id="EndDate" placeholder=" "/>
+                        <label asp-for="EndDate">EndDate</label>
+                        <span asp-validation-for="EndDate" class="text-danger"></span>
+                    </div>
+
+                    <div class="form-floating mb-3">
+                        <textarea asp-for="Description" class="form-control" style="height: 100px" id="Description" placeholder=" "></textarea>
+                        <label asp-for="Description">Description</label>
+                        <span asp-validation-for="Description" class="text-danger"></span>
+                    </div>
+
+                    <div class="form-group mt-3">
+                        <input type="submit" value="Save Relationship" class="btn btn-primary"/>
+                        @if (Model.EntityType == EntityTypes.Person)
+                        {
+                            <a asp-controller="Contacts" asp-action="Details" asp-route-id="@Model.EntityId" class="btn btn-secondary">Cancel</a>
+                        }
+                        else
+                        {
+                            <a asp-controller="Home" asp-action="Index" class="btn btn-secondary">Cancel</a>
+                        }
+                    </div>
+                </form>
             </div>
 
-            <div class="form-floating mb-3">
-                <select asp-for="RelatedEntityId" class="form-select" asp-items="@(new SelectList(Model.RelatedEntityOptions, "Value", "Text"))">
-                    <option value="">-- Select Related Entity --</option>
-                </select>
-                <label asp-for="RelatedEntityId">Related Entity</label>
-                <span asp-validation-for="RelatedEntityId" class="text-danger"></span>
-            </div>
+            @if (Model.EntityType == EntityTypes.Person)
+            {
+                <div class="tab-pane fade" id="new" role="tabpanel" aria-labelledby="new-tab">
+                    <form asp-action="CreatePartial">
+                        <input type="hidden" name="entityId" value="@Model.EntityId"/>
+                        <input type="hidden" name="entityType" value="@Model.EntityType"/>
 
-            <div class="alert alert-info" id="relationshipPreview" style="display: none;">
-                <!-- Preview text will be injected here -->
-            </div>
+                        <div class="mb-3">
+                            <label class="form-label">Relationship Type</label>
+                            <select name="SelectedRelationshipType" id="SelectedRelationshipTypePartial" class="form-control" required>
+                                <option value="">-- Select Type --</option>
+                                @foreach (var group in Model.RelationshipTypeOptions.GroupBy(opt => opt.Group))
+                                {
+                                    <optgroup label="@group.Key">
+                                        @foreach (var opt in group)
+                                        {
+                                            <option value="@opt.Value">@opt.Text</option>
+                                        }
+                                    </optgroup>
+                                }
+                            </select>
+                        </div>
 
-            <div class="form-floating mb-3">
-                <input asp-for="StartDate" class="form-control" type="date" id="StartDate" placeholder=" "/>
-                <label asp-for="StartDate">StartDate</label>
-                <span asp-validation-for="StartDate" class="text-danger"></span>
-            </div>
+                        <div class="row">
+                            <div class="col-md-6 form-floating mb-3">
+                                <input id="PartialContactFirstName" name="PartialContactFirstName" type="text" class="form-control" placeholder=" " required />
+                                <label for="PartialContactFirstName" class="ms-2">First Name (Required)</label>
+                            </div>
+                            <div class="col-md-6 form-floating mb-3">
+                                <input id="PartialContactLastName" name="PartialContactLastName" type="text" class="form-control" placeholder=" " />
+                                <label for="PartialContactLastName" class="ms-2">Last Name</label>
+                            </div>
+                        </div>
 
-            <div class="form-floating mb-3">
-                <input asp-for="EndDate" class="form-control" type="date" id="EndDate" placeholder=" "/>
-                <label asp-for="EndDate">EndDate</label>
-                <span asp-validation-for="EndDate" class="text-danger"></span>
-            </div>
+                        <div class="alert alert-info" id="relationshipPreviewPartial" style="display: none;">
+                            <!-- Preview text will be injected here -->
+                        </div>
 
-            <div class="form-floating mb-3">
-                <textarea asp-for="Description" class="form-control" style="height: 100px" id="Description" placeholder=" "></textarea>
-                <label asp-for="Description">Description</label>
-                <span asp-validation-for="Description" class="text-danger"></span>
-            </div>
+                        <div class="form-floating mb-3">
+                            <input id="Birthday" name="Birthday" type="date" class="form-control" placeholder=" " />
+                            <label for="Birthday">Birthday</label>
+                            <div class="form-text mt-1 text-muted"><i class="bi bi-info-circle"></i> Entering a birthday will automatically add a yearly reminder for this person.</div>
+                        </div>
 
-            <div class="form-group mt-3">
-                <input type="submit" value="Save Relationship" class="btn btn-primary"/>
-                @if (Model.EntityType == EntityTypes.Person)
-                {
-                    <a asp-controller="Contacts" asp-action="Details" asp-route-id="@Model.EntityId" class="btn btn-secondary">Cancel</a>
-                }
-                else
-                {
-                    <a asp-controller="Home" asp-action="Index" class="btn btn-secondary">Cancel</a>
-                }
-            </div>
-        </form>
+                        <div class="form-floating mb-3">
+                            <textarea id="DescriptionPartial" name="Description" class="form-control" style="height: 100px" placeholder=" "></textarea>
+                            <label for="DescriptionPartial">Details about this relationship</label>
+                        </div>
+
+                        <div class="form-group mt-3">
+                            <button type="submit" class="btn btn-primary"><i class="bi bi-save"></i> Save Partial Contact</button>
+                            <a asp-controller="Contacts" asp-action="Details" asp-route-id="@Model.EntityId" class="btn btn-secondary">Cancel</a>
+                        </div>
+                    </form>
+                </div>
+            }
+        </div>
     </div>
 </div>
 
@@ -109,8 +189,48 @@
             typeSelect.addEventListener('change', updatePreview);
             relatedSelect.addEventListener('change', updatePreview);
 
-            // Initial call
+            // Partial form
+            const typeSelectPartial = document.getElementById('SelectedRelationshipTypePartial');
+            const firstNameInput = document.getElementById('PartialContactFirstName');
+            const lastNameInput = document.getElementById('PartialContactLastName');
+            const previewPartial = document.getElementById('relationshipPreviewPartial');
+
+            function updatePreviewPartial() {
+                if (!typeSelectPartial || !previewPartial) return;
+
+                if (!typeSelectPartial.value || !firstNameInput.value) {
+                     previewPartial.style.display = 'none';
+                     return;
+                }
+
+                let typeText = typeSelectPartial.options[typeSelectPartial.selectedIndex].text;
+                typeText = typeText.replace(/\s*\(.*\)$/, '');
+
+                const relatedText = firstNameInput.value + (lastNameInput.value ? ' ' + lastNameInput.value : '');
+
+                previewPartial.style.display = 'block';
+                previewPartial.textContent = '';
+
+                const strong1 = document.createElement('strong');
+                strong1.textContent = entityName;
+                previewPartial.appendChild(strong1);
+
+                previewPartial.appendChild(document.createTextNode(` ${typeText} `));
+
+                const strong2 = document.createElement('strong');
+                strong2.textContent = relatedText;
+                previewPartial.appendChild(strong2);
+
+                previewPartial.appendChild(document.createTextNode('.'));
+            }
+
+            if (typeSelectPartial) typeSelectPartial.addEventListener('change', updatePreviewPartial);
+            if (firstNameInput) firstNameInput.addEventListener('input', updatePreviewPartial);
+            if (lastNameInput) lastNameInput.addEventListener('input', updatePreviewPartial);
+
+            // Initial calls
             updatePreview();
+            if (typeSelectPartial) updatePreviewPartial();
         });
     </script>
 }

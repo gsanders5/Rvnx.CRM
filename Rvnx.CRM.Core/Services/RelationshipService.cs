@@ -4,6 +4,7 @@ using Rvnx.CRM.Core.DTOs.Contact;
 using Rvnx.CRM.Core.Interfaces;
 using Rvnx.CRM.Core.Models.Business;
 using Rvnx.CRM.Core.Models.Contact;
+using Rvnx.CRM.Core.Models.Dates;
 
 namespace Rvnx.CRM.Core.Services
 {
@@ -106,7 +107,7 @@ namespace Rvnx.CRM.Core.Services
                         [
                             .. available.Select(p => new SelectOptionDto
                             {
-                                Value = p.Id.ToString(), Text = p.FullName, Selected = selectedId == p.Id
+                                Value = p.Id.ToString(), Text = p.IsPartial ? $"{p.FullName} (partial contact)" : p.FullName, Selected = selectedId == p.Id
                             })
                         ];
                         break;
@@ -164,6 +165,80 @@ namespace Rvnx.CRM.Core.Services
             }
 
             return options;
+        }
+
+        public async Task<RelationshipOperationResult> CreatePartialContactRelationshipAsync(Guid parentEntityId, string selectedRelationshipType, CreatePartialContactRelationshipDto dto)
+        {
+            (Guid typeId, bool isReverse, string? error) = ParseRelationshipSelection(selectedRelationshipType);
+            if (error != null)
+            {
+                return RelationshipOperationResult.Failure(error);
+            }
+
+            Contact partialContact = new()
+            {
+                Id = Guid.NewGuid(),
+                IsPartial = true,
+                FirstName = dto.PartialContactFirstName,
+                LastName = dto.PartialContactLastName
+            };
+
+            await repository.AddAsync(partialContact);
+
+            if (dto.Birthday.HasValue)
+            {
+                SignificantDate bday = new()
+                {
+                    Id = Guid.NewGuid(),
+                    ContactId = partialContact.Id,
+                    Title = SignificantDateTitles.Birthday,
+                    Date = dto.Birthday.Value,
+                    Description = "Birthday",
+                    RemindMe = true,
+                    EventFrequency = TimeSpan.FromDays(365)
+                };
+                await repository.AddAsync(bday);
+            }
+
+            Relationship relationship = new()
+            {
+                Id = Guid.NewGuid(),
+                EntityId = parentEntityId,
+                RelatedEntityId = partialContact.Id,
+                EntityType = EntityTypes.Person,
+                RelationshipTypeId = typeId,
+                Description = dto.Description
+            };
+
+            if (isReverse)
+            {
+                SwapRelationshipEntities(relationship);
+            }
+
+            await repository.AddAsync(relationship);
+            await repository.SaveChangesAsync();
+
+            return RelationshipOperationResult.Ok(parentEntityId, EntityTypes.Person);
+        }
+
+        public async Task<RelationshipOperationResult> PromotePartialContactAsync(Guid contactId)
+        {
+            Contact? contact = await repository.GetByIdAsync<Contact>(contactId);
+            if (contact == null)
+            {
+                return RelationshipOperationResult.Failure("Contact not found.");
+            }
+
+            if (!contact.IsPartial)
+            {
+                return RelationshipOperationResult.Failure("Contact is not a partial contact.");
+            }
+
+            contact.IsPartial = false;
+            await repository.UpdateAsync(contact);
+            await repository.SaveChangesAsync();
+
+            return RelationshipOperationResult.Ok(contact.Id, EntityTypes.Person);
         }
     }
 }

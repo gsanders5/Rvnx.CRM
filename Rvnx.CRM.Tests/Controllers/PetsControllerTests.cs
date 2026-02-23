@@ -39,13 +39,13 @@ namespace Rvnx.CRM.Tests.Controllers
         }
 
         [Fact]
-        public void CreateGetWithValidContactIdShouldReturnViewWithDto()
+        public async Task CreateGetWithValidContactIdShouldReturnViewWithDto()
         {
             // Arrange
             Guid contactId = Guid.NewGuid();
 
             // Act
-            IActionResult result = _controller.Create(contactId);
+            IActionResult result = await _controller.Create(contactId);
 
             // Assert
             ViewResult viewResult = Assert.IsType<ViewResult>(result);

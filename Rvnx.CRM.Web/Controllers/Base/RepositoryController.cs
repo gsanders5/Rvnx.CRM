@@ -30,6 +30,12 @@ public abstract class RepositoryController : AuthorizedController
         return "Unknown Entity";
     }
 
+    protected async Task<bool> IsPartialContactAsync(Guid id)
+    {
+        Contact? c = await Repository.GetByIdAsync<Contact>(id);
+        return c?.IsPartial == true;
+    }
+
     protected IActionResult RedirectToEntity(Guid id, string? type)
     {
         if (id == Guid.Empty || string.IsNullOrEmpty(type))

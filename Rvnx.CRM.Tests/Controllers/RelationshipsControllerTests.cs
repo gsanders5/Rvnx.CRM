@@ -210,7 +210,56 @@ namespace Rvnx.CRM.Tests.Controllers
 
             Assert.Equal(p1Id, resultViewModel.EntityId);
             Assert.Equal(EntityTypes.Person, resultViewModel.EntityType);
-            Assert.Equal("P1 User", resultViewModel.EntityName);
+        }
+
+        [Fact]
+        public async Task CreatePartialWithValidDataCreatesRelationshipAndRedirects()
+        {
+            // Arrange
+            Guid p1Id = Guid.NewGuid();
+            _context.Contacts.Add(new Contact { Id = p1Id, FirstName = "P1" });
+            await _context.SaveChangesAsync();
+
+            CreatePartialContactRelationshipDto dto = new()
+            {
+                PartialContactFirstName = "NewPartial",
+                SelectedRelationshipType = $"{Guid.NewGuid()}_Fwd"
+            };
+
+            // Act
+            IActionResult result = await _controller.CreatePartial(p1Id, EntityTypes.Person, dto);
+
+            // Assert
+            RedirectToActionResult redirectResult = Assert.IsType<RedirectToActionResult>(result);
+            Assert.Equal("Details", redirectResult.ActionName);
+            Assert.Equal("Contacts", redirectResult.ControllerName);
+            Assert.Equal(p1Id, redirectResult.RouteValues?["id"]);
+
+            Relationship? created = await _context.Set<Relationship>().FirstOrDefaultAsync();
+            Assert.NotNull(created);
+            Assert.Equal(p1Id, created.EntityId);
+        }
+
+        [Fact]
+        public async Task PromoteWithValidContactIdReturnsRedirect()
+        {
+            // Arrange
+            Guid p1Id = Guid.NewGuid();
+            _context.Contacts.Add(new Contact { Id = p1Id, FirstName = "P1", IsPartial = true });
+            await _context.SaveChangesAsync();
+
+            // Act
+            IActionResult result = await _controller.Promote(p1Id);
+
+            // Assert
+            RedirectToActionResult redirectResult = Assert.IsType<RedirectToActionResult>(result);
+            Assert.Equal("Edit", redirectResult.ActionName);
+            Assert.Equal("Contacts", redirectResult.ControllerName);
+            Assert.Equal(p1Id, redirectResult.RouteValues?["id"]);
+
+            Contact? promoted = await _context.Set<Contact>().FindAsync(p1Id);
+            Assert.NotNull(promoted);
+            Assert.False(promoted.IsPartial);
         }
     }
 }

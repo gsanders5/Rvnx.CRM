@@ -62,8 +62,8 @@ public class RepositoryIntegrationTests : SqliteIntegrationTestBase
         string now = DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture);
         // Note: SQLite syntax - Table name is Contact, not Contacts
         await Context.Database.ExecuteSqlRawAsync(
-            "INSERT INTO Contact (Id, FirstName, LastName, IsHidden, CreatedBy, CreatedDate, LastChangedBy, LastChangedDate, UserId) " +
-            "VALUES ({0}, 'Other', 'Guy', 0, 'System', {1}, 'System', {1}, 'UserB')",
+            "INSERT INTO Contact (Id, FirstName, LastName, IsHidden, CreatedBy, CreatedDate, LastChangedBy, LastChangedDate, UserId, IsPartial) " +
+            "VALUES ({0}, 'Other', 'Guy', 0, 'System', {1}, 'System', {1}, 'UserB', 0)",
             otherId, now);
 
         // 3. Act

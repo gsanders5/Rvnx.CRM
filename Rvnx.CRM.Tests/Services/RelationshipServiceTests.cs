@@ -6,6 +6,7 @@ using Rvnx.CRM.Core.Interfaces;
 using Rvnx.CRM.Core.Models.Base;
 using Rvnx.CRM.Core.Models.Business;
 using Rvnx.CRM.Core.Models.Contact;
+using Rvnx.CRM.Core.Models.Dates;
 using Rvnx.CRM.Core.Services;
 using System.Linq.Expressions;
 
@@ -388,6 +389,97 @@ namespace Rvnx.CRM.Tests.Services
 
             SelectOptionDto? spouseRev = options.FirstOrDefault(o => o.Value == $"{spouseTypeId}_Rev");
             Assert.Null(spouseRev); // Symmetric types shouldn't have Rev option
+        }
+
+        [Fact]
+        public async Task CreatePartialContactRelationshipAsyncCreatesContactAndRelationship()
+        {
+            // Arrange
+            Guid parentEntityId = Guid.NewGuid();
+            Guid typeId = Guid.NewGuid();
+            string selectedType = $"{typeId}_Fwd";
+
+            CreatePartialContactRelationshipDto dto = new()
+            {
+                PartialContactFirstName = "John",
+                PartialContactLastName = "Doe",
+                Description = "A partial contact"
+            };
+
+            // Act
+            RelationshipOperationResult result = await _service.CreatePartialContactRelationshipAsync(parentEntityId, selectedType, dto);
+
+            // Assert
+            Assert.True(result.Success);
+            Assert.Equal(parentEntityId, result.RedirectId);
+
+            _repositoryMock.Verify(r => r.AddAsync(It.Is<Contact>(c => c.IsPartial && c.FirstName == "John" && c.LastName == "Doe"), It.IsAny<CancellationToken>()), Times.Once);
+            _repositoryMock.Verify(r => r.AddAsync(It.Is<Relationship>(rel => rel.EntityId == parentEntityId && rel.RelationshipTypeId == typeId && rel.Description == "A partial contact"), It.IsAny<CancellationToken>()), Times.Once);
+            _repositoryMock.Verify(r => r.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once); // Save Changes
+        }
+
+        [Fact]
+        public async Task CreatePartialContactRelationshipAsyncWithBirthdayAddsSignificantDate()
+        {
+            // Arrange
+            Guid parentEntityId = Guid.NewGuid();
+            Guid typeId = Guid.NewGuid();
+            string selectedType = $"{typeId}_Fwd";
+
+            DateTime birthday = new(1990, 1, 1);
+            CreatePartialContactRelationshipDto dto = new()
+            {
+                PartialContactFirstName = "Jane",
+                Birthday = birthday
+            };
+
+            // Act
+            RelationshipOperationResult result = await _service.CreatePartialContactRelationshipAsync(parentEntityId, selectedType, dto);
+
+            // Assert
+            Assert.True(result.Success);
+
+            _repositoryMock.Verify(r => r.AddAsync(It.Is<SignificantDate>(sd => sd.Title == SignificantDateTitles.Birthday && sd.Date == birthday && sd.RemindMe), It.IsAny<CancellationToken>()), Times.Once);
+        }
+
+        [Fact]
+        public async Task PromotePartialContactAsyncUpdatesIsPartial()
+        {
+            // Arrange
+            Guid contactId = Guid.NewGuid();
+            Contact partialContact = new() { Id = contactId, IsPartial = true };
+
+            _repositoryMock.Setup(r => r.GetByIdAsync<Contact>(contactId, It.IsAny<CancellationToken>()))
+                .ReturnsAsync(partialContact);
+
+            // Act
+            RelationshipOperationResult result = await _service.PromotePartialContactAsync(contactId);
+
+            // Assert
+            Assert.True(result.Success);
+            Assert.Equal(contactId, result.RedirectId);
+            Assert.False(partialContact.IsPartial);
+
+            _repositoryMock.Verify(r => r.UpdateAsync(partialContact, It.IsAny<CancellationToken>()), Times.Once);
+            _repositoryMock.Verify(r => r.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
+        }
+
+        [Fact]
+        public async Task PromotePartialContactAsyncWhenNotPartialReturnsFailure()
+        {
+            // Arrange
+            Guid contactId = Guid.NewGuid();
+            Contact fullContact = new() { Id = contactId, IsPartial = false };
+
+            _repositoryMock.Setup(r => r.GetByIdAsync<Contact>(contactId, It.IsAny<CancellationToken>()))
+                .ReturnsAsync(fullContact);
+
+            // Act
+            RelationshipOperationResult result = await _service.PromotePartialContactAsync(contactId);
+
+            // Assert
+            Assert.False(result.Success);
+            Assert.Equal("Contact is not a partial contact.", result.ErrorMessage);
         }
     }
 }

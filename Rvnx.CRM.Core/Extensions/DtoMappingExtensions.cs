@@ -82,6 +82,8 @@ namespace Rvnx.CRM.Core.Extensions
                 RelationshipTypeOppositeName = oppositeName,
                 RelatedEntityName = entity.RelatedPerson?.FullName ?? "Unknown",
                 EntityName = entity.Person?.FullName ?? "Unknown",
+                IsEntityPartial = (entity.Person as Contact)?.IsPartial == true,
+                IsRelatedEntityPartial = (entity.RelatedPerson as Contact)?.IsPartial == true,
                 Description = entity.Description,
                 StartDate = entity.StartDate,
                 EndDate = entity.EndDate
@@ -157,7 +159,8 @@ namespace Rvnx.CRM.Core.Extensions
                 ProfileImageId = entity.ProfileImageId,
                 Pronouns = entity.Pronouns,
                 Gender = entity.Gender,
-                Religion = entity.Religion
+                Religion = entity.Religion,
+                IsPartial = entity.IsPartial
             };
         }
 
