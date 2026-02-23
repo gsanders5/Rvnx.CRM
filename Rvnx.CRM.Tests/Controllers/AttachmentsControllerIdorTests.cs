@@ -14,7 +14,7 @@ namespace Rvnx.CRM.Tests.Controllers
         {
             // Arrange
             Mock<IAttachmentService> serviceMock = new();
-            serviceMock.Setup(s => s.UploadAttachmentAsync(It.IsAny<Guid>(), It.IsAny<string>(), It.IsAny<byte[]>(), It.IsAny<string>(), It.IsAny<string>()))
+            serviceMock.Setup(s => s.UploadAttachmentAsync(It.IsAny<Guid>(), It.IsAny<string>(), It.IsAny<byte[]>(), It.IsAny<string>()))
                 .ReturnsAsync(AttachmentOperationResult.NotFound("Entity not found."));
 
             AttachmentsController controller = new(serviceMock.Object)

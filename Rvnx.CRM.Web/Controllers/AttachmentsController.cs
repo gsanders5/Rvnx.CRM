@@ -24,7 +24,7 @@ namespace Rvnx.CRM.Web.Controllers
             await file.CopyToAsync(ms);
             byte[] fileBytes = ms.ToArray();
 
-            AttachmentOperationResult result = await _attachmentService.UploadAttachmentAsync(entityId, entityType, fileBytes, file.FileName, file.ContentType);
+            AttachmentOperationResult result = await _attachmentService.UploadAttachmentAsync(entityId, entityType, fileBytes, file.FileName);
 
             if (result.Success)
             {

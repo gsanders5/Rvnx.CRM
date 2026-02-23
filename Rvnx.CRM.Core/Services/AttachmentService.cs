@@ -19,7 +19,7 @@ public class AttachmentService : IAttachmentService
         _entityService = entityService;
     }
 
-    public async Task<AttachmentOperationResult> UploadAttachmentAsync(Guid entityId, string entityType, byte[] content, string fileName, string contentType)
+    public async Task<AttachmentOperationResult> UploadAttachmentAsync(Guid entityId, string entityType, byte[] content, string fileName)
     {
         if (string.IsNullOrEmpty(entityType))
         {
@@ -64,12 +64,14 @@ public class AttachmentService : IAttachmentService
             return AttachmentOperationResult.Failure("Invalid file signature.");
         }
 
+        string safeContentType = _fileValidationService.GetMimeType(extension);
+
         Attachment attachment = new()
         {
             Id = Guid.NewGuid(),
             ContactId = entityId,
             AttachmentType = "General",
-            ContentType = contentType,
+            ContentType = safeContentType,
             FileName = fileName,
             AttachmentContent = new AttachmentContent
             {
