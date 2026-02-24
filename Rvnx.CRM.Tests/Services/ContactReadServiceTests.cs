@@ -165,14 +165,14 @@ namespace Rvnx.CRM.Tests.Services
 
             // We mock the repository to filter based on the predicate passed to it
             // This is crucial to verify that the service is constructing the query correctly
-            _repositoryMock.Setup(r => r.ListAsNoTrackingAsync<Contact>(
+            _repositoryMock.Setup(r => r.ListProjectedAsync<Contact, ContactDto>(
                 It.IsAny<Expression<Func<Contact, bool>>>(),
-                default,
-                It.IsAny<string[]>())) // No includes
-                .ReturnsAsync((Expression<Func<Contact, bool>> predicate, CancellationToken ct, string[] includes) =>
+                It.IsAny<Expression<Func<Contact, ContactDto>>>(),
+                default))
+                .ReturnsAsync((Expression<Func<Contact, bool>> predicate, Expression<Func<Contact, ContactDto>> selector, CancellationToken ct) =>
                 {
                     List<Contact> all = [hiddenContact, visibleContact];
-                    return all.AsQueryable().Where(predicate).ToList();
+                    return all.AsQueryable().Where(predicate).Select(c => new ContactDto { Id = c.Id, FirstName = c.FirstName, LastName = c.LastName ?? string.Empty }).ToList();
                 });
 
             // Mock subsequent calls to return empty
@@ -202,8 +202,8 @@ namespace Rvnx.CRM.Tests.Services
             Guid contactId2 = Guid.NewGuid();
             Guid imageId1 = Guid.NewGuid();
 
-            Contact contact1 = new() { Id = contactId1, FirstName = "C1" };
-            Contact contact2 = new() { Id = contactId2, FirstName = "C2" };
+            ContactDto dto1 = new() { Id = contactId1, FirstName = "C1" };
+            ContactDto dto2 = new() { Id = contactId2, FirstName = "C2" };
 
             Attachment image1 = new()
             {
@@ -212,8 +212,11 @@ namespace Rvnx.CRM.Tests.Services
                 AttachmentType = AttachmentTypes.ProfileImage
             };
 
-            _repositoryMock.Setup(r => r.ListAsNoTrackingAsync<Contact>(It.IsAny<Expression<Func<Contact, bool>>>(), default, It.IsAny<string[]>()))
-                .ReturnsAsync([contact1, contact2]);
+            _repositoryMock.Setup(r => r.ListProjectedAsync<Contact, ContactDto>(
+                It.IsAny<Expression<Func<Contact, bool>>>(),
+                It.IsAny<Expression<Func<Contact, ContactDto>>>(),
+                default))
+                .ReturnsAsync([dto1, dto2]);
 
             // Mock profile image fetch
             // The service fetches by AttachmentType == ProfileImage AND ContactId in list
@@ -230,13 +233,13 @@ namespace Rvnx.CRM.Tests.Services
             // Assert
             Assert.Equal(2, result.Count);
 
-            ContactDto? dto1 = result.FirstOrDefault(c => c.Id == contactId1);
-            Assert.NotNull(dto1);
-            Assert.Equal(imageId1, dto1.ProfileImageId);
+            ContactDto? resDto1 = result.FirstOrDefault(c => c.Id == contactId1);
+            Assert.NotNull(resDto1);
+            Assert.Equal(imageId1, resDto1.ProfileImageId);
 
-            ContactDto? dto2 = result.FirstOrDefault(c => c.Id == contactId2);
-            Assert.NotNull(dto2);
-            Assert.Null(dto2.ProfileImageId);
+            ContactDto? resDto2 = result.FirstOrDefault(c => c.Id == contactId2);
+            Assert.NotNull(resDto2);
+            Assert.Null(resDto2.ProfileImageId);
         }
 
         [Fact]
@@ -244,13 +247,16 @@ namespace Rvnx.CRM.Tests.Services
         {
             // Arrange
             Guid contactId = Guid.NewGuid();
-            Contact contact = new() { Id = contactId, FirstName = "C1" };
+            ContactDto dto = new() { Id = contactId, FirstName = "C1" };
 
             Label label1 = new() { Id = Guid.NewGuid(), Name = "VIP", Color = "Red" };
             ContactLabel cl1 = new() { ContactId = contactId, LabelId = label1.Id, Label = label1 };
 
-            _repositoryMock.Setup(r => r.ListAsNoTrackingAsync<Contact>(It.IsAny<Expression<Func<Contact, bool>>>(), default, It.IsAny<string[]>()))
-                .ReturnsAsync([contact]);
+            _repositoryMock.Setup(r => r.ListProjectedAsync<Contact, ContactDto>(
+                It.IsAny<Expression<Func<Contact, bool>>>(),
+                It.IsAny<Expression<Func<Contact, ContactDto>>>(),
+                default))
+                .ReturnsAsync([dto]);
 
             _repositoryMock.Setup(r => r.ListAsNoTrackingAsync<Attachment>(It.IsAny<Expression<Func<Attachment, bool>>>(), default)).ReturnsAsync([]);
 
@@ -266,10 +272,10 @@ namespace Rvnx.CRM.Tests.Services
 
             // Assert
             Assert.Single(result);
-            ContactDto dto = result.First();
-            Assert.Single(dto.Labels);
-            Assert.Equal("VIP", dto.Labels.First().Name);
-            Assert.Equal("Red", dto.Labels.First().Color);
+            ContactDto resDto = result.First();
+            Assert.Single(resDto.Labels);
+            Assert.Equal("VIP", resDto.Labels.First().Name);
+            Assert.Equal("Red", resDto.Labels.First().Color);
         }
 
         [Fact]

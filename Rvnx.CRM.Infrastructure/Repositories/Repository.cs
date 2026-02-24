@@ -90,6 +90,15 @@ public class Repository(CRMDbContext context) : IRepository
         return await query.ToListAsync(cancellationToken);
     }
 
+    public async Task<List<TDto>> ListProjectedAsync<T, TDto>(Expression<Func<T, bool>> predicate, Expression<Func<T, TDto>> selector, CancellationToken cancellationToken = default) where T : BaseEntity
+    {
+        return await _context.Set<T>()
+            .AsNoTracking()
+            .Where(predicate)
+            .Select(selector)
+            .ToListAsync(cancellationToken);
+    }
+
     public async Task<T> AddAsync<T>(T entity, CancellationToken cancellationToken = default) where T : BaseEntity
     {
         Microsoft.EntityFrameworkCore.ChangeTracking.EntityEntry<T> entry = await _context.Set<T>().AddAsync(entity, cancellationToken);
