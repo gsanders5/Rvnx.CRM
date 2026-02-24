@@ -156,6 +156,7 @@ namespace Rvnx.CRM.Core.Extensions
                 Company = entity.Company,
                 JobTitle = entity.JobTitle,
                 CreatedDate = entity.CreatedDate,
+                LastChangedDate = entity.LastChangedDate,
                 ProfileImageId = entity.ProfileImageId,
                 Pronouns = entity.Pronouns,
                 Gender = entity.Gender,
