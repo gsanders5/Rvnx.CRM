@@ -40,7 +40,12 @@ namespace Rvnx.CRM.Tests.Security
             // Arrange
             using CRMDbContext context = GetInMemoryDbContext();
             Repository repository = new(context);
-            NotesController controller = new(repository);
+
+            Mock<IEntityService> mockEntityService = new();
+            mockEntityService.Setup(s => s.IsPartialAsync(It.IsAny<string>(), It.IsAny<Guid>())).ReturnsAsync(false);
+            mockEntityService.Setup(s => s.GetEntityNameAsync(It.IsAny<string>(), It.IsAny<Guid>())).ReturnsAsync("Test Entity");
+
+            NotesController controller = new(repository, mockEntityService.Object);
 
             Guid noteId = Guid.NewGuid();
             Guid originalContactId = Guid.NewGuid();
@@ -88,7 +93,12 @@ namespace Rvnx.CRM.Tests.Security
             // Arrange
             using CRMDbContext context = GetInMemoryDbContext();
             Repository repository = new(context);
-            NotesController controller = new(repository);
+
+            Mock<IEntityService> mockEntityService = new();
+            mockEntityService.Setup(s => s.IsPartialAsync(It.IsAny<string>(), It.IsAny<Guid>())).ReturnsAsync(false);
+            mockEntityService.Setup(s => s.GetEntityNameAsync(It.IsAny<string>(), It.IsAny<Guid>())).ReturnsAsync("Test Entity");
+
+            NotesController controller = new(repository, mockEntityService.Object);
 
             Guid noteId = Guid.NewGuid();
             Guid contactId = Guid.NewGuid();
@@ -255,7 +265,12 @@ namespace Rvnx.CRM.Tests.Security
             // Arrange
             using CRMDbContext context = GetInMemoryDbContext();
             Repository repository = new(context);
-            NotesController controller = new(repository);
+
+            Mock<IEntityService> mockEntityService = new();
+            mockEntityService.Setup(s => s.IsPartialAsync(It.IsAny<string>(), It.IsAny<Guid>())).ReturnsAsync(false);
+            mockEntityService.Setup(s => s.GetEntityNameAsync(It.IsAny<string>(), It.IsAny<Guid>())).ReturnsAsync("Test Entity");
+
+            NotesController controller = new(repository, mockEntityService.Object);
 
             Guid nonExistentId = Guid.NewGuid();
             NoteFormViewModel note = new()

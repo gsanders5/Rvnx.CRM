@@ -1,6 +1,7 @@
 using Rvnx.CRM.Core.Constants;
 using Rvnx.CRM.Core.Interfaces;
 using Rvnx.CRM.Core.Models.Base;
+using Rvnx.CRM.Core.Models.Business;
 using Rvnx.CRM.Core.Models.Contact;
 using Rvnx.CRM.Core.Models.Dates;
 
@@ -26,5 +27,30 @@ public class EntityService : IEntityService
             EntityTypes.Relationship => await _repository.ExistsAsync<Relationship>(id),
             _ => false
         };
+    }
+
+    public async Task<string> GetEntityNameAsync(string entityType, Guid id)
+    {
+        if (entityType == EntityTypes.Person)
+        {
+            Contact? p = await _repository.GetByIdAsync<Contact>(id);
+            return p?.FullName ?? "Unknown Person";
+        }
+        else if (entityType == EntityTypes.Company)
+        {
+            Employer? c = await _repository.GetByIdAsync<Employer>(id);
+            return c?.CompanyName ?? "Unknown Company";
+        }
+        return "Unknown Entity";
+    }
+
+    public async Task<bool> IsPartialAsync(string entityType, Guid id)
+    {
+        if (entityType == EntityTypes.Person)
+        {
+            Contact? c = await _repository.GetByIdAsync<Contact>(id);
+            return c?.IsPartial == true;
+        }
+        return false;
     }
 }
