@@ -6,9 +6,10 @@ using System.Collections.Frozen;
 
 namespace Rvnx.CRM.Web.Controllers
 {
-    public class AttachmentsController(IAttachmentService attachmentService) : AuthorizedController
+    public class AttachmentsController(IAttachmentService attachmentService, IFileValidationService fileValidationService) : AuthorizedController
     {
         private readonly IAttachmentService _attachmentService = attachmentService;
+        private readonly IFileValidationService _fileValidationService = fileValidationService;
         private static readonly FrozenSet<string> ImageContentTypes = new[] { "image/jpeg", "image/png", "image/gif" }.ToFrozenSet(StringComparer.OrdinalIgnoreCase);
 
         [HttpPost]
@@ -18,6 +19,11 @@ namespace Rvnx.CRM.Web.Controllers
             if (file == null || file.Length == 0)
             {
                 return BadRequest("File is empty.");
+            }
+
+            if (!_fileValidationService.IsAllowedExtension(Path.GetExtension(file.FileName)))
+            {
+                return BadRequest("File type not allowed.");
             }
 
             using MemoryStream ms = new();
