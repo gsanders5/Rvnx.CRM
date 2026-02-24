@@ -9,6 +9,7 @@ namespace Rvnx.CRM.Web.Controllers
     {
         private readonly IAttachmentService _attachmentService = attachmentService;
         private readonly IFileValidationService _fileValidationService = fileValidationService;
+        private static readonly FrozenSet<string> ImageContentTypes = new[] { "image/jpeg", "image/png", "image/gif" }.ToFrozenSet(StringComparer.OrdinalIgnoreCase);
 
         [HttpPost]
         [ValidateAntiForgeryToken]

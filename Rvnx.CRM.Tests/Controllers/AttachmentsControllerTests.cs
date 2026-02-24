@@ -29,7 +29,7 @@ namespace Rvnx.CRM.Tests.Controllers
                     LastChangedDate = DateTime.UtcNow
                 });
 
-            AttachmentsController controller = new(serviceMock.Object)
+            AttachmentsController controller = new(serviceMock.Object, new Mock<IFileValidationService>().Object)
             {
                 ControllerContext = new ControllerContext
                 {
@@ -54,7 +54,7 @@ namespace Rvnx.CRM.Tests.Controllers
             serviceMock.Setup(s => s.GetAttachmentContentAsync(It.IsAny<Guid>()))
                 .ReturnsAsync((AttachmentContentDto?)null);
 
-            AttachmentsController controller = new(serviceMock.Object)
+            AttachmentsController controller = new(serviceMock.Object, new Mock<IFileValidationService>().Object)
             {
                 ControllerContext = new ControllerContext
                 {
@@ -87,7 +87,7 @@ namespace Rvnx.CRM.Tests.Controllers
                     LastChangedDate = lastChanged
                 });
 
-            AttachmentsController controller = new(serviceMock.Object)
+            AttachmentsController controller = new(serviceMock.Object, new Mock<IFileValidationService>().Object)
             {
                 ControllerContext = new ControllerContext
                 {
@@ -125,7 +125,7 @@ namespace Rvnx.CRM.Tests.Controllers
                     LastChangedDate = lastChanged
                 });
 
-            AttachmentsController controller = new(serviceMock.Object)
+            AttachmentsController controller = new(serviceMock.Object, new Mock<IFileValidationService>().Object)
             {
                 ControllerContext = new ControllerContext
                 {
