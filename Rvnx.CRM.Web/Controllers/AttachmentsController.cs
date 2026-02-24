@@ -21,6 +21,11 @@ namespace Rvnx.CRM.Web.Controllers
                 return BadRequest("File is empty.");
             }
 
+            if (!_fileValidationService.IsAllowedFileSize(file.Length))
+            {
+                return BadRequest("File is too large.");
+            }
+
             if (!_fileValidationService.IsAllowedExtension(Path.GetExtension(file.FileName)))
             {
                 return BadRequest("File type not allowed.");
