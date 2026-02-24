@@ -78,7 +78,8 @@ public class ContactReadService(IRepository repository) : IContactReadService
             nameof(Contact.ContactMethods),
             nameof(Contact.Facts),
             nameof(Contact.Addresses),
-            nameof(Contact.Attachments));
+            nameof(Contact.Attachments),
+            nameof(Contact.ContactLabels) + "." + nameof(ContactLabel.Label));
 
         Contact? contact = contacts.FirstOrDefault();
         if (contact == null)
@@ -137,8 +138,7 @@ public class ContactReadService(IRepository repository) : IContactReadService
             .Where(a => a.AttachmentType != AttachmentTypes.ProfileImage)
             .ToList();
 
-        List<ContactLabel> contactLabels = await _repository.ListAsNoTrackingAsync<ContactLabel>(cl => cl.ContactId == id, default, nameof(ContactLabel.Label)) ?? [];
-        contactDto.Labels = contactLabels.Select(cl => cl.Label).OrderBy(l => l.Name).Select(l => new LabelDto { Id = l.Id, Name = l.Name, Color = l.Color }).ToList();
+        contactDto.Labels = contact.ContactLabels.Select(cl => cl.Label).OrderBy(l => l.Name).Select(l => new LabelDto { Id = l.Id, Name = l.Name, Color = l.Color }).ToList();
 
         return contactDto;
     }
@@ -149,7 +149,8 @@ public class ContactReadService(IRepository repository) : IContactReadService
              c => c.Id == id && !c.IsPartial,
              default,
              nameof(Contact.ContactMethods),
-             nameof(Contact.SignificantDates));
+             nameof(Contact.SignificantDates),
+             nameof(Contact.ContactLabels));
 
         Contact? contact = contacts.FirstOrDefault();
 
@@ -189,10 +190,9 @@ public class ContactReadService(IRepository repository) : IContactReadService
         dto.Birthday = bday?.Date;
 
         List<Label> allLabels = await _repository.ListAsNoTrackingAsync<Label>(l => true) ?? [];
-        List<ContactLabel> contactLabels = await _repository.ListAsNoTrackingAsync<ContactLabel>(cl => cl.ContactId == id) ?? [];
 
         dto.AllLabels = allLabels.OrderBy(l => l.Name).Select(l => new LabelDto { Id = l.Id, Name = l.Name, Color = l.Color }).ToList();
-        dto.AssignedLabelIds = contactLabels.Select(cl => cl.LabelId).ToList();
+        dto.AssignedLabelIds = contact.ContactLabels.Select(cl => cl.LabelId).ToList();
 
         return dto;
     }

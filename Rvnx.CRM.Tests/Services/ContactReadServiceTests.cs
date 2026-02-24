@@ -335,15 +335,13 @@ namespace Rvnx.CRM.Tests.Services
             Label label2 = new() { Id = Guid.NewGuid(), Name = "B-Label" };
 
             ContactLabel assignedLabel = new() { ContactId = contactId, LabelId = label1.Id };
+            contact.ContactLabels.Add(assignedLabel);
 
             _repositoryMock.Setup(r => r.ListAsNoTrackingAsync<Contact>(It.IsAny<Expression<Func<Contact, bool>>>(), default, It.IsAny<string[]>()))
                 .ReturnsAsync([contact]);
 
             _repositoryMock.Setup(r => r.ListAsNoTrackingAsync<Label>(It.IsAny<Expression<Func<Label, bool>>>(), default))
                 .ReturnsAsync([label2, label1]); // Unsorted
-
-            _repositoryMock.Setup(r => r.ListAsNoTrackingAsync<ContactLabel>(It.IsAny<Expression<Func<ContactLabel, bool>>>(), default, It.IsAny<string[]>()))
-                .ReturnsAsync([assignedLabel]);
 
             // Act
             ContactFormDto? result = await _service.GetContactFormAsync(contactId);
