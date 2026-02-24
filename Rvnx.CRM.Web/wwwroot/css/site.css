@@ -1,4 +1,4 @@
-html {
+﻿html {
   font-size: 16px;
 }
 
@@ -38,4 +38,117 @@ body {
 .hover-shadow:hover {
   box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
   transition: box-shadow 0.3s;
+}
+
+/* ==========================================================================
+   DataTables Custom Styles
+   ========================================================================== */
+
+/* Column Visibility Button */
+.dt-buttons .buttons-colvis {
+    background: transparent !important;
+    border: 1px solid var(--mdb-border-color, #dee2e6) !important;
+    color: var(--mdb-body-color, #212529) !important;
+    padding: 0.375rem 0.5rem !important;
+    border-radius: 0.375rem;
+}
+
+    .dt-buttons .buttons-colvis:hover {
+        background-color: var(--mdb-tertiary-bg, #f8f9fa) !important;
+    }
+
+[data-mdb-theme="dark"] .dt-buttons .buttons-colvis {
+    border-color: var(--mdb-border-color, #444) !important;
+}
+
+    [data-mdb-theme="dark"] .dt-buttons .buttons-colvis:hover {
+        background-color: var(--mdb-tertiary-bg, #2a2a2a) !important;
+    }
+
+/* Column Visibility Dropdown */
+.dt-button-collection {
+    background-color: var(--mdb-surface-bg, #fff) !important;
+    border: 1px solid var(--mdb-border-color, #dee2e6) !important;
+    border-radius: 0.375rem;
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+    padding: 0.25rem 0;
+    min-width: 120px;
+}
+
+    /* Reset all nested elements */
+    .dt-button-collection li,
+    .dt-button-collection .dt-button,
+    .dt-button-collection .dt-button a,
+    .dt-button-collection .dropdown-item {
+        background: transparent !important;
+        border: none !important;
+        padding: 0 !important;
+        margin: 0 !important;
+    }
+
+    /* Style the list items as the clickable elements */
+    .dt-button-collection li {
+        display: flex;
+        align-items: center;
+        padding: 0.25rem 0.75rem !important;
+        color: var(--mdb-body-color, #212529);
+        font-size: 0.875rem;
+        cursor: pointer;
+    }
+
+        .dt-button-collection li:hover {
+            background-color: var(--mdb-highlight-bg-color, #f8f9fa) !important;
+        }
+
+    /* Hide default DataTables checkmark */
+    .dt-button-collection .dt-button span.dt-button-selected,
+    .dt-button-collection span.dt-button-selected {
+        display: none !important;
+    }
+
+    /* Checkmark for active/visible columns */
+    .dt-button-collection li:has(.dt-button-active)::before,
+    .dt-button-collection .dt-button.dt-button-active::before {
+        content: "\2713";
+        margin-right: 0.4rem;
+        font-weight: bold;
+    }
+
+    /* Placeholder space for inactive columns */
+    .dt-button-collection li:not(:has(.dt-button-active))::before,
+    .dt-button-collection .dt-button:not(.dt-button-active)::before {
+        content: "";
+        display: inline-block;
+        width: 0.75rem;
+        margin-right: 0.4rem;
+    }
+
+/* Dark mode dropdown */
+[data-mdb-theme="dark"] .dt-button-collection {
+    background-color: var(--mdb-surface-bg, #424242) !important;
+    border-color: var(--mdb-border-color, #555) !important;
+}
+
+    [data-mdb-theme="dark"] .dt-button-collection li {
+        color: var(--mdb-body-color, #fff);
+    }
+
+        [data-mdb-theme="dark"] .dt-button-collection li:hover {
+            background-color: var(--mdb-highlight-bg-color, #555) !important;
+        }
+
+/* Fix dropdown clipping from table-responsive */
+.table-responsive {
+    overflow: visible !important;
+}
+
+    .table-responsive .dataTables_wrapper {
+        overflow-x: auto;
+    }
+
+/* Remove shadow from column visibility button on mobile */
+@media screen and (max-width: 767px) {
+    #contacts-table_wrapper .dt-buttons.btn-group {
+        box-shadow: none !important;
+    }
 }
