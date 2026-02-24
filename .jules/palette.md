@@ -25,7 +25,3 @@
 }
 ```
 **Also:** Ensure responsive button groups use `d-grid gap-2 d-md-flex` for full-width stacking on mobile and inline layout on desktop.
-
-## 2025-05-25 - Skip to Content Link
-**Learning:** Keyboard users and screen readers need a quick way to bypass navigation menus.
-**Action:** Always include a "Skip to Content" link as the first focusable element in `_Layout.cshtml`, pointing to the main content area with `id="main-content"` and `tabindex="-1"`.
