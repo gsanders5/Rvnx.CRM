@@ -15,6 +15,7 @@ namespace Rvnx.CRM.Tests.Controllers
         {
             // Arrange
             Mock<IAttachmentService> serviceMock = new();
+            Mock<IFileValidationService> validationMock = new();
             Guid attachmentId = Guid.NewGuid();
             byte[] content = Encoding.UTF8.GetBytes("fake image content");
             string contentType = "image/png";
@@ -29,7 +30,7 @@ namespace Rvnx.CRM.Tests.Controllers
                     LastChangedDate = DateTime.UtcNow
                 });
 
-            AttachmentsController controller = new(serviceMock.Object)
+            AttachmentsController controller = new(serviceMock.Object, validationMock.Object)
             {
                 ControllerContext = new ControllerContext
                 {
@@ -51,10 +52,11 @@ namespace Rvnx.CRM.Tests.Controllers
         {
             // Arrange
             Mock<IAttachmentService> serviceMock = new();
+            Mock<IFileValidationService> validationMock = new();
             serviceMock.Setup(s => s.GetAttachmentContentAsync(It.IsAny<Guid>()))
                 .ReturnsAsync((AttachmentContentDto?)null);
 
-            AttachmentsController controller = new(serviceMock.Object)
+            AttachmentsController controller = new(serviceMock.Object, validationMock.Object)
             {
                 ControllerContext = new ControllerContext
                 {
@@ -74,6 +76,7 @@ namespace Rvnx.CRM.Tests.Controllers
         {
             // Arrange
             Mock<IAttachmentService> serviceMock = new();
+            Mock<IFileValidationService> validationMock = new();
             Guid attachmentId = Guid.NewGuid();
             DateTime lastChanged = DateTime.UtcNow.AddMinutes(-10); // Fixed time
 
@@ -87,7 +90,7 @@ namespace Rvnx.CRM.Tests.Controllers
                     LastChangedDate = lastChanged
                 });
 
-            AttachmentsController controller = new(serviceMock.Object)
+            AttachmentsController controller = new(serviceMock.Object, validationMock.Object)
             {
                 ControllerContext = new ControllerContext
                 {
@@ -112,6 +115,7 @@ namespace Rvnx.CRM.Tests.Controllers
         {
             // Arrange
             Mock<IAttachmentService> serviceMock = new();
+            Mock<IFileValidationService> validationMock = new();
             Guid attachmentId = Guid.NewGuid();
             DateTime lastChanged = DateTime.UtcNow;
 
@@ -125,7 +129,7 @@ namespace Rvnx.CRM.Tests.Controllers
                     LastChangedDate = lastChanged
                 });
 
-            AttachmentsController controller = new(serviceMock.Object)
+            AttachmentsController controller = new(serviceMock.Object, validationMock.Object)
             {
                 ControllerContext = new ControllerContext
                 {

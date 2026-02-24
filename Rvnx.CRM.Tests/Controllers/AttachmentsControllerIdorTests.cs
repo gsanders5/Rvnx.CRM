@@ -14,10 +14,13 @@ namespace Rvnx.CRM.Tests.Controllers
         {
             // Arrange
             Mock<IAttachmentService> serviceMock = new();
+            Mock<IFileValidationService> validationMock = new();
+            validationMock.Setup(v => v.IsAllowedExtension(It.IsAny<string>())).Returns(true);
+
             serviceMock.Setup(s => s.UploadAttachmentAsync(It.IsAny<Guid>(), It.IsAny<string>(), It.IsAny<byte[]>(), It.IsAny<string>()))
                 .ReturnsAsync(AttachmentOperationResult.NotFound("Entity not found."));
 
-            AttachmentsController controller = new(serviceMock.Object)
+            AttachmentsController controller = new(serviceMock.Object, validationMock.Object)
             {
                 ControllerContext = new ControllerContext
                 {
