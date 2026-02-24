@@ -93,9 +93,11 @@ namespace Rvnx.CRM.Web.Controllers
             Response.Headers.LastModified = dto.LastChangedDate.ToString("R");
             Response.Headers.CacheControl = "public, max-age=31536000";
 
-            return ImageContentTypes.Contains(dto.ContentType)
+            return IsImage(dto.ContentType)
                 ? File(dto.Content, dto.ContentType)
                 : File(dto.Content, dto.ContentType, dto.FileName);
         }
+
+        private static bool IsImage(string contentType) => ImageContentTypes.Contains(contentType);
     }
 }
