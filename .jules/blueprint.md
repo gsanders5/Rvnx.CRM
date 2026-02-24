@@ -19,3 +19,8 @@
 
 **Learning:** Business rules for allowed file types were duplicated as a `HashSet` in `AttachmentsController` and a `switch` in `FileValidationService`. This meant adding a new file type required changes in two layers.
 **Action:** Centralized the "Allowed Extensions" rule in `FileValidationService` by exposing `IsAllowedExtension`. This makes the service the single source of truth for file validation logic.
+
+## 2024-05-25 - [Test Data Utilities in Core]
+
+**Learning:** `FakeDataGenerator` was located in `Core/Services`, confusing domain logic with development/seeding utilities. Such utilities, even if returning domain entities, belong in `Infrastructure` (for data seeding) or `Tests`.
+**Action:** When finding utility classes that generate random data or handle development-only tasks, verify they are not in `Core`. Move them to `Infrastructure` or `Shared` to keep the domain pure.
