@@ -114,7 +114,8 @@ namespace Rvnx.CRM.Tests.Services
         {
             // Arrange
             Guid id = Guid.NewGuid();
-            var contact = new Contact { Id = id, FirstName = "John", LastName = "Doe" };
+            Contact contact = new()
+            { Id = id, FirstName = "John", LastName = "Doe" };
             _repositoryMock.Setup(r => r.GetByIdAsync<Contact>(id, It.IsAny<CancellationToken>())).ReturnsAsync(contact);
 
             // Act
@@ -129,7 +130,8 @@ namespace Rvnx.CRM.Tests.Services
         {
             // Arrange
             Guid id = Guid.NewGuid();
-            var employer = new Employer { Id = id, CompanyName = "Acme Corp" };
+            Employer employer = new()
+            { Id = id, CompanyName = "Acme Corp" };
             _repositoryMock.Setup(r => r.GetByIdAsync<Employer>(id, It.IsAny<CancellationToken>())).ReturnsAsync(employer);
 
             // Act
@@ -157,7 +159,8 @@ namespace Rvnx.CRM.Tests.Services
         {
             // Arrange
             Guid id = Guid.NewGuid();
-            var contact = new Contact { Id = id, IsPartial = true };
+            Contact contact = new()
+            { Id = id, IsPartial = true };
             _repositoryMock.Setup(r => r.GetByIdAsync<Contact>(id, It.IsAny<CancellationToken>())).ReturnsAsync(contact);
 
             // Act
@@ -172,7 +175,8 @@ namespace Rvnx.CRM.Tests.Services
         {
             // Arrange
             Guid id = Guid.NewGuid();
-            var contact = new Contact { Id = id, IsPartial = false };
+            Contact contact = new()
+            { Id = id, IsPartial = false };
             _repositoryMock.Setup(r => r.GetByIdAsync<Contact>(id, It.IsAny<CancellationToken>())).ReturnsAsync(contact);
 
             // Act

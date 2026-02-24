@@ -26,17 +26,9 @@ namespace Rvnx.CRM.Web.Controllers
 
             AttachmentOperationResult result = await _attachmentService.UploadAttachmentAsync(entityId, entityType, fileBytes, file.FileName);
 
-            if (result.Success)
-            {
-                return SafeRedirect(returnUrl);
-            }
-
-            if (result.IsNotFound)
-            {
-                return NotFound(string.Join("; ", result.Errors));
-            }
-
-            return BadRequest(string.Join("; ", result.Errors));
+            return result.Success
+                ? SafeRedirect(returnUrl)
+                : result.IsNotFound ? NotFound(string.Join("; ", result.Errors)) : BadRequest(string.Join("; ", result.Errors));
         }
 
         [HttpPost]
@@ -45,12 +37,9 @@ namespace Rvnx.CRM.Web.Controllers
         {
             AttachmentOperationResult result = await _attachmentService.DeleteAttachmentAsync(id);
 
-            if (result.IsNotFound && result.Errors.Any(e => e.Contains("partial contact", StringComparison.OrdinalIgnoreCase)))
-            {
-                return NotFound();
-            }
-
-            return SafeRedirect(returnUrl);
+            return result.IsNotFound && result.Errors.Any(e => e.Contains("partial contact", StringComparison.OrdinalIgnoreCase))
+                ? NotFound()
+                : SafeRedirect(returnUrl);
         }
 
         private IActionResult SafeRedirect(string? returnUrl)
@@ -69,12 +58,7 @@ namespace Rvnx.CRM.Web.Controllers
         public async Task<IActionResult> Download(Guid id)
         {
             AttachmentContentDto? dto = await _attachmentService.GetAttachmentContentAsync(id);
-            if (dto == null)
-            {
-                return NotFound();
-            }
-
-            return File(dto.Content, dto.ContentType, dto.FileName);
+            return dto == null ? NotFound() : File(dto.Content, dto.ContentType, dto.FileName);
         }
 
         public async Task<IActionResult> View(Guid id)

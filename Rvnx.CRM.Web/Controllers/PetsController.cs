@@ -12,7 +12,11 @@ namespace Rvnx.CRM.Web.Controllers
     {
         public async Task<IActionResult> Create(Guid entityId)
         {
-            if (await IsPartialContactAsync(entityId)) return NotFound();
+            if (await IsPartialContactAsync(entityId))
+            {
+                return NotFound();
+            }
+
             PetFormDto dto = new()
             {
                 EntityId = entityId
@@ -24,7 +28,10 @@ namespace Rvnx.CRM.Web.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(PetFormDto petDto)
         {
-            if (await IsPartialContactAsync(petDto.EntityId)) return NotFound();
+            if (await IsPartialContactAsync(petDto.EntityId))
+            {
+                return NotFound();
+            }
 
             if (ModelState.IsValid)
             {

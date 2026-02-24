@@ -222,7 +222,7 @@ namespace Rvnx.CRM.Tests.Services
                 default))
                 .ReturnsAsync([image1]);
 
-             _repositoryMock.Setup(r => r.ListAsNoTrackingAsync<ContactLabel>(It.IsAny<Expression<Func<ContactLabel, bool>>>(), default, It.IsAny<string[]>())).ReturnsAsync([]);
+            _repositoryMock.Setup(r => r.ListAsNoTrackingAsync<ContactLabel>(It.IsAny<Expression<Func<ContactLabel, bool>>>(), default, It.IsAny<string[]>())).ReturnsAsync([]);
 
             // Act
             List<ContactDto> result = await _service.GetIndexDataAsync(false);

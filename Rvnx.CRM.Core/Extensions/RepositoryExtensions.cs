@@ -19,23 +19,26 @@ public static class RepositoryExtensions
         params string[] includes) where T : BaseEntity
     {
         List<T> results = [];
-        
+
         foreach (TKey[] chunk in keys.Chunk(1000))
         {
-            if (chunk.Length == 0) continue;
-            
+            if (chunk.Length == 0)
+            {
+                continue;
+            }
+
             Expression<Func<T, bool>> predicate = predicateBuilder(chunk);
-            
-            List<T>? chunkResults = asNoTracking 
+
+            List<T>? chunkResults = asNoTracking
                 ? await repository.ListAsNoTrackingAsync(predicate, cancellationToken, includes)
                 : await repository.ListAsync(predicate, cancellationToken, includes);
-                
+
             if (chunkResults != null)
             {
                 results.AddRange(chunkResults);
             }
         }
-        
+
         return results;
     }
 }

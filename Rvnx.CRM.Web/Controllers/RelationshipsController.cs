@@ -85,7 +85,7 @@ namespace Rvnx.CRM.Web.Controllers
                 {
                     return RedirectToEntity(result.RedirectId, result.EntityType ?? string.Empty);
                 }
-                
+
                 ModelState.AddModelError(string.Empty, result.ErrorMessage ?? "Failed to create partial contact relationship.");
             }
 
@@ -105,7 +105,7 @@ namespace Rvnx.CRM.Web.Controllers
             }
 
             RelationshipOperationResult result = await _relationshipService.PromotePartialContactAsync(contactId);
-            
+
             if (result.Success)
             {
                 // Redirect to the newly promoted contact's edit page

@@ -112,48 +112,36 @@ public class AttachmentService : IAttachmentService
     {
         Attachment? attachment = await _repository.GetByIdWithIncludesAsync<Attachment>(attachmentId, nameof(Attachment.AttachmentContent));
 
-        if (attachment?.AttachmentContent == null)
-        {
-            return null;
-        }
-
-        if (attachment.ContactId.HasValue && await IsPartialContactAsync(attachment.ContactId.Value))
-        {
-            return null;
-        }
-
-        return new AttachmentContentDto
-        {
-            Id = attachment.Id,
-            Content = attachment.AttachmentContent.Content,
-            ContentType = attachment.ContentType,
-            FileName = attachment.FileName ?? "unknown",
-            LastChangedDate = attachment.LastChangedDate
-        };
+        return attachment?.AttachmentContent == null
+            ? null
+            : attachment.ContactId.HasValue && await IsPartialContactAsync(attachment.ContactId.Value)
+            ? null
+            : new AttachmentContentDto
+            {
+                Id = attachment.Id,
+                Content = attachment.AttachmentContent.Content,
+                ContentType = attachment.ContentType,
+                FileName = attachment.FileName ?? "unknown",
+                LastChangedDate = attachment.LastChangedDate
+            };
     }
 
     public async Task<AttachmentDto?> GetAttachmentAsync(Guid attachmentId)
     {
         Attachment? attachment = await _repository.GetByIdAsync<Attachment>(attachmentId);
-        if (attachment == null)
-        {
-            return null;
-        }
-
-        if (attachment.ContactId.HasValue && await IsPartialContactAsync(attachment.ContactId.Value))
-        {
-            return null;
-        }
-
-        return new AttachmentDto
-        {
-            Id = attachment.Id,
-            FileName = attachment.FileName ?? string.Empty,
-            ContentType = attachment.ContentType,
-            AttachmentType = attachment.AttachmentType,
-            EntityId = attachment.ContactId ?? Guid.Empty,
-            EntityType = EntityTypes.Person
-        };
+        return attachment == null
+            ? null
+            : attachment.ContactId.HasValue && await IsPartialContactAsync(attachment.ContactId.Value)
+            ? null
+            : new AttachmentDto
+            {
+                Id = attachment.Id,
+                FileName = attachment.FileName ?? string.Empty,
+                ContentType = attachment.ContentType,
+                AttachmentType = attachment.AttachmentType,
+                EntityId = attachment.ContactId ?? Guid.Empty,
+                EntityType = EntityTypes.Person
+            };
     }
 
     private async Task<bool> IsPartialContactAsync(Guid contactId)

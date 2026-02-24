@@ -13,22 +13,25 @@ namespace Rvnx.CRM.Web.Controllers
     {
         public async Task<IActionResult> Create(Guid entityId, string entityType)
         {
-            if (await IsPartialContactAsync(entityId)) return NotFound();
-
-            return View(new SignificantDateDto
-            {
-                EntityId = entityId,
-                EntityType = entityType,
-                Date = DateTime.Today,
-                EventFrequency = TimeSpan.FromDays(365) // Default to Yearly
-            });
+            return await IsPartialContactAsync(entityId)
+                ? NotFound()
+                : View(new SignificantDateDto
+                {
+                    EntityId = entityId,
+                    EntityType = entityType,
+                    Date = DateTime.Today,
+                    EventFrequency = TimeSpan.FromDays(365) // Default to Yearly
+                });
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind("Id,Title,Description,Date,EntityId,EntityType,RemindMe,EventFrequency")] SignificantDateDto dto)
         {
-            if (await IsPartialContactAsync(dto.EntityId)) return NotFound();
+            if (await IsPartialContactAsync(dto.EntityId))
+            {
+                return NotFound();
+            }
 
             if (ModelState.IsValid)
             {

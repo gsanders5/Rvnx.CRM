@@ -48,7 +48,10 @@ namespace Rvnx.CRM.Web.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(ReminderFormViewModel viewModel)
         {
-            if (await IsPartialContactAsync(viewModel.EntityId)) return NotFound();
+            if (await IsPartialContactAsync(viewModel.EntityId))
+            {
+                return NotFound();
+            }
 
             if (ModelState.IsValid)
             {

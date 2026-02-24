@@ -21,7 +21,10 @@ namespace Rvnx.CRM.Web.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(ContactMethodFormDto contactInfoInput)
         {
-            if (await IsPartialContactAsync(contactInfoInput.EntityId)) return NotFound();
+            if (await IsPartialContactAsync(contactInfoInput.EntityId))
+            {
+                return NotFound();
+            }
 
             if (ModelState.IsValid)
             {

@@ -255,7 +255,7 @@ namespace Rvnx.CRM.Web.Controllers
                 }
             }
 
-            var formConfig = await _contactReadService.GetContactFormAsync(id);
+            ContactFormDto? formConfig = await _contactReadService.GetContactFormAsync(id);
             if (formConfig != null)
             {
                 contactDto.AllLabels = formConfig.AllLabels;
@@ -314,11 +314,9 @@ namespace Rvnx.CRM.Web.Controllers
                 await labelService.AssignLabelAsync(contactId, labelId);
             }
 
-            if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
-            {
-                return Redirect(returnUrl);
-            }
-            return RedirectToAction(nameof(Edit), new { id = contactId });
+            return !string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl)
+                ? Redirect(returnUrl)
+                : RedirectToAction(nameof(Edit), new { id = contactId });
         }
 
         [HttpPost]
@@ -330,11 +328,9 @@ namespace Rvnx.CRM.Web.Controllers
                 await labelService.RemoveLabelAsync(contactId, labelId);
             }
 
-            if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
-            {
-                return Redirect(returnUrl);
-            }
-            return RedirectToAction(nameof(Edit), new { id = contactId });
+            return !string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl)
+                ? Redirect(returnUrl)
+                : RedirectToAction(nameof(Edit), new { id = contactId });
         }
 
         public IActionResult Import()

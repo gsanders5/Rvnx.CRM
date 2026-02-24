@@ -57,7 +57,7 @@ public class ContactManagementService(IRepository repository, IFileValidationSer
                 bool hasFullContactRelationship = false;
                 if (siblings.Count > 0)
                 {
-                    var fullContacts = await _repository.ListByChunkedContainsAsync<Contact, Guid>(
+                    List<Contact> fullContacts = await _repository.ListByChunkedContainsAsync<Contact, Guid>(
                         siblings,
                         chunk => c => chunk.Contains(c.Id) && !c.IsPartial,
                         asNoTracking: false);

@@ -4,7 +4,6 @@ using Rvnx.CRM.Core.Interfaces;
 using Rvnx.CRM.Core.Models.Contact;
 using Rvnx.CRM.Core.Services;
 using System.Linq.Expressions;
-using Xunit;
 
 namespace Rvnx.CRM.Tests.Services;
 
@@ -23,16 +22,16 @@ public class LabelServiceTests
     public async Task GetAllAsyncReturnsMappedDtos()
     {
         // Arrange
-        var labels = new List<Label>
-        {
+        List<Label> labels =
+        [
             new Label { Id = Guid.NewGuid(), Name = "Work", Color = "#ff0000" },
             new Label { Id = Guid.NewGuid(), Name = "Family", Color = "#00ff00" }
-        };
+        ];
         _mockRepo.Setup(r => r.ListAsNoTrackingAsync(It.IsAny<Expression<Func<Label, bool>>>(), It.IsAny<CancellationToken>(), It.IsAny<string[]>()))
                  .ReturnsAsync(labels);
 
         // Act
-        var result = await _service.GetAllAsync();
+        List<Core.DTOs.Contact.LabelDto> result = await _service.GetAllAsync();
 
         // Assert
         result.Should().HaveCount(2);
@@ -42,7 +41,7 @@ public class LabelServiceTests
     [Fact]
     public async Task CreateAsyncReturnsFailureWhenNameEmpty()
     {
-        var result = await _service.CreateAsync("", "#000000");
+        Core.DTOs.Contact.LabelOperationResult result = await _service.CreateAsync("", "#000000");
         result.Success.Should().BeFalse();
         result.Errors.Should().Contain("Label name cannot be empty.");
     }
@@ -50,11 +49,11 @@ public class LabelServiceTests
     [Fact]
     public async Task CreateAsyncReturnsFailureWhenNameExists()
     {
-        var labels = new List<Label> { new Label { Name = "ExistingLabel" } };
+        List<Label> labels = [new Label { Name = "ExistingLabel" }];
         _mockRepo.Setup(r => r.ListAsNoTrackingAsync(It.IsAny<Expression<Func<Label, bool>>>(), It.IsAny<CancellationToken>(), It.IsAny<string[]>()))
                  .ReturnsAsync(labels);
 
-        var result = await _service.CreateAsync("existinglabel", "#123456");
+        Core.DTOs.Contact.LabelOperationResult result = await _service.CreateAsync("existinglabel", "#123456");
 
         result.Success.Should().BeFalse();
         result.Errors[0].Should().Contain("already exists");
@@ -68,7 +67,7 @@ public class LabelServiceTests
 
         _mockRepo.Setup(r => r.AddAsync(It.IsAny<Label>(), It.IsAny<CancellationToken>())).ReturnsAsync(new Label());
 
-        var result = await _service.CreateAsync("NewLabel", "#000000");
+        Core.DTOs.Contact.LabelOperationResult result = await _service.CreateAsync("NewLabel", "#000000");
 
         result.Success.Should().BeTrue();
         result.LabelId.Should().NotBeNull();
@@ -80,20 +79,21 @@ public class LabelServiceTests
     public async Task UpdateAsyncReturnsNotFoundWhenDoesNotExist()
     {
         _mockRepo.Setup(r => r.GetByIdAsync<Label>(It.IsAny<Guid>(), It.IsAny<CancellationToken>())).ReturnsAsync((Label?)null);
-        var result = await _service.UpdateAsync(Guid.NewGuid(), "NewName", null);
+        Core.DTOs.Contact.LabelOperationResult result = await _service.UpdateAsync(Guid.NewGuid(), "NewName", null);
         result.IsNotFound.Should().BeTrue();
     }
 
     [Fact]
     public async Task UpdateAsyncUpdatesLabelWhenValid()
     {
-        var id = Guid.NewGuid();
-        var label = new Label { Id = id, Name = "OldName", Color = null };
+        Guid id = Guid.NewGuid();
+        Label label = new()
+        { Id = id, Name = "OldName", Color = null };
         _mockRepo.Setup(r => r.GetByIdAsync<Label>(id, It.IsAny<CancellationToken>())).ReturnsAsync(label);
         _mockRepo.Setup(r => r.ListAsNoTrackingAsync(It.IsAny<Expression<Func<Label, bool>>>(), It.IsAny<CancellationToken>(), It.IsAny<string[]>()))
                  .ReturnsAsync([]);
 
-        var result = await _service.UpdateAsync(id, "NewName", "#123");
+        Core.DTOs.Contact.LabelOperationResult result = await _service.UpdateAsync(id, "NewName", "#123");
 
         result.Success.Should().BeTrue();
         label.Name.Should().Be("NewName");
@@ -116,9 +116,10 @@ public class LabelServiceTests
     [Fact]
     public async Task RemoveLabelAsyncRemovesContactLabelWhenExists()
     {
-        var id = Guid.NewGuid();
-        var contactLabel = new ContactLabel { Id = id };
-        _mockRepo.Setup(r => r.ListAsync(It.IsAny<Expression<Func<ContactLabel, bool>>>(), It.IsAny<CancellationToken>())).ReturnsAsync(new List<ContactLabel> { contactLabel });
+        Guid id = Guid.NewGuid();
+        ContactLabel contactLabel = new()
+        { Id = id };
+        _mockRepo.Setup(r => r.ListAsync(It.IsAny<Expression<Func<ContactLabel, bool>>>(), It.IsAny<CancellationToken>())).ReturnsAsync([contactLabel]);
 
         await _service.RemoveLabelAsync(Guid.NewGuid(), Guid.NewGuid());
 

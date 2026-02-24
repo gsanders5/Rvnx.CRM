@@ -17,11 +17,11 @@ namespace Rvnx.CRM.Tests.Extensions
         public async Task ListByChunkedContainsAsyncWhenEmptyKeysReturnsEmptyListAndDoesNotCallRepository()
         {
             // Arrange
-            var mockRepo = new Mock<IRepository>();
-            var keys = new List<Guid>();
+            Mock<IRepository> mockRepo = new();
+            List<Guid> keys = [];
 
             // Act
-            var result = await mockRepo.Object.ListByChunkedContainsAsync<TestEntity, Guid>(
+            List<TestEntity> result = await mockRepo.Object.ListByChunkedContainsAsync<TestEntity, Guid>(
                 keys,
                 chunk => e => chunk.Contains(e.GroupId));
 
@@ -35,14 +35,14 @@ namespace Rvnx.CRM.Tests.Extensions
         public async Task ListByChunkedContainsAsyncWhenUnder1000KeysCallsRepositoryOnce()
         {
             // Arrange
-            var mockRepo = new Mock<IRepository>();
-            var keys = Enumerable.Range(0, 500).Select(_ => Guid.NewGuid()).ToList();
-            
+            Mock<IRepository> mockRepo = new();
+            List<Guid> keys = Enumerable.Range(0, 500).Select(_ => Guid.NewGuid()).ToList();
+
             mockRepo.Setup(r => r.ListAsNoTrackingAsync(It.IsAny<Expression<Func<TestEntity, bool>>>(), It.IsAny<CancellationToken>(), It.IsAny<string[]>()))
-                .ReturnsAsync(new List<TestEntity> { new TestEntity { Id = Guid.NewGuid() } });
+                .ReturnsAsync([new TestEntity { Id = Guid.NewGuid() }]);
 
             // Act
-            var result = await mockRepo.Object.ListByChunkedContainsAsync<TestEntity, Guid>(
+            List<TestEntity> result = await mockRepo.Object.ListByChunkedContainsAsync<TestEntity, Guid>(
                 keys,
                 chunk => e => chunk.Contains(e.GroupId));
 
@@ -55,14 +55,14 @@ namespace Rvnx.CRM.Tests.Extensions
         public async Task ListByChunkedContainsAsyncWhenOver1000KeysCallsRepositoryMultipleTimes()
         {
             // Arrange
-            var mockRepo = new Mock<IRepository>();
-            var keys = Enumerable.Range(0, 2500).Select(_ => Guid.NewGuid()).ToList(); // Should split into 1000, 1000, 500
-            
+            Mock<IRepository> mockRepo = new();
+            List<Guid> keys = Enumerable.Range(0, 2500).Select(_ => Guid.NewGuid()).ToList(); // Should split into 1000, 1000, 500
+
             mockRepo.Setup(r => r.ListAsNoTrackingAsync(It.IsAny<Expression<Func<TestEntity, bool>>>(), It.IsAny<CancellationToken>(), It.IsAny<string[]>()))
-                .ReturnsAsync(new List<TestEntity> { new TestEntity { Id = Guid.NewGuid() } });
+                .ReturnsAsync([new TestEntity { Id = Guid.NewGuid() }]);
 
             // Act
-            var result = await mockRepo.Object.ListByChunkedContainsAsync<TestEntity, Guid>(
+            List<TestEntity> result = await mockRepo.Object.ListByChunkedContainsAsync<TestEntity, Guid>(
                 keys,
                 chunk => e => chunk.Contains(e.GroupId));
 
@@ -75,14 +75,14 @@ namespace Rvnx.CRM.Tests.Extensions
         public async Task ListByChunkedContainsAsyncWhenAsNoTrackingFalseCallsListAsync()
         {
             // Arrange
-            var mockRepo = new Mock<IRepository>();
-            var keys = new List<Guid> { Guid.NewGuid() };
-            
+            Mock<IRepository> mockRepo = new();
+            List<Guid> keys = [Guid.NewGuid()];
+
             mockRepo.Setup(r => r.ListAsync(It.IsAny<Expression<Func<TestEntity, bool>>>(), It.IsAny<CancellationToken>(), It.IsAny<string[]>()))
-                .ReturnsAsync(new List<TestEntity> { new TestEntity { Id = Guid.NewGuid() } });
+                .ReturnsAsync([new TestEntity { Id = Guid.NewGuid() }]);
 
             // Act
-            var result = await mockRepo.Object.ListByChunkedContainsAsync<TestEntity, Guid>(
+            List<TestEntity> result = await mockRepo.Object.ListByChunkedContainsAsync<TestEntity, Guid>(
                 keys,
                 chunk => e => chunk.Contains(e.GroupId),
                 asNoTracking: false);

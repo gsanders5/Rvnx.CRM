@@ -1,6 +1,5 @@
 using FluentAssertions;
 using Rvnx.CRM.Core.Extensions;
-using Xunit;
 
 namespace Rvnx.CRM.Tests.Extensions;
 
@@ -20,7 +19,7 @@ public class ColorContrastHelperTests
     [InlineData("#abc", "#000000")]    // 3-char light hex
     public void GetContrastTextColorReturnsExpectedColor(string? bg, string expectedText)
     {
-        var result = ColorContrastHelper.GetContrastTextColor(bg);
+        string result = ColorContrastHelper.GetContrastTextColor(bg);
         result.Should().Be(expectedText);
     }
 }

@@ -8,7 +8,6 @@ using Rvnx.CRM.Core.Models.Contact;
 using Rvnx.CRM.Core.Services;
 using Rvnx.CRM.Infrastructure.Data;
 using Rvnx.CRM.Infrastructure.Repositories;
-using Xunit;
 
 namespace Rvnx.CRM.Tests.Security
 {

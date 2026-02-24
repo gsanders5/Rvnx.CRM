@@ -291,12 +291,8 @@ namespace Rvnx.CRM.Tests.Services
             _repositoryMock.Setup(r => r.ListAsync<Contact>(It.IsAny<Expression<Func<Contact, bool>>>(), It.IsAny<CancellationToken>(), It.IsAny<string[]>()))
                 .ReturnsAsync((Expression<Func<Contact, bool>> predicate, CancellationToken ct, string[] includes) =>
                 {
-                    var func = predicate.Compile();
-                    if (func(new Contact { Id = partialContactId, IsPartial = true }))
-                    {
-                        return linkedContacts;
-                    }
-                    return [];
+                    Func<Contact, bool> func = predicate.Compile();
+                    return func(new Contact { Id = partialContactId, IsPartial = true }) ? linkedContacts : [];
                 });
 
             // Act
@@ -345,19 +341,19 @@ namespace Rvnx.CRM.Tests.Services
             List<Contact> linkedContacts = [
                 new Contact { Id = partialContactId, IsPartial = true }
             ];
-            
+
             // Setup ListAsync<Contact> to return based on the query pattern
             _repositoryMock.Setup(r => r.ListAsync<Contact>(It.IsAny<Expression<Func<Contact, bool>>>(), It.IsAny<CancellationToken>(), It.IsAny<string[]>()))
                 .ReturnsAsync((Expression<Func<Contact, bool>> predicate, CancellationToken ct, string[] includes) =>
                 {
-                    var func = predicate.Compile();
-                    
+                    Func<Contact, bool> func = predicate.Compile();
+
                     // Case 1: Checking if linkedContacts are partial
                     if (func(new Contact { Id = partialContactId, IsPartial = true }))
                     {
                         return linkedContacts; // Returns the partial contact
                     }
-                    
+
                     // Case 2: Checking if remaining siblings are full contacts
                     if (func(new Contact { Id = otherFullContactId, IsPartial = false }))
                     {

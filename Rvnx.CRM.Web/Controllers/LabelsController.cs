@@ -11,7 +11,7 @@ public class LabelsController(ILabelService labelService) : AuthorizedController
 
     public async Task<IActionResult> Index()
     {
-        var labels = await _labelService.GetAllAsync();
+        List<LabelDto> labels = await _labelService.GetAllAsync();
         return View(labels);
     }
 
@@ -26,13 +26,13 @@ public class LabelsController(ILabelService labelService) : AuthorizedController
     {
         if (ModelState.IsValid)
         {
-            var result = await _labelService.CreateAsync(formDto.Name, formDto.Color);
+            LabelOperationResult result = await _labelService.CreateAsync(formDto.Name, formDto.Color);
             if (result.Success)
             {
                 return RedirectToAction(nameof(Index));
             }
 
-            foreach (var error in result.Errors)
+            foreach (string error in result.Errors)
             {
                 ModelState.AddModelError("", error);
             }
@@ -42,12 +42,9 @@ public class LabelsController(ILabelService labelService) : AuthorizedController
 
     public async Task<IActionResult> Edit(Guid id)
     {
-        var labels = await _labelService.GetAllAsync();
-        var label = labels.FirstOrDefault(l => l.Id == id);
-        if (label == null)
-            return NotFound();
-
-        return View(new LabelFormDto { Id = label.Id, Name = label.Name, Color = label.Color });
+        List<LabelDto> labels = await _labelService.GetAllAsync();
+        LabelDto? label = labels.FirstOrDefault(l => l.Id == id);
+        return label == null ? NotFound() : View(new LabelFormDto { Id = label.Id, Name = label.Name, Color = label.Color });
     }
 
     [HttpPost]
@@ -55,11 +52,13 @@ public class LabelsController(ILabelService labelService) : AuthorizedController
     public async Task<IActionResult> Edit(Guid id, LabelFormDto formDto)
     {
         if (id != formDto.Id)
+        {
             return NotFound();
+        }
 
         if (ModelState.IsValid)
         {
-            var result = await _labelService.UpdateAsync(id, formDto.Name, formDto.Color);
+            LabelOperationResult result = await _labelService.UpdateAsync(id, formDto.Name, formDto.Color);
             if (result.Success)
             {
                 return RedirectToAction(nameof(Index));
@@ -69,7 +68,7 @@ public class LabelsController(ILabelService labelService) : AuthorizedController
                 return NotFound();
             }
 
-            foreach (var error in result.Errors)
+            foreach (string error in result.Errors)
             {
                 ModelState.AddModelError("", error);
             }
