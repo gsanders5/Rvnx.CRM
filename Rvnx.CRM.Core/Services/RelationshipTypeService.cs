@@ -9,23 +9,14 @@ public static class RelationshipTypeService
     [
         // Family
         new(Guid.Parse("b2e9a5c8-7f4d-4a1b-8c6e-5f9d3a0e2b4c"), "Spouse", "Spouse", "Family", EntityTypes.Person),
-        new(Guid.Parse("11111111-1111-1111-1111-111111111101"), "Husband", "Wife", "Family", EntityTypes.Person),
         new(Guid.Parse("7c1f8d22-1b6a-4c28-9c1e-3f5a2b8e9d1a"), "Parent", "Child", "Family", EntityTypes.Person),
-        new(Guid.Parse("11111111-1111-1111-1111-111111111102"), "Father", "Child", "Family", EntityTypes.Person),
-        new(Guid.Parse("11111111-1111-1111-1111-111111111103"), "Mother", "Child", "Family", EntityTypes.Person),
         new(Guid.Parse("d4f1b8a9-3e2c-4b5d-9a6f-1c0e7d8b5a2f"), "Sibling", "Sibling", "Family", EntityTypes.Person),
-        new(Guid.Parse("11111111-1111-1111-1111-111111111104"), "Brother", "Sister", "Family", EntityTypes.Person),
-        new(Guid.Parse("11111111-1111-1111-1111-111111111105"), "Brother", "Brother", "Family", EntityTypes.Person),
-        new(Guid.Parse("11111111-1111-1111-1111-111111111106"), "Sister", "Sister", "Family", EntityTypes.Person),
         new(Guid.Parse("11111111-1111-1111-1111-111111111107"), "Grandparent", "Grandchild", "Family", EntityTypes.Person),
         new(Guid.Parse("11111111-1111-1111-1111-111111111108"), "Uncle/Aunt", "Nephew/Niece", "Family", EntityTypes.Person),
         new(Guid.Parse("11111111-1111-1111-1111-111111111109"), "Cousin", "Cousin", "Family", EntityTypes.Person),
 
         // Romantic
         new(Guid.Parse("f9e8d7c6-b5a4-3210-9876-543210fedcba"), "Partner", "Partner", "Romantic", EntityTypes.Person),
-        new(Guid.Parse("22222222-2222-2222-2222-222222222201"), "Boyfriend", "Girlfriend", "Romantic", EntityTypes.Person),
-        new(Guid.Parse("22222222-2222-2222-2222-222222222202"), "Boyfriend", "Boyfriend", "Romantic", EntityTypes.Person),
-        new(Guid.Parse("22222222-2222-2222-2222-222222222203"), "Girlfriend", "Girlfriend", "Romantic", EntityTypes.Person),
 
         // Professional
         new(Guid.Parse("1a2b3c4d-5e6f-7890-a1b2-c3d4e5f67890"), "Manager", "Employee", "Professional", EntityTypes.Person),

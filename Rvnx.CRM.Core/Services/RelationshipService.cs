@@ -167,6 +167,11 @@ namespace Rvnx.CRM.Core.Services
             return options;
         }
 
+        public List<RelationshipTypeDefinition> GetRelationshipTypes(string entityType)
+        {
+            return [.. RelationshipTypeService.GetByEntityType(entityType).OrderBy(t => t.Category).ThenBy(t => t.Name)];
+        }
+
         public async Task<RelationshipOperationResult> CreatePartialContactRelationshipAsync(Guid parentEntityId, string selectedRelationshipType, CreatePartialContactRelationshipDto dto)
         {
             (Guid typeId, bool isReverse, string? error) = ParseRelationshipSelection(selectedRelationshipType);

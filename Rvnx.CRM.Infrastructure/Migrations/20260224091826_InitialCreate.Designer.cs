@@ -11,8 +11,8 @@ using Rvnx.CRM.Infrastructure.Data;
 namespace Rvnx.CRM.Infrastructure.Migrations
 {
     [DbContext(typeof(CRMDbContext))]
-    [Migration("20260223020713_AddContactPersonalAttributes")]
-    partial class AddContactPersonalAttributes
+    [Migration("20260224091826_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -324,6 +324,9 @@ namespace Rvnx.CRM.Infrastructure.Migrations
                     b.Property<bool>("IsHidden")
                         .HasColumnType("INTEGER");
 
+                    b.Property<bool>("IsPartial")
+                        .HasColumnType("INTEGER");
+
                     b.Property<string>("JobTitle")
                         .HasMaxLength(100)
                         .HasColumnType("TEXT");
@@ -361,6 +364,50 @@ namespace Rvnx.CRM.Infrastructure.Migrations
                     b.HasIndex("UserId");
 
                     b.ToTable("Contact");
+                });
+
+            modelBuilder.Entity("Rvnx.CRM.Core.Models.Contact.ContactLabel", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("ContactId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("CreatedBy")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("LabelId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("LastChangedBy")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("LastChangedDate")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("UserId")
+                        .HasMaxLength(450)
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("LabelId");
+
+                    b.HasIndex("UserId");
+
+                    b.HasIndex("ContactId", "LabelId")
+                        .IsUnique();
+
+                    b.ToTable("ContactLabel");
                 });
 
             modelBuilder.Entity("Rvnx.CRM.Core.Models.Contact.ContactMethod", b =>
@@ -465,6 +512,48 @@ namespace Rvnx.CRM.Infrastructure.Migrations
                         {
                             t.HasCheckConstraint("CHK_Fact_Owner", "ContactId IS NOT NULL");
                         });
+                });
+
+            modelBuilder.Entity("Rvnx.CRM.Core.Models.Contact.Label", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Color")
+                        .HasMaxLength(7)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("CreatedBy")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("LastChangedBy")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("LastChangedDate")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("UserId")
+                        .HasMaxLength(450)
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("Label");
                 });
 
             modelBuilder.Entity("Rvnx.CRM.Core.Models.Contact.Pet", b =>
@@ -862,6 +951,25 @@ namespace Rvnx.CRM.Infrastructure.Migrations
                     b.Navigation("Contact");
                 });
 
+            modelBuilder.Entity("Rvnx.CRM.Core.Models.Contact.ContactLabel", b =>
+                {
+                    b.HasOne("Rvnx.CRM.Core.Models.Contact.Contact", "Contact")
+                        .WithMany("ContactLabels")
+                        .HasForeignKey("ContactId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Rvnx.CRM.Core.Models.Contact.Label", "Label")
+                        .WithMany("ContactLabels")
+                        .HasForeignKey("LabelId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Contact");
+
+                    b.Navigation("Label");
+                });
+
             modelBuilder.Entity("Rvnx.CRM.Core.Models.Contact.ContactMethod", b =>
                 {
                     b.HasOne("Rvnx.CRM.Core.Models.Contact.Contact", "Contact")
@@ -944,6 +1052,8 @@ namespace Rvnx.CRM.Infrastructure.Migrations
 
                     b.Navigation("Attachments");
 
+                    b.Navigation("ContactLabels");
+
                     b.Navigation("ContactMethods");
 
                     b.Navigation("Employers");
@@ -957,6 +1067,11 @@ namespace Rvnx.CRM.Infrastructure.Migrations
                     b.Navigation("Reminders");
 
                     b.Navigation("SignificantDates");
+                });
+
+            modelBuilder.Entity("Rvnx.CRM.Core.Models.Contact.Label", b =>
+                {
+                    b.Navigation("ContactLabels");
                 });
 #pragma warning restore 612, 618
         }

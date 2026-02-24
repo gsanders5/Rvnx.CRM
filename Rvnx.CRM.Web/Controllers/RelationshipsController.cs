@@ -27,7 +27,8 @@ namespace Rvnx.CRM.Web.Controllers
                 EntityName = await GetEntityName(entityId, entityType),
                 RelatedEntityOptions =
                     await _relationshipService.GetRelatedEntityOptionsAsync(entityId, entityType),
-                RelationshipTypeOptions = _relationshipService.GetRelationshipTypeOptions(entityType)
+                RelationshipTypeOptions = _relationshipService.GetRelationshipTypeOptions(entityType),
+                RelationshipTypes = _relationshipService.GetRelationshipTypes(entityType)
             };
 
             return View(viewModel);
@@ -65,6 +66,7 @@ namespace Rvnx.CRM.Web.Controllers
             viewModel.RelationshipTypeOptions =
                 _relationshipService.GetRelationshipTypeOptions(viewModel.EntityType,
                     viewModel.SelectedRelationshipType);
+            viewModel.RelationshipTypes = _relationshipService.GetRelationshipTypes(viewModel.EntityType);
 
             return View(viewModel);
         }
@@ -147,6 +149,7 @@ namespace Rvnx.CRM.Web.Controllers
                         relationship.EntityType, relationship.RelatedEntityId),
                 RelationshipTypeOptions =
                     _relationshipService.GetRelationshipTypeOptions(relationship.EntityType, currentSelection),
+                RelationshipTypes = _relationshipService.GetRelationshipTypes(relationship.EntityType),
                 SelectedRelationshipType = currentSelection,
                 IsEntityPartial = await IsPartialContactAsync(relationship.EntityId),
                 IsRelatedEntityPartial = await IsPartialContactAsync(relationship.RelatedEntityId)
@@ -192,6 +195,7 @@ namespace Rvnx.CRM.Web.Controllers
             viewModel.RelationshipTypeOptions =
                 _relationshipService.GetRelationshipTypeOptions(viewModel.EntityType,
                     viewModel.SelectedRelationshipType);
+            viewModel.RelationshipTypes = _relationshipService.GetRelationshipTypes(viewModel.EntityType);
 
             return View(viewModel);
         }
