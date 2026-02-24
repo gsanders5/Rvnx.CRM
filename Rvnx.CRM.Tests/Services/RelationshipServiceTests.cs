@@ -481,5 +481,95 @@ namespace Rvnx.CRM.Tests.Services
             Assert.False(result.Success);
             Assert.Equal("Contact is not a partial contact.", result.ErrorMessage);
         }
+
+        [Fact]
+        public async Task CreatePartialContactRelationshipAsyncReverseCorrectlySwapsEntities()
+        {
+            // Arrange
+            Guid parentEntityId = Guid.NewGuid();
+            Guid typeId = Guid.NewGuid();
+            string selectedType = $"{typeId}_Rev";
+
+            CreatePartialContactRelationshipDto dto = new()
+            {
+                PartialContactFirstName = "John",
+                PartialContactLastName = "Doe",
+                Description = "A partial contact"
+            };
+
+            // Act
+            RelationshipOperationResult result = await _service.CreatePartialContactRelationshipAsync(parentEntityId, selectedType, dto);
+
+            // Assert
+            Assert.True(result.Success);
+            Assert.Equal(parentEntityId, result.RedirectId);
+
+            _repositoryMock.Verify(r => r.AddAsync(It.Is<Contact>(c => c.IsPartial && c.FirstName == "John" && c.LastName == "Doe"), It.IsAny<CancellationToken>()), Times.Once);
+
+            // EntityId should be partialContact.Id (we don't know it exactly, but we can infer it's NOT parentEntityId)
+            // RelatedEntityId should be parentEntityId
+            _repositoryMock.Verify(r => r.AddAsync(It.Is<Relationship>(rel => rel.RelatedEntityId == parentEntityId && rel.RelationshipTypeId == typeId && rel.Description == "A partial contact"), It.IsAny<CancellationToken>()), Times.Once);
+            _repositoryMock.Verify(r => r.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
+        }
+
+        [Fact]
+        public async Task CreatePartialContactRelationshipAsyncMissingTypeReturnsFailure()
+        {
+            // Arrange
+            Guid parentEntityId = Guid.NewGuid();
+            CreatePartialContactRelationshipDto dto = new();
+
+            // Act
+            RelationshipOperationResult result = await _service.CreatePartialContactRelationshipAsync(parentEntityId, "", dto);
+
+            // Assert
+            Assert.False(result.Success);
+            Assert.Equal("Relationship Type is required.", result.ErrorMessage);
+        }
+
+        [Fact]
+        public async Task CreatePartialContactRelationshipAsyncInvalidFormatReturnsFailure()
+        {
+            // Arrange
+            Guid parentEntityId = Guid.NewGuid();
+            CreatePartialContactRelationshipDto dto = new();
+
+            // Act
+            RelationshipOperationResult result = await _service.CreatePartialContactRelationshipAsync(parentEntityId, "InvalidFormat", dto);
+
+            // Assert
+            Assert.False(result.Success);
+            Assert.Equal("Invalid Relationship Type.", result.ErrorMessage);
+        }
+
+        [Fact]
+        public async Task GetRelatedEntityOptionsAsyncUnknownTypeReturnsEmptyList()
+        {
+            // Arrange
+            Guid entityId = Guid.NewGuid();
+
+            // Act
+            List<SelectOptionDto> result = await _service.GetRelatedEntityOptionsAsync(entityId, "UnknownType");
+
+            // Assert
+            Assert.Empty(result);
+        }
+
+        [Fact]
+        public async Task PromotePartialContactAsyncNotFoundReturnsFailure()
+        {
+            // Arrange
+            Guid contactId = Guid.NewGuid();
+
+            _repositoryMock.Setup(r => r.GetByIdAsync<Contact>(contactId, It.IsAny<CancellationToken>()))
+                .ReturnsAsync((Contact?)null);
+
+            // Act
+            RelationshipOperationResult result = await _service.PromotePartialContactAsync(contactId);
+
+            // Assert
+            Assert.False(result.Success);
+            Assert.Equal("Contact not found.", result.ErrorMessage);
+        }
     }
 }
