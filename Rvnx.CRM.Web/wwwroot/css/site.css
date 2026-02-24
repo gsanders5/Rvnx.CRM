@@ -148,7 +148,14 @@ body {
 
 /* Remove shadow from column visibility button on mobile */
 @media screen and (max-width: 767px) {
-    #contacts-table_wrapper .dt-buttons.btn-group {
+    .dt-buttons.btn-group {
         box-shadow: none !important;
+        width: auto !important;
+        display: inline-flex !important;
+    }
+
+    .dt-buttons .buttons-colvis {
+        width: auto !important;
+        flex: 0 0 auto !important;
     }
 }
