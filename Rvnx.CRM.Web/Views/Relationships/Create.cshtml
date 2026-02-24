@@ -42,23 +42,41 @@
                     <!-- Step 1: Type Selection -->
                     <div class="mb-4">
                         <label class="form-label fw-bold">Step 1: Choose Relationship Type</label>
-                        <div class="d-flex flex-wrap gap-2" id="type-selection-container">
-                            @foreach (var group in Model.RelationshipTypes.GroupBy(t => t.Category))
-                            {
-                                <div class="w-100 mt-2 mb-1 text-muted small text-uppercase fw-bold">@group.Key</div>
-                                @foreach (var type in group)
-                                {
-                                    <button type="button"
-                                            class="btn btn-outline-secondary relationship-type-btn"
-                                            data-id="@type.Id"
-                                            data-is-symmetric="@type.IsSymmetric.ToString().ToLower()"
-                                            data-name="@type.Name"
-                                            data-opposite-name="@type.OppositeName">
-                                        @(type.IsSymmetric ? type.Name : $"{type.Name} / {type.OppositeName}")
-                                    </button>
-                                }
-                            }
+
+                        <!-- Summary (Initially Hidden) -->
+                        <div id="type-selection-summary" class="card mb-2 bg-light border-0" style="display: none;">
+                            <div class="card-body p-2 d-flex justify-content-between align-items-center">
+                                <span class="fw-bold text-primary" id="selected-type-text"></span>
+                                <button type="button" class="btn btn-sm btn-link text-decoration-none" id="change-type-btn">
+                                    <i class="bi bi-pencil me-1"></i> Change
+                                </button>
+                            </div>
                         </div>
+
+                        <!-- Collapsible Container -->
+                        <div class="collapse show" id="typeSelectionCollapse">
+                            <div class="d-flex flex-wrap gap-2" id="type-selection-container">
+                                @foreach (var group in Model.RelationshipTypes.GroupBy(t => t.Category))
+                                {
+                                    <div class="w-100 mt-2 mb-1 text-muted small text-uppercase fw-bold">@group.Key</div>
+                                    @foreach (var type in group)
+                                    {
+                                        <button type="button"
+                                                class="btn btn-outline-secondary relationship-type-btn"
+                                                data-id="@type.Id"
+                                                data-is-symmetric="@type.IsSymmetric.ToString().ToLower()"
+                                                data-name="@type.Name"
+                                                data-opposite-name="@type.OppositeName">
+                                            @(type.IsSymmetric ? type.Name : $"{type.Name} / {type.OppositeName}")
+                                        </button>
+                                    }
+                                }
+                            </div>
+                        </div>
+
+                        <!-- Hidden toggle button for programmatic control -->
+                        <button class="d-none" type="button" id="typeCollapseToggle" data-mdb-collapse-init data-mdb-target="#typeSelectionCollapse"></button>
+
                         <span asp-validation-for="SelectedRelationshipType" class="text-danger"></span>
                     </div>
 
@@ -128,23 +146,40 @@
                          <!-- Step 1: Type Selection (Partial) -->
                         <div class="mb-4">
                             <label class="form-label fw-bold">Step 1: Choose Relationship Type</label>
-                            <div class="d-flex flex-wrap gap-2" id="type-selection-container-partial">
-                                @foreach (var group in Model.RelationshipTypes.GroupBy(t => t.Category))
-                                {
-                                    <div class="w-100 mt-2 mb-1 text-muted small text-uppercase fw-bold">@group.Key</div>
-                                    @foreach (var type in group)
-                                    {
-                                        <button type="button"
-                                                class="btn btn-outline-secondary relationship-type-btn-partial"
-                                                data-id="@type.Id"
-                                                data-is-symmetric="@type.IsSymmetric.ToString().ToLower()"
-                                                data-name="@type.Name"
-                                                data-opposite-name="@type.OppositeName">
-                                            @(type.IsSymmetric ? type.Name : $"{type.Name} / {type.OppositeName}")
-                                        </button>
-                                    }
-                                }
+
+                            <!-- Summary (Initially Hidden) -->
+                            <div id="type-selection-summary-partial" class="card mb-2 bg-light border-0" style="display: none;">
+                                <div class="card-body p-2 d-flex justify-content-between align-items-center">
+                                    <span class="fw-bold text-primary" id="selected-type-text-partial"></span>
+                                    <button type="button" class="btn btn-sm btn-link text-decoration-none" id="change-type-btn-partial">
+                                        <i class="bi bi-pencil me-1"></i> Change
+                                    </button>
+                                </div>
                             </div>
+
+                            <!-- Collapsible Container -->
+                            <div class="collapse show" id="typeSelectionCollapsePartial">
+                                <div class="d-flex flex-wrap gap-2" id="type-selection-container-partial">
+                                    @foreach (var group in Model.RelationshipTypes.GroupBy(t => t.Category))
+                                    {
+                                        <div class="w-100 mt-2 mb-1 text-muted small text-uppercase fw-bold">@group.Key</div>
+                                        @foreach (var type in group)
+                                        {
+                                            <button type="button"
+                                                    class="btn btn-outline-secondary relationship-type-btn-partial"
+                                                    data-id="@type.Id"
+                                                    data-is-symmetric="@type.IsSymmetric.ToString().ToLower()"
+                                                    data-name="@type.Name"
+                                                    data-opposite-name="@type.OppositeName">
+                                                @(type.IsSymmetric ? type.Name : $"{type.Name} / {type.OppositeName}")
+                                            </button>
+                                        }
+                                    }
+                                </div>
+                            </div>
+
+                            <!-- Hidden toggle button -->
+                            <button class="d-none" type="button" id="typeCollapseTogglePartial" data-mdb-collapse-init data-mdb-target="#typeSelectionCollapsePartial"></button>
                         </div>
 
                         <!-- Step 2: Role Selection (Partial - Initially Hidden) -->
@@ -209,6 +244,13 @@
                     this.relatedInput = document.getElementById(config.relatedInputId); // Select or Text Input
                     this.relatedInput2 = document.getElementById(config.relatedInputId2); // Optional second input (lastname)
 
+                    // Collapse Elements
+                    this.summaryContainer = document.getElementById(config.summaryId);
+                    this.summaryText = document.getElementById(config.summaryTextId);
+                    this.changeBtn = document.getElementById(config.changeBtnId);
+                    this.toggleBtn = document.getElementById(config.toggleBtnId);
+                    this.collapseEl = document.getElementById(config.collapseId);
+
                     this.entityName = config.entityName;
                     this.isPartialForm = config.isPartialForm || false;
 
@@ -236,6 +278,9 @@
                     if (this.fwdBtn) this.fwdBtn.addEventListener('click', () => this.handleRoleClick('Fwd'));
                     if (this.revBtn) this.revBtn.addEventListener('click', () => this.handleRoleClick('Rev'));
 
+                    // Change Button
+                    if (this.changeBtn) this.changeBtn.addEventListener('click', () => this.handleChangeClick());
+
                     // Related Entity Input Changes
                     if (this.relatedInput) {
                         this.relatedInput.addEventListener(this.isPartialForm ? 'input' : 'change', () => this.updatePreview());
@@ -244,7 +289,7 @@
                         this.relatedInput2.addEventListener('input', () => this.updatePreview());
                     }
 
-                    // Pre-population (e.g. after validation error)
+                    // Initial Pre-population
                     if (this.hiddenInput && this.hiddenInput.value) {
                          const parts = this.hiddenInput.value.split('_');
                          if (parts.length === 2) {
@@ -277,6 +322,16 @@
                     btn.classList.remove('btn-outline-secondary');
                     btn.classList.add('active', 'btn-secondary');
 
+                    // Update Summary
+                    const typeLabel = this.state.isSymmetric ? this.state.name : `${this.state.name} / ${this.state.oppositeName}`;
+                    this.summaryText.textContent = typeLabel;
+                    this.summaryContainer.style.display = 'block'; // Show summary
+
+                    // Collapse List
+                    if (this.collapseEl.classList.contains('show')) {
+                        this.toggleBtn.click();
+                    }
+
                     if (this.state.isSymmetric) {
                         this.roleContainer.style.display = 'none';
                         this.state.role = 'Fwd'; // Symmetric defaults to Fwd
@@ -296,6 +351,14 @@
                         this.hiddenInput.value = ''; // Clear selection until role picked
                         this.preview.style.display = 'none';
                     }
+                }
+
+                handleChangeClick() {
+                    this.summaryContainer.style.display = 'none';
+                    if (!this.collapseEl.classList.contains('show')) {
+                        this.toggleBtn.click();
+                    }
+                    // Keep the selection active but show the list
                 }
 
                 handleRoleClick(role) {
@@ -350,10 +413,6 @@
                     }
 
                     // Calculate display text
-                    // If symmetric: "Subject is [Name] of Target"
-                    // If asymmetric Fwd: "Subject is [Name] of Target" (e.g. Parent)
-                    // If asymmetric Rev: "Subject is [OppositeName] of Target" (e.g. Child)
-
                     let relationText = '';
                     if (this.state.isSymmetric) {
                         relationText = this.state.name;
@@ -389,6 +448,14 @@
                 revBtnId: 'role-rev-btn',
                 previewId: 'relationshipPreview',
                 relatedInputId: 'RelatedEntityId',
+
+                // Collapse Params
+                collapseId: 'typeSelectionCollapse',
+                summaryId: 'type-selection-summary',
+                summaryTextId: 'selected-type-text',
+                changeBtnId: 'change-type-btn',
+                toggleBtnId: 'typeCollapseToggle',
+
                 entityName: entityName,
                 isPartialForm: false
             });
@@ -404,6 +471,14 @@
                     previewId: 'relationshipPreviewPartial',
                     relatedInputId: 'PartialContactFirstName',
                     relatedInputId2: 'PartialContactLastName',
+
+                    // Collapse Params Partial
+                    collapseId: 'typeSelectionCollapsePartial',
+                    summaryId: 'type-selection-summary-partial',
+                    summaryTextId: 'selected-type-text-partial',
+                    changeBtnId: 'change-type-btn-partial',
+                    toggleBtnId: 'typeCollapseTogglePartial',
+
                     entityName: entityName,
                     isPartialForm: true
                 });

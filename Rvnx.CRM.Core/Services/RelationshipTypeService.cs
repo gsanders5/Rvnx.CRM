@@ -14,18 +14,26 @@ public static class RelationshipTypeService
         new(Guid.Parse("11111111-1111-1111-1111-111111111107"), "Grandparent", "Grandchild", "Family", EntityTypes.Person),
         new(Guid.Parse("11111111-1111-1111-1111-111111111108"), "Uncle/Aunt", "Nephew/Niece", "Family", EntityTypes.Person),
         new(Guid.Parse("11111111-1111-1111-1111-111111111109"), "Cousin", "Cousin", "Family", EntityTypes.Person),
+        new(Guid.Parse("11111111-1111-1111-1111-111111111110"), "Godparent", "Godchild", "Family", EntityTypes.Person),
+        new(Guid.Parse("11111111-1111-1111-1111-111111111111"), "Step-Parent", "Step-Child", "Family", EntityTypes.Person),
 
         // Romantic
         new(Guid.Parse("f9e8d7c6-b5a4-3210-9876-543210fedcba"), "Partner", "Partner", "Romantic", EntityTypes.Person),
+        new(Guid.Parse("f9e8d7c6-b5a4-3210-9876-543210fedcbb"), "Significant Other", "Significant Other", "Romantic", EntityTypes.Person),
+        new(Guid.Parse("f9e8d7c6-b5a4-3210-9876-543210fedcbc"), "Date", "Date", "Romantic", EntityTypes.Person),
+        new(Guid.Parse("f9e8d7c6-b5a4-3210-9876-543210fedcbd"), "Lover", "Lover", "Romantic", EntityTypes.Person),
+        new(Guid.Parse("f9e8d7c6-b5a4-3210-9876-543210fedcbe"), "Ex-Partner", "Ex-Partner", "Romantic", EntityTypes.Person),
 
         // Professional
         new(Guid.Parse("1a2b3c4d-5e6f-7890-a1b2-c3d4e5f67890"), "Manager", "Employee", "Professional", EntityTypes.Person),
+        new(Guid.Parse("1a2b3c4d-5e6f-7890-a1b2-c3d4e5f67891"), "Mentor", "Protege", "Professional", EntityTypes.Person),
         new(Guid.Parse("09876543-210f-edcb-a987-6543210fedcb"), "Teacher", "Student", "Professional", EntityTypes.Person),
         new(Guid.Parse("33333333-3333-3333-3333-333333333301"), "Colleague", "Colleague", "Professional", EntityTypes.Person),
         new(Guid.Parse("33333333-3333-3333-3333-333333333302"), "Business Partner", "Business Partner", "Professional", EntityTypes.Person),
 
         // Social
         new(Guid.Parse("a5b6c7d8-9e0f-1a2b-3c4d-5e6f7a8b9c0d"), "Friend", "Friend", "Social", EntityTypes.Person),
+        new(Guid.Parse("a5b6c7d8-9e0f-1a2b-3c4d-5e6f7a8b9c0e"), "Best Friend", "Best Friend", "Social", EntityTypes.Person),
         new(Guid.Parse("44444444-4444-4444-4444-444444444401"), "Acquaintance", "Acquaintance", "Social", EntityTypes.Person),
 
         // Company

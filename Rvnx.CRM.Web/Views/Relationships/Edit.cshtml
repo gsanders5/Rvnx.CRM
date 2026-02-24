@@ -23,23 +23,41 @@
             <!-- Step 1: Type Selection -->
             <div class="mb-4">
                 <label class="form-label fw-bold">Step 1: Choose Relationship Type</label>
-                <div class="d-flex flex-wrap gap-2" id="type-selection-container">
-                    @foreach (var group in Model.RelationshipTypes.GroupBy(t => t.Category))
-                    {
-                        <div class="w-100 mt-2 mb-1 text-muted small text-uppercase fw-bold">@group.Key</div>
-                        @foreach (var type in group)
-                        {
-                            <button type="button"
-                                    class="btn btn-outline-secondary relationship-type-btn"
-                                    data-id="@type.Id"
-                                    data-is-symmetric="@type.IsSymmetric.ToString().ToLower()"
-                                    data-name="@type.Name"
-                                    data-opposite-name="@type.OppositeName">
-                                @(type.IsSymmetric ? type.Name : $"{type.Name} / {type.OppositeName}")
-                            </button>
-                        }
-                    }
+
+                <!-- Summary (Initially Hidden) -->
+                <div id="type-selection-summary" class="card mb-2 bg-light border-0" style="display: none;">
+                    <div class="card-body p-2 d-flex justify-content-between align-items-center">
+                        <span class="fw-bold text-primary" id="selected-type-text"></span>
+                        <button type="button" class="btn btn-sm btn-link text-decoration-none" id="change-type-btn">
+                            <i class="bi bi-pencil me-1"></i> Change
+                        </button>
+                    </div>
                 </div>
+
+                <!-- Collapsible Container -->
+                <div class="collapse show" id="typeSelectionCollapse">
+                    <div class="d-flex flex-wrap gap-2" id="type-selection-container">
+                        @foreach (var group in Model.RelationshipTypes.GroupBy(t => t.Category))
+                        {
+                            <div class="w-100 mt-2 mb-1 text-muted small text-uppercase fw-bold">@group.Key</div>
+                            @foreach (var type in group)
+                            {
+                                <button type="button"
+                                        class="btn btn-outline-secondary relationship-type-btn"
+                                        data-id="@type.Id"
+                                        data-is-symmetric="@type.IsSymmetric.ToString().ToLower()"
+                                        data-name="@type.Name"
+                                        data-opposite-name="@type.OppositeName">
+                                    @(type.IsSymmetric ? type.Name : $"{type.Name} / {type.OppositeName}")
+                                </button>
+                            }
+                        }
+                    </div>
+                </div>
+
+                <!-- Hidden toggle button -->
+                <button class="d-none" type="button" id="typeCollapseToggle" data-mdb-collapse-init data-mdb-target="#typeSelectionCollapse"></button>
+
                 <span asp-validation-for="SelectedRelationshipType" class="text-danger"></span>
             </div>
 
@@ -132,156 +150,215 @@
     @{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); }
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            const entityName = @Html.Raw(Json.Serialize(Model.EntityName));
+            // --- Helper Class for Relationship Logic ---
+            class RelationshipSelector {
+                constructor(config) {
+                    this.container = document.getElementById(config.containerId);
+                    this.roleContainer = document.getElementById(config.roleContainerId);
+                    this.hiddenInput = document.getElementById(config.hiddenInputId);
+                    this.fwdBtn = document.getElementById(config.fwdBtnId);
+                    this.revBtn = document.getElementById(config.revBtnId);
+                    this.preview = document.getElementById(config.previewId);
+                    this.relatedInput = document.getElementById(config.relatedInputId);
 
-            // Elements
-            const container = document.getElementById('type-selection-container');
-            const roleContainer = document.getElementById('role-selection-container');
-            const hiddenInput = document.getElementById('SelectedRelationshipType');
-            const fwdBtn = document.getElementById('role-fwd-btn');
-            const revBtn = document.getElementById('role-rev-btn');
-            const preview = document.getElementById('relationshipPreview');
-            const relatedInput = document.getElementById('RelatedEntityId');
+                    // Collapse Elements
+                    this.summaryContainer = document.getElementById(config.summaryId);
+                    this.summaryText = document.getElementById(config.summaryTextId);
+                    this.changeBtn = document.getElementById(config.changeBtnId);
+                    this.toggleBtn = document.getElementById(config.toggleBtnId);
+                    this.collapseEl = document.getElementById(config.collapseId);
 
-            let state = {
-                typeId: null,
-                isSymmetric: false,
-                name: '',
-                oppositeName: '',
-                role: null
-            };
+                    this.entityName = config.entityName;
 
-            function handleTypeClick(btn) {
-                // Update State
-                state.typeId = btn.dataset.id;
-                state.isSymmetric = btn.dataset.isSymmetric === 'true';
-                state.name = btn.dataset.name;
-                state.oppositeName = btn.dataset.oppositeName;
-                state.role = null;
+                    this.state = {
+                        typeId: null,
+                        isSymmetric: false,
+                        name: '',
+                        oppositeName: '',
+                        role: null // 'Fwd' or 'Rev'
+                    };
 
-                // Update UI (Active Class)
-                container.querySelectorAll('button').forEach(b => {
-                    b.classList.remove('active', 'btn-secondary');
-                    b.classList.add('btn-outline-secondary');
-                });
-
-                btn.classList.remove('btn-outline-secondary');
-                btn.classList.add('active', 'btn-secondary');
-
-                if (state.isSymmetric) {
-                    roleContainer.style.display = 'none';
-                    state.role = 'Fwd';
-                    updateHiddenInput();
-                    updatePreview();
-                } else {
-                    roleContainer.style.display = 'block';
-                    fwdBtn.textContent = state.name;
-                    revBtn.textContent = state.oppositeName;
-
-                    // Reset Role Buttons
-                    fwdBtn.classList.remove('active', 'btn-primary');
-                    fwdBtn.classList.add('btn-outline-primary');
-                    revBtn.classList.remove('active', 'btn-primary');
-                    revBtn.classList.add('btn-outline-primary');
-
-                    hiddenInput.value = '';
-                    preview.style.display = 'none';
-                }
-            }
-
-            function handleRoleClick(role) {
-                state.role = role;
-
-                if (role === 'Fwd') {
-                    fwdBtn.classList.add('active', 'btn-primary');
-                    fwdBtn.classList.remove('btn-outline-primary');
-                    revBtn.classList.remove('active', 'btn-primary');
-                    revBtn.classList.add('btn-outline-primary');
-                } else {
-                    revBtn.classList.add('active', 'btn-primary');
-                    revBtn.classList.remove('btn-outline-primary');
-                    fwdBtn.classList.remove('active', 'btn-primary');
-                    fwdBtn.classList.add('btn-outline-primary');
+                    this.init();
                 }
 
-                updateHiddenInput();
-                updatePreview();
-            }
+                init() {
+                    if (!this.container) return; // Guard clause
 
-            function updateHiddenInput() {
-                if (state.typeId && state.role) {
-                    hiddenInput.value = `${state.typeId}_${state.role}`;
-                } else {
-                    hiddenInput.value = '';
-                }
-            }
+                    // Type Buttons
+                    const typeBtns = this.container.querySelectorAll('button');
+                    typeBtns.forEach(btn => {
+                        btn.addEventListener('click', () => this.handleTypeClick(btn));
+                    });
 
-            function updatePreview() {
-                if (!state.typeId || !state.role || !relatedInput.value) {
-                    preview.style.display = 'none';
-                    return;
-                }
+                    // Role Buttons
+                    if (this.fwdBtn) this.fwdBtn.addEventListener('click', () => this.handleRoleClick('Fwd'));
+                    if (this.revBtn) this.revBtn.addEventListener('click', () => this.handleRoleClick('Rev'));
 
-                const relatedName = relatedInput.options[relatedInput.selectedIndex].text;
+                    // Change Button
+                    if (this.changeBtn) this.changeBtn.addEventListener('click', () => this.handleChangeClick());
 
-                let relationText = '';
-                if (state.isSymmetric) {
-                    relationText = state.name;
-                } else {
-                    relationText = state.role === 'Fwd' ? state.name : state.oppositeName;
-                }
+                    // Related Entity Input Changes
+                    if (this.relatedInput) {
+                        this.relatedInput.addEventListener('change', () => this.updatePreview());
+                    }
 
-                preview.style.display = 'block';
-                preview.textContent = '';
+                    // Initial Pre-population
+                    if (this.hiddenInput && this.hiddenInput.value) {
+                         const parts = this.hiddenInput.value.split('_');
+                         if (parts.length === 2) {
+                             const typeId = parts[0];
+                             const role = parts[1];
 
-                const s1 = document.createElement('strong');
-                s1.textContent = entityName;
-                preview.appendChild(s1);
-
-                preview.appendChild(document.createTextNode(` is ${relationText} of `));
-
-                const s2 = document.createElement('strong');
-                s2.textContent = relatedName;
-                preview.appendChild(s2);
-
-                preview.appendChild(document.createTextNode('.'));
-            }
-
-            // Initialization logic
-            function init() {
-                // Event Listeners
-                container.querySelectorAll('button').forEach(btn => {
-                    btn.addEventListener('click', () => handleTypeClick(btn));
-                });
-
-                fwdBtn.addEventListener('click', () => handleRoleClick('Fwd'));
-                revBtn.addEventListener('click', () => handleRoleClick('Rev'));
-                relatedInput.addEventListener('change', updatePreview);
-
-                // Pre-populate if value exists
-                if (hiddenInput.value) {
-                    const parts = hiddenInput.value.split('_');
-                    if (parts.length === 2) {
-                        const typeId = parts[0];
-                        const role = parts[1];
-
-                        // Find Type Button
-                        const typeBtn = container.querySelector(`button[data-id="${typeId}"]`);
-                        if (typeBtn) {
-                            // Click it (sets state)
-                            typeBtn.click(); // This will trigger handleTypeClick
-
-                            // If Asymmetric, click Role
-                            if (roleContainer.style.display !== 'none') {
-                                if (role === 'Fwd') fwdBtn.click();
-                                else revBtn.click();
-                            }
-                        }
+                             const typeBtn = this.container.querySelector(`button[data-id="${typeId}"]`);
+                             if (typeBtn) {
+                                 this.handleTypeClick(typeBtn);
+                                 if (!this.state.isSymmetric) {
+                                     this.handleRoleClick(role);
+                                 }
+                             }
+                         }
                     }
                 }
+
+                handleTypeClick(btn) {
+                    // Update State
+                    this.state.typeId = btn.dataset.id;
+                    this.state.isSymmetric = btn.dataset.isSymmetric === 'true';
+                    this.state.name = btn.dataset.name;
+                    this.state.oppositeName = btn.dataset.oppositeName;
+                    this.state.role = null; // Reset role on type change
+
+                    // Update UI (Active Class)
+                    this.container.querySelectorAll('button').forEach(b => b.classList.remove('active', 'btn-secondary'));
+                    this.container.querySelectorAll('button').forEach(b => b.classList.add('btn-outline-secondary'));
+
+                    btn.classList.remove('btn-outline-secondary');
+                    btn.classList.add('active', 'btn-secondary');
+
+                    // Update Summary
+                    const typeLabel = this.state.isSymmetric ? this.state.name : `${this.state.name} / ${this.state.oppositeName}`;
+                    this.summaryText.textContent = typeLabel;
+                    this.summaryContainer.style.display = 'block'; // Show summary
+
+                    // Collapse List
+                    if (this.collapseEl.classList.contains('show')) {
+                        this.toggleBtn.click();
+                    }
+
+                    if (this.state.isSymmetric) {
+                        this.roleContainer.style.display = 'none';
+                        this.state.role = 'Fwd'; // Symmetric defaults to Fwd
+                        this.updateHiddenInput();
+                        this.updatePreview();
+                    } else {
+                        this.roleContainer.style.display = 'block';
+                        this.fwdBtn.textContent = this.state.name;
+                        this.revBtn.textContent = this.state.oppositeName;
+
+                        // Reset Role Buttons
+                        this.fwdBtn.classList.remove('active', 'btn-primary');
+                        this.fwdBtn.classList.add('btn-outline-primary');
+                        this.revBtn.classList.remove('active', 'btn-primary');
+                        this.revBtn.classList.add('btn-outline-primary');
+
+                        this.hiddenInput.value = ''; // Clear selection until role picked
+                        this.preview.style.display = 'none';
+                    }
+                }
+
+                handleChangeClick() {
+                    this.summaryContainer.style.display = 'none';
+                    if (!this.collapseEl.classList.contains('show')) {
+                        this.toggleBtn.click();
+                    }
+                }
+
+                handleRoleClick(role) {
+                    this.state.role = role;
+
+                    // Update UI
+                    if (role === 'Fwd') {
+                        this.fwdBtn.classList.add('active', 'btn-primary');
+                        this.fwdBtn.classList.remove('btn-outline-primary');
+                        this.revBtn.classList.remove('active', 'btn-primary');
+                        this.revBtn.classList.add('btn-outline-primary');
+                    } else {
+                        this.revBtn.classList.add('active', 'btn-primary');
+                        this.revBtn.classList.remove('btn-outline-primary');
+                        this.fwdBtn.classList.remove('active', 'btn-primary');
+                        this.fwdBtn.classList.add('btn-outline-primary');
+                    }
+
+                    this.updateHiddenInput();
+                    this.updatePreview();
+                }
+
+                updateHiddenInput() {
+                    if (this.state.typeId && this.state.role) {
+                        this.hiddenInput.value = `${this.state.typeId}_${this.state.role}`;
+                    } else {
+                        this.hiddenInput.value = '';
+                    }
+                }
+
+                updatePreview() {
+                    if (!this.state.typeId || !this.state.role) {
+                        this.preview.style.display = 'none';
+                        return;
+                    }
+
+                    if (!this.relatedInput.value) {
+                         this.preview.style.display = 'none';
+                         return;
+                    }
+                    const relatedName = this.relatedInput.options[this.relatedInput.selectedIndex].text;
+
+                    // Calculate display text
+                    let relationText = '';
+                    if (this.state.isSymmetric) {
+                        relationText = this.state.name;
+                    } else {
+                        relationText = this.state.role === 'Fwd' ? this.state.name : this.state.oppositeName;
+                    }
+
+                    this.preview.style.display = 'block';
+                    this.preview.textContent = '';
+
+                    const s1 = document.createElement('strong');
+                    s1.textContent = this.entityName;
+                    this.preview.appendChild(s1);
+
+                    this.preview.appendChild(document.createTextNode(` is ${relationText} of `));
+
+                    const s2 = document.createElement('strong');
+                    s2.textContent = relatedName;
+                    this.preview.appendChild(s2);
+
+                    this.preview.appendChild(document.createTextNode('.'));
+                }
             }
 
-            init();
+            const entityName = @Html.Raw(Json.Serialize(Model.EntityName));
+
+            // Initialize Form
+            new RelationshipSelector({
+                containerId: 'type-selection-container',
+                roleContainerId: 'role-selection-container',
+                hiddenInputId: 'SelectedRelationshipType',
+                fwdBtnId: 'role-fwd-btn',
+                revBtnId: 'role-rev-btn',
+                previewId: 'relationshipPreview',
+                relatedInputId: 'RelatedEntityId',
+
+                // Collapse Params
+                collapseId: 'typeSelectionCollapse',
+                summaryId: 'type-selection-summary',
+                summaryTextId: 'selected-type-text',
+                changeBtnId: 'change-type-btn',
+                toggleBtnId: 'typeCollapseToggle',
+
+                entityName: entityName
+            });
         });
     </script>
 }
