@@ -39,11 +39,11 @@ namespace Rvnx.CRM.Tests.Services
                 .ReturnsAsync([contact]);
 
             // Setup ListAsNoTrackingAsync for Label (all labels query) - return empty or relevant
-             _repositoryMock.Setup(r => r.ListAsNoTrackingAsync<Label>(
-                It.IsAny<Expression<Func<Label, bool>>>(),
-                It.IsAny<CancellationToken>(),
-                It.IsAny<string[]>()))
-                .ReturnsAsync([]);
+            _repositoryMock.Setup(r => r.ListAsNoTrackingAsync<Label>(
+               It.IsAny<Expression<Func<Label, bool>>>(),
+               It.IsAny<CancellationToken>(),
+               It.IsAny<string[]>()))
+               .ReturnsAsync([]);
 
             // Setup ListAsNoTrackingAsync for ContactLabel (the separate query we want to eliminate)
             // Return EMPTY list to prove that if it IS called, it would return nothing (simulating DB behavior if we didn't mock it well, but here we explicitly return empty).

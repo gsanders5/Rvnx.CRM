@@ -98,6 +98,9 @@ namespace Rvnx.CRM.Web.Controllers
                 : File(dto.Content, dto.ContentType, dto.FileName);
         }
 
-        private static bool IsImage(string contentType) => ImageContentTypes.Contains(contentType);
+        private static bool IsImage(string contentType)
+        {
+            return ImageContentTypes.Contains(contentType);
+        }
     }
 }
