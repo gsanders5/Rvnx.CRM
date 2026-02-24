@@ -11,10 +11,7 @@ namespace Rvnx.CRM.Tests.Controllers
     {
         private static AttachmentsController GetController(Mock<IAttachmentService> serviceMock)
         {
-            Mock<IFileValidationService> validationMock = new();
-            validationMock.Setup(v => v.IsAllowedExtension(It.IsAny<string>())).Returns(true);
-
-            AttachmentsController controller = new(serviceMock.Object, validationMock.Object)
+            AttachmentsController controller = new(serviceMock.Object)
             {
                 ControllerContext = new ControllerContext
                 {
