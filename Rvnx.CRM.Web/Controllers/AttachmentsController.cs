@@ -2,14 +2,12 @@ using Microsoft.AspNetCore.Mvc;
 using Rvnx.CRM.Core.DTOs.Base;
 using Rvnx.CRM.Core.Interfaces;
 using Rvnx.CRM.Web.Controllers.Base;
-using System.Collections.Frozen;
 
 namespace Rvnx.CRM.Web.Controllers
 {
     public class AttachmentsController(IAttachmentService attachmentService) : AuthorizedController
     {
         private readonly IAttachmentService _attachmentService = attachmentService;
-        private static readonly FrozenSet<string> ImageContentTypes = new[] { "image/jpeg", "image/png", "image/gif" }.ToFrozenSet(StringComparer.OrdinalIgnoreCase);
 
         [HttpPost]
         [ValidateAntiForgeryToken]
@@ -87,9 +85,16 @@ namespace Rvnx.CRM.Web.Controllers
             Response.Headers.LastModified = dto.LastChangedDate.ToString("R");
             Response.Headers.CacheControl = "public, max-age=31536000";
 
-            return ImageContentTypes.Contains(dto.ContentType)
+            return IsImage(dto.ContentType)
                 ? File(dto.Content, dto.ContentType)
                 : File(dto.Content, dto.ContentType, dto.FileName);
+        }
+
+        private static bool IsImage(string contentType)
+        {
+            return string.Equals(contentType, "image/jpeg", StringComparison.OrdinalIgnoreCase) ||
+                   string.Equals(contentType, "image/png", StringComparison.OrdinalIgnoreCase) ||
+                   string.Equals(contentType, "image/gif", StringComparison.OrdinalIgnoreCase);
         }
     }
 }
