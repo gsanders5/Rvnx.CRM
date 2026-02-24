@@ -47,65 +47,6 @@
                 </tr>
             </thead>
             <tbody>
-            @foreach (var item in Model.Contacts)
-            {
-                <tr>
-                    <td data-order="@(item.ProfileImageId.HasValue ? 1 : 0)">
-                        <div class="d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
-                            @if (item.ProfileImageId.HasValue)
-                            {
-                                <img src="@Url.Action("View", "Attachments", new { id = item.ProfileImageId })" class="rounded-circle" width="40" height="40" alt="@item.FullName" style="object-fit: cover;" loading="lazy" />
-                            }
-                            else
-                            {
-                                <div class="rounded-circle bg-secondary text-white d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
-                                    <i class="bi bi-person-fill" aria-hidden="true"></i>
-                                </div>
-                            }
-                        </div>
-                    </td>
-                    <td>
-                        <a asp-action="Details" asp-route-id="@item.Id" class="fw-bold text-decoration-none">
-                            @item.FullName
-                        </a>
-                        @if (item.IsHidden)
-                        {
-                            <span class="badge bg-secondary ms-2" title="Hidden">
-                                <i class="bi bi-eye-slash"></i>
-                            </span>
-                        }
-                        @if (item.Labels != null && item.Labels.Any())
-                        {
-                            <div class="mt-1 d-flex gap-1 flex-wrap">
-                                @foreach (var label in item.Labels)
-                                {
-                                    @await Html.PartialAsync("_LabelBadge", label)
-                                }
-                            </div>
-                        }
-                    </td>
-                    <td>@item.Company</td>
-                    <td>@item.JobTitle</td>
-                    <td>@item.CreatedDate.ToShortDateString()</td>
-                    <td>@item.Pronouns</td>
-                    <td>@item.Gender</td>
-                    <td>@item.Religion</td>
-                    <td>@item.LastChangedDate.ToShortDateString()</td>
-                    <td>
-                        <div class="btn-group btn-group-sm">
-                            <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-outline-secondary" title="Edit" aria-label="Edit @item.FullName">
-                                <i class="bi bi-pencil-square"></i>
-                            </a>
-                            <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-outline-info" title="Details" aria-label="Details for @item.FullName">
-                                <i class="bi bi-info-circle"></i>
-                            </a>
-                            <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-outline-danger" title="Delete" aria-label="Delete @item.FullName">
-                                <i class="bi bi-trash"></i>
-                            </a>
-                        </div>
-                    </td>
-                </tr>
-            }
             </tbody>
         </table>
     </div>
@@ -130,6 +71,15 @@ else
     <script>
         $(document).ready(function () {
             $('#contacts-table').DataTable({
+                ajax: {
+                    url: '@Url.Action("DataTable", "Contacts")',
+                    type: 'GET',
+                    data: function (d) {
+                        d.showHidden = '@(Context.Request.Query["showHidden"] == "True")';
+                    }
+                },
+                processing: true,
+                serverSide: true,
                 paging: true,
                 pageLength: 25,
                 order: [[1, 'asc']],
@@ -138,6 +88,18 @@ else
                 searching: true,
                 searchDelay: 300,
                 autoWidth: false,
+                columns: [
+                    { data: 'photoHtml', orderable: false, searchable: false },
+                    { data: 'nameHtml' },
+                    { data: 'company' },
+                    { data: 'jobTitle' },
+                    { data: 'createdDate', render: function(data) { return data ? new Date(data).toLocaleDateString() : ''; } },
+                    { data: 'pronouns' },
+                    { data: 'gender' },
+                    { data: 'religion' },
+                    { data: 'lastChangedDate', render: function(data) { return data ? new Date(data).toLocaleDateString() : ''; } },
+                    { data: 'actionsHtml', orderable: false, searchable: false }
+                ],
                 layout: {
                     topStart: 'pageLength',
                     topEnd: {

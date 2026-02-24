@@ -20,6 +20,22 @@ public interface IRepository
 
     Task<List<T>> ListAsNoTrackingAsync<T>(Expression<Func<T, bool>> predicate, CancellationToken cancellationToken = default, params string[] includes) where T : BaseEntity;
 
+    Task<List<T>> ListPagedAsync<T>(
+        Expression<Func<T, bool>> predicate,
+        Func<IQueryable<T>, IOrderedQueryable<T>>? orderBy = null,
+        int? skip = null,
+        int? take = null,
+        CancellationToken cancellationToken = default,
+        params string[] includes) where T : BaseEntity;
+
+    Task<List<T>> ListAsNoTrackingPagedAsync<T>(
+        Expression<Func<T, bool>> predicate,
+        Func<IQueryable<T>, IOrderedQueryable<T>>? orderBy = null,
+        int? skip = null,
+        int? take = null,
+        CancellationToken cancellationToken = default,
+        params string[] includes) where T : BaseEntity;
+
 
     // Create Operations  
     Task<T> AddAsync<T>(T entity, CancellationToken cancellationToken = default) where T : BaseEntity;

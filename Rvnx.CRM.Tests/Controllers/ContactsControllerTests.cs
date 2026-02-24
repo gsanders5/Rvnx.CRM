@@ -54,13 +54,7 @@ namespace Rvnx.CRM.Tests.Controllers
         public async Task IndexReturnsViewWithContacts()
         {
             // Arrange
-            List<ContactDto> contacts =
-            [
-                new ContactDto { Id = Guid.NewGuid(), FirstName = "John", LastName = "Doe" },
-                new ContactDto { Id = Guid.NewGuid(), FirstName = "Jane", LastName = "Doe" }
-            ];
-
-            _contactReadServiceMock.Setup(s => s.GetIndexDataAsync(It.IsAny<bool>())).ReturnsAsync(contacts);
+            _contactReadServiceMock.Setup(s => s.HasAnyContactsAsync(It.IsAny<bool>())).ReturnsAsync(true);
 
             // Act
             IActionResult result = await _controller.Index();
@@ -68,7 +62,7 @@ namespace Rvnx.CRM.Tests.Controllers
             // Assert
             ViewResult viewResult = Assert.IsType<ViewResult>(result);
             ContactIndexViewModel model = Assert.IsAssignableFrom<ContactIndexViewModel>(viewResult.Model);
-            Assert.Equal(2, model.Contacts.Count());
+            Assert.NotEmpty(model.Contacts);
         }
 
         [Fact]

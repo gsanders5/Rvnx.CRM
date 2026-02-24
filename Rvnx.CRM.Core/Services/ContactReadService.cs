@@ -1,17 +1,25 @@
 using Rvnx.CRM.Core.Constants;
+using Rvnx.CRM.Core.DTOs.Common;
 using Rvnx.CRM.Core.DTOs.Contact;
+using Rvnx.CRM.Core.DTOs.DataTable;
 using Rvnx.CRM.Core.Enumerations;
 using Rvnx.CRM.Core.Extensions;
 using Rvnx.CRM.Core.Interfaces;
 using Rvnx.CRM.Core.Models.Base;
 using Rvnx.CRM.Core.Models.Contact;
 using Rvnx.CRM.Core.Models.Dates;
+using System.Linq.Expressions;
 
 namespace Rvnx.CRM.Core.Services;
 
 public class ContactReadService(IRepository repository) : IContactReadService
 {
     private readonly IRepository _repository = repository;
+
+    public async Task<bool> HasAnyContactsAsync(bool showHidden)
+    {
+        return await _repository.CountAsync<Contact>(x => x.IsHidden == showHidden && !x.IsPartial) > 0;
+    }
 
     public async Task<List<ContactDto>> GetIndexDataAsync(bool showHidden)
     {
@@ -20,6 +28,79 @@ public class ContactReadService(IRepository repository) : IContactReadService
         List<ContactDto> contactDtos = [.. contacts.Select(c => c.ToDto())];
         List<Guid> contactIds = [.. contacts.Select(c => c.Id)];
 
+        await StitchRelatedDataAsync(contactDtos, contactIds);
+
+        return contactDtos;
+    }
+
+    public async Task<PagedResult<ContactDto>> GetContactDataTableAsync(DataTableRequestDto request, bool showHidden)
+    {
+        Expression<Func<Contact, bool>> predicate;
+
+        if (!string.IsNullOrWhiteSpace(request.Search.Value))
+        {
+            string val = request.Search.Value;
+            predicate = x => x.IsHidden == showHidden && !x.IsPartial &&
+                (x.FirstName.Contains(val) ||
+                 (x.LastName != null && x.LastName.Contains(val)) ||
+                 (x.Company != null && x.Company.Contains(val)) ||
+                 (x.JobTitle != null && x.JobTitle.Contains(val)) ||
+                 x.ContactLabels.Any(cl => cl.Label.Name.Contains(val)));
+        }
+        else
+        {
+            predicate = x => x.IsHidden == showHidden && !x.IsPartial;
+        }
+
+        int totalCount = await _repository.CountAsync<Contact>(x => x.IsHidden == showHidden && !x.IsPartial);
+        int filteredCount = await _repository.CountAsync(predicate);
+
+        Func<IQueryable<Contact>, IOrderedQueryable<Contact>>? orderBy = null;
+        if (request.Order.Count > 0)
+        {
+            DataTableOrderDto order = request.Order[0];
+            bool asc = order.Dir == "asc";
+
+            switch (order.Column)
+            {
+                case 1: orderBy = q => asc ? q.OrderBy(c => c.FirstName).ThenBy(c => c.LastName) : q.OrderByDescending(c => c.FirstName).ThenByDescending(c => c.LastName); break;
+                case 2: orderBy = q => asc ? q.OrderBy(c => c.Company) : q.OrderByDescending(c => c.Company); break;
+                case 3: orderBy = q => asc ? q.OrderBy(c => c.JobTitle) : q.OrderByDescending(c => c.JobTitle); break;
+                case 4: orderBy = q => asc ? q.OrderBy(c => c.CreatedDate) : q.OrderByDescending(c => c.CreatedDate); break;
+                case 5: orderBy = q => asc ? q.OrderBy(c => c.Pronouns) : q.OrderByDescending(c => c.Pronouns); break;
+                case 6: orderBy = q => asc ? q.OrderBy(c => c.Gender) : q.OrderByDescending(c => c.Gender); break;
+                case 7: orderBy = q => asc ? q.OrderBy(c => c.Religion) : q.OrderByDescending(c => c.Religion); break;
+                case 8: orderBy = q => asc ? q.OrderBy(c => c.LastChangedDate) : q.OrderByDescending(c => c.LastChangedDate); break;
+                default: orderBy = q => q.OrderBy(c => c.FirstName); break;
+            }
+        }
+        else
+        {
+            orderBy = q => q.OrderBy(c => c.FirstName);
+        }
+
+        List<Contact> contacts = await _repository.ListAsNoTrackingPagedAsync(
+            predicate,
+            orderBy,
+            request.Start,
+            request.Length,
+            default);
+
+        List<ContactDto> contactDtos = [.. contacts.Select(c => c.ToDto())];
+        List<Guid> contactIds = [.. contacts.Select(c => c.Id)];
+
+        await StitchRelatedDataAsync(contactDtos, contactIds);
+
+        return new PagedResult<ContactDto>
+        {
+            Items = contactDtos,
+            TotalCount = totalCount,
+            FilteredCount = filteredCount
+        };
+    }
+
+    private async Task StitchRelatedDataAsync(List<ContactDto> contactDtos, List<Guid> contactIds)
+    {
         List<Attachment> profileAttachments = contactIds.Count > 0
             ? await _repository.ListByChunkedContainsAsync<Attachment, Guid>(
                 contactIds,
@@ -30,7 +111,7 @@ public class ContactReadService(IRepository repository) : IContactReadService
         {
             Dictionary<Guid, Attachment> attachmentMap = profileAttachments
                 .Where(a => a != null && a.ContactId.HasValue)
-                .GroupBy(a => a.ContactId!.Value) // Handle potential duplicates gracefully
+                .GroupBy(a => a.ContactId!.Value)
                 .ToDictionary(g => g.Key, g => g.First());
 
             foreach (ContactDto? dto in contactDtos)
@@ -62,8 +143,6 @@ public class ContactReadService(IRepository repository) : IContactReadService
                 dto.Labels = labels;
             }
         }
-
-        return contactDtos;
     }
 
     public async Task<ContactDetailDto?> GetContactDetailsAsync(Guid id)

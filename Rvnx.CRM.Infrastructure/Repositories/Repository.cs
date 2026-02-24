@@ -61,6 +61,72 @@ public class Repository(CRMDbContext context) : IRepository
         return await query.ToListAsync(cancellationToken);
     }
 
+    public async Task<List<T>> ListPagedAsync<T>(
+        Expression<Func<T, bool>> predicate,
+        Func<IQueryable<T>, IOrderedQueryable<T>>? orderBy = null,
+        int? skip = null,
+        int? take = null,
+        CancellationToken cancellationToken = default,
+        params string[] includes) where T : BaseEntity
+    {
+        IQueryable<T> query = _context.Set<T>().Where(predicate);
+
+        foreach (string include in includes)
+        {
+            query = query.Include(include);
+        }
+
+        if (orderBy != null)
+        {
+            query = orderBy(query);
+        }
+
+        if (skip.HasValue)
+        {
+            query = query.Skip(skip.Value);
+        }
+
+        if (take.HasValue)
+        {
+            query = query.Take(take.Value);
+        }
+
+        return await query.ToListAsync(cancellationToken);
+    }
+
+    public async Task<List<T>> ListAsNoTrackingPagedAsync<T>(
+        Expression<Func<T, bool>> predicate,
+        Func<IQueryable<T>, IOrderedQueryable<T>>? orderBy = null,
+        int? skip = null,
+        int? take = null,
+        CancellationToken cancellationToken = default,
+        params string[] includes) where T : BaseEntity
+    {
+        IQueryable<T> query = _context.Set<T>().AsNoTracking().Where(predicate);
+
+        foreach (string include in includes)
+        {
+            query = query.Include(include);
+        }
+
+        if (orderBy != null)
+        {
+            query = orderBy(query);
+        }
+
+        if (skip.HasValue)
+        {
+            query = query.Skip(skip.Value);
+        }
+
+        if (take.HasValue)
+        {
+            query = query.Take(take.Value);
+        }
+
+        return await query.ToListAsync(cancellationToken);
+    }
+
     public async Task<List<T>> ListAsNoTrackingAsync<T>(int? skip = null, int? take = null, CancellationToken cancellationToken = default) where T : BaseEntity
     {
         IQueryable<T> query = _context.Set<T>().AsNoTracking();

@@ -1,8 +1,11 @@
 using Microsoft.AspNetCore.Mvc;
 using Rvnx.CRM.Core.Constants;
+using Rvnx.CRM.Core.DTOs.Common;
 using Rvnx.CRM.Core.DTOs.Contact;
+using Rvnx.CRM.Core.DTOs.DataTable;
 using Rvnx.CRM.Core.Interfaces;
 using Rvnx.CRM.Web.Controllers.Base;
+using System.Globalization;
 
 namespace Rvnx.CRM.Web.Controllers
 {
@@ -112,15 +115,139 @@ namespace Rvnx.CRM.Web.Controllers
 
         public async Task<IActionResult> Index(bool showHidden = false)
         {
-            List<ContactDto> contactDtos = await _contactReadService.GetIndexDataAsync(showHidden);
+            bool hasContacts = await _contactReadService.HasAnyContactsAsync(showHidden);
 
             ContactIndexViewModel viewModel = new()
             {
-                Contacts = contactDtos,
+                Contacts = hasContacts ? [new ContactDto()] : [],
                 SuccessMessage = TempData["SuccessMessage"] as string
             };
 
             return View(viewModel);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> DataTable(bool showHidden = false)
+        {
+            DataTableRequestDto request = new()
+            {
+                Draw = int.TryParse(Request.Query["draw"], out int draw) ? draw : 0,
+                Start = int.TryParse(Request.Query["start"], out int start) ? start : 0,
+                Length = int.TryParse(Request.Query["length"], out int length) ? length : 10,
+                Search = new DataTableSearchDto
+                {
+                    Value = Request.Query["search[value]"],
+                    Regex = Request.Query["search[regex]"] == "true"
+                }
+            };
+
+            int orderIndex = 0;
+            while (Request.Query.ContainsKey($"order[{orderIndex}][column]"))
+            {
+                request.Order.Add(new DataTableOrderDto
+                {
+                    Column = int.Parse(Request.Query[$"order[{orderIndex}][column]"]!, CultureInfo.InvariantCulture),
+                    Dir = Request.Query[$"order[{orderIndex}][dir]"]!
+                });
+                orderIndex++;
+            }
+
+            PagedResult<ContactDto> pagedResult = await _contactReadService.GetContactDataTableAsync(request, showHidden);
+
+            List<ContactDataTableDto> data = new(pagedResult.Items.Count());
+
+            foreach (ContactDto item in pagedResult.Items)
+            {
+                if (item == null) continue;
+
+                ContactDataTableDto row = new()
+                {
+                    Id = item.Id,
+                    FirstName = item.FirstName,
+                    LastName = item.LastName,
+                    FullName = item.FullName,
+                    Company = item.Company,
+                    JobTitle = item.JobTitle,
+                    IsHidden = item.IsHidden,
+                    ProfileImageId = item.ProfileImageId,
+                    Pronouns = item.Pronouns,
+                    Gender = item.Gender,
+                    Religion = item.Religion,
+                    IsPartial = item.IsPartial,
+                    Labels = item.Labels ?? [],
+                    CreatedDate = item.CreatedDate,
+                    LastChangedDate = item.LastChangedDate,
+                    CreatedBy = item.CreatedBy,
+                    LastChangedBy = item.LastChangedBy,
+                    UserId = item.UserId
+                };
+
+                // URLs
+                string editUrl = Url.Action("Edit", "Contacts", new { id = item.Id }) ?? "";
+                string detailsUrl = Url.Action("Details", "Contacts", new { id = item.Id }) ?? "";
+                string deleteUrl = Url.Action("Delete", "Contacts", new { id = item.Id }) ?? "";
+                string photoUrl = item.ProfileImageId.HasValue ? Url.Action("View", "Attachments", new { id = item.ProfileImageId }) ?? "" : "";
+
+                string name = System.Net.WebUtility.HtmlEncode(item.FullName);
+
+                // Photo HTML
+                if (item.ProfileImageId.HasValue)
+                {
+                    row.PhotoHtml = $@"<div class=""d-flex align-items-center justify-content-center"" style=""width: 40px; height: 40px;"">
+                                        <img src=""{photoUrl}"" class=""rounded-circle"" width=""40"" height=""40"" alt=""{name}"" style=""object-fit: cover;"" loading=""lazy"" />
+                                       </div>";
+                }
+                else
+                {
+                    row.PhotoHtml = @"<div class=""d-flex align-items-center justify-content-center"" style=""width: 40px; height: 40px;"">
+                                        <div class=""rounded-circle bg-secondary text-white d-flex align-items-center justify-content-center"" style=""width: 40px; height: 40px;"">
+                                            <i class=""bi bi-person-fill"" aria-hidden=""true""></i>
+                                        </div>
+                                      </div>";
+                }
+
+                // Name HTML
+                string hiddenBadge = item.IsHidden ? @"<span class=""badge bg-secondary ms-2"" title=""Hidden""><i class=""bi bi-eye-slash""></i></span>" : "";
+
+                string labelsHtml = "";
+                if (item.Labels != null && item.Labels.Any())
+                {
+                    labelsHtml = "<div class=\"mt-1 d-flex gap-1 flex-wrap\">";
+                    foreach (var label in item.Labels)
+                    {
+                        string color = !string.IsNullOrEmpty(label.Color) ? label.Color : "#6c757d";
+                        string labelName = System.Net.WebUtility.HtmlEncode(label.Name);
+                        // Using style attribute for badge color since view does the same
+                        labelsHtml += $@"<span class=""badge rounded-pill"" style=""background-color: {color}; color: #fff;"">{labelName}</span>";
+                    }
+                    labelsHtml += "</div>";
+                }
+
+                row.NameHtml = $@"<a href=""{detailsUrl}"" class=""fw-bold text-decoration-none"">{name}</a>{hiddenBadge}{labelsHtml}";
+
+                // Actions HTML
+                row.ActionsHtml = $@"<div class=""btn-group btn-group-sm"">
+<a href=""{editUrl}"" class=""btn btn-outline-secondary"" title=""Edit"" aria-label=""Edit {name}"">
+<i class=""bi bi-pencil-square""></i>
+</a>
+<a href=""{detailsUrl}"" class=""btn btn-outline-info"" title=""Details"" aria-label=""Details for {name}"">
+<i class=""bi bi-info-circle""></i>
+</a>
+<a href=""{deleteUrl}"" class=""btn btn-outline-danger"" title=""Delete"" aria-label=""Delete {name}"">
+<i class=""bi bi-trash""></i>
+</a>
+</div>";
+
+                data.Add(row);
+            }
+
+            return Json(new DataTableResponseDto<ContactDataTableDto>
+            {
+                Draw = request.Draw,
+                RecordsTotal = pagedResult.TotalCount,
+                RecordsFiltered = pagedResult.FilteredCount,
+                Data = data
+            });
         }
 
         public async Task<IActionResult> Details(Guid? id)

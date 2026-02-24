@@ -13,7 +13,7 @@ namespace Rvnx.CRM.Tests.Controllers
     public class ContactsControllerPerformanceTests
     {
         [Fact]
-        public async Task IndexDelegatesToService()
+        public async Task IndexDelegatesToHasAnyContacts()
         {
             // Arrange
             Mock<ILogger<ContactsController>> loggerMock = new();
@@ -21,12 +21,7 @@ namespace Rvnx.CRM.Tests.Controllers
             Mock<IUserSynchronizationService> syncMock = new();
             Mock<IContactReadService> readServiceMock = new();
 
-            List<ContactDto> contactDtos =
-            [
-                new ContactDto { Id = Guid.NewGuid(), FirstName = "Test" }
-            ];
-
-            readServiceMock.Setup(s => s.GetIndexDataAsync(It.IsAny<bool>())).ReturnsAsync(contactDtos);
+            readServiceMock.Setup(s => s.HasAnyContactsAsync(It.IsAny<bool>())).ReturnsAsync(true);
 
             ContactsController controller = new(loggerMock.Object, userMock.Object, Mock.Of<IContactImportService>(), Mock.Of<IContactExportService>(), Mock.Of<IContactManagementService>(), readServiceMock.Object, Mock.Of<ISelfContactService>())
             {
@@ -38,7 +33,7 @@ namespace Rvnx.CRM.Tests.Controllers
             await controller.Index();
 
             // Assert
-            readServiceMock.Verify(s => s.GetIndexDataAsync(false), Times.Once);
+            readServiceMock.Verify(s => s.HasAnyContactsAsync(false), Times.Once);
         }
     }
 }

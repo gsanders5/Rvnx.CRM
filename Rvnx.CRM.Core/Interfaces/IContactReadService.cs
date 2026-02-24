@@ -1,9 +1,26 @@
+using Rvnx.CRM.Core.DTOs.Common;
 using Rvnx.CRM.Core.DTOs.Contact;
+using Rvnx.CRM.Core.DTOs.DataTable;
 
 namespace Rvnx.CRM.Core.Interfaces;
 
 public interface IContactReadService
 {
+    /// <summary>
+    /// Retrieves a paged list of contacts for the DataTable, handling server-side search, sort, and pagination.
+    /// </summary>
+    /// <param name="request">The DataTables request parameters.</param>
+    /// <param name="showHidden">If true, includes contacts marked as hidden.</param>
+    /// <returns>A paged result of <see cref="ContactDto"/> objects.</returns>
+    Task<PagedResult<ContactDto>> GetContactDataTableAsync(DataTableRequestDto request, bool showHidden);
+
+    /// <summary>
+    /// Checks if there are any contacts matching the criteria.
+    /// </summary>
+    /// <param name="showHidden">If true, includes contacts marked as hidden.</param>
+    /// <returns>True if any contacts exist.</returns>
+    Task<bool> HasAnyContactsAsync(bool showHidden);
+
     /// <summary>
     /// Retrieves a list of contacts for the index view, optionally including hidden contacts.
     /// Related data (like profile images and labels) is stitched in memory.
