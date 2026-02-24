@@ -56,12 +56,12 @@
                 <span asp-validation-for="Description" class="text-danger"></span>
             </div>
 
-            <div class="form-group mt-3 flex-wrap d-flex gap-2">
-                <button type="submit" class="btn btn-primary"><i class="bi bi-save"></i> Save</button>
+            <div class="d-grid gap-2 d-md-flex mt-4">
+                <button type="submit" class="btn btn-primary"><i class="bi bi-save me-2"></i>Save</button>
                 @if (Model.IsEntityPartial || Model.IsRelatedEntityPartial)
                 {
                     <button type="button" class="btn btn-info" data-mdb-modal-init data-mdb-target="#promoteModal">
-                        <i class="bi bi-arrow-up-circle"></i> Promote to contact
+                        <i class="bi bi-arrow-up-circle me-2"></i>Promote to contact
                     </button>
                 }
                 @if (Model.EntityType == EntityTypes.Person)
