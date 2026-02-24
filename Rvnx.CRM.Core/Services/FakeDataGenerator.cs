@@ -17,7 +17,7 @@ namespace Rvnx.CRM.Core.Services
         private static readonly string[] Companies = { "Acme Corp", "Globex", "Soylent Corp", "Initech", "Umbrella Corp", "Stark Ind", "Wayne Ent", "Cyberdyne", "Massive Dynamic" };
         private static readonly string[] JobTitles = { "Developer", "Manager", "Designer", "Engineer", "Analyst", "Consultant", "Director", "VP", "CEO", "CTO" };
 
-        public static Contact GenerateContact()
+        private static Contact GenerateContact()
         {
             string firstName = FirstNames[_random.Next(FirstNames.Length)];
             string lastName = LastNames[_random.Next(LastNames.Length)];
