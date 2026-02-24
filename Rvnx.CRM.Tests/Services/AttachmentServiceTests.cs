@@ -104,5 +104,126 @@ namespace Rvnx.CRM.Tests.Services
             Assert.True(result.IsNotFound);
             Assert.Contains("partial contact", result.Errors[0]);
         }
+
+        [Fact]
+        public async Task UploadAttachmentAsyncShouldFailWhenEntityTypeNotSupported()
+        {
+            // Arrange
+            using CRMDbContext context = GetInMemoryDbContext();
+            Repository repo = new(context);
+            Mock<IFileValidationService> fileServiceMock = new();
+            Mock<IEntityService> entityServiceMock = new();
+            // No need to mock EntityService for this check as it happens before existence check
+
+            AttachmentService service = new(repo, fileServiceMock.Object, entityServiceMock.Object);
+
+            // Act
+            AttachmentOperationResult result = await service.UploadAttachmentAsync(Guid.NewGuid(), "UnsupportedType", [1, 2, 3], "test.txt");
+
+            // Assert
+            Assert.False(result.Success);
+            Assert.Contains("not currently supported", result.Errors[0]);
+        }
+
+        [Fact]
+        public async Task UploadAttachmentAsyncShouldFailWhenFileEmpty()
+        {
+            // Arrange
+            using CRMDbContext context = GetInMemoryDbContext();
+            Repository repo = new(context);
+            Mock<IFileValidationService> fileServiceMock = new();
+            Mock<IEntityService> entityServiceMock = new();
+            entityServiceMock.Setup(s => s.ExistsAsync(It.IsAny<string>(), It.IsAny<Guid>())).ReturnsAsync(true);
+
+            AttachmentService service = new(repo, fileServiceMock.Object, entityServiceMock.Object);
+            Guid contactId = Guid.NewGuid();
+            context.Contacts.Add(new Contact { Id = contactId, FirstName = "Test", LastName = "User" });
+            context.SaveChanges();
+
+            // Act
+            AttachmentOperationResult result = await service.UploadAttachmentAsync(contactId, EntityTypes.Person, [], "test.png");
+
+            // Assert
+            Assert.False(result.Success);
+            Assert.Contains("File is empty", result.Errors[0]);
+        }
+
+        [Fact]
+        public async Task UploadAttachmentAsyncShouldFailWhenFileSizeTooLarge()
+        {
+            // Arrange
+            using CRMDbContext context = GetInMemoryDbContext();
+            Repository repo = new(context);
+            Mock<IFileValidationService> fileServiceMock = new();
+            fileServiceMock.Setup(s => s.IsAllowedFileSize(It.IsAny<long>())).Returns(false);
+
+            Mock<IEntityService> entityServiceMock = new();
+            entityServiceMock.Setup(s => s.ExistsAsync(It.IsAny<string>(), It.IsAny<Guid>())).ReturnsAsync(true);
+
+            AttachmentService service = new(repo, fileServiceMock.Object, entityServiceMock.Object);
+            Guid contactId = Guid.NewGuid();
+            context.Contacts.Add(new Contact { Id = contactId, FirstName = "Test", LastName = "User" });
+            context.SaveChanges();
+
+            // Act
+            AttachmentOperationResult result = await service.UploadAttachmentAsync(contactId, EntityTypes.Person, [1, 2, 3], "test.png");
+
+            // Assert
+            Assert.False(result.Success);
+            Assert.Contains("File is too large", result.Errors[0]);
+        }
+
+        [Fact]
+        public async Task UploadAttachmentAsyncShouldFailWhenExtensionNotAllowed()
+        {
+            // Arrange
+            using CRMDbContext context = GetInMemoryDbContext();
+            Repository repo = new(context);
+            Mock<IFileValidationService> fileServiceMock = new();
+            fileServiceMock.Setup(s => s.IsAllowedFileSize(It.IsAny<long>())).Returns(true);
+            fileServiceMock.Setup(s => s.IsAllowedExtension(It.IsAny<string>())).Returns(false);
+
+            Mock<IEntityService> entityServiceMock = new();
+            entityServiceMock.Setup(s => s.ExistsAsync(It.IsAny<string>(), It.IsAny<Guid>())).ReturnsAsync(true);
+
+            AttachmentService service = new(repo, fileServiceMock.Object, entityServiceMock.Object);
+            Guid contactId = Guid.NewGuid();
+            context.Contacts.Add(new Contact { Id = contactId, FirstName = "Test", LastName = "User" });
+            context.SaveChanges();
+
+            // Act
+            AttachmentOperationResult result = await service.UploadAttachmentAsync(contactId, EntityTypes.Person, [1, 2, 3], "test.exe");
+
+            // Assert
+            Assert.False(result.Success);
+            Assert.Contains("File type not allowed", result.Errors[0]);
+        }
+
+        [Fact]
+        public async Task UploadAttachmentAsyncShouldFailWhenSignatureInvalid()
+        {
+            // Arrange
+            using CRMDbContext context = GetInMemoryDbContext();
+            Repository repo = new(context);
+            Mock<IFileValidationService> fileServiceMock = new();
+            fileServiceMock.Setup(s => s.IsAllowedFileSize(It.IsAny<long>())).Returns(true);
+            fileServiceMock.Setup(s => s.IsAllowedExtension(It.IsAny<string>())).Returns(true);
+            fileServiceMock.Setup(s => s.IsValidFileSignature(It.IsAny<byte[]>(), It.IsAny<string>())).Returns(false);
+
+            Mock<IEntityService> entityServiceMock = new();
+            entityServiceMock.Setup(s => s.ExistsAsync(It.IsAny<string>(), It.IsAny<Guid>())).ReturnsAsync(true);
+
+            AttachmentService service = new(repo, fileServiceMock.Object, entityServiceMock.Object);
+            Guid contactId = Guid.NewGuid();
+            context.Contacts.Add(new Contact { Id = contactId, FirstName = "Test", LastName = "User" });
+            context.SaveChanges();
+
+            // Act
+            AttachmentOperationResult result = await service.UploadAttachmentAsync(contactId, EntityTypes.Person, [1, 2, 3], "test.png");
+
+            // Assert
+            Assert.False(result.Success);
+            Assert.Contains("Invalid file signature", result.Errors[0]);
+        }
     }
 }
