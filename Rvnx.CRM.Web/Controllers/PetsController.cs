@@ -12,7 +12,7 @@ namespace Rvnx.CRM.Web.Controllers
     {
         public async Task<IActionResult> Create(Guid entityId)
         {
-            if (await IsPartialContactAsync(entityId))
+            if (!await IsValidContactAsync(entityId))
             {
                 return NotFound();
             }
@@ -28,7 +28,7 @@ namespace Rvnx.CRM.Web.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(PetFormDto petDto)
         {
-            if (await IsPartialContactAsync(petDto.EntityId))
+            if (!await IsValidContactAsync(petDto.EntityId))
             {
                 return NotFound();
             }
@@ -47,7 +47,7 @@ namespace Rvnx.CRM.Web.Controllers
         public async Task<IActionResult> Edit(Guid id)
         {
             Pet? pet = await Repository.GetByIdAsync<Pet>(id);
-            if (pet == null || await IsPartialContactAsync(pet.ContactId))
+            if (pet == null || !await IsValidContactAsync(pet.ContactId))
             {
                 return NotFound();
             }
@@ -78,7 +78,7 @@ namespace Rvnx.CRM.Web.Controllers
             if (ModelState.IsValid)
             {
                 Pet? pet = await Repository.GetByIdAsync<Pet>(id);
-                if (pet == null || await IsPartialContactAsync(pet.ContactId))
+                if (pet == null || !await IsValidContactAsync(pet.ContactId))
                 {
                     return NotFound();
                 }
@@ -95,7 +95,7 @@ namespace Rvnx.CRM.Web.Controllers
         public async Task<IActionResult> Delete(Guid id)
         {
             Pet? pet = await Repository.GetByIdAsync<Pet>(id);
-            return pet == null || await IsPartialContactAsync(pet.ContactId) ? NotFound() : View(pet.ToDto());
+            return pet == null || !await IsValidContactAsync(pet.ContactId) ? NotFound() : View(pet.ToDto());
         }
 
         [HttpPost, ActionName("Delete")]

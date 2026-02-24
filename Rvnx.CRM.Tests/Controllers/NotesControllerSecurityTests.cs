@@ -106,6 +106,7 @@ namespace Rvnx.CRM.Tests.Controllers
 
             _context.Contacts.Add(otherUserContact);
             await _context.SaveChangesAsync();
+            _context.ChangeTracker.Clear();
 
             // Act
             IActionResult result = await _controller.Create(otherUserContactId, EntityTypes.Person);

@@ -52,6 +52,9 @@ namespace Rvnx.CRM.Tests.Controllers
         {
             // Arrange
             Guid entityId = Guid.NewGuid();
+            _context.Contacts.Add(new Contact { Id = entityId, FirstName = "Parent" });
+            await _context.SaveChangesAsync();
+
             string entityType = EntityTypes.Person;
 
             // Act
@@ -102,9 +105,13 @@ namespace Rvnx.CRM.Tests.Controllers
         public async Task CreatePostInvalidDataReturnsView()
         {
             // Arrange
+            Guid entityId = Guid.NewGuid();
+            _context.Contacts.Add(new Contact { Id = entityId, FirstName = "Parent" });
+            await _context.SaveChangesAsync();
+
             ContactMethodFormDto dto = new()
             {
-                EntityId = Guid.NewGuid(),
+                EntityId = entityId,
                 EntityType = EntityTypes.Person,
                 // Missing Type and Value (required)
             };
@@ -120,7 +127,7 @@ namespace Rvnx.CRM.Tests.Controllers
         }
 
         [Fact]
-        public async Task CreatePostWithNonExistentParentCreatesOrphanedRecord()
+        public async Task CreatePostWithNonExistentParentReturnsNotFound()
         {
             // Arrange
             // We do NOT create the parent entity
@@ -136,20 +143,14 @@ namespace Rvnx.CRM.Tests.Controllers
             };
 
             // Act
-            // This now triggers a foreign key constraint violation if it wasn't InMemoryDb,
-            // but for InMemoryDb it might still work unless we enforce FK.
-            // However, our code doesn't explicitly check exists anymore, it relies on DB constraints.
-            // So we just check if it was added.
             IActionResult result = await _controller.Create(dto);
 
             // Assert
-            RedirectToActionResult redirectResult = Assert.IsType<RedirectToActionResult>(result);
-            Assert.Equal("Details", redirectResult.ActionName);
+            Assert.IsType<NotFoundResult>(result);
 
-            // Verify record exists in DB
+            // Verify record does NOT exist in DB
             ContactMethod? created = await _context.Set<ContactMethod>().FirstOrDefaultAsync(c => c.Value == "orphan@example.com");
-            Assert.NotNull(created);
-            Assert.Equal(nonExistentEntityId, created.ContactId);
+            Assert.Null(created);
         }
 
         [Fact]
