@@ -386,6 +386,14 @@ public class VCardService : IVCardService
         vCard = builder.VCard;
 
         // v8: Use ToVcfString extension method for serialization
-        return System.Text.Encoding.UTF8.GetBytes(vCard.ToVcfString(VCdVersion.V3_0));
+        string vcfString = vCard.ToVcfString(VCdVersion.V3_0);
+
+        // Fix compatibility: Replace "ENCODING=b" with "ENCODING=BASE64"
+        // The library uses the abbreviated form per RFC 2426, but many applications
+        // (including Google Contacts) only recognize the full "BASE64" form
+        vcfString = vcfString.Replace("ENCODING=b;", "ENCODING=BASE64;")
+                             .Replace("ENCODING=b:", "ENCODING=BASE64:");
+
+        return System.Text.Encoding.UTF8.GetBytes(vcfString);
     }
 }
