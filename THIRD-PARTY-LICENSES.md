@@ -8,9 +8,9 @@ Purpose: License compliance audit
 
 | Package | Version | Project | License | License URL |
 |---|---|---|---|---|
-| Microsoft.EntityFrameworkCore.Design | 9.0.2 | Rvnx.CRM.Web | MIT | https://licenses.nuget.org/MIT |
-| Microsoft.AspNetCore.Authentication.OpenIdConnect | 8.0.13 | Rvnx.CRM.Web | MIT | https://licenses.nuget.org/MIT |
-| Microsoft.EntityFrameworkCore | 9.0.2 | Rvnx.CRM.Core | MIT | https://licenses.nuget.org/MIT |
+| Microsoft.EntityFrameworkCore.Design | 9.0.13 | Rvnx.CRM.Web | MIT | https://licenses.nuget.org/MIT |
+| Microsoft.AspNetCore.Authentication.OpenIdConnect | 8.0.0 | Rvnx.CRM.Web | MIT | https://licenses.nuget.org/MIT |
+| Microsoft.EntityFrameworkCore | 9.0.13 | Rvnx.CRM.Core | MIT | https://licenses.nuget.org/MIT |
 | FolkerKinzel.VCards | 6.0.0 | Rvnx.CRM.Infrastructure | MIT | https://github.com/FolkerKinzel/VCards/blob/master/LICENSE |
 | File.TypeChecker | 4.3.0 | Rvnx.CRM.Core | MIT | https://github.com/AJMitev/FileTypeChecker/blob/master/LICENSE |
 | File.TypeChecker.Web | 2.0.0 | Rvnx.CRM.Web | MIT | https://github.com/AJMitev/FileTypeChecker.Web/blob/master/LICENSE |
