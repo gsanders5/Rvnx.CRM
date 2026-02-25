@@ -176,8 +176,15 @@ namespace Rvnx.CRM.Tests.Services
                 });
 
             // Mock subsequent calls to return empty
-            _repositoryMock.Setup(r => r.ListAsNoTrackingAsync<Attachment>(It.IsAny<Expression<Func<Attachment, bool>>>(), default)).ReturnsAsync([]);
-            _repositoryMock.Setup(r => r.ListAsNoTrackingAsync<ContactLabel>(It.IsAny<Expression<Func<ContactLabel, bool>>>(), default, It.IsAny<string[]>())).ReturnsAsync([]);
+            _repositoryMock.Setup(r => r.ListProjectedAsync<Attachment, (Guid, Guid)>(
+                It.IsAny<Expression<Func<Attachment, bool>>>(),
+                It.IsAny<Expression<Func<Attachment, (Guid, Guid)>>>(),
+                default)).ReturnsAsync([]);
+
+            _repositoryMock.Setup(r => r.ListProjectedAsync<ContactLabel, (Guid, Guid, string, string?)>(
+                It.IsAny<Expression<Func<ContactLabel, bool>>>(),
+                It.IsAny<Expression<Func<ContactLabel, (Guid, Guid, string, string?)>>>(),
+                default)).ReturnsAsync([]);
 
             // Act - Show Hidden
             List<ContactDto> resultShowHidden = await _service.GetIndexDataAsync(true);
@@ -205,12 +212,8 @@ namespace Rvnx.CRM.Tests.Services
             ContactDto dto1 = new() { Id = contactId1, FirstName = "C1" };
             ContactDto dto2 = new() { Id = contactId2, FirstName = "C2" };
 
-            Attachment image1 = new()
-            {
-                Id = imageId1,
-                ContactId = contactId1,
-                AttachmentType = AttachmentTypes.ProfileImage
-            };
+            // We mock the projection result directly
+            var attachmentProjection = (contactId1, imageId1);
 
             _repositoryMock.Setup(r => r.ListProjectedAsync<Contact, ContactDto>(
                 It.IsAny<Expression<Func<Contact, bool>>>(),
@@ -219,13 +222,16 @@ namespace Rvnx.CRM.Tests.Services
                 .ReturnsAsync([dto1, dto2]);
 
             // Mock profile image fetch
-            // The service fetches by AttachmentType == ProfileImage AND ContactId in list
-            _repositoryMock.Setup(r => r.ListAsNoTrackingAsync<Attachment>(
+            _repositoryMock.Setup(r => r.ListProjectedAsync<Attachment, (Guid, Guid)>(
                 It.IsAny<Expression<Func<Attachment, bool>>>(),
+                It.IsAny<Expression<Func<Attachment, (Guid, Guid)>>>(),
                 default))
-                .ReturnsAsync([image1]);
+                .ReturnsAsync([attachmentProjection]);
 
-            _repositoryMock.Setup(r => r.ListAsNoTrackingAsync<ContactLabel>(It.IsAny<Expression<Func<ContactLabel, bool>>>(), default, It.IsAny<string[]>())).ReturnsAsync([]);
+            _repositoryMock.Setup(r => r.ListProjectedAsync<ContactLabel, (Guid, Guid, string, string?)>(
+                It.IsAny<Expression<Func<ContactLabel, bool>>>(),
+                It.IsAny<Expression<Func<ContactLabel, (Guid, Guid, string, string?)>>>(),
+                default)).ReturnsAsync([]);
 
             // Act
             List<ContactDto> result = await _service.GetIndexDataAsync(false);
@@ -250,7 +256,7 @@ namespace Rvnx.CRM.Tests.Services
             ContactDto dto = new() { Id = contactId, FirstName = "C1" };
 
             Label label1 = new() { Id = Guid.NewGuid(), Name = "VIP", Color = "Red" };
-            ContactLabel cl1 = new() { ContactId = contactId, LabelId = label1.Id, Label = label1 };
+            var labelProjection = (contactId, label1.Id, label1.Name, label1.Color);
 
             _repositoryMock.Setup(r => r.ListProjectedAsync<Contact, ContactDto>(
                 It.IsAny<Expression<Func<Contact, bool>>>(),
@@ -258,14 +264,17 @@ namespace Rvnx.CRM.Tests.Services
                 default))
                 .ReturnsAsync([dto]);
 
-            _repositoryMock.Setup(r => r.ListAsNoTrackingAsync<Attachment>(It.IsAny<Expression<Func<Attachment, bool>>>(), default)).ReturnsAsync([]);
+            _repositoryMock.Setup(r => r.ListProjectedAsync<Attachment, (Guid, Guid)>(
+                It.IsAny<Expression<Func<Attachment, bool>>>(),
+                It.IsAny<Expression<Func<Attachment, (Guid, Guid)>>>(),
+                default)).ReturnsAsync([]);
 
             // Mock labels fetch
-            _repositoryMock.Setup(r => r.ListAsNoTrackingAsync<ContactLabel>(
+            _repositoryMock.Setup(r => r.ListProjectedAsync<ContactLabel, (Guid, Guid, string, string?)>(
                 It.IsAny<Expression<Func<ContactLabel, bool>>>(),
-                default,
-                It.IsAny<string[]>()))
-                .ReturnsAsync([cl1]);
+                It.IsAny<Expression<Func<ContactLabel, (Guid, Guid, string, string?)>>>(),
+                default))
+                .ReturnsAsync([labelProjection]);
 
             // Act
             List<ContactDto> result = await _service.GetIndexDataAsync(false);

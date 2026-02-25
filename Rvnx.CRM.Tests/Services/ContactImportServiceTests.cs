@@ -37,8 +37,8 @@ namespace Rvnx.CRM.Tests.Services
                 new() { FirstName = "Jane", LastName = "Smith" }
             ];
 
-            _vCardServiceMock.Setup(v => v.ParseVCard(It.IsAny<Stream>()))
-                .Returns(contacts);
+            _vCardServiceMock.Setup(v => v.ParseVCardAsync(It.IsAny<Stream>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(contacts);
 
             // Mock no duplicates found
             _repositoryMock.Setup(r => r.CountAsync(It.IsAny<Expression<Func<Contact, bool>>>(), default))
@@ -69,8 +69,8 @@ namespace Rvnx.CRM.Tests.Services
                 new() { FirstName = "Duplicate", LastName = "User" }
             ];
 
-            _vCardServiceMock.Setup(v => v.ParseVCard(It.IsAny<Stream>()))
-                .Returns(contacts);
+            _vCardServiceMock.Setup(v => v.ParseVCardAsync(It.IsAny<Stream>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(contacts);
 
             // Mock duplicate found by name
             _repositoryMock.Setup(r => r.CountAsync(It.IsAny<Expression<Func<Contact, bool>>>(), default))
@@ -104,8 +104,8 @@ namespace Rvnx.CRM.Tests.Services
             };
             List<Contact> contacts = [contact];
 
-            _vCardServiceMock.Setup(v => v.ParseVCard(It.IsAny<Stream>()))
-                .Returns(contacts);
+            _vCardServiceMock.Setup(v => v.ParseVCardAsync(It.IsAny<Stream>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(contacts);
 
             // Mock unique name
             _repositoryMock.Setup(r => r.CountAsync(It.IsAny<Expression<Func<Contact, bool>>>(), default))
@@ -131,8 +131,8 @@ namespace Rvnx.CRM.Tests.Services
         public async Task ImportFromVCardAsyncExceptionInParsingLogsAndRethrows()
         {
             // Arrange
-            _vCardServiceMock.Setup(v => v.ParseVCard(It.IsAny<Stream>()))
-                .Throws(new InvalidOperationException("Parse error"));
+            _vCardServiceMock.Setup(v => v.ParseVCardAsync(It.IsAny<Stream>(), It.IsAny<CancellationToken>()))
+                .ThrowsAsync(new InvalidOperationException("Parse error"));
 
             using MemoryStream stream = new();
 

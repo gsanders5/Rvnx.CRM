@@ -1,3 +1,4 @@
+using FileTypeChecker.Web.Attributes;
 using Microsoft.AspNetCore.Mvc;
 using Rvnx.CRM.Core.Constants;
 using Rvnx.CRM.Core.DTOs.Contact;
@@ -6,7 +7,7 @@ using Rvnx.CRM.Web.Controllers.Base;
 
 namespace Rvnx.CRM.Web.Controllers
 {
-    public class ContactsController(ILogger<ContactsController> logger, ICurrentUserService currentUserService, IContactImportService contactImportService, IContactExportService contactExportService, IContactManagementService contactManagementService, IContactReadService contactReadService, ISelfContactService selfContactService) : AuthorizedController
+    public class ContactsController(ILogger<ContactsController> logger, ICurrentUserService currentUserService, IContactImportService contactImportService, IContactExportService contactExportService, IContactManagementService contactManagementService, IContactReadService contactReadService, ISelfContactService selfContactService, IFileValidationService fileValidationService) : AuthorizedController
     {
         private readonly ILogger<ContactsController> _logger = logger;
         private readonly ICurrentUserService _currentUserService = currentUserService;
@@ -15,6 +16,7 @@ namespace Rvnx.CRM.Web.Controllers
         private readonly IContactManagementService _contactManagementService = contactManagementService;
         private readonly IContactReadService _contactReadService = contactReadService;
         private readonly ISelfContactService _selfContactService = selfContactService;
+        private readonly IFileValidationService _fileValidationService = fileValidationService;
 
         private static readonly Action<ILogger, Exception?> LogErrorImportingVcf =
             LoggerMessage.Define(
@@ -87,9 +89,7 @@ namespace Rvnx.CRM.Web.Controllers
                 return Unauthorized();
             }
 
-            contactDto.Pronouns = contactDto.Pronouns == "Unspecified" ? null : contactDto.Pronouns;
-            contactDto.Gender = contactDto.Gender == "Unspecified" ? null : contactDto.Gender;
-            contactDto.Religion = string.IsNullOrWhiteSpace(contactDto.Religion) ? null : contactDto.Religion;
+            NormalizeContactForm(contactDto);
 
             if (ModelState.IsValid)
             {
@@ -148,9 +148,7 @@ namespace Rvnx.CRM.Web.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind("FirstName,LastName,Nickname,Email,Phone,JobTitle,Company,Birthday,IsHidden,Pronouns,Gender,Religion")] ContactCreateViewModel contactDto)
         {
-            contactDto.Pronouns = contactDto.Pronouns == "Unspecified" ? null : contactDto.Pronouns;
-            contactDto.Gender = contactDto.Gender == "Unspecified" ? null : contactDto.Gender;
-            contactDto.Religion = string.IsNullOrWhiteSpace(contactDto.Religion) ? null : contactDto.Religion;
+            NormalizeContactForm(contactDto);
 
             if (ModelState.IsValid)
             {
@@ -210,7 +208,7 @@ namespace Rvnx.CRM.Web.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(Guid id, [Bind("Id,FirstName,LastName,Nickname,Email,Phone,JobTitle,Company,Birthday,IsHidden,Pronouns,Gender,Religion")] ContactFormDto contactDto, IFormFile? profileImage)
+        public async Task<IActionResult> Edit(Guid id, [Bind("Id,FirstName,LastName,Nickname,Email,Phone,JobTitle,Company,Birthday,IsHidden,Pronouns,Gender,Religion")] ContactFormDto contactDto, [AllowImages] IFormFile? profileImage)
         {
             if (id != contactDto.Id)
             {
@@ -222,9 +220,12 @@ namespace Rvnx.CRM.Web.Controllers
                 return NotFound();
             }
 
-            contactDto.Pronouns = contactDto.Pronouns == "Unspecified" ? null : contactDto.Pronouns;
-            contactDto.Gender = contactDto.Gender == "Unspecified" ? null : contactDto.Gender;
-            contactDto.Religion = string.IsNullOrWhiteSpace(contactDto.Religion) ? null : contactDto.Religion;
+            if (profileImage != null && !_fileValidationService.IsAllowedFileSize(profileImage.Length))
+            {
+                 ModelState.AddModelError("profileImage", "File is too large.");
+            }
+
+            NormalizeContactForm(contactDto);
 
             if (ModelState.IsValid)
             {
@@ -348,6 +349,13 @@ namespace Rvnx.CRM.Web.Controllers
                 return View();
             }
 
+            if (!_fileValidationService.IsAllowedFileSize(file.Length))
+            {
+                ModelState.AddModelError("file", "File is too large.");
+                return View();
+            }
+
+            // Note: File.TypeChecker does not support .vcf, so we rely on extension validation.
             if (!Path.GetExtension(file.FileName).Equals(".vcf", StringComparison.OrdinalIgnoreCase))
             {
                 ModelState.AddModelError("file", "Only .vcf files are allowed.");
@@ -381,6 +389,13 @@ namespace Rvnx.CRM.Web.Controllers
             {
                 return NotFound();
             }
+        }
+
+        private static void NormalizeContactForm(ContactFormDto dto)
+        {
+            dto.Pronouns = dto.Pronouns == PersonalAttributeOptions.Unspecified ? null : dto.Pronouns;
+            dto.Gender = dto.Gender == PersonalAttributeOptions.Unspecified ? null : dto.Gender;
+            dto.Religion = string.IsNullOrWhiteSpace(dto.Religion) ? null : dto.Religion;
         }
     }
 }

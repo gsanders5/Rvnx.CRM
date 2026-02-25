@@ -23,7 +23,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IRepository, Repository>();
 
         // Add VCard Service
-        services.AddScoped<IVCardService, VCardService>();
+        services.AddHttpClient<IVCardService, VCardService>();
 
         // Add User Synchronization Service
         services.AddScoped<IUserSynchronizationService, UserSynchronizationService>();
@@ -33,6 +33,9 @@ public static class ServiceCollectionExtensions
 
         // Add Contact Export Service
         services.AddScoped<IContactExportService, ContactExportService>();
+
+        // Add Debug Data Service
+        services.AddScoped<IDebugDataService, DebugDataService>();
 
         return services;
     }

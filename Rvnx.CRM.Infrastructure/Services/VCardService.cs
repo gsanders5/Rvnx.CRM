@@ -5,14 +5,23 @@ using FolkerKinzel.VCards.Models;
 using Rvnx.CRM.Core.Constants;
 using Rvnx.CRM.Core.Enumerations;
 using Rvnx.CRM.Core.Interfaces;
+using Rvnx.CRM.Core.Models.Base;
 using Rvnx.CRM.Core.Models.Contact;
 using Rvnx.CRM.Core.Models.Dates;
+using System.Net.Http.Headers;
 
 namespace Rvnx.CRM.Infrastructure.Services;
 
 public class VCardService : IVCardService
 {
-    public IEnumerable<Contact> ParseVCard(Stream fileStream)
+    private readonly HttpClient? _httpClient;
+
+    public VCardService(HttpClient? httpClient = null)
+    {
+        _httpClient = httpClient;
+    }
+
+    public async Task<IEnumerable<Contact>> ParseVCardAsync(Stream fileStream, CancellationToken cancellationToken = default)
     {
         IReadOnlyList<VCard> vCards;
         try
@@ -199,10 +208,100 @@ public class VCardService : IVCardService
                 };
             }
 
+            // Photo - attempt to resolve
+            (byte[]? photoBytes, string? mediaType) = await TryGetPhotoAsync(vc, _httpClient != null, cancellationToken);
+            if (photoBytes != null && photoBytes.Length > 0)
+            {
+                // Default to jpg
+                string extension = ".jpg";
+                string contentType = "image/jpeg";
+
+                // Refine using MediaType if available
+                if (!string.IsNullOrEmpty(mediaType))
+                {
+                    if (mediaType.Contains("png", StringComparison.OrdinalIgnoreCase))
+                    {
+                        extension = ".png";
+                        contentType = "image/png";
+                    }
+                    else if (mediaType.Contains("gif", StringComparison.OrdinalIgnoreCase))
+                    {
+                        extension = ".gif";
+                        contentType = "image/gif";
+                    }
+                    else if (mediaType.Contains("jpeg", StringComparison.OrdinalIgnoreCase) || mediaType.Contains("jpg", StringComparison.OrdinalIgnoreCase))
+                    {
+                        extension = ".jpg";
+                        contentType = "image/jpeg";
+                    }
+                }
+
+                Attachment attachment = new()
+                {
+                    Id = Guid.NewGuid(),
+                    ContactId = contact.Id,
+                    AttachmentType = AttachmentTypes.ProfileImage,
+                    ContentType = contentType,
+                    FileName = $"vcard_photo{extension}"
+                };
+
+                AttachmentContent content = new()
+                {
+                    Id = Guid.NewGuid(),
+                    AttachmentId = attachment.Id,
+                    Content = photoBytes
+                };
+
+                attachment.AttachmentContent = content;
+                contact.Attachments.Add(attachment);
+            }
+
             contacts.Add(contact);
         }
 
         return contacts;
+    }
+
+    private async Task<(byte[]? Content, string? MediaType)> TryGetPhotoAsync(VCard vc, bool resolveUrls, CancellationToken cancellationToken)
+    {
+        var photoProp = vc.Photos?.FirstOrNull();
+        if (photoProp?.Value is not RawData rawData)
+        {
+            return (null, null);
+        }
+
+        // Try to get embedded bytes first
+        byte[]? bytes = rawData.Bytes;
+        if (bytes != null && bytes.Length > 0)
+        {
+            return (bytes, photoProp.Parameters.MediaType);
+        }
+
+        // Try to resolve from URI if we have an HttpClient and URL resolution is enabled
+        Uri? photoUri = rawData.Uri;
+        if (photoUri != null && resolveUrls && _httpClient != null)
+        {
+            try
+            {
+                // Only fetch http/https URLs
+                if (photoUri.Scheme == Uri.UriSchemeHttp || photoUri.Scheme == Uri.UriSchemeHttps)
+                {
+                    using HttpResponseMessage response = await _httpClient.GetAsync(photoUri, cancellationToken);
+                    if (response.IsSuccessStatusCode)
+                    {
+                        byte[] content = await response.Content.ReadAsByteArrayAsync(cancellationToken);
+                        MediaTypeHeaderValue? contentType = response.Content.Headers.ContentType;
+                        return (content, contentType?.MediaType ?? photoProp.Parameters.MediaType);
+                    }
+                }
+            }
+            catch
+            {
+                // Failed to fetch photo - continue without it
+            }
+        }
+
+        return (null, null);
     }
 
     public byte[] ExportVCard(Contact contact)
@@ -274,9 +373,27 @@ public class VCardService : IVCardService
             builder.GenderViews.Add(sex);
         }
 
+        // Photo
+        if (contact.Attachments != null)
+        {
+            var profileImage = contact.Attachments.FirstOrDefault(a => a.AttachmentType == AttachmentTypes.ProfileImage);
+            if (profileImage != null && profileImage.AttachmentContent != null && profileImage.AttachmentContent.Content.Length > 0)
+            {
+                builder.Photos.AddBytes(profileImage.AttachmentContent.Content, profileImage.ContentType ?? "image/jpeg");
+            }
+        }
+
         vCard = builder.VCard;
 
         // v8: Use ToVcfString extension method for serialization
-        return System.Text.Encoding.UTF8.GetBytes(vCard.ToVcfString(VCdVersion.V3_0));
+        string vcfString = vCard.ToVcfString(VCdVersion.V3_0);
+
+        // Fix compatibility: Replace "ENCODING=b" with "ENCODING=BASE64"
+        // The library uses the abbreviated form per RFC 2426, but many applications
+        // (including Google Contacts) only recognize the full "BASE64" form
+        vcfString = vcfString.Replace("ENCODING=b;", "ENCODING=BASE64;")
+                             .Replace("ENCODING=b:", "ENCODING=BASE64:");
+
+        return System.Text.Encoding.UTF8.GetBytes(vcfString);
     }
 }
