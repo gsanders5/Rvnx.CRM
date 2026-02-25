@@ -4,12 +4,27 @@ namespace Rvnx.CRM.Core.Services
 {
     public class FileValidationService : IFileValidationService
     {
-        private static readonly HashSet<string> AllowedExtensions = new(StringComparer.OrdinalIgnoreCase) { ".jpg", ".jpeg", ".png", ".gif", ".pdf", ".txt", ".doc", ".docx", ".xls", ".xlsx" };
+        private sealed record FileTypeInfo(string MimeType, bool IsImage, byte[]? MagicBytes);
+
+        private static readonly Dictionary<string, FileTypeInfo> FileTypeMap = new(StringComparer.OrdinalIgnoreCase)
+        {
+            { ".jpg", new FileTypeInfo("image/jpeg", true, new byte[] { 0xFF, 0xD8, 0xFF }) },
+            { ".jpeg", new FileTypeInfo("image/jpeg", true, new byte[] { 0xFF, 0xD8, 0xFF }) },
+            { ".png", new FileTypeInfo("image/png", true, new byte[] { 0x89, 0x50, 0x4E, 0x47 }) },
+            { ".gif", new FileTypeInfo("image/gif", true, new byte[] { 0x47, 0x49, 0x46, 0x38 }) },
+            { ".pdf", new FileTypeInfo("application/pdf", false, new byte[] { 0x25, 0x50, 0x44, 0x46 }) },
+            { ".txt", new FileTypeInfo("text/plain", false, null) },
+            { ".doc", new FileTypeInfo("application/msword", false, new byte[] { 0xD0, 0xCF, 0x11, 0xE0 }) },
+            { ".docx", new FileTypeInfo("application/vnd.openxmlformats-officedocument.wordprocessingml.document", false, new byte[] { 0x50, 0x4B, 0x03, 0x04 }) },
+            { ".xls", new FileTypeInfo("application/vnd.ms-excel", false, new byte[] { 0xD0, 0xCF, 0x11, 0xE0 }) },
+            { ".xlsx", new FileTypeInfo("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", false, new byte[] { 0x50, 0x4B, 0x03, 0x04 }) }
+        };
+
         private const long MaxFileSize = 30 * 1024 * 1024; // 30 MB
 
         public bool IsAllowedExtension(string extension)
         {
-            return !string.IsNullOrEmpty(extension) && AllowedExtensions.Contains(extension);
+            return !string.IsNullOrEmpty(extension) && FileTypeMap.ContainsKey(extension);
         }
 
         public bool IsAllowedFileSize(long length)
@@ -24,8 +39,7 @@ namespace Rvnx.CRM.Core.Services
                 return false;
             }
 
-            extension = extension.ToLowerInvariant();
-            return extension is ".jpg" or ".jpeg" or ".png" or ".gif";
+            return FileTypeMap.TryGetValue(extension, out var info) && info.IsImage;
         }
 
         public bool IsValidImageSignature(byte[] fileBytes, string? extension)
@@ -35,15 +49,12 @@ namespace Rvnx.CRM.Core.Services
                 return false;
             }
 
-            extension = extension.ToLowerInvariant();
-
-            return extension switch
+            if (!FileTypeMap.TryGetValue(extension, out var info) || !info.IsImage)
             {
-                ".jpg" or ".jpeg" => fileBytes[0] == 0xFF && fileBytes[1] == 0xD8 && fileBytes[2] == 0xFF,
-                ".png" => fileBytes[0] == 0x89 && fileBytes[1] == 0x50 && fileBytes[2] == 0x4E && fileBytes[3] == 0x47,
-                ".gif" => fileBytes[0] == 0x47 && fileBytes[1] == 0x49 && fileBytes[2] == 0x46 && fileBytes[3] == 0x38,
-                _ => false
-            };
+                return false;
+            }
+
+            return CheckSignature(fileBytes, info.MagicBytes);
         }
 
         public bool IsValidFileSignature(byte[] fileBytes, string extension)
@@ -53,42 +64,45 @@ namespace Rvnx.CRM.Core.Services
                 return false;
             }
 
-            if (!IsAllowedExtension(extension))
+            if (!FileTypeMap.TryGetValue(extension, out var info))
             {
                 return false;
             }
 
-            extension = extension.ToLowerInvariant();
-
-            return IsImageExtension(extension)
-                ? IsValidImageSignature(fileBytes, extension)
-                : extension switch
-                {
-                    ".pdf" => fileBytes[0] == 0x25 && fileBytes[1] == 0x50 && fileBytes[2] == 0x44 && fileBytes[3] == 0x46,
-                    ".doc" or ".xls" => fileBytes[0] == 0xD0 && fileBytes[1] == 0xCF && fileBytes[2] == 0x11 && fileBytes[3] == 0xE0,
-                    ".docx" or ".xlsx" => fileBytes[0] == 0x50 && fileBytes[1] == 0x4B && fileBytes[2] == 0x03 && fileBytes[3] == 0x04,
-                    ".txt" => true,
-                    _ => false
-                };
+            return CheckSignature(fileBytes, info.MagicBytes);
         }
 
         public string GetMimeType(string extension)
         {
-            return string.IsNullOrEmpty(extension)
-                ? "application/octet-stream"
-                : extension.ToLowerInvariant() switch
+            if (string.IsNullOrEmpty(extension))
+            {
+                return "application/octet-stream";
+            }
+
+            return FileTypeMap.TryGetValue(extension, out var info) ? info.MimeType : "application/octet-stream";
+        }
+
+        private static bool CheckSignature(byte[] fileBytes, byte[]? magicBytes)
+        {
+            if (magicBytes == null || magicBytes.Length == 0)
+            {
+                return true;
+            }
+
+            if (fileBytes.Length < magicBytes.Length)
+            {
+                return false;
+            }
+
+            for (int i = 0; i < magicBytes.Length; i++)
+            {
+                if (fileBytes[i] != magicBytes[i])
                 {
-                    ".jpg" or ".jpeg" => "image/jpeg",
-                    ".png" => "image/png",
-                    ".gif" => "image/gif",
-                    ".pdf" => "application/pdf",
-                    ".txt" => "text/plain",
-                    ".doc" => "application/msword",
-                    ".docx" => "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-                    ".xls" => "application/vnd.ms-excel",
-                    ".xlsx" => "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                    _ => "application/octet-stream"
-                };
+                    return false;
+                }
+            }
+
+            return true;
         }
     }
 }
