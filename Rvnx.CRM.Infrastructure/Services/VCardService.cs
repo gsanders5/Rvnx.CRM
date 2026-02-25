@@ -5,6 +5,7 @@ using FolkerKinzel.VCards.Models;
 using Rvnx.CRM.Core.Constants;
 using Rvnx.CRM.Core.Enumerations;
 using Rvnx.CRM.Core.Interfaces;
+using Rvnx.CRM.Core.Models.Base;
 using Rvnx.CRM.Core.Models.Contact;
 using Rvnx.CRM.Core.Models.Dates;
 
@@ -12,7 +13,14 @@ namespace Rvnx.CRM.Infrastructure.Services;
 
 public class VCardService : IVCardService
 {
-    public IEnumerable<Contact> ParseVCard(Stream fileStream)
+    private readonly HttpClient? _httpClient;
+
+    public VCardService(HttpClient? httpClient = null)
+    {
+        _httpClient = httpClient;
+    }
+
+    public async Task<IEnumerable<Contact>> ParseVCardAsync(Stream fileStream, CancellationToken cancellationToken = default)
     {
         IReadOnlyList<VCard> vCards;
         try
@@ -199,10 +207,85 @@ public class VCardService : IVCardService
                 };
             }
 
+            // Photo - attempt to resolve
+            byte[]? photoBytes = await TryGetPhotoAsync(vc, _httpClient != null, cancellationToken);
+            if (photoBytes != null && photoBytes.Length > 0)
+            {
+                Attachment attachment = new()
+                {
+                    Id = Guid.NewGuid(),
+                    ContactId = contact.Id,
+                    AttachmentType = AttachmentTypes.ProfileImage,
+                    ContentType = "image/jpeg", // Default, will refine if possible
+                    FileName = "vcard_photo.jpg"
+                };
+
+                // Try to get MIME type from vCard if available
+                var photoProp = vc.Photos?.FirstOrNull();
+                if (photoProp?.Parameters.MediaType != null)
+                {
+                    attachment.ContentType = photoProp.Parameters.MediaType;
+                    if (attachment.ContentType.Contains("png", StringComparison.OrdinalIgnoreCase))
+                    {
+                        attachment.FileName = "vcard_photo.png";
+                    }
+                }
+
+                AttachmentContent content = new()
+                {
+                    Id = Guid.NewGuid(),
+                    AttachmentId = attachment.Id,
+                    Content = photoBytes
+                };
+
+                attachment.AttachmentContent = content;
+                contact.Attachments.Add(attachment);
+            }
+
             contacts.Add(contact);
         }
 
         return contacts;
+    }
+
+    private async Task<byte[]?> TryGetPhotoAsync(VCard vc, bool resolveUrls, CancellationToken cancellationToken)
+    {
+        var photoProp = vc.Photos?.FirstOrNull();
+        if (photoProp?.Value is not RawData rawData)
+        {
+            return null;
+        }
+
+        // Try to get embedded bytes first
+        byte[]? bytes = rawData.Bytes;
+        if (bytes != null && bytes.Length > 0)
+        {
+            return bytes;
+        }
+
+        // Try to resolve from URI if we have an HttpClient and URL resolution is enabled
+        Uri? photoUri = rawData.Uri;
+        if (photoUri != null && resolveUrls && _httpClient != null)
+        {
+            try
+            {
+                // Only fetch http/https URLs
+                if (photoUri.Scheme == Uri.UriSchemeHttp || photoUri.Scheme == Uri.UriSchemeHttps)
+                {
+                    using HttpResponseMessage response = await _httpClient.GetAsync(photoUri, cancellationToken);
+                    if (response.IsSuccessStatusCode)
+                    {
+                        return await response.Content.ReadAsByteArrayAsync(cancellationToken);
+                    }
+                }
+            }
+            catch
+            {
+                // Failed to fetch photo - continue without it
+            }
+        }
+
+        return null;
     }
 
     public byte[] ExportVCard(Contact contact)
@@ -272,6 +355,16 @@ public class VCardService : IVCardService
                 _ => Sex.Other
             };
             builder.GenderViews.Add(sex);
+        }
+
+        // Photo
+        if (contact.Attachments != null)
+        {
+            var profileImage = contact.Attachments.FirstOrDefault(a => a.AttachmentType == AttachmentTypes.ProfileImage);
+            if (profileImage != null && profileImage.AttachmentContent != null && profileImage.AttachmentContent.Content.Length > 0)
+            {
+                builder.Photos.AddBytes(profileImage.AttachmentContent.Content, profileImage.ContentType ?? "image/jpeg");
+            }
         }
 
         vCard = builder.VCard;

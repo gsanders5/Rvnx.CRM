@@ -2,22 +2,36 @@ using Rvnx.CRM.Core.Constants;
 using Rvnx.CRM.Core.Enumerations;
 using Rvnx.CRM.Core.Models.Contact;
 using Rvnx.CRM.Core.Models.Dates;
+using Rvnx.CRM.Core.Models.Base;
 using Rvnx.CRM.Infrastructure.Services;
 using System.Text;
+using Moq;
+using Moq.Protected;
+using System.Net;
 
 namespace Rvnx.CRM.Tests.Services
 {
-    public class VCardServiceTests
+    public class VCardServiceTests : IDisposable
     {
         private readonly VCardService _service;
+        private readonly Mock<HttpMessageHandler> _httpMessageHandlerMock;
+        private readonly HttpClient _httpClient;
 
         public VCardServiceTests()
         {
-            _service = new VCardService();
+            _httpMessageHandlerMock = new Mock<HttpMessageHandler>();
+            _httpClient = new HttpClient(_httpMessageHandlerMock.Object);
+            _service = new VCardService(_httpClient);
+        }
+
+        public void Dispose()
+        {
+            _httpClient.Dispose();
+            GC.SuppressFinalize(this);
         }
 
         [Fact]
-        public void ParseVCardShouldReturnContactWhenValidVCardProvided()
+        public async Task ParseVCardAsyncShouldReturnContactWhenValidVCardProvided()
         {
             // Arrange
             string vcfContent = @"BEGIN:VCARD
@@ -34,7 +48,8 @@ END:VCARD";
             using MemoryStream stream = new(Encoding.UTF8.GetBytes(vcfContent));
 
             // Act
-            List<Contact> contacts = _service.ParseVCard(stream).ToList();
+            IEnumerable<Contact> result = await _service.ParseVCardAsync(stream);
+            List<Contact> contacts = result.ToList();
 
             // Assert
             Assert.Single(contacts);
@@ -50,6 +65,77 @@ END:VCARD";
             SignificantDate? bday = contact.SignificantDates.FirstOrDefault(sd => sd.Title == SignificantDateTitles.Birthday);
             Assert.NotNull(bday);
             Assert.Equal(new DateTime(1990, 1, 1), bday.Date);
+        }
+
+        [Fact]
+        public async Task ParseVCardAsyncShouldExtractEmbeddedPhoto()
+        {
+             // Arrange
+            string vcfContent = @"BEGIN:VCARD
+VERSION:3.0
+FN:Photo Test
+N:Test;Photo;;;
+PHOTO;ENCODING=b;TYPE=JPEG:SGVsbG8gV29ybGQ=
+END:VCARD";
+            // "SGVsbG8gV29ybGQ=" is "Hello World" in Base64
+
+            using MemoryStream stream = new(Encoding.UTF8.GetBytes(vcfContent));
+
+            // Act
+            IEnumerable<Contact> result = await _service.ParseVCardAsync(stream);
+            List<Contact> contacts = result.ToList();
+
+            // Assert
+            Assert.Single(contacts);
+            Contact contact = contacts.First();
+            Assert.Single(contact.Attachments);
+            Attachment attachment = contact.Attachments.First();
+            Assert.Equal(AttachmentTypes.ProfileImage, attachment.AttachmentType);
+            Assert.Equal("image/jpeg", attachment.ContentType);
+            Assert.NotNull(attachment.AttachmentContent);
+            Assert.Equal("Hello World", Encoding.UTF8.GetString(attachment.AttachmentContent.Content));
+        }
+
+        [Fact]
+        public async Task ParseVCardAsyncShouldDownloadUrlPhoto()
+        {
+            // Arrange
+            string photoUrl = "https://example.com/photo.jpg";
+            string vcfContent = $@"BEGIN:VCARD
+VERSION:3.0
+FN:Url Photo Test
+N:Test;Url;;;
+PHOTO;VALUE=URI:{photoUrl}
+END:VCARD";
+
+            byte[] photoBytes = Encoding.UTF8.GetBytes("Downloaded Photo");
+
+            _httpMessageHandlerMock.Protected()
+                .Setup<Task<HttpResponseMessage>>(
+                    "SendAsync",
+                    ItExpr.Is<HttpRequestMessage>(req => req.Method == HttpMethod.Get && req.RequestUri == new Uri(photoUrl)),
+                    ItExpr.IsAny<CancellationToken>()
+                )
+                .ReturnsAsync(new HttpResponseMessage
+                {
+                    StatusCode = HttpStatusCode.OK,
+                    Content = new ByteArrayContent(photoBytes)
+                });
+
+            using MemoryStream stream = new(Encoding.UTF8.GetBytes(vcfContent));
+
+            // Act
+            IEnumerable<Contact> result = await _service.ParseVCardAsync(stream);
+            List<Contact> contacts = result.ToList();
+
+            // Assert
+            Assert.Single(contacts);
+            Contact contact = contacts.First();
+            Assert.Single(contact.Attachments);
+            Attachment attachment = contact.Attachments.First();
+            Assert.Equal(AttachmentTypes.ProfileImage, attachment.AttachmentType);
+            Assert.NotNull(attachment.AttachmentContent);
+            Assert.Equal("Downloaded Photo", Encoding.UTF8.GetString(attachment.AttachmentContent.Content));
         }
 
         [Fact]
@@ -91,6 +177,37 @@ END:VCARD";
             Assert.Contains("jane@example.com", vcf);
             Assert.Contains("19950520", vcf.Replace("-", "")); // Date format might vary
             Assert.Contains("END:VCARD", vcf);
+        }
+
+        [Fact]
+        public void ExportVCardShouldEmbedProfileImage()
+        {
+            // Arrange
+            Contact contact = new()
+            {
+                FirstName = "Photo",
+                LastName = "Export"
+            };
+
+            byte[] photoBytes = Encoding.UTF8.GetBytes("Exported Photo");
+            contact.Attachments.Add(new Attachment
+            {
+                AttachmentType = AttachmentTypes.ProfileImage,
+                ContentType = "image/png",
+                AttachmentContent = new AttachmentContent
+                {
+                    Content = photoBytes
+                }
+            });
+
+            // Act
+            byte[] bytes = _service.ExportVCard(contact);
+            string vcf = Encoding.UTF8.GetString(bytes);
+
+            // Assert
+            Assert.Contains("PHOTO", vcf);
+            // Base64 of "Exported Photo" is "RXhwb3J0ZWQgUGhvdG8="
+            Assert.Contains("RXhwb3J0ZWQgUGhvdG8=", vcf);
         }
     }
 }
