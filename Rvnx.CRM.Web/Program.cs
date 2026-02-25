@@ -29,6 +29,16 @@ namespace Rvnx.CRM.Web
 
             if (authEnabled)
             {
+                // Validate that required authentication settings are present when enabled
+                if (string.IsNullOrWhiteSpace(authConfig["Authority"]) ||
+                    string.IsNullOrWhiteSpace(authConfig["ClientId"]) ||
+                    string.IsNullOrWhiteSpace(authConfig["ClientSecret"]))
+                {
+                    throw new InvalidOperationException(
+                        "Authentication is enabled but Authority, ClientId, or ClientSecret is missing in configuration. " +
+                        "Please provide these values in appsettings.json or via environment variables (e.g., Authentication__ClientSecret).");
+                }
+
                 builder.Services.AddAuthentication(options =>
                 {
                     options.DefaultScheme = CookieAuthenticationDefaults.AuthenticationScheme;
