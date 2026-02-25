@@ -26,7 +26,7 @@ namespace Rvnx.CRM.Web.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Id,Title,Description,Date,EntityId,EntityType,RemindMe,EventFrequency")] SignificantDateDto dto)
+        public async Task<IActionResult> Create( [Bind("Id,Title,Description,Date,EntityId,EntityType,RemindMe,EventFrequency")] SignificantDateDto dto)
         {
             if (!await IsValidContactAsync(dto.EntityId))
             {
@@ -62,6 +62,7 @@ namespace Rvnx.CRM.Web.Controllers
 
                 return RedirectToEntity(dto.EntityId, dto.EntityType);
             }
+
             return View(dto);
         }
 
@@ -73,12 +74,16 @@ namespace Rvnx.CRM.Web.Controllers
             }
 
             SignificantDate? importantDate = await Repository.GetByIdAsync<SignificantDate>(id.Value);
-            return importantDate == null || !await IsValidContactAsync(importantDate.ContactId ?? Guid.Empty) ? NotFound() : View(importantDate.ToDto());
+            return importantDate == null || !await IsValidContactAsync(importantDate.ContactId ?? Guid.Empty)
+                ? NotFound()
+                : View(importantDate.ToDto());
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(Guid id, [Bind("Id,Title,Description,Date,EntityId,EntityType,RemindMe,EventFrequency")] SignificantDateDto dto)
+        public async Task<IActionResult> Edit(Guid id,
+            [Bind("Id,Title,Description,Date,EntityId,EntityType,RemindMe,EventFrequency")]
+            SignificantDateDto dto)
         {
             if (id != dto.Id)
             {
@@ -126,8 +131,10 @@ namespace Rvnx.CRM.Web.Controllers
                         throw;
                     }
                 }
+
                 return RedirectToEntity(dto.EntityId, dto.EntityType);
             }
+
             return View(dto);
         }
 
@@ -139,7 +146,9 @@ namespace Rvnx.CRM.Web.Controllers
             }
 
             SignificantDate? importantDate = await Repository.GetByIdAsync<SignificantDate>(id.Value);
-            return importantDate == null || !await IsValidContactAsync(importantDate.ContactId ?? Guid.Empty) ? NotFound() : View(importantDate.ToDto());
+            return importantDate == null || !await IsValidContactAsync(importantDate.ContactId ?? Guid.Empty)
+                ? NotFound()
+                : View(importantDate.ToDto());
         }
 
         [HttpPost, ActionName("Delete")]
@@ -157,15 +166,21 @@ namespace Rvnx.CRM.Web.Controllers
 
                 return RedirectToEntity(entityId, entityType);
             }
+
             return RedirectToAction("Index", "Home");
         }
 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "CA1862:Use the 'StringComparison' method overloads to perform case-insensitive string comparisons", Justification = "EF Core cannot translate string.Equals with StringComparison. .ToLower() is used for SQLite-compatible translatable case-insensitivity.")]
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Globalization", "CA1304:Specify CultureInfo", Justification = "EF Core cannot translate .ToLower(CultureInfo).")]
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Globalization", "CA1311:Specify a culture or use an invariant version", Justification = "EF Core cannot translate .ToLower(CultureInfo) or .ToLowerInvariant().")]
         private async Task<bool> IsBirthdayAlreadySetAsync(Guid contactId, Guid? excludeId = null)
         {
             return (await Repository.CountAsync<SignificantDate>(d =>
-                d.ContactId == contactId &&
-                d.Id != (excludeId ?? Guid.Empty) &&
-                string.Equals(d.Title, SignificantDateTitles.Birthday, StringComparison.OrdinalIgnoreCase))) > 0;
+                       d.ContactId == contactId &&
+                       d.Id != (excludeId ?? Guid.Empty) &&
+                       d.Title != null &&
+                       d.Title.ToLower() == SignificantDateTitles.Birthday.ToLower())) >
+                   0;
         }
     }
 }
