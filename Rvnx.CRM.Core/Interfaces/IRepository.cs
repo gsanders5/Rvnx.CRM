@@ -22,6 +22,8 @@ public interface IRepository
 
     Task<List<TDto>> ListProjectedAsync<T, TDto>(Expression<Func<T, bool>> predicate, Expression<Func<T, TDto>> selector, CancellationToken cancellationToken = default) where T : BaseEntity;
 
+    Task<List<TDto>> ListProjectedAsync<T, TDto>(Expression<Func<T, bool>> predicate, Expression<Func<T, TDto>> selector, Expression<Func<T, object>>? orderBy, bool descending, CancellationToken cancellationToken = default) where T : BaseEntity;
+
 
     // Create Operations  
     Task<T> AddAsync<T>(T entity, CancellationToken cancellationToken = default) where T : BaseEntity;

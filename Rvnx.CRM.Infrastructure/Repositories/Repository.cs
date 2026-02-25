@@ -99,6 +99,18 @@ public class Repository(CRMDbContext context) : IRepository
             .ToListAsync(cancellationToken);
     }
 
+    public async Task<List<TDto>> ListProjectedAsync<T, TDto>(Expression<Func<T, bool>> predicate, Expression<Func<T, TDto>> selector, Expression<Func<T, object>>? orderBy, bool descending, CancellationToken cancellationToken = default) where T : BaseEntity
+    {
+        IQueryable<T> query = _context.Set<T>().AsNoTracking().Where(predicate);
+
+        if (orderBy != null)
+        {
+            query = descending ? query.OrderByDescending(orderBy) : query.OrderBy(orderBy);
+        }
+
+        return await query.Select(selector).ToListAsync(cancellationToken);
+    }
+
     public async Task<T> AddAsync<T>(T entity, CancellationToken cancellationToken = default) where T : BaseEntity
     {
         Microsoft.EntityFrameworkCore.ChangeTracking.EntityEntry<T> entry = await _context.Set<T>().AddAsync(entity, cancellationToken);

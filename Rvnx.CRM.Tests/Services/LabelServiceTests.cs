@@ -21,13 +21,19 @@ public class LabelServiceTests
     public async Task GetAllAsyncReturnsMappedDtos()
     {
         // Arrange
-        List<Label> labels =
+        List<Core.DTOs.Contact.LabelDto> labelDtos =
         [
-            new Label { Id = Guid.NewGuid(), Name = "Work", Color = "#ff0000" },
-            new Label { Id = Guid.NewGuid(), Name = "Family", Color = "#00ff00" }
+            new Core.DTOs.Contact.LabelDto { Id = Guid.NewGuid(), Name = "Work", Color = "#ff0000" },
+            new Core.DTOs.Contact.LabelDto { Id = Guid.NewGuid(), Name = "Family", Color = "#00ff00" }
         ];
-        _mockRepo.Setup(r => r.ListAsNoTrackingAsync(It.IsAny<Expression<Func<Label, bool>>>(), It.IsAny<CancellationToken>(), It.IsAny<string[]>()))
-                 .ReturnsAsync(labels);
+
+        _mockRepo.Setup(r => r.ListProjectedAsync(
+                It.IsAny<Expression<Func<Label, bool>>>(),
+                It.IsAny<Expression<Func<Label, Core.DTOs.Contact.LabelDto>>>(),
+                It.IsAny<Expression<Func<Label, object>>>(),
+                It.IsAny<bool>(),
+                It.IsAny<CancellationToken>()))
+                 .ReturnsAsync(labelDtos);
 
         // Act
         List<Core.DTOs.Contact.LabelDto> result = await _service.GetAllAsync();

@@ -11,13 +11,17 @@ public class LabelService(IRepository repository) : ILabelService
 
     public async Task<List<LabelDto>> GetAllAsync()
     {
-        List<Label> labels = await _repository.ListAsNoTrackingAsync<Label>(l => true) ?? [];
-        return [.. labels.OrderBy(l => l.Name).Select(l => new LabelDto
-        {
-            Id = l.Id,
-            Name = l.Name,
-            Color = l.Color
-        })];
+        return await _repository.ListProjectedAsync<Label, LabelDto>(
+            l => true,
+            l => new LabelDto
+            {
+                Id = l.Id,
+                Name = l.Name,
+                Color = l.Color
+            },
+            orderBy: l => l.Name,
+            descending: false
+        );
     }
 
     public async Task<LabelOperationResult> CreateAsync(string name, string? color)
