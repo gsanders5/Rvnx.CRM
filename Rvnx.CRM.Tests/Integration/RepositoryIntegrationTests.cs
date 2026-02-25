@@ -1,4 +1,3 @@
-using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using Rvnx.CRM.Core.Models.Business;
 using Rvnx.CRM.Core.Models.Contact;
@@ -36,9 +35,9 @@ public class RepositoryIntegrationTests : SqliteIntegrationTestBase
         Context.ChangeTracker.Clear();
 
         Contact? retrieved = await Context.Contacts.FirstOrDefaultAsync(c => c.FirstName == "Real");
-        retrieved.Should().NotBeNull();
-        retrieved!.LastName.Should().Be("Database");
-        retrieved.UserId.Should().Be(TestUserId); // Audit field check
+        Assert.NotNull(retrieved);
+        Assert.Equal("Database", retrieved!.LastName);
+        Assert.Equal(TestUserId, retrieved.UserId); // Audit field check
     }
 
     [Fact]
@@ -71,8 +70,8 @@ public class RepositoryIntegrationTests : SqliteIntegrationTestBase
         List<Contact> visibleContacts = await _repository.ListAsync<Contact>();
 
         // 4. Assert
-        visibleContacts.Should().Contain(c => c.FirstName == "My");
-        visibleContacts.Should().NotContain(c => c.FirstName == "Other");
+        Assert.Contains(visibleContacts, c => c.FirstName == "My");
+        Assert.DoesNotContain(visibleContacts, c => c.FirstName == "Other");
     }
 
     [Fact]
@@ -109,10 +108,10 @@ public class RepositoryIntegrationTests : SqliteIntegrationTestBase
 
         // Employer should be deleted (Cascade)
         Employer? emp = await Context.Employers.IgnoreQueryFilters().FirstOrDefaultAsync(e => e.CompanyName == "Work");
-        emp.Should().BeNull();
+        Assert.Null(emp);
 
         // SignificantDate should now be deleted because of the new explicit FK with Cascade Delete
         SignificantDate? d = await Context.SignificantDates.IgnoreQueryFilters().FirstOrDefaultAsync(x => x.Title == "Bday");
-        d.Should().BeNull();
+        Assert.Null(d);
     }
 }
