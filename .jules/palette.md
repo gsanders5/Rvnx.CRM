@@ -25,11 +25,3 @@
 }
 ```
 **Also:** Ensure responsive button groups use `d-grid gap-2 d-md-flex` for full-width stacking on mobile and inline layout on desktop.
-
-## 2025-05-24 - Skip to Content Pattern
-**Learning:** Keyboard users often have to tab through long navigation menus before reaching the main content, which is a significant accessibility barrier.
-**Action:** Implement a "Skip to content" link immediately after the `<body>` tag using standard Bootstrap classes:
-```html
-<a href="#main-content" class="visually-hidden-focusable position-absolute top-0 start-0 p-3 z-3 bg-primary text-white text-decoration-none rounded-bottom-end">Skip to main content</a>
-```
-Ensure the target container has `id="main-content"` and `tabindex="-1"` to correctly receive focus.

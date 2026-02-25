@@ -23,8 +23,6 @@ public class ContactReadService(IRepository repository) : IContactReadService
                 Id = c.Id,
                 FirstName = c.FirstName,
                 LastName = c.LastName ?? string.Empty,
-                // Optimization: Compute FullName in database projection to avoid extra memory loop
-                FullName = (c.FirstName + " " + (c.LastName ?? "")).Trim(),
                 Company = c.Company,
                 JobTitle = c.JobTitle,
                 IsHidden = c.IsHidden,
@@ -39,42 +37,48 @@ public class ContactReadService(IRepository repository) : IContactReadService
                 IsPartial = c.IsPartial
             });
 
+        // Compute FullName in memory to avoid SQL translation issues and ensure consistency
+        foreach (ContactDto dto in contactDtos)
+        {
+            dto.FullName = (dto.FirstName + " " + dto.LastName).Trim();
+        }
+
         List<Guid> contactIds = [.. contactDtos.Select(c => c.Id)];
 
-        // Optimization: Project only necessary fields (ContactId, AttachmentId) instead of fetching full Attachment entities
-        List<(Guid ContactId, Guid AttachmentId)> profileAttachments = contactIds.Count > 0
-            ? await _repository.ListProjectedByChunkedContainsAsync<Attachment, (Guid, Guid), Guid>(
+        List<Attachment> profileAttachments = contactIds.Count > 0
+            ? await _repository.ListByChunkedContainsAsync<Attachment, Guid>(
                 contactIds,
-                chunk => a => a.ContactId != null && a.AttachmentType == AttachmentTypes.ProfileImage && chunk.Contains(a.ContactId.Value),
-                a => new ValueTuple<Guid, Guid>(a.ContactId!.Value, a.Id))
+                chunk => a => a.ContactId != null && a.AttachmentType == AttachmentTypes.ProfileImage && chunk.Contains(a.ContactId.Value))
             : [];
 
         if (profileAttachments.Count > 0)
         {
-            Dictionary<Guid, Guid> attachmentMap = profileAttachments
-                .GroupBy(a => a.ContactId) // Handle potential duplicates gracefully
-                .ToDictionary(g => g.Key, g => g.First().AttachmentId);
+            Dictionary<Guid, Attachment> attachmentMap = profileAttachments
+                .Where(a => a != null && a.ContactId.HasValue)
+                .GroupBy(a => a.ContactId!.Value) // Handle potential duplicates gracefully
+                .ToDictionary(g => g.Key, g => g.First());
 
             foreach (ContactDto? dto in contactDtos)
             {
-                if (dto != null && attachmentMap.TryGetValue(dto.Id, out Guid attachmentId))
+                if (dto != null && attachmentMap.TryGetValue(dto.Id, out Attachment? attachment))
                 {
-                    dto.ProfileImageId = attachmentId;
+                    dto.ProfileImageId = attachment.Id;
                 }
             }
         }
 
-        // Optimization: Project only necessary fields (ContactId, Label Info) instead of fetching ContactLabel + joined Label entities
-        List<(Guid ContactId, Guid LabelId, string Name, string? Color)> allContactLabels = contactIds.Count > 0
-            ? await _repository.ListProjectedByChunkedContainsAsync<ContactLabel, (Guid, Guid, string, string?), Guid>(
+        List<ContactLabel> allContactLabels = contactIds.Count > 0
+            ? await _repository.ListByChunkedContainsAsync<ContactLabel, Guid>(
                 contactIds,
                 chunk => cl => chunk.Contains(cl.ContactId),
-                cl => new ValueTuple<Guid, Guid, string, string?>(cl.ContactId, cl.Label.Id, cl.Label.Name, cl.Label.Color))
+                asNoTracking: true,
+                cancellationToken: default,
+                nameof(ContactLabel.Label))
             : [];
 
         Dictionary<Guid, List<LabelDto>> labelsByContact = allContactLabels
             .GroupBy(cl => cl.ContactId)
-            .ToDictionary(g => g.Key, g => g.Select(cl => new LabelDto { Id = cl.LabelId, Name = cl.Name, Color = cl.Color }).OrderBy(l => l.Name).ToList());
+            .ToDictionary(g => g.Key, g => g.Select(cl => new LabelDto { Id = cl.Label.Id, Name = cl.Label.Name, Color = cl.Label.Color }).OrderBy(l => l.Name).ToList());
 
         foreach (ContactDto? dto in contactDtos)
         {

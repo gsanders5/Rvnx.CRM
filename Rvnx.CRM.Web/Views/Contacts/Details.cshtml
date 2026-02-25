@@ -448,10 +448,21 @@
         </div>
     </div>
 
-    <!-- Timeline -->
+    <!-- Interactions (Timeline & Notes) -->
     <div class="card mb-4">
-        <div class="card-header d-flex justify-content-between align-items-center">
-            <h5 class="card-title mb-0"><i class="bi bi-clock-history"></i> Timeline</h5>
+        <div class="card-header d-flex justify-content-between align-items-center border-bottom-0 pb-0">
+             <ul class="nav nav-tabs card-header-tabs" id="crm-tabs" role="tablist">
+                 <li class="nav-item" role="presentation">
+                     <a class="nav-link active" id="timeline-tab" data-mdb-tab-init href="#timeline-content" role="tab" aria-controls="timeline-content" aria-selected="true">
+                         <i class="bi bi-clock-history me-2"></i>Timeline
+                     </a>
+                 </li>
+                 <li class="nav-item" role="presentation">
+                     <a class="nav-link" id="notes-tab" data-mdb-tab-init href="#notes-content" role="tab" aria-controls="notes-content" aria-selected="false">
+                         <i class="bi bi-journal-text me-2"></i>Notes
+                     </a>
+                 </li>
+             </ul>
             <div class="dropdown">
                 <button class="btn btn-sm btn-outline-primary dropdown-toggle" type="button" id="dropdownMenuButton" data-mdb-dropdown-init data-mdb-toggle="dropdown" aria-expanded="false">
                     <i class="bi bi-plus-lg"></i> Add
@@ -464,70 +475,111 @@
             </div>
         </div>
         <div class="card-body">
-            @if (Model.Timeline != null && Model.Timeline.Any())
-            {
-                <div class="timeline">
-                    @foreach (var item in Model.Timeline)
+             <div class="tab-content">
+                 <!-- Timeline Tab -->
+                 <div class="tab-pane fade show active" id="timeline-content" role="tabpanel" aria-labelledby="timeline-tab">
+                    @if (Model.Timeline != null && Model.Timeline.Any())
                     {
-                        <div class="card mb-3 border-start border-4 @(item.Type == "Note" ? "border-primary" : item.Type == "Reminder" ? "border-success" : "border-info")">
-                            <div class="card-body py-2">
-                                <div class="d-flex justify-content-between align-items-start mb-1">
-                                    <div>
-                                        <h6 class="card-title mb-0 d-flex align-items-center gap-2">
-                                            <i class="bi @item.Icon text-muted"></i>
-                                            @item.Title
-                                        </h6>
-                                        <small class="text-muted">@item.Date.ToShortDateString()</small>
-                                    </div>
-                                    <div class="btn-group btn-group-sm">
-                                        @if (item.Type == "Note")
+                        <div class="timeline">
+                            @foreach (var item in Model.Timeline)
+                            {
+                                <div class="card mb-3 border-start border-4 @(item.Type == "Note" ? "border-primary" : item.Type == "Reminder" ? "border-success" : "border-info")">
+                                    <div class="card-body py-2">
+                                        <div class="d-flex justify-content-between align-items-start mb-1">
+                                            <div>
+                                                <h6 class="card-title mb-0 d-flex align-items-center gap-2">
+                                                    <i class="bi @item.Icon text-muted"></i>
+                                                    @item.Title
+                                                </h6>
+                                                <small class="text-muted">@item.Date.ToShortDateString()</small>
+                                            </div>
+                                            <div class="btn-group btn-group-sm">
+                                                @if (item.Type == "Note")
+                                                {
+                                                    <a asp-controller="Notes" asp-action="Edit" asp-route-id="@item.Id" class="btn btn-link text-secondary p-0 mx-1" title="Edit"><i class="bi bi-pencil-square"></i></a>
+                                                    <form asp-controller="Notes" asp-action="Delete" asp-route-id="@item.Id" method="post" class="d-inline" onsubmit="return confirm('Are you sure you want to delete this note?');">
+                                                        <button type="submit" class="btn btn-link text-danger p-0 mx-1" title="Delete"><i class="bi bi-trash"></i></button>
+                                                    </form>
+                                                }
+                                                else if (item.Type == "Reminder")
+                                                {
+                                                    <a asp-controller="Reminders" asp-action="Edit" asp-route-id="@item.Id" class="btn btn-link text-secondary p-0 mx-1" title="Edit"><i class="bi bi-pencil-square"></i></a>
+                                                    <form asp-controller="Reminders" asp-action="Delete" asp-route-id="@item.Id" method="post" class="d-inline" onsubmit="return confirm('Are you sure you want to delete this reminder?');">
+                                                        <button type="submit" class="btn btn-link text-danger p-0 mx-1" title="Delete"><i class="bi bi-trash"></i></button>
+                                                    </form>
+                                                }
+                                                else if (item.Type == "Date")
+                                                {
+                                                    <a asp-controller="SignificantDates" asp-action="Edit" asp-route-id="@item.Id" class="btn btn-link text-secondary p-0 mx-1" title="Edit"><i class="bi bi-pencil-square"></i></a>
+                                                    <form asp-controller="SignificantDates" asp-action="Delete" asp-route-id="@item.Id" method="post" class="d-inline" onsubmit="return confirm('Are you sure you want to delete this date?');">
+                                                        <button type="submit" class="btn btn-link text-danger p-0 mx-1" title="Delete"><i class="bi bi-trash"></i></button>
+                                                    </form>
+                                                }
+                                            </div>
+                                        </div>
+                                        @if (!string.IsNullOrEmpty(item.Description) && item.Description != item.Title)
                                         {
-                                            <a asp-controller="Notes" asp-action="Edit" asp-route-id="@item.Id" class="btn btn-link text-secondary p-0 mx-1" title="Edit"><i class="bi bi-pencil-square"></i></a>
-                                            <form asp-controller="Notes" asp-action="Delete" asp-route-id="@item.Id" method="post" class="d-inline" onsubmit="return confirm('Are you sure you want to delete this note?');">
-                                                <button type="submit" class="btn btn-link text-danger p-0 mx-1" title="Delete"><i class="bi bi-trash"></i></button>
-                                            </form>
-                                        }
-                                        else if (item.Type == "Reminder")
-                                        {
-                                            <a asp-controller="Reminders" asp-action="Edit" asp-route-id="@item.Id" class="btn btn-link text-secondary p-0 mx-1" title="Edit"><i class="bi bi-pencil-square"></i></a>
-                                            <form asp-controller="Reminders" asp-action="Delete" asp-route-id="@item.Id" method="post" class="d-inline" onsubmit="return confirm('Are you sure you want to delete this reminder?');">
-                                                <button type="submit" class="btn btn-link text-danger p-0 mx-1" title="Delete"><i class="bi bi-trash"></i></button>
-                                            </form>
-                                        }
-                                        else if (item.Type == "Date")
-                                        {
-                                            <a asp-controller="SignificantDates" asp-action="Edit" asp-route-id="@item.Id" class="btn btn-link text-secondary p-0 mx-1" title="Edit"><i class="bi bi-pencil-square"></i></a>
-                                            <form asp-controller="SignificantDates" asp-action="Delete" asp-route-id="@item.Id" method="post" class="d-inline" onsubmit="return confirm('Are you sure you want to delete this date?');">
-                                                <button type="submit" class="btn btn-link text-danger p-0 mx-1" title="Delete"><i class="bi bi-trash"></i></button>
-                                            </form>
+                                            @if (item.Type == "Note")
+                                            {
+                                                 <div class="d-none note-source">@item.Description</div>
+                                                 <div class="note-render card-text small text-secondary"></div>
+                                            }
+                                            else
+                                            {
+                                                <p class="card-text small text-secondary mb-0">@item.Description</p>
+                                            }
                                         }
                                     </div>
                                 </div>
-                                @if (!string.IsNullOrEmpty(item.Description) && item.Description != item.Title)
-                                {
-                                    @if (item.Type == "Note")
-                                    {
-                                         <div class="d-none note-source">@item.Description</div>
-                                         <div class="note-render card-text small text-secondary"></div>
-                                    }
-                                    else
-                                    {
-                                        <p class="card-text small text-secondary mb-0">@item.Description</p>
-                                    }
-                                }
-                            </div>
+                            }
                         </div>
                     }
-                </div>
-            }
-            else
-            {
-                <div class="text-center py-4 text-muted">
-                    <i class="bi bi-clock-history display-6 d-block mb-3 opacity-25"></i>
-                    <p class="mb-2">No history yet.</p>
-                    <a asp-controller="Notes" asp-action="Create" asp-route-entityId="@Model.Id" asp-route-entityType="Person" class="btn btn-sm btn-primary mt-2"><i class="bi bi-plus-lg"></i> Add Note</a>
-                </div>
-            }
+                    else
+                    {
+                        <div class="text-center py-4 text-muted">
+                            <i class="bi bi-clock-history display-6 d-block mb-3 opacity-25"></i>
+                            <p class="mb-2">No history yet.</p>
+                            <a asp-controller="Notes" asp-action="Create" asp-route-entityId="@Model.Id" asp-route-entityType="Person" class="btn btn-sm btn-primary mt-2"><i class="bi bi-plus-lg"></i> Add Note</a>
+                        </div>
+                    }
+                 </div>
+
+                 <!-- Notes Tab -->
+                 <div class="tab-pane fade" id="notes-content" role="tabpanel" aria-labelledby="notes-tab">
+                     @if (Model.Notes != null && Model.Notes.Any())
+                     {
+                         <div class="list-group">
+                             @foreach (var note in Model.Notes.OrderByDescending(n => n.CreatedDate))
+                             {
+                                 <div class="list-group-item">
+                                     <div class="d-flex w-100 justify-content-between mb-1">
+                                         <h6 class="mb-1">@note.Title</h6>
+                                         <div>
+                                            <small class="text-muted">@note.CreatedDate.ToShortDateString()</small>
+                                            <div class="btn-group btn-group-sm ms-2">
+                                                <a asp-controller="Notes" asp-action="Edit" asp-route-id="@note.Id" class="btn btn-link text-secondary p-0 mx-1" title="Edit"><i class="bi bi-pencil-square"></i></a>
+                                                <form asp-controller="Notes" asp-action="Delete" asp-route-id="@note.Id" method="post" class="d-inline" onsubmit="return confirm('Are you sure you want to delete this note?');">
+                                                    <button type="submit" class="btn btn-link text-danger p-0 mx-1" title="Delete"><i class="bi bi-trash"></i></button>
+                                                </form>
+                                            </div>
+                                         </div>
+                                     </div>
+                                     <div class="d-none note-source">@note.Value</div>
+                                     <div class="note-render card-text small text-secondary"></div>
+                                 </div>
+                             }
+                         </div>
+                     }
+                     else
+                     {
+                        <div class="text-center py-4 text-muted">
+                            <i class="bi bi-journal-text display-6 d-block mb-3 opacity-25"></i>
+                            <p class="mb-2">No notes yet.</p>
+                            <a asp-controller="Notes" asp-action="Create" asp-route-entityId="@Model.Id" asp-route-entityType="Person" class="btn btn-sm btn-primary mt-2"><i class="bi bi-plus-lg"></i> Add Note</a>
+                        </div>
+                     }
+                 </div>
+             </div>
         </div>
     </div>
 

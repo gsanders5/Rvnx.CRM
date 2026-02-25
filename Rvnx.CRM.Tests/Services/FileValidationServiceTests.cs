@@ -135,8 +135,7 @@ namespace Rvnx.CRM.Tests.Services
         [Fact]
         public void IsValidFileSignatureShouldReturnTrueForValidPdf()
         {
-            // %PDF-1.4
-            byte[] bytes = { 0x25, 0x50, 0x44, 0x46, 0x2D, 0x31, 0x2E, 0x34 };
+            byte[] bytes = { 0x25, 0x50, 0x44, 0x46, 0x00 };
             Assert.True(_service.IsValidFileSignature(bytes, ".pdf"));
         }
 
@@ -150,17 +149,14 @@ namespace Rvnx.CRM.Tests.Services
         [Fact]
         public void IsValidFileSignatureShouldReturnTrueForValidDocx()
         {
-            // Zip header + padding
-            byte[] bytes = new byte[20];
-            bytes[0] = 0x50; bytes[1] = 0x4B; bytes[2] = 0x03; bytes[3] = 0x04;
+            byte[] bytes = { 0x50, 0x4B, 0x03, 0x04, 0x00 };
             Assert.True(_service.IsValidFileSignature(bytes, ".docx"));
         }
 
         [Fact]
         public void IsValidFileSignatureShouldReturnTrueForValidDoc()
         {
-            // OLE header
-            byte[] bytes = { 0xD0, 0xCF, 0x11, 0xE0, 0xA1, 0xB1, 0x1A, 0xE1 };
+            byte[] bytes = { 0xD0, 0xCF, 0x11, 0xE0, 0x00 };
             Assert.True(_service.IsValidFileSignature(bytes, ".doc"));
         }
 
@@ -181,8 +177,8 @@ namespace Rvnx.CRM.Tests.Services
         [Fact]
         public void IsValidFileSignatureShouldReturnTrueForValidImage()
         {
-            // PNG full signature
-            byte[] bytes = { 0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A };
+            // PNG
+            byte[] bytes = { 0x89, 0x50, 0x4E, 0x47, 0x00 };
             Assert.True(_service.IsValidFileSignature(bytes, ".png"));
         }
 

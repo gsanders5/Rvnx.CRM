@@ -21,7 +21,7 @@ public class ContactImportService(IRepository repository, IVCardService vCardSer
     {
         try
         {
-            IEnumerable<Contact> importedContacts = await _vCardService.ParseVCardAsync(vCardStream);
+            IEnumerable<Contact> importedContacts = _vCardService.ParseVCard(vCardStream);
 
             int addedCount = 0;
             int skippedCount = 0;

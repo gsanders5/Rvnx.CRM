@@ -20,7 +20,6 @@ namespace Rvnx.CRM.Tests.Controllers
         private readonly Mock<IContactManagementService> _contactManagementServiceMock = new();
         private readonly Mock<IContactReadService> _contactReadServiceMock = new();
         private readonly Mock<ISelfContactService> _selfContactServiceMock = new();
-        private readonly Mock<IFileValidationService> _fileValidationServiceMock = new();
         private readonly ContactsController _controller;
 
         public ContactsControllerTests()
@@ -30,7 +29,6 @@ namespace Rvnx.CRM.Tests.Controllers
             _userMock.Setup(s => s.IsAuthenticated).Returns(true);
 
             _syncMock.Setup(s => s.SyncUserAsync(It.IsAny<System.Security.Claims.ClaimsPrincipal>())).Returns(Task.CompletedTask);
-            _fileValidationServiceMock.Setup(s => s.IsAllowedFileSize(It.IsAny<long>())).Returns(true);
 
             _controller = new ContactsController(
                 _loggerMock.Object,
@@ -39,8 +37,7 @@ namespace Rvnx.CRM.Tests.Controllers
                 _contactExportServiceMock.Object,
                 _contactManagementServiceMock.Object,
                 _contactReadServiceMock.Object,
-                _selfContactServiceMock.Object,
-                _fileValidationServiceMock.Object)
+                _selfContactServiceMock.Object)
             {
                 ControllerContext = new ControllerContext { HttpContext = new DefaultHttpContext() }
             };
@@ -171,25 +168,6 @@ namespace Rvnx.CRM.Tests.Controllers
 
             // Verify message
             Assert.Equal("Import successful! Added: 1, Skipped: 1", _controller.TempData["SuccessMessage"]);
-        }
-
-        [Fact]
-        public async Task ImportWhenFileIsTooLargeShouldReturnError()
-        {
-            // Arrange
-            Mock<IFormFile> fileMock = new();
-            fileMock.Setup(f => f.Length).Returns(31 * 1024 * 1024); // 31 MB
-            fileMock.Setup(f => f.FileName).Returns("contacts.vcf");
-
-            _fileValidationServiceMock.Setup(s => s.IsAllowedFileSize(It.IsAny<long>())).Returns(false);
-
-            // Act
-            IActionResult result = await _controller.Import(fileMock.Object);
-
-            // Assert
-            ViewResult viewResult = Assert.IsType<ViewResult>(result);
-            Assert.False(_controller.ModelState.IsValid);
-            Assert.Equal("File is too large.", _controller.ModelState["file"]!.Errors[0].ErrorMessage);
         }
 
         [Fact]

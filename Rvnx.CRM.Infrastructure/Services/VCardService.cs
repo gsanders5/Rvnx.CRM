@@ -1,33 +1,24 @@
 using FolkerKinzel.VCards;
-using FolkerKinzel.VCards.Enums;
-using FolkerKinzel.VCards.Extensions;
 using FolkerKinzel.VCards.Models;
+using FolkerKinzel.VCards.Models.Enums;
+using FolkerKinzel.VCards.Models.PropertyParts;
 using Rvnx.CRM.Core.Constants;
 using Rvnx.CRM.Core.Enumerations;
 using Rvnx.CRM.Core.Interfaces;
-using Rvnx.CRM.Core.Models.Base;
 using Rvnx.CRM.Core.Models.Contact;
 using Rvnx.CRM.Core.Models.Dates;
-using System.Net.Http.Headers;
 
 namespace Rvnx.CRM.Infrastructure.Services;
 
 public class VCardService : IVCardService
 {
-    private readonly HttpClient? _httpClient;
-
-    public VCardService(HttpClient? httpClient = null)
+    public IEnumerable<Contact> ParseVCard(Stream fileStream)
     {
-        _httpClient = httpClient;
-    }
-
-    public async Task<IEnumerable<Contact>> ParseVCardAsync(Stream fileStream, CancellationToken cancellationToken = default)
-    {
-        IReadOnlyList<VCard> vCards;
+        IList<VCard> vCards;
         try
         {
-            // v8: Use Vcf.Deserialize with Stream directly, leaveStreamOpen to not dispose the caller's stream
-            vCards = Vcf.Deserialize(fileStream, leaveStreamOpen: true);
+            using StreamReader reader = new(fileStream);
+            vCards = VCard.DeserializeVcf(reader);
         }
         catch
         {
@@ -45,19 +36,19 @@ public class VCardService : IVCardService
                 LastName = ""
             };
 
-            // 1. Name - use extension method FirstOrNull() for safer access
-            FolkerKinzel.VCards.Models.Properties.NameProperty? nameProp = vc.NameViews?.FirstOrNull();
-            if (nameProp?.Value is Name n)
+            // 1. Name
+            NameProperty? nameProp = vc.NameViews?.FirstOrDefault();
+            if (nameProp != null && nameProp.Value != null)
             {
-                // v8: Name uses Surnames and Given (both IReadOnlyList<string>)
-                contact.LastName = n.Surnames.Count > 0 ? n.Surnames[0] : "";
-                contact.FirstName = n.Given.Count > 0 ? n.Given[0] : "";
+                Name n = nameProp.Value;
+                contact.LastName = n.LastName.FirstOrDefault() ?? "";
+                contact.FirstName = n.FirstName.FirstOrDefault() ?? "";
             }
 
             // Name Fallback using Display Name
             if (string.IsNullOrEmpty(contact.FirstName) && string.IsNullOrEmpty(contact.LastName))
             {
-                FolkerKinzel.VCards.Models.Properties.TextProperty? displayProp = vc.DisplayNames?.FirstOrNull();
+                TextProperty? displayProp = vc.DisplayNames?.FirstOrDefault();
                 if (displayProp != null && !string.IsNullOrWhiteSpace(displayProp.Value))
                 {
                     string displayName = displayProp.Value;
@@ -101,21 +92,25 @@ public class VCardService : IVCardService
             }
 
             // Nickname
-            FolkerKinzel.VCards.Models.Properties.StringCollectionProperty? nicknameProp = vc.NickNames?.FirstOrNull();
-            if (nicknameProp?.Value is IReadOnlyList<string> nicknames && nicknames.Count > 0)
+            StringCollectionProperty? nicknameProp = vc.NickNames?.FirstOrDefault();
+            if (nicknameProp != null)
             {
-                contact.Nickname = nicknames[0];
+                if (nicknameProp.Value is IEnumerable<string> list)
+                {
+                    contact.Nickname = list.FirstOrDefault();
+                }
             }
 
-            // Org - v8: Organization.Name (not OrganizationName)
-            FolkerKinzel.VCards.Models.Properties.OrgProperty? orgProp = vc.Organizations?.FirstOrNull();
-            if (orgProp?.Value is Organization org)
+            // Org
+            OrganizationProperty? orgProp = vc.Organizations?.FirstOrDefault();
+            if (orgProp != null && orgProp.Value != null)
             {
-                contact.Company = org.Name;
+                Organization org = orgProp.Value;
+                contact.Company = org.OrganizationName;
             }
 
             // Title
-            FolkerKinzel.VCards.Models.Properties.TextProperty? titleProp = vc.Titles?.FirstOrNull();
+            TextProperty? titleProp = vc.Titles?.FirstOrDefault();
             if (titleProp != null)
             {
                 contact.JobTitle = titleProp.Value;
@@ -124,7 +119,7 @@ public class VCardService : IVCardService
             // Emails
             if (vc.EMails != null)
             {
-                foreach (FolkerKinzel.VCards.Models.Properties.TextProperty? emailProp in vc.EMails)
+                foreach (TextProperty? emailProp in vc.EMails)
                 {
                     if (emailProp?.Value is string email && !string.IsNullOrWhiteSpace(email))
                     {
@@ -143,7 +138,7 @@ public class VCardService : IVCardService
             // Phones
             if (vc.Phones != null)
             {
-                foreach (FolkerKinzel.VCards.Models.Properties.TextProperty? phoneProp in vc.Phones)
+                foreach (TextProperty? phoneProp in vc.Phones)
                 {
                     if (phoneProp?.Value is string phone && !string.IsNullOrWhiteSpace(phone))
                     {
@@ -162,9 +157,10 @@ public class VCardService : IVCardService
             // Birthday
             if (vc.BirthDayViews != null)
             {
-                FolkerKinzel.VCards.Models.Properties.DateAndOrTimeProperty? bdayProp = vc.BirthDayViews.FirstOrNull();
-                if (bdayProp?.Value is DateAndOrTime val)
+                DateAndOrTimeProperty? bdayProp = vc.BirthDayViews.FirstOrDefault();
+                if (bdayProp != null && bdayProp.Value != null)
                 {
+                    DateAndOrTime val = bdayProp.Value;
                     if (val.DateTimeOffset.HasValue)
                     {
                         contact.SignificantDates.Add(new SignificantDate
@@ -195,65 +191,18 @@ public class VCardService : IVCardService
                 }
             }
 
-            // Gender - v8: GenderProperty.Value.Sex returns Sex enum
-            FolkerKinzel.VCards.Models.Properties.GenderProperty? genderProp = vc.GenderViews?.FirstOrNull();
-            if (genderProp?.Value is Gender gender)
+            // Gender
+            GenderProperty? genderProp = vc.GenderViews?.FirstOrDefault();
+            if (genderProp?.Value != null)
             {
-                contact.Gender = gender.Sex switch
+                // Note: The property on GenderInfo is named 'Gender' and is of type Gender? (enum)
+                contact.Gender = genderProp.Value.Gender switch
                 {
-                    Sex.Male => "Male",
-                    Sex.Female => "Female",
-                    Sex.Other => "Other",
+                    Gender.Male => "Male",
+                    Gender.Female => "Female",
+                    Gender.Other => "Other",
                     _ => null
                 };
-            }
-
-            // Photo - attempt to resolve
-            (byte[]? photoBytes, string? mediaType) = await TryGetPhotoAsync(vc, _httpClient != null, cancellationToken);
-            if (photoBytes != null && photoBytes.Length > 0)
-            {
-                // Default to jpg
-                string extension = ".jpg";
-                string contentType = "image/jpeg";
-
-                // Refine using MediaType if available
-                if (!string.IsNullOrEmpty(mediaType))
-                {
-                    if (mediaType.Contains("png", StringComparison.OrdinalIgnoreCase))
-                    {
-                        extension = ".png";
-                        contentType = "image/png";
-                    }
-                    else if (mediaType.Contains("gif", StringComparison.OrdinalIgnoreCase))
-                    {
-                        extension = ".gif";
-                        contentType = "image/gif";
-                    }
-                    else if (mediaType.Contains("jpeg", StringComparison.OrdinalIgnoreCase) || mediaType.Contains("jpg", StringComparison.OrdinalIgnoreCase))
-                    {
-                        extension = ".jpg";
-                        contentType = "image/jpeg";
-                    }
-                }
-
-                Attachment attachment = new()
-                {
-                    Id = Guid.NewGuid(),
-                    ContactId = contact.Id,
-                    AttachmentType = AttachmentTypes.ProfileImage,
-                    ContentType = contentType,
-                    FileName = $"vcard_photo{extension}"
-                };
-
-                AttachmentContent content = new()
-                {
-                    Id = Guid.NewGuid(),
-                    AttachmentId = attachment.Id,
-                    Content = photoBytes
-                };
-
-                attachment.AttachmentContent = content;
-                contact.Attachments.Add(attachment);
             }
 
             contacts.Add(contact);
@@ -262,91 +211,66 @@ public class VCardService : IVCardService
         return contacts;
     }
 
-    private async Task<(byte[]? Content, string? MediaType)> TryGetPhotoAsync(VCard vc, bool resolveUrls, CancellationToken cancellationToken)
-    {
-        var photoProp = vc.Photos?.FirstOrNull();
-        if (photoProp?.Value is not RawData rawData)
-        {
-            return (null, null);
-        }
-
-        // Try to get embedded bytes first
-        byte[]? bytes = rawData.Bytes;
-        if (bytes != null && bytes.Length > 0)
-        {
-            return (bytes, photoProp.Parameters.MediaType);
-        }
-
-        // Try to resolve from URI if we have an HttpClient and URL resolution is enabled
-        Uri? photoUri = rawData.Uri;
-        if (photoUri != null && resolveUrls && _httpClient != null)
-        {
-            try
-            {
-                // Only fetch http/https URLs
-                if (photoUri.Scheme == Uri.UriSchemeHttp || photoUri.Scheme == Uri.UriSchemeHttps)
-                {
-                    using HttpResponseMessage response = await _httpClient.GetAsync(photoUri, cancellationToken);
-                    if (response.IsSuccessStatusCode)
-                    {
-                        byte[] content = await response.Content.ReadAsByteArrayAsync(cancellationToken);
-                        MediaTypeHeaderValue? contentType = response.Content.Headers.ContentType;
-                        return (content, contentType?.MediaType ?? photoProp.Parameters.MediaType);
-                    }
-                }
-            }
-            catch
-            {
-                // Failed to fetch photo - continue without it
-            }
-        }
-
-        return (null, null);
-    }
-
     public byte[] ExportVCard(Contact contact)
     {
-        // v8: Use VCardBuilder fluent API for creating VCards
-        VCard vCard = VCardBuilder
-            .Create()
-            .NameViews.Add(NameBuilder
-                .Create()
-                .AddSurname(contact.LastName ?? "")
-                .AddGiven(contact.FirstName)
-                .Build())
-            .DisplayNames.Add(contact.FullName)
-            .VCard;
+        VCard vc = new()
+        {
+            // Name
+            NameViews = new[]
+            {
+                new NameProperty(
+                    lastName: new [] { contact.LastName ?? "" },
+                    firstName: new [] { contact.FirstName },
+                    middleName: null,
+                    prefix: null,
+                    suffix: null,
+                    group: null
+                )
+            },
 
-        // Continue building with Edit() for conditional properties
-        VCardBuilder builder = VCardBuilder.Create(vCard);
+            DisplayNames = new[]
+            {
+                new TextProperty(contact.FullName)
+            }
+        };
 
         // Org
         if (!string.IsNullOrEmpty(contact.Company))
         {
-            builder.Organizations.Add(contact.Company);
+            vc.Organizations = new[] { new OrganizationProperty(contact.Company, null, null) };
         }
 
         // Title
         if (!string.IsNullOrEmpty(contact.JobTitle))
         {
-            builder.Titles.Add(contact.JobTitle);
+            vc.Titles = new[] { new TextProperty(contact.JobTitle) };
         }
 
         // Emails
         if (contact.ContactMethods != null)
         {
-            foreach (ContactMethod? cm in contact.ContactMethods.Where(m => m.Type == ContactMethodType.Email && !string.IsNullOrEmpty(m.Value)))
+            List<TextProperty> emails = contact.ContactMethods
+                .Where(m => m.Type == ContactMethodType.Email && !string.IsNullOrEmpty(m.Value))
+                .Select(m => new TextProperty(m.Value))
+                .ToList();
+
+            if (emails.Count > 0)
             {
-                builder.EMails.Add(cm.Value);
+                vc.EMails = emails;
             }
         }
 
         // Phones
         if (contact.ContactMethods != null)
         {
-            foreach (ContactMethod? cm in contact.ContactMethods.Where(m => m.Type == ContactMethodType.Phone && !string.IsNullOrEmpty(m.Value)))
+            List<TextProperty> phones = contact.ContactMethods
+                .Where(m => m.Type == ContactMethodType.Phone && !string.IsNullOrEmpty(m.Value))
+                .Select(m => new TextProperty(m.Value))
+                .ToList();
+
+            if (phones.Count > 0)
             {
-                builder.Phones.Add(cm.Value);
+                vc.Phones = phones;
             }
         }
 
@@ -356,44 +280,25 @@ public class VCardService : IVCardService
             SignificantDate? bday = contact.SignificantDates.FirstOrDefault(d => d.Title == SignificantDateTitles.Birthday);
             if (bday != null)
             {
-                builder.BirthDayViews.Add(bday.Date.Year, bday.Date.Month, bday.Date.Day);
+                vc.BirthDayViews = new[] { DateAndOrTimeProperty.FromDate(DateOnly.FromDateTime(bday.Date)) };
             }
         }
 
         // Gender
         if (!string.IsNullOrEmpty(contact.Gender))
         {
-            Sex sex = contact.Gender switch
+            Gender sex = contact.Gender switch
             {
-                "Male" => Sex.Male,
-                "Female" => Sex.Female,
-                "Non-Binary" => Sex.Other,
-                _ => Sex.Other
+                "Male" => Gender.Male,
+                "Female" => Gender.Female,
+                "Non-Binary" => Gender.Other,
+                _ => Gender.Other
             };
-            builder.GenderViews.Add(sex);
+            vc.GenderViews = new[] { new GenderProperty(sex) };
         }
 
-        // Photo
-        if (contact.Attachments != null)
-        {
-            var profileImage = contact.Attachments.FirstOrDefault(a => a.AttachmentType == AttachmentTypes.ProfileImage);
-            if (profileImage != null && profileImage.AttachmentContent != null && profileImage.AttachmentContent.Content.Length > 0)
-            {
-                builder.Photos.AddBytes(profileImage.AttachmentContent.Content, profileImage.ContentType ?? "image/jpeg");
-            }
-        }
-
-        vCard = builder.VCard;
-
-        // v8: Use ToVcfString extension method for serialization
-        string vcfString = vCard.ToVcfString(VCdVersion.V3_0);
-
-        // Fix compatibility: Replace "ENCODING=b" with "ENCODING=BASE64"
-        // The library uses the abbreviated form per RFC 2426, but many applications
-        // (including Google Contacts) only recognize the full "BASE64" form
-        vcfString = vcfString.Replace("ENCODING=b;", "ENCODING=BASE64;")
-                             .Replace("ENCODING=b:", "ENCODING=BASE64:");
-
-        return System.Text.Encoding.UTF8.GetBytes(vcfString);
+        using MemoryStream ms = new();
+        VCard.SerializeVcf(ms, new[] { vc }, VCdVersion.V3_0);
+        return ms.ToArray();
     }
 }

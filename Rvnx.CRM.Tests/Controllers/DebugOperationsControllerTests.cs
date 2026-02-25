@@ -15,11 +15,11 @@ namespace Rvnx.CRM.Tests.Controllers
         public void OnActionExecutingReturnsNotFoundWhenNotDevelopment()
         {
             // Arrange
-            Mock<IDebugDataService> debugServiceMock = new();
+            Mock<IRepository> repositoryMock = new();
             Mock<IHostEnvironment> environmentMock = new();
             environmentMock.Setup(e => e.EnvironmentName).Returns("Production");
 
-            DebugOperationsController controller = new(debugServiceMock.Object, environmentMock.Object);
+            DebugOperationsController controller = new(repositoryMock.Object, environmentMock.Object);
 
             ActionContext actionContext = new(
                 new DefaultHttpContext(),
@@ -45,11 +45,11 @@ namespace Rvnx.CRM.Tests.Controllers
         public void OnActionExecutingAllowsExecutionWhenDevelopment()
         {
             // Arrange
-            Mock<IDebugDataService> debugServiceMock = new();
+            Mock<IRepository> repositoryMock = new();
             Mock<IHostEnvironment> environmentMock = new();
             environmentMock.Setup(e => e.EnvironmentName).Returns("Development");
 
-            DebugOperationsController controller = new(debugServiceMock.Object, environmentMock.Object);
+            DebugOperationsController controller = new(repositoryMock.Object, environmentMock.Object);
 
             ActionContext actionContext = new(
                 new DefaultHttpContext(),
