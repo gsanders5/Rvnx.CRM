@@ -139,6 +139,34 @@ END:VCARD";
         }
 
         [Fact]
+        public async Task ParseVCardAsyncShouldHandleGifPhoto()
+        {
+            // Arrange
+            string vcfContent = @"BEGIN:VCARD
+VERSION:3.0
+FN:Gif Photo Test
+N:Test;Gif;;;
+PHOTO;ENCODING=b;TYPE=GIF:R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7
+END:VCARD";
+            // 1x1 transparent GIF Base64
+
+            using MemoryStream stream = new(Encoding.UTF8.GetBytes(vcfContent));
+
+            // Act
+            IEnumerable<Contact> result = await _service.ParseVCardAsync(stream);
+            List<Contact> contacts = result.ToList();
+
+            // Assert
+            Assert.Single(contacts);
+            Contact contact = contacts.First();
+            Assert.Single(contact.Attachments);
+            Attachment attachment = contact.Attachments.First();
+            Assert.Equal(AttachmentTypes.ProfileImage, attachment.AttachmentType);
+            Assert.Equal("image/gif", attachment.ContentType);
+            Assert.Equal("vcard_photo.gif", attachment.FileName);
+        }
+
+        [Fact]
         public void ExportVCardShouldReturnValidVcfWhenContactProvided()
         {
             // Arrange

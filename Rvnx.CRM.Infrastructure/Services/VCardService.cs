@@ -8,6 +8,7 @@ using Rvnx.CRM.Core.Interfaces;
 using Rvnx.CRM.Core.Models.Base;
 using Rvnx.CRM.Core.Models.Contact;
 using Rvnx.CRM.Core.Models.Dates;
+using System.Net.Http.Headers;
 
 namespace Rvnx.CRM.Infrastructure.Services;
 
@@ -208,28 +209,41 @@ public class VCardService : IVCardService
             }
 
             // Photo - attempt to resolve
-            byte[]? photoBytes = await TryGetPhotoAsync(vc, _httpClient != null, cancellationToken);
+            (byte[]? photoBytes, string? mediaType) = await TryGetPhotoAsync(vc, _httpClient != null, cancellationToken);
             if (photoBytes != null && photoBytes.Length > 0)
             {
+                // Default to jpg
+                string extension = ".jpg";
+                string contentType = "image/jpeg";
+
+                // Refine using MediaType if available
+                if (!string.IsNullOrEmpty(mediaType))
+                {
+                    if (mediaType.Contains("png", StringComparison.OrdinalIgnoreCase))
+                    {
+                        extension = ".png";
+                        contentType = "image/png";
+                    }
+                    else if (mediaType.Contains("gif", StringComparison.OrdinalIgnoreCase))
+                    {
+                        extension = ".gif";
+                        contentType = "image/gif";
+                    }
+                    else if (mediaType.Contains("jpeg", StringComparison.OrdinalIgnoreCase) || mediaType.Contains("jpg", StringComparison.OrdinalIgnoreCase))
+                    {
+                        extension = ".jpg";
+                        contentType = "image/jpeg";
+                    }
+                }
+
                 Attachment attachment = new()
                 {
                     Id = Guid.NewGuid(),
                     ContactId = contact.Id,
                     AttachmentType = AttachmentTypes.ProfileImage,
-                    ContentType = "image/jpeg", // Default, will refine if possible
-                    FileName = "vcard_photo.jpg"
+                    ContentType = contentType,
+                    FileName = $"vcard_photo{extension}"
                 };
-
-                // Try to get MIME type from vCard if available
-                var photoProp = vc.Photos?.FirstOrNull();
-                if (photoProp?.Parameters.MediaType != null)
-                {
-                    attachment.ContentType = photoProp.Parameters.MediaType;
-                    if (attachment.ContentType.Contains("png", StringComparison.OrdinalIgnoreCase))
-                    {
-                        attachment.FileName = "vcard_photo.png";
-                    }
-                }
 
                 AttachmentContent content = new()
                 {
@@ -248,19 +262,19 @@ public class VCardService : IVCardService
         return contacts;
     }
 
-    private async Task<byte[]?> TryGetPhotoAsync(VCard vc, bool resolveUrls, CancellationToken cancellationToken)
+    private async Task<(byte[]? Content, string? MediaType)> TryGetPhotoAsync(VCard vc, bool resolveUrls, CancellationToken cancellationToken)
     {
         var photoProp = vc.Photos?.FirstOrNull();
         if (photoProp?.Value is not RawData rawData)
         {
-            return null;
+            return (null, null);
         }
 
         // Try to get embedded bytes first
         byte[]? bytes = rawData.Bytes;
         if (bytes != null && bytes.Length > 0)
         {
-            return bytes;
+            return (bytes, photoProp.Parameters.MediaType);
         }
 
         // Try to resolve from URI if we have an HttpClient and URL resolution is enabled
@@ -275,7 +289,9 @@ public class VCardService : IVCardService
                     using HttpResponseMessage response = await _httpClient.GetAsync(photoUri, cancellationToken);
                     if (response.IsSuccessStatusCode)
                     {
-                        return await response.Content.ReadAsByteArrayAsync(cancellationToken);
+                        byte[] content = await response.Content.ReadAsByteArrayAsync(cancellationToken);
+                        MediaTypeHeaderValue? contentType = response.Content.Headers.ContentType;
+                        return (content, contentType?.MediaType ?? photoProp.Parameters.MediaType);
                     }
                 }
             }
@@ -285,7 +301,7 @@ public class VCardService : IVCardService
             }
         }
 
-        return null;
+        return (null, null);
     }
 
     public byte[] ExportVCard(Contact contact)
