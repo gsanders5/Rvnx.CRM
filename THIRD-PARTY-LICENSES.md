@@ -16,7 +16,6 @@ Purpose: License compliance audit
 | Microsoft.EntityFrameworkCore.SqlServer | 8.0.0 | Rvnx.CRM.Infrastructure | MIT | https://licenses.nuget.org/MIT |
 | Microsoft.EntityFrameworkCore.Tools | 8.0.0 | Rvnx.CRM.Infrastructure | MIT | https://licenses.nuget.org/MIT |
 | coverlet.collector | 6.0.4 | Rvnx.CRM.Tests | MIT | https://github.com/coverlet-coverage/coverlet/blob/master/LICENSE |
-| FluentAssertions | 8.8.0 | Rvnx.CRM.Tests | Xceed Community License (Non-Commercial) | https://github.com/fluentassertions/fluentassertions/blob/main/LICENSE |
 | Microsoft.EntityFrameworkCore.InMemory | 8.0.0 | Rvnx.CRM.Tests | MIT | https://licenses.nuget.org/MIT |
 | Microsoft.NET.Test.Sdk | 17.14.1 | Rvnx.CRM.Tests | MIT | https://licenses.nuget.org/MIT |
 | Moq | 4.20.72 | Rvnx.CRM.Tests | BSD-3-Clause | https://github.com/moq/moq4/blob/main/License.txt |
@@ -78,8 +77,8 @@ Purpose: License compliance audit
 
 ## Summary
 
-Total dependencies audited: 27
-Licenses identified: MIT, Apache-2.0, BSD-3-Clause, CC BY 4.0 (Icons), MPL-2.0 (Option), Xceed Community License (Non-Commercial), SIL Open Font License 1.1
+Total dependencies audited: 26
+Licenses identified: MIT, Apache-2.0, BSD-3-Clause, CC BY 4.0 (Icons), MPL-2.0 (Option), SIL Open Font License 1.1
 Unresolved: 0
 
 ### License compatibility notes
@@ -88,5 +87,4 @@ Unresolved: 0
 - **BSD-3-Clause**: Attribution required, no endorsement clause. Similar to MIT. (Includes the original Markdown copyright notice in `marked.js`.)
 - **CC BY 4.0**: Attribution required. Applies to Font Awesome Icons.
 - **MPL-2.0**: File-level copyleft. Only relevant if choosing MPL for DOMPurify. Apache-2.0 option is available and simpler for compatibility.
-- **Xceed Community License (Non-Commercial)**: Strictly prohibits commercial use. Permitted only for non-commercial, open-source, or personal projects.
 - **SIL Open Font License 1.1**: Allows font software to be used, studied, modified, and redistributed freely as long as they are not sold by themselves. Fonts can be bundled, embedded, and redistributed with software.

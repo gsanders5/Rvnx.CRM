@@ -1,4 +1,3 @@
-using FluentAssertions;
 using Microsoft.Extensions.Logging;
 using Moq;
 using Rvnx.CRM.Core.Interfaces;
@@ -109,9 +108,9 @@ namespace Rvnx.CRM.Tests.Services
 
             // 3. Verify only incomplete reminders appear — completed reminders should never show
             //    on the dashboard, regardless of whether they are recurring.
-            result.UpcomingEvents.Should().Contain(e => e.Title == "Active Reminder");
-            result.UpcomingEvents.Should().NotContain(e => e.Title == "Completed Recurring Reminder");
-            result.UpcomingEvents.Should().NotContain(e => e.Title == "Completed One-Time Reminder");
+            Assert.Contains(result.UpcomingEvents, e => e.Title == "Active Reminder");
+            Assert.DoesNotContain(result.UpcomingEvents, e => e.Title == "Completed Recurring Reminder");
+            Assert.DoesNotContain(result.UpcomingEvents, e => e.Title == "Completed One-Time Reminder");
         }
     }
 }

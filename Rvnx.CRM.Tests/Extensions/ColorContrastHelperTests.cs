@@ -1,4 +1,3 @@
-using FluentAssertions;
 using Rvnx.CRM.Core.Extensions;
 
 namespace Rvnx.CRM.Tests.Extensions;
@@ -20,6 +19,6 @@ public class ColorContrastHelperTests
     public void GetContrastTextColorReturnsExpectedColor(string? bg, string expectedText)
     {
         string result = ColorContrastHelper.GetContrastTextColor(bg);
-        result.Should().Be(expectedText);
+        Assert.Equal(expectedText, result);
     }
 }
