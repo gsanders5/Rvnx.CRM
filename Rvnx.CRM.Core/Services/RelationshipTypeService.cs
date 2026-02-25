@@ -8,14 +8,28 @@ public static class RelationshipTypeService
     private static readonly List<RelationshipTypeDefinition> _types =
     [
         // Family
-        new(Guid.Parse("b2e9a5c8-7f4d-4a1b-8c6e-5f9d3a0e2b4c"), "Spouse", "Spouse", "Family", EntityTypes.Person),
-        new(Guid.Parse("7c1f8d22-1b6a-4c28-9c1e-3f5a2b8e9d1a"), "Parent", "Child", "Family", EntityTypes.Person),
-        new(Guid.Parse("d4f1b8a9-3e2c-4b5d-9a6f-1c0e7d8b5a2f"), "Sibling", "Sibling", "Family", EntityTypes.Person),
-        new(Guid.Parse("11111111-1111-1111-1111-111111111107"), "Grandparent", "Grandchild", "Family", EntityTypes.Person),
-        new(Guid.Parse("11111111-1111-1111-1111-111111111108"), "Uncle/Aunt", "Nephew/Niece", "Family", EntityTypes.Person),
+        new(Guid.Parse("b2e9a5c8-7f4d-4a1b-8c6e-5f9d3a0e2b4c"), "Spouse", "Spouse", "Family", EntityTypes.Person,
+            NameMale: "Husband", NameFemale: "Wife", OppositeNameMale: "Husband", OppositeNameFemale: "Wife"),
+
+        new(Guid.Parse("7c1f8d22-1b6a-4c28-9c1e-3f5a2b8e9d1a"), "Parent", "Child", "Family", EntityTypes.Person,
+            NameMale: "Father", NameFemale: "Mother", OppositeNameMale: "Son", OppositeNameFemale: "Daughter"),
+
+        new(Guid.Parse("d4f1b8a9-3e2c-4b5d-9a6f-1c0e7d8b5a2f"), "Sibling", "Sibling", "Family", EntityTypes.Person,
+            NameMale: "Brother", NameFemale: "Sister", OppositeNameMale: "Brother", OppositeNameFemale: "Sister"),
+
+        new(Guid.Parse("11111111-1111-1111-1111-111111111107"), "Grandparent", "Grandchild", "Family", EntityTypes.Person,
+            NameMale: "Grandfather", NameFemale: "Grandmother", OppositeNameMale: "Grandson", OppositeNameFemale: "Granddaughter"),
+
+        new(Guid.Parse("11111111-1111-1111-1111-111111111108"), "Uncle/Aunt", "Nephew/Niece", "Family", EntityTypes.Person,
+            NameMale: "Uncle", NameFemale: "Aunt", OppositeNameMale: "Nephew", OppositeNameFemale: "Niece"),
+
         new(Guid.Parse("11111111-1111-1111-1111-111111111109"), "Cousin", "Cousin", "Family", EntityTypes.Person),
-        new(Guid.Parse("11111111-1111-1111-1111-111111111110"), "Godparent", "Godchild", "Family", EntityTypes.Person),
-        new(Guid.Parse("11111111-1111-1111-1111-111111111111"), "Step-Parent", "Step-Child", "Family", EntityTypes.Person),
+
+        new(Guid.Parse("11111111-1111-1111-1111-111111111110"), "Godparent", "Godchild", "Family", EntityTypes.Person,
+            NameMale: "Godfather", NameFemale: "Godmother", OppositeNameMale: "Godson", OppositeNameFemale: "Goddaughter"),
+
+        new(Guid.Parse("11111111-1111-1111-1111-111111111111"), "Step-Parent", "Step-Child", "Family", EntityTypes.Person,
+            NameMale: "Step-Father", NameFemale: "Step-Mother", OppositeNameMale: "Step-Son", OppositeNameFemale: "Step-Daughter"),
 
         // Romantic
         new(Guid.Parse("f9e8d7c6-b5a4-3210-9876-543210fedcba"), "Partner", "Partner", "Romantic", EntityTypes.Person),
