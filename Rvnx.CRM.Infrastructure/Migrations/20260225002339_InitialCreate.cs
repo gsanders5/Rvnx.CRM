@@ -7,9 +7,6 @@ namespace Rvnx.CRM.Infrastructure.Migrations
     /// <inheritdoc />
     public partial class InitialCreate : Migration
     {
-        private static readonly string[] RelationshipEntityIdColumns = ["EntityId", "EntityType"];
-        private static readonly string[] RelationshipRelatedEntityIdColumns = ["RelatedEntityId", "EntityType"];
-
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
@@ -18,6 +15,10 @@ namespace Rvnx.CRM.Infrastructure.Migrations
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "TEXT", nullable: false),
+                    IsPartial = table.Column<bool>(type: "INTEGER", nullable: false),
+                    Pronouns = table.Column<string>(type: "TEXT", maxLength: 100, nullable: true),
+                    Gender = table.Column<string>(type: "TEXT", maxLength: 100, nullable: true),
+                    Religion = table.Column<string>(type: "TEXT", maxLength: 100, nullable: true),
                     CreatedBy = table.Column<string>(type: "TEXT", maxLength: 256, nullable: false),
                     LastChangedBy = table.Column<string>(type: "TEXT", maxLength: 256, nullable: false),
                     CreatedDate = table.Column<DateTime>(type: "TEXT", nullable: false),
@@ -30,7 +31,28 @@ namespace Rvnx.CRM.Infrastructure.Migrations
                     Company = table.Column<string>(type: "TEXT", maxLength: 200, nullable: true),
                     IsHidden = table.Column<bool>(type: "INTEGER", nullable: false)
                 },
-                constraints: table => { table.PrimaryKey("PK_Contact", x => x.Id); });
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Contact", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Label",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "TEXT", nullable: false),
+                    Name = table.Column<string>(type: "TEXT", maxLength: 100, nullable: false),
+                    Color = table.Column<string>(type: "TEXT", maxLength: 7, nullable: true),
+                    CreatedBy = table.Column<string>(type: "TEXT", maxLength: 256, nullable: false),
+                    LastChangedBy = table.Column<string>(type: "TEXT", maxLength: 256, nullable: false),
+                    CreatedDate = table.Column<DateTime>(type: "TEXT", nullable: false),
+                    LastChangedDate = table.Column<DateTime>(type: "TEXT", nullable: false),
+                    UserId = table.Column<Guid>(type: "TEXT", maxLength: 450, nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Label", x => x.Id);
+                });
 
             migrationBuilder.CreateTable(
                 name: "Relationship",
@@ -50,7 +72,10 @@ namespace Rvnx.CRM.Infrastructure.Migrations
                     EntityId = table.Column<Guid>(type: "TEXT", nullable: false),
                     EntityType = table.Column<string>(type: "TEXT", maxLength: 50, nullable: false)
                 },
-                constraints: table => { table.PrimaryKey("PK_Relationship", x => x.Id); });
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Relationship", x => x.Id);
+                });
 
             migrationBuilder.CreateTable(
                 name: "Address",
@@ -358,6 +383,36 @@ namespace Rvnx.CRM.Infrastructure.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "ContactLabel",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "TEXT", nullable: false),
+                    ContactId = table.Column<Guid>(type: "TEXT", nullable: false),
+                    LabelId = table.Column<Guid>(type: "TEXT", nullable: false),
+                    CreatedBy = table.Column<string>(type: "TEXT", maxLength: 256, nullable: false),
+                    LastChangedBy = table.Column<string>(type: "TEXT", maxLength: 256, nullable: false),
+                    CreatedDate = table.Column<DateTime>(type: "TEXT", nullable: false),
+                    LastChangedDate = table.Column<DateTime>(type: "TEXT", nullable: false),
+                    UserId = table.Column<Guid>(type: "TEXT", maxLength: 450, nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_ContactLabel", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_ContactLabel_Contact_ContactId",
+                        column: x => x.ContactId,
+                        principalTable: "Contact",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_ContactLabel_Label_LabelId",
+                        column: x => x.LabelId,
+                        principalTable: "Label",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "AttachmentContent",
                 columns: table => new
                 {
@@ -418,6 +473,22 @@ namespace Rvnx.CRM.Infrastructure.Migrations
                 column: "UserId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_ContactLabel_ContactId_LabelId",
+                table: "ContactLabel",
+                columns: new[] { "ContactId", "LabelId" },
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ContactLabel_LabelId",
+                table: "ContactLabel",
+                column: "LabelId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ContactLabel_UserId",
+                table: "ContactLabel",
+                column: "UserId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_ContactMethod_ContactId",
                 table: "ContactMethod",
                 column: "ContactId");
@@ -445,6 +516,11 @@ namespace Rvnx.CRM.Infrastructure.Migrations
             migrationBuilder.CreateIndex(
                 name: "IX_Fact_UserId",
                 table: "Fact",
+                column: "UserId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Label_UserId",
+                table: "Label",
                 column: "UserId");
 
             migrationBuilder.CreateIndex(
@@ -480,12 +556,12 @@ namespace Rvnx.CRM.Infrastructure.Migrations
             migrationBuilder.CreateIndex(
                 name: "IX_Relationship_EntityId_EntityType",
                 table: "Relationship",
-                columns: RelationshipEntityIdColumns);
+                columns: new[] { "EntityId", "EntityType" });
 
             migrationBuilder.CreateIndex(
                 name: "IX_Relationship_RelatedEntityId_EntityType",
                 table: "Relationship",
-                columns: RelationshipRelatedEntityIdColumns);
+                columns: new[] { "RelatedEntityId", "EntityType" });
 
             migrationBuilder.CreateIndex(
                 name: "IX_Relationship_UserId",
@@ -534,6 +610,9 @@ namespace Rvnx.CRM.Infrastructure.Migrations
                 name: "AttachmentContent");
 
             migrationBuilder.DropTable(
+                name: "ContactLabel");
+
+            migrationBuilder.DropTable(
                 name: "ContactMethod");
 
             migrationBuilder.DropTable(
@@ -565,6 +644,9 @@ namespace Rvnx.CRM.Infrastructure.Migrations
 
             migrationBuilder.DropTable(
                 name: "Attachment");
+
+            migrationBuilder.DropTable(
+                name: "Label");
 
             migrationBuilder.DropTable(
                 name: "Contact");

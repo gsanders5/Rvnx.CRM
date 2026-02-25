@@ -1,10 +1,7 @@
 using Rvnx.CRM.Core.DTOs.Contact;
 using Rvnx.CRM.Core.Extensions;
 using Rvnx.CRM.Core.Models.Contact;
-using Rvnx.CRM.Core.DTOs.Base;
-using Rvnx.CRM.Core.Models.Base;
 using System.Reflection;
-using Xunit;
 
 namespace Rvnx.CRM.Tests.Extensions
 {
@@ -14,8 +11,8 @@ namespace Rvnx.CRM.Tests.Extensions
         public void ToDtoShouldMapLastChangedDateFromContact()
         {
             // Arrange
-            var lastChangedDate = new DateTime(2023, 10, 27, 12, 0, 0, DateTimeKind.Utc);
-            var contact = new Contact
+            DateTime lastChangedDate = new(2023, 10, 27, 12, 0, 0, DateTimeKind.Utc);
+            Contact contact = new()
             {
                 Id = Guid.NewGuid(),
                 FirstName = "Test",
@@ -24,7 +21,7 @@ namespace Rvnx.CRM.Tests.Extensions
             };
 
             // Act
-            var dto = contact.ToDto();
+            ContactDto dto = contact.ToDto();
 
             // Assert
             Assert.Equal(lastChangedDate, dto.LastChangedDate);
@@ -35,7 +32,7 @@ namespace Rvnx.CRM.Tests.Extensions
         public void ToDtoShouldMapAllMatchingProperties()
         {
             // Arrange
-            var contact = new Contact
+            Contact contact = new()
             {
                 Id = Guid.NewGuid(),
                 FirstName = "TestFirst",
@@ -56,29 +53,35 @@ namespace Rvnx.CRM.Tests.Extensions
             };
 
             // Act
-            var dto = contact.ToDto();
+            ContactDto dto = contact.ToDto();
 
             // Assert
-            var entityProps = typeof(Contact).GetProperties();
-            var dtoProps = typeof(ContactDto).GetProperties();
+            PropertyInfo[] entityProps = typeof(Contact).GetProperties();
+            PropertyInfo[] dtoProps = typeof(ContactDto).GetProperties();
 
-            foreach (var dtoProp in dtoProps)
+            foreach (PropertyInfo dtoProp in dtoProps)
             {
                 // Skip collections or properties that require complex mapping logic that ToDto might not handle directly (like Labels)
                 if (typeof(System.Collections.IEnumerable).IsAssignableFrom(dtoProp.PropertyType) && dtoProp.PropertyType != typeof(string))
+                {
                     continue;
+                }
 
                 // Skip properties that don't exist on the entity with the same name
-                var entityProp = entityProps.FirstOrDefault(p => p.Name == dtoProp.Name);
+                PropertyInfo? entityProp = entityProps.FirstOrDefault(p => p.Name == dtoProp.Name);
                 if (entityProp == null)
+                {
                     continue;
+                }
 
                 // Skip properties where types are incompatible (though usually mapping handles simple conversions)
                 if (!dtoProp.PropertyType.IsAssignableFrom(entityProp.PropertyType))
+                {
                     continue;
+                }
 
-                var entityValue = entityProp.GetValue(contact);
-                var dtoValue = dtoProp.GetValue(dto);
+                object? entityValue = entityProp.GetValue(contact);
+                object? dtoValue = dtoProp.GetValue(dto);
 
                 Assert.Equal(entityValue, dtoValue);
             }

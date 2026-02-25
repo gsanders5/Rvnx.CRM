@@ -5,6 +5,7 @@ using Rvnx.CRM.Core.DTOs.Dates;
 using Rvnx.CRM.Core.Models.Base;
 using Rvnx.CRM.Core.Models.Contact;
 using Rvnx.CRM.Core.Models.Dates;
+using Rvnx.CRM.Core.Services;
 
 namespace Rvnx.CRM.Core.Extensions
 {
@@ -68,8 +69,9 @@ namespace Rvnx.CRM.Core.Extensions
 
         public static RelationshipDto ToDto(this Relationship entity)
         {
-            string typeName = entity.RelationshipTypeName;
-            string oppositeName = entity.RelationshipTypeOppositeName;
+            RelationshipTypeDefinition? def = RelationshipTypeService.GetById(entity.RelationshipTypeId);
+            string typeName = def?.GetName((entity.Person as Contact)?.Gender) ?? entity.RelationshipTypeName;
+            string oppositeName = def?.GetOppositeName((entity.RelatedPerson as Contact)?.Gender) ?? entity.RelationshipTypeOppositeName;
 
             return new RelationshipDto
             {

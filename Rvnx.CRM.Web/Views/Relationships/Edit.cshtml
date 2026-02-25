@@ -9,21 +9,65 @@
 
 <div class="row">
     <div class="col-md-6">
-        <form asp-action="Edit">
+        <form asp-action="Edit" id="edit-relationship-form">
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
             <input type="hidden" asp-for="Id"/>
             <input type="hidden" asp-for="EntityId"/>
             <input type="hidden" asp-for="EntityType"/>
             <input type="hidden" asp-for="EntityName"/>
-            <!-- RelationshipTypeId will be set on post based on selection -->
             <input type="hidden" asp-for="RelationshipTypeId"/>
 
-            <div class="mb-3">
-                <label asp-for="SelectedRelationshipType" class="form-label">Relationship Type</label>
-                <select asp-for="SelectedRelationshipType" class="form-control" asp-items="@(new SelectList(Model.RelationshipTypeOptions, "Value", "Text", null, "Group"))">
-                    <option value="">-- Select Type --</option>
-                </select>
+            <!-- Hidden input to store the final selection -->
+            <input type="hidden" asp-for="SelectedRelationshipType" id="SelectedRelationshipType" />
+
+            <!-- Step 1: Type Selection -->
+            <div class="mb-4">
+                <label class="form-label fw-bold">Step 1: Choose Relationship Type</label>
+
+                <!-- Summary (Initially Hidden) -->
+                <div id="type-selection-summary" class="card mb-2 bg-body-tertiary border-0" style="display: none;">
+                    <div class="card-body p-2 d-flex justify-content-between align-items-center">
+                        <span class="fw-bold text-primary" id="selected-type-text"></span>
+                        <button type="button" class="btn btn-sm btn-link text-decoration-none" id="change-type-btn">
+                            <i class="bi bi-pencil me-1"></i> Change
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Collapsible Container -->
+                <div class="collapse show" id="typeSelectionCollapse">
+                    <div class="d-flex flex-wrap gap-2" id="type-selection-container">
+                        @foreach (var group in Model.RelationshipTypes.GroupBy(t => t.Category))
+                        {
+                            <div class="w-100 mt-2 mb-1 text-muted small text-uppercase fw-bold">@group.Key</div>
+                            @foreach (var type in group)
+                            {
+                                <button type="button"
+                                        class="btn btn-outline-secondary relationship-type-btn"
+                                        data-id="@type.Id"
+                                        data-is-symmetric="@type.IsSymmetric.ToString().ToLower()"
+                                        data-name="@type.Name"
+                                        data-opposite-name="@type.OppositeName">
+                                    @(type.IsSymmetric ? type.Name : $"{type.Name} / {type.OppositeName}")
+                                </button>
+                            }
+                        }
+                    </div>
+                </div>
+
+                <!-- Hidden toggle button -->
+                <button class="d-none" type="button" id="typeCollapseToggle" data-mdb-collapse-init data-mdb-target="#typeSelectionCollapse"></button>
+
                 <span asp-validation-for="SelectedRelationshipType" class="text-danger"></span>
+            </div>
+
+            <!-- Step 2: Role Selection (Initially Hidden) -->
+            <div class="mb-4" id="role-selection-container" style="display: none;">
+                <label class="form-label fw-bold">Step 2: @Model.EntityName is the...</label>
+                <div class="btn-group w-100" role="group">
+                    <button type="button" class="btn btn-outline-primary role-btn" data-role="Fwd" id="role-fwd-btn">Parent</button>
+                    <button type="button" class="btn btn-outline-primary role-btn" data-role="Rev" id="role-rev-btn">Child</button>
+                </div>
             </div>
 
             <div class="form-floating mb-3">
@@ -106,45 +150,215 @@
     @{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); }
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            const typeSelect = document.getElementById('SelectedRelationshipType');
-            const relatedSelect = document.getElementById('RelatedEntityId');
-            const preview = document.getElementById('relationshipPreview');
-            // Safely serialize entityName to JS string
-            const entityName = @Html.Raw(Json.Serialize(Model.EntityName));
+            // --- Helper Class for Relationship Logic ---
+            class RelationshipSelector {
+                constructor(config) {
+                    this.container = document.getElementById(config.containerId);
+                    this.roleContainer = document.getElementById(config.roleContainerId);
+                    this.hiddenInput = document.getElementById(config.hiddenInputId);
+                    this.fwdBtn = document.getElementById(config.fwdBtnId);
+                    this.revBtn = document.getElementById(config.revBtnId);
+                    this.preview = document.getElementById(config.previewId);
+                    this.relatedInput = document.getElementById(config.relatedInputId);
 
-            function updatePreview() {
-                if (!typeSelect.value || !relatedSelect.value) {
-                     preview.style.display = 'none';
-                     return;
+                    // Collapse Elements
+                    this.summaryContainer = document.getElementById(config.summaryId);
+                    this.summaryText = document.getElementById(config.summaryTextId);
+                    this.changeBtn = document.getElementById(config.changeBtnId);
+                    this.toggleBtn = document.getElementById(config.toggleBtnId);
+                    this.collapseEl = document.getElementById(config.collapseId);
+
+                    this.entityName = config.entityName;
+
+                    this.state = {
+                        typeId: null,
+                        isSymmetric: false,
+                        name: '',
+                        oppositeName: '',
+                        role: null // 'Fwd' or 'Rev'
+                    };
+
+                    this.init();
                 }
 
-                // Get selected text but remove any text in parentheses at the end, e.g. " (Sister)"
-                let typeText = typeSelect.options[typeSelect.selectedIndex].text;
-                typeText = typeText.replace(/\s*\(.*\)$/, '');
+                init() {
+                    if (!this.container) return; // Guard clause
 
-                const relatedText = relatedSelect.options[relatedSelect.selectedIndex].text;
+                    // Type Buttons
+                    const typeBtns = this.container.querySelectorAll('button');
+                    typeBtns.forEach(btn => {
+                        btn.addEventListener('click', () => this.handleTypeClick(btn));
+                    });
 
-                preview.style.display = 'block';
-                preview.textContent = ''; // Clear previous content
+                    // Role Buttons
+                    if (this.fwdBtn) this.fwdBtn.addEventListener('click', () => this.handleRoleClick('Fwd'));
+                    if (this.revBtn) this.revBtn.addEventListener('click', () => this.handleRoleClick('Rev'));
 
-                const strong1 = document.createElement('strong');
-                strong1.textContent = entityName;
-                preview.appendChild(strong1);
+                    // Change Button
+                    if (this.changeBtn) this.changeBtn.addEventListener('click', () => this.handleChangeClick());
 
-                preview.appendChild(document.createTextNode(` ${typeText} `));
+                    // Related Entity Input Changes
+                    if (this.relatedInput) {
+                        this.relatedInput.addEventListener('change', () => this.updatePreview());
+                    }
 
-                const strong2 = document.createElement('strong');
-                strong2.textContent = relatedText;
-                preview.appendChild(strong2);
+                    // Initial Pre-population
+                    if (this.hiddenInput && this.hiddenInput.value) {
+                         const parts = this.hiddenInput.value.split('_');
+                         if (parts.length === 2) {
+                             const typeId = parts[0];
+                             const role = parts[1];
 
-                preview.appendChild(document.createTextNode('.'));
+                             const typeBtn = this.container.querySelector(`button[data-id="${typeId}"]`);
+                             if (typeBtn) {
+                                 this.handleTypeClick(typeBtn);
+                                 if (!this.state.isSymmetric) {
+                                     this.handleRoleClick(role);
+                                 }
+                             }
+                         }
+                    }
+                }
+
+                handleTypeClick(btn) {
+                    // Update State
+                    this.state.typeId = btn.dataset.id;
+                    this.state.isSymmetric = btn.dataset.isSymmetric === 'true';
+                    this.state.name = btn.dataset.name;
+                    this.state.oppositeName = btn.dataset.oppositeName;
+                    this.state.role = null; // Reset role on type change
+
+                    // Update UI (Active Class)
+                    this.container.querySelectorAll('button').forEach(b => b.classList.remove('active', 'btn-secondary'));
+                    this.container.querySelectorAll('button').forEach(b => b.classList.add('btn-outline-secondary'));
+
+                    btn.classList.remove('btn-outline-secondary');
+                    btn.classList.add('active', 'btn-secondary');
+
+                    // Update Summary
+                    const typeLabel = this.state.isSymmetric ? this.state.name : `${this.state.name} / ${this.state.oppositeName}`;
+                    this.summaryText.textContent = typeLabel;
+                    this.summaryContainer.style.display = 'block'; // Show summary
+
+                    // Collapse List
+                    if (this.collapseEl.classList.contains('show')) {
+                        this.toggleBtn.click();
+                    }
+
+                    if (this.state.isSymmetric) {
+                        this.roleContainer.style.display = 'none';
+                        this.state.role = 'Fwd'; // Symmetric defaults to Fwd
+                        this.updateHiddenInput();
+                        this.updatePreview();
+                    } else {
+                        this.roleContainer.style.display = 'block';
+                        this.fwdBtn.textContent = this.state.name;
+                        this.revBtn.textContent = this.state.oppositeName;
+
+                        // Reset Role Buttons
+                        this.fwdBtn.classList.remove('active', 'btn-primary');
+                        this.fwdBtn.classList.add('btn-outline-primary');
+                        this.revBtn.classList.remove('active', 'btn-primary');
+                        this.revBtn.classList.add('btn-outline-primary');
+
+                        this.hiddenInput.value = ''; // Clear selection until role picked
+                        this.preview.style.display = 'none';
+                    }
+                }
+
+                handleChangeClick() {
+                    this.summaryContainer.style.display = 'none';
+                    if (!this.collapseEl.classList.contains('show')) {
+                        this.toggleBtn.click();
+                    }
+                }
+
+                handleRoleClick(role) {
+                    this.state.role = role;
+
+                    // Update UI
+                    if (role === 'Fwd') {
+                        this.fwdBtn.classList.add('active', 'btn-primary');
+                        this.fwdBtn.classList.remove('btn-outline-primary');
+                        this.revBtn.classList.remove('active', 'btn-primary');
+                        this.revBtn.classList.add('btn-outline-primary');
+                    } else {
+                        this.revBtn.classList.add('active', 'btn-primary');
+                        this.revBtn.classList.remove('btn-outline-primary');
+                        this.fwdBtn.classList.remove('active', 'btn-primary');
+                        this.fwdBtn.classList.add('btn-outline-primary');
+                    }
+
+                    this.updateHiddenInput();
+                    this.updatePreview();
+                }
+
+                updateHiddenInput() {
+                    if (this.state.typeId && this.state.role) {
+                        this.hiddenInput.value = `${this.state.typeId}_${this.state.role}`;
+                    } else {
+                        this.hiddenInput.value = '';
+                    }
+                }
+
+                updatePreview() {
+                    if (!this.state.typeId || !this.state.role) {
+                        this.preview.style.display = 'none';
+                        return;
+                    }
+
+                    if (!this.relatedInput.value) {
+                         this.preview.style.display = 'none';
+                         return;
+                    }
+                    const relatedName = this.relatedInput.options[this.relatedInput.selectedIndex].text;
+
+                    // Calculate display text
+                    let relationText = '';
+                    if (this.state.isSymmetric) {
+                        relationText = this.state.name;
+                    } else {
+                        relationText = this.state.role === 'Fwd' ? this.state.name : this.state.oppositeName;
+                    }
+
+                    this.preview.style.display = 'block';
+                    this.preview.textContent = '';
+
+                    const s1 = document.createElement('strong');
+                    s1.textContent = this.entityName;
+                    this.preview.appendChild(s1);
+
+                    this.preview.appendChild(document.createTextNode(` is ${relationText} of `));
+
+                    const s2 = document.createElement('strong');
+                    s2.textContent = relatedName;
+                    this.preview.appendChild(s2);
+
+                    this.preview.appendChild(document.createTextNode('.'));
+                }
             }
 
-            typeSelect.addEventListener('change', updatePreview);
-            relatedSelect.addEventListener('change', updatePreview);
+            const entityName = @Html.Raw(Json.Serialize(Model.EntityName));
 
-            // Initial call
-            updatePreview();
+            // Initialize Form
+            new RelationshipSelector({
+                containerId: 'type-selection-container',
+                roleContainerId: 'role-selection-container',
+                hiddenInputId: 'SelectedRelationshipType',
+                fwdBtnId: 'role-fwd-btn',
+                revBtnId: 'role-rev-btn',
+                previewId: 'relationshipPreview',
+                relatedInputId: 'RelatedEntityId',
+
+                // Collapse Params
+                collapseId: 'typeSelectionCollapse',
+                summaryId: 'type-selection-summary',
+                summaryTextId: 'selected-type-text',
+                changeBtnId: 'change-type-btn',
+                toggleBtnId: 'typeCollapseToggle',
+
+                entityName: entityName
+            });
         });
     </script>
 }

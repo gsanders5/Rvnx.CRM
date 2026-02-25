@@ -44,6 +44,14 @@ public interface IRelationshipService
     List<SelectOptionDto> GetRelationshipTypeOptions(string entityType, string? selectedValue = null);
 
     /// <summary>
+    /// Retrieves the list of relationship type definitions for a given entity type.
+    /// Used for building custom UI (e.g., two-step selection).
+    /// </summary>
+    /// <param name="entityType">The type of the source entity.</param>
+    /// <returns>A list of <see cref="RelationshipTypeDefinition"/>.</returns>
+    List<RelationshipTypeDefinition> GetRelationshipTypes(string entityType);
+
+    /// <summary>
     /// Creates a new "Partial Contact" and establishes a relationship to it.
     /// A partial contact is a contact that exists only as a name and potentially a birthday, without a full profile.
     /// </summary>
