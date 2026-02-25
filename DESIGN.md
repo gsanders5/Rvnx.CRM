@@ -24,8 +24,6 @@
 │   ├── Services/               # Infrastructure-dependent services (e.g. UserSync, VCard)
 │   ├── ServiceCollectionExtensions.cs
 │   └── Rvnx.CRM.Infrastructure.csproj
-├── Rvnx.CRM.Shared/            # Shared components (Currently empty/reserved)
-│   └── Rvnx.CRM.Shared.csproj
 └── Rvnx.CRM.Web/               # Presentation layer
     ├── Controllers/            # MVC Controllers (Orchestration logic)
     ├── Services/               # UI-specific services (CurrentUserService)
@@ -40,7 +38,6 @@
 
 - **Core**: Contains domain entities, interfaces, and pure logic. Depends on **Entity Framework Core** (for data annotations).
 - **Infrastructure**: Implements Core interfaces, handles data access and external integrations. Depends on **Core** and **FolkerKinzel.VCards**.
-- **Shared**: Currently unused (placeholder).
 - **Web**: Presentation layer. Orchestrates user interactions. Depends on all other projects.
 
 ### Key Patterns
