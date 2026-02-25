@@ -29,7 +29,6 @@
 
 	<ItemGroup>
 		<ProjectReference Include="..\Rvnx.CRM.Core\Rvnx.CRM.Core.csproj" />
-		<ProjectReference Include="..\Rvnx.CRM.Shared\Rvnx.CRM.Shared.csproj" />
 	</ItemGroup>
 
 	<ItemGroup>
