@@ -30,7 +30,7 @@ Purpose: License compliance audit prior to publishing a project license.
 | Library | Version | URL | License | License URL |
 |---|---|---|---|---|
 | Font Awesome (CSS) | 6.0.0 | https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css | MIT (Code), CC BY 4.0 (Icons) | https://fontawesome.com/license/free |
-| Google Fonts (Roboto) | - | https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap | Apache-2.0 | https://www.apache.org/licenses/LICENSE-2.0 |
+| Google Fonts (Roboto) | - | https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap | SIL Open Font License 1.1 | https://openfontlicense.org |
 | MDB UI Kit (CSS) | 9.3.0 | https://cdn.jsdelivr.net/npm/mdb-ui-kit@9.3.0/css/mdb.min.css | MIT | https://mdbootstrap.com/general/license/ |
 | Bootstrap Icons | 1.11.3 | https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css | MIT | https://github.com/twbs/icons/blob/main/LICENSE.md |
 | DataTables (CSS) | dt-2.3.7, b-3.2.6, b-colvis-3.2.6, r-3.0.8, sc-2.4.3 | https://cdn.datatables.net/v/bs5/dt-2.3.7/b-3.2.6/b-colvis-3.2.6/r-3.0.8/sc-2.4.3/datatables.min.css | MIT | https://datatables.net/license/ |
@@ -79,7 +79,7 @@ Purpose: License compliance audit prior to publishing a project license.
 ## Summary
 
 Total dependencies audited: 27
-Licenses identified: MIT, Apache-2.0, BSD-3-Clause, CC BY 4.0 (Icons), MPL-2.0 (Option), Xceed Community License (Non-Commercial)
+Licenses identified: MIT, Apache-2.0, BSD-3-Clause, CC BY 4.0 (Icons), MPL-2.0 (Option), Xceed Community License (Non-Commercial), SIL Open Font License 1.1
 Unresolved: 0
 
 ### License compatibility notes
@@ -89,3 +89,4 @@ Unresolved: 0
 - **CC BY 4.0**: Attribution required. Applies to Font Awesome Icons.
 - **MPL-2.0**: File-level copyleft. Only relevant if choosing MPL for DOMPurify. Apache-2.0 option is available and simpler for compatibility.
 - **Xceed Community License (Non-Commercial)**: Strictly prohibits commercial use. Permitted only for non-commercial, open-source, or personal projects.
+- **SIL Open Font License 1.1**: Allows font software to be used, studied, modified, and redistributed freely as long as they are not sold by themselves. Fonts can be bundled, embedded, and redistributed with software.
