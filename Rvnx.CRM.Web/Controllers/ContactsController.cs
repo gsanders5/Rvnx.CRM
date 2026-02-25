@@ -6,7 +6,7 @@ using Rvnx.CRM.Web.Controllers.Base;
 
 namespace Rvnx.CRM.Web.Controllers
 {
-    public class ContactsController(ILogger<ContactsController> logger, ICurrentUserService currentUserService, IContactImportService contactImportService, IContactExportService contactExportService, IContactManagementService contactManagementService, IContactReadService contactReadService, ISelfContactService selfContactService) : AuthorizedController
+    public class ContactsController(ILogger<ContactsController> logger, ICurrentUserService currentUserService, IContactImportService contactImportService, IContactExportService contactExportService, IContactManagementService contactManagementService, IContactReadService contactReadService, ISelfContactService selfContactService, IFileValidationService fileValidationService) : AuthorizedController
     {
         private readonly ILogger<ContactsController> _logger = logger;
         private readonly ICurrentUserService _currentUserService = currentUserService;
@@ -15,6 +15,7 @@ namespace Rvnx.CRM.Web.Controllers
         private readonly IContactManagementService _contactManagementService = contactManagementService;
         private readonly IContactReadService _contactReadService = contactReadService;
         private readonly ISelfContactService _selfContactService = selfContactService;
+        private readonly IFileValidationService _fileValidationService = fileValidationService;
 
         private static readonly Action<ILogger, Exception?> LogErrorImportingVcf =
             LoggerMessage.Define(
@@ -345,6 +346,12 @@ namespace Rvnx.CRM.Web.Controllers
             if (file == null || file.Length == 0)
             {
                 ModelState.AddModelError("file", "Please select a file.");
+                return View();
+            }
+
+            if (!_fileValidationService.IsAllowedFileSize(file.Length))
+            {
+                ModelState.AddModelError("file", "File is too large.");
                 return View();
             }
 
