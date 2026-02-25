@@ -41,4 +41,33 @@ public static class RepositoryExtensions
 
         return results;
     }
+
+    /// <summary>
+    /// Explicitly chunks a large list of keys to avoid SQL parameter limits and executes projected queries against the repository layer in batches.
+    /// </summary>
+    public static async Task<List<TDto>> ListProjectedByChunkedContainsAsync<T, TDto, TKey>(
+        this IRepository repository,
+        IEnumerable<TKey> keys,
+        Func<IEnumerable<TKey>, Expression<Func<T, bool>>> predicateBuilder,
+        Expression<Func<T, TDto>> selector,
+        CancellationToken cancellationToken = default) where T : BaseEntity
+    {
+        List<TDto> results = [];
+
+        foreach (TKey[] chunk in keys.Chunk(1000))
+        {
+            if (chunk.Length == 0)
+            {
+                continue;
+            }
+
+            Expression<Func<T, bool>> predicate = predicateBuilder(chunk);
+
+            List<TDto> chunkResults = await repository.ListProjectedAsync(predicate, selector, cancellationToken);
+
+            results.AddRange(chunkResults);
+        }
+
+        return results;
+    }
 }
