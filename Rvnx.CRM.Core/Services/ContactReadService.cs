@@ -15,10 +15,35 @@ public class ContactReadService(IRepository repository) : IContactReadService
 
     public async Task<List<ContactDto>> GetIndexDataAsync(bool showHidden)
     {
-        List<Contact> contacts = await _repository.ListAsNoTrackingAsync<Contact>(x => x.IsHidden == showHidden && !x.IsPartial);
+        // Optimization: Project directly to DTO to avoid fetching all columns and instantiating Contact entities
+        List<ContactDto> contactDtos = await _repository.ListProjectedAsync<Contact, ContactDto>(
+            x => x.IsHidden == showHidden && !x.IsPartial,
+            c => new ContactDto
+            {
+                Id = c.Id,
+                FirstName = c.FirstName,
+                LastName = c.LastName ?? string.Empty,
+                Company = c.Company,
+                JobTitle = c.JobTitle,
+                IsHidden = c.IsHidden,
+                CreatedDate = c.CreatedDate,
+                LastChangedDate = c.LastChangedDate,
+                CreatedBy = c.CreatedBy,
+                LastChangedBy = c.LastChangedBy,
+                UserId = c.UserId != null ? c.UserId.ToString() : null,
+                Pronouns = c.Pronouns,
+                Gender = c.Gender,
+                Religion = c.Religion,
+                IsPartial = c.IsPartial
+            });
 
-        List<ContactDto> contactDtos = [.. contacts.Select(c => c.ToDto())];
-        List<Guid> contactIds = [.. contacts.Select(c => c.Id)];
+        // Compute FullName in memory to avoid SQL translation issues and ensure consistency
+        foreach (ContactDto dto in contactDtos)
+        {
+            dto.FullName = (dto.FirstName + " " + dto.LastName).Trim();
+        }
+
+        List<Guid> contactIds = [.. contactDtos.Select(c => c.Id)];
 
         List<Attachment> profileAttachments = contactIds.Count > 0
             ? await _repository.ListByChunkedContainsAsync<Attachment, Guid>(
