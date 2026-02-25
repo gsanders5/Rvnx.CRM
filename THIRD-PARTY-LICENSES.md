@@ -12,6 +12,7 @@ Purpose: License compliance audit
 | Microsoft.AspNetCore.Authentication.OpenIdConnect | 8.0.0 | Rvnx.CRM.Web | MIT | https://licenses.nuget.org/MIT |
 | Microsoft.EntityFrameworkCore | 8.0.0 | Rvnx.CRM.Core | MIT | https://licenses.nuget.org/MIT |
 | FolkerKinzel.VCards | 6.0.0 | Rvnx.CRM.Infrastructure | MIT | https://github.com/FolkerKinzel/VCards/blob/master/LICENSE |
+| File.TypeChecker | 4.3.0 | Rvnx.CRM.Core | MIT | https://github.com/AJMitev/FileTypeChecker/blob/master/LICENSE |
 | Microsoft.EntityFrameworkCore.Sqlite | 8.0.0 | Rvnx.CRM.Infrastructure | MIT | https://licenses.nuget.org/MIT |
 | Microsoft.EntityFrameworkCore.SqlServer | 8.0.0 | Rvnx.CRM.Infrastructure | MIT | https://licenses.nuget.org/MIT |
 | Microsoft.EntityFrameworkCore.Tools | 8.0.0 | Rvnx.CRM.Infrastructure | MIT | https://licenses.nuget.org/MIT |
