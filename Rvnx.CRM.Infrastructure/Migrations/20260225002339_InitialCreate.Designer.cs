@@ -11,7 +11,7 @@ using Rvnx.CRM.Infrastructure.Data;
 namespace Rvnx.CRM.Infrastructure.Migrations
 {
     [DbContext(typeof(CRMDbContext))]
-    [Migration("20260224091826_InitialCreate")]
+    [Migration("20260225002339_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />

@@ -1,5 +1,4 @@
-﻿using System;
-using Microsoft.EntityFrameworkCore.Migrations;
+﻿using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
@@ -8,10 +7,6 @@ namespace Rvnx.CRM.Infrastructure.Migrations
     /// <inheritdoc />
     public partial class InitialCreate : Migration
     {
-        private static readonly string[] _contactLabelColumns = ["ContactId", "LabelId"];
-        private static readonly string[] _relationshipEntityColumns = ["EntityId", "EntityType"];
-        private static readonly string[] _relationshipRelatedEntityColumns = ["RelatedEntityId", "EntityType"];
-
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
@@ -480,7 +475,7 @@ namespace Rvnx.CRM.Infrastructure.Migrations
             migrationBuilder.CreateIndex(
                 name: "IX_ContactLabel_ContactId_LabelId",
                 table: "ContactLabel",
-                columns: _contactLabelColumns,
+                columns: new[] { "ContactId", "LabelId" },
                 unique: true);
 
             migrationBuilder.CreateIndex(
@@ -561,12 +556,12 @@ namespace Rvnx.CRM.Infrastructure.Migrations
             migrationBuilder.CreateIndex(
                 name: "IX_Relationship_EntityId_EntityType",
                 table: "Relationship",
-                columns: _relationshipEntityColumns);
+                columns: new[] { "EntityId", "EntityType" });
 
             migrationBuilder.CreateIndex(
                 name: "IX_Relationship_RelatedEntityId_EntityType",
                 table: "Relationship",
-                columns: _relationshipRelatedEntityColumns);
+                columns: new[] { "RelatedEntityId", "EntityType" });
 
             migrationBuilder.CreateIndex(
                 name: "IX_Relationship_UserId",

@@ -8,15 +8,15 @@ public record RelationshipTypeDefinition(Guid Id, string Name, string OppositeNa
 
     public string GetName(string? gender)
     {
-        if (string.Equals(gender, "Male", StringComparison.OrdinalIgnoreCase)) return NameMale ?? Name;
-        if (string.Equals(gender, "Female", StringComparison.OrdinalIgnoreCase)) return NameFemale ?? Name;
-        return Name;
+        return string.Equals(gender, "Male", StringComparison.OrdinalIgnoreCase)
+            ? NameMale ?? Name
+            : string.Equals(gender, "Female", StringComparison.OrdinalIgnoreCase) ? NameFemale ?? Name : Name;
     }
 
     public string GetOppositeName(string? gender)
     {
-        if (string.Equals(gender, "Male", StringComparison.OrdinalIgnoreCase)) return OppositeNameMale ?? OppositeName;
-        if (string.Equals(gender, "Female", StringComparison.OrdinalIgnoreCase)) return OppositeNameFemale ?? OppositeName;
-        return OppositeName;
+        return string.Equals(gender, "Male", StringComparison.OrdinalIgnoreCase)
+            ? OppositeNameMale ?? OppositeName
+            : string.Equals(gender, "Female", StringComparison.OrdinalIgnoreCase) ? OppositeNameFemale ?? OppositeName : OppositeName;
     }
 }
