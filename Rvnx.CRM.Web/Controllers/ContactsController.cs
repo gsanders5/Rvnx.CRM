@@ -89,9 +89,7 @@ namespace Rvnx.CRM.Web.Controllers
                 return Unauthorized();
             }
 
-            contactDto.Pronouns = contactDto.Pronouns == "Unspecified" ? null : contactDto.Pronouns;
-            contactDto.Gender = contactDto.Gender == "Unspecified" ? null : contactDto.Gender;
-            contactDto.Religion = string.IsNullOrWhiteSpace(contactDto.Religion) ? null : contactDto.Religion;
+            NormalizeContactForm(contactDto);
 
             if (ModelState.IsValid)
             {
@@ -150,9 +148,7 @@ namespace Rvnx.CRM.Web.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind("FirstName,LastName,Nickname,Email,Phone,JobTitle,Company,Birthday,IsHidden,Pronouns,Gender,Religion")] ContactCreateViewModel contactDto)
         {
-            contactDto.Pronouns = contactDto.Pronouns == "Unspecified" ? null : contactDto.Pronouns;
-            contactDto.Gender = contactDto.Gender == "Unspecified" ? null : contactDto.Gender;
-            contactDto.Religion = string.IsNullOrWhiteSpace(contactDto.Religion) ? null : contactDto.Religion;
+            NormalizeContactForm(contactDto);
 
             if (ModelState.IsValid)
             {
@@ -229,9 +225,7 @@ namespace Rvnx.CRM.Web.Controllers
                  ModelState.AddModelError("profileImage", "File is too large.");
             }
 
-            contactDto.Pronouns = contactDto.Pronouns == "Unspecified" ? null : contactDto.Pronouns;
-            contactDto.Gender = contactDto.Gender == "Unspecified" ? null : contactDto.Gender;
-            contactDto.Religion = string.IsNullOrWhiteSpace(contactDto.Religion) ? null : contactDto.Religion;
+            NormalizeContactForm(contactDto);
 
             if (ModelState.IsValid)
             {
@@ -395,6 +389,13 @@ namespace Rvnx.CRM.Web.Controllers
             {
                 return NotFound();
             }
+        }
+
+        private static void NormalizeContactForm(ContactFormDto dto)
+        {
+            dto.Pronouns = dto.Pronouns == PersonalAttributeOptions.Unspecified ? null : dto.Pronouns;
+            dto.Gender = dto.Gender == PersonalAttributeOptions.Unspecified ? null : dto.Gender;
+            dto.Religion = string.IsNullOrWhiteSpace(dto.Religion) ? null : dto.Religion;
         }
     }
 }
