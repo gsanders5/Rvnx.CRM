@@ -176,10 +176,23 @@ namespace Rvnx.CRM.Tests.Controllers
         public async Task EditPostWhenIdMismatchShouldReturnNotFound()
         {
             // Arrange
-            PetFormDto dto = new() { Id = Guid.NewGuid(), Name = "Test" };
+            Guid petId = Guid.NewGuid();
+            Guid contactId = Guid.NewGuid();
+            _context.Contacts.Add(new Contact { Id = contactId, FirstName = "Test" });
+            _context.Set<Pet>().Add(new Pet
+            {
+                Id = petId,
+                ContactId = contactId,
+                Name = "Existing Pet",
+                Species = "Dog"
+            });
+            await _context.SaveChangesAsync();
+            _context.ChangeTracker.Clear();
+
+            PetFormDto dto = new() { Id = Guid.NewGuid(), Name = "Test", EntityId = contactId };
 
             // Act
-            IActionResult result = await _controller.Edit(Guid.NewGuid(), dto);
+            IActionResult result = await _controller.Edit(petId, dto);
 
             // Assert
             Assert.IsType<NotFoundResult>(result);
