@@ -1,6 +1,6 @@
 # Third-Party License Inventory
 Generated: 2025-05-22
-Purpose: License compliance audit prior to publishing a project license.
+Purpose: License compliance audit
 
 ---
 
