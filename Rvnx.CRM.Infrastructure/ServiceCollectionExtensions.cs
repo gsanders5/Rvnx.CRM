@@ -34,6 +34,9 @@ public static class ServiceCollectionExtensions
         // Add Contact Export Service
         services.AddScoped<IContactExportService, ContactExportService>();
 
+        // Add Debug Data Service
+        services.AddScoped<IDebugDataService, DebugDataService>();
+
         return services;
     }
 }

@@ -24,3 +24,8 @@
 
 **Learning:** `FakeDataGenerator` was located in `Core/Services`, confusing domain logic with development/seeding utilities. Such utilities, even if returning domain entities, belong in `Infrastructure` (for data seeding) or `Tests`.
 **Action:** When finding utility classes that generate random data or handle development-only tasks, verify they are not in `Core`. Move them to `Infrastructure` or `Shared` to keep the domain pure.
+
+## 2026-05-26 - [Controller Orchestrating Data Operations]
+
+**Learning:** `DebugOperationsController` contained significant data manipulation logic (seeding, reset) directly in action methods, coupling the web layer to concrete infrastructure utilities (`FakeDataGenerator`) and orchestrating complex repository operations.
+**Action:** Extract such logic into a dedicated service (e.g., `IDebugDataService` in Core, implementation in Infrastructure) so the controller only delegates commands. This decouples the web layer from implementation details of data management.
