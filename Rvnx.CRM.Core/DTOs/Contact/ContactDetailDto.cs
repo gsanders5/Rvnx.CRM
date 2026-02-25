@@ -18,5 +18,6 @@ namespace Rvnx.CRM.Core.DTOs.Contact
         public IEnumerable<ContactMethodDto> ContactMethods { get; set; } = [];
         public IEnumerable<FactDto> Facts { get; set; } = [];
         public IEnumerable<AttachmentDto> Attachments { get; set; } = [];
+        public IEnumerable<InteractionDto> Timeline { get; set; } = [];
     }
 }

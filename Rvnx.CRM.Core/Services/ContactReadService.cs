@@ -165,6 +165,44 @@ public class ContactReadService(IRepository repository) : IContactReadService
 
         contactDto.Labels = contact.ContactLabels.Select(cl => cl.Label).OrderBy(l => l.Name).Select(l => new LabelDto { Id = l.Id, Name = l.Name, Color = l.Color }).ToList();
 
+        List<InteractionDto> timeline = [];
+
+        // Add Notes
+        timeline.AddRange(contact.Notes.Select(n => new InteractionDto
+        {
+            Id = n.Id,
+            Type = "Note",
+            Title = n.Title,
+            Description = n.Value,
+            Date = n.CreatedDate,
+            Icon = "bi-journal-text"
+        }));
+
+        // Add Completed Reminders
+        timeline.AddRange(contact.Reminders.Where(r => r.IsCompleted).Select(r => new InteractionDto
+        {
+            Id = r.Id,
+            Type = "Reminder",
+            Title = r.Title,
+            Description = r.Description,
+            Date = r.DueDate,
+            Icon = "bi-check-circle-fill"
+        }));
+
+        // Add Past Significant Dates
+        DateTime today = DateTime.Today;
+        timeline.AddRange(contact.SignificantDates.Where(d => d.Date < today).Select(d => new InteractionDto
+        {
+            Id = d.Id,
+            Type = "Date",
+            Title = d.Title ?? "Significant Date",
+            Description = d.Description,
+            Date = d.Date,
+            Icon = "bi-calendar-event"
+        }));
+
+        contactDto.Timeline = timeline.OrderByDescending(t => t.Date).ToList();
+
         return contactDto;
     }
 
