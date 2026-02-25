@@ -35,7 +35,7 @@ Purpose: License compliance audit prior to publishing a project license.
 | Bootstrap Icons | 1.11.3 | https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css | MIT | https://github.com/twbs/icons/blob/main/LICENSE.md |
 | DataTables (CSS) | dt-2.3.7, b-3.2.6, b-colvis-3.2.6, r-3.0.8, sc-2.4.3 | https://cdn.datatables.net/v/bs5/dt-2.3.7/b-3.2.6/b-colvis-3.2.6/r-3.0.8/sc-2.4.3/datatables.min.css | MIT | https://datatables.net/license/ |
 | MDB UI Kit (JS) | 9.3.0 | https://cdn.jsdelivr.net/npm/mdb-ui-kit@9.3.0/js/mdb.umd.min.js | MIT | https://mdbootstrap.com/general/license/ |
-| marked.js | Latest | https://cdn.jsdelivr.net/npm/marked/marked.min.js | MIT | https://github.com/markedjs/marked/blob/master/LICENSE.md |
+| marked.js | Latest | https://cdn.jsdelivr.net/npm/marked/marked.min.js | MIT / BSD-3-Clause | https://github.com/markedjs/marked/blob/master/LICENSE.md |
 | DOMPurify | 3.0.10 | https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.10/purify.min.js | Apache-2.0 OR MPL-2.0 | https://github.com/cure53/DOMPurify/blob/main/LICENSE |
 | DataTables (JS) | dt-2.3.7, b-3.2.6, b-colvis-3.2.6, r-3.0.8, sc-2.4.3 | https://cdn.datatables.net/v/bs5/dt-2.3.7/b-3.2.6/b-colvis-3.2.6/r-3.0.8/sc-2.4.3/datatables.min.js | MIT | https://datatables.net/license/ |
 
@@ -85,7 +85,7 @@ Unresolved: 0
 ### License compatibility notes
 - **MIT**: Attribution required in distributed software. Very permissive.
 - **Apache-2.0**: Attribution required, patent grant included. Compatible with GPLv3.
-- **BSD-3-Clause**: Attribution required, no endorsement clause. Similar to MIT.
+- **BSD-3-Clause**: Attribution required, no endorsement clause. Similar to MIT. (Includes the original Markdown copyright notice in `marked.js`.)
 - **CC BY 4.0**: Attribution required. Applies to Font Awesome Icons.
 - **MPL-2.0**: File-level copyleft. Only relevant if choosing MPL for DOMPurify. Apache-2.0 option is available and simpler for compatibility.
 - **Xceed Community License (Non-Commercial)**: Strictly prohibits commercial use. Permitted only for non-commercial, open-source, or personal projects.
