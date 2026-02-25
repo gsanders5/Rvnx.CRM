@@ -24,7 +24,7 @@ namespace Rvnx.CRM.Web.Controllers
             }
 
             // Sentinel: Verify entity existence and access rights to prevent IDOR
-            if (!await Repository.ExistsAsync<Contact>(entityId) || await entityService.IsPartialAsync(EntityTypes.Person, entityId))
+            if (!await IsValidContactAsync(entityId))
             {
                 return NotFound();
             }
@@ -49,7 +49,7 @@ namespace Rvnx.CRM.Web.Controllers
             }
 
             // Sentinel: Verify entity existence and access rights to prevent IDOR
-            if (!await Repository.ExistsAsync<Contact>(viewModel.EntityId) || await entityService.IsPartialAsync(EntityTypes.Person, viewModel.EntityId))
+            if (!await IsValidContactAsync(viewModel.EntityId))
             {
                 return NotFound();
             }
@@ -74,7 +74,7 @@ namespace Rvnx.CRM.Web.Controllers
             }
 
             Note? note = await Repository.GetByIdAsync<Note>(id.Value);
-            if (note == null || await entityService.IsPartialAsync(EntityTypes.Person, note.ContactId ?? Guid.Empty))
+            if (note == null || !await IsValidContactAsync(note.ContactId ?? Guid.Empty))
             {
                 return NotFound();
             }
@@ -106,7 +106,7 @@ namespace Rvnx.CRM.Web.Controllers
                 try
                 {
                     Note? existingNote = await Repository.GetByIdAsync<Note>(id);
-                    if (existingNote == null || await entityService.IsPartialAsync(EntityTypes.Person, existingNote.ContactId ?? Guid.Empty))
+                    if (existingNote == null || !await IsValidContactAsync(existingNote.ContactId ?? Guid.Empty))
                     {
                         return NotFound();
                     }
@@ -147,7 +147,7 @@ namespace Rvnx.CRM.Web.Controllers
             }
 
             Note? note = await Repository.GetByIdAsync<Note>(id.Value);
-            if (note == null || await entityService.IsPartialAsync(EntityTypes.Person, note.ContactId ?? Guid.Empty))
+            if (note == null || !await IsValidContactAsync(note.ContactId ?? Guid.Empty))
             {
                 return NotFound();
             }

@@ -12,7 +12,7 @@ namespace Rvnx.CRM.Web.Controllers
     {
         public async Task<IActionResult> Create(Guid entityId, string entityType)
         {
-            return entityId == Guid.Empty || await IsPartialContactAsync(entityId)
+            return !await IsValidContactAsync(entityId)
                 ? NotFound()
                 : View(new ContactMethodFormDto { EntityId = entityId, EntityType = entityType });
         }
@@ -21,7 +21,7 @@ namespace Rvnx.CRM.Web.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(ContactMethodFormDto contactInfoInput)
         {
-            if (await IsPartialContactAsync(contactInfoInput.EntityId))
+            if (!await IsValidContactAsync(contactInfoInput.EntityId))
             {
                 return NotFound();
             }
@@ -45,7 +45,7 @@ namespace Rvnx.CRM.Web.Controllers
 
             ContactMethod? contactInfo = await Repository.GetByIdAsync<ContactMethod>(id.Value);
 
-            if (contactInfo == null || await IsPartialContactAsync(contactInfo.ContactId ?? Guid.Empty))
+            if (contactInfo == null || !await IsValidContactAsync(contactInfo.ContactId ?? Guid.Empty))
             {
                 return NotFound();
             }
@@ -77,7 +77,7 @@ namespace Rvnx.CRM.Web.Controllers
                 try
                 {
                     ContactMethod? existingContactInfo = await Repository.GetByIdAsync<ContactMethod>(id);
-                    if (existingContactInfo == null || await IsPartialContactAsync(existingContactInfo.ContactId ?? Guid.Empty))
+                    if (existingContactInfo == null || !await IsValidContactAsync(existingContactInfo.ContactId ?? Guid.Empty))
                     {
                         return NotFound();
                     }
@@ -113,7 +113,7 @@ namespace Rvnx.CRM.Web.Controllers
             }
 
             ContactMethod? contactInfo = await Repository.GetByIdAsync<ContactMethod>(id.Value);
-            return contactInfo == null || await IsPartialContactAsync(contactInfo.ContactId ?? Guid.Empty) ? NotFound() : View(contactInfo);
+            return contactInfo == null || !await IsValidContactAsync(contactInfo.ContactId ?? Guid.Empty) ? NotFound() : View(contactInfo);
         }
 
         [HttpPost, ActionName("Delete")]

@@ -36,6 +36,21 @@ public abstract class RepositoryController : AuthorizedController
         return c?.IsPartial == true;
     }
 
+    /// <summary>
+    /// Checks if a contact exists and is not a partial contact.
+    /// Use this for validating entity references in create/edit actions.
+    /// </summary>
+    protected async Task<bool> IsValidContactAsync(Guid id)
+    {
+        if (id == Guid.Empty)
+        {
+            return false;
+        }
+
+        Contact? c = await Repository.GetByIdAsync<Contact>(id);
+        return c != null && !c.IsPartial;
+    }
+
     protected IActionResult RedirectToEntity(Guid id, string? type)
     {
         if (id == Guid.Empty || string.IsNullOrEmpty(type))

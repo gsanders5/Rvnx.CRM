@@ -43,6 +43,8 @@ namespace Rvnx.CRM.Tests.Controllers
         {
             // Arrange
             Guid contactId = Guid.NewGuid();
+            _context.Contacts.Add(new Contact { Id = contactId, FirstName = "Test" });
+            await _context.SaveChangesAsync();
 
             // Act
             IActionResult result = await _controller.Create(contactId);
@@ -189,6 +191,7 @@ namespace Rvnx.CRM.Tests.Controllers
             // Arrange
             Guid petId = Guid.NewGuid();
             Guid contactId = Guid.NewGuid();
+            _context.Contacts.Add(new Contact { Id = contactId, FirstName = "Test" });
             _context.Set<Pet>().Add(new Pet
             {
                 Id = petId,

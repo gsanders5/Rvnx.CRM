@@ -7,3 +7,8 @@
 
 **Learning:** Fetching the current `User` entity requires checking both the internal ID (`GetByIdAsync`) and falling back to searching by external `SubjectId` (as a string).
 **Action:** Centralise this dual-lookup logic into a single helper method (e.g., `GetUserAsync`) instead of repeating the two repository calls across controller actions.
+
+## 2026-02-20 - Contact Validation Security
+
+**Learning:** Relying solely on `IsPartialContactAsync` for validation allows non-existent contacts to bypass checks (as they are "not partial"). This can lead to orphaned records.
+**Action:** Use `IsValidContactAsync` in `RepositoryController` which explicitly enforces both existence and non-partial status for contact-related operations.
