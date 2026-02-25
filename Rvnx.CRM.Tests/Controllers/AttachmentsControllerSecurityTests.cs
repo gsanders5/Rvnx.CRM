@@ -13,6 +13,7 @@ namespace Rvnx.CRM.Tests.Controllers
         {
             Mock<IFileValidationService> fileValidationMock = new();
             fileValidationMock.Setup(f => f.IsAllowedExtension(It.IsAny<string>())).Returns(true);
+            fileValidationMock.Setup(f => f.IsAllowedFileSize(It.IsAny<long>())).Returns(true);
 
             AttachmentsController controller = new(serviceMock.Object, fileValidationMock.Object)
             {
