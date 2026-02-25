@@ -8,14 +8,15 @@ Purpose: License compliance audit
 
 | Package | Version | Project | License | License URL |
 |---|---|---|---|---|
-| Microsoft.EntityFrameworkCore.Design | 8.0.0 | Rvnx.CRM.Web | MIT | https://licenses.nuget.org/MIT |
-| Microsoft.AspNetCore.Authentication.OpenIdConnect | 8.0.0 | Rvnx.CRM.Web | MIT | https://licenses.nuget.org/MIT |
-| Microsoft.EntityFrameworkCore | 8.0.0 | Rvnx.CRM.Core | MIT | https://licenses.nuget.org/MIT |
+| Microsoft.EntityFrameworkCore.Design | 9.0.2 | Rvnx.CRM.Web | MIT | https://licenses.nuget.org/MIT |
+| Microsoft.AspNetCore.Authentication.OpenIdConnect | 8.0.13 | Rvnx.CRM.Web | MIT | https://licenses.nuget.org/MIT |
+| Microsoft.EntityFrameworkCore | 9.0.2 | Rvnx.CRM.Core | MIT | https://licenses.nuget.org/MIT |
 | FolkerKinzel.VCards | 6.0.0 | Rvnx.CRM.Infrastructure | MIT | https://github.com/FolkerKinzel/VCards/blob/master/LICENSE |
 | File.TypeChecker | 4.3.0 | Rvnx.CRM.Core | MIT | https://github.com/AJMitev/FileTypeChecker/blob/master/LICENSE |
-| Microsoft.EntityFrameworkCore.Sqlite | 8.0.0 | Rvnx.CRM.Infrastructure | MIT | https://licenses.nuget.org/MIT |
-| Microsoft.EntityFrameworkCore.SqlServer | 8.0.0 | Rvnx.CRM.Infrastructure | MIT | https://licenses.nuget.org/MIT |
-| Microsoft.EntityFrameworkCore.Tools | 8.0.0 | Rvnx.CRM.Infrastructure | MIT | https://licenses.nuget.org/MIT |
+| File.TypeChecker.Web | 2.0.0 | Rvnx.CRM.Web | MIT | https://github.com/AJMitev/FileTypeChecker.Web/blob/master/LICENSE |
+| Microsoft.EntityFrameworkCore.Sqlite | 9.0.2 | Rvnx.CRM.Infrastructure | MIT | https://licenses.nuget.org/MIT |
+| Microsoft.EntityFrameworkCore.SqlServer | 9.0.2 | Rvnx.CRM.Infrastructure | MIT | https://licenses.nuget.org/MIT |
+| Microsoft.EntityFrameworkCore.Tools | 9.0.2 | Rvnx.CRM.Infrastructure | MIT | https://licenses.nuget.org/MIT |
 | coverlet.collector | 6.0.4 | Rvnx.CRM.Tests | MIT | https://github.com/coverlet-coverage/coverlet/blob/master/LICENSE |
 | Microsoft.EntityFrameworkCore.InMemory | 8.0.0 | Rvnx.CRM.Tests | MIT | https://licenses.nuget.org/MIT |
 | Microsoft.NET.Test.Sdk | 17.14.1 | Rvnx.CRM.Tests | MIT | https://licenses.nuget.org/MIT |

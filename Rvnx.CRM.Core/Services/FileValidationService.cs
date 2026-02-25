@@ -61,8 +61,16 @@ namespace Rvnx.CRM.Core.Services
                 return false;
             }
 
-            using MemoryStream stream = new(fileBytes);
-            return stream.IsImage();
+            try
+            {
+                using MemoryStream stream = new(fileBytes);
+                return stream.IsImage();
+            }
+            catch (Exception)
+            {
+                // File.TypeChecker might throw if it can't read enough bytes or encounters an error
+                return false;
+            }
         }
 
         public bool IsValidFileSignature(byte[] fileBytes, string extension)
@@ -81,8 +89,15 @@ namespace Rvnx.CRM.Core.Services
                 return true;
             }
 
-            using MemoryStream stream = new(fileBytes);
-            return FileTypeValidator.IsTypeRecognizable(stream);
+            try
+            {
+                using MemoryStream stream = new(fileBytes);
+                return FileTypeValidator.IsTypeRecognizable(stream);
+            }
+            catch
+            {
+                return false;
+            }
         }
 
         public string GetMimeType(string extension)
