@@ -26,6 +26,7 @@
     </script>
 </head>
 <body>
+<a href="#main-content" class="visually-hidden-focusable position-absolute top-0 start-0 p-3 z-3 bg-primary text-white text-decoration-none rounded-bottom-end">Skip to main content</a>
 <header>
     <nav class="navbar navbar-expand-sm navbar-toggleable-sm border-bottom box-shadow mb-3 bg-primary" data-mdb-theme="dark">
         <div class="container-fluid">
@@ -80,7 +81,7 @@
     </nav>
 </header>
 <div class="container">
-    <main role="main" class="pb-3">
+    <main id="main-content" role="main" class="pb-3" tabindex="-1">
         @RenderBody()
     </main>
 </div>
