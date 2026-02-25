@@ -200,7 +200,7 @@ namespace Rvnx.CRM.Web.Controllers
             return View(viewModel);
         }
 
-        public async Task<IActionResult> Delete(Guid? id)
+        public async Task<IActionResult> Delete(Guid? id, string? returnUrl = null)
         {
             if (id == null)
             {
@@ -231,7 +231,8 @@ namespace Rvnx.CRM.Web.Controllers
                 EntityName = viewModel.EntityName,
                 Description = viewModel.Description,
                 StartDate = viewModel.StartDate,
-                EndDate = viewModel.EndDate
+                EndDate = viewModel.EndDate,
+                ReturnUrl = returnUrl
             };
 
             return View(deleteViewModel);
@@ -239,7 +240,7 @@ namespace Rvnx.CRM.Web.Controllers
 
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> DeleteConfirmed(Guid id)
+        public async Task<IActionResult> DeleteConfirmed(Guid id, string? returnUrl = null)
         {
             Relationship? relationship = await Repository.GetByIdAsync<Relationship>(id);
             if (relationship != null)
@@ -248,6 +249,12 @@ namespace Rvnx.CRM.Web.Controllers
                 string entityType = relationship.EntityType;
                 await Repository.DeleteAsync<Relationship>(id);
                 await Repository.SaveChangesAsync();
+
+                if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
+                {
+                    return Redirect(returnUrl);
+                }
+
                 return RedirectToEntity(entityId, entityType);
             }
 

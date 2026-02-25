@@ -34,8 +34,13 @@
 
     <form asp-action="Delete">
         <input type="hidden" asp-for="Id"/>
+        <input type="hidden" asp-for="ReturnUrl"/>
         <input type="submit" value="Delete" class="btn btn-danger"/> |
-        @if (Model.EntityType == EntityTypes.Person)
+        @if (!string.IsNullOrEmpty(Model.ReturnUrl))
+        {
+            <a href="@Model.ReturnUrl">Cancel</a>
+        }
+        else if (Model.EntityType == EntityTypes.Person)
         {
             <a asp-controller="Contacts" asp-action="Details" asp-route-id="@Model.EntityId">Cancel</a>
         }

@@ -233,7 +233,7 @@
                                     <a asp-controller="Relationships" asp-action="Edit" asp-route-id="@rel.Id" class="text-secondary me-2" title="Edit relationship" aria-label="Edit relationship with @rel.RelatedEntityName">
                                         <i class="bi bi-pencil-square"></i>
                                     </a>
-                                    <a asp-controller="Relationships" asp-action="Delete" asp-route-id="@rel.Id" class="text-danger" title="Delete relationship" aria-label="Delete relationship with @rel.RelatedEntityName">
+                                    <a asp-controller="Relationships" asp-action="Delete" asp-route-id="@rel.Id" asp-route-returnUrl="@(Context.Request.Path + Context.Request.QueryString)" class="text-danger" title="Delete relationship" aria-label="Delete relationship with @rel.RelatedEntityName">
                                         <i class="bi bi-trash"></i>
                                     </a>
                                 </div>
@@ -270,7 +270,7 @@
                                     <a asp-controller="Relationships" asp-action="Edit" asp-route-id="@rel.Id" class="text-secondary me-2" title="Edit relationship" aria-label="Edit relationship with @rel.EntityName">
                                         <i class="bi bi-pencil-square"></i>
                                     </a>
-                                    <a asp-controller="Relationships" asp-action="Delete" asp-route-id="@rel.Id" class="text-danger" title="Delete relationship" aria-label="Delete relationship with @rel.EntityName">
+                                    <a asp-controller="Relationships" asp-action="Delete" asp-route-id="@rel.Id" asp-route-returnUrl="@(Context.Request.Path + Context.Request.QueryString)" class="text-danger" title="Delete relationship" aria-label="Delete relationship with @rel.EntityName">
                                         <i class="bi bi-trash"></i>
                                     </a>
                                 </div>
