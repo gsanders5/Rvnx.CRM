@@ -1,7 +1,7 @@
 using FolkerKinzel.VCards;
+using FolkerKinzel.VCards.Enums;
+using FolkerKinzel.VCards.Extensions;
 using FolkerKinzel.VCards.Models;
-using FolkerKinzel.VCards.Models.Enums;
-using FolkerKinzel.VCards.Models.PropertyParts;
 using Rvnx.CRM.Core.Constants;
 using Rvnx.CRM.Core.Enumerations;
 using Rvnx.CRM.Core.Interfaces;
@@ -14,11 +14,11 @@ public class VCardService : IVCardService
 {
     public IEnumerable<Contact> ParseVCard(Stream fileStream)
     {
-        IList<VCard> vCards;
+        IReadOnlyList<VCard> vCards;
         try
         {
-            using StreamReader reader = new(fileStream);
-            vCards = VCard.DeserializeVcf(reader);
+            // v8: Use Vcf.Deserialize with Stream directly, leaveStreamOpen to not dispose the caller's stream
+            vCards = Vcf.Deserialize(fileStream, leaveStreamOpen: true);
         }
         catch
         {
@@ -36,19 +36,19 @@ public class VCardService : IVCardService
                 LastName = ""
             };
 
-            // 1. Name
-            NameProperty? nameProp = vc.NameViews?.FirstOrDefault();
-            if (nameProp != null && nameProp.Value != null)
+            // 1. Name - use extension method FirstOrNull() for safer access
+            FolkerKinzel.VCards.Models.Properties.NameProperty? nameProp = vc.NameViews?.FirstOrNull();
+            if (nameProp?.Value is Name n)
             {
-                Name n = nameProp.Value;
-                contact.LastName = n.LastName.FirstOrDefault() ?? "";
-                contact.FirstName = n.FirstName.FirstOrDefault() ?? "";
+                // v8: Name uses Surnames and Given (both IReadOnlyList<string>)
+                contact.LastName = n.Surnames.Count > 0 ? n.Surnames[0] : "";
+                contact.FirstName = n.Given.Count > 0 ? n.Given[0] : "";
             }
 
             // Name Fallback using Display Name
             if (string.IsNullOrEmpty(contact.FirstName) && string.IsNullOrEmpty(contact.LastName))
             {
-                TextProperty? displayProp = vc.DisplayNames?.FirstOrDefault();
+                FolkerKinzel.VCards.Models.Properties.TextProperty? displayProp = vc.DisplayNames?.FirstOrNull();
                 if (displayProp != null && !string.IsNullOrWhiteSpace(displayProp.Value))
                 {
                     string displayName = displayProp.Value;
@@ -92,25 +92,21 @@ public class VCardService : IVCardService
             }
 
             // Nickname
-            StringCollectionProperty? nicknameProp = vc.NickNames?.FirstOrDefault();
-            if (nicknameProp != null)
+            FolkerKinzel.VCards.Models.Properties.StringCollectionProperty? nicknameProp = vc.NickNames?.FirstOrNull();
+            if (nicknameProp?.Value is IReadOnlyList<string> nicknames && nicknames.Count > 0)
             {
-                if (nicknameProp.Value is IEnumerable<string> list)
-                {
-                    contact.Nickname = list.FirstOrDefault();
-                }
+                contact.Nickname = nicknames[0];
             }
 
-            // Org
-            OrganizationProperty? orgProp = vc.Organizations?.FirstOrDefault();
-            if (orgProp != null && orgProp.Value != null)
+            // Org - v8: Organization.Name (not OrganizationName)
+            FolkerKinzel.VCards.Models.Properties.OrgProperty? orgProp = vc.Organizations?.FirstOrNull();
+            if (orgProp?.Value is Organization org)
             {
-                Organization org = orgProp.Value;
-                contact.Company = org.OrganizationName;
+                contact.Company = org.Name;
             }
 
             // Title
-            TextProperty? titleProp = vc.Titles?.FirstOrDefault();
+            FolkerKinzel.VCards.Models.Properties.TextProperty? titleProp = vc.Titles?.FirstOrNull();
             if (titleProp != null)
             {
                 contact.JobTitle = titleProp.Value;
@@ -119,7 +115,7 @@ public class VCardService : IVCardService
             // Emails
             if (vc.EMails != null)
             {
-                foreach (TextProperty? emailProp in vc.EMails)
+                foreach (FolkerKinzel.VCards.Models.Properties.TextProperty? emailProp in vc.EMails)
                 {
                     if (emailProp?.Value is string email && !string.IsNullOrWhiteSpace(email))
                     {
@@ -138,7 +134,7 @@ public class VCardService : IVCardService
             // Phones
             if (vc.Phones != null)
             {
-                foreach (TextProperty? phoneProp in vc.Phones)
+                foreach (FolkerKinzel.VCards.Models.Properties.TextProperty? phoneProp in vc.Phones)
                 {
                     if (phoneProp?.Value is string phone && !string.IsNullOrWhiteSpace(phone))
                     {
@@ -157,10 +153,9 @@ public class VCardService : IVCardService
             // Birthday
             if (vc.BirthDayViews != null)
             {
-                DateAndOrTimeProperty? bdayProp = vc.BirthDayViews.FirstOrDefault();
-                if (bdayProp != null && bdayProp.Value != null)
+                FolkerKinzel.VCards.Models.Properties.DateAndOrTimeProperty? bdayProp = vc.BirthDayViews.FirstOrNull();
+                if (bdayProp?.Value is DateAndOrTime val)
                 {
-                    DateAndOrTime val = bdayProp.Value;
                     if (val.DateTimeOffset.HasValue)
                     {
                         contact.SignificantDates.Add(new SignificantDate
@@ -191,16 +186,15 @@ public class VCardService : IVCardService
                 }
             }
 
-            // Gender
-            GenderProperty? genderProp = vc.GenderViews?.FirstOrDefault();
-            if (genderProp?.Value != null)
+            // Gender - v8: GenderProperty.Value.Sex returns Sex enum
+            FolkerKinzel.VCards.Models.Properties.GenderProperty? genderProp = vc.GenderViews?.FirstOrNull();
+            if (genderProp?.Value is Gender gender)
             {
-                // Note: The property on GenderInfo is named 'Gender' and is of type Gender? (enum)
-                contact.Gender = genderProp.Value.Gender switch
+                contact.Gender = gender.Sex switch
                 {
-                    Gender.Male => "Male",
-                    Gender.Female => "Female",
-                    Gender.Other => "Other",
+                    Sex.Male => "Male",
+                    Sex.Female => "Female",
+                    Sex.Other => "Other",
                     _ => null
                 };
             }
@@ -213,64 +207,47 @@ public class VCardService : IVCardService
 
     public byte[] ExportVCard(Contact contact)
     {
-        VCard vc = new()
-        {
-            // Name
-            NameViews = new[]
-            {
-                new NameProperty(
-                    lastName: new [] { contact.LastName ?? "" },
-                    firstName: new [] { contact.FirstName },
-                    middleName: null,
-                    prefix: null,
-                    suffix: null,
-                    group: null
-                )
-            },
+        // v8: Use VCardBuilder fluent API for creating VCards
+        VCard vCard = VCardBuilder
+            .Create()
+            .NameViews.Add(NameBuilder
+                .Create()
+                .AddSurname(contact.LastName ?? "")
+                .AddGiven(contact.FirstName)
+                .Build())
+            .DisplayNames.Add(contact.FullName)
+            .VCard;
 
-            DisplayNames = new[]
-            {
-                new TextProperty(contact.FullName)
-            }
-        };
+        // Continue building with Edit() for conditional properties
+        VCardBuilder builder = VCardBuilder.Create(vCard);
 
         // Org
         if (!string.IsNullOrEmpty(contact.Company))
         {
-            vc.Organizations = new[] { new OrganizationProperty(contact.Company, null, null) };
+            builder.Organizations.Add(contact.Company);
         }
 
         // Title
         if (!string.IsNullOrEmpty(contact.JobTitle))
         {
-            vc.Titles = new[] { new TextProperty(contact.JobTitle) };
+            builder.Titles.Add(contact.JobTitle);
         }
 
         // Emails
         if (contact.ContactMethods != null)
         {
-            List<TextProperty> emails = contact.ContactMethods
-                .Where(m => m.Type == ContactMethodType.Email && !string.IsNullOrEmpty(m.Value))
-                .Select(m => new TextProperty(m.Value))
-                .ToList();
-
-            if (emails.Count > 0)
+            foreach (ContactMethod? cm in contact.ContactMethods.Where(m => m.Type == ContactMethodType.Email && !string.IsNullOrEmpty(m.Value)))
             {
-                vc.EMails = emails;
+                builder.EMails.Add(cm.Value);
             }
         }
 
         // Phones
         if (contact.ContactMethods != null)
         {
-            List<TextProperty> phones = contact.ContactMethods
-                .Where(m => m.Type == ContactMethodType.Phone && !string.IsNullOrEmpty(m.Value))
-                .Select(m => new TextProperty(m.Value))
-                .ToList();
-
-            if (phones.Count > 0)
+            foreach (ContactMethod? cm in contact.ContactMethods.Where(m => m.Type == ContactMethodType.Phone && !string.IsNullOrEmpty(m.Value)))
             {
-                vc.Phones = phones;
+                builder.Phones.Add(cm.Value);
             }
         }
 
@@ -280,25 +257,26 @@ public class VCardService : IVCardService
             SignificantDate? bday = contact.SignificantDates.FirstOrDefault(d => d.Title == SignificantDateTitles.Birthday);
             if (bday != null)
             {
-                vc.BirthDayViews = new[] { DateAndOrTimeProperty.FromDate(DateOnly.FromDateTime(bday.Date)) };
+                builder.BirthDayViews.Add(bday.Date.Year, bday.Date.Month, bday.Date.Day);
             }
         }
 
         // Gender
         if (!string.IsNullOrEmpty(contact.Gender))
         {
-            Gender sex = contact.Gender switch
+            Sex sex = contact.Gender switch
             {
-                "Male" => Gender.Male,
-                "Female" => Gender.Female,
-                "Non-Binary" => Gender.Other,
-                _ => Gender.Other
+                "Male" => Sex.Male,
+                "Female" => Sex.Female,
+                "Non-Binary" => Sex.Other,
+                _ => Sex.Other
             };
-            vc.GenderViews = new[] { new GenderProperty(sex) };
+            builder.GenderViews.Add(sex);
         }
 
-        using MemoryStream ms = new();
-        VCard.SerializeVcf(ms, new[] { vc }, VCdVersion.V3_0);
-        return ms.ToArray();
+        vCard = builder.VCard;
+
+        // v8: Use ToVcfString extension method for serialization
+        return System.Text.Encoding.UTF8.GetBytes(vCard.ToVcfString(VCdVersion.V3_0));
     }
 }
