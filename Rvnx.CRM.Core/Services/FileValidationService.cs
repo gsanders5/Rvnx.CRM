@@ -17,7 +17,8 @@ namespace Rvnx.CRM.Core.Services
             { ".doc", new FileTypeInfo("application/msword", false, new byte[] { 0xD0, 0xCF, 0x11, 0xE0 }) },
             { ".docx", new FileTypeInfo("application/vnd.openxmlformats-officedocument.wordprocessingml.document", false, new byte[] { 0x50, 0x4B, 0x03, 0x04 }) },
             { ".xls", new FileTypeInfo("application/vnd.ms-excel", false, new byte[] { 0xD0, 0xCF, 0x11, 0xE0 }) },
-            { ".xlsx", new FileTypeInfo("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", false, new byte[] { 0x50, 0x4B, 0x03, 0x04 }) }
+            { ".xlsx", new FileTypeInfo("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", false, new byte[] { 0x50, 0x4B, 0x03, 0x04 }) },
+            { ".vcf", new FileTypeInfo("text/vcard", false, null) }
         };
 
         private const long MaxFileSize = 30 * 1024 * 1024; // 30 MB
