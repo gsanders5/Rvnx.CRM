@@ -1,3 +1,4 @@
+using FileTypeChecker.Web.Attributes;
 using Microsoft.AspNetCore.Mvc;
 using Rvnx.CRM.Core.DTOs.Base;
 using Rvnx.CRM.Core.Interfaces;
@@ -14,11 +15,16 @@ namespace Rvnx.CRM.Web.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Upload(Guid entityId, string entityType, IFormFile file, string? returnUrl = null)
+        public async Task<IActionResult> Upload(Guid entityId, string entityType, [ForbidExecutables] IFormFile file, string? returnUrl = null)
         {
             if (file == null || file.Length == 0)
             {
                 return BadRequest("File is empty.");
+            }
+
+            if (!ModelState.IsValid)
+            {
+                return BadRequest("File type validation failed.");
             }
 
             if (!_fileValidationService.IsAllowedFileSize(file.Length))

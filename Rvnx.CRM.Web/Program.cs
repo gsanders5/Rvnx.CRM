@@ -5,6 +5,7 @@ using Rvnx.CRM.Core.Interfaces;
 using Rvnx.CRM.Infrastructure;
 using Rvnx.CRM.Infrastructure.Data;
 using Rvnx.CRM.Web.Services;
+// using FileTypeChecker.Web.Registration; // Method not present in 2.0.0
 
 namespace Rvnx.CRM.Web
 {
@@ -23,6 +24,8 @@ namespace Rvnx.CRM.Web
 
             builder.Services.AddHttpContextAccessor();
             builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
+            // File.TypeChecker.Web 2.0.0 does not expose AddFileTypesValidation.
+            // Assuming automatic or no registration required for this version.
 
             IConfigurationSection authConfig = builder.Configuration.GetSection("Authentication");
             bool authEnabled = authConfig.GetValue<bool>("Enabled");

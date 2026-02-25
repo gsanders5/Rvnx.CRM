@@ -1,3 +1,4 @@
+using FileTypeChecker.Web.Attributes;
 using Microsoft.AspNetCore.Mvc;
 using Rvnx.CRM.Core.Constants;
 using Rvnx.CRM.Core.DTOs.Contact;
@@ -211,7 +212,7 @@ namespace Rvnx.CRM.Web.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(Guid id, [Bind("Id,FirstName,LastName,Nickname,Email,Phone,JobTitle,Company,Birthday,IsHidden,Pronouns,Gender,Religion")] ContactFormDto contactDto, IFormFile? profileImage)
+        public async Task<IActionResult> Edit(Guid id, [Bind("Id,FirstName,LastName,Nickname,Email,Phone,JobTitle,Company,Birthday,IsHidden,Pronouns,Gender,Religion")] ContactFormDto contactDto, [AllowImages] IFormFile? profileImage)
         {
             if (id != contactDto.Id)
             {
@@ -221,6 +222,11 @@ namespace Rvnx.CRM.Web.Controllers
             if (!await _contactReadService.ContactExistsAsync(id))
             {
                 return NotFound();
+            }
+
+            if (profileImage != null && !_fileValidationService.IsAllowedFileSize(profileImage.Length))
+            {
+                 ModelState.AddModelError("profileImage", "File is too large.");
             }
 
             contactDto.Pronouns = contactDto.Pronouns == "Unspecified" ? null : contactDto.Pronouns;
@@ -355,6 +361,7 @@ namespace Rvnx.CRM.Web.Controllers
                 return View();
             }
 
+            // Note: File.TypeChecker does not support .vcf, so we rely on extension validation.
             if (!Path.GetExtension(file.FileName).Equals(".vcf", StringComparison.OrdinalIgnoreCase))
             {
                 ModelState.AddModelError("file", "Only .vcf files are allowed.");
