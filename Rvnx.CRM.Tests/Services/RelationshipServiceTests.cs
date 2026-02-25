@@ -280,15 +280,17 @@ namespace Rvnx.CRM.Tests.Services
             Guid otherId1 = Guid.NewGuid();
             Guid otherId2 = Guid.NewGuid();
 
-            Contact contact1 = new() { Id = otherId1, FirstName = "Zara", LastName = "Doe" }; // Should be last
-            Contact contact2 = new() { Id = otherId2, FirstName = "Adam", LastName = "Smith" }; // Should be first
+            List<SelectOptionDto> returnedList = [
+                new SelectOptionDto { Value = otherId2.ToString(), Text = "Adam Smith" },
+                new SelectOptionDto { Value = otherId1.ToString(), Text = "Zara Doe", Selected = true }
+            ];
 
-            List<Contact> returnedList = [contact1, contact2];
-
-            _repositoryMock.Setup(r => r.ListAsNoTrackingAsync(
+            _repositoryMock.Setup(r => r.ListProjectedAsync(
                 It.IsAny<Expression<Func<Contact, bool>>>(),
-                It.IsAny<CancellationToken>(),
-                It.IsAny<string[]>()))
+                It.IsAny<Expression<Func<Contact, SelectOptionDto>>>(),
+                It.IsAny<Expression<Func<Contact, string>>>(),
+                It.IsAny<bool>(),
+                It.IsAny<CancellationToken>()))
                 .ReturnsAsync(returnedList);
 
             // Act
@@ -301,10 +303,12 @@ namespace Rvnx.CRM.Tests.Services
             Assert.True(result[1].Selected); // otherId1 was selected
 
             // Verify the predicate logic
-            _repositoryMock.Verify(r => r.ListAsNoTrackingAsync(
+            _repositoryMock.Verify(r => r.ListProjectedAsync(
                 It.Is<Expression<Func<Contact, bool>>>(expr => VerifyPredicate(expr, entityId)),
-                It.IsAny<CancellationToken>(),
-                It.IsAny<string[]>()), Times.Once);
+                It.IsAny<Expression<Func<Contact, SelectOptionDto>>>(),
+                It.IsAny<Expression<Func<Contact, string>>>(),
+                It.IsAny<bool>(),
+                It.IsAny<CancellationToken>()), Times.Once);
         }
 
         [Fact]
@@ -315,15 +319,17 @@ namespace Rvnx.CRM.Tests.Services
             Guid otherId1 = Guid.NewGuid();
             Guid otherId2 = Guid.NewGuid();
 
-            Employer emp1 = new() { Id = otherId1, CompanyName = "Z Corp" };
-            Employer emp2 = new() { Id = otherId2, CompanyName = "A Inc" };
+            List<SelectOptionDto> returnedList = [
+                new SelectOptionDto { Value = otherId2.ToString(), Text = "A Inc" },
+                new SelectOptionDto { Value = otherId1.ToString(), Text = "Z Corp", Selected = true }
+            ];
 
-            List<Employer> returnedList = [emp1, emp2];
-
-            _repositoryMock.Setup(r => r.ListAsNoTrackingAsync(
+            _repositoryMock.Setup(r => r.ListProjectedAsync(
                 It.IsAny<Expression<Func<Employer, bool>>>(),
-                It.IsAny<CancellationToken>(),
-                It.IsAny<string[]>()))
+                It.IsAny<Expression<Func<Employer, SelectOptionDto>>>(),
+                It.IsAny<Expression<Func<Employer, string>>>(),
+                It.IsAny<bool>(),
+                It.IsAny<CancellationToken>()))
                 .ReturnsAsync(returnedList);
 
             // Act
@@ -336,10 +342,12 @@ namespace Rvnx.CRM.Tests.Services
             Assert.True(result[1].Selected); // otherId1 was selected
 
             // Verify the predicate logic
-            _repositoryMock.Verify(r => r.ListAsNoTrackingAsync(
+            _repositoryMock.Verify(r => r.ListProjectedAsync(
                 It.Is<Expression<Func<Employer, bool>>>(expr => VerifyPredicate(expr, entityId)),
-                It.IsAny<CancellationToken>(),
-                It.IsAny<string[]>()), Times.Once);
+                It.IsAny<Expression<Func<Employer, SelectOptionDto>>>(),
+                It.IsAny<Expression<Func<Employer, string>>>(),
+                It.IsAny<bool>(),
+                It.IsAny<CancellationToken>()), Times.Once);
         }
 
         private static bool VerifyPredicate<T>(Expression<Func<T, bool>> expr, Guid entityId) where T : BaseEntity, new()
