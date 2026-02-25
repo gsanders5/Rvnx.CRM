@@ -1,6 +1,8 @@
+using Rvnx.CRM.Core.Constants;
 using Rvnx.CRM.Core.Enumerations;
 using Rvnx.CRM.Core.Models.Contact;
 using Rvnx.CRM.Core.Models.Dates;
+using Rvnx.CRM.Core.Services;
 using System.Globalization;
 
 namespace Rvnx.CRM.Infrastructure.Services
@@ -9,8 +11,16 @@ namespace Rvnx.CRM.Infrastructure.Services
     {
         private static readonly Random _random = new();
 
-        private static readonly string[] FirstNames = { "James", "John", "Robert", "Michael", "William", "David", "Richard", "Joseph", "Thomas", "Charles", "Mary", "Patricia", "Jennifer", "Linda", "Elizabeth", "Barbara", "Susan", "Jessica", "Sarah", "Karen", "Liam", "Noah", "Oliver", "Elijah", "James", "William", "Benjamin", "Lucas", "Henry", "Alexander", "Olivia", "Emma", "Ava", "Charlotte", "Sophia", "Amelia", "Isabella", "Mia", "Evelyn", "Harper" };
+        private static readonly string[] MaleFirstNames = { "James", "John", "Robert", "Michael", "William", "David", "Richard", "Joseph", "Thomas", "Charles", "Liam", "Noah", "Oliver", "Elijah", "Benjamin", "Lucas", "Henry", "Alexander" };
+        private static readonly string[] FemaleFirstNames = { "Mary", "Patricia", "Jennifer", "Linda", "Elizabeth", "Barbara", "Susan", "Jessica", "Sarah", "Karen", "Olivia", "Emma", "Ava", "Charlotte", "Sophia", "Amelia", "Isabella", "Mia", "Evelyn", "Harper" };
         private static readonly string[] LastNames = { "Smith", "Johnson", "Williams", "Brown", "Jones", "Garcia", "Miller", "Davis", "Rodriguez", "Martinez", "Hernandez", "Lopez", "Gonzalez", "Wilson", "Anderson", "Thomas", "Taylor", "Moore", "Jackson", "Martin" };
+
+        // Ensure these match Rvnx.CRM.Core.Constants.PersonalAttributeOptions
+        private static readonly string MaleGender = "Male";
+        private static readonly string FemaleGender = "Female";
+        private static readonly string MalePronoun = "He/Him";
+        private static readonly string FemalePronoun = "She/Her";
+
         private static readonly string[] Cities = { "New York", "Los Angeles", "Chicago", "Houston", "Phoenix", "Philadelphia", "San Antonio", "San Diego", "Dallas", "San Jose" };
         private static readonly string[] States = { "NY", "CA", "IL", "TX", "AZ", "PA", "TX", "CA", "TX", "CA" };
         private static readonly string[] Streets = { "Main St", "High St", "Broadway", "Market St", "Park Ave", "Oak St", "Washington St", "Maple Ave", "Cedar St", "Elm St" };
@@ -19,7 +29,24 @@ namespace Rvnx.CRM.Infrastructure.Services
 
         private static Contact GenerateContact()
         {
-            string firstName = FirstNames[_random.Next(FirstNames.Length)];
+            bool isMale = _random.Next(2) == 0;
+            string firstName;
+            string gender;
+            string pronouns;
+
+            if (isMale)
+            {
+                firstName = MaleFirstNames[_random.Next(MaleFirstNames.Length)];
+                gender = MaleGender;
+                pronouns = MalePronoun;
+            }
+            else
+            {
+                firstName = FemaleFirstNames[_random.Next(FemaleFirstNames.Length)];
+                gender = FemaleGender;
+                pronouns = FemalePronoun;
+            }
+
             string lastName = LastNames[_random.Next(LastNames.Length)];
 
             Contact contact = new()
@@ -27,6 +54,8 @@ namespace Rvnx.CRM.Infrastructure.Services
                 Id = Guid.NewGuid(),
                 FirstName = firstName,
                 LastName = lastName,
+                Gender = gender,
+                Pronouns = pronouns,
                 Nickname = _random.Next(2) == 0 ? firstName[..Math.Min(3, firstName.Length)] : null,
                 Company = _random.Next(3) == 0 ? Companies[_random.Next(Companies.Length)] : null,
                 JobTitle = _random.Next(3) == 0 ? JobTitles[_random.Next(JobTitles.Length)] : null,
@@ -103,6 +132,38 @@ namespace Rvnx.CRM.Infrastructure.Services
                 list.Add(GenerateContact());
             }
             return list;
+        }
+
+        public static List<Relationship> GenerateRelationships(List<Contact> contacts, int count)
+        {
+            List<Relationship> relationships = [];
+            var personTypes = RelationshipTypeService.GetByEntityType(EntityTypes.Person);
+
+            if (contacts.Count < 2) return relationships;
+
+            for (int i = 0; i < count; i++)
+            {
+                var contact1 = contacts[_random.Next(contacts.Count)];
+                var contact2 = contacts[_random.Next(contacts.Count)];
+
+                while (contact1.Id == contact2.Id)
+                {
+                    contact2 = contacts[_random.Next(contacts.Count)];
+                }
+
+                var type = personTypes[_random.Next(personTypes.Count)];
+
+                relationships.Add(new Relationship
+                {
+                    Id = Guid.NewGuid(),
+                    EntityId = contact1.Id,
+                    EntityType = EntityTypes.Person,
+                    RelatedEntityId = contact2.Id,
+                    RelationshipTypeId = type.Id,
+                    Description = "Generated relationship"
+                });
+            }
+            return relationships;
         }
     }
 }
