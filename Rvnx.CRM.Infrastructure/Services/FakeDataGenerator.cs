@@ -3,7 +3,7 @@ using Rvnx.CRM.Core.Models.Contact;
 using Rvnx.CRM.Core.Models.Dates;
 using System.Globalization;
 
-namespace Rvnx.CRM.Core.Services
+namespace Rvnx.CRM.Infrastructure.Services
 {
     public class FakeDataGenerator
     {
