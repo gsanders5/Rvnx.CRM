@@ -44,30 +44,68 @@ public class ContactManagementService(IRepository repository, IFileValidationSer
                 linkedContactIds,
                 chunk => c => chunk.Contains(c.Id) && c.IsPartial,
                 asNoTracking: false);
-            foreach (Contact partialContact in linkedPartialContacts)
+
+            if (linkedPartialContacts.Count > 0)
             {
-                List<Relationship> partialRels = await _repository.ListAsync<Relationship>(r =>
-                    (r.EntityId == partialContact.Id || r.RelatedEntityId == partialContact.Id) && r.EntityType == EntityTypes.Person);
+                List<Guid> partialContactIds = linkedPartialContacts.Select(c => c.Id).ToList();
+                List<Relationship> allPartialRels = await _repository.ListByChunkedContainsAsync<Relationship, Guid>(
+                    partialContactIds,
+                    chunk => r => (chunk.Contains(r.EntityId) || chunk.Contains(r.RelatedEntityId)) && r.EntityType == EntityTypes.Person,
+                    asNoTracking: false);
 
-                List<Guid> siblings = partialRels
-                    .Select(r => r.EntityId == partialContact.Id ? r.RelatedEntityId : r.EntityId)
-                    .Distinct()
-                    .ToList();
+                HashSet<Guid> allInvolvedIds = allPartialRels
+                    .Select(r => r.EntityId)
+                    .Concat(allPartialRels.Select(r => r.RelatedEntityId))
+                    .ToHashSet();
 
-                bool hasFullContactRelationship = false;
-                if (siblings.Count > 0)
+                List<Guid> potentialFullContactIds = allInvolvedIds.Except(partialContactIds).ToList();
+                HashSet<Guid> confirmedFullContactIds = [];
+
+                if (potentialFullContactIds.Count > 0)
                 {
                     List<Contact> fullContacts = await _repository.ListByChunkedContainsAsync<Contact, Guid>(
-                        siblings,
+                        potentialFullContactIds,
                         chunk => c => chunk.Contains(c.Id) && !c.IsPartial,
-                        asNoTracking: false);
-                    hasFullContactRelationship = fullContacts.Count > 0;
+                        asNoTracking: true);
+                    confirmedFullContactIds = fullContacts.Select(c => c.Id).ToHashSet();
                 }
 
-                if (!hasFullContactRelationship)
+                Dictionary<Guid, List<Relationship>> relsByContactId = partialContactIds.ToDictionary(id => id, id => new List<Relationship>());
+
+                foreach (Relationship rel in allPartialRels)
                 {
-                    await DeleteContactDependenciesAsync(partialContact.Id);
-                    await _repository.DeleteAsync<Contact>(partialContact.Id);
+                    if (relsByContactId.TryGetValue(rel.EntityId, out List<Relationship>? list1))
+                    {
+                        list1.Add(rel);
+                    }
+                    if (relsByContactId.TryGetValue(rel.RelatedEntityId, out List<Relationship>? list2))
+                    {
+                        list2.Add(rel);
+                    }
+                }
+
+                foreach (Contact partialContact in linkedPartialContacts)
+                {
+                    bool hasFullContactRelationship = false;
+
+                    if (relsByContactId.TryGetValue(partialContact.Id, out List<Relationship>? myRels))
+                    {
+                        foreach (Relationship rel in myRels)
+                        {
+                            Guid siblingId = rel.EntityId == partialContact.Id ? rel.RelatedEntityId : rel.EntityId;
+                            if (confirmedFullContactIds.Contains(siblingId))
+                            {
+                                hasFullContactRelationship = true;
+                                break;
+                            }
+                        }
+                    }
+
+                    if (!hasFullContactRelationship)
+                    {
+                        await DeleteContactDependenciesAsync(partialContact.Id);
+                        await _repository.DeleteAsync<Contact>(partialContact.Id);
+                    }
                 }
             }
             await _repository.SaveChangesAsync();

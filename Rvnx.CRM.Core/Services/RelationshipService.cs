@@ -100,30 +100,30 @@ namespace Rvnx.CRM.Core.Services
             {
                 case EntityTypes.Person:
                     {
-                        List<Contact> available =
-                            await repository.ListAsNoTrackingAsync<Contact>(p => p.Id != entityId);
-                        available = available.OrderBy(p => p.FullName).ToList();
-                        options =
-                        [
-                            .. available.Select(p => new SelectOptionDto
+                        options = await repository.ListProjectedAsync<Contact, SelectOptionDto, string>(
+                            p => p.Id != entityId,
+                            p => new SelectOptionDto
                             {
-                                Value = p.Id.ToString(), Text = p.IsPartial ? $"{p.FullName} (partial contact)" : p.FullName, Selected = selectedId == p.Id
-                            })
-                        ];
+                                Value = p.Id.ToString(),
+                                Text = p.IsPartial
+                                    ? p.FirstName + " " + (p.LastName ?? "") + " (partial contact)"
+                                    : p.FirstName + " " + (p.LastName ?? ""),
+                                Selected = selectedId == p.Id
+                            },
+                            p => p.FirstName + " " + (p.LastName ?? ""));
                         break;
                     }
                 case EntityTypes.Company:
                     {
-                        List<Employer> available =
-                            await repository.ListAsNoTrackingAsync<Employer>(c => c.Id != entityId);
-                        available = available.OrderBy(c => c.CompanyName).ToList();
-                        options =
-                        [
-                            .. available.Select(c => new SelectOptionDto
+                        options = await repository.ListProjectedAsync<Employer, SelectOptionDto, string>(
+                            c => c.Id != entityId,
+                            c => new SelectOptionDto
                             {
-                                Value = c.Id.ToString(), Text = c.CompanyName, Selected = selectedId == c.Id
-                            })
-                        ];
+                                Value = c.Id.ToString(),
+                                Text = c.CompanyName,
+                                Selected = selectedId == c.Id
+                            },
+                            c => c.CompanyName);
                         break;
                     }
             }

@@ -1,12 +1,47 @@
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.AspNetCore.Mvc;
 using Moq;
 using Rvnx.CRM.Web.Controllers;
+using System.Linq;
+using System.Reflection;
 
 namespace Rvnx.CRM.Tests.Controllers
 {
     public class AccountControllerTests
     {
+        [Fact]
+        public void LogoutShouldHaveHttpPostAndValidateAntiForgeryTokenAttributes()
+        {
+            // Arrange
+            var methodInfo = typeof(AccountController).GetMethod("Logout");
+            Assert.NotNull(methodInfo);
+
+            // Act
+            var httpPostAttribute = methodInfo!.GetCustomAttributes(typeof(HttpPostAttribute), false).FirstOrDefault();
+            var validateAntiForgeryTokenAttribute = methodInfo!.GetCustomAttributes(typeof(ValidateAntiForgeryTokenAttribute), false).FirstOrDefault();
+
+            // Assert
+            Assert.NotNull(httpPostAttribute);
+            Assert.NotNull(validateAntiForgeryTokenAttribute);
+        }
+
+        [Fact]
+        public void LogoutShouldReturnSignOutResult()
+        {
+             // Arrange
+            AccountController controller = new();
+
+            // Act
+            IActionResult result = controller.Logout();
+
+            // Assert
+            SignOutResult signOutResult = Assert.IsType<SignOutResult>(result);
+            Assert.Contains(CookieAuthenticationDefaults.AuthenticationScheme, signOutResult.AuthenticationSchemes);
+            Assert.Contains(OpenIdConnectDefaults.AuthenticationScheme, signOutResult.AuthenticationSchemes);
+            Assert.Equal("/", signOutResult.Properties!.RedirectUri);
+        }
+
         [Fact]
         public void LoginShouldDefaultToRootWhenReturnUrlIsExternal()
         {
