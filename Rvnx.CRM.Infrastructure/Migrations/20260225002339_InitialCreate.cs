@@ -7,9 +7,9 @@ namespace Rvnx.CRM.Infrastructure.Migrations
     /// <inheritdoc />
     public partial class InitialCreate : Migration
     {
-        private static readonly string[] ContactLabelColumns = ["ContactId", "LabelId"];
-        private static readonly string[] RelationshipEntityColumns = ["EntityId", "EntityType"];
-        private static readonly string[] RelationshipRelatedEntityColumns = ["RelatedEntityId", "EntityType"];
+        private static readonly string[] _contactLabelIndexColumns = ["ContactId", "LabelId"];
+        private static readonly string[] _relationshipEntityIndexColumns = ["EntityId", "EntityType"];
+        private static readonly string[] _relationshipRelatedEntityIndexColumns = ["RelatedEntityId", "EntityType"];
 
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -479,7 +479,7 @@ namespace Rvnx.CRM.Infrastructure.Migrations
             migrationBuilder.CreateIndex(
                 name: "IX_ContactLabel_ContactId_LabelId",
                 table: "ContactLabel",
-                columns: ContactLabelColumns,
+                columns: _contactLabelIndexColumns,
                 unique: true);
 
             migrationBuilder.CreateIndex(
@@ -560,12 +560,12 @@ namespace Rvnx.CRM.Infrastructure.Migrations
             migrationBuilder.CreateIndex(
                 name: "IX_Relationship_EntityId_EntityType",
                 table: "Relationship",
-                columns: RelationshipEntityColumns);
+                columns: _relationshipEntityIndexColumns);
 
             migrationBuilder.CreateIndex(
                 name: "IX_Relationship_RelatedEntityId_EntityType",
                 table: "Relationship",
-                columns: RelationshipRelatedEntityColumns);
+                columns: _relationshipRelatedEntityIndexColumns);
 
             migrationBuilder.CreateIndex(
                 name: "IX_Relationship_UserId",

@@ -275,7 +275,13 @@ namespace Rvnx.CRM.Tests.Services
             List<Relationship> initialRelationships = [
                 new Relationship { EntityId = contactId, RelatedEntityId = partialContactId, EntityType = EntityTypes.Person }
             ];
+
+            // Setup ListAsync<Relationship> (2-arg)
             _repositoryMock.Setup(r => r.ListAsync<Relationship>(It.IsAny<Expression<Func<Relationship, bool>>>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(initialRelationships);
+
+            // Setup ListAsync<Relationship> (3-arg) used by bulk query
+            _repositoryMock.Setup(r => r.ListAsync<Relationship>(It.IsAny<Expression<Func<Relationship, bool>>>(), It.IsAny<CancellationToken>(), It.IsAny<string[]>()))
                 .ReturnsAsync(initialRelationships);
 
             // Mock Dependencies (empty)
@@ -288,12 +294,17 @@ namespace Rvnx.CRM.Tests.Services
                 new Contact { Id = partialContactId, IsPartial = true }
             ];
 
+            var contactMockFunc = new Func<Expression<Func<Contact, bool>>, CancellationToken, string[], List<Contact>>((predicate, ct, includes) =>
+            {
+                Func<Contact, bool> func = predicate.Compile();
+                return linkedContacts.Where(func).ToList();
+            });
+
             _repositoryMock.Setup(r => r.ListAsync<Contact>(It.IsAny<Expression<Func<Contact, bool>>>(), It.IsAny<CancellationToken>(), It.IsAny<string[]>()))
-                .ReturnsAsync((Expression<Func<Contact, bool>> predicate, CancellationToken ct, string[] includes) =>
-                {
-                    Func<Contact, bool> func = predicate.Compile();
-                    return func(new Contact { Id = partialContactId, IsPartial = true }) ? linkedContacts : [];
-                });
+                .ReturnsAsync(contactMockFunc);
+
+            _repositoryMock.Setup(r => r.ListAsNoTrackingAsync<Contact>(It.IsAny<Expression<Func<Contact, bool>>>(), It.IsAny<CancellationToken>(), It.IsAny<string[]>()))
+                .ReturnsAsync(contactMockFunc);
 
             // Act
             await _service.DeleteContactAsync(contactId);
@@ -316,52 +327,60 @@ namespace Rvnx.CRM.Tests.Services
             _repositoryMock.Setup(r => r.ListAsync<Rvnx.CRM.Core.Models.User>(It.IsAny<Expression<Func<Rvnx.CRM.Core.Models.User, bool>>>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync([]);
 
-            // Mock Relationships for the deleted contact
+            // Data
             List<Relationship> initialRelationships = [
                 new Relationship { EntityId = contactId, RelatedEntityId = partialContactId, EntityType = EntityTypes.Person }
             ];
-
-            // Mock Relationships for the partial contact (contains another link)
             List<Relationship> partialContactRelationships = [
                 new Relationship { EntityId = otherFullContactId, RelatedEntityId = partialContactId, EntityType = EntityTypes.Person }
             ];
 
-            _repositoryMock.SetupSequence(r => r.ListAsync<Relationship>(It.IsAny<Expression<Func<Relationship, bool>>>(), It.IsAny<CancellationToken>()))
-                .ReturnsAsync(initialRelationships) // First call to get deleted contact's rels
-                .ReturnsAsync(initialRelationships) // Dependency deletion call
-                .ReturnsAsync(partialContactRelationships) // Call to get partial contact's remaining rels
-                .ReturnsAsync(partialContactRelationships); // Fallback
+            List<Relationship> allRels = new List<Relationship>();
+            allRels.AddRange(initialRelationships);
+            allRels.AddRange(partialContactRelationships);
+
+            // Mock ListAsync<Relationship> (2-arg and 3-arg)
+             _repositoryMock.Setup(r => r.ListAsync<Relationship>(It.IsAny<Expression<Func<Relationship, bool>>>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync((Expression<Func<Relationship, bool>> predicate, CancellationToken ct) =>
+                {
+                    var func = predicate.Compile();
+                    return allRels.Where(func).ToList();
+                });
+
+             _repositoryMock.Setup(r => r.ListAsync<Relationship>(It.IsAny<Expression<Func<Relationship, bool>>>(), It.IsAny<CancellationToken>(), It.IsAny<string[]>()))
+                .ReturnsAsync((Expression<Func<Relationship, bool>> predicate, CancellationToken ct, string[] includes) =>
+                {
+                    var func = predicate.Compile();
+                    return allRels.Where(func).ToList();
+                });
 
             // Mock Dependencies (empty)
             _repositoryMock.Setup(r => r.ListAsync<Pet>(It.IsAny<Expression<Func<Pet, bool>>>(), It.IsAny<CancellationToken>())).ReturnsAsync([]);
             _repositoryMock.Setup(r => r.ListAsync<Fact>(It.IsAny<Expression<Func<Fact, bool>>>(), It.IsAny<CancellationToken>())).ReturnsAsync([]);
             _repositoryMock.Setup(r => r.ListAsync<Note>(It.IsAny<Expression<Func<Note, bool>>>(), It.IsAny<CancellationToken>())).ReturnsAsync([]);
 
-            // When checking if the linked contact is partial
+            // Contacts
             List<Contact> linkedContacts = [
                 new Contact { Id = partialContactId, IsPartial = true }
             ];
+            List<Contact> fullContacts = [
+                 new Contact { Id = otherFullContactId, IsPartial = false }
+            ];
 
-            // Setup ListAsync<Contact> to return based on the query pattern
+            var contactMockFunc = new Func<Expression<Func<Contact, bool>>, CancellationToken, string[], List<Contact>>((predicate, ct, includes) =>
+            {
+                Func<Contact, bool> func = predicate.Compile();
+                var allRelevantContacts = new List<Contact>();
+                allRelevantContacts.AddRange(linkedContacts);
+                allRelevantContacts.AddRange(fullContacts);
+                return allRelevantContacts.Where(func).ToList();
+            });
+
             _repositoryMock.Setup(r => r.ListAsync<Contact>(It.IsAny<Expression<Func<Contact, bool>>>(), It.IsAny<CancellationToken>(), It.IsAny<string[]>()))
-                .ReturnsAsync((Expression<Func<Contact, bool>> predicate, CancellationToken ct, string[] includes) =>
-                {
-                    Func<Contact, bool> func = predicate.Compile();
+                .ReturnsAsync(contactMockFunc);
 
-                    // Case 1: Checking if linkedContacts are partial
-                    if (func(new Contact { Id = partialContactId, IsPartial = true }))
-                    {
-                        return linkedContacts; // Returns the partial contact
-                    }
-
-                    // Case 2: Checking if remaining siblings are full contacts
-                    if (func(new Contact { Id = otherFullContactId, IsPartial = false }))
-                    {
-                        return [new Contact { Id = otherFullContactId, IsPartial = false }]; // Returns the other full contact
-                    }
-
-                    return [];
-                });
+            _repositoryMock.Setup(r => r.ListAsNoTrackingAsync<Contact>(It.IsAny<Expression<Func<Contact, bool>>>(), It.IsAny<CancellationToken>(), It.IsAny<string[]>()))
+                .ReturnsAsync(contactMockFunc);
 
             // Act
             await _service.DeleteContactAsync(contactId);

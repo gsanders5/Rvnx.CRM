@@ -23,7 +23,6 @@ For technical details, architecture, and design documentation, please see [DESIG
 - **Rvnx.CRM.Core**: Domain layer containing entities, interfaces, DTOs, and pure business logic services.
 - **Rvnx.CRM.Infrastructure**: Data access layer with EF Core DbContext, migrations, and repository implementations.
 - **Rvnx.CRM.Web**: ASP.NET Core MVC presentation layer, controllers, and views.
-- **Rvnx.CRM.Shared**: Shared utilities and common models.
 - **Rvnx.CRM.Tests**: Unit and integration tests.
 
 ## Setup Instructions

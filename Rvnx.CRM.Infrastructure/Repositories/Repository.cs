@@ -27,7 +27,8 @@ public class Repository(CRMDbContext context) : IRepository
         return await query.FirstOrDefaultAsync(e => e.Id == id);
     }
 
-    public async Task<List<T>> ListAsync<T>(int? skip = null, int? take = null, CancellationToken cancellationToken = default) where T : BaseEntity
+    public async Task<List<T>> ListAsync<T>(int? skip = null, int? take = null,
+        CancellationToken cancellationToken = default) where T : BaseEntity
     {
         IQueryable<T> query = _context.Set<T>().AsQueryable();
 
@@ -44,12 +45,14 @@ public class Repository(CRMDbContext context) : IRepository
         return await query.ToListAsync(cancellationToken);
     }
 
-    public async Task<List<T>> ListAsync<T>(Expression<Func<T, bool>> predicate, CancellationToken cancellationToken = default) where T : BaseEntity
+    public async Task<List<T>> ListAsync<T>(Expression<Func<T, bool>> predicate,
+        CancellationToken cancellationToken = default) where T : BaseEntity
     {
         return await _context.Set<T>().Where(predicate).ToListAsync(cancellationToken);
     }
 
-    public async Task<List<T>> ListAsync<T>(Expression<Func<T, bool>> predicate, CancellationToken cancellationToken = default, params string[] includes) where T : BaseEntity
+    public async Task<List<T>> ListAsync<T>(Expression<Func<T, bool>> predicate,
+        CancellationToken cancellationToken = default, params string[] includes) where T : BaseEntity
     {
         IQueryable<T> query = _context.Set<T>().Where(predicate);
 
@@ -61,7 +64,8 @@ public class Repository(CRMDbContext context) : IRepository
         return await query.ToListAsync(cancellationToken);
     }
 
-    public async Task<List<T>> ListAsNoTrackingAsync<T>(int? skip = null, int? take = null, CancellationToken cancellationToken = default) where T : BaseEntity
+    public async Task<List<T>> ListAsNoTrackingAsync<T>(int? skip = null, int? take = null,
+        CancellationToken cancellationToken = default) where T : BaseEntity
     {
         IQueryable<T> query = _context.Set<T>().AsNoTracking();
 
@@ -78,7 +82,8 @@ public class Repository(CRMDbContext context) : IRepository
         return await query.ToListAsync(cancellationToken);
     }
 
-    public async Task<List<T>> ListAsNoTrackingAsync<T>(Expression<Func<T, bool>> predicate, CancellationToken cancellationToken = default, params string[] includes) where T : BaseEntity
+    public async Task<List<T>> ListAsNoTrackingAsync<T>(Expression<Func<T, bool>> predicate,
+        CancellationToken cancellationToken = default, params string[] includes) where T : BaseEntity
     {
         IQueryable<T> query = _context.Set<T>().AsNoTracking().Where(predicate);
 
@@ -90,7 +95,8 @@ public class Repository(CRMDbContext context) : IRepository
         return await query.ToListAsync(cancellationToken);
     }
 
-    public async Task<List<TDto>> ListProjectedAsync<T, TDto>(Expression<Func<T, bool>> predicate, Expression<Func<T, TDto>> selector, CancellationToken cancellationToken = default) where T : BaseEntity
+    public async Task<List<TDto>> ListProjectedAsync<T, TDto>(Expression<Func<T, bool>> predicate,
+        Expression<Func<T, TDto>> selector, CancellationToken cancellationToken = default) where T : BaseEntity
     {
         return await _context.Set<T>()
             .AsNoTracking()
@@ -99,13 +105,30 @@ public class Repository(CRMDbContext context) : IRepository
             .ToListAsync(cancellationToken);
     }
 
+    public async Task<List<TDto>> ListProjectedAsync<T, TDto, TKey>(Expression<Func<T, bool>> predicate,
+        Expression<Func<T, TDto>> selector, Expression<Func<T, TKey>> orderBy, bool descending = false,
+        CancellationToken cancellationToken = default) where T : BaseEntity
+    {
+        IQueryable<T> query = _context.Set<T>()
+            .AsNoTracking()
+            .Where(predicate);
+
+        query = descending ? query.OrderByDescending(orderBy) : query.OrderBy(orderBy);
+
+        return await query
+            .Select(selector)
+            .ToListAsync(cancellationToken);
+    }
+
     public async Task<T> AddAsync<T>(T entity, CancellationToken cancellationToken = default) where T : BaseEntity
     {
-        Microsoft.EntityFrameworkCore.ChangeTracking.EntityEntry<T> entry = await _context.Set<T>().AddAsync(entity, cancellationToken);
+        Microsoft.EntityFrameworkCore.ChangeTracking.EntityEntry<T> entry =
+            await _context.Set<T>().AddAsync(entity, cancellationToken);
         return entry.Entity;
     }
 
-    public async Task<IEnumerable<T>> AddRangeAsync<T>(IEnumerable<T> entities, CancellationToken cancellationToken = default) where T : BaseEntity
+    public async Task<IEnumerable<T>> AddRangeAsync<T>(IEnumerable<T> entities,
+        CancellationToken cancellationToken = default) where T : BaseEntity
     {
         List<T> entitiesList = entities.ToList();
         await _context.Set<T>().AddRangeAsync(entitiesList, cancellationToken);
@@ -135,7 +158,8 @@ public class Repository(CRMDbContext context) : IRepository
         return Task.CompletedTask;
     }
 
-    public Task DeleteRangeAsync<T>(IEnumerable<T> entities, CancellationToken cancellationToken = default) where T : BaseEntity
+    public Task DeleteRangeAsync<T>(IEnumerable<T> entities, CancellationToken cancellationToken = default)
+        where T : BaseEntity
     {
         _context.Set<T>().RemoveRange(entities);
         return Task.CompletedTask;
@@ -156,7 +180,8 @@ public class Repository(CRMDbContext context) : IRepository
         return await _context.Set<T>().CountAsync(cancellationToken);
     }
 
-    public async Task<int> CountAsync<T>(Expression<Func<T, bool>> predicate, CancellationToken cancellationToken = default) where T : BaseEntity
+    public async Task<int> CountAsync<T>(Expression<Func<T, bool>> predicate,
+        CancellationToken cancellationToken = default) where T : BaseEntity
     {
         return await _context.Set<T>().CountAsync(predicate, cancellationToken);
     }

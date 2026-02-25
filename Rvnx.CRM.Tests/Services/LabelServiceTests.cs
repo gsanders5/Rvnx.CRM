@@ -1,4 +1,3 @@
-using FluentAssertions;
 using Moq;
 using Rvnx.CRM.Core.Interfaces;
 using Rvnx.CRM.Core.Models.Contact;
@@ -22,28 +21,34 @@ public class LabelServiceTests
     public async Task GetAllAsyncReturnsMappedDtos()
     {
         // Arrange
-        List<Label> labels =
+        List<Core.DTOs.Contact.LabelDto> labelDtos =
         [
-            new Label { Id = Guid.NewGuid(), Name = "Work", Color = "#ff0000" },
-            new Label { Id = Guid.NewGuid(), Name = "Family", Color = "#00ff00" }
+            new Core.DTOs.Contact.LabelDto { Id = Guid.NewGuid(), Name = "Work", Color = "#ff0000" },
+            new Core.DTOs.Contact.LabelDto { Id = Guid.NewGuid(), Name = "Family", Color = "#00ff00" }
         ];
-        _mockRepo.Setup(r => r.ListAsNoTrackingAsync(It.IsAny<Expression<Func<Label, bool>>>(), It.IsAny<CancellationToken>(), It.IsAny<string[]>()))
-                 .ReturnsAsync(labels);
+
+        _mockRepo.Setup(r => r.ListProjectedAsync(
+                It.IsAny<Expression<Func<Label, bool>>>(),
+                It.IsAny<Expression<Func<Label, Core.DTOs.Contact.LabelDto>>>(),
+                It.IsAny<Expression<Func<Label, object>>>(),
+                It.IsAny<bool>(),
+                It.IsAny<CancellationToken>()))
+                 .ReturnsAsync(labelDtos);
 
         // Act
         List<Core.DTOs.Contact.LabelDto> result = await _service.GetAllAsync();
 
         // Assert
-        result.Should().HaveCount(2);
-        result.Should().Contain(l => l.Name == "Work" && l.Color == "#ff0000");
+        Assert.Equal(2, result.Count);
+        Assert.Contains(result, l => l.Name == "Work" && l.Color == "#ff0000");
     }
 
     [Fact]
     public async Task CreateAsyncReturnsFailureWhenNameEmpty()
     {
         Core.DTOs.Contact.LabelOperationResult result = await _service.CreateAsync("", "#000000");
-        result.Success.Should().BeFalse();
-        result.Errors.Should().Contain("Label name cannot be empty.");
+        Assert.False(result.Success);
+        Assert.Contains("Label name cannot be empty.", result.Errors);
     }
 
     [Fact]
@@ -55,8 +60,8 @@ public class LabelServiceTests
 
         Core.DTOs.Contact.LabelOperationResult result = await _service.CreateAsync("existinglabel", "#123456");
 
-        result.Success.Should().BeFalse();
-        result.Errors[0].Should().Contain("already exists");
+        Assert.False(result.Success);
+        Assert.Contains("already exists", result.Errors[0]);
     }
 
     [Fact]
@@ -69,8 +74,8 @@ public class LabelServiceTests
 
         Core.DTOs.Contact.LabelOperationResult result = await _service.CreateAsync("NewLabel", "#000000");
 
-        result.Success.Should().BeTrue();
-        result.LabelId.Should().NotBeNull();
+        Assert.True(result.Success);
+        Assert.NotNull(result.LabelId);
         _mockRepo.Verify(r => r.AddAsync(It.Is<Label>(l => l.Name == "NewLabel" && l.Color == "#000000"), It.IsAny<CancellationToken>()), Times.Once);
         _mockRepo.Verify(r => r.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
     }
@@ -80,7 +85,7 @@ public class LabelServiceTests
     {
         _mockRepo.Setup(r => r.GetByIdAsync<Label>(It.IsAny<Guid>(), It.IsAny<CancellationToken>())).ReturnsAsync((Label?)null);
         Core.DTOs.Contact.LabelOperationResult result = await _service.UpdateAsync(Guid.NewGuid(), "NewName", null);
-        result.IsNotFound.Should().BeTrue();
+        Assert.True(result.IsNotFound);
     }
 
     [Fact]
@@ -95,9 +100,9 @@ public class LabelServiceTests
 
         Core.DTOs.Contact.LabelOperationResult result = await _service.UpdateAsync(id, "NewName", "#123");
 
-        result.Success.Should().BeTrue();
-        label.Name.Should().Be("NewName");
-        label.Color.Should().Be("#123");
+        Assert.True(result.Success);
+        Assert.Equal("NewName", label.Name);
+        Assert.Equal("#123", label.Color);
         _mockRepo.Verify(r => r.UpdateAsync(label, It.IsAny<CancellationToken>()), Times.Once);
         _mockRepo.Verify(r => r.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
     }

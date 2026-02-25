@@ -1,4 +1,3 @@
-using FluentAssertions;
 using Microsoft.AspNetCore.Mvc;
 using Moq;
 using Rvnx.CRM.Core.DTOs.Dashboard;
@@ -53,6 +52,6 @@ public class HomeControllerPerformanceTests : IDisposable
 
         // Assert
         _dashboardServiceMock.Verify(s => s.GetDashboardDataAsync(), Times.Once);
-        result.Should().BeOfType<ViewResult>();
+        Assert.IsType<ViewResult>(result);
     }
 }

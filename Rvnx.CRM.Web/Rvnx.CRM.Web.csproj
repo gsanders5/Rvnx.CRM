@@ -30,7 +30,6 @@
 	<ItemGroup>
 		<ProjectReference Include="..\Rvnx.CRM.Core\Rvnx.CRM.Core.csproj" />
 		<ProjectReference Include="..\Rvnx.CRM.Infrastructure\Rvnx.CRM.Infrastructure.csproj" />
-		<ProjectReference Include="..\Rvnx.CRM.Shared\Rvnx.CRM.Shared.csproj" />
 	</ItemGroup>
 
 </Project>

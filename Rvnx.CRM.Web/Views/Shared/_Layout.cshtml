@@ -1,4 +1,6 @@
-﻿<!DOCTYPE html>
+@using Microsoft.Extensions.Configuration
+@inject IConfiguration Configuration
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8"/>
@@ -47,7 +49,7 @@
                     </environment>
                 </ul>
                 <ul class="navbar-nav">
-                    @if (Context.RequestServices.GetService<Microsoft.Extensions.Configuration.IConfiguration>()?.GetValue<bool>("Authentication:Enabled") ?? false)
+                    @if (Configuration.GetValue<bool>("Authentication:Enabled"))
                     {
                         if (User.Identity?.IsAuthenticated == true)
                         {
@@ -55,7 +57,9 @@
                                 <a class="nav-link" asp-area="" asp-controller="Contacts" asp-action="Self">Hello, @User.Identity.Name!</a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link" asp-area="" asp-controller="Account" asp-action="Logout">Logout</a>
+                                <form class="form-inline" asp-area="" asp-controller="Account" asp-action="Logout" method="post">
+                                    <button type="submit" class="nav-link btn btn-link">Logout</button>
+                                </form>
                             </li>
                         }
                         else
