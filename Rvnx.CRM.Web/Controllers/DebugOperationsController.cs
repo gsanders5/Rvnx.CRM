@@ -125,7 +125,7 @@ namespace Rvnx.CRM.Web.Controllers
         public async Task<IActionResult> AddRandomRelationships()
         {
             // 1. Get available Relationship Types (Static)
-            List<RelationshipTypeDefinition> types = RelationshipTypeService.GetAll();
+            List<RelationshipTypeDefinition> types = (List<RelationshipTypeDefinition>)RelationshipTypeService.GetAll();
             if (types.Count == 0)
             {
                 TempData["Message"] = "No relationship types defined.";
