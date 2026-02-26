@@ -310,5 +310,101 @@ namespace Rvnx.CRM.Tests.Extensions
             Assert.Equal(dto.StartDate, entity.StartDate);
             Assert.Equal(dto.EndDate, entity.EndDate);
         }
+
+        [Fact]
+        public void UpdateEntityShouldHandleNullValues()
+        {
+            // Arrange
+            var entity = new Relationship
+            {
+                Id = Guid.NewGuid(),
+                EntityId = Guid.NewGuid(),
+                RelatedEntityId = Guid.NewGuid(),
+                RelationshipTypeId = Guid.NewGuid(),
+                Description = "Original description",
+                StartDate = DateTime.Now.Date,
+                EndDate = DateTime.Now.Date
+            };
+
+            var dto = new RelationshipFormDto
+            {
+                EntityId = entity.EntityId,
+                RelatedEntityId = entity.RelatedEntityId,
+                RelationshipTypeId = entity.RelationshipTypeId,
+                Description = null,
+                StartDate = null,
+                EndDate = null
+            };
+
+            // Act
+            entity.UpdateEntity(dto);
+
+            // Assert
+            Assert.Null(entity.Description);
+            Assert.Null(entity.StartDate);
+            Assert.Null(entity.EndDate);
+        }
+
+        [Fact]
+        public void UpdateEntityShouldNotModifyIdOrEntityType()
+        {
+            // Arrange
+            var originalId = Guid.NewGuid();
+            var originalEntityType = "OriginalType";
+
+            var entity = new Relationship
+            {
+                Id = originalId,
+                EntityId = Guid.NewGuid(),
+                RelatedEntityId = Guid.NewGuid(),
+                RelationshipTypeId = Guid.NewGuid(),
+                EntityType = originalEntityType
+            };
+
+            var dto = new RelationshipFormDto
+            {
+                // Different ID and EntityType in DTO (though DTO ID is nullable and EntityType usually ignored in Update)
+                Id = Guid.NewGuid(),
+                EntityType = "DifferentType",
+                EntityId = Guid.NewGuid(),
+                RelatedEntityId = Guid.NewGuid(),
+                RelationshipTypeId = Guid.NewGuid()
+            };
+
+            // Act
+            entity.UpdateEntity(dto);
+
+            // Assert
+            Assert.Equal(originalId, entity.Id);
+            Assert.Equal(originalEntityType, entity.EntityType);
+        }
+
+        [Fact]
+        public void UpdateEntityShouldUpdateForeignKeys()
+        {
+            // Arrange
+            var entity = new Relationship
+            {
+                Id = Guid.NewGuid(),
+                EntityId = Guid.NewGuid(),
+                RelatedEntityId = Guid.NewGuid(),
+                RelationshipTypeId = Guid.NewGuid()
+            };
+
+            var dto = new RelationshipFormDto
+            {
+                EntityId = Guid.NewGuid(), // Changed
+                RelatedEntityId = Guid.NewGuid(), // Changed
+                RelationshipTypeId = Guid.NewGuid() // Changed
+            };
+
+            // Act
+            entity.UpdateEntity(dto);
+
+            // Assert
+            Assert.Equal(dto.EntityId, entity.EntityId);
+            Assert.Equal(dto.RelatedEntityId, entity.RelatedEntityId);
+            Assert.Equal(dto.RelationshipTypeId, entity.RelationshipTypeId);
+        }
     }
 }
