@@ -5,6 +5,23 @@ namespace Rvnx.CRM.Tests.Security
     public class AuthenticationConfigurationTests
     {
         [Fact]
+        public void AppSettingsShouldHaveAuthenticationEnabledByDefault()
+        {
+            // Arrange
+            var appsettingsPath = Path.Combine(Directory.GetCurrentDirectory(), "..", "..", "..", "..", "Rvnx.CRM.Web", "appsettings.json");
+
+            var config = new ConfigurationBuilder()
+                .AddJsonFile(appsettingsPath)
+                .Build();
+
+            // Act
+            bool authEnabled = config.GetValue<bool>("Authentication:Enabled");
+
+            // Assert
+            Assert.True(authEnabled, "appsettings.json should have authentication enabled by default.");
+        }
+
+        [Fact]
         public void AppSettingsShouldNotContainHardcodedSecret()
         {
             // Arrange
