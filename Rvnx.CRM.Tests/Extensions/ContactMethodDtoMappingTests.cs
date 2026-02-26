@@ -93,5 +93,65 @@ namespace Rvnx.CRM.Tests.Extensions
             // Verify ContactId remains unchanged
             Assert.Equal(initialContactId, entity.ContactId);
         }
+
+        [Fact]
+        public void UpdateEntityShouldPreserveIdAndUpdateValues()
+        {
+            // Arrange
+            var initialId = Guid.NewGuid();
+            var entity = new ContactMethod
+            {
+                Id = initialId,
+                Type = ContactMethodType.Email,
+                Value = "test@example.com",
+                Label = "Work"
+            };
+
+            var dto = new ContactMethodFormDto
+            {
+                // DTO might have a different ID or none, but Entity ID should never change
+                Id = Guid.NewGuid(),
+                Type = ContactMethodType.Phone,
+                Value = "123",
+                Label = "Mobile"
+            };
+
+            // Act
+            entity.UpdateEntity(dto);
+
+            // Assert
+            // Verify Id is preserved
+            Assert.Equal(initialId, entity.Id);
+
+            // Verify other properties are updated (Happy Path)
+            Assert.Equal(dto.Type, entity.Type);
+            Assert.Equal(dto.Value, entity.Value);
+            Assert.Equal(dto.Label, entity.Label);
+        }
+
+        [Fact]
+        public void UpdateEntityShouldHandleNullLabel()
+        {
+            // Arrange
+            var entity = new ContactMethod
+            {
+                Type = ContactMethodType.Email,
+                Value = "test@example.com",
+                Label = "Work"
+            };
+
+            var dto = new ContactMethodFormDto
+            {
+                Type = ContactMethodType.Email,
+                Value = "test@example.com",
+                Label = null
+            };
+
+            // Act
+            entity.UpdateEntity(dto);
+
+            // Assert
+            Assert.Null(entity.Label);
+        }
     }
 }
