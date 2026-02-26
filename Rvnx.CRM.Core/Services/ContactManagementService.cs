@@ -116,7 +116,6 @@ public class ContactManagementService(IRepository repository, IFileValidationSer
     {
         Contact contact = contactDto.ToEntity();
         await _repository.AddAsync(contact);
-        await _repository.SaveChangesAsync();
 
         await UpdateOrAddContactMethod(contact.Id, ContactMethodType.Email, contactDto.Email, null);
         await UpdateOrAddContactMethod(contact.Id, ContactMethodType.Phone, contactDto.Phone, null);
