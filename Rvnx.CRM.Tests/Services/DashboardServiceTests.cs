@@ -1,6 +1,7 @@
 using Microsoft.Extensions.Logging;
 using Moq;
 using Rvnx.CRM.Core.Interfaces;
+using Rvnx.CRM.Core.Models.Base;
 using Rvnx.CRM.Core.Models.Contact;
 using Rvnx.CRM.Core.Models.Dates;
 using Rvnx.CRM.Core.Services;
@@ -73,6 +74,11 @@ namespace Rvnx.CRM.Tests.Services
                         It.IsAny<CancellationToken>(), It.IsAny<string[]>()))
                 .ReturnsAsync([]);
 
+            _repositoryMock.Setup(r => r.ListProjectedAsync(
+                    It.IsAny<Expression<Func<Attachment, bool>>>(),
+                    It.IsAny<Expression<Func<Attachment, (Guid, Guid)>>>(),
+                    It.IsAny<CancellationToken>()))
+                .ReturnsAsync([]);
 
             // Setup for the EXPECTED new behavior (with predicate)
             _repositoryMock.Setup(r => r.ListAsNoTrackingAsync<Reminder>(It.IsAny<Expression<Func<Reminder, bool>>>(),
