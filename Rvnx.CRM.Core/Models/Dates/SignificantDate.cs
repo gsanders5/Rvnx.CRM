@@ -21,6 +21,6 @@ public class SignificantDate : RemindableEntity
 
     public DateTime GetNextOccurrence()
     {
-        return Rvnx.CRM.Core.Services.DateCalculationService.GetNextOccurrence(Date, EventFrequency);
+        return Rvnx.CRM.Core.Services.DateCalculationService.GetNextOccurrence(Date, EventFrequency, treatFrequencyAsCalendarYears: EventFrequency.TotalDays % 365 == 0);
     }
 }

@@ -31,6 +31,6 @@ public class Reminder : RemindableEntity
             baseDate = baseDate.Add(EventFrequency);
         }
 
-        return Rvnx.CRM.Core.Services.DateCalculationService.GetNextOccurrence(baseDate, EventFrequency);
+        return Rvnx.CRM.Core.Services.DateCalculationService.GetNextOccurrence(baseDate, EventFrequency, treatFrequencyAsCalendarYears: EventFrequency.TotalDays % 365 == 0);
     }
 }
