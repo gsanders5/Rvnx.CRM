@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
+using Microsoft.EntityFrameworkCore;
 using Rvnx.CRM.Core;
 using Rvnx.CRM.Core.Interfaces;
 using Rvnx.CRM.Infrastructure;
@@ -100,7 +101,7 @@ namespace Rvnx.CRM.Web
                 try
                 {
                     CRMDbContext context = services.GetRequiredService<CRMDbContext>();
-                    context.Database.EnsureCreated();
+                    context.Database.Migrate();
                 }
                 catch (Exception ex)
                 {
