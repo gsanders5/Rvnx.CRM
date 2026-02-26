@@ -37,3 +37,43 @@ document.addEventListener('click', function (e) {
         console.error('Failed to copy: ', err);
     });
 });
+
+$(function() {
+    // Global form submission loading state
+    $('form').on('submit', function() {
+        var $form = $(this);
+
+        // Don't show spinner if form has target="_blank" (e.g. download)
+        if ($form.attr('target') === '_blank') return;
+
+        // Check if validation is available and passes
+        if (typeof $form.valid === 'function' && !$form.valid()) {
+            return;
+        }
+
+        var $btn = $form.find('button[type="submit"]:not([disabled])');
+        if ($btn.length === 0) return;
+
+        var $icon = $btn.find('i');
+        if ($icon.length) {
+            // Store original class to restore if needed (though page usually reloads)
+            $icon.data('original-class', $icon.attr('class'));
+            $icon.removeClass().addClass('spinner-border spinner-border-sm');
+        } else {
+            $btn.prepend('<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>');
+        }
+
+        // Disable button to prevent double submit
+        $btn.prop('disabled', true);
+
+        // Timeout to re-enable button after 10 seconds in case of network issue or 204 No Content
+        setTimeout(function() {
+            $btn.prop('disabled', false);
+            if ($icon.length) {
+                $icon.attr('class', $icon.data('original-class'));
+            } else {
+                $btn.find('.spinner-border').remove();
+            }
+        }, 10000);
+    });
+});

@@ -212,19 +212,5 @@
             initReveal('pronouns-select', 'pronouns-custom');
             initReveal('gender-select', 'gender-custom');
         })();
-
-        // Loading state for submit button
-        $('#contact-form').on('submit', function() {
-            if ($(this).valid()) {
-                var btn = $(this).find('button[type="submit"]');
-                var icon = btn.find('i');
-                if (icon.length) {
-                    icon.removeClass().addClass('spinner-border spinner-border-sm');
-                } else {
-                    btn.prepend('<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>');
-                }
-                btn.prop('disabled', true);
-            }
-        });
     </script>
 }
