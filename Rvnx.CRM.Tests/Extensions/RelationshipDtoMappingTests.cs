@@ -244,5 +244,71 @@ namespace Rvnx.CRM.Tests.Extensions
             Assert.Equal("Unknown", dto.RelationshipTypeName);
             Assert.Equal("Unknown", dto.RelationshipTypeOppositeName);
         }
+
+        [Fact]
+        public void ToEntityShouldMapPropertiesCorrectly()
+        {
+            // Arrange
+            var dto = new RelationshipFormDto
+            {
+                EntityId = Guid.NewGuid(),
+                RelatedEntityId = Guid.NewGuid(),
+                EntityType = "Person",
+                RelationshipTypeId = Guid.NewGuid(),
+                Description = "A description",
+                StartDate = DateTime.Now.Date,
+                EndDate = DateTime.Now.Date.AddYears(1)
+            };
+
+            // Act
+            var entity = dto.ToEntity();
+
+            // Assert
+            Assert.NotEqual(Guid.Empty, entity.Id);
+            Assert.Equal(dto.EntityId, entity.EntityId);
+            Assert.Equal(dto.RelatedEntityId, entity.RelatedEntityId);
+            Assert.Equal(dto.EntityType, entity.EntityType);
+            Assert.Equal(dto.RelationshipTypeId, entity.RelationshipTypeId);
+            Assert.Equal(dto.Description, entity.Description);
+            Assert.Equal(dto.StartDate, entity.StartDate);
+            Assert.Equal(dto.EndDate, entity.EndDate);
+        }
+
+        [Fact]
+        public void UpdateEntityShouldUpdatePropertiesCorrectly()
+        {
+            // Arrange
+            var entity = new Relationship
+            {
+                Id = Guid.NewGuid(),
+                EntityId = Guid.NewGuid(),
+                RelatedEntityId = Guid.NewGuid(),
+                RelationshipTypeId = Guid.NewGuid(),
+                Description = "Original description",
+                StartDate = DateTime.Now.Date.AddDays(-10),
+                EndDate = DateTime.Now.Date
+            };
+
+            var dto = new RelationshipFormDto
+            {
+                EntityId = Guid.NewGuid(), // Changed
+                RelatedEntityId = Guid.NewGuid(), // Changed
+                RelationshipTypeId = Guid.NewGuid(), // Changed
+                Description = "Updated description",
+                StartDate = DateTime.Now.Date.AddDays(-5),
+                EndDate = DateTime.Now.Date.AddDays(5)
+            };
+
+            // Act
+            entity.UpdateEntity(dto);
+
+            // Assert
+            Assert.Equal(dto.EntityId, entity.EntityId);
+            Assert.Equal(dto.RelatedEntityId, entity.RelatedEntityId);
+            Assert.Equal(dto.RelationshipTypeId, entity.RelationshipTypeId);
+            Assert.Equal(dto.Description, entity.Description);
+            Assert.Equal(dto.StartDate, entity.StartDate);
+            Assert.Equal(dto.EndDate, entity.EndDate);
+        }
     }
 }
