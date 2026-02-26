@@ -28,7 +28,7 @@ namespace Rvnx.CRM.Tests.Models
             // Since Model uses DateTime.Today, we should test the Service logic primarily if we want to inject 'Today'
             // OR we can just use the service directly for these tests as requested "Can you add a test ... for these computed dates?"
 
-            DateTime nextOccurrence = DateCalculationService.GetNextOccurrence(birthday.Date, birthday.EventFrequency, _today);
+            DateTime nextOccurrence = DateCalculationService.GetNextOccurrence(birthday.Date, birthday.EventFrequency, _today, treatFrequencyAsCalendarYears: true);
 
             // Assert
             Assert.Equal(new DateTime(2027, 2, 14), nextOccurrence);
@@ -42,7 +42,7 @@ namespace Rvnx.CRM.Tests.Models
             TimeSpan freq = TimeSpan.FromDays(365);
 
             // Act
-            DateTime nextOccurrence = DateCalculationService.GetNextOccurrence(birthday, freq, _today);
+            DateTime nextOccurrence = DateCalculationService.GetNextOccurrence(birthday, freq, _today, treatFrequencyAsCalendarYears: true);
 
             // Assert
             Assert.Equal(new DateTime(2026, 2, 16), nextOccurrence);
@@ -56,7 +56,7 @@ namespace Rvnx.CRM.Tests.Models
             TimeSpan freq = TimeSpan.FromDays(365);
 
             // Act
-            DateTime nextOccurrence = DateCalculationService.GetNextOccurrence(birthday, freq, _today);
+            DateTime nextOccurrence = DateCalculationService.GetNextOccurrence(birthday, freq, _today, treatFrequencyAsCalendarYears: true);
 
             // Assert
             Assert.Equal(_today, nextOccurrence);
@@ -71,7 +71,7 @@ namespace Rvnx.CRM.Tests.Models
             // 2026 is not a leap year
 
             // Act
-            DateTime nextOccurrence = DateCalculationService.GetNextOccurrence(birthday, freq, _today);
+            DateTime nextOccurrence = DateCalculationService.GetNextOccurrence(birthday, freq, _today, treatFrequencyAsCalendarYears: true);
 
             // Assert
             Assert.Equal(new DateTime(2026, 2, 28), nextOccurrence);
@@ -87,7 +87,7 @@ namespace Rvnx.CRM.Tests.Models
 
             // Act
             // Next leap year is 2028
-            DateTime nextOccurrence = DateCalculationService.GetNextOccurrence(birthday, freq, todayIn2027);
+            DateTime nextOccurrence = DateCalculationService.GetNextOccurrence(birthday, freq, todayIn2027, treatFrequencyAsCalendarYears: true);
 
             // Assert
             Assert.Equal(new DateTime(2028, 2, 29), nextOccurrence);

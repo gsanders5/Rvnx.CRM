@@ -2,7 +2,7 @@ namespace Rvnx.CRM.Core.Services
 {
     public static class DateCalculationService
     {
-        public static DateTime GetNextOccurrence(DateTime originalDate, TimeSpan frequency, DateTime? referenceDate = null)
+        public static DateTime GetNextOccurrence(DateTime originalDate, TimeSpan frequency, DateTime? referenceDate = null, bool treatFrequencyAsCalendarYears = false)
         {
             DateTime today = referenceDate ?? DateTime.Today;
             DateTime nextOccurrence = originalDate;
@@ -19,9 +19,7 @@ namespace Rvnx.CRM.Core.Services
                 return nextOccurrence;
             }
 
-            bool isMultipleOf365Days = (frequency.TotalDays % 365) == 0;
-
-            if (isMultipleOf365Days)
+            if (treatFrequencyAsCalendarYears)
             {
                 int yearsPerCycle = (int)(frequency.TotalDays / 365);
                 int yearsSinceOriginal = today.Year - originalDate.Year;

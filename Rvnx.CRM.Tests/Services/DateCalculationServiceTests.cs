@@ -33,7 +33,7 @@ namespace Rvnx.CRM.Tests.Services
             DateTime today = new(2024, 6, 1);
 
             // Act
-            DateTime result = DateCalculationService.GetNextOccurrence(start, frequency, today);
+            DateTime result = DateCalculationService.GetNextOccurrence(start, frequency, today, treatFrequencyAsCalendarYears: true);
 
             // Assert
             // This assertion proves the "365 days = 1 Calendar Year" logic
@@ -49,7 +49,7 @@ namespace Rvnx.CRM.Tests.Services
             DateTime today = new(2021, 3, 1);
 
             // Act
-            DateTime result = DateCalculationService.GetNextOccurrence(start, frequency, today);
+            DateTime result = DateCalculationService.GetNextOccurrence(start, frequency, today, treatFrequencyAsCalendarYears: true);
 
             // Assert
             // 2020-02-29 -> 2021-02-28 -> 2022-02-28
@@ -65,7 +65,7 @@ namespace Rvnx.CRM.Tests.Services
             DateTime today = new(2023, 3, 1); // After Feb 2023
 
             // Act
-            DateTime result = DateCalculationService.GetNextOccurrence(start, frequency, today);
+            DateTime result = DateCalculationService.GetNextOccurrence(start, frequency, today, treatFrequencyAsCalendarYears: true);
 
             // Assert
             // 2020 -> 2021 (Feb 28) -> 2022 (Feb 28) -> 2023 (Feb 28).
@@ -82,7 +82,7 @@ namespace Rvnx.CRM.Tests.Services
             DateTime today = new(2023, 6, 1);
 
             // Act
-            DateTime result = DateCalculationService.GetNextOccurrence(start, frequency, today);
+            DateTime result = DateCalculationService.GetNextOccurrence(start, frequency, today, treatFrequencyAsCalendarYears: true);
 
             // Assert
             // Should be next Jan 1 after June 2023
@@ -162,7 +162,7 @@ namespace Rvnx.CRM.Tests.Services
             DateTime today = new(2021, 1, 1);
 
             // Act
-            DateTime result = DateCalculationService.GetNextOccurrence(start, frequency, today);
+            DateTime result = DateCalculationService.GetNextOccurrence(start, frequency, today, treatFrequencyAsCalendarYears: true);
 
             // Assert
             // 2020 + 2 years = 2022.
