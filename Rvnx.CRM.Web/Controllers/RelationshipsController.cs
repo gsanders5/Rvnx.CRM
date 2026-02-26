@@ -232,7 +232,7 @@ namespace Rvnx.CRM.Web.Controllers
                 Description = viewModel.Description,
                 StartDate = viewModel.StartDate,
                 EndDate = viewModel.EndDate,
-                ReturnUrl = returnUrl
+                ReturnUrl = !string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl) ? returnUrl : null
             };
 
             return View(deleteViewModel);
