@@ -82,13 +82,14 @@ namespace Rvnx.CRM.Web.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> CreateSelf([Bind("FirstName,LastName,Nickname,Email,Phone,JobTitle,Company,Birthday,Pronouns,Gender,Religion")] ContactCreateViewModel contactDto)
+        public async Task<IActionResult> CreateSelf(ContactCreateViewModel contactDto)
         {
             if (!_currentUserService.IsAuthenticated)
             {
                 return Unauthorized();
             }
 
+            contactDto.IsHidden = false;
             NormalizeContactForm(contactDto);
 
             if (ModelState.IsValid)
@@ -146,7 +147,7 @@ namespace Rvnx.CRM.Web.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("FirstName,LastName,Nickname,Email,Phone,JobTitle,Company,Birthday,IsHidden,Pronouns,Gender,Religion")] ContactCreateViewModel contactDto)
+        public async Task<IActionResult> Create(ContactCreateViewModel contactDto)
         {
             NormalizeContactForm(contactDto);
 
@@ -208,7 +209,7 @@ namespace Rvnx.CRM.Web.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(Guid id, [Bind("Id,FirstName,LastName,Nickname,Email,Phone,JobTitle,Company,Birthday,IsHidden,Pronouns,Gender,Religion")] ContactFormDto contactDto, [AllowImages] IFormFile? profileImage)
+        public async Task<IActionResult> Edit(Guid id, ContactFormDto contactDto, [AllowImages] IFormFile? profileImage)
         {
             if (id != contactDto.Id)
             {
