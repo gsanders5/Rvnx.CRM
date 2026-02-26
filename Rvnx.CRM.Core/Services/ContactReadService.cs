@@ -125,10 +125,19 @@ public class ContactReadService(IRepository repository) : IContactReadService
         List<Contact> relatedContacts = [];
         if (relatedIds.Count > 0)
         {
-            relatedContacts = await _repository.ListByChunkedContainsAsync<Contact, Guid>(
+            // Optimization: Project only necessary fields for relationships display (Id, Name, Gender, IsPartial)
+            // This avoids fetching all columns (including large text fields) for every related contact.
+            relatedContacts = await _repository.ListProjectedByChunkedContainsAsync<Contact, Contact, Guid>(
                 relatedIds,
                 chunk => c => chunk.Contains(c.Id),
-                asNoTracking: true);
+                c => new Contact
+                {
+                    Id = c.Id,
+                    FirstName = c.FirstName,
+                    LastName = c.LastName,
+                    Gender = c.Gender,
+                    IsPartial = c.IsPartial
+                });
         }
 
         // Manually populate navigation properties for display
