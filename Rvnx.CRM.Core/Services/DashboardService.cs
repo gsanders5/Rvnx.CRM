@@ -1,7 +1,9 @@
 using Microsoft.Extensions.Logging;
 using Rvnx.CRM.Core.Constants;
 using Rvnx.CRM.Core.DTOs.Dashboard;
+using Rvnx.CRM.Core.Extensions;
 using Rvnx.CRM.Core.Interfaces;
+using Rvnx.CRM.Core.Models.Base;
 using Rvnx.CRM.Core.Models.Contact;
 using Rvnx.CRM.Core.Models.Dates;
 
@@ -34,6 +36,19 @@ public class DashboardService(IRepository repository, ILogger<DashboardService> 
         List<Contact> contacts = await _repository.ListAsNoTrackingAsync<Contact>(x => x.IsHidden == false);
         Dictionary<Guid, Contact> contactDict = contacts.ToDictionary(c => c.Id, c => c);
 
+        List<Guid> contactIds = [.. contacts.Select(c => c.Id)];
+
+        List<(Guid ContactId, Guid AttachmentId)> profileAttachments = contactIds.Count > 0
+            ? await _repository.ListProjectedByChunkedContainsAsync<Attachment, (Guid, Guid), Guid>(
+                contactIds,
+                chunk => a => a.ContactId != null && a.AttachmentType == AttachmentTypes.ProfileImage && chunk.Contains(a.ContactId.Value),
+                a => new ValueTuple<Guid, Guid>(a.ContactId!.Value, a.Id))
+            : [];
+
+        Dictionary<Guid, Guid> attachmentMap = profileAttachments
+            .GroupBy(a => a.ContactId)
+            .ToDictionary(g => g.Key, g => g.First().AttachmentId);
+
         PriorityQueue<UpcomingEventDto, DateTime> topEvents = new();
 
         await ProcessRemindersAsync(topEvents, contactDict);
@@ -46,11 +61,19 @@ public class DashboardService(IRepository repository, ILogger<DashboardService> 
 
         foreach (Contact contact in contacts)
         {
+            string? photoUrl = null;
+            if (attachmentMap.TryGetValue(contact.Id, out Guid attachmentId))
+            {
+                photoUrl = $"/Attachments/View/{attachmentId}";
+            }
+
             result.GraphNodes.Add(new GraphNodeDto
             {
                 Id = contact.Id.ToString(),
                 Name = contact.FullName,
-                Group = 1
+                Group = 1,
+                PhotoUrl = photoUrl,
+                Gender = contact.Gender
             });
         }
 

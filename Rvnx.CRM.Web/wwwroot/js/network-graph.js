@@ -66,10 +66,30 @@ function initializeNetworkGraph(nodes, links) {
   let panStartY = 0;
   let currentPanX = 0;
   let currentPanY = 0;
+  let currentScale = 1;
 
   // A group to hold everything so we can pan the camera
   const cameraLayer = document.createElementNS(svgNS, "g");
   svg.appendChild(cameraLayer);
+
+  // Define clipPath for profile images
+  const defs = document.createElementNS(svgNS, "defs");
+  const clipPath = document.createElementNS(svgNS, "clipPath");
+  clipPath.setAttribute("id", "circle-clip");
+  const clipCircle = document.createElementNS(svgNS, "circle");
+  clipCircle.setAttribute("r", "20");
+  clipCircle.setAttribute("cx", "0");
+  clipCircle.setAttribute("cy", "0");
+  clipPath.appendChild(clipCircle);
+  defs.appendChild(clipPath);
+  svg.appendChild(defs);
+
+  const updateTransform = () => {
+    cameraLayer.setAttribute(
+      "transform",
+      `translate(${currentPanX}, ${currentPanY}) scale(${currentScale})`
+    );
+  };
 
   // Apply panning listener to the SVG itself
   svg.style.cursor = "grab";
@@ -87,10 +107,7 @@ function initializeNetworkGraph(nodes, links) {
     if (isPanning) {
       currentPanX = e.clientX - panStartX;
       currentPanY = e.clientY - panStartY;
-      cameraLayer.setAttribute(
-        "transform",
-        `translate(${currentPanX}, ${currentPanY})`,
-      );
+      updateTransform();
     }
   });
 
@@ -100,6 +117,73 @@ function initializeNetworkGraph(nodes, links) {
       svg.style.cursor = "grab";
     }
   });
+
+  // Zoom Logic
+  svg.addEventListener("wheel", (e) => {
+    e.preventDefault();
+    const zoomIntensity = 0.1;
+    const direction = e.deltaY > 0 ? -1 : 1;
+    const factor = 1 + direction * zoomIntensity;
+    const newScale = Math.max(0.1, Math.min(5, currentScale * factor));
+    const scaleRatio = newScale / currentScale;
+
+    const rect = svg.getBoundingClientRect();
+    const mouseX = e.clientX - rect.left;
+    const mouseY = e.clientY - rect.top;
+
+    currentPanX = mouseX - (mouseX - currentPanX) * scaleRatio;
+    currentPanY = mouseY - (mouseY - currentPanY) * scaleRatio;
+    currentScale = newScale;
+
+    updateTransform();
+  });
+
+  // Zoom Buttons
+  const zoomInBtn = document.getElementById("zoom-in-btn");
+  const zoomOutBtn = document.getElementById("zoom-out-btn");
+  const resetZoomBtn = document.getElementById("reset-zoom-btn");
+
+  const handleButtonZoom = (factor) => {
+    const newScale = Math.max(0.1, Math.min(5, currentScale * factor));
+    const scaleRatio = newScale / currentScale;
+
+    // Zoom to center
+    const rect = svg.getBoundingClientRect();
+    const cx = rect.width / 2;
+    const cy = rect.height / 2;
+
+    currentPanX = cx - (cx - currentPanX) * scaleRatio;
+    currentPanY = cy - (cy - currentPanY) * scaleRatio;
+    currentScale = newScale;
+    updateTransform();
+  };
+
+  if (zoomInBtn) {
+    zoomInBtn.addEventListener("click", () => handleButtonZoom(1.2));
+  }
+
+  if (zoomOutBtn) {
+    zoomOutBtn.addEventListener("click", () => handleButtonZoom(1 / 1.2));
+  }
+
+  if (resetZoomBtn) {
+    resetZoomBtn.addEventListener("click", () => {
+      currentScale = 1;
+      currentPanX = 0;
+      currentPanY = 0;
+      updateTransform();
+    });
+  }
+
+  // Helper for colors
+  const getGenderColor = (gender) => {
+    if (!gender) return "#9e9e9e"; // Unset/Unknown
+    const g = gender.toLowerCase();
+    if (g === "male") return "#1a73e8";
+    if (g === "female") return "#e91e8c";
+    if (g === "non-binary") return "#7c3aed";
+    return "#9e9e9e"; // Other/Unspecified
+  };
 
   // Create Link elements first
   const linkElements = links.map((link) => {
@@ -116,12 +200,45 @@ function initializeNetworkGraph(nodes, links) {
     const g = document.createElementNS(svgNS, "g");
     g.style.cursor = "grab";
 
+    // Fallback circle
     const circle = document.createElementNS(svgNS, "circle");
     circle.setAttribute("r", "20");
-    circle.setAttribute("fill", "#0d6efd");
+    circle.setAttribute("fill", getGenderColor(node.gender));
     circle.setAttribute("stroke", "#fff");
     circle.setAttribute("stroke-width", "2");
     g.appendChild(circle);
+
+    // Profile photo image
+    if (node.photoUrl) {
+      const image = document.createElementNS(svgNS, "image");
+      image.setAttribute("href", node.photoUrl);
+      image.setAttribute("width", "40");
+      image.setAttribute("height", "40");
+      image.setAttribute("x", "-20");
+      image.setAttribute("y", "-20");
+      image.setAttribute("clip-path", "url(#circle-clip)");
+
+      // Error handling: if image fails, remove it or hide it
+      image.addEventListener("error", () => {
+        image.style.display = "none";
+        // Also hide the ring if we hide the image?
+        // No, keep the ring as it frames the fallback circle too, or remove it.
+        // The fallback circle has stroke. The ring has stroke.
+        // If image is hidden, we see fallback circle which has stroke.
+        // If ring is on top, we see ring stroke.
+        // If we have ring + fallback circle stroke, it's fine.
+      });
+
+      g.appendChild(image);
+
+      // Ring on top to maintain stroke consistency
+      const ring = document.createElementNS(svgNS, "circle");
+      ring.setAttribute("r", "20");
+      ring.setAttribute("fill", "none");
+      ring.setAttribute("stroke", "#fff");
+      ring.setAttribute("stroke-width", "2");
+      g.appendChild(ring);
+    }
 
     const text = document.createElementNS(svgNS, "text");
     text.setAttribute("dy", "35");
@@ -187,10 +304,10 @@ function initializeNetworkGraph(nodes, links) {
 
   function tick() {
     // Simulation Parameters
-    const k = 3000; // Repulsion constant
+    const k = 2500; // Repulsion constant
     const linkDistance = 180;
-    const damping = 0.9;
-    const centerForce = 0.005;
+    const damping = 0.85;
+    const centerForce = 0.008;
 
     // Repulsion
     for (let i = 0; i < nodes.length; i++) {
