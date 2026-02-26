@@ -139,5 +139,30 @@ namespace Rvnx.CRM.Tests.Services
             Assert.True(_relationshipListCalls <= 4, $"Expected <= 4 relationship calls, but got {_relationshipListCalls}");
             Assert.True(_contactListCalls <= 2, $"Expected <= 2 contact calls, but got {_contactListCalls}");
         }
+
+        [Fact]
+        public async Task CreateContactAsyncUsesSingleSaveChangesAsync()
+        {
+            // Arrange
+            ContactFormDto dto = new()
+            {
+                FirstName = "Performance",
+                LastName = "Test",
+                Email = "perf@example.com",
+                Phone = "123456789",
+                Birthday = new DateTime(1990, 1, 1)
+            };
+
+            // Act
+            await _service.CreateContactAsync(dto);
+
+            // Assert
+            // Verifies that only ONE SaveChangesAsync is called, reducing DB roundtrips
+            _repositoryMock.Verify(r => r.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
+
+            _repositoryMock.Verify(r => r.AddAsync(It.IsAny<Contact>(), It.IsAny<CancellationToken>()), Times.Once);
+            _repositoryMock.Verify(r => r.AddAsync(It.IsAny<ContactMethod>(), It.IsAny<CancellationToken>()), Times.Exactly(2)); // Email and Phone
+            _repositoryMock.Verify(r => r.AddAsync(It.IsAny<SignificantDate>(), It.IsAny<CancellationToken>()), Times.Once); // Birthday
+        }
     }
 }
