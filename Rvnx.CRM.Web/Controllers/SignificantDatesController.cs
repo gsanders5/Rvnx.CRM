@@ -26,7 +26,7 @@ namespace Rvnx.CRM.Web.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create( [Bind("Id,Title,Description,Date,EntityId,EntityType,RemindMe,EventFrequency")] SignificantDateDto dto)
+        public async Task<IActionResult> Create(SignificantDateDto dto)
         {
             if (!await IsValidContactAsync(dto.EntityId))
             {
@@ -81,9 +81,7 @@ namespace Rvnx.CRM.Web.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(Guid id,
-            [Bind("Id,Title,Description,Date,EntityId,EntityType,RemindMe,EventFrequency")]
-            SignificantDateDto dto)
+        public async Task<IActionResult> Edit(Guid id, SignificantDateDto dto)
         {
             if (id != dto.Id)
             {
