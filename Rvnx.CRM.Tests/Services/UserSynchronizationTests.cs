@@ -101,9 +101,11 @@ namespace Rvnx.CRM.Tests.Services
                 SubjectId = "sub456",
                 Email = "old@example.com",
                 DisplayName = "Old Name",
+                Group = new Core.Models.UserGroup { Name = "Old Group" }
             };
             context.Users.Add(existingUser);
             await context.SaveChangesAsync();
+            context.ChangeTracker.Clear(); // Clear tracker to simulate fresh request
 
             List<Claim> claims =
             [

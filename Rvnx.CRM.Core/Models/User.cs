@@ -24,4 +24,9 @@ public class User : BaseEntity, IGlobalEntity
 
     [ForeignKey(nameof(SelfContactId))]
     public virtual Rvnx.CRM.Core.Models.Contact.Contact? SelfContact { get; set; }
+
+    [ForeignKey(nameof(GroupId))]
+    public virtual UserGroup? Group { get; set; }
+
+    public bool IsAdministrator { get; set; }
 }

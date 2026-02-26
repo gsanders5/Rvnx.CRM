@@ -40,7 +40,7 @@ namespace Rvnx.CRM.Tests.DTOs
                 $"Missing properties in {typeof(TDto).Name} from {typeof(TModel).Name}: {string.Join(", ", missingProperties)}");
         }
 
-        private static readonly string[] ContactDetailDtoIgnoredProperties = ["IsHidden", "Addresses", "Attachments", "ContactLabels"];
+        private static readonly string[] ContactDetailDtoIgnoredProperties = ["IsHidden", "Addresses", "Attachments", "ContactLabels", "GroupId"];
         [Fact]
         public void ContactDetailDtoShouldHaveAllContactProperties()
         {
@@ -48,7 +48,7 @@ namespace Rvnx.CRM.Tests.DTOs
             VerifyProperties<Contact, ContactDetailDto>(ContactDetailDtoIgnoredProperties); // Handled as collections in DetailDto
         }
 
-        private static readonly string[] PetDtoIgnoredProperties = ["ContactId", "Contact"];
+        private static readonly string[] PetDtoIgnoredProperties = ["ContactId", "Contact", "GroupId"];
         [Fact]
         public void PetDtoShouldHaveAllPetProperties()
         {
@@ -57,7 +57,7 @@ namespace Rvnx.CRM.Tests.DTOs
             VerifyProperties<Pet, PetDto>(PetDtoIgnoredProperties);
         }
 
-        private static readonly string[] NoteDtoIgnoredProperties = ["ContactId", "Contact"];
+        private static readonly string[] NoteDtoIgnoredProperties = ["ContactId", "Contact", "GroupId"];
         [Fact]
         public void NoteDtoShouldHaveAllNoteProperties()
         {
@@ -65,7 +65,7 @@ namespace Rvnx.CRM.Tests.DTOs
             VerifyProperties<Note, NoteDto>(NoteDtoIgnoredProperties);
         }
 
-        private static readonly string[] SignificantDateDtoIgnoredProperties = ["ContactId", "Contact"];
+        private static readonly string[] SignificantDateDtoIgnoredProperties = ["ContactId", "Contact", "GroupId"];
         [Fact]
         public void SignificantDateDtoShouldHaveAllSignificantDateProperties()
         {
@@ -73,7 +73,7 @@ namespace Rvnx.CRM.Tests.DTOs
             VerifyProperties<SignificantDate, SignificantDateDto>(SignificantDateDtoIgnoredProperties);
         }
 
-        private static readonly string[] ReminderDtoIgnoredProperties = ["ContactId", "Contact"];
+        private static readonly string[] ReminderDtoIgnoredProperties = ["ContactId", "Contact", "GroupId"];
         [Fact]
         public void ReminderDtoShouldHaveAllReminderProperties()
         {
@@ -81,7 +81,7 @@ namespace Rvnx.CRM.Tests.DTOs
             VerifyProperties<Reminder, ReminderDto>(ReminderDtoIgnoredProperties);
         }
 
-        private static readonly string[] RelationshipDtoIgnoredProperties = ["RelationshipType", "Person", "RelatedPerson"];
+        private static readonly string[] RelationshipDtoIgnoredProperties = ["RelationshipType", "Person", "RelatedPerson", "GroupId"];
         [Fact]
         public void RelationshipDtoShouldHaveAllRelationshipProperties()
         {

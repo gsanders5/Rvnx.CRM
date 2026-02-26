@@ -10,7 +10,6 @@ namespace Rvnx.CRM.Tests.Extensions
     {
         private sealed class TestEntity : BaseEntity
         {
-            public Guid GroupId { get; set; }
         }
 
         [Fact]
@@ -23,7 +22,7 @@ namespace Rvnx.CRM.Tests.Extensions
             // Act
             List<TestEntity> result = await mockRepo.Object.ListByChunkedContainsAsync<TestEntity, Guid>(
                 keys,
-                chunk => e => chunk.Contains(e.GroupId));
+                chunk => e => chunk.Contains(e.Id));
 
             // Assert
             Assert.Empty(result);
@@ -44,7 +43,7 @@ namespace Rvnx.CRM.Tests.Extensions
             // Act
             List<TestEntity> result = await mockRepo.Object.ListByChunkedContainsAsync<TestEntity, Guid>(
                 keys,
-                chunk => e => chunk.Contains(e.GroupId));
+                chunk => e => chunk.Contains(e.Id));
 
             // Assert
             Assert.Single(result);
@@ -64,7 +63,7 @@ namespace Rvnx.CRM.Tests.Extensions
             // Act
             List<TestEntity> result = await mockRepo.Object.ListByChunkedContainsAsync<TestEntity, Guid>(
                 keys,
-                chunk => e => chunk.Contains(e.GroupId));
+                chunk => e => chunk.Contains(e.Id));
 
             // Assert
             Assert.Equal(3, result.Count); // 1 per chunk
@@ -84,7 +83,7 @@ namespace Rvnx.CRM.Tests.Extensions
             // Act
             List<TestEntity> result = await mockRepo.Object.ListByChunkedContainsAsync<TestEntity, Guid>(
                 keys,
-                chunk => e => chunk.Contains(e.GroupId),
+                chunk => e => chunk.Contains(e.Id),
                 asNoTracking: false);
 
             // Assert

@@ -8,5 +8,6 @@ namespace Rvnx.CRM.Core.DTOs.Base
         public DateTime CreatedDate { get; set; }
         public DateTime LastChangedDate { get; set; }
         public string? UserId { get; set; }
+        public string? GroupId { get; set; }
     }
 }
