@@ -91,5 +91,47 @@ namespace Rvnx.CRM.Tests.Extensions
             // Assert
             Assert.Equal(EntityTypes.Person, dto.EntityType);
         }
+
+        [Fact]
+        public void UpdateEntityShouldUpdatePropertiesCorrectly()
+        {
+            // Arrange
+            var initialContactId = Guid.NewGuid();
+            var entity = new Reminder
+            {
+                Id = Guid.NewGuid(),
+                Title = "Original Title",
+                Description = "Original Description",
+                DueDate = new DateTime(2023, 1, 1),
+                IsCompleted = false,
+                RemindMe = false,
+                EventFrequency = TimeSpan.Zero,
+                ContactId = initialContactId
+            };
+
+            var dto = new ReminderDto
+            {
+                Title = "Updated Title",
+                Description = "Updated Description",
+                DueDate = new DateTime(2023, 12, 31),
+                IsCompleted = true,
+                RemindMe = true,
+                EventFrequency = TimeSpan.FromDays(1)
+            };
+
+            // Act
+            entity.UpdateEntity(dto);
+
+            // Assert
+            Assert.Equal(dto.Title, entity.Title);
+            Assert.Equal(dto.Description, entity.Description);
+            Assert.Equal(dto.DueDate, entity.DueDate);
+            Assert.Equal(dto.IsCompleted, entity.IsCompleted);
+            Assert.Equal(dto.RemindMe, entity.RemindMe);
+            Assert.Equal(dto.EventFrequency, entity.EventFrequency);
+
+            // Verify unchanged properties
+            Assert.Equal(initialContactId, entity.ContactId);
+        }
     }
 }
