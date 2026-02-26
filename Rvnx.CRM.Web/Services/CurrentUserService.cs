@@ -1,3 +1,4 @@
+using Microsoft.Data.Sqlite;
 using Rvnx.CRM.Core.Constants;
 using Rvnx.CRM.Core.Interfaces;
 using System.Security.Claims;
@@ -8,6 +9,8 @@ public class CurrentUserService(IHttpContextAccessor httpContextAccessor, IConfi
 {
     private readonly IHttpContextAccessor _httpContextAccessor = httpContextAccessor;
     private readonly IConfiguration _configuration = configuration;
+    private Guid? _groupId;
+    private bool _groupIdResolved;
 
     public Guid? UserId
     {
@@ -35,6 +38,70 @@ public class CurrentUserService(IHttpContextAccessor httpContextAccessor, IConfi
             // This handles cases where UserSynchronizationService hasn't run yet
             string? nameId = user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             return Guid.TryParse(nameId, out Guid guid) ? guid : null;
+        }
+    }
+
+    public Guid? GroupId
+    {
+        get
+        {
+            if (_groupIdResolved)
+            {
+                return _groupId;
+            }
+
+            if (!IsAuthEnabled())
+            {
+                _groupIdResolved = true;
+                _groupId = null;
+                return null;
+            }
+
+            Guid? userId = UserId;
+            if (userId == null)
+            {
+                _groupIdResolved = true;
+                _groupId = null;
+                return null;
+            }
+
+            _groupId = ResolveGroupIdFromDb(userId.Value);
+            _groupIdResolved = true;
+            return _groupId;
+        }
+    }
+
+    private Guid? ResolveGroupIdFromDb(Guid userId)
+    {
+        try
+        {
+            string? connectionString = _configuration.GetConnectionString("DefaultConnection");
+            if (string.IsNullOrEmpty(connectionString)) return null;
+
+            using var connection = new SqliteConnection(connectionString);
+            connection.Open();
+
+            using var command = connection.CreateCommand();
+            command.CommandText = "SELECT GroupId FROM Users WHERE Id = @UserId";
+            command.Parameters.AddWithValue("@UserId", userId);
+
+            object? result = command.ExecuteScalar();
+            if (result != null && result != DBNull.Value)
+            {
+                if (Guid.TryParse(result.ToString(), out Guid groupId))
+                {
+                    return groupId;
+                }
+                if (result is byte[] bytes && bytes.Length == 16)
+                {
+                    return new Guid(bytes);
+                }
+            }
+            return null;
+        }
+        catch
+        {
+            return null;
         }
     }
 

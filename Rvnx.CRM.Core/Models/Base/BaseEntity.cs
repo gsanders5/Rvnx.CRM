@@ -24,4 +24,6 @@ public abstract class BaseEntity
 
     [MaxLength(450)]
     public Guid? UserId { get; set; }
+
+    public Guid? GroupId { get; set; }
 }

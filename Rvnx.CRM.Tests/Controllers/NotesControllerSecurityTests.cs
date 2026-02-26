@@ -65,7 +65,8 @@ namespace Rvnx.CRM.Tests.Controllers
             {
                 Id = otherUserContactId,
                 FirstName = "Private",
-                UserId = _otherUserId
+                UserId = _otherUserId,
+                GroupId = Guid.NewGuid() // Explicitly set different group
             };
 
             _context.Contacts.Add(otherUserContact);
@@ -101,7 +102,8 @@ namespace Rvnx.CRM.Tests.Controllers
             {
                 Id = otherUserContactId,
                 FirstName = "Private",
-                UserId = _otherUserId
+                UserId = _otherUserId,
+                GroupId = Guid.NewGuid() // Explicitly set different group
             };
 
             _context.Contacts.Add(otherUserContact);

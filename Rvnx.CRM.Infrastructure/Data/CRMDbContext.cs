@@ -27,6 +27,7 @@ public class CRMDbContext(DbContextOptions<CRMDbContext> options, ICurrentUserSe
     public DbSet<Fact> Facts { get; set; }
     public DbSet<Address> Addresses { get; set; }
     public DbSet<User> Users { get; set; }
+    public DbSet<UserGroup> UserGroups { get; set; }
     public DbSet<Label> Labels { get; set; }
     public DbSet<ContactLabel> ContactLabels { get; set; }
 
@@ -156,6 +157,7 @@ public class CRMDbContext(DbContextOptions<CRMDbContext> options, ICurrentUserSe
         foreach (Microsoft.EntityFrameworkCore.Metadata.IMutableEntityType? entityType in entityTypes)
         {
             modelBuilder.Entity(entityType.Name).HasIndex(nameof(BaseEntity.UserId));
+            modelBuilder.Entity(entityType.Name).HasIndex(nameof(BaseEntity.GroupId));
 
             if (!typeof(IGlobalEntity).IsAssignableFrom(entityType.ClrType))
             {
@@ -170,7 +172,7 @@ public class CRMDbContext(DbContextOptions<CRMDbContext> options, ICurrentUserSe
 
     private void ConfigureGlobalFilter<T>(ModelBuilder modelBuilder) where T : BaseEntity
     {
-        modelBuilder.Entity<T>().HasQueryFilter(e => e.UserId == _currentUserService.UserId);
+        modelBuilder.Entity<T>().HasQueryFilter(e => e.GroupId == _currentUserService.GroupId);
     }
 
     public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
@@ -192,6 +194,7 @@ public class CRMDbContext(DbContextOptions<CRMDbContext> options, ICurrentUserSe
 
         string username = GetUsername();
         Guid? userId = GetUserId();
+        Guid? groupId = GetGroupId();
 
         foreach (Microsoft.EntityFrameworkCore.ChangeTracking.EntityEntry<BaseEntity>? entry in entries)
         {
@@ -207,6 +210,11 @@ public class CRMDbContext(DbContextOptions<CRMDbContext> options, ICurrentUserSe
                 if (entry.Entity.UserId == null)
                 {
                     entry.Entity.UserId = userId;
+                }
+
+                if (entry.Entity.GroupId == null)
+                {
+                    entry.Entity.GroupId = groupId;
                 }
             }
             else if (entry.State == EntityState.Modified)
@@ -227,5 +235,10 @@ public class CRMDbContext(DbContextOptions<CRMDbContext> options, ICurrentUserSe
     private Guid? GetUserId()
     {
         return _currentUserService.UserId;
+    }
+
+    private Guid? GetGroupId()
+    {
+        return _currentUserService.GroupId;
     }
 }

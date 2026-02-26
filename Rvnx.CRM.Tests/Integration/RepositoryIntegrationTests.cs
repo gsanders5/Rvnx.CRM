@@ -58,12 +58,14 @@ public class RepositoryIntegrationTests : SqliteIntegrationTestBase
         // Let's just use Raw SQL to seed "Other" data.
 
         Guid otherId = Guid.NewGuid();
+        Guid otherUserId = Guid.NewGuid();
+        Guid otherGroupId = Guid.NewGuid();
         string now = DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture);
         // Note: SQLite syntax - Table name is Contact, not Contacts
         await Context.Database.ExecuteSqlRawAsync(
-            "INSERT INTO Contact (Id, FirstName, LastName, IsHidden, CreatedBy, CreatedDate, LastChangedBy, LastChangedDate, UserId, IsPartial) " +
-            "VALUES ({0}, 'Other', 'Guy', 0, 'System', {1}, 'System', {1}, 'UserB', 0)",
-            otherId, now);
+            "INSERT INTO Contact (Id, FirstName, LastName, IsHidden, CreatedBy, CreatedDate, LastChangedBy, LastChangedDate, UserId, GroupId, IsPartial) " +
+            "VALUES ({0}, 'Other', 'Guy', 0, 'System', {1}, 'System', {1}, {2}, {3}, 0)",
+            otherId, now, otherUserId, otherGroupId);
 
         // 3. Act
         Context.ChangeTracker.Clear();

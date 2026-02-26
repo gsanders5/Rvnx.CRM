@@ -44,6 +44,15 @@ public class UserSynchronizationService : IUserSynchronizationService
                 CreatedBy = "System",
                 LastChangedBy = "System",
             };
+
+            var group = new UserGroup
+            {
+                Name = user.DisplayName ?? "My Group",
+                CreatedBy = "System",
+                LastChangedBy = "System"
+            };
+            user.Group = group;
+
             _dbContext.Users.Add(user);
             await _dbContext.SaveChangesAsync();
             user.UserId = user.Id;
@@ -60,6 +69,18 @@ public class UserSynchronizationService : IUserSynchronizationService
             if (name != null && user.DisplayName != name)
             {
                 user.DisplayName = name;
+                changed = true;
+            }
+
+            if (user.GroupId == null)
+            {
+                var group = new UserGroup
+                {
+                    Name = user.DisplayName ?? "My Group",
+                    CreatedBy = "System",
+                    LastChangedBy = "System"
+                };
+                user.Group = group;
                 changed = true;
             }
 

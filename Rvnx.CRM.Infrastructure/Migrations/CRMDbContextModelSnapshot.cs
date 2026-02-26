@@ -15,7 +15,7 @@ namespace Rvnx.CRM.Infrastructure.Migrations
         protected override void BuildModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
-            modelBuilder.HasAnnotation("ProductVersion", "8.0.0");
+            modelBuilder.HasAnnotation("ProductVersion", "9.0.13");
 
             modelBuilder.Entity("Rvnx.CRM.Core.Models.Base.Attachment", b =>
                 {
@@ -48,6 +48,9 @@ namespace Rvnx.CRM.Infrastructure.Migrations
                         .HasMaxLength(255)
                         .HasColumnType("TEXT");
 
+                    b.Property<Guid?>("GroupId")
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("LastChangedBy")
                         .IsRequired()
                         .HasMaxLength(256)
@@ -63,6 +66,8 @@ namespace Rvnx.CRM.Infrastructure.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("ContactId");
+
+                    b.HasIndex("GroupId");
 
                     b.HasIndex("UserId");
 
@@ -93,6 +98,9 @@ namespace Rvnx.CRM.Infrastructure.Migrations
                     b.Property<DateTime>("CreatedDate")
                         .HasColumnType("TEXT");
 
+                    b.Property<Guid?>("GroupId")
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("LastChangedBy")
                         .IsRequired()
                         .HasMaxLength(256)
@@ -109,6 +117,8 @@ namespace Rvnx.CRM.Infrastructure.Migrations
 
                     b.HasIndex("AttachmentId")
                         .IsUnique();
+
+                    b.HasIndex("GroupId");
 
                     b.HasIndex("UserId");
 
@@ -130,6 +140,9 @@ namespace Rvnx.CRM.Infrastructure.Migrations
                         .HasColumnType("TEXT");
 
                     b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("GroupId")
                         .HasColumnType("TEXT");
 
                     b.Property<string>("LastChangedBy")
@@ -156,6 +169,8 @@ namespace Rvnx.CRM.Infrastructure.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("ContactId");
+
+                    b.HasIndex("GroupId");
 
                     b.HasIndex("UserId");
 
@@ -190,6 +205,9 @@ namespace Rvnx.CRM.Infrastructure.Migrations
                     b.Property<DateTime?>("EndDate")
                         .HasColumnType("TEXT");
 
+                    b.Property<Guid?>("GroupId")
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("JobTitle")
                         .HasColumnType("TEXT");
 
@@ -214,6 +232,8 @@ namespace Rvnx.CRM.Infrastructure.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("EmployeeId");
+
+                    b.HasIndex("GroupId");
 
                     b.HasIndex("UserId");
 
@@ -252,6 +272,9 @@ namespace Rvnx.CRM.Infrastructure.Migrations
                     b.Property<DateTime>("CreatedDate")
                         .HasColumnType("TEXT");
 
+                    b.Property<Guid?>("GroupId")
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("LastChangedBy")
                         .IsRequired()
                         .HasMaxLength(256)
@@ -282,6 +305,8 @@ namespace Rvnx.CRM.Infrastructure.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("ContactId");
+
+                    b.HasIndex("GroupId");
 
                     b.HasIndex("UserId");
 
@@ -316,6 +341,9 @@ namespace Rvnx.CRM.Infrastructure.Migrations
 
                     b.Property<string>("Gender")
                         .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("GroupId")
                         .HasColumnType("TEXT");
 
                     b.Property<bool>("IsHidden")
@@ -358,6 +386,8 @@ namespace Rvnx.CRM.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("GroupId");
+
                     b.HasIndex("UserId");
 
                     b.ToTable("Contact");
@@ -380,6 +410,9 @@ namespace Rvnx.CRM.Infrastructure.Migrations
                     b.Property<DateTime>("CreatedDate")
                         .HasColumnType("TEXT");
 
+                    b.Property<Guid?>("GroupId")
+                        .HasColumnType("TEXT");
+
                     b.Property<Guid>("LabelId")
                         .HasColumnType("TEXT");
 
@@ -396,6 +429,8 @@ namespace Rvnx.CRM.Infrastructure.Migrations
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("GroupId");
 
                     b.HasIndex("LabelId");
 
@@ -422,6 +457,9 @@ namespace Rvnx.CRM.Infrastructure.Migrations
                         .HasColumnType("TEXT");
 
                     b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("GroupId")
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Label")
@@ -451,6 +489,8 @@ namespace Rvnx.CRM.Infrastructure.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("ContactId");
+
+                    b.HasIndex("GroupId");
 
                     b.HasIndex("UserId");
 
@@ -482,6 +522,9 @@ namespace Rvnx.CRM.Infrastructure.Migrations
                     b.Property<DateTime>("CreatedDate")
                         .HasColumnType("TEXT");
 
+                    b.Property<Guid?>("GroupId")
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("LastChangedBy")
                         .IsRequired()
                         .HasMaxLength(256)
@@ -502,6 +545,8 @@ namespace Rvnx.CRM.Infrastructure.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("ContactId");
+
+                    b.HasIndex("GroupId");
 
                     b.HasIndex("UserId");
 
@@ -529,6 +574,9 @@ namespace Rvnx.CRM.Infrastructure.Migrations
                     b.Property<DateTime>("CreatedDate")
                         .HasColumnType("TEXT");
 
+                    b.Property<Guid?>("GroupId")
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("LastChangedBy")
                         .IsRequired()
                         .HasMaxLength(256)
@@ -547,6 +595,8 @@ namespace Rvnx.CRM.Infrastructure.Migrations
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("GroupId");
 
                     b.HasIndex("UserId");
 
@@ -577,6 +627,9 @@ namespace Rvnx.CRM.Infrastructure.Migrations
                     b.Property<DateTime>("CreatedDate")
                         .HasColumnType("TEXT");
 
+                    b.Property<Guid?>("GroupId")
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("LastChangedBy")
                         .IsRequired()
                         .HasMaxLength(256)
@@ -605,6 +658,8 @@ namespace Rvnx.CRM.Infrastructure.Migrations
 
                     b.HasIndex("ContactId");
 
+                    b.HasIndex("GroupId");
+
                     b.HasIndex("UserId");
 
                     b.ToTable("Pet");
@@ -625,6 +680,9 @@ namespace Rvnx.CRM.Infrastructure.Migrations
                         .HasColumnType("TEXT");
 
                     b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("GroupId")
                         .HasColumnType("TEXT");
 
                     b.Property<string>("LastChangedBy")
@@ -650,6 +708,8 @@ namespace Rvnx.CRM.Infrastructure.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("ContactId");
+
+                    b.HasIndex("GroupId");
 
                     b.HasIndex("UserId");
 
@@ -687,6 +747,9 @@ namespace Rvnx.CRM.Infrastructure.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("TEXT");
 
+                    b.Property<Guid?>("GroupId")
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("LastChangedBy")
                         .IsRequired()
                         .HasMaxLength(256)
@@ -709,6 +772,8 @@ namespace Rvnx.CRM.Infrastructure.Migrations
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("GroupId");
 
                     b.HasIndex("UserId");
 
@@ -745,6 +810,9 @@ namespace Rvnx.CRM.Infrastructure.Migrations
                     b.Property<TimeSpan>("EventFrequency")
                         .HasColumnType("TEXT");
 
+                    b.Property<Guid?>("GroupId")
+                        .HasColumnType("TEXT");
+
                     b.Property<bool>("IsCompleted")
                         .HasColumnType("INTEGER");
 
@@ -774,6 +842,8 @@ namespace Rvnx.CRM.Infrastructure.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("ContactId");
+
+                    b.HasIndex("GroupId");
 
                     b.HasIndex("UserId");
 
@@ -809,6 +879,9 @@ namespace Rvnx.CRM.Infrastructure.Migrations
                     b.Property<TimeSpan>("EventFrequency")
                         .HasColumnType("TEXT");
 
+                    b.Property<Guid?>("GroupId")
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("LastChangedBy")
                         .IsRequired()
                         .HasMaxLength(256)
@@ -834,6 +907,8 @@ namespace Rvnx.CRM.Infrastructure.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("ContactId");
+
+                    b.HasIndex("GroupId");
 
                     b.HasIndex("UserId");
 
@@ -866,6 +941,12 @@ namespace Rvnx.CRM.Infrastructure.Migrations
                         .HasMaxLength(256)
                         .HasColumnType("TEXT");
 
+                    b.Property<Guid?>("GroupId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("IsAdministrator")
+                        .HasColumnType("INTEGER");
+
                     b.Property<string>("LastChangedBy")
                         .IsRequired()
                         .HasMaxLength(256)
@@ -888,12 +969,57 @@ namespace Rvnx.CRM.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("GroupId");
+
                     b.HasIndex("SelfContactId")
                         .IsUnique();
 
                     b.HasIndex("UserId");
 
                     b.ToTable("Users");
+                });
+
+            modelBuilder.Entity("Rvnx.CRM.Core.Models.UserGroup", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("CreatedBy")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("GroupId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("LastChangedBy")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("LastChangedDate")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("UserId")
+                        .HasMaxLength(450)
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("GroupId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("UserGroups");
                 });
 
             modelBuilder.Entity("Rvnx.CRM.Core.Models.Base.Attachment", b =>
@@ -1030,10 +1156,16 @@ namespace Rvnx.CRM.Infrastructure.Migrations
 
             modelBuilder.Entity("Rvnx.CRM.Core.Models.User", b =>
                 {
+                    b.HasOne("Rvnx.CRM.Core.Models.UserGroup", "Group")
+                        .WithMany("Members")
+                        .HasForeignKey("GroupId");
+
                     b.HasOne("Rvnx.CRM.Core.Models.Contact.Contact", "SelfContact")
                         .WithOne()
                         .HasForeignKey("Rvnx.CRM.Core.Models.User", "SelfContactId")
                         .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("Group");
 
                     b.Navigation("SelfContact");
                 });
@@ -1069,6 +1201,11 @@ namespace Rvnx.CRM.Infrastructure.Migrations
             modelBuilder.Entity("Rvnx.CRM.Core.Models.Contact.Label", b =>
                 {
                     b.Navigation("ContactLabels");
+                });
+
+            modelBuilder.Entity("Rvnx.CRM.Core.Models.UserGroup", b =>
+                {
+                    b.Navigation("Members");
                 });
 #pragma warning restore 612, 618
         }
