@@ -22,3 +22,8 @@
 **Vulnerability:** `AttachmentsController` trusted the user-provided `Content-Type` header during file upload. An attacker could upload a `.txt` file with `Content-Type: text/html`, which would be served back to users as HTML, executing malicious scripts (Stored XSS).
 **Learning:** Never trust client-provided metadata like `Content-Type`. Browsers often respect this header over file extensions, leading to XSS if not validated.
 **Prevention:** Determine the MIME type server-side based on the file content or extension using a strict whitelist. Ignore the client's `Content-Type` header entirely.
+
+## 2024-05-22 - Unvalidated Redirect in GET Action
+**Vulnerability:** Found an Unvalidated Redirect (Open Redirect) and potential Reflected XSS in `RelationshipsController.Delete` (GET action). The `returnUrl` parameter was passed directly to the view model without validation, allowing attackers to inject malicious URLs or JavaScript.
+**Learning:** Developers often remember to validate `returnUrl` in POST actions (like `DeleteConfirmed`) but overlook GET actions that display the URL in the view (e.g., in a "Cancel" link).
+**Prevention:** Always validate `returnUrl` with `Url.IsLocalUrl()` in both GET and POST actions if it is used to redirect or rendered in a link.
