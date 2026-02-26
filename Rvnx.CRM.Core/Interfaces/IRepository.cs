@@ -49,6 +49,9 @@ public interface IRepository
 
     Task DeleteAsync<T>(T entity, CancellationToken cancellationToken = default) where T : BaseEntity;
 
+    Task DeleteAsync<T>(Expression<Func<T, bool>> predicate, CancellationToken cancellationToken = default)
+        where T : BaseEntity;
+
     Task DeleteRangeAsync<T>(IEnumerable<T> entities, CancellationToken cancellationToken = default)
         where T : BaseEntity;
 
