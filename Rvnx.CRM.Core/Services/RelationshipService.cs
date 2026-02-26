@@ -2,6 +2,7 @@ using Rvnx.CRM.Core.Constants;
 using Rvnx.CRM.Core.DTOs.Common;
 using Rvnx.CRM.Core.DTOs.Contact;
 using Rvnx.CRM.Core.Interfaces;
+using Rvnx.CRM.Core.Models;
 using Rvnx.CRM.Core.Models.Business;
 using Rvnx.CRM.Core.Models.Contact;
 using Rvnx.CRM.Core.Models.Dates;
@@ -244,6 +245,44 @@ namespace Rvnx.CRM.Core.Services
             await repository.SaveChangesAsync();
 
             return RelationshipOperationResult.Ok(contact.Id, EntityTypes.Person);
+        }
+
+        public async Task<Relationship?> GetRelationshipForEditAsync(Guid id)
+        {
+            return await repository.GetByIdAsync<Relationship>(id);
+        }
+
+        public async Task<Relationship?> GetRelationshipForDeleteAsync(Guid id)
+        {
+            Relationship? relationship = await repository.GetByIdAsync<Relationship>(id);
+            if (relationship == null)
+            {
+                return null;
+            }
+
+            // Populate Person/RelatedPerson so names show up
+            Guid p1Id = relationship.EntityId;
+            Guid p2Id = relationship.RelatedEntityId;
+            List<Contact> contacts = await repository.ListAsync<Contact>(c => c.Id == p1Id || c.Id == p2Id);
+
+            relationship.Person = contacts.FirstOrDefault(c => c.Id == p1Id);
+            relationship.RelatedPerson = contacts.FirstOrDefault(c => c.Id == p2Id);
+
+            return relationship;
+        }
+
+        public async Task<OperationResult> DeleteRelationshipAsync(Guid id)
+        {
+            Relationship? relationship = await repository.GetByIdAsync<Relationship>(id);
+            if (relationship != null)
+            {
+                Guid entityId = relationship.EntityId;
+                string entityType = relationship.EntityType;
+                await repository.DeleteAsync<Relationship>(id);
+                await repository.SaveChangesAsync();
+                return OperationResult.Ok(entityId, entityType);
+            }
+            return OperationResult.Failure("Relationship not found.");
         }
     }
 }

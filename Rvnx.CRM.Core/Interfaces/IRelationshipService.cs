@@ -1,5 +1,6 @@
 using Rvnx.CRM.Core.DTOs.Common;
 using Rvnx.CRM.Core.DTOs.Contact;
+using Rvnx.CRM.Core.Models;
 using Rvnx.CRM.Core.Models.Contact;
 
 namespace Rvnx.CRM.Core.Interfaces;
@@ -67,4 +68,8 @@ public interface IRelationshipService
     /// <param name="contactId">The ID of the contact to promote.</param>
     /// <returns>A <see cref="RelationshipOperationResult"/> indicating success or failure.</returns>
     Task<RelationshipOperationResult> PromotePartialContactAsync(Guid contactId);
+
+    Task<Relationship?> GetRelationshipForEditAsync(Guid id);
+    Task<Relationship?> GetRelationshipForDeleteAsync(Guid id);
+    Task<OperationResult> DeleteRelationshipAsync(Guid id);
 }

@@ -10,6 +10,7 @@ using Rvnx.CRM.Core.Interfaces;
 using Rvnx.CRM.Core.Models.Contact;
 using Rvnx.CRM.Infrastructure.Data;
 using Rvnx.CRM.Infrastructure.Repositories;
+using Rvnx.CRM.Infrastructure.Services;
 using Rvnx.CRM.Web.Controllers;
 
 namespace Rvnx.CRM.Tests.Controllers
@@ -31,8 +32,9 @@ namespace Rvnx.CRM.Tests.Controllers
 
             _context = new CRMDbContext(options, _userMock.Object);
             Repository repository = new(_context);
+            IContactMethodService contactMethodService = new ContactMethodService(repository);
 
-            _controller = new ContactMethodsController(repository)
+            _controller = new ContactMethodsController(contactMethodService, repository)
             {
                 ControllerContext = new ControllerContext { HttpContext = new DefaultHttpContext() }
             };

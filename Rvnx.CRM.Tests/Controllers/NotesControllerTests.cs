@@ -8,6 +8,7 @@ using Rvnx.CRM.Core.Models.Base;
 using Rvnx.CRM.Core.Models.Contact;
 using Rvnx.CRM.Infrastructure.Data;
 using Rvnx.CRM.Infrastructure.Repositories;
+using Rvnx.CRM.Infrastructure.Services;
 using Rvnx.CRM.Web.Controllers;
 
 namespace Rvnx.CRM.Tests.Controllers
@@ -34,7 +35,9 @@ namespace Rvnx.CRM.Tests.Controllers
             mockEntityService.Setup(s => s.IsPartialAsync(It.IsAny<string>(), It.IsAny<Guid>())).ReturnsAsync(false);
             mockEntityService.Setup(s => s.GetEntityNameAsync(It.IsAny<string>(), It.IsAny<Guid>())).ReturnsAsync("Test Entity");
 
-            _controller = new NotesController(repository, mockEntityService.Object);
+            INoteService noteService = new NoteService(repository, mockEntityService.Object);
+
+            _controller = new NotesController(noteService, repository, mockEntityService.Object);
         }
 
         public void Dispose()

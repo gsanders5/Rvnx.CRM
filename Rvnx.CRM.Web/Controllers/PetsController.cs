@@ -1,69 +1,43 @@
 using Microsoft.AspNetCore.Mvc;
 using Rvnx.CRM.Core.Constants;
 using Rvnx.CRM.Core.DTOs.Contact;
-using Rvnx.CRM.Core.Extensions;
 using Rvnx.CRM.Core.Interfaces;
+using Rvnx.CRM.Core.Models;
 using Rvnx.CRM.Core.Models.Contact;
 using Rvnx.CRM.Web.Controllers.Base;
 
 namespace Rvnx.CRM.Web.Controllers
 {
-    public class PetsController(IRepository repository) : RepositoryController(repository)
+    public class PetsController(IPetService petService, IRepository repository) : RepositoryController(repository)
     {
+        private readonly IPetService _petService = petService;
+
         public async Task<IActionResult> Create(Guid entityId)
         {
-            if (!await IsValidContactAsync(entityId))
-            {
-                return NotFound();
-            }
-
-            PetFormDto dto = new()
-            {
-                EntityId = entityId
-            };
-            return View(dto);
+            PetFormDto? dto = await _petService.GetFormForCreateAsync(entityId);
+            return dto == null ? NotFound() : View(dto);
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(PetFormDto petDto)
         {
-            if (!await IsValidContactAsync(petDto.EntityId))
-            {
-                return NotFound();
-            }
-
             if (ModelState.IsValid)
             {
-                Pet pet = petDto.ToEntity();
-                await Repository.AddAsync(pet);
-                await Repository.SaveChangesAsync();
-
-                return RedirectToEntity(petDto.EntityId, EntityTypes.Person);
+                OperationResult result = await _petService.CreateAsync(petDto);
+                if (result.Success)
+                {
+                    return RedirectToEntity(result.RedirectId, result.RedirectType);
+                }
+                if (result.ErrorMessage == "Contact not found.") return NotFound();
             }
             return View(petDto);
         }
 
         public async Task<IActionResult> Edit(Guid id)
         {
-            Pet? pet = await Repository.GetByIdAsync<Pet>(id);
-            if (pet == null || !await IsValidContactAsync(pet.ContactId))
-            {
-                return NotFound();
-            }
-
-            PetFormDto dto = new()
-            {
-                Id = pet.Id,
-                EntityId = pet.ContactId,
-                Name = pet.Name,
-                Species = pet.Species,
-                Breed = pet.Breed,
-                Birthday = pet.Birthday,
-                Notes = pet.Notes
-            };
-
-            return View(dto);
+            PetFormDto? dto = await _petService.GetFormAsync(id);
+            return dto == null ? NotFound() : View(dto);
         }
 
         [HttpPost]
@@ -77,38 +51,30 @@ namespace Rvnx.CRM.Web.Controllers
 
             if (ModelState.IsValid)
             {
-                Pet? pet = await Repository.GetByIdAsync<Pet>(id);
-                if (pet == null || !await IsValidContactAsync(pet.ContactId))
+                OperationResult result = await _petService.UpdateAsync(id, petDto);
+                if (result.Success)
                 {
-                    return NotFound();
+                    return RedirectToEntity(result.RedirectId, result.RedirectType);
                 }
-
-                pet.UpdateEntity(petDto);
-                await Repository.UpdateAsync(pet);
-                await Repository.SaveChangesAsync();
-
-                return RedirectToEntity(pet.ContactId, EntityTypes.Person);
+                if (result.ErrorMessage == "Pet not found.") return NotFound();
             }
             return View(petDto);
         }
 
         public async Task<IActionResult> Delete(Guid id)
         {
-            Pet? pet = await Repository.GetByIdAsync<Pet>(id);
-            return pet == null || !await IsValidContactAsync(pet.ContactId) ? NotFound() : View(pet.ToDto());
+            Pet? pet = await _petService.GetByIdAsync(id);
+            return pet == null ? NotFound() : View(pet.ToDto());
         }
 
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(Guid id)
         {
-            Pet? pet = await Repository.GetByIdAsync<Pet>(id);
-            if (pet != null)
+            OperationResult result = await _petService.DeleteAsync(id);
+            if (result.Success)
             {
-                Guid entityId = pet.ContactId;
-                await Repository.DeleteAsync<Pet>(id);
-                await Repository.SaveChangesAsync();
-                return RedirectToEntity(entityId, EntityTypes.Person);
+                return RedirectToEntity(result.RedirectId, result.RedirectType);
             }
             return RedirectToAction("Index", "Contacts");
         }
