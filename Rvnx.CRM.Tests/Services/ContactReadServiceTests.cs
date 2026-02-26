@@ -120,9 +120,10 @@ namespace Rvnx.CRM.Tests.Services
                 .ReturnsAsync(relationships);
 
             // Mock fetching related contacts
-            _repositoryMock.Setup(r => r.ListAsNoTrackingAsync<Contact>(
-                It.IsAny<Expression<Func<Contact, bool>>>(), // This one matches related contacts query
-                default)) // No includes
+            _repositoryMock.Setup(r => r.ListProjectedAsync<Contact, Contact>(
+                It.IsAny<Expression<Func<Contact, bool>>>(),
+                It.IsAny<Expression<Func<Contact, Contact>>>(),
+                default))
                 .ReturnsAsync([relatedContact]);
 
             // Other mocks
