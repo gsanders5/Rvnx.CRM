@@ -214,8 +214,13 @@ namespace Rvnx.CRM.Web.Controllers
             }
 
             // Populate Person/RelatedPerson so names show up
-            relationship.Person = await Repository.GetByIdAsync<Contact>(relationship.EntityId);
-            relationship.RelatedPerson = await Repository.GetByIdAsync<Contact>(relationship.RelatedEntityId);
+            // Use local variables to avoid closure issues with EF Core translation
+            Guid p1Id = relationship.EntityId;
+            Guid p2Id = relationship.RelatedEntityId;
+            List<Contact> contacts = await Repository.ListAsync<Contact>(c => c.Id == p1Id || c.Id == p2Id);
+
+            relationship.Person = contacts.FirstOrDefault(c => c.Id == p1Id);
+            relationship.RelatedPerson = contacts.FirstOrDefault(c => c.Id == p2Id);
 
             RelationshipDto viewModel = relationship.ToDto();
             RelationshipDeleteViewModel deleteViewModel = new()
