@@ -158,6 +158,23 @@ public class Repository(CRMDbContext context) : IRepository
         return Task.CompletedTask;
     }
 
+    public async Task DeleteAsync<T>(Expression<Func<T, bool>> predicate, CancellationToken cancellationToken = default)
+        where T : BaseEntity
+    {
+        if (_context.Database.ProviderName == "Microsoft.EntityFrameworkCore.InMemory")
+        {
+            List<T> entities = await _context.Set<T>().Where(predicate).ToListAsync(cancellationToken);
+            if (entities.Count != 0)
+            {
+                _context.Set<T>().RemoveRange(entities);
+            }
+        }
+        else
+        {
+            await _context.Set<T>().Where(predicate).ExecuteDeleteAsync(cancellationToken);
+        }
+    }
+
     public Task DeleteRangeAsync<T>(IEnumerable<T> entities, CancellationToken cancellationToken = default)
         where T : BaseEntity
     {

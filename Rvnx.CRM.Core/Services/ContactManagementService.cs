@@ -229,21 +229,12 @@ public class ContactManagementService(IRepository repository, IFileValidationSer
         // are now configured with Cascade Delete via ContactId foreign key.
 
         await DeleteRelatedEntitiesAsync<Relationship>(contactId);
-
-        List<Relationship> relatedTo = await _repository.ListAsync<Relationship>(r => r.RelatedEntityId == contactId && r.EntityType == EntityTypes.Person);
-        if (relatedTo.Count != 0)
-        {
-            await _repository.DeleteRangeAsync(relatedTo);
-        }
+        await _repository.DeleteAsync<Relationship>(r => r.RelatedEntityId == contactId && r.EntityType == EntityTypes.Person);
     }
 
     private async Task DeleteRelatedEntitiesAsync<T>(Guid contactId) where T : PolymorphicEntity
     {
-        List<T> entities = await _repository.ListAsync<T>(e => e.EntityId == contactId && e.EntityType == EntityTypes.Person);
-        if (entities.Count != 0)
-        {
-            await _repository.DeleteRangeAsync(entities);
-        }
+        await _repository.DeleteAsync<T>(e => e.EntityId == contactId && e.EntityType == EntityTypes.Person);
     }
 
     private async Task<ContactMethod?> GetPrimaryContactMethodAsync(Guid contactId, ContactMethodType type)

@@ -143,6 +143,15 @@ namespace Rvnx.CRM.Tests.Services
                         if (existing != null) _relationships.Remove(existing);
                     }
                 });
+
+            // Setup DeleteAsync(predicate) callback
+            _repositoryMock.Setup(r => r.DeleteAsync(It.IsAny<Expression<Func<Relationship, bool>>>(), It.IsAny<CancellationToken>()))
+                .Callback<Expression<Func<Relationship, bool>>, CancellationToken>((predicate, ct) =>
+                {
+                    var func = predicate.Compile();
+                    var itemsToRemove = _relationships.Where(func).ToList();
+                    foreach (var item in itemsToRemove) _relationships.Remove(item);
+                });
         }
 
         [Fact]
@@ -367,9 +376,11 @@ namespace Rvnx.CRM.Tests.Services
             await _service.DeleteContactAsync(contactId);
 
             // Assert
-            // 1. Deletes relationships
-            _repositoryMock.Verify(r => r.DeleteRangeAsync(It.Is<IEnumerable<Relationship>>(list => list.Contains(rel1)), It.IsAny<CancellationToken>()), Times.Once);
-            _repositoryMock.Verify(r => r.DeleteRangeAsync(It.Is<IEnumerable<Relationship>>(list => list.Contains(rel2)), It.IsAny<CancellationToken>()), Times.Once);
+            // 1. Deletes relationships (Using optimized DeleteAsync(predicate))
+            _repositoryMock.Verify(r => r.DeleteAsync(It.IsAny<Expression<Func<Relationship, bool>>>(), It.IsAny<CancellationToken>()), Times.Exactly(2));
+
+            // Verify DeleteRangeAsync is NOT called
+            _repositoryMock.Verify(r => r.DeleteRangeAsync(It.IsAny<IEnumerable<Relationship>>(), It.IsAny<CancellationToken>()), Times.Never);
 
             // 2. Deletes Contact
             _repositoryMock.Verify(r => r.DeleteAsync<Contact>(contactId, It.IsAny<CancellationToken>()), Times.Once);
