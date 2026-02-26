@@ -29,11 +29,11 @@ public class DebugOperationsService(
                 .ThenInclude(g => g.Members)
             .ToListAsync();
 
-        // Use null-conditional operators carefully or check for nulls
-        // u is not null here because ToListAsync() returns entities
         return users.Select(u => {
             string groupName = "No Group";
             int memberCount = 0;
+
+            // Explicit null check for Group to avoid CS8602
             if (u.Group != null)
             {
                 groupName = u.Group.Name;
@@ -43,6 +43,7 @@ public class DebugOperationsService(
                 }
             }
 
+            // Using null coalescing for optional fields that might be null
             return new MergeUserDto
             {
                 Id = u.Id,
@@ -96,11 +97,11 @@ public class DebugOperationsService(
 
         // Decide which group to keep
         // Prefer larger group
-        UserGroup g1 = group1!; // Known not null from checks above
-        UserGroup g2 = group2!; // Known not null from checks above
+        UserGroup g1 = group1!;
+        UserGroup g2 = group2!;
 
-        // Ensure Members are loaded. Even with Include, static analysis might worry about nulls.
         int count1 = 0;
+        // Suppress nullable warning as we checked for nulls above, but static analysis might not infer deep prop
         if (g1.Members != null)
         {
             count1 = g1.Members.Count;
