@@ -1,15 +1,28 @@
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using Rvnx.CRM.Core.Constants;
+using Rvnx.CRM.Core.DTOs.Base;
 using Rvnx.CRM.Core.Interfaces;
+using Rvnx.CRM.Core.Models;
 using Rvnx.CRM.Core.Models.Base;
 using Rvnx.CRM.Core.Models.Contact;
 using Rvnx.CRM.Core.Models.Dates;
 using Rvnx.CRM.Core.Services;
+using Rvnx.CRM.Infrastructure.Data;
 
 namespace Rvnx.CRM.Infrastructure.Services;
 
-public class DebugDataService(IRepository repository) : IDebugDataService
+public class DebugDataService(IRepository repository, CRMDbContext context, ILogger<DebugDataService> logger) : IDebugDataService
 {
     private readonly IRepository _repository = repository;
+    private readonly CRMDbContext _context = context;
+    private readonly ILogger<DebugDataService> _logger = logger;
+
+    private static readonly Action<ILogger, Guid, Guid, Guid?, DateTime, Exception?> LogMerge =
+        LoggerMessage.Define<Guid, Guid, Guid?, DateTime>(
+            LogLevel.Information,
+            new EventId(1, nameof(MergeAccountsAsync)),
+            "Merged group {DiscardedGroupId} into {KeptGroupId}. Administrator: {AdminId}. Timestamp: {Timestamp}");
 
     public async Task SeedTestDataAsync(int count)
     {
@@ -150,5 +163,129 @@ public class DebugDataService(IRepository repository) : IDebugDataService
 
         await _repository.SaveChangesAsync();
         return createdCount;
+    }
+
+    public async Task<List<User>> GetMergeCandidatesAsync()
+    {
+        return await _context.Users.IgnoreQueryFilters()
+            .Include(u => u.Group)
+                .ThenInclude(g => g.Members)
+            .ToListAsync();
+    }
+
+    public async Task<bool> IsAdministratorAsync(Guid userId)
+    {
+        User? user = await _context.Users.IgnoreQueryFilters().FirstOrDefaultAsync(u => u.Id == userId);
+        return user?.IsAdministrator ?? false;
+    }
+
+    public async Task<MergeOperationResult> MergeAccountsAsync(Guid user1Id, Guid user2Id, Guid adminId)
+    {
+        if (user1Id == user2Id)
+        {
+            return MergeOperationResult.Failure("Cannot merge same user.");
+        }
+
+        User? user1 = await _context.Users.IgnoreQueryFilters().Include(u => u.Group).ThenInclude(g => g.Members).FirstOrDefaultAsync(u => u.Id == user1Id);
+        User? user2 = await _context.Users.IgnoreQueryFilters().Include(u => u.Group).ThenInclude(g => g.Members).FirstOrDefaultAsync(u => u.Id == user2Id);
+
+        if (user1 == null || user2 == null)
+        {
+            return MergeOperationResult.Failure("User not found.");
+        }
+
+        UserGroup? group1 = user1.Group;
+        UserGroup? group2 = user2.Group;
+
+        if (group1 == null || group2 == null)
+        {
+            return MergeOperationResult.Failure("One or both users have no group.");
+        }
+
+        if (group1.Id == group2.Id)
+        {
+             return MergeOperationResult.Failure("Users are already in the same group.");
+        }
+
+        // Decide which group to keep
+        // Prefer larger group
+        UserGroup g1 = group1!;
+        UserGroup g2 = group2!;
+
+        int count1 = g1.Members?.Count ?? 0;
+        int count2 = g2.Members?.Count ?? 0;
+
+        UserGroup keptGroup = count1 >= count2 ? g1 : g2;
+        UserGroup discardedGroup = keptGroup == g1 ? g2 : g1;
+
+        // Move all entities
+        Guid keptGroupId = keptGroup.Id;
+        Guid discardedGroupId = discardedGroup.Id;
+
+        // Update all filtered entities
+        IEnumerable<Microsoft.EntityFrameworkCore.Metadata.IEntityType> entityTypes = _context.Model.GetEntityTypes()
+            .Where(e => typeof(BaseEntity).IsAssignableFrom(e.ClrType) && !typeof(IGlobalEntity).IsAssignableFrom(e.ClrType));
+
+        foreach (Microsoft.EntityFrameworkCore.Metadata.IEntityType? entityType in entityTypes)
+        {
+            string? tableName = entityType.GetTableName();
+#pragma warning disable EF1002 // SQL Injection risk
+            if (tableName != null)
+            {
+                // In-memory provider doesn't support raw SQL for updates like this.
+                // For now, if not relational, we skip optimization and assume standard tracking (which might be slower but correct).
+                // Or check if provider is relational.
+                if (_context.Database.IsRelational())
+                {
+                    await _context.Database.ExecuteSqlRawAsync($"UPDATE \"{tableName}\" SET \"GroupId\" = {{0}} WHERE \"GroupId\" = {{1}}", keptGroupId, discardedGroupId);
+                }
+                else
+                {
+                    // Fallback for InMemory (primarily for tests)
+                    // In memory, we must update entities via EF Core tracking.
+                    // This is slow but necessary for tests to pass asserting that entities moved.
+                    if (entityType.ClrType != null)
+                    {
+                        System.Reflection.MethodInfo? method = GetType()
+                            .GetMethod(nameof(UpdateGroupIdsInMemory), System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)
+                            ?.MakeGenericMethod(entityType.ClrType);
+
+                        if (method != null)
+                        {
+                            await (Task)method.Invoke(this, [keptGroupId, discardedGroupId])!;
+                        }
+                    }
+                }
+            }
+#pragma warning restore EF1002
+        }
+
+        // Move users
+        if (discardedGroup.Members != null)
+        {
+            foreach (User? member in discardedGroup.Members.ToList())
+            {
+                member.GroupId = keptGroupId;
+                member.Group = keptGroup; // Ensure navigation property is updated if tracked
+            }
+        }
+
+        // Delete discarded group
+        _context.UserGroups.Remove(discardedGroup);
+
+        await _context.SaveChangesAsync();
+
+        LogMerge(_logger, discardedGroupId, keptGroupId, adminId, DateTime.UtcNow, null);
+
+        return MergeOperationResult.Ok(keptGroup.Name, keptGroup.Members != null ? keptGroup.Members.Count : 0);
+    }
+
+    private async Task UpdateGroupIdsInMemory<T>(Guid keptGroupId, Guid discardedGroupId) where T : BaseEntity
+    {
+        List<T> entities = await _context.Set<T>().IgnoreQueryFilters().Where(e => e.GroupId == discardedGroupId).ToListAsync();
+        foreach (T entity in entities)
+        {
+            entity.GroupId = keptGroupId;
+        }
     }
 }
