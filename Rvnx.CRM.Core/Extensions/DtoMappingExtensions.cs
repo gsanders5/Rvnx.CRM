@@ -33,6 +33,7 @@ namespace Rvnx.CRM.Core.Extensions
                 Title = entity.Title,
                 Description = entity.Description,
                 DueDate = entity.DueDate,
+                IsCompleted = entity.IsCompleted,
                 EntityId = entity.ContactId ?? Guid.Empty,
                 EntityType = EntityTypes.Person,
                 RemindMe = entity.RemindMe,
