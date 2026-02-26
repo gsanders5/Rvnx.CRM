@@ -37,6 +37,33 @@ namespace Rvnx.CRM.Tests.Extensions
         }
 
         [Fact]
+        public void ToDtoShouldHandleNullContactId()
+        {
+            // Arrange
+            var entity = new ContactMethod
+            {
+                Id = Guid.NewGuid(),
+                Type = ContactMethodType.Phone,
+                Value = "+1987654321",
+                Label = "Mobile",
+                ContactId = null,
+                CreatedDate = DateTime.UtcNow
+            };
+
+            // Act
+            var dto = entity.ToDto();
+
+            // Assert
+            Assert.Equal(entity.Id, dto.Id);
+            Assert.Equal(entity.Type, dto.Type);
+            Assert.Equal(entity.Value, dto.Value);
+            Assert.Equal(entity.Label, dto.Label);
+            Assert.Equal(Guid.Empty, dto.EntityId);
+            Assert.Equal(EntityTypes.Person, dto.EntityType);
+            Assert.Equal(entity.CreatedDate, dto.CreatedDate);
+        }
+
+        [Fact]
         public void ToEntityShouldCreateNewContactMethodWithCorrectProperties()
         {
             // Arrange
