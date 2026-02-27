@@ -4,18 +4,18 @@
     ViewData["Title"] = "Contacts";
 }
 
-<div class="d-flex justify-content-between align-items-center mb-3">
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-center mb-3">
     <h1>Contacts</h1>
-    <div>
+    <div class="d-flex flex-wrap gap-2 mt-3 mt-md-0">
         @if (Context.Request.Query["showHidden"] == "True")
         {
-            <a asp-action="Index" asp-route-showHidden="False" class="btn btn-outline-secondary me-2">Hide Hidden</a>
+            <a asp-action="Index" asp-route-showHidden="False" class="btn btn-outline-secondary">Hide Hidden</a>
         }
         else
         {
-            <a asp-action="Index" asp-route-showHidden="True" class="btn btn-outline-secondary me-2">View Hidden</a>
+            <a asp-action="Index" asp-route-showHidden="True" class="btn btn-outline-secondary">View Hidden</a>
         }
-        <a asp-action="Import" class="btn btn-outline-primary me-2"><i class="fa-solid fa-file-import"></i> Import VCF</a>
+        <a asp-action="Import" class="btn btn-outline-primary"><i class="fa-solid fa-file-import"></i> Import VCF</a>
         <a asp-action="Create" class="btn btn-primary"><i class="bi bi-plus-lg"></i> Create New</a>
     </div>
 </div>

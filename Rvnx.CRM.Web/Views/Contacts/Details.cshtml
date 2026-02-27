@@ -353,9 +353,9 @@
                     @foreach (var date in Model.SignificantDates.OrderBy(d => d.Date))
                     {
                         <li class="list-group-item">
-                            <div class="d-flex w-100 justify-content-between">
-                                <h6 class="mb-1">@date.Title</h6>
-                                <div>
+                            <div class="d-flex w-100 justify-content-between align-items-center">
+                                <h6 class="mb-1 me-2">@date.Title</h6>
+                                <div class="d-flex flex-wrap gap-1 align-items-center justify-content-end">
                                     <span class="badge bg-info text-dark">@date.Date.ToShortDateString()</span>
 
                                     @if (string.Equals(date.Title, SignificantDateTitles.Birthday, StringComparison.OrdinalIgnoreCase))
@@ -371,7 +371,7 @@
                                         <span class="badge bg-warning text-dark">Remind Me</span>
                                     }
 
-                                    <div class="btn-group btn-group-sm ml-2">
+                                    <div class="btn-group btn-group-sm">
                                         <a asp-controller="SignificantDates" asp-action="Edit" asp-route-id="@date.Id" class="btn btn-outline-secondary" title="Edit" aria-label="Edit @date.Title">
                                             <i class="bi bi-pencil-square"></i>
                                         </a>
@@ -413,13 +413,13 @@
                     @foreach (var reminder in Model.Reminders.OrderBy(r => r.DueDate))
                     {
                         <li class="list-group-item">
-                            <div class="d-flex w-100 justify-content-between">
-                                <h6 class="mb-1">@reminder.Title</h6>
-                                <div>
+                            <div class="d-flex w-100 justify-content-between align-items-center">
+                                <h6 class="mb-1 me-2">@reminder.Title</h6>
+                                <div class="d-flex flex-wrap gap-2 align-items-center justify-content-end">
                                     <small class="@(reminder.DueDate < DateTime.Now ? "text-danger" : "text-muted")">
                                         @reminder.DueDate.ToShortDateString()
                                     </small>
-                                    <div class="btn-group btn-group-sm ml-2">
+                                    <div class="btn-group btn-group-sm">
                                         <a asp-controller="Reminders" asp-action="Edit" asp-route-id="@reminder.Id" class="btn btn-outline-secondary" title="Edit" aria-label="Edit @reminder.Title">
                                             <i class="bi bi-pencil-square"></i>
                                         </a>
