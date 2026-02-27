@@ -78,21 +78,14 @@ namespace Rvnx.CRM.Web.Controllers
 
             if (ModelState.IsValid)
             {
-                try
+                OperationResult result = await _noteService.UpdateAsync(id, viewModel);
+                if (result.Success)
                 {
-                    OperationResult result = await _noteService.UpdateAsync(id, viewModel);
-                    if (result.Success)
-                    {
-                        return RedirectToEntity(result.RedirectId, result.RedirectType);
-                    }
-                    if (result.ErrorMessage == "Note not found.")
-                    {
-                        return NotFound();
-                    }
+                    return RedirectToEntity(result.RedirectId, result.RedirectType);
                 }
-                catch (Exception)
+                if (result.ErrorMessage == "Note not found.")
                 {
-                    throw;
+                    return NotFound();
                 }
             }
 

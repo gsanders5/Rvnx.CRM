@@ -58,21 +58,14 @@ namespace Rvnx.CRM.Web.Controllers
 
             if (ModelState.IsValid)
             {
-                try
+                OperationResult result = await _factService.UpdateAsync(id, factDto);
+                if (result.Success)
                 {
-                    OperationResult result = await _factService.UpdateAsync(id, factDto);
-                    if (result.Success)
-                    {
-                        return RedirectToEntity(result.RedirectId, result.RedirectType);
-                    }
-                    if (result.ErrorMessage == "Fact not found.")
-                    {
-                        return NotFound();
-                    }
+                    return RedirectToEntity(result.RedirectId, result.RedirectType);
                 }
-                catch (Exception)
+                if (result.ErrorMessage == "Fact not found.")
                 {
-                    throw;
+                    return NotFound();
                 }
             }
 
