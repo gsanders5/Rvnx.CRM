@@ -11,6 +11,7 @@
         <form id="contact-form" asp-action="Edit" enctype="multipart/form-data">
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
             <input type="hidden" asp-for="Id"/>
+            <input type="hidden" asp-for="ProfileImageId"/>
 
             <div class="form-floating mb-3">
                 <input asp-for="FirstName" class="form-control" placeholder="FirstName" required autofocus/>
@@ -96,6 +97,15 @@
 
             <div class="mb-3">
                 <label for="profileImage" class="form-label">Profile Image</label>
+                @if (Model.ProfileImageId.HasValue)
+                {
+                    <div class="d-flex align-items-center mb-2">
+                        <img src="@Url.Action("View", "Attachments", new { id = Model.ProfileImageId })" class="rounded me-2" alt="Current Profile" style="width: 50px; height: 50px; object-fit: cover;" />
+                        <button type="submit" asp-action="UnsetPhoto" asp-route-id="@Model.Id" class="btn btn-sm btn-outline-danger" onclick="return confirm('Are you sure you want to remove the profile photo?');">
+                            <i class="bi bi-x-circle"></i> Unset Photo
+                        </button>
+                    </div>
+                }
                 <input type="file" name="profileImage" class="form-control" accept="image/*" data-preview-target="#new-profile-image-preview"/>
                 <div class="mt-2">
                     <img id="new-profile-image-preview" src="" class="img-fluid rounded border d-none" alt="New Profile Image Preview" style="max-height: 200px; object-fit: contain;" />

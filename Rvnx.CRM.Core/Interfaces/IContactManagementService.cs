@@ -29,4 +29,19 @@ public interface IContactManagementService
     /// <param name="contentType">The content type of the profile image.</param>
     /// <returns>A <see cref="ContactOperationResult"/> indicating success, failure, or not found.</returns>
     Task<ContactOperationResult> UpdateContactAsync(Guid id, ContactFormDto contactDto, Stream? imageStream, string? fileName, string? contentType);
+
+    /// <summary>
+    /// Unsets the profile photo for a contact, archiving the old one as a general attachment.
+    /// </summary>
+    /// <param name="contactId">The ID of the contact.</param>
+    /// <returns>A <see cref="ContactOperationResult"/> indicating success or failure.</returns>
+    Task<ContactOperationResult> UnsetProfilePhotoAsync(Guid contactId);
+
+    /// <summary>
+    /// Sets an existing attachment as the profile photo, archiving any existing profile photo.
+    /// </summary>
+    /// <param name="contactId">The ID of the contact.</param>
+    /// <param name="attachmentId">The ID of the attachment to promote.</param>
+    /// <returns>A <see cref="ContactOperationResult"/> indicating success or failure.</returns>
+    Task<ContactOperationResult> SetAttachmentAsProfilePhotoAsync(Guid contactId, Guid attachmentId);
 }
