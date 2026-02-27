@@ -26,6 +26,13 @@ namespace Rvnx.CRM.Tests.Controllers
             repositoryMock.Setup(r => r.CountAsync<Contact>(It.IsAny<System.Linq.Expressions.Expression<Func<Contact, bool>>>(), default))
                 .ReturnsAsync(1); // IsValidContactAsync
 
+            // Mock ListProjectedAsync for GetEntityName
+            repositoryMock.Setup(r => r.ListProjectedAsync(
+                    It.IsAny<System.Linq.Expressions.Expression<Func<Contact, bool>>>(),
+                    It.IsAny<System.Linq.Expressions.Expression<Func<Contact, string>>>(),
+                    default))
+                .ReturnsAsync(["Test Contact"]);
+
             RelationshipsController controller = new(relationshipServiceMock.Object, repositoryMock.Object);
 
             Guid entityId = Guid.NewGuid();
