@@ -16,6 +16,7 @@ public class EntityService : IEntityService
         _repository = repository;
     }
 
+    /// <inheritdoc />
     public async Task<bool> ExistsAsync(string entityType, Guid id)
     {
         return entityType switch
@@ -29,6 +30,7 @@ public class EntityService : IEntityService
         };
     }
 
+    /// <inheritdoc />
     public async Task<string> GetEntityNameAsync(string entityType, Guid id)
     {
         if (entityType == EntityTypes.Person)
@@ -44,6 +46,7 @@ public class EntityService : IEntityService
         return "Unknown Entity";
     }
 
+    /// <inheritdoc />
     public async Task<bool> IsPartialAsync(string entityType, Guid id)
     {
         if (entityType == EntityTypes.Person)

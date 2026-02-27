@@ -29,6 +29,7 @@ public class DashboardService(IRepository repository, ILogger<DashboardService> 
             new EventId(2, nameof(LogSignificantDateProcessingLimitReached)),
             "Significant date processing limit reached ({Limit}). Some dates may not appear in dashboard.");
 
+    /// <inheritdoc />
     public async Task<DashboardDto> GetDashboardDataAsync()
     {
         DashboardDto result = new();

@@ -17,3 +17,19 @@
 **Constraint**: `[NotMapped]` Collections
 **State**: `Person` entity has `[NotMapped]` collections for `Relationships`.
 **Detail**: EF Core does not automatically populate the `Relationships` collection on `Person`. This must be done manually by the service layer (specifically `ContactReadService`) when details are requested. Do not expect `Include(p => p.Relationships)` to work out of the box without custom configuration or service-level handling.
+
+## 2026-02-28 - Full Documentation Pass (Scrivener)
+
+**Update**: `README.md` and `DESIGN.md` now reflect the .NET 8 / EF Core 9 stack and the shift to Explicit Foreign Keys.
+
+**Feature**: Explicit Foreign Keys
+**State**: Entities like `Note`, `Reminder`, `Attachment`, `ContactMethod`, etc., have moved away from generic polymorphic associations.
+**Detail**: They now use typed, nullable FKs (e.g., `ContactId`) with Check Constraints (e.g., `CHK_Note_Owner`) ensuring that exactly one owner FK is populated (though currently `ContactId` is the primary one used). Future agents should check the `CRMDbContext.OnModelCreating` to see these constraints.
+
+**Constraint**: Attachment Splitting
+**State**: `Attachment` (metadata) and `AttachmentContent` (blob) are separate tables.
+**Detail**: This prevents loading large blobs when only listing file names. When you need the file content, you must explicitly `Include(a => a.AttachmentContent)` or query the content table separately.
+
+**Feature**: User Isolation
+**State**: `GroupId` is the primary isolation key.
+**Detail**: Global Query Filters on `BaseEntity` automatically filter by `GroupId`. `ICurrentUserService` resolves this ID from the `Users` table. Bypassing this filter (e.g. for admin tasks) requires `IgnoreQueryFilters()`.
