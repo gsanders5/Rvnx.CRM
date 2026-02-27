@@ -4,7 +4,6 @@ using Rvnx.CRM.Core.Extensions;
 using Rvnx.CRM.Core.Interfaces;
 using Rvnx.CRM.Core.Models;
 using Rvnx.CRM.Core.Models.Base;
-using Rvnx.CRM.Core.Models.Contact;
 
 namespace Rvnx.CRM.Infrastructure.Services;
 

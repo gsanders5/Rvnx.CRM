@@ -3,7 +3,6 @@ using Rvnx.CRM.Core.DTOs.Dates;
 using Rvnx.CRM.Core.Extensions;
 using Rvnx.CRM.Core.Interfaces;
 using Rvnx.CRM.Core.Models;
-using Rvnx.CRM.Core.Models.Contact;
 using Rvnx.CRM.Core.Models.Dates;
 
 namespace Rvnx.CRM.Infrastructure.Services;

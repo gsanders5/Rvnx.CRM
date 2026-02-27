@@ -16,12 +16,9 @@ namespace Rvnx.CRM.Web.Controllers
         {
             NoteFormViewModel? viewModel = await _noteService.GetFormForCreateAsync(entityId, entityType);
 
-            if (viewModel == null)
-            {
-                return entityType != Rvnx.CRM.Core.Constants.EntityTypes.Person ? BadRequest("Only Person entities are supported.") : NotFound();
-            }
-
-            return View(viewModel);
+            return viewModel == null
+                ? entityType != Rvnx.CRM.Core.Constants.EntityTypes.Person ? BadRequest("Only Person entities are supported.") : NotFound()
+                : View(viewModel);
         }
 
         [HttpPost]

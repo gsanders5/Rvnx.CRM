@@ -455,17 +455,7 @@ public class VCardService : IVCardService
 
             // :: Unspecified is handled
 
-            if (bytes[0] == 0xFE && (bytes[1] & 0xC0) == 0x80)
-            {
-                return false;
-            }
-
-            if ((bytes[0] & 0xFE) == 0xFC)
-            {
-                return false;
-            }
-
-            return bytes[0] != 0x20 || bytes[1] != 0x01 || bytes[2] != 0x0D || bytes[3] != 0xB8;
+            return (bytes[0] != 0xFE || (bytes[1] & 0xC0) != 0x80) && (bytes[0] & 0xFE) != 0xFC && (bytes[0] != 0x20 || bytes[1] != 0x01 || bytes[2] != 0x0D || bytes[3] != 0xB8);
         }
 
         return false;
