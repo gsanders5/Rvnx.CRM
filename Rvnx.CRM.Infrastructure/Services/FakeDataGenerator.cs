@@ -15,9 +15,8 @@ namespace Rvnx.CRM.Infrastructure.Services
         private static readonly string[] FemaleFirstNames = { "Mary", "Patricia", "Jennifer", "Linda", "Elizabeth", "Barbara", "Susan", "Jessica", "Sarah", "Karen", "Olivia", "Emma", "Ava", "Charlotte", "Sophia", "Amelia", "Isabella", "Mia", "Evelyn", "Harper" };
         private static readonly string[] LastNames = { "Smith", "Johnson", "Williams", "Brown", "Jones", "Garcia", "Miller", "Davis", "Rodriguez", "Martinez", "Hernandez", "Lopez", "Gonzalez", "Wilson", "Anderson", "Thomas", "Taylor", "Moore", "Jackson", "Martin" };
 
-        // Ensure these match Rvnx.CRM.Core.Constants.PersonalAttributeOptions
-        private static readonly string MaleGender = "Male";
-        private static readonly string FemaleGender = "Female";
+        private static readonly string MaleGender = PersonalAttributeOptions.Male;
+        private static readonly string FemaleGender = PersonalAttributeOptions.Female;
         private static readonly string MalePronoun = "He/Him";
         private static readonly string FemalePronoun = "She/Her";
 
