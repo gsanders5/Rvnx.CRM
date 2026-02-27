@@ -60,25 +60,14 @@ namespace Rvnx.CRM.Web.Controllers
 
             if (ModelState.IsValid)
             {
-                try
+                OperationResult result = await _contactMethodService.UpdateAsync(id, contactInfoInput);
+                if (result.Success)
                 {
-                    OperationResult result = await _contactMethodService.UpdateAsync(id, contactInfoInput);
-                    if (result.Success)
-                    {
-                        return RedirectToEntity(result.RedirectId, result.RedirectType);
-                    }
-                    if (result.ErrorMessage == "Contact method not found.")
-                    {
-                        return NotFound();
-                    }
+                    return RedirectToEntity(result.RedirectId, result.RedirectType);
                 }
-                catch (Exception)
+                if (result.ErrorMessage == "Contact method not found.")
                 {
-                    // If we caught an exception but the service re-threw it, it might propagate.
-                    // The service currently rethrows if the entity exists but concurrency fails, or fails if not exists.
-                    // But here we rely on the service logic.
-                    // If we are here, it means service threw.
-                    throw;
+                    return NotFound();
                 }
             }
 
