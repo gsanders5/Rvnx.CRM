@@ -29,7 +29,6 @@ namespace Rvnx.CRM.Tests.Services
         [Fact]
         public async Task UploadAttachmentAsyncShouldSucceedWhenValid()
         {
-            // Arrange
             using CRMDbContext context = GetInMemoryDbContext();
             Repository repo = new(context);
             Mock<IFileValidationService> fileServiceMock = new();
@@ -49,10 +48,8 @@ namespace Rvnx.CRM.Tests.Services
 
             byte[] content = [1, 2, 3];
 
-            // Act
             AttachmentOperationResult result = await service.UploadAttachmentAsync(contactId, EntityTypes.Person, content, "test.png");
 
-            // Assert
             Assert.True(result.Success);
             Assert.NotNull(result.AttachmentId);
             Attachment? attachment = await context.Attachments.FindAsync(result.AttachmentId);
@@ -63,7 +60,6 @@ namespace Rvnx.CRM.Tests.Services
         [Fact]
         public async Task UploadAttachmentAsyncShouldFailWhenEntityNotFound()
         {
-            // Arrange
             using CRMDbContext context = GetInMemoryDbContext();
             Repository repo = new(context);
             Mock<IFileValidationService> fileServiceMock = new();
@@ -72,10 +68,8 @@ namespace Rvnx.CRM.Tests.Services
 
             AttachmentService service = new(repo, fileServiceMock.Object, entityServiceMock.Object);
 
-            // Act
             AttachmentOperationResult result = await service.UploadAttachmentAsync(Guid.NewGuid(), EntityTypes.Person, [1], "test.png");
 
-            // Assert
             Assert.False(result.Success);
             Assert.True(result.IsNotFound);
         }
@@ -83,7 +77,6 @@ namespace Rvnx.CRM.Tests.Services
         [Fact]
         public async Task UploadAttachmentAsyncShouldFailWhenPartialContact()
         {
-            // Arrange
             using CRMDbContext context = GetInMemoryDbContext();
             Repository repo = new(context);
             Mock<IFileValidationService> fileServiceMock = new();
@@ -96,10 +89,8 @@ namespace Rvnx.CRM.Tests.Services
             context.Contacts.Add(new Contact { Id = contactId, FirstName = "Partial", IsPartial = true });
             context.SaveChanges();
 
-            // Act
             AttachmentOperationResult result = await service.UploadAttachmentAsync(contactId, EntityTypes.Person, [1], "test.png");
 
-            // Assert
             Assert.False(result.Success);
             Assert.True(result.IsNotFound);
             Assert.Contains("partial contact", result.Errors[0]);
@@ -108,7 +99,6 @@ namespace Rvnx.CRM.Tests.Services
         [Fact]
         public async Task UploadAttachmentAsyncShouldFailWhenEntityTypeNotSupported()
         {
-            // Arrange
             using CRMDbContext context = GetInMemoryDbContext();
             Repository repo = new(context);
             Mock<IFileValidationService> fileServiceMock = new();
@@ -117,10 +107,8 @@ namespace Rvnx.CRM.Tests.Services
 
             AttachmentService service = new(repo, fileServiceMock.Object, entityServiceMock.Object);
 
-            // Act
             AttachmentOperationResult result = await service.UploadAttachmentAsync(Guid.NewGuid(), "UnsupportedType", [1, 2, 3], "test.txt");
 
-            // Assert
             Assert.False(result.Success);
             Assert.Contains("not currently supported", result.Errors[0]);
         }
@@ -128,7 +116,6 @@ namespace Rvnx.CRM.Tests.Services
         [Fact]
         public async Task UploadAttachmentAsyncShouldFailWhenFileEmpty()
         {
-            // Arrange
             using CRMDbContext context = GetInMemoryDbContext();
             Repository repo = new(context);
             Mock<IFileValidationService> fileServiceMock = new();
@@ -140,10 +127,8 @@ namespace Rvnx.CRM.Tests.Services
             context.Contacts.Add(new Contact { Id = contactId, FirstName = "Test", LastName = "User" });
             context.SaveChanges();
 
-            // Act
             AttachmentOperationResult result = await service.UploadAttachmentAsync(contactId, EntityTypes.Person, [], "test.png");
 
-            // Assert
             Assert.False(result.Success);
             Assert.Contains("File is empty", result.Errors[0]);
         }
@@ -151,7 +136,6 @@ namespace Rvnx.CRM.Tests.Services
         [Fact]
         public async Task UploadAttachmentAsyncShouldFailWhenFileSizeTooLarge()
         {
-            // Arrange
             using CRMDbContext context = GetInMemoryDbContext();
             Repository repo = new(context);
             Mock<IFileValidationService> fileServiceMock = new();
@@ -165,10 +149,8 @@ namespace Rvnx.CRM.Tests.Services
             context.Contacts.Add(new Contact { Id = contactId, FirstName = "Test", LastName = "User" });
             context.SaveChanges();
 
-            // Act
             AttachmentOperationResult result = await service.UploadAttachmentAsync(contactId, EntityTypes.Person, [1, 2, 3], "test.png");
 
-            // Assert
             Assert.False(result.Success);
             Assert.Contains("File is too large", result.Errors[0]);
         }
@@ -176,7 +158,6 @@ namespace Rvnx.CRM.Tests.Services
         [Fact]
         public async Task UploadAttachmentAsyncShouldFailWhenExtensionNotAllowed()
         {
-            // Arrange
             using CRMDbContext context = GetInMemoryDbContext();
             Repository repo = new(context);
             Mock<IFileValidationService> fileServiceMock = new();
@@ -191,10 +172,8 @@ namespace Rvnx.CRM.Tests.Services
             context.Contacts.Add(new Contact { Id = contactId, FirstName = "Test", LastName = "User" });
             context.SaveChanges();
 
-            // Act
             AttachmentOperationResult result = await service.UploadAttachmentAsync(contactId, EntityTypes.Person, [1, 2, 3], "test.exe");
 
-            // Assert
             Assert.False(result.Success);
             Assert.Contains("File type not allowed", result.Errors[0]);
         }
@@ -202,7 +181,6 @@ namespace Rvnx.CRM.Tests.Services
         [Fact]
         public async Task UploadAttachmentAsyncShouldFailWhenSignatureInvalid()
         {
-            // Arrange
             using CRMDbContext context = GetInMemoryDbContext();
             Repository repo = new(context);
             Mock<IFileValidationService> fileServiceMock = new();
@@ -218,10 +196,8 @@ namespace Rvnx.CRM.Tests.Services
             context.Contacts.Add(new Contact { Id = contactId, FirstName = "Test", LastName = "User" });
             context.SaveChanges();
 
-            // Act
             AttachmentOperationResult result = await service.UploadAttachmentAsync(contactId, EntityTypes.Person, [1, 2, 3], "test.png");
 
-            // Assert
             Assert.False(result.Success);
             Assert.Contains("Invalid file signature", result.Errors[0]);
         }

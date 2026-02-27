@@ -14,7 +14,6 @@ public class LabelServicePerformanceTests(ITestOutputHelper output) : SqliteInte
     [Fact]
     public async Task GetAllAsyncPerformance()
     {
-        // Arrange
         Repository repository = new(Context);
         LabelService labelService = new(repository);
 
@@ -32,12 +31,10 @@ public class LabelServicePerformanceTests(ITestOutputHelper output) : SqliteInte
         await Context.Labels.AddRangeAsync(labels);
         await Context.SaveChangesAsync();
 
-        // Act
         Stopwatch stopwatch = Stopwatch.StartNew();
         List<LabelDto> result = await labelService.GetAllAsync();
         stopwatch.Stop();
 
-        // Assert
         Assert.Equal(labelCount, result.Count);
         _output.WriteLine($"GetAllAsync took: {stopwatch.ElapsedMilliseconds} ms for {labelCount} labels.");
     }

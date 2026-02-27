@@ -29,18 +29,15 @@ namespace Rvnx.CRM.Tests.Security
         [Fact]
         public async Task UploadAttachmentShouldIgnoreMaliciousContentTypeAndUseSafeMimeType()
         {
-            // Arrange
             using CRMDbContext context = GetInMemoryDbContext();
             Repository repo = new(context);
             Mock<IFileValidationService> fileServiceMock = new();
 
-            // Setup validation to pass
             fileServiceMock.Setup(s => s.IsAllowedFileSize(It.IsAny<long>())).Returns(true);
             fileServiceMock.Setup(s => s.IsAllowedExtension(It.IsAny<string>())).Returns(true);
             fileServiceMock.Setup(s => s.IsValidFileSignature(It.IsAny<byte[]>(), It.IsAny<string>())).Returns(true);
             fileServiceMock.Setup(s => s.GetMimeType(It.IsAny<string>())).Returns("text/plain");
 
-            // Setup entity existence
             Mock<IEntityService> entityServiceMock = new();
             entityServiceMock.Setup(s => s.ExistsAsync(It.IsAny<string>(), It.IsAny<Guid>())).ReturnsAsync(true);
 
@@ -53,12 +50,10 @@ namespace Rvnx.CRM.Tests.Security
             byte[] content = [1, 2, 3]; // Dummy content
             string fileName = "innocent.txt";
 
-            // Act
             // The malicious Content-Type is no longer even passed to the method.
             // The method signature change itself is part of the security fix (Defense in Depth / Trust Nothing).
             AttachmentOperationResult result = await service.UploadAttachmentAsync(contactId, EntityTypes.Person, content, fileName);
 
-            // Assert
             Assert.True(result.Success);
 
             Attachment? attachment = await context.Attachments.FindAsync(result.AttachmentId);

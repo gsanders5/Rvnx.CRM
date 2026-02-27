@@ -34,7 +34,6 @@ namespace Rvnx.CRM.Web
 
             if (authEnabled)
             {
-                // Validate that required authentication settings are present when enabled
                 if (string.IsNullOrWhiteSpace(authConfig["Authority"]) ||
                     string.IsNullOrWhiteSpace(authConfig["ClientId"]) ||
                     string.IsNullOrWhiteSpace(authConfig["ClientSecret"]))

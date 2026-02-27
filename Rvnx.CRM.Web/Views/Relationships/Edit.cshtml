@@ -150,7 +150,6 @@
     @{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); }
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // --- Helper Class for Relationship Logic ---
             class RelationshipSelector {
                 constructor(config) {
                     this.container = document.getElementById(config.containerId);
@@ -161,7 +160,6 @@
                     this.preview = document.getElementById(config.previewId);
                     this.relatedInput = document.getElementById(config.relatedInputId);
 
-                    // Collapse Elements
                     this.summaryContainer = document.getElementById(config.summaryId);
                     this.summaryText = document.getElementById(config.summaryTextId);
                     this.changeBtn = document.getElementById(config.changeBtnId);
@@ -184,25 +182,20 @@
                 init() {
                     if (!this.container) return; // Guard clause
 
-                    // Type Buttons
                     const typeBtns = this.container.querySelectorAll('button');
                     typeBtns.forEach(btn => {
                         btn.addEventListener('click', () => this.handleTypeClick(btn));
                     });
 
-                    // Role Buttons
                     if (this.fwdBtn) this.fwdBtn.addEventListener('click', () => this.handleRoleClick('Fwd'));
                     if (this.revBtn) this.revBtn.addEventListener('click', () => this.handleRoleClick('Rev'));
 
-                    // Change Button
                     if (this.changeBtn) this.changeBtn.addEventListener('click', () => this.handleChangeClick());
 
-                    // Related Entity Input Changes
                     if (this.relatedInput) {
                         this.relatedInput.addEventListener('change', () => this.updatePreview());
                     }
 
-                    // Initial Pre-population
                     if (this.hiddenInput && this.hiddenInput.value) {
                          const parts = this.hiddenInput.value.split('_');
                          if (parts.length === 2) {
@@ -221,26 +214,22 @@
                 }
 
                 handleTypeClick(btn) {
-                    // Update State
                     this.state.typeId = btn.dataset.id;
                     this.state.isSymmetric = btn.dataset.isSymmetric === 'true';
                     this.state.name = btn.dataset.name;
                     this.state.oppositeName = btn.dataset.oppositeName;
                     this.state.role = null; // Reset role on type change
 
-                    // Update UI (Active Class)
                     this.container.querySelectorAll('button').forEach(b => b.classList.remove('active', 'btn-secondary'));
                     this.container.querySelectorAll('button').forEach(b => b.classList.add('btn-outline-secondary'));
 
                     btn.classList.remove('btn-outline-secondary');
                     btn.classList.add('active', 'btn-secondary');
 
-                    // Update Summary
                     const typeLabel = this.state.isSymmetric ? this.state.name : `${this.state.name} / ${this.state.oppositeName}`;
                     this.summaryText.textContent = typeLabel;
                     this.summaryContainer.style.display = 'block'; // Show summary
 
-                    // Collapse List
                     if (this.collapseEl.classList.contains('show')) {
                         this.toggleBtn.click();
                     }
@@ -255,7 +244,6 @@
                         this.fwdBtn.textContent = this.state.name;
                         this.revBtn.textContent = this.state.oppositeName;
 
-                        // Reset Role Buttons
                         this.fwdBtn.classList.remove('active', 'btn-primary');
                         this.fwdBtn.classList.add('btn-outline-primary');
                         this.revBtn.classList.remove('active', 'btn-primary');
@@ -276,7 +264,6 @@
                 handleRoleClick(role) {
                     this.state.role = role;
 
-                    // Update UI
                     if (role === 'Fwd') {
                         this.fwdBtn.classList.add('active', 'btn-primary');
                         this.fwdBtn.classList.remove('btn-outline-primary');
@@ -313,7 +300,6 @@
                     }
                     const relatedName = this.relatedInput.options[this.relatedInput.selectedIndex].text;
 
-                    // Calculate display text
                     let relationText = '';
                     if (this.state.isSymmetric) {
                         relationText = this.state.name;
@@ -340,7 +326,6 @@
 
             const entityName = @Html.Raw(Json.Serialize(Model.EntityName));
 
-            // Initialize Form
             new RelationshipSelector({
                 containerId: 'type-selection-container',
                 roleContainerId: 'role-selection-container',
@@ -350,7 +335,6 @@
                 previewId: 'relationshipPreview',
                 relatedInputId: 'RelatedEntityId',
 
-                // Collapse Params
                 collapseId: 'typeSelectionCollapse',
                 summaryId: 'type-selection-summary',
                 summaryTextId: 'selected-type-text',

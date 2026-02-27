@@ -61,7 +61,6 @@ namespace Rvnx.CRM.Infrastructure.Services
                 IsHidden = _random.Next(10) == 0 // 10% chance
             };
 
-            // Generate Address
             if (_random.Next(2) == 0)
             {
                 int cityIndex = _random.Next(Cities.Length);
@@ -78,7 +77,6 @@ namespace Rvnx.CRM.Infrastructure.Services
                 });
             }
 
-            // Generate Phone
             if (_random.Next(2) == 0)
             {
                 contact.ContactMethods.Add(new ContactMethod
@@ -91,7 +89,6 @@ namespace Rvnx.CRM.Infrastructure.Services
                 });
             }
 
-            // Generate Email
             if (_random.Next(2) == 0)
             {
                 contact.ContactMethods.Add(new ContactMethod
@@ -104,7 +101,6 @@ namespace Rvnx.CRM.Infrastructure.Services
                 });
             }
 
-            // Generate Birthday
             if (_random.Next(2) == 0)
             {
                 int year = DateTime.Today.Year - _random.Next(20, 70);

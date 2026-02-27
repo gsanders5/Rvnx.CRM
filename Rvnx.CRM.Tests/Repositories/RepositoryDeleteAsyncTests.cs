@@ -55,7 +55,6 @@ namespace Rvnx.CRM.Tests.Repositories
             Repository repo = new(context);
             Guid id = Guid.NewGuid();
 
-            // Should not throw
             await repo.DeleteAsync<BadEntity>(id);
         }
 

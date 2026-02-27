@@ -260,7 +260,6 @@ namespace Rvnx.CRM.Core.Services
                 return null;
             }
 
-            // Populate Person/RelatedPerson so names show up
             Guid p1Id = relationship.EntityId;
             Guid p2Id = relationship.RelatedEntityId;
             List<Contact> contacts = await repository.ListAsync<Contact>(c => c.Id == p1Id || c.Id == p2Id);

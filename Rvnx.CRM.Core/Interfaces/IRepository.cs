@@ -5,7 +5,6 @@ namespace Rvnx.CRM.Core.Interfaces;
 
 public interface IRepository
 {
-    // Read Operations
     /// <summary>
     /// Retrieves an entity by its ID.
     /// </summary>
@@ -60,7 +59,6 @@ public interface IRepository
         CancellationToken cancellationToken = default) where T : BaseEntity;
 
 
-    // Create Operations  
     /// <summary>
     /// Adds a new entity.
     /// </summary>
@@ -73,14 +71,12 @@ public interface IRepository
         where T : BaseEntity;
 
 
-    // Update Operations
     /// <summary>
     /// Updates an existing entity.
     /// </summary>
     Task<T> UpdateAsync<T>(T entity, CancellationToken cancellationToken = default) where T : BaseEntity;
 
 
-    // Delete Operations
     /// <summary>
     /// Deletes an entity by its ID.
     /// </summary>
@@ -104,14 +100,12 @@ public interface IRepository
         where T : BaseEntity;
 
 
-    // Persistence
     /// <summary>
     /// Saves all changes made in this context to the database.
     /// </summary>
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 
 
-    // Utility
     /// <summary>
     /// Checks if an entity with the given ID exists.
     /// </summary>

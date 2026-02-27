@@ -9,7 +9,6 @@ namespace Rvnx.CRM.Tests.Extensions
         [Fact]
         public void ToDtoShouldMapPropertiesCorrectly()
         {
-            // Arrange
             Pet entity = new()
             {
                 Id = Guid.NewGuid(),
@@ -21,10 +20,8 @@ namespace Rvnx.CRM.Tests.Extensions
                 ContactId = Guid.NewGuid()
             };
 
-            // Act
             PetDto dto = entity.ToDto();
 
-            // Assert
             Assert.Equal(entity.Id, dto.Id);
             Assert.Equal(entity.Name, dto.Name);
             Assert.Equal(entity.Species, dto.Species);
@@ -40,7 +37,6 @@ namespace Rvnx.CRM.Tests.Extensions
         [Fact]
         public void ToEntityShouldCreateNewPetWithCorrectProperties()
         {
-            // Arrange
             PetFormDto dto = new()
             {
                 Name = "Mittens",
@@ -51,10 +47,8 @@ namespace Rvnx.CRM.Tests.Extensions
                 EntityId = Guid.NewGuid()
             };
 
-            // Act
             Pet entity = dto.ToEntity();
 
-            // Assert
             Assert.NotEqual(Guid.Empty, entity.Id);
             Assert.Equal(dto.Name, entity.Name);
             Assert.Equal(dto.Species, entity.Species);
@@ -67,7 +61,6 @@ namespace Rvnx.CRM.Tests.Extensions
         [Fact]
         public void UpdateEntityShouldUpdatePropertiesCorrectly()
         {
-            // Arrange
             Guid initialContactId = Guid.NewGuid();
             Pet entity = new()
             {
@@ -91,17 +84,14 @@ namespace Rvnx.CRM.Tests.Extensions
                 EntityId = Guid.NewGuid()
             };
 
-            // Act
             entity.UpdateEntity(dto);
 
-            // Assert
             Assert.Equal(dto.Name, entity.Name);
             Assert.Equal(dto.Species, entity.Species);
             Assert.Equal(dto.Breed, entity.Breed);
             Assert.Equal(dto.Birthday, entity.Birthday);
             Assert.Equal(dto.Notes, entity.Notes);
 
-            // Verify ContactId remains unchanged
             Assert.Equal(initialContactId, entity.ContactId);
         }
     }

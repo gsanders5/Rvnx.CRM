@@ -26,7 +26,6 @@ public class HomeControllerPerformanceTests : IDisposable
     [Fact]
     public async Task IndexShouldDelegateToDashboardService()
     {
-        // Arrange
         DashboardDto dashboardData = new()
         {
             UpcomingEvents =
@@ -47,10 +46,8 @@ public class HomeControllerPerformanceTests : IDisposable
             .Setup(s => s.GetDashboardDataAsync())
             .ReturnsAsync(dashboardData);
 
-        // Act
         IActionResult result = await _controller.Index();
 
-        // Assert
         _dashboardServiceMock.Verify(s => s.GetDashboardDataAsync(), Times.Once);
         Assert.IsType<ViewResult>(result);
     }

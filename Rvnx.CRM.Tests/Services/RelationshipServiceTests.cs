@@ -26,7 +26,6 @@ namespace Rvnx.CRM.Tests.Services
         [Fact]
         public async Task CreateRelationshipAsyncForwardCorrectlySetsRelationship()
         {
-            // Arrange
             Guid originalEntityId = Guid.NewGuid();
             Guid originalRelatedEntityId = Guid.NewGuid();
             Relationship relationship = new()
@@ -38,10 +37,8 @@ namespace Rvnx.CRM.Tests.Services
             Guid typeId = Guid.NewGuid();
             string selectedType = $"{typeId}_Fwd";
 
-            // Act
             RelationshipOperationResult result = await _service.CreateRelationshipAsync(relationship, selectedType);
 
-            // Assert
             Assert.True(result.Success);
             Assert.Equal(typeId, relationship.RelationshipTypeId);
             Assert.Equal(originalEntityId, relationship.EntityId);
@@ -55,7 +52,6 @@ namespace Rvnx.CRM.Tests.Services
         [Fact]
         public async Task CreateRelationshipAsyncReverseCorrectlySwapsEntities()
         {
-            // Arrange
             Guid originalEntityId = Guid.NewGuid();
             Guid originalRelatedEntityId = Guid.NewGuid();
             Relationship relationship = new()
@@ -67,14 +63,11 @@ namespace Rvnx.CRM.Tests.Services
             Guid typeId = Guid.NewGuid();
             string selectedType = $"{typeId}_Rev";
 
-            // Act
             RelationshipOperationResult result = await _service.CreateRelationshipAsync(relationship, selectedType);
 
-            // Assert
             Assert.True(result.Success);
             Assert.Equal(typeId, relationship.RelationshipTypeId);
 
-            // Check for swap
             Assert.Equal(originalRelatedEntityId, relationship.EntityId);
             Assert.Equal(originalEntityId, relationship.RelatedEntityId);
 
@@ -88,13 +81,10 @@ namespace Rvnx.CRM.Tests.Services
         [Fact]
         public async Task CreateRelationshipAsyncMissingTypeReturnsFailure()
         {
-            // Arrange
             Relationship relationship = new();
 
-            // Act
             RelationshipOperationResult result = await _service.CreateRelationshipAsync(relationship, "");
 
-            // Assert
             Assert.False(result.Success);
             Assert.Equal("Relationship Type is required.", result.ErrorMessage);
             _repositoryMock.Verify(r => r.AddAsync(It.IsAny<Relationship>(), It.IsAny<CancellationToken>()), Times.Never);
@@ -103,13 +93,10 @@ namespace Rvnx.CRM.Tests.Services
         [Fact]
         public async Task CreateRelationshipAsyncInvalidFormatReturnsFailure()
         {
-            // Arrange
             Relationship relationship = new();
 
-            // Act
             RelationshipOperationResult result = await _service.CreateRelationshipAsync(relationship, "InvalidFormat");
 
-            // Assert
             Assert.False(result.Success);
             Assert.Equal("Invalid Relationship Type.", result.ErrorMessage);
             _repositoryMock.Verify(r => r.AddAsync(It.IsAny<Relationship>(), It.IsAny<CancellationToken>()), Times.Never);
@@ -118,13 +105,10 @@ namespace Rvnx.CRM.Tests.Services
         [Fact]
         public async Task CreateRelationshipAsyncInvalidGuidReturnsFailure()
         {
-            // Arrange
             Relationship relationship = new();
 
-            // Act
             RelationshipOperationResult result = await _service.CreateRelationshipAsync(relationship, "NotAGuid_Fwd");
 
-            // Assert
             Assert.False(result.Success);
             Assert.Equal("Invalid Relationship Type.", result.ErrorMessage);
             _repositoryMock.Verify(r => r.AddAsync(It.IsAny<Relationship>(), It.IsAny<CancellationToken>()), Times.Never);
@@ -132,7 +116,6 @@ namespace Rvnx.CRM.Tests.Services
         [Fact]
         public async Task UpdateRelationshipAsyncForwardCorrectlyUpdatesRelationship()
         {
-            // Arrange
             Guid relationshipId = Guid.NewGuid();
             Guid originalEntityId = Guid.NewGuid();
             Guid originalRelatedEntityId = Guid.NewGuid();
@@ -160,10 +143,8 @@ namespace Rvnx.CRM.Tests.Services
             _repositoryMock.Setup(r => r.GetByIdAsync<Relationship>(relationshipId, It.IsAny<CancellationToken>()))
                 .ReturnsAsync(existingRelationship);
 
-            // Act
             RelationshipOperationResult result = await _service.UpdateRelationshipAsync(relationshipId, updatedRelationship, selectedType);
 
-            // Assert
             Assert.True(result.Success);
             Assert.Equal(typeId, existingRelationship.RelationshipTypeId);
             Assert.Equal("Updated Description", existingRelationship.Description);
@@ -178,7 +159,6 @@ namespace Rvnx.CRM.Tests.Services
         [Fact]
         public async Task UpdateRelationshipAsyncReverseCorrectlySwapsEntities()
         {
-            // Arrange
             Guid relationshipId = Guid.NewGuid();
             Relationship existingRelationship = new()
             {
@@ -203,14 +183,11 @@ namespace Rvnx.CRM.Tests.Services
             _repositoryMock.Setup(r => r.GetByIdAsync<Relationship>(relationshipId, It.IsAny<CancellationToken>()))
                 .ReturnsAsync(existingRelationship);
 
-            // Act
             RelationshipOperationResult result = await _service.UpdateRelationshipAsync(relationshipId, updatedRelationship, selectedType);
 
-            // Assert
             Assert.True(result.Success);
             Assert.Equal(typeId, existingRelationship.RelationshipTypeId);
 
-            // Should be swapped
             Assert.Equal(newRelatedEntityId, existingRelationship.EntityId);
             Assert.Equal(newEntityId, existingRelationship.RelatedEntityId);
 
@@ -224,7 +201,6 @@ namespace Rvnx.CRM.Tests.Services
         [Fact]
         public async Task UpdateRelationshipAsyncNotFoundReturnsFailure()
         {
-            // Arrange
             Guid relationshipId = Guid.NewGuid();
             Relationship updatedRelationship = new();
             Guid typeId = Guid.NewGuid();
@@ -233,10 +209,8 @@ namespace Rvnx.CRM.Tests.Services
             _repositoryMock.Setup(r => r.GetByIdAsync<Relationship>(relationshipId, It.IsAny<CancellationToken>()))
                 .ReturnsAsync((Relationship?)null);
 
-            // Act
             RelationshipOperationResult result = await _service.UpdateRelationshipAsync(relationshipId, updatedRelationship, selectedType);
 
-            // Assert
             Assert.False(result.Success);
             Assert.Equal("Relationship not found.", result.ErrorMessage);
             _repositoryMock.Verify(r => r.UpdateAsync(It.IsAny<Relationship>(), It.IsAny<CancellationToken>()), Times.Never);
@@ -245,14 +219,11 @@ namespace Rvnx.CRM.Tests.Services
         [Fact]
         public async Task UpdateRelationshipAsyncMissingTypeReturnsFailure()
         {
-            // Arrange
             Guid relationshipId = Guid.NewGuid();
             Relationship updatedRelationship = new();
 
-            // Act
             RelationshipOperationResult result = await _service.UpdateRelationshipAsync(relationshipId, updatedRelationship, "");
 
-            // Assert
             Assert.False(result.Success);
             Assert.Equal("Relationship Type is required.", result.ErrorMessage);
         }
@@ -260,14 +231,11 @@ namespace Rvnx.CRM.Tests.Services
         [Fact]
         public async Task UpdateRelationshipAsyncInvalidFormatReturnsFailure()
         {
-            // Arrange
             Guid relationshipId = Guid.NewGuid();
             Relationship updatedRelationship = new();
 
-            // Act
             RelationshipOperationResult result = await _service.UpdateRelationshipAsync(relationshipId, updatedRelationship, "Invalid");
 
-            // Assert
             Assert.False(result.Success);
             Assert.Equal("Invalid Relationship Type.", result.ErrorMessage);
         }
@@ -275,7 +243,6 @@ namespace Rvnx.CRM.Tests.Services
         [Fact]
         public async Task GetRelatedEntityOptionsAsyncPersonReturnsContactsExcludingSelfAndSorted()
         {
-            // Arrange
             Guid entityId = Guid.NewGuid();
             Guid otherId1 = Guid.NewGuid();
             Guid otherId2 = Guid.NewGuid();
@@ -293,16 +260,13 @@ namespace Rvnx.CRM.Tests.Services
                 It.IsAny<CancellationToken>()))
                 .ReturnsAsync(returnedList);
 
-            // Act
             List<SelectOptionDto> result = await _service.GetRelatedEntityOptionsAsync(entityId, EntityTypes.Person, otherId1);
 
-            // Assert
             Assert.Equal(2, result.Count);
             Assert.Equal(otherId2.ToString(), result[0].Value); // Adam
             Assert.Equal(otherId1.ToString(), result[1].Value); // Zara
             Assert.True(result[1].Selected); // otherId1 was selected
 
-            // Verify the predicate logic
             _repositoryMock.Verify(r => r.ListProjectedAsync(
                 It.Is<Expression<Func<Contact, bool>>>(expr => VerifyPredicate(expr, entityId)),
                 It.IsAny<Expression<Func<Contact, SelectOptionDto>>>(),
@@ -314,7 +278,6 @@ namespace Rvnx.CRM.Tests.Services
         [Fact]
         public async Task GetRelatedEntityOptionsAsyncCompanyReturnsEmployersExcludingSelfAndSorted()
         {
-            // Arrange
             Guid entityId = Guid.NewGuid();
             Guid otherId1 = Guid.NewGuid();
             Guid otherId2 = Guid.NewGuid();
@@ -332,16 +295,13 @@ namespace Rvnx.CRM.Tests.Services
                 It.IsAny<CancellationToken>()))
                 .ReturnsAsync(returnedList);
 
-            // Act
             List<SelectOptionDto> result = await _service.GetRelatedEntityOptionsAsync(entityId, EntityTypes.Company, otherId1);
 
-            // Assert
             Assert.Equal(2, result.Count);
             Assert.Equal(otherId2.ToString(), result[0].Value); // A Inc
             Assert.Equal(otherId1.ToString(), result[1].Value); // Z Corp
             Assert.True(result[1].Selected); // otherId1 was selected
 
-            // Verify the predicate logic
             _repositoryMock.Verify(r => r.ListProjectedAsync(
                 It.Is<Expression<Func<Employer, bool>>>(expr => VerifyPredicate(expr, entityId)),
                 It.IsAny<Expression<Func<Employer, SelectOptionDto>>>(),
@@ -362,33 +322,26 @@ namespace Rvnx.CRM.Tests.Services
         [Fact]
         public void GetRelationshipTypeOptionsReturnsCorrectOptions()
         {
-            // Arrange
             // Using "Parent" which is asymmetric. ID: 7c1f8d22-1b6a-4c28-9c1e-3f5a2b8e9d1a
-            // "Parent" is Name, "Child" is OppositeName.
             Guid parentTypeId = Guid.Parse("7c1f8d22-1b6a-4c28-9c1e-3f5a2b8e9d1a");
             string selectedValue = $"{parentTypeId}_Rev"; // Should select "is Child of (Parent)"
 
-            // Act
             List<SelectOptionDto> options = _service.GetRelationshipTypeOptions(EntityTypes.Person, selectedValue);
 
-            // Assert
             Assert.NotEmpty(options);
 
-            // Check for Parent (Fwd)
             SelectOptionDto? parentFwd = options.FirstOrDefault(o => o.Value == $"{parentTypeId}_Fwd");
             Assert.NotNull(parentFwd);
             Assert.Equal("is Parent of (Child)", parentFwd.Text);
             Assert.Equal("Family", parentFwd.Group);
             Assert.False(parentFwd.Selected);
 
-            // Check for Parent (Rev) - Child
             SelectOptionDto? parentRev = options.FirstOrDefault(o => o.Value == $"{parentTypeId}_Rev");
             Assert.NotNull(parentRev);
             Assert.Equal("is Child of (Parent)", parentRev.Text);
             Assert.Equal("Family", parentRev.Group);
             Assert.True(parentRev.Selected);
 
-            // Check for Spouse (Symmetric) - ID: b2e9a5c8-7f4d-4a1b-8c6e-5f9d3a0e2b4c
             Guid spouseTypeId = Guid.Parse("b2e9a5c8-7f4d-4a1b-8c6e-5f9d3a0e2b4c");
 
             SelectOptionDto? spouseFwd = options.FirstOrDefault(o => o.Value == $"{spouseTypeId}_Fwd");
@@ -402,7 +355,6 @@ namespace Rvnx.CRM.Tests.Services
         [Fact]
         public async Task CreatePartialContactRelationshipAsyncCreatesContactAndRelationship()
         {
-            // Arrange
             Guid parentEntityId = Guid.NewGuid();
             Guid typeId = Guid.NewGuid();
             string selectedType = $"{typeId}_Fwd";
@@ -414,10 +366,8 @@ namespace Rvnx.CRM.Tests.Services
                 Description = "A partial contact"
             };
 
-            // Act
             RelationshipOperationResult result = await _service.CreatePartialContactRelationshipAsync(parentEntityId, selectedType, dto);
 
-            // Assert
             Assert.True(result.Success);
             Assert.Equal(parentEntityId, result.RedirectId);
 
@@ -429,7 +379,6 @@ namespace Rvnx.CRM.Tests.Services
         [Fact]
         public async Task CreatePartialContactRelationshipAsyncWithBirthdayAddsSignificantDate()
         {
-            // Arrange
             Guid parentEntityId = Guid.NewGuid();
             Guid typeId = Guid.NewGuid();
             string selectedType = $"{typeId}_Fwd";
@@ -441,10 +390,8 @@ namespace Rvnx.CRM.Tests.Services
                 Birthday = birthday
             };
 
-            // Act
             RelationshipOperationResult result = await _service.CreatePartialContactRelationshipAsync(parentEntityId, selectedType, dto);
 
-            // Assert
             Assert.True(result.Success);
 
             _repositoryMock.Verify(r => r.AddAsync(It.Is<SignificantDate>(sd => sd.Title == SignificantDateTitles.Birthday && sd.Date == birthday && sd.RemindMe), It.IsAny<CancellationToken>()), Times.Once);
@@ -453,17 +400,14 @@ namespace Rvnx.CRM.Tests.Services
         [Fact]
         public async Task PromotePartialContactAsyncUpdatesIsPartial()
         {
-            // Arrange
             Guid contactId = Guid.NewGuid();
             Contact partialContact = new() { Id = contactId, IsPartial = true };
 
             _repositoryMock.Setup(r => r.GetByIdAsync<Contact>(contactId, It.IsAny<CancellationToken>()))
                 .ReturnsAsync(partialContact);
 
-            // Act
             RelationshipOperationResult result = await _service.PromotePartialContactAsync(contactId);
 
-            // Assert
             Assert.True(result.Success);
             Assert.Equal(contactId, result.RedirectId);
             Assert.False(partialContact.IsPartial);
@@ -475,17 +419,14 @@ namespace Rvnx.CRM.Tests.Services
         [Fact]
         public async Task PromotePartialContactAsyncWhenNotPartialReturnsFailure()
         {
-            // Arrange
             Guid contactId = Guid.NewGuid();
             Contact fullContact = new() { Id = contactId, IsPartial = false };
 
             _repositoryMock.Setup(r => r.GetByIdAsync<Contact>(contactId, It.IsAny<CancellationToken>()))
                 .ReturnsAsync(fullContact);
 
-            // Act
             RelationshipOperationResult result = await _service.PromotePartialContactAsync(contactId);
 
-            // Assert
             Assert.False(result.Success);
             Assert.Equal("Contact is not a partial contact.", result.ErrorMessage);
         }
@@ -493,7 +434,6 @@ namespace Rvnx.CRM.Tests.Services
         [Fact]
         public async Task CreatePartialContactRelationshipAsyncReverseCorrectlySwapsEntities()
         {
-            // Arrange
             Guid parentEntityId = Guid.NewGuid();
             Guid typeId = Guid.NewGuid();
             string selectedType = $"{typeId}_Rev";
@@ -505,17 +445,14 @@ namespace Rvnx.CRM.Tests.Services
                 Description = "A partial contact"
             };
 
-            // Act
             RelationshipOperationResult result = await _service.CreatePartialContactRelationshipAsync(parentEntityId, selectedType, dto);
 
-            // Assert
             Assert.True(result.Success);
             Assert.Equal(parentEntityId, result.RedirectId);
 
             _repositoryMock.Verify(r => r.AddAsync(It.Is<Contact>(c => c.IsPartial && c.FirstName == "John" && c.LastName == "Doe"), It.IsAny<CancellationToken>()), Times.Once);
 
             // EntityId should be partialContact.Id (we don't know it exactly, but we can infer it's NOT parentEntityId)
-            // RelatedEntityId should be parentEntityId
             _repositoryMock.Verify(r => r.AddAsync(It.Is<Relationship>(rel => rel.RelatedEntityId == parentEntityId && rel.RelationshipTypeId == typeId && rel.Description == "A partial contact"), It.IsAny<CancellationToken>()), Times.Once);
             _repositoryMock.Verify(r => r.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
         }
@@ -523,14 +460,11 @@ namespace Rvnx.CRM.Tests.Services
         [Fact]
         public async Task CreatePartialContactRelationshipAsyncMissingTypeReturnsFailure()
         {
-            // Arrange
             Guid parentEntityId = Guid.NewGuid();
             CreatePartialContactRelationshipDto dto = new();
 
-            // Act
             RelationshipOperationResult result = await _service.CreatePartialContactRelationshipAsync(parentEntityId, "", dto);
 
-            // Assert
             Assert.False(result.Success);
             Assert.Equal("Relationship Type is required.", result.ErrorMessage);
         }
@@ -538,14 +472,11 @@ namespace Rvnx.CRM.Tests.Services
         [Fact]
         public async Task CreatePartialContactRelationshipAsyncInvalidFormatReturnsFailure()
         {
-            // Arrange
             Guid parentEntityId = Guid.NewGuid();
             CreatePartialContactRelationshipDto dto = new();
 
-            // Act
             RelationshipOperationResult result = await _service.CreatePartialContactRelationshipAsync(parentEntityId, "InvalidFormat", dto);
 
-            // Assert
             Assert.False(result.Success);
             Assert.Equal("Invalid Relationship Type.", result.ErrorMessage);
         }
@@ -553,29 +484,23 @@ namespace Rvnx.CRM.Tests.Services
         [Fact]
         public async Task GetRelatedEntityOptionsAsyncUnknownTypeReturnsEmptyList()
         {
-            // Arrange
             Guid entityId = Guid.NewGuid();
 
-            // Act
             List<SelectOptionDto> result = await _service.GetRelatedEntityOptionsAsync(entityId, "UnknownType");
 
-            // Assert
             Assert.Empty(result);
         }
 
         [Fact]
         public async Task PromotePartialContactAsyncNotFoundReturnsFailure()
         {
-            // Arrange
             Guid contactId = Guid.NewGuid();
 
             _repositoryMock.Setup(r => r.GetByIdAsync<Contact>(contactId, It.IsAny<CancellationToken>()))
                 .ReturnsAsync((Contact?)null);
 
-            // Act
             RelationshipOperationResult result = await _service.PromotePartialContactAsync(contactId);
 
-            // Assert
             Assert.False(result.Success);
             Assert.Equal("Contact not found.", result.ErrorMessage);
         }

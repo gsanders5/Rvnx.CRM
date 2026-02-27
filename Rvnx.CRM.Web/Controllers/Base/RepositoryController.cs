@@ -65,7 +65,6 @@ public abstract class RepositoryController : AuthorizedController
         {
             return RedirectToAction("Details", "Contacts", new { id });
         }
-        // Add other types here
         return RedirectToAction("Index", "Home");
     }
 }

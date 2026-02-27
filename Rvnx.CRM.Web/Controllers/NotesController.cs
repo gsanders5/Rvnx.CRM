@@ -18,7 +18,6 @@ namespace Rvnx.CRM.Web.Controllers
 
             if (viewModel == null)
             {
-                // Replicate original error handling logic for consistency
                 return entityType != Rvnx.CRM.Core.Constants.EntityTypes.Person ? BadRequest("Only Person entities are supported.") : NotFound();
             }
 
@@ -48,7 +47,6 @@ namespace Rvnx.CRM.Web.Controllers
                 }
             }
 
-            // Re-populate view data if validation failed
             if (viewModel.EntityId != Guid.Empty)
             {
                 viewModel.EntityName = await _entityService.GetEntityNameAsync(viewModel.EntityType, viewModel.EntityId);

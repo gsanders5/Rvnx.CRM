@@ -57,10 +57,8 @@ namespace Rvnx.CRM.Tests.Controllers
         [Fact]
         public async Task CreatePostShouldReturnNotFoundWhenUserCannotAccessContact()
         {
-            // Arrange
             Guid otherUserContactId = Guid.NewGuid();
 
-            // Seed a contact belonging to ANOTHER user directly into the context
             // Note: Since we are adding directly to the context, we need to bypass the query filter or simulate the other user adding it.
             // But CRMDbContext applies filters on QUERY, not on direct DbSet access unless configured otherwise.
             // Wait, AddAsync uses the current user ID from the service if UserId is null.
@@ -91,17 +89,14 @@ namespace Rvnx.CRM.Tests.Controllers
                 Value = "I shouldn't be here"
             };
 
-            // Act
             IActionResult result = await _controller.Create(maliciousNote);
 
-            // Assert
             Assert.IsType<NotFoundResult>(result);
         }
 
         [Fact]
         public async Task CreateGetShouldReturnNotFoundWhenUserCannotAccessContact()
         {
-            // Arrange
             Guid otherUserContactId = Guid.NewGuid();
             Contact otherUserContact = new()
             {
@@ -115,23 +110,18 @@ namespace Rvnx.CRM.Tests.Controllers
             await _context.SaveChangesAsync();
             _context.ChangeTracker.Clear();
 
-            // Act
             IActionResult result = await _controller.Create(otherUserContactId, EntityTypes.Person);
 
-            // Assert
             Assert.IsType<NotFoundResult>(result);
         }
 
         [Fact]
         public async Task CreateGetShouldReturnBadRequestWhenEntityTypeIsNotPerson()
         {
-            // Arrange
             Guid entityId = Guid.NewGuid();
 
-            // Act
             IActionResult result = await _controller.Create(entityId, EntityTypes.Company);
 
-            // Assert
             BadRequestObjectResult badRequest = Assert.IsType<BadRequestObjectResult>(result);
             Assert.Equal("Only Person entities are supported.", badRequest.Value);
         }

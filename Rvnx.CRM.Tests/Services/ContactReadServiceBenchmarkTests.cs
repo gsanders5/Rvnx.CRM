@@ -25,7 +25,6 @@ namespace Rvnx.CRM.Tests.Services
         [Fact]
         public async Task GetContactFormAsyncPerformanceOptimized()
         {
-            // Arrange
             Guid contactId = Guid.NewGuid();
             Contact contact = new() { Id = contactId, FirstName = "Test", LastName = "User" };
 
@@ -33,7 +32,6 @@ namespace Rvnx.CRM.Tests.Services
             contact.ContactMethods.Add(new ContactMethod { Type = ContactMethodType.Email, Value = "test@example.com", Label = ContactMethodLabels.Primary });
             contact.SignificantDates.Add(new SignificantDate { Title = SignificantDateTitles.Birthday, Date = new DateTime(1990, 1, 1) });
 
-            // Setup ListAsNoTrackingAsync for Contact with includes
             _repositoryMock.Setup(r => r.ListAsNoTrackingAsync<Contact>(
                 It.IsAny<Expression<Func<Contact, bool>>>(),
                 It.IsAny<CancellationToken>(),
@@ -43,15 +41,12 @@ namespace Rvnx.CRM.Tests.Services
             _repositoryMock.Setup(r => r.ListAsync<Attachment>(It.IsAny<Expression<Func<Attachment, bool>>>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync([]);
 
-            // Act
             ContactFormDto? result = await _service.GetContactFormAsync(contactId);
 
-            // Assert
             Assert.NotNull(result);
             Assert.Equal("test@example.com", result.Email);
             Assert.Equal(new DateTime(1990, 1, 1), result.Birthday);
 
-            // Verify only ONE call to repository
             _repositoryMock.Verify(r => r.ListAsNoTrackingAsync<Contact>(
                 It.IsAny<Expression<Func<Contact, bool>>>(),
                 It.IsAny<CancellationToken>(),
@@ -59,7 +54,6 @@ namespace Rvnx.CRM.Tests.Services
 
             _repositoryMock.Verify(r => r.GetByIdAsync<Contact>(It.IsAny<Guid>(), It.IsAny<CancellationToken>()), Times.Never);
 
-            // Ensure no other calls (like the old ones)
             _repositoryMock.Verify(r => r.ListAsNoTrackingAsync<ContactMethod>(
                It.IsAny<Expression<Func<ContactMethod, bool>>>(),
                It.IsAny<CancellationToken>(),

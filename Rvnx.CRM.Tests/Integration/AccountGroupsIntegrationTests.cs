@@ -12,13 +12,11 @@ public class AccountGroupsIntegrationTests
     [Fact]
     public async Task EntitiesShouldBeFilteredByGroupId()
     {
-        // Arrange
         Guid group1Id = Guid.NewGuid();
         Guid group2Id = Guid.NewGuid();
         Guid user1Id = Guid.NewGuid();
         Guid user2Id = Guid.NewGuid();
 
-        // Setup mock user service to simulate User 1 logged in
         Mock<ICurrentUserService> mockUserService = new();
         mockUserService.Setup(u => u.UserId).Returns(user1Id);
         mockUserService.Setup(u => u.GroupId).Returns(group1Id);
@@ -30,7 +28,6 @@ public class AccountGroupsIntegrationTests
 
         using (CRMDbContext context = new(options, mockUserService.Object))
         {
-            // Seed data directly (bypassing filters via IgnoreQueryFilters not needed for Adds if we set IDs,
             // but we want to simulate different groups)
 
             // Note: SaveChanges uses CurrentUserService to stamp.
@@ -47,13 +44,11 @@ public class AccountGroupsIntegrationTests
             await context.SaveChangesAsync();
         }
 
-        // Act - Query as User 1
         using (CRMDbContext context = new(options, mockUserService.Object))
         {
             Repository repo = new(context);
             List<Contact> results = await repo.ListAsync<Contact>();
 
-            // Assert
             Assert.Single(results);
             Assert.Equal("Group1", results[0].FirstName);
         }
@@ -62,7 +57,6 @@ public class AccountGroupsIntegrationTests
     [Fact]
     public async Task UsersInSameGroupShouldSeeSameData()
     {
-        // Arrange
         Guid sharedGroupId = Guid.NewGuid();
         Guid userA_Id = Guid.NewGuid();
         Guid userB_Id = Guid.NewGuid();
@@ -71,7 +65,6 @@ public class AccountGroupsIntegrationTests
             .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
             .Options;
 
-        // 1. User A creates data
         Mock<ICurrentUserService> mockUserServiceA = new();
         mockUserServiceA.Setup(u => u.UserId).Returns(userA_Id);
         mockUserServiceA.Setup(u => u.GroupId).Returns(sharedGroupId);
@@ -95,7 +88,6 @@ public class AccountGroupsIntegrationTests
             Repository repo = new(context);
             List<Contact> results = await repo.ListAsync<Contact>();
 
-            // Assert
             Assert.Single(results);
             Assert.Equal("Shared", results[0].FirstName);
             Assert.Equal(sharedGroupId, results[0].GroupId);
@@ -107,7 +99,6 @@ public class AccountGroupsIntegrationTests
     [Fact]
     public async Task UpdateAuditFieldsShouldStampGroupId()
     {
-        // Arrange
         Guid groupId = Guid.NewGuid();
         Mock<ICurrentUserService> mockUserService = new();
         mockUserService.Setup(u => u.UserId).Returns(Guid.NewGuid());
@@ -121,11 +112,9 @@ public class AccountGroupsIntegrationTests
         using CRMDbContext context = new(options, mockUserService.Object);
         Contact contact = new() { FirstName = "New", LastName = "One" };
 
-        // Act
         context.Contacts.Add(contact);
         await context.SaveChangesAsync();
 
-        // Assert
         Assert.Equal(groupId, contact.GroupId);
     }
 }

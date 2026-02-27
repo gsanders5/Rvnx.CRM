@@ -11,7 +11,6 @@ namespace Rvnx.CRM.Tests.Controllers
         [Fact]
         public async Task CreateShouldUseSingleQueryForOptions()
         {
-            // Arrange
             Mock<IRepository> repositoryMock = new();
             Mock<IRelationshipService> relationshipServiceMock = new();
 
@@ -26,7 +25,6 @@ namespace Rvnx.CRM.Tests.Controllers
             repositoryMock.Setup(r => r.CountAsync<Contact>(It.IsAny<System.Linq.Expressions.Expression<Func<Contact, bool>>>(), default))
                 .ReturnsAsync(1); // IsValidContactAsync
 
-            // Mock ListProjectedAsync for GetEntityName
             repositoryMock.Setup(r => r.ListProjectedAsync(
                     It.IsAny<System.Linq.Expressions.Expression<Func<Contact, bool>>>(),
                     It.IsAny<System.Linq.Expressions.Expression<Func<Contact, string>>>(),
@@ -37,11 +35,8 @@ namespace Rvnx.CRM.Tests.Controllers
 
             Guid entityId = Guid.NewGuid();
 
-            // Act
             await controller.Create(entityId, EntityTypes.Person);
 
-            // Assert
-            // Verify that GetRelatedEntityOptionsAsync is called exactly once
             relationshipServiceMock.Verify(s => s.GetRelatedEntityOptionsAsync(entityId, EntityTypes.Person, null), Times.Once);
         }
     }

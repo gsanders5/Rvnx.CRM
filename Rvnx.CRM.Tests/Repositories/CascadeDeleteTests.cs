@@ -13,7 +13,6 @@ namespace Rvnx.CRM.Tests.Repositories
         [Fact]
         public async Task DeleteContactShouldDeleteDependencies()
         {
-            // Arrange
             Mock<ILogger<ContactsController>> logger = new();
             Mock<ICurrentUserService> userMock = new();
             Mock<IContactManagementService> managementMock = new();
@@ -27,17 +26,14 @@ namespace Rvnx.CRM.Tests.Repositories
 
             Guid contactId = Guid.NewGuid();
 
-            // Act
             await controller.DeleteConfirmed(contactId);
 
-            // Assert
             managementMock.Verify(m => m.DeleteContactAsync(contactId), Times.Once);
         }
 
         [Fact]
         public async Task DeleteContactShouldDeleteRelationships()
         {
-            // Arrange
             Mock<ILogger<ContactsController>> logger = new();
             Mock<ICurrentUserService> userMock = new();
             Mock<IContactManagementService> managementMock = new();
@@ -51,10 +47,8 @@ namespace Rvnx.CRM.Tests.Repositories
 
             Guid contactId = Guid.NewGuid();
 
-            // Act
             await controller.DeleteConfirmed(contactId);
 
-            // Assert
             managementMock.Verify(m => m.DeleteContactAsync(contactId), Times.Once);
         }
     }

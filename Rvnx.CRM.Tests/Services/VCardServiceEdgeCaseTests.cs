@@ -20,34 +20,27 @@ namespace Rvnx.CRM.Tests.Services
         [Fact]
         public async Task ParseVCardShouldReturnEmptyWhenStreamIsEmpty()
         {
-            // Arrange
             using MemoryStream stream = new();
 
-            // Act
             List<Contact> contacts = (await _service.ParseVCardAsync(stream)).ToList();
 
-            // Assert
             Assert.Empty(contacts);
         }
 
         [Fact]
         public async Task ParseVCardShouldReturnEmptyWhenInvalidVCardFormat()
         {
-            // Arrange
             string invalidContent = "This is not a valid VCard content";
             using MemoryStream stream = new(Encoding.UTF8.GetBytes(invalidContent));
 
-            // Act
             List<Contact> contacts = (await _service.ParseVCardAsync(stream)).ToList();
 
-            // Assert
             Assert.Empty(contacts);
         }
 
         [Fact]
         public async Task ParseVCardShouldUseFallbackNameWhenNoNameProperty()
         {
-            // Arrange
             string vcfContent = @"BEGIN:VCARD
 VERSION:3.0
 FN:John Doe
@@ -55,10 +48,8 @@ END:VCARD";
 
             using MemoryStream stream = new(Encoding.UTF8.GetBytes(vcfContent));
 
-            // Act
             List<Contact> contacts = (await _service.ParseVCardAsync(stream)).ToList();
 
-            // Assert
             Assert.Single(contacts);
             Contact contact = contacts.First();
             Assert.Equal("John", contact.FirstName);
@@ -68,7 +59,6 @@ END:VCARD";
         [Fact]
         public async Task ParseVCardShouldHandleCommaFormattedDisplayName()
         {
-            // Arrange - Format: "LastName, FirstName"
             string vcfContent = @"BEGIN:VCARD
 VERSION:3.0
 FN:Doe, John
@@ -76,10 +66,8 @@ END:VCARD";
 
             using MemoryStream stream = new(Encoding.UTF8.GetBytes(vcfContent));
 
-            // Act
             List<Contact> contacts = (await _service.ParseVCardAsync(stream)).ToList();
 
-            // Assert
             Assert.Single(contacts);
             Contact contact = contacts.First();
             Assert.Equal("John", contact.FirstName);
@@ -89,7 +77,6 @@ END:VCARD";
         [Fact]
         public async Task ParseVCardShouldSetUnknownWhenNoNameAtAll()
         {
-            // Arrange
             string vcfContent = @"BEGIN:VCARD
 VERSION:3.0
 EMAIL:test@example.com
@@ -97,10 +84,8 @@ END:VCARD";
 
             using MemoryStream stream = new(Encoding.UTF8.GetBytes(vcfContent));
 
-            // Act
             List<Contact> contacts = (await _service.ParseVCardAsync(stream)).ToList();
 
-            // Assert
             Assert.Single(contacts);
             Contact contact = contacts.First();
             Assert.Equal("Unknown", contact.FirstName);
@@ -109,7 +94,6 @@ END:VCARD";
         [Fact]
         public async Task ParseVCardShouldSwapNamesWhenOnlyLastNameProvided()
         {
-            // Arrange - VCard with only last name should move it to first name
             string vcfContent = @"BEGIN:VCARD
 VERSION:3.0
 N:Doe;;;;
@@ -117,10 +101,8 @@ END:VCARD";
 
             using MemoryStream stream = new(Encoding.UTF8.GetBytes(vcfContent));
 
-            // Act
             List<Contact> contacts = (await _service.ParseVCardAsync(stream)).ToList();
 
-            // Assert
             Assert.Single(contacts);
             Contact contact = contacts.First();
             Assert.Equal("Doe", contact.FirstName);
@@ -130,7 +112,6 @@ END:VCARD";
         [Fact]
         public async Task ParseVCardShouldParseMultipleContacts()
         {
-            // Arrange
             string vcfContent = @"BEGIN:VCARD
 VERSION:3.0
 N:Doe;John;;;
@@ -144,10 +125,8 @@ END:VCARD";
 
             using MemoryStream stream = new(Encoding.UTF8.GetBytes(vcfContent));
 
-            // Act
             List<Contact> contacts = (await _service.ParseVCardAsync(stream)).ToList();
 
-            // Assert
             Assert.Equal(2, contacts.Count);
             Assert.Contains(contacts, c => c.FirstName == "John" && c.LastName == "Doe");
             Assert.Contains(contacts, c => c.FirstName == "Jane" && c.LastName == "Smith");
@@ -156,7 +135,6 @@ END:VCARD";
         [Fact]
         public async Task ParseVCardShouldParseMultipleEmails()
         {
-            // Arrange
             string vcfContent = @"BEGIN:VCARD
 VERSION:3.0
 N:Doe;John;;;
@@ -166,10 +144,8 @@ END:VCARD";
 
             using MemoryStream stream = new(Encoding.UTF8.GetBytes(vcfContent));
 
-            // Act
             List<Contact> contacts = (await _service.ParseVCardAsync(stream)).ToList();
 
-            // Assert
             Assert.Single(contacts);
             Contact contact = contacts.First();
             Assert.Equal(2, contact.ContactMethods.Count);
@@ -180,7 +156,6 @@ END:VCARD";
         [Fact]
         public async Task ParseVCardShouldParseMultiplePhones()
         {
-            // Arrange
             string vcfContent = @"BEGIN:VCARD
 VERSION:3.0
 N:Doe;John;;;
@@ -190,10 +165,8 @@ END:VCARD";
 
             using MemoryStream stream = new(Encoding.UTF8.GetBytes(vcfContent));
 
-            // Act
             List<Contact> contacts = (await _service.ParseVCardAsync(stream)).ToList();
 
-            // Assert
             Assert.Single(contacts);
             Contact contact = contacts.First();
             Assert.Equal(2, contact.ContactMethods.Count(cm => cm.Type == ContactMethodType.Phone));
@@ -202,7 +175,6 @@ END:VCARD";
         [Fact]
         public async Task ParseVCardShouldHandleDateOnlyBirthday()
         {
-            // Arrange - Birthday with DateOnly format
             string vcfContent = @"BEGIN:VCARD
 VERSION:3.0
 N:Doe;John;;;
@@ -211,10 +183,8 @@ END:VCARD";
 
             using MemoryStream stream = new(Encoding.UTF8.GetBytes(vcfContent));
 
-            // Act
             List<Contact> contacts = (await _service.ParseVCardAsync(stream)).ToList();
 
-            // Assert
             Assert.Single(contacts);
             Contact contact = contacts.First();
             SignificantDate? bday = contact.SignificantDates.FirstOrDefault(d => d.Title == SignificantDateTitles.Birthday);
@@ -225,7 +195,6 @@ END:VCARD";
         [Fact]
         public async Task ParseVCardShouldSetReminderFlagsForBirthday()
         {
-            // Arrange
             string vcfContent = @"BEGIN:VCARD
 VERSION:3.0
 N:Doe;John;;;
@@ -234,10 +203,8 @@ END:VCARD";
 
             using MemoryStream stream = new(Encoding.UTF8.GetBytes(vcfContent));
 
-            // Act
             List<Contact> contacts = (await _service.ParseVCardAsync(stream)).ToList();
 
-            // Assert
             Assert.Single(contacts);
             Contact contact = contacts.First();
             SignificantDate? bday = contact.SignificantDates.FirstOrDefault(d => d.Title == SignificantDateTitles.Birthday);
@@ -250,7 +217,6 @@ END:VCARD";
         [Fact]
         public void ExportVCardShouldHandleNullContactMethods()
         {
-            // Arrange
             Contact contact = new()
             {
                 Id = Guid.NewGuid(),
@@ -259,10 +225,8 @@ END:VCARD";
                 ContactMethods = null!
             };
 
-            // Act
             byte[] result = _service.ExportVCard(contact);
 
-            // Assert
             Assert.NotEmpty(result);
             string vcf = Encoding.UTF8.GetString(result);
             Assert.Contains("BEGIN:VCARD", vcf);
@@ -272,7 +236,6 @@ END:VCARD";
         [Fact]
         public void ExportVCardShouldHandleNullSignificantDates()
         {
-            // Arrange
             Contact contact = new()
             {
                 Id = Guid.NewGuid(),
@@ -280,17 +243,14 @@ END:VCARD";
                 SignificantDates = null!
             };
 
-            // Act
             byte[] result = _service.ExportVCard(contact);
 
-            // Assert
             Assert.NotEmpty(result);
         }
 
         [Fact]
         public void ExportVCardShouldHandleEmptyLastName()
         {
-            // Arrange
             Contact contact = new()
             {
                 Id = Guid.NewGuid(),
@@ -298,11 +258,9 @@ END:VCARD";
                 LastName = null
             };
 
-            // Act
             byte[] result = _service.ExportVCard(contact);
             string vcf = Encoding.UTF8.GetString(result);
 
-            // Assert
             Assert.Contains("Test", vcf);
             Assert.DoesNotContain("null", vcf.ToLower(CultureInfo.InvariantCulture));
         }
@@ -310,7 +268,6 @@ END:VCARD";
         [Fact]
         public void ExportVCardShouldIncludeBirthdayOnlyNotOtherDates()
         {
-            // Arrange
             Contact contact = new()
             {
                 Id = Guid.NewGuid(),
@@ -322,11 +279,9 @@ END:VCARD";
                 ]
             };
 
-            // Act
             byte[] result = _service.ExportVCard(contact);
             string vcf = Encoding.UTF8.GetString(result);
 
-            // Assert
             // VCard format only supports BDAY, not arbitrary dates
             Assert.Contains("BDAY", vcf);
             // Anniversary should not appear (VCard doesn't support custom dates in the same way)
@@ -335,7 +290,6 @@ END:VCARD";
         [Fact]
         public void ExportVCardShouldOnlyIncludeEmailAndPhoneContactMethods()
         {
-            // Arrange
             Contact contact = new()
             {
                 Id = Guid.NewGuid(),
@@ -348,11 +302,9 @@ END:VCARD";
                 ]
             };
 
-            // Act
             byte[] result = _service.ExportVCard(contact);
             string vcf = Encoding.UTF8.GetString(result);
 
-            // Assert
             Assert.Contains("test@example.com", vcf);
             Assert.Contains("1234567890", vcf);
             // Website is not exported by default in this implementation
@@ -361,7 +313,6 @@ END:VCARD";
         [Fact]
         public void ExportVCardShouldSkipEmptyEmailValues()
         {
-            // Arrange
             Contact contact = new()
             {
                 Id = Guid.NewGuid(),
@@ -374,19 +325,15 @@ END:VCARD";
                 ]
             };
 
-            // Act
             byte[] result = _service.ExportVCard(contact);
             string vcf = Encoding.UTF8.GetString(result);
 
-            // Assert
             Assert.Contains("valid@example.com", vcf);
-            // Should only have one EMAIL entry
         }
 
         [Fact]
         public async Task ParseVCardShouldExtractNickname()
         {
-            // Arrange
             string vcfContent = @"BEGIN:VCARD
 VERSION:3.0
 N:Doe;John;;;
@@ -395,10 +342,8 @@ END:VCARD";
 
             using MemoryStream stream = new(Encoding.UTF8.GetBytes(vcfContent));
 
-            // Act
             List<Contact> contacts = (await _service.ParseVCardAsync(stream)).ToList();
 
-            // Assert
             Assert.Single(contacts);
             Contact contact = contacts.First();
             Assert.Equal("Johnny", contact.Nickname);
@@ -407,7 +352,6 @@ END:VCARD";
         [Fact]
         public async Task ParseVCardShouldExtractOrganizationAndTitle()
         {
-            // Arrange
             string vcfContent = @"BEGIN:VCARD
 VERSION:3.0
 N:Doe;John;;;
@@ -417,10 +361,8 @@ END:VCARD";
 
             using MemoryStream stream = new(Encoding.UTF8.GetBytes(vcfContent));
 
-            // Act
             List<Contact> contacts = (await _service.ParseVCardAsync(stream)).ToList();
 
-            // Assert
             Assert.Single(contacts);
             Contact contact = contacts.First();
             Assert.Equal("Acme Corporation", contact.Company);

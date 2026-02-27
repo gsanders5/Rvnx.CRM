@@ -52,17 +52,14 @@ namespace Rvnx.CRM.Tests.Controllers
         [Fact]
         public async Task CreateGetReturnsViewWithCorrectModel()
         {
-            // Arrange
             Guid entityId = Guid.NewGuid();
             _context.Contacts.Add(new Contact { Id = entityId, FirstName = "Parent" });
             await _context.SaveChangesAsync();
 
             string entityType = EntityTypes.Person;
 
-            // Act
             IActionResult result = await _controller.Create(entityId, entityType);
 
-            // Assert
             ViewResult viewResult = Assert.IsType<ViewResult>(result);
             ContactMethodFormDto model = Assert.IsType<ContactMethodFormDto>(viewResult.Model);
             Assert.Equal(entityId, model.EntityId);
@@ -72,10 +69,8 @@ namespace Rvnx.CRM.Tests.Controllers
         [Fact]
         public async Task CreatePostValidDataCreatesContactMethod()
         {
-            // Arrange
             Guid entityId = Guid.NewGuid();
             string entityType = EntityTypes.Person;
-            // Create parent entity
             _context.Contacts.Add(new Contact { Id = entityId, FirstName = "Parent", LastName = "Entity" });
             await _context.SaveChangesAsync();
 
@@ -88,10 +83,8 @@ namespace Rvnx.CRM.Tests.Controllers
                 Label = "Work"
             };
 
-            // Act
             IActionResult result = await _controller.Create(dto);
 
-            // Assert
             RedirectToActionResult redirectResult = Assert.IsType<RedirectToActionResult>(result);
             Assert.Equal("Details", redirectResult.ActionName); // RedirectToEntity -> Details
             Assert.Equal("Contacts", redirectResult.ControllerName);
@@ -106,7 +99,6 @@ namespace Rvnx.CRM.Tests.Controllers
         [Fact]
         public async Task CreatePostInvalidDataReturnsView()
         {
-            // Arrange
             Guid entityId = Guid.NewGuid();
             _context.Contacts.Add(new Contact { Id = entityId, FirstName = "Parent" });
             await _context.SaveChangesAsync();
@@ -115,14 +107,11 @@ namespace Rvnx.CRM.Tests.Controllers
             {
                 EntityId = entityId,
                 EntityType = EntityTypes.Person,
-                // Missing Type and Value (required)
             };
             _controller.ModelState.AddModelError("Value", "Required");
 
-            // Act
             IActionResult result = await _controller.Create(dto);
 
-            // Assert
             ViewResult viewResult = Assert.IsType<ViewResult>(result);
             Assert.Equal(dto, viewResult.Model);
             Assert.False(_controller.ModelState.IsValid);
@@ -131,7 +120,6 @@ namespace Rvnx.CRM.Tests.Controllers
         [Fact]
         public async Task CreatePostWithNonExistentParentReturnsNotFound()
         {
-            // Arrange
             // We do NOT create the parent entity
             Guid nonExistentEntityId = Guid.NewGuid();
             string entityType = EntityTypes.Person;
@@ -144,10 +132,8 @@ namespace Rvnx.CRM.Tests.Controllers
                 Value = "orphan@example.com"
             };
 
-            // Act
             IActionResult result = await _controller.Create(dto);
 
-            // Assert
             Assert.IsType<NotFoundResult>(result);
 
             // Verify record does NOT exist in DB
@@ -158,11 +144,9 @@ namespace Rvnx.CRM.Tests.Controllers
         [Fact]
         public async Task EditPostValidDataUpdatesContactMethod()
         {
-            // Arrange
             Guid entityId = Guid.NewGuid();
             Guid methodId = Guid.NewGuid();
 
-            // Seed
             _context.Contacts.Add(new Contact { Id = entityId, FirstName = "Test", LastName = "User" });
             _context.Set<ContactMethod>().Add(new ContactMethod
             {
@@ -174,7 +158,6 @@ namespace Rvnx.CRM.Tests.Controllers
             });
             await _context.SaveChangesAsync();
 
-            // Clear change tracker to ensure we are testing a fresh request
             _context.ChangeTracker.Clear();
 
             ContactMethodFormDto dto = new()
@@ -187,10 +170,8 @@ namespace Rvnx.CRM.Tests.Controllers
                 Label = "New Label"
             };
 
-            // Act
             IActionResult result = await _controller.Edit(methodId, dto);
 
-            // Assert
             RedirectToActionResult redirectResult = Assert.IsType<RedirectToActionResult>(result);
             Assert.Equal("Details", redirectResult.ActionName);
 
@@ -204,7 +185,6 @@ namespace Rvnx.CRM.Tests.Controllers
         [Fact]
         public async Task EditPostReturnsNotFoundWhenEntityDoesNotExist()
         {
-            // Arrange
             Guid methodId = Guid.NewGuid();
             ContactMethodFormDto dto = new()
             {
@@ -215,17 +195,14 @@ namespace Rvnx.CRM.Tests.Controllers
                 Value = "Val"
             };
 
-            // Act
             IActionResult result = await _controller.Edit(methodId, dto);
 
-            // Assert
             Assert.IsType<NotFoundResult>(result);
         }
 
         [Fact]
         public async Task DeletePostDeletesContactMethod()
         {
-            // Arrange
             Guid entityId = Guid.NewGuid();
             Guid methodId = Guid.NewGuid();
 
@@ -239,10 +216,8 @@ namespace Rvnx.CRM.Tests.Controllers
             });
             await _context.SaveChangesAsync();
 
-            // Act
             IActionResult result = await _controller.DeleteConfirmed(methodId);
 
-            // Assert
             RedirectToActionResult redirectResult = Assert.IsType<RedirectToActionResult>(result);
             Assert.Equal("Details", redirectResult.ActionName);
 

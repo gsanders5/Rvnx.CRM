@@ -7,17 +7,14 @@ namespace Rvnx.CRM.Tests.Security
         [Fact]
         public void AppSettingsShouldNotContainHardcodedSecret()
         {
-            // Arrange
             string appsettingsPath = Path.Combine(Directory.GetCurrentDirectory(), "..", "..", "..", "..", "Rvnx.CRM.Web", "appsettings.json");
 
             IConfigurationRoot config = new ConfigurationBuilder()
                 .AddJsonFile(appsettingsPath)
                 .Build();
 
-            // Act
             string? secret = config["Authentication:ClientSecret"];
 
-            // Assert
             Assert.True(string.IsNullOrWhiteSpace(secret) || secret == "CHANGE_ME",
                 "appsettings.json should not contain a hardcoded secret.");
 
@@ -27,7 +24,6 @@ namespace Rvnx.CRM.Tests.Security
         [Fact]
         public void ValidationLogicShouldThrowWhenAuthEnabledAndSecretMissing()
         {
-            // Arrange
             Dictionary<string, string?> authSettings = new()
             {
                 {"Authentication:Enabled", "true"},
@@ -43,7 +39,6 @@ namespace Rvnx.CRM.Tests.Security
             IConfigurationSection authConfig = config.GetSection("Authentication");
             bool authEnabled = authConfig.GetValue<bool>("Enabled");
 
-            // Act & Assert
             if (authEnabled)
             {
                 Assert.Throws<InvalidOperationException>(() =>

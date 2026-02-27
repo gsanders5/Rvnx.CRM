@@ -27,7 +27,6 @@ public class MergeAccountsTests
     [Fact]
     public async Task MergeAccountsShouldMoveEntitiesAndUsersToKeptGroup()
     {
-        // Arrange
         Guid adminId = Guid.NewGuid();
         Guid group1Id = Guid.NewGuid();
         Guid group2Id = Guid.NewGuid();
@@ -41,10 +40,8 @@ public class MergeAccountsTests
 
         using CRMDbContext context = GetInMemoryDbContext(mockUserService.Object);
 
-        // Setup Admin User
         context.Users.Add(new User { Id = adminId, Email = "admin@example.com", IsAdministrator = true, GroupId = mockUserService.Object.GroupId, SubjectId = "admin" });
 
-        // Setup Group 1 (Kept - has more members)
         UserGroup group1 = new() { Id = group1Id, Name = "Group 1" };
         User user1 = new() { Id = user1Id, Email = "u1@example.com", Group = group1, GroupId = group1Id, SubjectId = "u1" };
         User user1b = new() { Id = Guid.NewGuid(), Email = "u1b@example.com", Group = group1, GroupId = group1Id, SubjectId = "u1b" }; // Extra member to win tie
@@ -52,13 +49,11 @@ public class MergeAccountsTests
         context.Users.Add(user1);
         context.Users.Add(user1b);
 
-        // Setup Group 2 (Discarded)
         UserGroup group2 = new() { Id = group2Id, Name = "Group 2" };
         User user2 = new() { Id = user2Id, Email = "u2@example.com", Group = group2, GroupId = group2Id, SubjectId = "u2" };
         context.UserGroups.Add(group2);
         context.Users.Add(user2);
 
-        // Add Entities for Group 2
         Contact contact2 = new() { FirstName = "G2", LastName = "Contact", GroupId = group2Id, UserId = user2Id };
         context.Contacts.Add(contact2);
 
@@ -77,21 +72,16 @@ public class MergeAccountsTests
             mockEnv.Object,
             mockUserService.Object)
         {
-            // Setup TempData
             TempData = new Microsoft.AspNetCore.Mvc.ViewFeatures.TempDataDictionary(new DefaultHttpContext(), Mock.Of<Microsoft.AspNetCore.Mvc.ViewFeatures.ITempDataProvider>())
         };
 
-        // Act
         // Merge user2 (Group 2) into user1 (Group 1)
         IActionResult result = await controller.MergeAccounts(user1Id, user2Id, "MERGE");
 
-        // Assert
         Assert.IsType<RedirectToActionResult>(result);
 
-        // Verify Data
         context.ChangeTracker.Clear();
 
-        // 1. Discarded group should be deleted
         UserGroup? g2 = await context.UserGroups.IgnoreQueryFilters().FirstOrDefaultAsync(g => g.Id == group2Id);
         Assert.Null(g2);
 
@@ -105,7 +95,6 @@ public class MergeAccountsTests
         Assert.NotNull(c2);
         Assert.Equal(group1Id, c2!.GroupId);
 
-        // 4. Group 1 should still exist
         UserGroup? g1 = await context.UserGroups.IgnoreQueryFilters().FirstOrDefaultAsync(g => g.Id == group1Id);
         Assert.NotNull(g1);
     }
@@ -113,7 +102,6 @@ public class MergeAccountsTests
     [Fact]
     public async Task MergeAccountsShouldFailIfNonAdmin()
     {
-        // Arrange
         Guid regularUserId = Guid.NewGuid();
         Mock<ICurrentUserService> mockUserService = new();
         mockUserService.Setup(u => u.UserId).Returns(regularUserId);
@@ -131,10 +119,8 @@ public class MergeAccountsTests
             new Mock<IHostEnvironment>().Object,
             mockUserService.Object);
 
-        // Act
         IActionResult result = await controller.MergeAccounts(Guid.NewGuid(), Guid.NewGuid(), "MERGE");
 
-        // Assert
         Assert.IsType<ForbidResult>(result);
     }
 }

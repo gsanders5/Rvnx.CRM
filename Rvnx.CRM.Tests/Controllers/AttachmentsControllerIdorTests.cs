@@ -12,7 +12,6 @@ namespace Rvnx.CRM.Tests.Controllers
         [Fact]
         public async Task UploadShouldReturnNotFoundWhenEntityBelongsToAnotherUser()
         {
-            // Arrange
             Mock<IAttachmentService> serviceMock = new();
             serviceMock.Setup(s => s.UploadAttachmentAsync(It.IsAny<Guid>(), It.IsAny<string>(), It.IsAny<byte[]>(), It.IsAny<string>()))
                 .ReturnsAsync(AttachmentOperationResult.NotFound("Entity not found."));
@@ -44,10 +43,8 @@ namespace Rvnx.CRM.Tests.Controllers
                 .Callback<Stream, CancellationToken>((stream, token) => ms.CopyTo(stream))
                 .Returns(Task.CompletedTask);
 
-            // Act
             IActionResult result = await controller.Upload(Guid.NewGuid(), "Person", fileMock.Object);
 
-            // Assert
             Assert.IsType<NotFoundObjectResult>(result);
         }
     }

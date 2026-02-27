@@ -52,7 +52,6 @@ namespace Rvnx.CRM.Tests.Controllers
         [Fact]
         public async Task DeleteGetWithUnvalidatedReturnUrlShouldSanitizeIt()
         {
-            // Arrange
             // We need a valid relationship ID to reach the logic
             Guid relId = Guid.NewGuid();
             _context.Relationships.Add(new Core.Models.Contact.Relationship
@@ -66,10 +65,8 @@ namespace Rvnx.CRM.Tests.Controllers
 
             string maliciousUrl = "http://malicious.com";
 
-            // Act
             IActionResult result = await _controller.Delete(relId, maliciousUrl);
 
-            // Assert
             ViewResult viewResult = Assert.IsType<ViewResult>(result);
             dynamic? model = viewResult.Model;
             // In Razor Pages/Views, we access properties. Here we check if ReturnUrl in model is null

@@ -10,7 +10,6 @@ namespace Rvnx.CRM.Tests.Extensions
         [Fact]
         public void ToDtoShouldMapPropertiesCorrectly()
         {
-            // Arrange
             Note note = new()
             {
                 Id = Guid.NewGuid(),
@@ -20,10 +19,8 @@ namespace Rvnx.CRM.Tests.Extensions
                 CreatedDate = DateTime.UtcNow
             };
 
-            // Act
             NoteDto dto = note.ToDto();
 
-            // Assert
             Assert.Equal(note.Id, dto.Id);
             Assert.Equal(note.Title, dto.Title);
             Assert.Equal(note.Value, dto.Value);
@@ -35,7 +32,6 @@ namespace Rvnx.CRM.Tests.Extensions
         [Fact]
         public void ToDtoShouldMapNullContactIdToEmptyGuid()
         {
-            // Arrange
             Note note = new()
             {
                 Id = Guid.NewGuid(),
@@ -45,17 +41,14 @@ namespace Rvnx.CRM.Tests.Extensions
                 CreatedDate = DateTime.UtcNow
             };
 
-            // Act
             NoteDto dto = note.ToDto();
 
-            // Assert
             Assert.Equal(Guid.Empty, dto.EntityId);
         }
 
         [Fact]
         public void ToEntityShouldCreateNewNoteWithCorrectProperties()
         {
-            // Arrange
             NoteFormDto formDto = new()
             {
                 Title = "New Title",
@@ -63,10 +56,8 @@ namespace Rvnx.CRM.Tests.Extensions
                 EntityId = Guid.NewGuid()
             };
 
-            // Act
             Note entity = formDto.ToEntity();
 
-            // Assert
             Assert.NotEqual(Guid.Empty, entity.Id);
             Assert.Equal(formDto.Title, entity.Title);
             Assert.Equal(formDto.Value, entity.Value);
@@ -76,7 +67,6 @@ namespace Rvnx.CRM.Tests.Extensions
         [Fact]
         public void UpdateEntityShouldUpdatePropertiesCorrectly()
         {
-            // Arrange
             Guid initialContactId = Guid.NewGuid();
             Note note = new()
             {
@@ -94,14 +84,11 @@ namespace Rvnx.CRM.Tests.Extensions
                 EntityId = Guid.NewGuid()
             };
 
-            // Act
             note.UpdateEntity(formDto);
 
-            // Assert
             Assert.Equal("Updated Title", note.Title);
             Assert.Equal("Updated Value", note.Value);
 
-            // Verify ContactId remains unchanged
             Assert.Equal(initialContactId, note.ContactId);
         }
     }

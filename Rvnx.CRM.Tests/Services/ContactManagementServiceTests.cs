@@ -32,7 +32,6 @@ namespace Rvnx.CRM.Tests.Services
             _fileValidationServiceMock = new Mock<IFileValidationService>();
             _service = new ContactManagementService(_repositoryMock.Object, _fileValidationServiceMock.Object);
 
-            // Setup ListAsync for ContactMethod
             _repositoryMock.Setup(r => r.ListAsync<ContactMethod>(
                 It.IsAny<Expression<Func<ContactMethod, bool>>>(),
                 It.IsAny<CancellationToken>()))
@@ -41,7 +40,6 @@ namespace Rvnx.CRM.Tests.Services
                     return _contactMethods.AsQueryable().Where(predicate).ToList();
                 });
 
-            // Setup ListAsync for SignificantDate
             _repositoryMock.Setup(r => r.ListAsync<SignificantDate>(
                 It.IsAny<Expression<Func<SignificantDate, bool>>>(),
                 It.IsAny<CancellationToken>()))
@@ -50,7 +48,6 @@ namespace Rvnx.CRM.Tests.Services
                     return _significantDates.AsQueryable().Where(predicate).ToList();
                 });
 
-            // Setup ListAsync for Attachment
             _repositoryMock.Setup(r => r.ListAsync<Attachment>(
                 It.IsAny<Expression<Func<Attachment, bool>>>(),
                 It.IsAny<CancellationToken>()))
@@ -59,7 +56,6 @@ namespace Rvnx.CRM.Tests.Services
                     return _attachments.AsQueryable().Where(predicate).ToList();
                 });
 
-            // Setup ListAsync for User
             _repositoryMock.Setup(r => r.ListAsync<User>(
                 It.IsAny<Expression<Func<User, bool>>>(),
                 It.IsAny<CancellationToken>()))
@@ -68,7 +64,6 @@ namespace Rvnx.CRM.Tests.Services
                     return _users.AsQueryable().Where(predicate).ToList();
                 });
 
-            // Setup ListAsync for Relationship (2 args)
             _repositoryMock.Setup(r => r.ListAsync<Relationship>(
                 It.IsAny<Expression<Func<Relationship, bool>>>(),
                 It.IsAny<CancellationToken>()))
@@ -77,7 +72,6 @@ namespace Rvnx.CRM.Tests.Services
                     return _relationships.AsQueryable().Where(predicate).ToList();
                 });
 
-            // Setup ListAsync for Relationship (3 args with includes)
             _repositoryMock.Setup(r => r.ListAsync<Relationship>(
                 It.IsAny<Expression<Func<Relationship, bool>>>(),
                 It.IsAny<CancellationToken>(),
@@ -87,7 +81,6 @@ namespace Rvnx.CRM.Tests.Services
                     return _relationships.AsQueryable().Where(predicate).ToList();
                 });
 
-            // Setup ListAsync for Contact (3 args with includes)
             _repositoryMock.Setup(r => r.ListAsync<Contact>(
                 It.IsAny<Expression<Func<Contact, bool>>>(),
                 It.IsAny<CancellationToken>(),
@@ -97,7 +90,6 @@ namespace Rvnx.CRM.Tests.Services
                     return _contacts.AsQueryable().Where(predicate).ToList();
                 });
 
-            // Setup ListAsNoTrackingAsync for Contact (3 args with includes)
             _repositoryMock.Setup(r => r.ListAsNoTrackingAsync<Contact>(
                 It.IsAny<Expression<Func<Contact, bool>>>(),
                 It.IsAny<CancellationToken>(),
@@ -107,12 +99,10 @@ namespace Rvnx.CRM.Tests.Services
                     return _contacts.AsQueryable().Where(predicate).ToList();
                 });
 
-            // Setup dependencies to return empty if not mocked specifically
             _repositoryMock.Setup(r => r.ListAsync<Pet>(It.IsAny<Expression<Func<Pet, bool>>>(), It.IsAny<CancellationToken>())).ReturnsAsync([]);
             _repositoryMock.Setup(r => r.ListAsync<Fact>(It.IsAny<Expression<Func<Fact, bool>>>(), It.IsAny<CancellationToken>())).ReturnsAsync([]);
             _repositoryMock.Setup(r => r.ListAsync<Note>(It.IsAny<Expression<Func<Note, bool>>>(), It.IsAny<CancellationToken>())).ReturnsAsync([]);
 
-            // Setup Delete callbacks to maintain in-memory state consistency
             _repositoryMock.Setup(r => r.DeleteAsync<Contact>(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
                 .Callback<Guid, CancellationToken>((id, ct) =>
                 {
@@ -156,7 +146,6 @@ namespace Rvnx.CRM.Tests.Services
                     }
                 });
 
-            // Setup DeleteAsync(predicate) callback
             _repositoryMock.Setup(r => r.DeleteAsync(It.IsAny<Expression<Func<Relationship, bool>>>(), It.IsAny<CancellationToken>()))
                 .Callback<Expression<Func<Relationship, bool>>, CancellationToken>((predicate, ct) =>
                 {
@@ -172,7 +161,6 @@ namespace Rvnx.CRM.Tests.Services
         [Fact]
         public async Task UpdateContactWithEmptyEmailDeletesExistingPrimaryEmail()
         {
-            // Arrange
             Guid contactId = Guid.NewGuid();
             ContactMethod existingEmail = new()
             {
@@ -196,10 +184,8 @@ namespace Rvnx.CRM.Tests.Services
                 Email = "" // Empty email
             };
 
-            // Act
             ContactOperationResult result = await _service.UpdateContactAsync(contactId, dto, null, null, null);
 
-            // Assert
             Assert.True(result.Success);
             _repositoryMock.Verify(r => r.DeleteAsync<ContactMethod>(existingEmail.Id, It.IsAny<CancellationToken>()), Times.Once);
             _repositoryMock.Verify(r => r.UpdateAsync(It.IsAny<ContactMethod>(), It.IsAny<CancellationToken>()), Times.Never);
@@ -209,9 +195,7 @@ namespace Rvnx.CRM.Tests.Services
         [Fact]
         public async Task UpdateContactWithNewEmailAddsContactMethod()
         {
-            // Arrange
             Guid contactId = Guid.NewGuid();
-            // No existing email in _contactMethods
 
             Contact contact = new() { Id = contactId, FirstName = "Test", LastName = "User" };
             _repositoryMock.Setup(r => r.GetByIdAsync<Contact>(contactId, It.IsAny<CancellationToken>()))
@@ -225,10 +209,8 @@ namespace Rvnx.CRM.Tests.Services
                 Email = "new@example.com"
             };
 
-            // Act
             ContactOperationResult result = await _service.UpdateContactAsync(contactId, dto, null, null, null);
 
-            // Assert
             Assert.True(result.Success);
             _repositoryMock.Verify(r => r.AddAsync(It.Is<ContactMethod>(cm =>
                 cm.ContactId == contactId &&
@@ -241,7 +223,6 @@ namespace Rvnx.CRM.Tests.Services
         [Fact]
         public async Task UpdateContactWithChangedEmailUpdatesExistingContactMethod()
         {
-            // Arrange
             Guid contactId = Guid.NewGuid();
             ContactMethod existingEmail = new()
             {
@@ -265,13 +246,10 @@ namespace Rvnx.CRM.Tests.Services
                 Email = "new@example.com"
             };
 
-            // Act
             ContactOperationResult result = await _service.UpdateContactAsync(contactId, dto, null, null, null);
 
-            // Assert
             Assert.True(result.Success);
 
-            // Verify UpdateAsync was called on the SAME object reference (since we're modifying it in memory)
             _repositoryMock.Verify(r => r.UpdateAsync(It.Is<ContactMethod>(cm =>
                 cm.Id == existingEmail.Id &&
                 cm.Value == "new@example.com"),
@@ -283,7 +261,6 @@ namespace Rvnx.CRM.Tests.Services
         [Fact]
         public async Task UpdateContactWithEmptyBirthdayDeletesExistingBirthday()
         {
-            // Arrange
             Guid contactId = Guid.NewGuid();
             SignificantDate existingBirthday = new()
             {
@@ -306,10 +283,8 @@ namespace Rvnx.CRM.Tests.Services
                 Birthday = null
             };
 
-            // Act
             ContactOperationResult result = await _service.UpdateContactAsync(contactId, dto, null, null, null);
 
-            // Assert
             Assert.True(result.Success);
             _repositoryMock.Verify(r => r.DeleteAsync<SignificantDate>(existingBirthday.Id, It.IsAny<CancellationToken>()), Times.Once);
         }
@@ -317,9 +292,7 @@ namespace Rvnx.CRM.Tests.Services
         [Fact]
         public async Task UpdateContactWithNewBirthdayAddsSignificantDate()
         {
-            // Arrange
             Guid contactId = Guid.NewGuid();
-            // No existing birthday
 
             Contact contact = new() { Id = contactId, FirstName = "Test", LastName = "User" };
             _repositoryMock.Setup(r => r.GetByIdAsync<Contact>(contactId, It.IsAny<CancellationToken>()))
@@ -334,10 +307,8 @@ namespace Rvnx.CRM.Tests.Services
                 Birthday = newBirthday
             };
 
-            // Act
             ContactOperationResult result = await _service.UpdateContactAsync(contactId, dto, null, null, null);
 
-            // Assert
             Assert.True(result.Success);
             _repositoryMock.Verify(r => r.AddAsync(It.Is<SignificantDate>(sd =>
                 sd.ContactId == contactId &&
@@ -351,7 +322,6 @@ namespace Rvnx.CRM.Tests.Services
         [Fact]
         public async Task UpdateContactWithInvalidImageExtensionReturnsFailure()
         {
-            // Arrange
             Guid contactId = Guid.NewGuid();
             Contact contact = new() { Id = contactId, FirstName = "Test", LastName = "User" };
             _repositoryMock.Setup(r => r.GetByIdAsync<Contact>(contactId, It.IsAny<CancellationToken>()))
@@ -365,10 +335,8 @@ namespace Rvnx.CRM.Tests.Services
 
             _fileValidationServiceMock.Setup(f => f.IsImageExtension(".txt")).Returns(false);
 
-            // Act
             ContactOperationResult result = await _service.UpdateContactAsync(contactId, dto, stream, fileName, contentType);
 
-            // Assert
             Assert.False(result.Success);
             Assert.Contains("Only image files", result.Errors.First());
             _repositoryMock.Verify(r => r.UpdateAsync(It.IsAny<Contact>(), It.IsAny<CancellationToken>()), Times.Never);
@@ -377,7 +345,6 @@ namespace Rvnx.CRM.Tests.Services
         [Fact]
         public async Task UpdateContactWithNewImageArchivesOldProfilePhoto()
         {
-            // Arrange
             Guid contactId = Guid.NewGuid();
             Contact contact = new() { Id = contactId, FirstName = "Test", LastName = "User" };
             _repositoryMock.Setup(r => r.GetByIdAsync<Contact>(contactId, It.IsAny<CancellationToken>()))
@@ -400,10 +367,8 @@ namespace Rvnx.CRM.Tests.Services
             _fileValidationServiceMock.Setup(f => f.IsImageExtension(".jpg")).Returns(true);
             _fileValidationServiceMock.Setup(f => f.IsValidImageSignature(It.IsAny<byte[]>(), ".jpg")).Returns(true);
 
-            // Act
             await _service.UpdateContactAsync(contactId, dto, stream, fileName, contentType);
 
-            // Assert
             _repositoryMock.Verify(r => r.UpdateAsync(It.Is<Attachment>(a => a.Id == existingProfilePhoto.Id && a.AttachmentType == "General"), It.IsAny<CancellationToken>()), Times.Once);
             _repositoryMock.Verify(r => r.AddAsync(It.Is<Attachment>(a => a.AttachmentType == AttachmentTypes.ProfileImage && a.FileName == fileName), It.IsAny<CancellationToken>()), Times.Once);
         }
@@ -411,7 +376,6 @@ namespace Rvnx.CRM.Tests.Services
         [Fact]
         public async Task UnsetProfilePhotoArchivesExistingPhoto()
         {
-            // Arrange
             Guid contactId = Guid.NewGuid();
             Attachment existingProfilePhoto = new()
             {
@@ -422,10 +386,8 @@ namespace Rvnx.CRM.Tests.Services
             };
             _attachments.Add(existingProfilePhoto);
 
-            // Act
             ContactOperationResult result = await _service.UnsetProfilePhotoAsync(contactId);
 
-            // Assert
             Assert.True(result.Success);
             _repositoryMock.Verify(r => r.UpdateAsync(It.Is<Attachment>(a => a.Id == existingProfilePhoto.Id && a.AttachmentType == "General"), It.IsAny<CancellationToken>()), Times.Once);
             _repositoryMock.Verify(r => r.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
@@ -434,7 +396,6 @@ namespace Rvnx.CRM.Tests.Services
         [Fact]
         public async Task SetAttachmentAsProfilePhotoArchivesOldAndSetsNew()
         {
-            // Arrange
             Guid contactId = Guid.NewGuid();
             Attachment existingProfilePhoto = new()
             {
@@ -457,21 +418,16 @@ namespace Rvnx.CRM.Tests.Services
             _repositoryMock.Setup(r => r.GetByIdAsync<Attachment>(newPhoto.Id, It.IsAny<CancellationToken>()))
                 .ReturnsAsync(newPhoto);
 
-            // Act
             ContactOperationResult result = await _service.SetAttachmentAsProfilePhotoAsync(contactId, newPhoto.Id);
 
-            // Assert
             Assert.True(result.Success);
-            // Verify old photo archived
             _repositoryMock.Verify(r => r.UpdateAsync(It.Is<Attachment>(a => a.Id == existingProfilePhoto.Id && a.AttachmentType == "General"), It.IsAny<CancellationToken>()), Times.Once);
-            // Verify new photo promoted
             _repositoryMock.Verify(r => r.UpdateAsync(It.Is<Attachment>(a => a.Id == newPhoto.Id && a.AttachmentType == AttachmentTypes.ProfileImage), It.IsAny<CancellationToken>()), Times.Once);
         }
 
         [Fact]
         public async Task SetAttachmentAsProfilePhotoFailsForNonImage()
         {
-            // Arrange
             Guid contactId = Guid.NewGuid();
             Attachment doc = new()
             {
@@ -488,10 +444,8 @@ namespace Rvnx.CRM.Tests.Services
 
             _fileValidationServiceMock.Setup(f => f.IsImageExtension(".pdf")).Returns(false);
 
-            // Act
             ContactOperationResult result = await _service.SetAttachmentAsProfilePhotoAsync(contactId, doc.Id);
 
-            // Assert
             Assert.False(result.Success);
             Assert.Contains("not an image", result.Errors.First());
         }
@@ -499,7 +453,6 @@ namespace Rvnx.CRM.Tests.Services
         [Fact]
         public async Task SetAttachmentAsProfilePhotoFailsForWrongContact()
         {
-            // Arrange
             Guid contactId = Guid.NewGuid();
             Guid otherContactId = Guid.NewGuid();
             Attachment photo = new()
@@ -515,44 +468,35 @@ namespace Rvnx.CRM.Tests.Services
             _repositoryMock.Setup(r => r.GetByIdAsync<Attachment>(photo.Id, It.IsAny<CancellationToken>()))
                 .ReturnsAsync(photo);
 
-            // Act
             ContactOperationResult result = await _service.SetAttachmentAsProfilePhotoAsync(contactId, photo.Id);
 
-            // Assert
             Assert.True(result.IsNotFound);
         }
         [Fact]
         public async Task DeleteContactDeletesContactAndDirectDependencies()
         {
-            // Arrange
             Guid contactId = Guid.NewGuid();
             Contact contact = new() { Id = contactId, FirstName = "ToDelete" };
             _contacts.Add(contact);
 
-            // Add relationships
             Relationship rel1 = new() { Id = Guid.NewGuid(), EntityId = contactId, RelatedEntityId = Guid.NewGuid(), EntityType = EntityTypes.Person };
             Relationship rel2 = new() { Id = Guid.NewGuid(), EntityId = Guid.NewGuid(), RelatedEntityId = contactId, EntityType = EntityTypes.Person };
             _relationships.Add(rel1);
             _relationships.Add(rel2);
 
-            // Act
             await _service.DeleteContactAsync(contactId);
 
-            // Assert
             // 1. Deletes relationships (Using optimized DeleteAsync(predicate))
             _repositoryMock.Verify(r => r.DeleteAsync(It.IsAny<Expression<Func<Relationship, bool>>>(), It.IsAny<CancellationToken>()), Times.Exactly(2));
 
-            // Verify DeleteRangeAsync is NOT called
             _repositoryMock.Verify(r => r.DeleteRangeAsync(It.IsAny<IEnumerable<Relationship>>(), It.IsAny<CancellationToken>()), Times.Never);
 
-            // 2. Deletes Contact
             _repositoryMock.Verify(r => r.DeleteAsync<Contact>(contactId, It.IsAny<CancellationToken>()), Times.Once);
         }
 
         [Fact]
         public async Task DeleteContactAsyncOrphansPartialContactDeletesIt()
         {
-            // Arrange
             Guid contactId = Guid.NewGuid();
             Guid partialContactId = Guid.NewGuid();
 
@@ -562,18 +506,13 @@ namespace Rvnx.CRM.Tests.Services
             _contacts.Add(contact);
             _contacts.Add(partialContact);
 
-            // Link them
             Relationship rel = new() { Id = Guid.NewGuid(), EntityId = contactId, RelatedEntityId = partialContactId, EntityType = EntityTypes.Person };
             _relationships.Add(rel);
 
-            // Act
             await _service.DeleteContactAsync(contactId);
 
-            // Assert
-            // Verify main contact deletion
             _repositoryMock.Verify(r => r.DeleteAsync<Contact>(contactId, It.IsAny<CancellationToken>()), Times.Once);
 
-            // Verify partial contact deletion (orphan cleanup)
             _repositoryMock.Verify(r => r.DeleteAsync<Contact>(partialContactId, It.IsAny<CancellationToken>()), Times.Once); // The orphan must be deleted
             _repositoryMock.Verify(r => r.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.AtLeast(2));
         }
@@ -581,7 +520,6 @@ namespace Rvnx.CRM.Tests.Services
         [Fact]
         public async Task DeleteContactAsyncDoesNotDeletePartialContactIfStillLinked()
         {
-            // Arrange
             Guid contactId = Guid.NewGuid();
             Guid partialContactId = Guid.NewGuid();
             Guid otherFullContactId = Guid.NewGuid();
@@ -594,29 +532,22 @@ namespace Rvnx.CRM.Tests.Services
             _contacts.Add(partialContact);
             _contacts.Add(otherContact);
 
-            // Link Main -> Partial
             Relationship rel1 = new() { Id = Guid.NewGuid(), EntityId = contactId, RelatedEntityId = partialContactId, EntityType = EntityTypes.Person };
-            // Link Other -> Partial
             Relationship rel2 = new() { Id = Guid.NewGuid(), EntityId = otherFullContactId, RelatedEntityId = partialContactId, EntityType = EntityTypes.Person };
 
             _relationships.Add(rel1);
             _relationships.Add(rel2);
 
-            // Act
             await _service.DeleteContactAsync(contactId);
 
-            // Assert
-            // Verify main contact deletion
             _repositoryMock.Verify(r => r.DeleteAsync<Contact>(contactId, It.IsAny<CancellationToken>()), Times.Once);
 
-            // Verify partial contact is NOT deleted
             _repositoryMock.Verify(r => r.DeleteAsync<Contact>(partialContactId, It.IsAny<CancellationToken>()), Times.Never);
         }
 
         [Fact]
         public async Task DeleteContactUnlinksSelfContactFromUser()
         {
-            // Arrange
             Guid contactId = Guid.NewGuid();
             Contact contact = new() { Id = contactId, FirstName = "Linked", LastName = "Contact" };
             User user = new()
@@ -629,11 +560,8 @@ namespace Rvnx.CRM.Tests.Services
             _contacts.Add(contact);
             _users.Add(user);
 
-            // Act
             await _service.DeleteContactAsync(contactId);
 
-            // Assert
-            // Verify that the user was updated with SelfContactId set to null
             _repositoryMock.Verify(r => r.UpdateAsync(It.Is<User>(u => u.Id == user.Id && u.SelfContactId == null), It.IsAny<CancellationToken>()), Times.Once);
         }
     }

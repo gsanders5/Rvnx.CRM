@@ -116,7 +116,6 @@ public class ContactReadService(IRepository repository) : IContactReadService
         List<Relationship> relationships = allRelationships.Where(r => r.EntityId == id).ToList();
         List<Relationship> relatedTo = allRelationships.Where(r => r.RelatedEntityId == id).ToList();
 
-        // Fetch all related contacts in one go
         List<Guid> relatedIds = relationships.Select(r => r.RelatedEntityId)
             .Concat(relatedTo.Select(r => r.EntityId))
             .Distinct()

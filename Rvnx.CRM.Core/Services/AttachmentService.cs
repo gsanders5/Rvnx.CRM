@@ -38,7 +38,6 @@ public class AttachmentService : IAttachmentService
             return AttachmentOperationResult.NotFound($"Entity not found.");
         }
 
-        // Validate Partial Contact restriction
         if (await IsPartialContactAsync(entityId))
         {
             return AttachmentOperationResult.NotFound("Cannot add attachment to partial contact.");

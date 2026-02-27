@@ -5,7 +5,6 @@ namespace Rvnx.CRM.Core.Services;
 
 public static class RelationshipTypeIds
 {
-    // Family
     public static readonly Guid Spouse = Guid.Parse("b2e9a5c8-7f4d-4a1b-8c6e-5f9d3a0e2b4c");
     public static readonly Guid ExSpouse = Guid.Parse("b2e9a5c8-7f6d-4a1b-8c6e-5f9d3a0e2b4c");
     public static readonly Guid Parent = Guid.Parse("7c1f8d22-1b6a-4c28-9c1e-3f5a2b8e9d1a");
@@ -18,23 +17,19 @@ public static class RelationshipTypeIds
     public static readonly Guid StepSibling = Guid.Parse("985d3d47-1585-4788-867d-3062c2b9b78a");
     public static readonly Guid HalfSibling = Guid.Parse("3553b74c-88ba-4c1b-957c-867d6d80f319");
 
-    // Romantic
     public static readonly Guid SignificantOther = Guid.Parse("f9e8d7c6-b5a4-3210-9876-543210fedcbb");
     public static readonly Guid ExPartner = Guid.Parse("f9e8d7c6-b5a4-3210-9876-543210fedcbe");
 
-    // Professional
     public static readonly Guid Manager = Guid.Parse("1a2b3c4d-5e6f-7890-a1b2-c3d4e5f67890");
     public static readonly Guid Mentor = Guid.Parse("1a2b3c4d-5e6f-7890-a1b2-c3d4e5f67891");
     public static readonly Guid Teacher = Guid.Parse("09876543-210f-edcb-a987-6543210fedcb");
     public static readonly Guid Colleague = Guid.Parse("c2497ebc-1ec3-427b-a845-67d31f136f56");
     public static readonly Guid BusinessPartner = Guid.Parse("36a10f9d-dc1a-4803-ae52-26fd9b9c7ec5");
 
-    // Social
     public static readonly Guid Friend = Guid.Parse("a5b6c7d8-9e0f-1a2b-3c4d-5e6f7a8b9c0d");
     public static readonly Guid BestFriend = Guid.Parse("a5b6c7d8-9e0f-1a2b-3c4d-5e6f7a8b9c0e");
     public static readonly Guid Acquaintance = Guid.Parse("71186e94-7048-4b3c-a854-5482328ab505");
 
-    // Company
     public static readonly Guid ParentCompany = Guid.Parse("fedcba98-7654-3210-fedc-ba9876543210");
 }
 
@@ -42,7 +37,6 @@ public static class RelationshipTypeService
 {
     private static readonly Lazy<List<RelationshipTypeDefinition>> _types = new(() =>
     [
-        // Family
         new(RelationshipTypeIds.Spouse, "Spouse", "Spouse", "Family", EntityTypes.Person,
             NameMale: "Husband", NameFemale: "Wife", OppositeNameMale: "Husband", OppositeNameFemale: "Wife"),
 
@@ -75,23 +69,19 @@ public static class RelationshipTypeService
         new(RelationshipTypeIds.HalfSibling, "Half-Sibling", "Half-Sibling", "Family", EntityTypes.Person,
             NameMale: "Half-Brother", NameFemale: "Half-Sister", OppositeNameMale: "Half-Brother", OppositeNameFemale: "Half-Sister"),
 
-        // Romantic
         new(RelationshipTypeIds.SignificantOther, "Significant Other", "Significant Other", "Romantic", EntityTypes.Person),
         new(RelationshipTypeIds.ExPartner, "Ex-Partner", "Ex-Partner", "Romantic", EntityTypes.Person),
 
-        // Professional
         new(RelationshipTypeIds.Manager, "Manager", "Employee", "Professional", EntityTypes.Person),
         new(RelationshipTypeIds.Mentor, "Mentor", "Protege", "Professional", EntityTypes.Person),
         new(RelationshipTypeIds.Teacher, "Teacher", "Student", "Professional", EntityTypes.Person),
         new(RelationshipTypeIds.Colleague, "Colleague", "Colleague", "Professional", EntityTypes.Person),
         new(RelationshipTypeIds.BusinessPartner, "Business Partner", "Business Partner", "Professional", EntityTypes.Person),
 
-        // Social
         new(RelationshipTypeIds.Friend, "Friend", "Friend", "Social", EntityTypes.Person),
         new(RelationshipTypeIds.BestFriend, "Best Friend", "Best Friend", "Social", EntityTypes.Person),
         new(RelationshipTypeIds.Acquaintance, "Acquaintance", "Acquaintance", "Social", EntityTypes.Person),
 
-        // Company
         new(RelationshipTypeIds.ParentCompany, "Parent Company", "Subsidiary", "Company", EntityTypes.Company)
     ]);
 

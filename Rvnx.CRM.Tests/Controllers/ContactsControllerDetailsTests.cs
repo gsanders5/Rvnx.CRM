@@ -14,7 +14,6 @@ namespace Rvnx.CRM.Tests.Controllers
         [Fact]
         public async Task DetailsShouldReturnViewWithMappedRelationships()
         {
-            // Arrange
             Mock<ILogger<ContactsController>> loggerMock = new();
             Mock<ICurrentUserService> userMock = new();
             Mock<IUserSynchronizationService> syncMock = new();
@@ -36,10 +35,8 @@ namespace Rvnx.CRM.Tests.Controllers
                 ControllerContext = new ControllerContext { HttpContext = new DefaultHttpContext() }
             };
 
-            // Act
             IActionResult result = await controller.Details(contactId);
 
-            // Assert
             ViewResult viewResult = Assert.IsType<ViewResult>(result);
             ContactDetailDto model = Assert.IsAssignableFrom<ContactDetailDto>(viewResult.Model);
             Assert.Equal(contactId, model.Id);

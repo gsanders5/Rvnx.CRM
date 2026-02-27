@@ -24,7 +24,6 @@ namespace Rvnx.CRM.Core.Services
             if (frequency <= TimeSpan.Zero)
             {
                 // If no frequency, it's a one-time event (or already happened)
-                // Just return the original date
                 return nextOccurrence;
             }
 

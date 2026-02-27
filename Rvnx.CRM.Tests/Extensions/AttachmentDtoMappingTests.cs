@@ -10,7 +10,6 @@ namespace Rvnx.CRM.Tests.Extensions
         [Fact]
         public void ToDtoShouldMapAllPropertiesWhenTheyArePopulated()
         {
-            // Arrange
             Guid attachmentId = Guid.NewGuid();
             Guid contactId = Guid.NewGuid();
             Attachment attachment = new()
@@ -22,10 +21,8 @@ namespace Rvnx.CRM.Tests.Extensions
                 ContactId = contactId
             };
 
-            // Act
             AttachmentDto dto = attachment.ToDto();
 
-            // Assert
             Assert.Equal(attachmentId, dto.Id);
             Assert.Equal("test-document.pdf", dto.FileName);
             Assert.Equal("application/pdf", dto.ContentType);
@@ -37,7 +34,6 @@ namespace Rvnx.CRM.Tests.Extensions
         [Fact]
         public void ToDtoShouldMapNullFileNameToEmptyString()
         {
-            // Arrange
             Attachment attachment = new()
             {
                 Id = Guid.NewGuid(),
@@ -47,17 +43,14 @@ namespace Rvnx.CRM.Tests.Extensions
                 ContactId = Guid.NewGuid()
             };
 
-            // Act
             AttachmentDto dto = attachment.ToDto();
 
-            // Assert
             Assert.Equal(string.Empty, dto.FileName);
         }
 
         [Fact]
         public void ToDtoShouldMapNullContactIdToEmptyGuid()
         {
-            // Arrange
             Attachment attachment = new()
             {
                 Id = Guid.NewGuid(),
@@ -67,17 +60,14 @@ namespace Rvnx.CRM.Tests.Extensions
                 ContactId = null
             };
 
-            // Act
             AttachmentDto dto = attachment.ToDto();
 
-            // Assert
             Assert.Equal(Guid.Empty, dto.EntityId);
         }
 
         [Fact]
         public void ToDtoShouldAlwaysMapEntityTypeToPerson()
         {
-            // Arrange
             Attachment attachment = new()
             {
                 Id = Guid.NewGuid(),
@@ -87,10 +77,8 @@ namespace Rvnx.CRM.Tests.Extensions
                 ContactId = Guid.NewGuid()
             };
 
-            // Act
             AttachmentDto dto = attachment.ToDto();
 
-            // Assert
             Assert.Equal(EntityTypes.Person, dto.EntityType);
         }
     }

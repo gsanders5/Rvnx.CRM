@@ -10,7 +10,6 @@ namespace Rvnx.CRM.Tests.Extensions
         [Fact]
         public void ToDtoShouldMapAllPropertiesWhenEntityIsFullyPopulated()
         {
-            // Arrange
             SignificantDate entity = new()
             {
                 Id = Guid.NewGuid(),
@@ -23,10 +22,8 @@ namespace Rvnx.CRM.Tests.Extensions
                 EventFrequency = TimeSpan.FromDays(365)
             };
 
-            // Act
             SignificantDateDto dto = entity.ToDto();
 
-            // Assert
             Assert.Equal(entity.Id, dto.Id);
             Assert.Equal(entity.Title, dto.Title);
             Assert.Equal(entity.Date, dto.Date);
@@ -41,67 +38,55 @@ namespace Rvnx.CRM.Tests.Extensions
         [Fact]
         public void ToDtoShouldMapNullTitleToEmptyString()
         {
-            // Arrange
             SignificantDate entity = new()
             {
                 Title = null,
                 Date = DateTime.Now
             };
 
-            // Act
             SignificantDateDto dto = entity.ToDto();
 
-            // Assert
             Assert.Equal(string.Empty, dto.Title);
         }
 
         [Fact]
         public void ToDtoShouldMapNullContactIdToEmptyGuid()
         {
-            // Arrange
             SignificantDate entity = new()
             {
                 ContactId = null,
                 Date = DateTime.Now
             };
 
-            // Act
             SignificantDateDto dto = entity.ToDto();
 
-            // Assert
             Assert.Equal(Guid.Empty, dto.EntityId);
         }
 
         [Fact]
         public void ToDtoShouldSetEntityTypeToPerson()
         {
-            // Arrange
             SignificantDate entity = new()
             {
                 Date = DateTime.Now
             };
 
-            // Act
             SignificantDateDto dto = entity.ToDto();
 
-            // Assert
             Assert.Equal(EntityTypes.Person, dto.EntityType);
         }
 
         [Fact]
         public void ToDtoShouldMapNullDescriptionAsNull()
         {
-            // Arrange
             SignificantDate entity = new()
             {
                 Description = null,
                 Date = DateTime.Now
             };
 
-            // Act
             SignificantDateDto dto = entity.ToDto();
 
-            // Assert
             Assert.Null(dto.Description);
         }
     }

@@ -11,17 +11,14 @@ namespace Rvnx.CRM.Tests.Controllers
         [Fact]
         public async Task UploadShouldNotReadStreamWhenFileExceedsSizeLimit()
         {
-            // Arrange
             Mock<IAttachmentService> attachmentServiceMock = new();
             Mock<IFileValidationService> fileValidationServiceMock = new();
 
-            // Setup validation: Extension is allowed, but size is NOT
             fileValidationServiceMock.Setup(x => x.IsAllowedExtension(It.IsAny<string>())).Returns(true);
             fileValidationServiceMock.Setup(x => x.IsAllowedFileSize(It.IsAny<long>())).Returns(false);
 
             AttachmentsController controller = new(attachmentServiceMock.Object, fileValidationServiceMock.Object);
 
-            // Mock file
             Mock<IFormFile> fileMock = new();
             fileMock.Setup(f => f.FileName).Returns("large.pdf");
             fileMock.Setup(f => f.Length).Returns(50 * 1024 * 1024); // 50MB
@@ -29,11 +26,8 @@ namespace Rvnx.CRM.Tests.Controllers
                 .Returns(Task.CompletedTask)
                 .Verifiable(); // We want to verify this is NOT called
 
-            // Act
             IActionResult result = await controller.Upload(Guid.NewGuid(), "Person", fileMock.Object);
 
-            // Assert
-            // 1. Should return BadRequest
             Assert.IsType<BadRequestObjectResult>(result);
 
             // 2. Crucially, CopyToAsync should NEVER be called to prevent memory exhaustion

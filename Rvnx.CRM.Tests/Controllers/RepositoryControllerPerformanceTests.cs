@@ -19,7 +19,6 @@ namespace Rvnx.CRM.Tests.Controllers
         [Fact]
         public async Task IsValidContactAsyncShouldUseEfficientQuery()
         {
-            // Arrange
             Mock<IRepository> repositoryMock = new();
             Guid contactId = Guid.NewGuid();
 
@@ -29,16 +28,12 @@ namespace Rvnx.CRM.Tests.Controllers
 
             TestRepositoryController controller = new(repositoryMock.Object);
 
-            // Act
             bool result = await controller.PublicIsValidContactAsync(contactId);
 
-            // Assert
             Assert.True(result);
 
-            // Verify GetByIdAsync is NOT called
             repositoryMock.Verify(r => r.GetByIdAsync<Contact>(It.IsAny<Guid>(), It.IsAny<CancellationToken>()), Times.Never, "GetByIdAsync should NOT be called in the optimized version");
 
-            // Verify CountAsync IS called
             repositoryMock.Verify(r => r.CountAsync<Contact>(It.IsAny<Expression<Func<Contact, bool>>>(), It.IsAny<CancellationToken>()), Times.Once, "CountAsync should be called in the optimized version");
         }
     }

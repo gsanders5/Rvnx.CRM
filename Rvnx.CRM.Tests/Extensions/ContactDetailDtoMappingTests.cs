@@ -11,7 +11,6 @@ namespace Rvnx.CRM.Tests.Extensions
         [Fact]
         public void ToDetailDtoShouldMapSimplePropertiesCorrectly()
         {
-            // Arrange
             Contact contact = new()
             {
                 Id = Guid.NewGuid(),
@@ -28,10 +27,8 @@ namespace Rvnx.CRM.Tests.Extensions
                 IsPartial = false
             };
 
-            // Act
             ContactDetailDto result = contact.ToDetailDto();
 
-            // Assert
             Assert.Equal(contact.Id, result.Id);
             Assert.Equal(contact.FirstName, result.FirstName);
             Assert.Equal(contact.LastName, result.LastName);
@@ -50,7 +47,6 @@ namespace Rvnx.CRM.Tests.Extensions
         [Fact]
         public void ToDetailDtoShouldMapCollectionsCorrectly()
         {
-            // Arrange
             Guid contactId = Guid.NewGuid();
             Contact contact = new()
             {
@@ -67,10 +63,8 @@ namespace Rvnx.CRM.Tests.Extensions
                 Attachments = [new Attachment { Id = Guid.NewGuid(), FileName = "test.pdf", ContactId = contactId }]
             };
 
-            // Act
             ContactDetailDto result = contact.ToDetailDto();
 
-            // Assert
             Assert.Single(result.Notes);
             Assert.Equal(contact.Notes.First().Id, result.Notes.First().Id);
 
@@ -99,7 +93,6 @@ namespace Rvnx.CRM.Tests.Extensions
         [Fact]
         public void ToDetailDtoShouldHandleNullCollectionsReturnsEmptyLists()
         {
-            // Arrange
             Contact contact = new()
             {
                 Id = Guid.NewGuid(),
@@ -117,10 +110,8 @@ namespace Rvnx.CRM.Tests.Extensions
                 Attachments = null!
             };
 
-            // Act
             ContactDetailDto result = contact.ToDetailDto();
 
-            // Assert
             Assert.NotNull(result.Notes);
             Assert.Empty(result.Notes);
 

@@ -95,17 +95,14 @@ public class UserSynchronizationService : IUserSynchronizationService
         // providing the internal ID for CRM operations
         if (principal.Identity is ClaimsIdentity identity)
         {
-            // Remove any existing internal user ID claim (in case of re-sync)
             Claim? existingInternalClaim = identity.FindFirst(ClaimConstants.InternalUserIdClaimType);
             if (existingInternalClaim != null)
             {
                 identity.RemoveClaim(existingInternalClaim);
             }
 
-            // Add the internal user ID claim
             identity.AddClaim(new Claim(ClaimConstants.InternalUserIdClaimType, user.Id.ToString()));
 
-            // Add display name if not already present
             if (!identity.HasClaim(c => c.Type == ClaimTypes.Name) && !string.IsNullOrEmpty(user.DisplayName))
             {
                 identity.AddClaim(new Claim(ClaimTypes.Name, user.DisplayName));

@@ -52,7 +52,6 @@ namespace Rvnx.CRM.Tests.Controllers
         [Fact]
         public async Task DeleteConfirmedWithValidReturnUrlShouldRedirectToUrl()
         {
-            // Arrange
             Guid relId = Guid.NewGuid();
             _context.Relationships.Add(new Core.Models.Contact.Relationship
             {
@@ -65,10 +64,8 @@ namespace Rvnx.CRM.Tests.Controllers
 
             string returnUrl = "/local/path";
 
-            // Act
             IActionResult result = await _controller.DeleteConfirmed(relId, returnUrl);
 
-            // Assert
             RedirectResult redirectResult = Assert.IsType<RedirectResult>(result);
             Assert.Equal(returnUrl, redirectResult.Url);
         }
@@ -76,7 +73,6 @@ namespace Rvnx.CRM.Tests.Controllers
         [Fact]
         public async Task DeleteConfirmedWithInvalidReturnUrlShouldRedirectToEntity()
         {
-            // Arrange
             Guid relId = Guid.NewGuid();
             Guid entityId = Guid.NewGuid();
             _context.Relationships.Add(new Core.Models.Contact.Relationship
@@ -90,10 +86,8 @@ namespace Rvnx.CRM.Tests.Controllers
 
             string returnUrl = "http://malicious.com";
 
-            // Act
             IActionResult result = await _controller.DeleteConfirmed(relId, returnUrl);
 
-            // Assert
             RedirectToActionResult redirectResult = Assert.IsType<RedirectToActionResult>(result);
             Assert.Equal("Details", redirectResult.ActionName);
             Assert.Equal("Contacts", redirectResult.ControllerName);

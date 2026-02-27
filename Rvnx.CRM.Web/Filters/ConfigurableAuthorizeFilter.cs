@@ -9,13 +9,11 @@ public class ConfigurableAuthorizeFilter(IConfiguration configuration) : IAsyncA
 
     public Task OnAuthorizationAsync(AuthorizationFilterContext context)
     {
-        // Check if authorization is enabled globally
         if (!_configuration.GetValue<bool>("Authentication:Enabled"))
         {
             return Task.CompletedTask;
         }
 
-        // Check if user is authenticated
         if (context.HttpContext.User.Identity?.IsAuthenticated != true)
         {
             context.Result = new ChallengeResult();

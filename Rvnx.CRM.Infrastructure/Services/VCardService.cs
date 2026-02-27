@@ -110,28 +110,24 @@ public class VCardService : IVCardService
             contact.FirstName = "Unknown";
         }
 
-        // Nickname
         FolkerKinzel.VCards.Models.Properties.StringCollectionProperty? nicknameProp = vc.NickNames?.FirstOrNull();
         if (nicknameProp?.Value is IReadOnlyList<string> nicknames && nicknames.Count > 0)
         {
             contact.Nickname = nicknames[0];
         }
 
-        // Org - v8: Organization.Name (not OrganizationName)
         FolkerKinzel.VCards.Models.Properties.OrgProperty? orgProp = vc.Organizations?.FirstOrNull();
         if (orgProp?.Value is Organization org)
         {
             contact.Company = org.Name;
         }
 
-        // Title
         FolkerKinzel.VCards.Models.Properties.TextProperty? titleProp = vc.Titles?.FirstOrNull();
         if (titleProp != null)
         {
             contact.JobTitle = titleProp.Value;
         }
 
-        // Emails
         if (vc.EMails != null)
         {
             foreach (FolkerKinzel.VCards.Models.Properties.TextProperty? emailProp in vc.EMails)
@@ -150,7 +146,6 @@ public class VCardService : IVCardService
             }
         }
 
-        // Phones
         if (vc.Phones != null)
         {
             foreach (FolkerKinzel.VCards.Models.Properties.TextProperty? phoneProp in vc.Phones)
@@ -169,7 +164,6 @@ public class VCardService : IVCardService
             }
         }
 
-        // Birthday
         if (vc.BirthDayViews != null)
         {
             FolkerKinzel.VCards.Models.Properties.DateAndOrTimeProperty? bdayProp = vc.BirthDayViews.FirstOrNull();
@@ -218,11 +212,9 @@ public class VCardService : IVCardService
             };
         }
 
-        // Photo - attempt to resolve
         (byte[]? photoBytes, string? mediaType) = await TryGetPhotoAsync(vc, _httpClient != null, cancellationToken);
         if (photoBytes != null && photoBytes.Length > 0)
         {
-            // Default to jpg
             string extension = ".jpg";
             string contentType = "image/jpeg";
 
@@ -290,12 +282,10 @@ public class VCardService : IVCardService
         {
             try
             {
-                // Only fetch http/https URLs
                 if (photoUri.Scheme == Uri.UriSchemeHttp || photoUri.Scheme == Uri.UriSchemeHttps)
                 {
                     Uri targetUri = photoUri;
 
-                    // SSRF Protection: Validate initial URI
                     if (!await IsSafeUriAsync(targetUri))
                     {
                         return (null, null);
@@ -350,7 +340,6 @@ public class VCardService : IVCardService
             return false;
         }
 
-        // Check host IP address
         if (IPAddress.TryParse(uri.Host, out IPAddress? ipAddress))
         {
             return IsPublicIpAddress(ipAddress);
@@ -371,7 +360,6 @@ public class VCardService : IVCardService
 
     private static bool IsPublicIpAddress(IPAddress ipAddress)
     {
-        // 1. Check Loopback (127.0.0.1, ::1)
         if (IPAddress.IsLoopback(ipAddress))
         {
             return false;
@@ -385,7 +373,6 @@ public class VCardService : IVCardService
 
         // 3. Check "Any" address (0.0.0.0 or ::)
         // In IPv6 mapped format, 0.0.0.0 becomes ::ffff:0.0.0.0 (::ffff:0:0)
-        // Standard "Any" is all zeros.
         bool isAny = true;
         for (int i = 0; i < bytes.Length; i++)
         {
@@ -402,7 +389,6 @@ public class VCardService : IVCardService
             return false; // ::0
         }
 
-        // Check IPv4 Any explicitly if it was IPv4
         if (ipAddress.AddressFamily == AddressFamily.InterNetwork)
         {
             if (ipAddress.Equals(IPAddress.Any))
@@ -419,31 +405,26 @@ public class VCardService : IVCardService
         {
             byte[] v4bytes = ipAddress.GetAddressBytes();
 
-            // 0.0.0.0/8 (Current network) - RFC 1122
             if (v4bytes[0] == 0)
             {
                 return false;
             }
 
-            // 10.0.0.0/8 (Private)
             if (v4bytes[0] == 10)
             {
                 return false;
             }
 
-            // 172.16.0.0/12 (Private)
             if (v4bytes[0] == 172 && v4bytes[1] >= 16 && v4bytes[1] <= 31)
             {
                 return false;
             }
 
-            // 192.168.0.0/16 (Private)
             if (v4bytes[0] == 192 && v4bytes[1] == 168)
             {
                 return false;
             }
 
-            // 169.254.0.0/16 (Link-Local)
             if (v4bytes[0] == 169 && v4bytes[1] == 254)
             {
                 return false;
@@ -472,22 +453,18 @@ public class VCardService : IVCardService
                 return IsPublicIpAddress(v4); // Recursively check the IPv4 part
             }
 
-            // ::1 Loopback check is handled
             // :: Unspecified is handled
 
-            // fe80::/10 Link-Local
             if (bytes[0] == 0xFE && (bytes[1] & 0xC0) == 0x80)
             {
                 return false;
             }
 
-            // fc00::/7 Unique Local (ULA)
             if ((bytes[0] & 0xFE) == 0xFC)
             {
                 return false;
             }
 
-            // 2001:db8::/32 Documentation
             return bytes[0] != 0x20 || bytes[1] != 0x01 || bytes[2] != 0x0D || bytes[3] != 0xB8;
         }
 
@@ -510,19 +487,16 @@ public class VCardService : IVCardService
         // Continue building with Edit() for conditional properties
         VCardBuilder builder = VCardBuilder.Create(vCard);
 
-        // Org
         if (!string.IsNullOrEmpty(contact.Company))
         {
             builder.Organizations.Add(contact.Company);
         }
 
-        // Title
         if (!string.IsNullOrEmpty(contact.JobTitle))
         {
             builder.Titles.Add(contact.JobTitle);
         }
 
-        // Emails
         if (contact.ContactMethods != null)
         {
             foreach (ContactMethod? cm in contact.ContactMethods.Where(m => m.Type == ContactMethodType.Email && !string.IsNullOrEmpty(m.Value)))
@@ -531,7 +505,6 @@ public class VCardService : IVCardService
             }
         }
 
-        // Phones
         if (contact.ContactMethods != null)
         {
             foreach (ContactMethod? cm in contact.ContactMethods.Where(m => m.Type == ContactMethodType.Phone && !string.IsNullOrEmpty(m.Value)))
@@ -540,7 +513,6 @@ public class VCardService : IVCardService
             }
         }
 
-        // Birthday
         if (contact.SignificantDates != null)
         {
             SignificantDate? bday = contact.SignificantDates.FirstOrDefault(d => d.Title == SignificantDateTitles.Birthday);
@@ -550,7 +522,6 @@ public class VCardService : IVCardService
             }
         }
 
-        // Gender
         if (!string.IsNullOrEmpty(contact.Gender))
         {
             Sex sex = contact.Gender switch
@@ -563,7 +534,6 @@ public class VCardService : IVCardService
             builder.GenderViews.Add(sex);
         }
 
-        // Photo
         if (contact.Attachments != null)
         {
             Attachment? profileImage = contact.Attachments.FirstOrDefault(a => a.AttachmentType == AttachmentTypes.ProfileImage);

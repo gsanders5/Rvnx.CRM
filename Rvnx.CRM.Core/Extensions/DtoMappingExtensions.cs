@@ -11,7 +11,6 @@ namespace Rvnx.CRM.Core.Extensions
 {
     public static class DtoMappingExtensions
     {
-        // Common Mappings
         public static NoteDto ToDto(this Note entity)
         {
             return new NoteDto
@@ -147,7 +146,6 @@ namespace Rvnx.CRM.Core.Extensions
             };
         }
 
-        // Contact Mappings
         public static ContactDto ToDto(this Contact entity)
         {
             return new ContactDto
@@ -270,7 +268,6 @@ namespace Rvnx.CRM.Core.Extensions
             entity.Type = dto.Type;
             entity.Value = dto.Value;
             entity.Label = dto.Label;
-            // ContactId should not be changeable
         }
         public static Note ToEntity(this NoteFormDto dto)
         {
