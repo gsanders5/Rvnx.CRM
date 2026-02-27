@@ -15,7 +15,7 @@ public class ReminderService(IRepository repository, IEntityService entityServic
 
     public async Task<OperationResult> CreateAsync(ReminderFormViewModel dto)
     {
-        if (!await IsValidContactAsync(dto.EntityId))
+        if (!await _repository.IsValidContactAsync(dto.EntityId))
         {
             return OperationResult.Failure("Contact not found.");
         }
@@ -43,7 +43,7 @@ public class ReminderService(IRepository repository, IEntityService entityServic
         try
         {
             Reminder? reminder = await _repository.GetByIdAsync<Reminder>(id);
-            if (reminder == null || !await IsValidContactAsync(reminder.ContactId ?? Guid.Empty))
+            if (reminder == null || !await _repository.IsValidContactAsync(reminder.ContactId ?? Guid.Empty))
             {
                 return OperationResult.Failure("Reminder not found.");
             }
@@ -83,7 +83,7 @@ public class ReminderService(IRepository repository, IEntityService entityServic
     {
         Reminder? reminder = await _repository.GetByIdAsync<Reminder>(id);
 
-        if (reminder == null || !await IsValidContactAsync(reminder.ContactId ?? Guid.Empty))
+        if (reminder == null || !await _repository.IsValidContactAsync(reminder.ContactId ?? Guid.Empty))
         {
             return null;
         }
@@ -107,7 +107,7 @@ public class ReminderService(IRepository repository, IEntityService entityServic
 
     public async Task<ReminderFormViewModel?> GetFormForCreateAsync(Guid entityId, string entityType)
     {
-        if (!await IsValidContactAsync(entityId))
+        if (!await _repository.IsValidContactAsync(entityId))
         {
             return null;
         }
@@ -138,11 +138,6 @@ public class ReminderService(IRepository repository, IEntityService entityServic
     public async Task<ReminderDto?> GetDtoAsync(Guid id)
     {
         Reminder? reminder = await _repository.GetByIdAsync<Reminder>(id);
-        return reminder == null || !await IsValidContactAsync(reminder.ContactId ?? Guid.Empty) ? null : reminder.ToDto();
-    }
-
-    private async Task<bool> IsValidContactAsync(Guid id)
-    {
-        return id != Guid.Empty && await _repository.CountAsync<Contact>(c => c.Id == id && !c.IsPartial) > 0;
+        return reminder == null || !await _repository.IsValidContactAsync(reminder.ContactId ?? Guid.Empty) ? null : reminder.ToDto();
     }
 }

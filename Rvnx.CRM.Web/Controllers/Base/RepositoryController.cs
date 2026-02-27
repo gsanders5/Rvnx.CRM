@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Rvnx.CRM.Core.Constants;
+using Rvnx.CRM.Core.Extensions;
 using Rvnx.CRM.Core.Interfaces;
 using Rvnx.CRM.Core.Models.Business;
 using Rvnx.CRM.Core.Models.Contact;
@@ -50,7 +51,7 @@ public abstract class RepositoryController : AuthorizedController
     /// </summary>
     protected async Task<bool> IsValidContactAsync(Guid id)
     {
-        return id != Guid.Empty && await _repository.CountAsync<Contact>(c => c.Id == id && !c.IsPartial) > 0;
+        return await _repository.IsValidContactAsync(id);
     }
 
     protected IActionResult RedirectToEntity(Guid id, string? type)

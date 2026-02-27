@@ -13,7 +13,7 @@ public class PetService(IRepository repository) : IPetService
 
     public async Task<OperationResult> CreateAsync(PetFormDto dto)
     {
-        if (!await IsValidContactAsync(dto.EntityId))
+        if (!await _repository.IsValidContactAsync(dto.EntityId))
         {
             return OperationResult.Failure("Contact not found.");
         }
@@ -30,7 +30,7 @@ public class PetService(IRepository repository) : IPetService
         try
         {
             Pet? existingPet = await _repository.GetByIdAsync<Pet>(id);
-            if (existingPet == null || !await IsValidContactAsync(existingPet.ContactId))
+            if (existingPet == null || !await _repository.IsValidContactAsync(existingPet.ContactId))
             {
                 return OperationResult.Failure("Pet not found.");
             }
@@ -70,7 +70,7 @@ public class PetService(IRepository repository) : IPetService
     {
         Pet? pet = await _repository.GetByIdAsync<Pet>(id);
 
-        return pet == null || !await IsValidContactAsync(pet.ContactId)
+        return pet == null || !await _repository.IsValidContactAsync(pet.ContactId)
             ? null
             : new PetFormDto
             {
@@ -86,17 +86,12 @@ public class PetService(IRepository repository) : IPetService
 
     public async Task<PetFormDto?> GetFormForCreateAsync(Guid entityId)
     {
-        return !await IsValidContactAsync(entityId) ? null : new PetFormDto { EntityId = entityId };
+        return !await _repository.IsValidContactAsync(entityId) ? null : new PetFormDto { EntityId = entityId };
     }
 
     public async Task<Pet?> GetByIdAsync(Guid id)
     {
         Pet? pet = await _repository.GetByIdAsync<Pet>(id);
-        return pet == null || !await IsValidContactAsync(pet.ContactId) ? null : pet;
-    }
-
-    private async Task<bool> IsValidContactAsync(Guid id)
-    {
-        return id != Guid.Empty && await _repository.CountAsync<Contact>(c => c.Id == id && !c.IsPartial) > 0;
+        return pet == null || !await _repository.IsValidContactAsync(pet.ContactId) ? null : pet;
     }
 }

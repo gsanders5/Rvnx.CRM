@@ -13,7 +13,7 @@ public class FactService(IRepository repository) : IFactService
 
     public async Task<OperationResult> CreateAsync(FactFormDto dto)
     {
-        if (!await IsValidContactAsync(dto.EntityId))
+        if (!await _repository.IsValidContactAsync(dto.EntityId))
         {
             return OperationResult.Failure("Contact not found.");
         }
@@ -30,7 +30,7 @@ public class FactService(IRepository repository) : IFactService
         try
         {
             Fact? existingFact = await _repository.GetByIdAsync<Fact>(id);
-            if (existingFact == null || !await IsValidContactAsync(existingFact.ContactId ?? Guid.Empty))
+            if (existingFact == null || !await _repository.IsValidContactAsync(existingFact.ContactId ?? Guid.Empty))
             {
                 return OperationResult.Failure("Fact not found.");
             }
@@ -70,7 +70,7 @@ public class FactService(IRepository repository) : IFactService
     {
         Fact? fact = await _repository.GetByIdAsync<Fact>(id);
 
-        return fact == null || !await IsValidContactAsync(fact.ContactId ?? Guid.Empty)
+        return fact == null || !await _repository.IsValidContactAsync(fact.ContactId ?? Guid.Empty)
             ? null
             : new FactFormDto
             {
@@ -84,17 +84,12 @@ public class FactService(IRepository repository) : IFactService
 
     public async Task<FactFormDto?> GetFormForCreateAsync(Guid entityId, string entityType)
     {
-        return !await IsValidContactAsync(entityId) ? null : new FactFormDto { EntityId = entityId, EntityType = entityType };
+        return !await _repository.IsValidContactAsync(entityId) ? null : new FactFormDto { EntityId = entityId, EntityType = entityType };
     }
 
     public async Task<Fact?> GetByIdAsync(Guid id)
     {
         Fact? fact = await _repository.GetByIdAsync<Fact>(id);
-        return fact == null || !await IsValidContactAsync(fact.ContactId ?? Guid.Empty) ? null : fact;
-    }
-
-    private async Task<bool> IsValidContactAsync(Guid id)
-    {
-        return id != Guid.Empty && await _repository.CountAsync<Contact>(c => c.Id == id && !c.IsPartial) > 0;
+        return fact == null || !await _repository.IsValidContactAsync(fact.ContactId ?? Guid.Empty) ? null : fact;
     }
 }
