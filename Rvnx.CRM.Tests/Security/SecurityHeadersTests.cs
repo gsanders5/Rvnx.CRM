@@ -16,7 +16,7 @@ public class SecurityHeadersTests : IClassFixture<WebApplicationFactory<Program>
     public async Task ResponseShouldContainXContentTypeOptionsHeader()
     {
         // Arrange
-        HttpClient client = _factory.CreateClient();
+        HttpClient client = _factory.CreateClient(new WebApplicationFactoryClientOptions { AllowAutoRedirect = false });
 
         // Act
         HttpResponseMessage response = await client.GetAsync("/");
