@@ -10,15 +10,15 @@
 │   ├── Interfaces/             # Service and Repository interfaces
 │   ├── Models/                 # Domain entities (organized by feature)
 │   │   ├── Base/               # Base classes (BaseEntity, Person)
-│   │   ├── Contact/            # Contact-related entities (Contact, ContactMethod)
+│   │   ├── Contact/            # Contact-related entities (Contact, ContactMethod, Relationship)
 │   │   ├── Dates/              # SignificantDate, Reminder
-│   │   └── Business/           # Employer, etc.
-│   ├── Services/               # Pure domain logic services (e.g. FileValidation)
+│   │   └── Business/           # Employer, Attachment, Note
+│   ├── Services/               # Pure domain logic services (e.g. FileValidation, DateCalculation)
 │   └── Rvnx.CRM.Core.csproj
 ├── Rvnx.CRM.Infrastructure/    # Data access & Implementation layer
 │   ├── Data/
 │   │   └── CRMDbContext.cs     # EF Core DbContext
-│   ├── Migrations/             # EF Core migrations
+│   ├── Migrations/             # EF Core migrations (SQLite)
 │   ├── Repositories/
 │   │   └── Repository.cs       # Generic repository implementation
 │   ├── Services/               # Infrastructure-dependent services (e.g. UserSync, VCard)
@@ -43,7 +43,7 @@
 ### Key Patterns
 
 - **Generic Repository Pattern**: `IRepository` handles basic CRUD for `BaseEntity` types.
-- **Explicit Foreign Keys**: Entities previously using polymorphic associations (`Note`, `Reminder`, `Attachment`, `ContactMethod`, etc.) now use typed nullable foreign keys (e.g., `ContactId`, `CompanyId`) with check constraints to enforce single ownership. `Pet` uses a required `ContactId`.
+- **Explicit Foreign Keys**: Entities previously using polymorphic associations (`Note`, `Reminder`, `Attachment`, `ContactMethod`, etc.) now use typed nullable foreign keys (e.g., `ContactId`) with check constraints to enforce ownership.
 - **User Isolation**: `CRMDbContext` applies global query filters to restrict access to data based on the current user (`ICurrentUserService`).
 - **Service Delegation**: Controllers delegate business logic to specialized services (e.g., `IContactManagementService`, `IContactImportService`).
 
@@ -69,11 +69,11 @@ The system supports "Partial Contacts" — contacts that exist primarily as a na
 
 ### Relationship Direction
 
-Relationships are polymorphic but managed via `RelationshipService`.
+Relationships are polymorphic but primarily link Person to Person.
 
 -   **Storage**: Stored as `EntityId` (Source) -> `RelatedEntityId` (Target).
 -   **Selection**: The UI sends a string like `{TypeId}_Fwd` or `{TypeId}_Rev`.
--   **Parsing**: `RelationshipService` parses this string. if `Rev` (Reverse) is selected, the service swaps the `EntityId` and `RelatedEntityId` before saving, ensuring the relationship is stored in the semantic direction intended by the user.
+-   **Parsing**: `RelationshipService` parses this string. If `Rev` (Reverse) is selected, the service swaps the `EntityId` and `RelatedEntityId` before saving, ensuring the relationship is stored in the semantic direction intended by the user.
 
 ## Core Entities
 
@@ -107,9 +107,10 @@ The `[NotMapped]` collections on `Person` (like `Relationships`, `RelatedTo`) ar
 
 Concrete entity inheriting `Person`.
 
-- Stores `Employers` via navigation property.
-- Links to `ContactMethod`, `SignificantDate`, `Pet`, `Note`, etc. via standard EF Core navigation properties with Cascade Delete.
-- Contains the `IsPartial` flag.
+- **IsPartial**: Boolean flag indicating if the contact is a full profile or a placeholder.
+- **Pets**: Managed via `Pet` entity with `ContactId` FK.
+- **Employers**: Managed via `Employer` entity with `EmployeeId` FK.
+- **Labels**: Managed via `ContactLabel` join entity.
 
 ### Relationship
 
@@ -119,46 +120,38 @@ Polymorphic entity linking two entities.
 -   **Target**: `RelatedEntityId` (Points to the target entity, usually another `Contact`).
 -   **Navigation**: `Person` and `RelatedPerson` are `[NotMapped]` and populated manually by `ContactReadService`.
 
-## Repository Usage
+### Attachment & Content
 
-The generic repository provides type-safe CRUD operations.
-Data loading is now simplified with standard Include support:
+Attachments are split into two tables to optimize performance (loading metadata without heavy blobs).
 
-```csharp
-// Fetch related entities via Include or typed FK
-var contacts = await _repository.ListAsync<Contact>(c => c.Id == id, default, nameof(Contact.Notes));
-var notes = await _repository.ListAsync<Note>(n => n.ContactId == parentId);
-```
+-   **Attachment**: Stores metadata (`FileName`, `ContentType`, `AttachmentType`).
+-   **AttachmentContent**: Stores the actual file bytes (`byte[] Content`) and links back to `Attachment` via 1:1 relationship.
 
 ## Service Layer
 
 - **Core Services**: Pure logic implementations and domain orchestrations.
-  - `FileValidationService`
-  - `ContactManagementService`
-  - `ContactReadService`
-  - `SelfContactService`
-  - `DashboardService`
-  - `RelationshipService`
+  - `DateCalculationService`: Handles recurrence logic (e.g., birthdays, reminders), explicitly handling leap years and calendar vs. timespan frequency.
+  - `FileValidationService`: Validates file signatures (magic numbers) and extensions for uploads.
+  - `ContactManagementService`: Handles CUD operations for contacts, including cascading deletes and orphan cleanup for partial contacts.
+  - `RelationshipService`: Manages creation, direction parsing, and promotion of partial contacts.
+
 - **Infrastructure Services**: Implementations requiring external dependencies or DB access.
-  - `UserSynchronizationService`
-  - `VCardService`
-  - `ContactImportService`
-  - `ContactExportService`
-- **Web Services**: Implementations requiring HTTP Context (e.g., `CurrentUserService`).
+  - `UserSynchronizationService`: Syncs OIDC user claims to the local `User` table.
+  - `VCardService`: Uses `FolkerKinzel.VCards` to parse and generate VCF files.
 
 ## Database Configuration
 
 ### Global Query Filters
 
 - Automatically applied to all `BaseEntity` types in `CRMDbContext`.
-- Filter: `e => e.UserId == _currentUserService.UserId`.
-- Ensures users only see their own data.
+- Filter: `e => e.GroupId == _currentUserService.GroupId`.
+- Ensures users only see their own data (or data belonging to their group).
 
 ### Audit Trail
 
 - Automatically populated in `CRMDbContext.SaveChanges()`.
 - Sets `CreatedBy`, `LastChangedBy`, `CreatedDate`, `LastChangedDate`.
-- Sets `UserId` on creation if null.
+- Sets `UserId` and `GroupId` on creation if null.
 
 ## Known Deviations from Pure Architecture
 

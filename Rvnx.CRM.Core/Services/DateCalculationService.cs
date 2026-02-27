@@ -2,6 +2,15 @@ namespace Rvnx.CRM.Core.Services
 {
     public static class DateCalculationService
     {
+        /// <summary>
+        /// Calculates the next occurrence of a recurring date.
+        /// Handles complex logic for leap years and calendar-based vs. timespan-based recurrence.
+        /// </summary>
+        /// <param name="originalDate">The starting date of the event.</param>
+        /// <param name="frequency">The interval between occurrences.</param>
+        /// <param name="referenceDate">The date to calculate the next occurrence relative to (defaults to Today).</param>
+        /// <param name="treatFrequencyAsCalendarYears">If true, treats intervals of 365 days as 1 calendar year (handling leap years correctly).</param>
+        /// <returns>The date of the next occurrence.</returns>
         public static DateTime GetNextOccurrence(DateTime originalDate, TimeSpan frequency, DateTime? referenceDate = null, bool treatFrequencyAsCalendarYears = false)
         {
             DateTime today = referenceDate ?? DateTime.Today;

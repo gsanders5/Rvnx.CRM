@@ -19,6 +19,7 @@ public class AttachmentService : IAttachmentService
         _entityService = entityService;
     }
 
+    /// <inheritdoc />
     public async Task<AttachmentOperationResult> UploadAttachmentAsync(Guid entityId, string entityType, byte[] content, string fileName)
     {
         if (string.IsNullOrEmpty(entityType))
@@ -89,6 +90,7 @@ public class AttachmentService : IAttachmentService
         return AttachmentOperationResult.Ok(attachment.Id);
     }
 
+    /// <inheritdoc />
     public async Task<AttachmentOperationResult> DeleteAttachmentAsync(Guid attachmentId)
     {
         Attachment? attachment = await _repository.GetByIdAsync<Attachment>(attachmentId);
@@ -108,6 +110,7 @@ public class AttachmentService : IAttachmentService
         return AttachmentOperationResult.Ok(attachmentId);
     }
 
+    /// <inheritdoc />
     public async Task<AttachmentContentDto?> GetAttachmentContentAsync(Guid attachmentId)
     {
         Attachment? attachment = await _repository.GetByIdWithIncludesAsync<Attachment>(attachmentId, nameof(Attachment.AttachmentContent));
@@ -126,6 +129,7 @@ public class AttachmentService : IAttachmentService
             };
     }
 
+    /// <inheritdoc />
     public async Task<AttachmentDto?> GetAttachmentAsync(Guid attachmentId)
     {
         Attachment? attachment = await _repository.GetByIdAsync<Attachment>(attachmentId);
