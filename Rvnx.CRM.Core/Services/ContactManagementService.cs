@@ -252,7 +252,10 @@ public class ContactManagementService(IRepository repository, IFileValidationSer
 
     private bool IsImage(string contentType, string? fileName)
     {
-        if (contentType.StartsWith("image/", StringComparison.OrdinalIgnoreCase)) return true;
+        if (contentType.StartsWith("image/", StringComparison.OrdinalIgnoreCase))
+        {
+            return true;
+        }
 
         if (!string.IsNullOrEmpty(fileName))
         {

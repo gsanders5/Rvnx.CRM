@@ -72,12 +72,7 @@ namespace Rvnx.CRM.Web.Controllers
 
             ContactOperationResult result = await contactManagementService.SetAttachmentAsProfilePhotoAsync(attachment.EntityId, id);
 
-            if (result.Success)
-            {
-                return SafeRedirect(returnUrl);
-            }
-
-            return result.IsNotFound ? NotFound() : BadRequest(string.Join("; ", result.Errors));
+            return result.Success ? SafeRedirect(returnUrl) : result.IsNotFound ? NotFound() : BadRequest(string.Join("; ", result.Errors));
         }
 
         private IActionResult SafeRedirect(string? returnUrl)

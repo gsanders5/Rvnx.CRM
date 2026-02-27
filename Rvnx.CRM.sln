@@ -11,6 +11,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Rvnx.CRM.Infrastructure", "
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Rvnx.CRM.Tests", "Rvnx.CRM.Tests\Rvnx.CRM.Tests.csproj", "{DC81C65C-ACEB-4722-8716-13C6C82D3E8C}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Rvnx.CRM.ConsoleApp", "Rvnx.CRM.ConsoleApp\Rvnx.CRM.ConsoleApp.csproj", "{960B1D44-1582-4BE0-8250-CDE4A714E084}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -69,6 +71,18 @@ Global
 		{DC81C65C-ACEB-4722-8716-13C6C82D3E8C}.Release|x64.Build.0 = Release|Any CPU
 		{DC81C65C-ACEB-4722-8716-13C6C82D3E8C}.Release|x86.ActiveCfg = Release|Any CPU
 		{DC81C65C-ACEB-4722-8716-13C6C82D3E8C}.Release|x86.Build.0 = Release|Any CPU
+		{960B1D44-1582-4BE0-8250-CDE4A714E084}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{960B1D44-1582-4BE0-8250-CDE4A714E084}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{960B1D44-1582-4BE0-8250-CDE4A714E084}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{960B1D44-1582-4BE0-8250-CDE4A714E084}.Debug|x64.Build.0 = Debug|Any CPU
+		{960B1D44-1582-4BE0-8250-CDE4A714E084}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{960B1D44-1582-4BE0-8250-CDE4A714E084}.Debug|x86.Build.0 = Debug|Any CPU
+		{960B1D44-1582-4BE0-8250-CDE4A714E084}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{960B1D44-1582-4BE0-8250-CDE4A714E084}.Release|Any CPU.Build.0 = Release|Any CPU
+		{960B1D44-1582-4BE0-8250-CDE4A714E084}.Release|x64.ActiveCfg = Release|Any CPU
+		{960B1D44-1582-4BE0-8250-CDE4A714E084}.Release|x64.Build.0 = Release|Any CPU
+		{960B1D44-1582-4BE0-8250-CDE4A714E084}.Release|x86.ActiveCfg = Release|Any CPU
+		{960B1D44-1582-4BE0-8250-CDE4A714E084}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

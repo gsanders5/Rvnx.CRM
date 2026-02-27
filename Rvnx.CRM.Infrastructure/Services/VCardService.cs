@@ -392,14 +392,23 @@ public class VCardService : IVCardService
             // For IPv4 mapped, the first 10 bytes are 0, next 2 are 0xFF.
             // But strict "Any" (0.0.0.0) mapped is ::ffff:0.0.0.0
             // Let's check the original address for 0.0.0.0 specifically if it was IPv4
-            if (bytes[i] != 0) isAny = false;
+            if (bytes[i] != 0)
+            {
+                isAny = false;
+            }
         }
-        if (isAny) return false; // ::0
+        if (isAny)
+        {
+            return false; // ::0
+        }
 
         // Check IPv4 Any explicitly if it was IPv4
         if (ipAddress.AddressFamily == AddressFamily.InterNetwork)
         {
-            if (ipAddress.Equals(IPAddress.Any)) return false;
+            if (ipAddress.Equals(IPAddress.Any))
+            {
+                return false;
+            }
         }
 
 
@@ -411,23 +420,41 @@ public class VCardService : IVCardService
             byte[] v4bytes = ipAddress.GetAddressBytes();
 
             // 0.0.0.0/8 (Current network) - RFC 1122
-            if (v4bytes[0] == 0) return false;
+            if (v4bytes[0] == 0)
+            {
+                return false;
+            }
 
             // 10.0.0.0/8 (Private)
-            if (v4bytes[0] == 10) return false;
+            if (v4bytes[0] == 10)
+            {
+                return false;
+            }
 
             // 172.16.0.0/12 (Private)
-            if (v4bytes[0] == 172 && v4bytes[1] >= 16 && v4bytes[1] <= 31) return false;
+            if (v4bytes[0] == 172 && v4bytes[1] >= 16 && v4bytes[1] <= 31)
+            {
+                return false;
+            }
 
             // 192.168.0.0/16 (Private)
-            if (v4bytes[0] == 192 && v4bytes[1] == 168) return false;
+            if (v4bytes[0] == 192 && v4bytes[1] == 168)
+            {
+                return false;
+            }
 
             // 169.254.0.0/16 (Link-Local)
-            if (v4bytes[0] == 169 && v4bytes[1] == 254) return false;
+            if (v4bytes[0] == 169 && v4bytes[1] == 254)
+            {
+                return false;
+            }
 
             // 127.0.0.0/8 (Loopback) - IsLoopback only catches 127.0.0.1 usually?
             // .NET IsLoopback checks 127.0.0.1 but 127.x.x.x is all loopback.
-            if (v4bytes[0] == 127) return false;
+            if (v4bytes[0] == 127)
+            {
+                return false;
+            }
 
             // 100.64.0.0/10 (Shared Address Space - CGNAT) - RFC 6598
             // Often considered "public" on WAN but internal to carrier.
@@ -449,15 +476,19 @@ public class VCardService : IVCardService
             // :: Unspecified is handled
 
             // fe80::/10 Link-Local
-            if (bytes[0] == 0xFE && (bytes[1] & 0xC0) == 0x80) return false;
+            if (bytes[0] == 0xFE && (bytes[1] & 0xC0) == 0x80)
+            {
+                return false;
+            }
 
             // fc00::/7 Unique Local (ULA)
-            if ((bytes[0] & 0xFE) == 0xFC) return false;
+            if ((bytes[0] & 0xFE) == 0xFC)
+            {
+                return false;
+            }
 
             // 2001:db8::/32 Documentation
-            if (bytes[0] == 0x20 && bytes[1] == 0x01 && bytes[2] == 0x0D && bytes[3] == 0xB8) return false;
-
-            return true;
+            return bytes[0] != 0x20 || bytes[1] != 0x01 || bytes[2] != 0x0D || bytes[3] != 0xB8;
         }
 
         return false;

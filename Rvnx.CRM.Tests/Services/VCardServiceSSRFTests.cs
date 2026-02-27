@@ -1,9 +1,6 @@
 using Moq;
 using Moq.Protected;
-using Rvnx.CRM.Core.Constants;
-using Rvnx.CRM.Core.Enumerations;
 using Rvnx.CRM.Core.Models.Base;
-using Rvnx.CRM.Core.Models.Business;
 using Rvnx.CRM.Core.Models.Contact;
 using Rvnx.CRM.Infrastructure.Services;
 using System.Net;
@@ -151,17 +148,17 @@ END:VCARD";
 
         private void SetupMockResponse(string url, string content)
         {
-             _httpMessageHandlerMock.Protected()
-                .Setup<Task<HttpResponseMessage>>(
-                    "SendAsync",
-                    ItExpr.Is<HttpRequestMessage>(req => req.Method == HttpMethod.Get && req.RequestUri == new Uri(url)),
-                    ItExpr.IsAny<CancellationToken>()
-                )
-                .ReturnsAsync(new HttpResponseMessage
-                {
-                    StatusCode = HttpStatusCode.OK,
-                    Content = new ByteArrayContent(Encoding.UTF8.GetBytes(content))
-                });
+            _httpMessageHandlerMock.Protected()
+               .Setup<Task<HttpResponseMessage>>(
+                   "SendAsync",
+                   ItExpr.Is<HttpRequestMessage>(req => req.Method == HttpMethod.Get && req.RequestUri == new Uri(url)),
+                   ItExpr.IsAny<CancellationToken>()
+               )
+               .ReturnsAsync(new HttpResponseMessage
+               {
+                   StatusCode = HttpStatusCode.OK,
+                   Content = new ByteArrayContent(Encoding.UTF8.GetBytes(content))
+               });
         }
     }
 }

@@ -320,12 +320,7 @@ namespace Rvnx.CRM.Web.Controllers
 
             ContactOperationResult result = await _contactManagementService.UnsetProfilePhotoAsync(id);
 
-            if (result.Success)
-            {
-                return RedirectToAction(nameof(Edit), new { id });
-            }
-
-            return BadRequest("Could not unset profile photo.");
+            return result.Success ? RedirectToAction(nameof(Edit), new { id }) : BadRequest("Could not unset profile photo.");
         }
 
         [HttpPost]
