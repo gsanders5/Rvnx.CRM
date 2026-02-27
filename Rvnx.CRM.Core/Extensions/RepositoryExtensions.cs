@@ -1,5 +1,6 @@
 using Rvnx.CRM.Core.Interfaces;
 using Rvnx.CRM.Core.Models.Base;
+using Rvnx.CRM.Core.Models.Contact;
 using System.Linq.Expressions;
 
 namespace Rvnx.CRM.Core.Extensions;
@@ -69,5 +70,13 @@ public static class RepositoryExtensions
         }
 
         return results;
+    }
+
+    /// <summary>
+    /// Checks if a contact exists and is not a partial contact.
+    /// </summary>
+    public static async Task<bool> IsValidContactAsync(this IRepository repository, Guid id)
+    {
+        return id != Guid.Empty && await repository.CountAsync<Contact>(c => c.Id == id && !c.IsPartial) > 0;
     }
 }

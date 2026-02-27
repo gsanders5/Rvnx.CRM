@@ -13,7 +13,7 @@ public class ContactMethodService(IRepository repository) : IContactMethodServic
 
     public async Task<OperationResult> CreateAsync(ContactMethodFormDto dto)
     {
-        if (!await IsValidContactAsync(dto.EntityId))
+        if (!await _repository.IsValidContactAsync(dto.EntityId))
         {
             return OperationResult.Failure("Contact not found.");
         }
@@ -30,7 +30,7 @@ public class ContactMethodService(IRepository repository) : IContactMethodServic
         try
         {
             ContactMethod? existingContactInfo = await _repository.GetByIdAsync<ContactMethod>(id);
-            if (existingContactInfo == null || !await IsValidContactAsync(existingContactInfo.ContactId ?? Guid.Empty))
+            if (existingContactInfo == null || !await _repository.IsValidContactAsync(existingContactInfo.ContactId ?? Guid.Empty))
             {
                 return OperationResult.Failure("Contact method not found.");
             }
@@ -70,7 +70,7 @@ public class ContactMethodService(IRepository repository) : IContactMethodServic
     {
         ContactMethod? contactInfo = await _repository.GetByIdAsync<ContactMethod>(id);
 
-        return contactInfo == null || !await IsValidContactAsync(contactInfo.ContactId ?? Guid.Empty)
+        return contactInfo == null || !await _repository.IsValidContactAsync(contactInfo.ContactId ?? Guid.Empty)
             ? null
             : new ContactMethodFormDto
             {
@@ -85,17 +85,12 @@ public class ContactMethodService(IRepository repository) : IContactMethodServic
 
     public async Task<ContactMethodFormDto?> GetFormForCreateAsync(Guid entityId, string entityType)
     {
-        return !await IsValidContactAsync(entityId) ? null : new ContactMethodFormDto { EntityId = entityId, EntityType = entityType };
+        return !await _repository.IsValidContactAsync(entityId) ? null : new ContactMethodFormDto { EntityId = entityId, EntityType = entityType };
     }
 
     public async Task<ContactMethod?> GetByIdAsync(Guid id)
     {
         ContactMethod? contactInfo = await _repository.GetByIdAsync<ContactMethod>(id);
-        return contactInfo == null || !await IsValidContactAsync(contactInfo.ContactId ?? Guid.Empty) ? null : contactInfo;
-    }
-
-    private async Task<bool> IsValidContactAsync(Guid id)
-    {
-        return id != Guid.Empty && await _repository.CountAsync<Contact>(c => c.Id == id && !c.IsPartial) > 0;
+        return contactInfo == null || !await _repository.IsValidContactAsync(contactInfo.ContactId ?? Guid.Empty) ? null : contactInfo;
     }
 }

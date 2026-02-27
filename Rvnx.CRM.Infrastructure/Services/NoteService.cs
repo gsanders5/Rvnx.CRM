@@ -20,7 +20,7 @@ public class NoteService(IRepository repository, IEntityService entityService) :
             return OperationResult.Failure("Only Person entities are supported.");
         }
 
-        if (!await IsValidContactAsync(dto.EntityId))
+        if (!await _repository.IsValidContactAsync(dto.EntityId))
         {
             return OperationResult.Failure("Contact not found.");
         }
@@ -37,7 +37,7 @@ public class NoteService(IRepository repository, IEntityService entityService) :
         try
         {
             Note? existingNote = await _repository.GetByIdAsync<Note>(id);
-            if (existingNote == null || !await IsValidContactAsync(existingNote.ContactId ?? Guid.Empty))
+            if (existingNote == null || !await _repository.IsValidContactAsync(existingNote.ContactId ?? Guid.Empty))
             {
                 return OperationResult.Failure("Note not found.");
             }
@@ -77,7 +77,7 @@ public class NoteService(IRepository repository, IEntityService entityService) :
     {
         Note? note = await _repository.GetByIdAsync<Note>(id);
 
-        return note == null || !await IsValidContactAsync(note.ContactId ?? Guid.Empty)
+        return note == null || !await _repository.IsValidContactAsync(note.ContactId ?? Guid.Empty)
             ? null
             : new NoteFormViewModel
             {
@@ -94,7 +94,7 @@ public class NoteService(IRepository repository, IEntityService entityService) :
     {
         return entityId == Guid.Empty || entityType != EntityTypes.Person
             ? null
-            : !await IsValidContactAsync(entityId)
+            : !await _repository.IsValidContactAsync(entityId)
             ? null
             : new NoteFormViewModel
             {
@@ -107,11 +107,6 @@ public class NoteService(IRepository repository, IEntityService entityService) :
     public async Task<Note?> GetByIdAsync(Guid id)
     {
         Note? note = await _repository.GetByIdAsync<Note>(id);
-        return note == null || !await IsValidContactAsync(note.ContactId ?? Guid.Empty) ? null : note;
-    }
-
-    private async Task<bool> IsValidContactAsync(Guid id)
-    {
-        return id != Guid.Empty && await _repository.CountAsync<Contact>(c => c.Id == id && !c.IsPartial) > 0;
+        return note == null || !await _repository.IsValidContactAsync(note.ContactId ?? Guid.Empty) ? null : note;
     }
 }
