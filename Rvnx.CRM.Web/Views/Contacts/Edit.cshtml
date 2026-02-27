@@ -96,7 +96,10 @@
 
             <div class="mb-3">
                 <label for="profileImage" class="form-label">Profile Image</label>
-                <input type="file" name="profileImage" class="form-control" accept="image/*"/>
+                <input type="file" name="profileImage" class="form-control" accept="image/*" data-preview-target="#new-profile-image-preview"/>
+                <div class="mt-2">
+                    <img id="new-profile-image-preview" src="" class="img-fluid rounded border d-none" alt="New Profile Image Preview" style="max-height: 200px; object-fit: contain;" />
+                </div>
             </div>
 
             <div class="mb-3 form-check form-switch">

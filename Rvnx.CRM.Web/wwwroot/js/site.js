@@ -38,6 +38,29 @@ document.addEventListener('click', function (e) {
     });
 });
 
+// Image Preview Logic
+document.addEventListener('change', function(e) {
+    if (!e.target.matches('input[type="file"][data-preview-target]')) return;
+
+    const input = e.target;
+    const targetSelector = input.getAttribute('data-preview-target');
+    const targetImg = document.querySelector(targetSelector);
+
+    if (!targetImg) return;
+
+    if (input.files && input.files[0]) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            targetImg.src = e.target.result;
+            targetImg.classList.remove('d-none');
+        }
+        reader.readAsDataURL(input.files[0]);
+    } else {
+        targetImg.classList.add('d-none');
+        targetImg.src = '';
+    }
+});
+
 $(function() {
     // Global form submission loading state
     $('form').on('submit', function() {
