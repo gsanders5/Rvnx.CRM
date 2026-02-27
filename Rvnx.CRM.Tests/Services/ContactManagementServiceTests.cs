@@ -373,6 +373,154 @@ namespace Rvnx.CRM.Tests.Services
             Assert.Contains("Only image files", result.Errors.First());
             _repositoryMock.Verify(r => r.UpdateAsync(It.IsAny<Contact>(), It.IsAny<CancellationToken>()), Times.Never);
         }
+
+        [Fact]
+        public async Task UpdateContactWithNewImageArchivesOldProfilePhoto()
+        {
+            // Arrange
+            Guid contactId = Guid.NewGuid();
+            Contact contact = new() { Id = contactId, FirstName = "Test", LastName = "User" };
+            _repositoryMock.Setup(r => r.GetByIdAsync<Contact>(contactId, It.IsAny<CancellationToken>()))
+                .ReturnsAsync(contact);
+
+            Attachment existingProfilePhoto = new()
+            {
+                Id = Guid.NewGuid(),
+                ContactId = contactId,
+                AttachmentType = AttachmentTypes.ProfileImage,
+                FileName = "old.jpg"
+            };
+            _attachments.Add(existingProfilePhoto);
+
+            ContactFormDto dto = new() { Id = contactId, FirstName = "Test", LastName = "User" };
+            using MemoryStream stream = new();
+            string fileName = "new.jpg";
+            string contentType = "image/jpeg";
+
+            _fileValidationServiceMock.Setup(f => f.IsImageExtension(".jpg")).Returns(true);
+            _fileValidationServiceMock.Setup(f => f.IsValidImageSignature(It.IsAny<byte[]>(), ".jpg")).Returns(true);
+
+            // Act
+            await _service.UpdateContactAsync(contactId, dto, stream, fileName, contentType);
+
+            // Assert
+            _repositoryMock.Verify(r => r.UpdateAsync(It.Is<Attachment>(a => a.Id == existingProfilePhoto.Id && a.AttachmentType == "General"), It.IsAny<CancellationToken>()), Times.Once);
+            _repositoryMock.Verify(r => r.AddAsync(It.Is<Attachment>(a => a.AttachmentType == AttachmentTypes.ProfileImage && a.FileName == fileName), It.IsAny<CancellationToken>()), Times.Once);
+        }
+
+        [Fact]
+        public async Task UnsetProfilePhotoArchivesExistingPhoto()
+        {
+            // Arrange
+            Guid contactId = Guid.NewGuid();
+            Attachment existingProfilePhoto = new()
+            {
+                Id = Guid.NewGuid(),
+                ContactId = contactId,
+                AttachmentType = AttachmentTypes.ProfileImage,
+                FileName = "profile.jpg"
+            };
+            _attachments.Add(existingProfilePhoto);
+
+            // Act
+            ContactOperationResult result = await _service.UnsetProfilePhotoAsync(contactId);
+
+            // Assert
+            Assert.True(result.Success);
+            _repositoryMock.Verify(r => r.UpdateAsync(It.Is<Attachment>(a => a.Id == existingProfilePhoto.Id && a.AttachmentType == "General"), It.IsAny<CancellationToken>()), Times.Once);
+            _repositoryMock.Verify(r => r.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
+        }
+
+        [Fact]
+        public async Task SetAttachmentAsProfilePhotoArchivesOldAndSetsNew()
+        {
+            // Arrange
+            Guid contactId = Guid.NewGuid();
+            Attachment existingProfilePhoto = new()
+            {
+                Id = Guid.NewGuid(),
+                ContactId = contactId,
+                AttachmentType = AttachmentTypes.ProfileImage,
+                FileName = "old.jpg"
+            };
+            Attachment newPhoto = new()
+            {
+                Id = Guid.NewGuid(),
+                ContactId = contactId,
+                AttachmentType = "General",
+                FileName = "new.jpg",
+                ContentType = "image/jpeg"
+            };
+            _attachments.Add(existingProfilePhoto);
+            _attachments.Add(newPhoto);
+
+            _repositoryMock.Setup(r => r.GetByIdAsync<Attachment>(newPhoto.Id, It.IsAny<CancellationToken>()))
+                .ReturnsAsync(newPhoto);
+
+            // Act
+            ContactOperationResult result = await _service.SetAttachmentAsProfilePhotoAsync(contactId, newPhoto.Id);
+
+            // Assert
+            Assert.True(result.Success);
+            // Verify old photo archived
+            _repositoryMock.Verify(r => r.UpdateAsync(It.Is<Attachment>(a => a.Id == existingProfilePhoto.Id && a.AttachmentType == "General"), It.IsAny<CancellationToken>()), Times.Once);
+            // Verify new photo promoted
+            _repositoryMock.Verify(r => r.UpdateAsync(It.Is<Attachment>(a => a.Id == newPhoto.Id && a.AttachmentType == AttachmentTypes.ProfileImage), It.IsAny<CancellationToken>()), Times.Once);
+        }
+
+        [Fact]
+        public async Task SetAttachmentAsProfilePhotoFailsForNonImage()
+        {
+            // Arrange
+            Guid contactId = Guid.NewGuid();
+            Attachment doc = new()
+            {
+                Id = Guid.NewGuid(),
+                ContactId = contactId,
+                AttachmentType = "General",
+                FileName = "doc.pdf",
+                ContentType = "application/pdf"
+            };
+            _attachments.Add(doc);
+
+            _repositoryMock.Setup(r => r.GetByIdAsync<Attachment>(doc.Id, It.IsAny<CancellationToken>()))
+                .ReturnsAsync(doc);
+
+            _fileValidationServiceMock.Setup(f => f.IsImageExtension(".pdf")).Returns(false);
+
+            // Act
+            ContactOperationResult result = await _service.SetAttachmentAsProfilePhotoAsync(contactId, doc.Id);
+
+            // Assert
+            Assert.False(result.Success);
+            Assert.Contains("not an image", result.Errors.First());
+        }
+
+        [Fact]
+        public async Task SetAttachmentAsProfilePhotoFailsForWrongContact()
+        {
+            // Arrange
+            Guid contactId = Guid.NewGuid();
+            Guid otherContactId = Guid.NewGuid();
+            Attachment photo = new()
+            {
+                Id = Guid.NewGuid(),
+                ContactId = otherContactId,
+                AttachmentType = "General",
+                FileName = "photo.jpg",
+                ContentType = "image/jpeg"
+            };
+            _attachments.Add(photo);
+
+            _repositoryMock.Setup(r => r.GetByIdAsync<Attachment>(photo.Id, It.IsAny<CancellationToken>()))
+                .ReturnsAsync(photo);
+
+            // Act
+            ContactOperationResult result = await _service.SetAttachmentAsProfilePhotoAsync(contactId, photo.Id);
+
+            // Assert
+            Assert.True(result.IsNotFound);
+        }
         [Fact]
         public async Task DeleteContactDeletesContactAndDirectDependencies()
         {

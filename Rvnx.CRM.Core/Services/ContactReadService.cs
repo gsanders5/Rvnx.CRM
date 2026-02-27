@@ -219,6 +219,15 @@ public class ContactReadService(IRepository repository) : IContactReadService
             .FirstOrDefault(d => d.Title == SignificantDateTitles.Birthday);
         dto.Birthday = bday?.Date;
 
+        // Explicitly await the task to ensure Result is not accessed prematurely or incorrectly, and handle null result from ListAsync safely
+        List<Attachment> attachments = await _repository.ListAsync<Attachment>(a => a.ContactId == id && a.AttachmentType == AttachmentTypes.ProfileImage);
+        Attachment? profileAttachment = attachments.FirstOrDefault();
+
+        if (profileAttachment != null)
+        {
+            dto.ProfileImageId = profileAttachment.Id;
+        }
+
         List<Label> allLabels = await _repository.ListAsNoTrackingAsync<Label>(l => true) ?? [];
 
         dto.AllLabels = allLabels.OrderBy(l => l.Name).Select(l => new LabelDto { Id = l.Id, Name = l.Name, Color = l.Color }).ToList();

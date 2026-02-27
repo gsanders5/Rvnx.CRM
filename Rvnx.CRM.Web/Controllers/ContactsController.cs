@@ -198,6 +198,7 @@ namespace Rvnx.CRM.Web.Controllers
                 Pronouns = dto.Pronouns,
                 Gender = dto.Gender,
                 Religion = dto.Religion,
+                ProfileImageId = dto.ProfileImageId,
                 PronounOptions = PersonalAttributeOptions.Pronouns,
                 GenderOptions = PersonalAttributeOptions.Gender,
                 AllLabels = dto.AllLabels,
@@ -279,6 +280,7 @@ namespace Rvnx.CRM.Web.Controllers
                 Pronouns = contactDto.Pronouns,
                 Gender = contactDto.Gender,
                 Religion = contactDto.Religion,
+                ProfileImageId = formConfig?.ProfileImageId,
                 PronounOptions = PersonalAttributeOptions.Pronouns,
                 GenderOptions = PersonalAttributeOptions.Gender,
                 AllLabels = contactDto.AllLabels,
@@ -305,6 +307,25 @@ namespace Rvnx.CRM.Web.Controllers
         {
             await _contactManagementService.DeleteContactAsync(id);
             return RedirectToAction(nameof(Index));
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> UnsetPhoto(Guid id)
+        {
+            if (!await _contactReadService.ContactExistsAsync(id))
+            {
+                return NotFound();
+            }
+
+            ContactOperationResult result = await _contactManagementService.UnsetProfilePhotoAsync(id);
+
+            if (result.Success)
+            {
+                return RedirectToAction(nameof(Edit), new { id });
+            }
+
+            return BadRequest("Could not unset profile photo.");
         }
 
         [HttpPost]

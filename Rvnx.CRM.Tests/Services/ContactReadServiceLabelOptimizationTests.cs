@@ -1,6 +1,7 @@
 using Moq;
 using Rvnx.CRM.Core.DTOs.Contact;
 using Rvnx.CRM.Core.Interfaces;
+using Rvnx.CRM.Core.Models.Base;
 using Rvnx.CRM.Core.Models.Contact;
 using Rvnx.CRM.Core.Services;
 using System.Linq.Expressions;
@@ -53,6 +54,9 @@ namespace Rvnx.CRM.Tests.Services
                 It.IsAny<Expression<Func<ContactLabel, bool>>>(),
                 It.IsAny<CancellationToken>(),
                 It.IsAny<string[]>()))
+                .ReturnsAsync([]);
+
+            _repositoryMock.Setup(r => r.ListAsync<Attachment>(It.IsAny<Expression<Func<Attachment, bool>>>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync([]);
 
             // Act

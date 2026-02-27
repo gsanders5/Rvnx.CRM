@@ -1,6 +1,7 @@
 using FileTypeChecker.Web.Attributes;
 using Microsoft.AspNetCore.Mvc;
 using Rvnx.CRM.Core.DTOs.Base;
+using Rvnx.CRM.Core.DTOs.Contact;
 using Rvnx.CRM.Core.Interfaces;
 using Rvnx.CRM.Web.Controllers.Base;
 using System.Collections.Frozen;
@@ -57,6 +58,26 @@ namespace Rvnx.CRM.Web.Controllers
             return result.IsNotFound && result.Errors.Any(e => e.Contains("partial contact", StringComparison.OrdinalIgnoreCase))
                 ? NotFound()
                 : SafeRedirect(returnUrl);
+        }
+
+        [HttpPost("Attachments/{id}/SetAsProfilePhoto")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> SetAsProfilePhoto(Guid id, [FromServices] IContactManagementService contactManagementService, string? returnUrl = null)
+        {
+            AttachmentDto? attachment = await _attachmentService.GetAttachmentAsync(id);
+            if (attachment == null)
+            {
+                return NotFound();
+            }
+
+            ContactOperationResult result = await contactManagementService.SetAttachmentAsProfilePhotoAsync(attachment.EntityId, id);
+
+            if (result.Success)
+            {
+                return SafeRedirect(returnUrl);
+            }
+
+            return result.IsNotFound ? NotFound() : BadRequest(string.Join("; ", result.Errors));
         }
 
         private IActionResult SafeRedirect(string? returnUrl)

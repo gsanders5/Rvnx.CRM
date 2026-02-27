@@ -304,6 +304,9 @@ namespace Rvnx.CRM.Tests.Services
             _repositoryMock.Setup(r => r.ListAsNoTrackingAsync<Contact>(It.IsAny<Expression<Func<Contact, bool>>>(), default, It.IsAny<string[]>()))
                 .ReturnsAsync([contact]);
 
+            _repositoryMock.Setup(r => r.ListAsync<Attachment>(It.IsAny<Expression<Func<Attachment, bool>>>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync([]);
+
             _repositoryMock.Setup(r => r.ListAsNoTrackingAsync<Label>(It.IsAny<Expression<Func<Label, bool>>>(), default)).ReturnsAsync([]);
             _repositoryMock.Setup(r => r.ListAsNoTrackingAsync<ContactLabel>(It.IsAny<Expression<Func<ContactLabel, bool>>>(), default, It.IsAny<string[]>())).ReturnsAsync([]);
 
@@ -328,6 +331,9 @@ namespace Rvnx.CRM.Tests.Services
 
             _repositoryMock.Setup(r => r.ListAsNoTrackingAsync<Contact>(It.IsAny<Expression<Func<Contact, bool>>>(), default, It.IsAny<string[]>()))
                 .ReturnsAsync([contact]);
+
+            _repositoryMock.Setup(r => r.ListAsync<Attachment>(It.IsAny<Expression<Func<Attachment, bool>>>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync([]);
 
             _repositoryMock.Setup(r => r.ListAsNoTrackingAsync<Label>(It.IsAny<Expression<Func<Label, bool>>>(), default)).ReturnsAsync([]);
             _repositoryMock.Setup(r => r.ListAsNoTrackingAsync<ContactLabel>(It.IsAny<Expression<Func<ContactLabel, bool>>>(), default, It.IsAny<string[]>())).ReturnsAsync([]);
@@ -355,6 +361,9 @@ namespace Rvnx.CRM.Tests.Services
 
             _repositoryMock.Setup(r => r.ListAsNoTrackingAsync<Contact>(It.IsAny<Expression<Func<Contact, bool>>>(), default, It.IsAny<string[]>()))
                 .ReturnsAsync([contact]);
+
+            _repositoryMock.Setup(r => r.ListAsync<Attachment>(It.IsAny<Expression<Func<Attachment, bool>>>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync([]);
 
             _repositoryMock.Setup(r => r.ListAsNoTrackingAsync<Label>(It.IsAny<Expression<Func<Label, bool>>>(), default))
                 .ReturnsAsync([label2, label1]); // Unsorted

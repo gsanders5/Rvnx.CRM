@@ -3,6 +3,15 @@
 @using Rvnx.CRM.Core.Constants
 @model ContactDetailDto
 
+@inject Microsoft.AspNetCore.Antiforgery.IAntiforgery Antiforgery
+
+@functions {
+    public string GetAntiXsrfRequestToken()
+    {
+        return Antiforgery.GetAndStoreTokens(Context).RequestToken ?? string.Empty;
+    }
+}
+
 @{
     ViewData["Title"] = "Details";
 }
@@ -533,6 +542,15 @@
                                 <a asp-controller="Attachments" asp-action="Download" asp-route-id="@attachment.Id" class="btn btn-outline-secondary" title="Download" aria-label="Download @attachment.FileName">
                                     <i class="bi bi-download"></i>
                                 </a>
+                                @if (!string.IsNullOrEmpty(attachment.ContentType) && attachment.ContentType.StartsWith("image/", StringComparison.OrdinalIgnoreCase))
+                                {
+                                    <form method="post" class="d-inline" action="/Attachments/@attachment.Id/SetAsProfilePhoto?returnUrl=@(Context.Request.Path + Context.Request.QueryString)">
+                                        <button type="submit" class="btn btn-outline-primary" title="Set as profile photo" aria-label="Set @attachment.FileName as profile photo">
+                                            <i class="bi bi-person-circle"></i>
+                                        </button>
+                                        <input name="__RequestVerificationToken" type="hidden" value="@GetAntiXsrfRequestToken()" />
+                                    </form>
+                                }
                                 <form asp-controller="Attachments" asp-action="Delete" asp-route-id="@attachment.Id" asp-route-returnUrl="@(Context.Request.Path + Context.Request.QueryString)" method="post" class="d-inline" onsubmit="return confirm('Are you sure?');">
                                     <button type="submit" class="btn btn-outline-danger" title="Delete" aria-label="Delete @attachment.FileName">
                                         <i class="bi bi-trash"></i>

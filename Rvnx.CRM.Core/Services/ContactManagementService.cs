@@ -165,6 +165,40 @@ public class ContactManagementService(IRepository repository, IFileValidationSer
         }
     }
 
+    public async Task<ContactOperationResult> UnsetProfilePhotoAsync(Guid contactId)
+    {
+        await ArchiveExistingProfilePhotoAsync(contactId);
+        await _repository.SaveChangesAsync();
+        return ContactOperationResult.Ok(contactId);
+    }
+
+    public async Task<ContactOperationResult> SetAttachmentAsProfilePhotoAsync(Guid contactId, Guid attachmentId)
+    {
+        Attachment? attachment = await _repository.GetByIdAsync<Attachment>(attachmentId);
+        if (attachment == null)
+        {
+            return ContactOperationResult.NotFound();
+        }
+
+        if (attachment.ContactId != contactId)
+        {
+            return ContactOperationResult.NotFound();
+        }
+
+        if (!IsImage(attachment.ContentType, attachment.FileName))
+        {
+            return ContactOperationResult.Failure("Attachment is not an image.");
+        }
+
+        await ArchiveExistingProfilePhotoAsync(contactId);
+
+        attachment.AttachmentType = AttachmentTypes.ProfileImage;
+        await _repository.UpdateAsync(attachment);
+        await _repository.SaveChangesAsync();
+
+        return ContactOperationResult.Ok(contactId);
+    }
+
     private async Task<ContactOperationResult> HandleProfileImageUpdateAsync(Guid contactId, Stream? imageStream, string? fileName, string? contentType)
     {
         if (imageStream == null || string.IsNullOrEmpty(fileName) || string.IsNullOrEmpty(contentType))
@@ -187,40 +221,46 @@ public class ContactManagementService(IRepository repository, IFileValidationSer
             return ContactOperationResult.Failure("Invalid file signature.");
         }
 
-        List<Attachment> existingAttachments = await _repository.ListAsync<Attachment>(a => a.ContactId == contactId && a.AttachmentType == AttachmentTypes.ProfileImage);
-        Attachment? existingAttachment = existingAttachments.FirstOrDefault();
+        await ArchiveExistingProfilePhotoAsync(contactId);
 
-        if (existingAttachment != null)
+        Attachment attachment = new()
         {
-            existingAttachment = await _repository.GetByIdWithIncludesAsync<Attachment>(existingAttachment.Id, "AttachmentContent");
-            if (existingAttachment != null)
+            Id = Guid.NewGuid(),
+            ContactId = contactId,
+            AttachmentType = AttachmentTypes.ProfileImage,
+            ContentType = contentType,
+            FileName = fileName,
+            AttachmentContent = new AttachmentContent
             {
-                existingAttachment.AttachmentContent ??= new AttachmentContent { AttachmentId = existingAttachment.Id };
-                existingAttachment.AttachmentContent.Content = fileBytes;
-
-                existingAttachment.ContentType = contentType;
-                existingAttachment.FileName = fileName;
-                await _repository.UpdateAsync(existingAttachment);
+                Content = fileBytes
             }
-        }
-        else
-        {
-            Attachment attachment = new()
-            {
-                Id = Guid.NewGuid(),
-                ContactId = contactId,
-                AttachmentType = AttachmentTypes.ProfileImage,
-                ContentType = contentType,
-                FileName = fileName,
-                AttachmentContent = new AttachmentContent
-                {
-                    Content = fileBytes
-                }
-            };
-            await _repository.AddAsync(attachment);
-        }
+        };
+        await _repository.AddAsync(attachment);
 
         return ContactOperationResult.Ok(contactId);
+    }
+
+    private async Task ArchiveExistingProfilePhotoAsync(Guid contactId)
+    {
+        List<Attachment> existingAttachments = await _repository.ListAsync<Attachment>(a => a.ContactId == contactId && a.AttachmentType == AttachmentTypes.ProfileImage);
+        foreach (Attachment existingAttachment in existingAttachments)
+        {
+            existingAttachment.AttachmentType = "General";
+            await _repository.UpdateAsync(existingAttachment);
+        }
+    }
+
+    private bool IsImage(string contentType, string? fileName)
+    {
+        if (contentType.StartsWith("image/", StringComparison.OrdinalIgnoreCase)) return true;
+
+        if (!string.IsNullOrEmpty(fileName))
+        {
+            string ext = Path.GetExtension(fileName).ToLowerInvariant();
+            return _fileValidationService.IsImageExtension(ext);
+        }
+
+        return false;
     }
 
     private async Task DeleteContactDependenciesAsync(Guid contactId)

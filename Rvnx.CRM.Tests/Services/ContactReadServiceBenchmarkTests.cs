@@ -3,6 +3,7 @@ using Rvnx.CRM.Core.Constants;
 using Rvnx.CRM.Core.DTOs.Contact;
 using Rvnx.CRM.Core.Enumerations;
 using Rvnx.CRM.Core.Interfaces;
+using Rvnx.CRM.Core.Models.Base;
 using Rvnx.CRM.Core.Models.Contact;
 using Rvnx.CRM.Core.Models.Dates;
 using Rvnx.CRM.Core.Services;
@@ -38,6 +39,9 @@ namespace Rvnx.CRM.Tests.Services
                 It.IsAny<CancellationToken>(),
                 It.Is<string[]>(s => s.Contains("ContactMethods") && s.Contains("SignificantDates"))))
                 .ReturnsAsync([contact]);
+
+            _repositoryMock.Setup(r => r.ListAsync<Attachment>(It.IsAny<Expression<Func<Attachment, bool>>>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync([]);
 
             // Act
             ContactFormDto? result = await _service.GetContactFormAsync(contactId);
