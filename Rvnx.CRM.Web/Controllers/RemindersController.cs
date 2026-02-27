@@ -1,80 +1,40 @@
 using Microsoft.AspNetCore.Mvc;
 using Rvnx.CRM.Core.Constants;
 using Rvnx.CRM.Core.DTOs.Dates;
-using Rvnx.CRM.Core.Extensions;
 using Rvnx.CRM.Core.Interfaces;
-using Rvnx.CRM.Core.Models.Dates;
+using Rvnx.CRM.Core.Models;
 using Rvnx.CRM.Web.Controllers.Base;
 
 namespace Rvnx.CRM.Web.Controllers
 {
-    public class RemindersController(IRepository repository) : RepositoryController(repository)
+    public class RemindersController(IReminderService reminderService, IRepository repository, IEntityService entityService) : RepositoryController(repository)
     {
+        private readonly IReminderService _reminderService = reminderService;
+        private readonly IEntityService _entityService = entityService;
+
         public async Task<IActionResult> Create(Guid entityId, string entityType)
         {
-            if (!await IsValidContactAsync(entityId))
-            {
-                return NotFound();
-            }
-
-            ReminderDto dto = new Reminder
-            {
-                ContactId = entityId,
-                DueDate = DateTime.Now.AddDays(1),
-                EventFrequency = TimeSpan.FromDays(365) // Default
-            }.ToDto();
-
-            ReminderFormViewModel viewModel = new()
-            {
-                // Copy properties from dto
-                Id = dto.Id,
-                Title = dto.Title,
-                Description = dto.Description,
-                DueDate = dto.DueDate,
-                IsCompleted = dto.IsCompleted,
-                EntityId = dto.EntityId,
-                EntityType = dto.EntityType,
-                RemindMe = dto.RemindMe,
-                ReminderSent = dto.ReminderSent,
-                EventFrequency = dto.EventFrequency,
-
-                EntityName = await GetEntityName(entityId, entityType)
-            };
-
-            return View(viewModel);
+            ReminderFormViewModel? viewModel = await _reminderService.GetFormForCreateAsync(entityId, entityType);
+            return viewModel == null ? NotFound() : View(viewModel);
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(ReminderFormViewModel viewModel)
         {
-            if (!await IsValidContactAsync(viewModel.EntityId))
-            {
-                return NotFound();
-            }
-
             if (ModelState.IsValid)
             {
-                Reminder reminder = new()
+                OperationResult result = await _reminderService.CreateAsync(viewModel);
+                if (result.Success)
                 {
-                    Id = Guid.NewGuid(),
-                    Title = viewModel.Title,
-                    Description = viewModel.Description,
-                    DueDate = viewModel.DueDate,
-                    IsCompleted = viewModel.IsCompleted,
-                    ContactId = viewModel.EntityId,
-                    RemindMe = viewModel.RemindMe,
-                    EventFrequency = viewModel.EventFrequency
-                };
-
-                await Repository.AddAsync(reminder);
-                await Repository.SaveChangesAsync();
-                return RedirectToEntity(reminder.ContactId ?? Guid.Empty, EntityTypes.Person);
+                    return RedirectToEntity(result.RedirectId, result.RedirectType);
+                }
+                if (result.ErrorMessage == "Contact not found.") return NotFound();
             }
 
             if (viewModel.EntityId != Guid.Empty && !string.IsNullOrEmpty(viewModel.EntityType))
             {
-                viewModel.EntityName = await GetEntityName(viewModel.EntityId, viewModel.EntityType);
+                viewModel.EntityName = await _entityService.GetEntityNameAsync(viewModel.EntityType, viewModel.EntityId);
             }
             return View(viewModel);
         }
@@ -86,29 +46,8 @@ namespace Rvnx.CRM.Web.Controllers
                 return NotFound();
             }
 
-            Reminder? reminder = await Repository.GetByIdAsync<Reminder>(id.Value);
-            if (reminder == null || !await IsValidContactAsync(reminder.ContactId ?? Guid.Empty))
-            {
-                return NotFound();
-            }
-
-            ReminderDto dto = reminder.ToDto();
-            ReminderFormViewModel viewModel = new()
-            {
-                Id = dto.Id,
-                Title = dto.Title,
-                Description = dto.Description,
-                DueDate = dto.DueDate,
-                IsCompleted = dto.IsCompleted,
-                EntityId = dto.EntityId,
-                EntityType = dto.EntityType,
-                RemindMe = dto.RemindMe,
-                ReminderSent = dto.ReminderSent,
-                EventFrequency = dto.EventFrequency,
-                EntityName = await GetEntityName(dto.EntityId, dto.EntityType)
-            };
-
-            return View(viewModel);
+            ReminderFormViewModel? viewModel = await _reminderService.GetFormAsync(id.Value);
+            return viewModel == null ? NotFound() : View(viewModel);
         }
 
         [HttpPost]
@@ -124,35 +63,22 @@ namespace Rvnx.CRM.Web.Controllers
             {
                 try
                 {
-                    Reminder? reminder = await Repository.GetByIdAsync<Reminder>(id);
-                    if (reminder == null || !await IsValidContactAsync(reminder.ContactId ?? Guid.Empty))
+                    OperationResult result = await _reminderService.UpdateAsync(id, viewModel);
+                    if (result.Success)
                     {
-                        return NotFound();
+                        return RedirectToEntity(result.RedirectId, result.RedirectType);
                     }
-
-                    // UpdateEntity expects ReminderDto. Since viewModel inherits ReminderDto, this works.
-                    reminder.UpdateEntity(viewModel);
-
-                    await Repository.UpdateAsync(reminder);
-                    await Repository.SaveChangesAsync();
+                    if (result.ErrorMessage == "Reminder not found.") return NotFound();
                 }
                 catch (Exception)
                 {
-                    if (!await Repository.ExistsAsync<Reminder>(viewModel.Id))
-                    {
-                        return NotFound();
-                    }
-                    else
-                    {
-                        throw;
-                    }
+                    throw;
                 }
-                return RedirectToEntity(viewModel.EntityId, viewModel.EntityType);
             }
 
             if (viewModel.EntityId != Guid.Empty && !string.IsNullOrEmpty(viewModel.EntityType))
             {
-                viewModel.EntityName = await GetEntityName(viewModel.EntityId, viewModel.EntityType);
+                viewModel.EntityName = await _entityService.GetEntityNameAsync(viewModel.EntityType, viewModel.EntityId);
             }
             return View(viewModel);
         }
@@ -164,13 +90,12 @@ namespace Rvnx.CRM.Web.Controllers
                 return NotFound();
             }
 
-            Reminder? reminder = await Repository.GetByIdAsync<Reminder>(id.Value);
-            if (reminder == null || !await IsValidContactAsync(reminder.ContactId ?? Guid.Empty))
+            ReminderDto? dto = await _reminderService.GetDtoAsync(id.Value);
+            if (dto == null)
             {
                 return NotFound();
             }
 
-            ReminderDto dto = reminder.ToDto();
             ReminderDeleteViewModel viewModel = new()
             {
                 Id = dto.Id,
@@ -183,7 +108,7 @@ namespace Rvnx.CRM.Web.Controllers
                 RemindMe = dto.RemindMe,
                 ReminderSent = dto.ReminderSent,
                 EventFrequency = dto.EventFrequency,
-                EntityName = await GetEntityName(dto.EntityId, dto.EntityType)
+                EntityName = await _entityService.GetEntityNameAsync(dto.EntityType, dto.EntityId)
             };
             return View(viewModel);
         }
@@ -192,14 +117,10 @@ namespace Rvnx.CRM.Web.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(Guid id)
         {
-            Reminder? reminder = await Repository.GetByIdAsync<Reminder>(id);
-            if (reminder != null)
+            OperationResult result = await _reminderService.DeleteAsync(id);
+            if (result.Success)
             {
-                Guid entityId = reminder.ContactId ?? Guid.Empty;
-                string entityType = EntityTypes.Person;
-                await Repository.DeleteAsync<Reminder>(id);
-                await Repository.SaveChangesAsync();
-                return RedirectToEntity(entityId, entityType);
+                return RedirectToEntity(result.RedirectId, result.RedirectType);
             }
             return RedirectToAction("Index", "Home");
         }

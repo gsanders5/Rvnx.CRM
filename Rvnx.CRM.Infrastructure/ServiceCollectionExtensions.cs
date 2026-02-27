@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Rvnx.CRM.Core.Interfaces;
@@ -36,6 +36,27 @@ public static class ServiceCollectionExtensions
 
         // Add Debug Data Service
         services.AddScoped<IDebugDataService, DebugDataService>();
+
+        // Add Debug Operations Service
+        services.AddScoped<IDebugOperationsService, DebugOperationsService>();
+
+        // Add Contact Method Service
+        services.AddScoped<IContactMethodService, ContactMethodService>();
+
+        // Add Fact Service
+        services.AddScoped<IFactService, FactService>();
+
+        // Add Pet Service
+        services.AddScoped<IPetService, PetService>();
+
+        // Add Note Service
+        services.AddScoped<INoteService, NoteService>();
+
+        // Add Reminder Service
+        services.AddScoped<IReminderService, ReminderService>();
+
+        // Add Significant Date Service
+        services.AddScoped<ISignificantDateService, SignificantDateService>();
 
         return services;
     }

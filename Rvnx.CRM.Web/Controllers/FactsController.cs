@@ -1,37 +1,35 @@
 using Microsoft.AspNetCore.Mvc;
 using Rvnx.CRM.Core.Constants;
 using Rvnx.CRM.Core.DTOs.Contact;
-using Rvnx.CRM.Core.Extensions;
 using Rvnx.CRM.Core.Interfaces;
+using Rvnx.CRM.Core.Models;
 using Rvnx.CRM.Core.Models.Contact;
 using Rvnx.CRM.Web.Controllers.Base;
 
 namespace Rvnx.CRM.Web.Controllers
 {
-    public class FactsController(IRepository repository) : RepositoryController(repository)
+    public class FactsController(IFactService factService, IRepository repository) : RepositoryController(repository)
     {
+        private readonly IFactService _factService = factService;
+
         public async Task<IActionResult> Create(Guid entityId, string entityType)
         {
-            return !await IsValidContactAsync(entityId)
-                ? NotFound()
-                : View(new FactFormDto { EntityId = entityId, EntityType = entityType });
+            FactFormDto? dto = await _factService.GetFormForCreateAsync(entityId, entityType);
+            return dto == null ? NotFound() : View(dto);
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(FactFormDto factDto)
         {
-            if (!await IsValidContactAsync(factDto.EntityId))
-            {
-                return NotFound();
-            }
-
             if (ModelState.IsValid)
             {
-                Fact fact = factDto.ToEntity();
-                await Repository.AddAsync(fact);
-                await Repository.SaveChangesAsync();
-                return RedirectToEntity(fact.ContactId ?? Guid.Empty, EntityTypes.Person);
+                OperationResult result = await _factService.CreateAsync(factDto);
+                if (result.Success)
+                {
+                    return RedirectToEntity(result.RedirectId, result.RedirectType);
+                }
+                if (result.ErrorMessage == "Contact not found.") return NotFound();
             }
             return View(factDto);
         }
@@ -43,23 +41,8 @@ namespace Rvnx.CRM.Web.Controllers
                 return NotFound();
             }
 
-            Fact? fact = await Repository.GetByIdAsync<Fact>(id.Value);
-
-            if (fact == null || !await IsValidContactAsync(fact.ContactId ?? Guid.Empty))
-            {
-                return NotFound();
-            }
-
-            FactFormDto dto = new()
-            {
-                Id = fact.Id,
-                Category = fact.Category,
-                Value = fact.Value,
-                EntityId = fact.ContactId ?? Guid.Empty,
-                EntityType = EntityTypes.Person
-            };
-
-            return View(dto);
+            FactFormDto? dto = await _factService.GetFormAsync(id.Value);
+            return dto == null ? NotFound() : View(dto);
         }
 
         [HttpPost]
@@ -75,30 +58,16 @@ namespace Rvnx.CRM.Web.Controllers
             {
                 try
                 {
-                    // Fetch existing entity to preserve audit fields and prevent tampering
-                    Fact? existingFact = await Repository.GetByIdAsync<Fact>(id);
-                    if (existingFact == null || !await IsValidContactAsync(existingFact.ContactId ?? Guid.Empty))
+                    OperationResult result = await _factService.UpdateAsync(id, factDto);
+                    if (result.Success)
                     {
-                        return NotFound();
+                        return RedirectToEntity(result.RedirectId, result.RedirectType);
                     }
-
-                    existingFact.UpdateEntity(factDto);
-
-                    await Repository.UpdateAsync(existingFact);
-                    await Repository.SaveChangesAsync();
-
-                    return RedirectToEntity(existingFact.ContactId ?? Guid.Empty, EntityTypes.Person);
+                    if (result.ErrorMessage == "Fact not found.") return NotFound();
                 }
                 catch (Exception)
                 {
-                    if (!await Repository.ExistsAsync<Fact>(factDto.Id.Value))
-                    {
-                        return NotFound();
-                    }
-                    else
-                    {
-                        throw;
-                    }
+                    throw;
                 }
             }
 
@@ -112,22 +81,18 @@ namespace Rvnx.CRM.Web.Controllers
                 return NotFound();
             }
 
-            Fact? fact = await Repository.GetByIdAsync<Fact>(id.Value);
-            return fact == null || !await IsValidContactAsync(fact.ContactId ?? Guid.Empty) ? NotFound() : View(fact);
+            Fact? fact = await _factService.GetByIdAsync(id.Value);
+            return fact == null ? NotFound() : View(fact);
         }
 
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(Guid id)
         {
-            Fact? fact = await Repository.GetByIdAsync<Fact>(id);
-            if (fact != null)
+            OperationResult result = await _factService.DeleteAsync(id);
+            if (result.Success)
             {
-                Guid entityId = fact.ContactId ?? Guid.Empty;
-                string entityType = EntityTypes.Person;
-                await Repository.DeleteAsync<Fact>(id);
-                await Repository.SaveChangesAsync();
-                return RedirectToEntity(entityId, entityType);
+                return RedirectToEntity(result.RedirectId, result.RedirectType);
             }
             return RedirectToAction("Index", "Home");
         }

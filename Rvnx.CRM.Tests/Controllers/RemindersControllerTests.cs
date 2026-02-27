@@ -8,6 +8,7 @@ using Rvnx.CRM.Core.Models.Contact;
 using Rvnx.CRM.Core.Models.Dates;
 using Rvnx.CRM.Infrastructure.Data;
 using Rvnx.CRM.Infrastructure.Repositories;
+using Rvnx.CRM.Infrastructure.Services;
 using Rvnx.CRM.Web.Controllers;
 
 namespace Rvnx.CRM.Tests.Controllers
@@ -29,7 +30,14 @@ namespace Rvnx.CRM.Tests.Controllers
 
             _context = new CRMDbContext(options, mockCurrentUserService.Object);
             Repository repository = new(_context);
-            _controller = new RemindersController(repository);
+
+            Mock<IEntityService> mockEntityService = new();
+            mockEntityService.Setup(s => s.IsPartialAsync(It.IsAny<string>(), It.IsAny<Guid>())).ReturnsAsync(false);
+            mockEntityService.Setup(s => s.GetEntityNameAsync(It.IsAny<string>(), It.IsAny<Guid>())).ReturnsAsync("Test Entity");
+
+            IReminderService reminderService = new ReminderService(repository, mockEntityService.Object);
+
+            _controller = new RemindersController(reminderService, repository, mockEntityService.Object);
         }
 
         public void Dispose()

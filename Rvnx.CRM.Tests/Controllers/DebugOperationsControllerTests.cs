@@ -8,6 +8,7 @@ using Microsoft.Extensions.Logging;
 using Moq;
 using Rvnx.CRM.Core.Interfaces;
 using Rvnx.CRM.Infrastructure.Data;
+using Rvnx.CRM.Infrastructure.Services;
 using Rvnx.CRM.Web.Controllers;
 
 namespace Rvnx.CRM.Tests.Controllers
@@ -39,10 +40,11 @@ namespace Rvnx.CRM.Tests.Controllers
         {
             // Arrange
             Mock<IDebugDataService> debugServiceMock = new();
+            Mock<IDebugOperationsService> debugOperationsServiceMock = new();
             Mock<IHostEnvironment> environmentMock = new();
             environmentMock.Setup(e => e.EnvironmentName).Returns("Production");
 
-            DebugOperationsController controller = new(debugServiceMock.Object, environmentMock.Object, _dbContext, _currentUserServiceMock.Object, _loggerMock.Object);
+            DebugOperationsController controller = new(debugServiceMock.Object, debugOperationsServiceMock.Object, environmentMock.Object, _currentUserServiceMock.Object);
 
             ActionContext actionContext = new(
                 new DefaultHttpContext(),
@@ -69,10 +71,11 @@ namespace Rvnx.CRM.Tests.Controllers
         {
             // Arrange
             Mock<IDebugDataService> debugServiceMock = new();
+            Mock<IDebugOperationsService> debugOperationsServiceMock = new();
             Mock<IHostEnvironment> environmentMock = new();
             environmentMock.Setup(e => e.EnvironmentName).Returns("Development");
 
-            DebugOperationsController controller = new(debugServiceMock.Object, environmentMock.Object, _dbContext, _currentUserServiceMock.Object, _loggerMock.Object);
+            DebugOperationsController controller = new(debugServiceMock.Object, debugOperationsServiceMock.Object, environmentMock.Object, _currentUserServiceMock.Object);
 
             ActionContext actionContext = new(
                 new DefaultHttpContext(),

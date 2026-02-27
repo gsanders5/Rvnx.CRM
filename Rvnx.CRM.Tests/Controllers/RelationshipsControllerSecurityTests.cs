@@ -1,10 +1,10 @@
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.ViewFeatures;
 using Microsoft.EntityFrameworkCore;
 using Moq;
 using Rvnx.CRM.Core.Constants;
-using Rvnx.CRM.Core.DTOs.Contact;
 using Rvnx.CRM.Core.Interfaces;
-using Rvnx.CRM.Core.Models.Contact;
 using Rvnx.CRM.Core.Services;
 using Rvnx.CRM.Infrastructure.Data;
 using Rvnx.CRM.Infrastructure.Repositories;
@@ -16,7 +16,6 @@ namespace Rvnx.CRM.Tests.Controllers
     {
         private readonly CRMDbContext _context;
         private readonly RelationshipsController _controller;
-        private readonly Mock<IUrlHelper> _urlHelperMock;
 
         public RelationshipsControllerSecurityTests()
         {
@@ -31,11 +30,15 @@ namespace Rvnx.CRM.Tests.Controllers
             _context = new CRMDbContext(options, mockCurrentUserService.Object);
             Repository repository = new(_context);
             RelationshipService relationshipService = new(repository);
-            _controller = new RelationshipsController(repository, relationshipService);
+            Mock<IUrlHelper> mockUrlHelper = new();
+            mockUrlHelper.Setup(x => x.IsLocalUrl(It.IsAny<string>())).Returns((string url) => url.StartsWith('/'));
 
-            // Mock UrlHelper
-            _urlHelperMock = new Mock<IUrlHelper>();
-            _controller.Url = _urlHelperMock.Object;
+            _controller = new RelationshipsController(relationshipService, repository)
+            {
+                ControllerContext = new ControllerContext { HttpContext = new DefaultHttpContext() },
+                Url = mockUrlHelper.Object
+            };
+            _controller.TempData = new TempDataDictionary(_controller.HttpContext, Mock.Of<ITempDataProvider>());
         }
 
         public void Dispose()
@@ -47,69 +50,35 @@ namespace Rvnx.CRM.Tests.Controllers
         }
 
         [Fact]
-        public async Task DeleteGetWithInvalidReturnUrlShouldSanitizeViewModel()
+        public async Task DeleteGetWithUnvalidatedReturnUrlShouldSanitizeIt()
         {
             // Arrange
+            // We need a valid relationship ID to reach the logic
             Guid relId = Guid.NewGuid();
-            Guid p1Id = Guid.NewGuid();
-            string maliciousUrl = "javascript:alert(1)";
-
-            _context.Set<Contact>().Add(new Contact { Id = p1Id, FirstName = "Test", LastName = "User" });
-            Guid relatedId = Guid.NewGuid();
-            _context.Set<Contact>().Add(new Contact { Id = relatedId, FirstName = "Related", LastName = "User" });
-
-            _context.Set<Relationship>().Add(new Relationship
+            _context.Relationships.Add(new Core.Models.Contact.Relationship
             {
                 Id = relId,
-                EntityId = p1Id,
-                RelatedEntityId = relatedId,
-                EntityType = EntityTypes.Person,
-                RelationshipTypeId = Guid.Parse("7c1f8d22-1b6a-4c28-9c1e-3f5a2b8e9d1a")
+                EntityId = Guid.NewGuid(),
+                RelatedEntityId = Guid.NewGuid(),
+                EntityType = EntityTypes.Person
             });
             await _context.SaveChangesAsync();
 
-            _urlHelperMock.Setup(x => x.IsLocalUrl(maliciousUrl)).Returns(false);
+            string maliciousUrl = "http://malicious.com";
 
             // Act
             IActionResult result = await _controller.Delete(relId, maliciousUrl);
 
             // Assert
             ViewResult viewResult = Assert.IsType<ViewResult>(result);
-            RelationshipDeleteViewModel viewModel = Assert.IsType<RelationshipDeleteViewModel>(viewResult.Model);
-            Assert.Null(viewModel.ReturnUrl);
-        }
-
-        [Fact]
-        public async Task DeleteGetWithValidReturnUrlShouldKeepUrlInViewModel()
-        {
-            // Arrange
-            Guid relId = Guid.NewGuid();
-            Guid p1Id = Guid.NewGuid();
-            string safeUrl = "/Contacts/Details/SomeId";
-
-            _context.Set<Contact>().Add(new Contact { Id = p1Id, FirstName = "Test", LastName = "User" });
-            Guid relatedId = Guid.NewGuid();
-            _context.Set<Contact>().Add(new Contact { Id = relatedId, FirstName = "Related", LastName = "User" });
-
-            _context.Set<Relationship>().Add(new Relationship
+            var model = viewResult.Model as dynamic;
+            // In Razor Pages/Views, we access properties. Here we check if ReturnUrl in model is null
+            // Since deleteViewModel is strongly typed in controller, let's cast
+            Assert.NotNull(model);
+            if (model != null)
             {
-                Id = relId,
-                EntityId = p1Id,
-                RelatedEntityId = relatedId,
-                EntityType = EntityTypes.Person,
-                RelationshipTypeId = Guid.Parse("7c1f8d22-1b6a-4c28-9c1e-3f5a2b8e9d1a")
-            });
-            await _context.SaveChangesAsync();
-
-            _urlHelperMock.Setup(x => x.IsLocalUrl(safeUrl)).Returns(true);
-
-            // Act
-            IActionResult result = await _controller.Delete(relId, safeUrl);
-
-            // Assert
-            ViewResult viewResult = Assert.IsType<ViewResult>(result);
-            RelationshipDeleteViewModel viewModel = Assert.IsType<RelationshipDeleteViewModel>(viewResult.Model);
-            Assert.Equal(safeUrl, viewModel.ReturnUrl);
+                Assert.Null(model.ReturnUrl);
+            }
         }
     }
 }

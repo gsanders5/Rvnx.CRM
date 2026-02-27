@@ -6,6 +6,7 @@ using Rvnx.CRM.Core.Interfaces;
 using Rvnx.CRM.Core.Models.Contact;
 using Rvnx.CRM.Infrastructure.Data;
 using Rvnx.CRM.Infrastructure.Repositories;
+using Rvnx.CRM.Infrastructure.Services;
 using Rvnx.CRM.Web.Controllers;
 
 namespace Rvnx.CRM.Tests.Controllers
@@ -27,7 +28,8 @@ namespace Rvnx.CRM.Tests.Controllers
 
             _context = new CRMDbContext(options, mockCurrentUserService.Object);
             Repository repository = new(_context);
-            _controller = new PetsController(repository);
+            IPetService petService = new PetService(repository);
+            _controller = new PetsController(petService, repository);
         }
 
         public void Dispose()

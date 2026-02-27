@@ -31,7 +31,7 @@ namespace Rvnx.CRM.Tests.Controllers
             _context = new CRMDbContext(options, mockCurrentUserService.Object);
             Repository repository = new(_context);
             RelationshipService relationshipService = new(repository);
-            _controller = new RelationshipsController(repository, relationshipService);
+            _controller = new RelationshipsController(relationshipService, repository);
         }
 
         public void Dispose()

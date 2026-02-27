@@ -8,23 +8,25 @@ namespace Rvnx.CRM.Web.Controllers.Base;
 
 public abstract class RepositoryController : AuthorizedController
 {
-    protected IRepository Repository { get; }
+    // The repository is no longer directly exposed to derived controllers for business logic.
+    // It is kept private for the base class helper methods only.
+    private readonly IRepository _repository;
 
     protected RepositoryController(IRepository repository)
     {
-        Repository = repository;
+        _repository = repository;
     }
 
     protected async Task<string> GetEntityName(Guid id, string type)
     {
         if (type == EntityTypes.Person)
         {
-            Contact? p = await Repository.GetByIdAsync<Contact>(id);
+            Contact? p = await _repository.GetByIdAsync<Contact>(id);
             return p?.FullName ?? "Unknown Person";
         }
         else if (type == EntityTypes.Company)
         {
-            Employer? c = await Repository.GetByIdAsync<Employer>(id);
+            Employer? c = await _repository.GetByIdAsync<Employer>(id);
             return c?.CompanyName ?? "Unknown Company";
         }
         return "Unknown Entity";
@@ -32,7 +34,7 @@ public abstract class RepositoryController : AuthorizedController
 
     protected async Task<bool> IsPartialContactAsync(Guid id)
     {
-        Contact? c = await Repository.GetByIdAsync<Contact>(id);
+        Contact? c = await _repository.GetByIdAsync<Contact>(id);
         return c?.IsPartial == true;
     }
 
@@ -47,7 +49,7 @@ public abstract class RepositoryController : AuthorizedController
             return false;
         }
 
-        return await Repository.CountAsync<Contact>(c => c.Id == id && !c.IsPartial) > 0;
+        return await _repository.CountAsync<Contact>(c => c.Id == id && !c.IsPartial) > 0;
     }
 
     protected IActionResult RedirectToEntity(Guid id, string? type)

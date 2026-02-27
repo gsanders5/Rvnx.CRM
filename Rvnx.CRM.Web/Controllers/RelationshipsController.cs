@@ -3,12 +3,13 @@ using Rvnx.CRM.Core.Constants;
 using Rvnx.CRM.Core.DTOs.Contact;
 using Rvnx.CRM.Core.Extensions;
 using Rvnx.CRM.Core.Interfaces;
+using Rvnx.CRM.Core.Models;
 using Rvnx.CRM.Core.Models.Contact;
 using Rvnx.CRM.Web.Controllers.Base;
 
 namespace Rvnx.CRM.Web.Controllers
 {
-    public class RelationshipsController(IRepository repository, IRelationshipService relationshipService)
+    public class RelationshipsController(IRelationshipService relationshipService, IRepository repository)
         : RepositoryController(repository)
     {
         private readonly IRelationshipService _relationshipService = relationshipService;
@@ -125,7 +126,7 @@ namespace Rvnx.CRM.Web.Controllers
                 return NotFound();
             }
 
-            Relationship? relationship = await Repository.GetByIdAsync<Relationship>(id.Value);
+            Relationship? relationship = await _relationshipService.GetRelationshipForEditAsync(id.Value);
             if (relationship == null)
             {
                 return NotFound();
@@ -207,22 +208,17 @@ namespace Rvnx.CRM.Web.Controllers
                 return NotFound();
             }
 
-            Relationship? relationship = await Repository.GetByIdAsync<Relationship>(id.Value);
+            Relationship? relationship = await _relationshipService.GetRelationshipForDeleteAsync(id.Value);
             if (relationship == null)
             {
                 return NotFound();
             }
 
-            // Populate Person/RelatedPerson so names show up
-            // Use local variables to avoid closure issues with EF Core translation
-            Guid p1Id = relationship.EntityId;
-            Guid p2Id = relationship.RelatedEntityId;
-            List<Contact> contacts = await Repository.ListAsync<Contact>(c => c.Id == p1Id || c.Id == p2Id);
-
-            relationship.Person = contacts.FirstOrDefault(c => c.Id == p1Id);
-            relationship.RelatedPerson = contacts.FirstOrDefault(c => c.Id == p2Id);
-
             RelationshipDto viewModel = relationship.ToDto();
+
+            // Sanitize returnUrl - if it's not local, treat it as null/empty
+            string? safeReturnUrl = !string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl) ? returnUrl : null;
+
             RelationshipDeleteViewModel deleteViewModel = new()
             {
                 Id = viewModel.Id,
@@ -237,7 +233,7 @@ namespace Rvnx.CRM.Web.Controllers
                 Description = viewModel.Description,
                 StartDate = viewModel.StartDate,
                 EndDate = viewModel.EndDate,
-                ReturnUrl = !string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl) ? returnUrl : null
+                ReturnUrl = safeReturnUrl
             };
 
             return View(deleteViewModel);
@@ -247,20 +243,15 @@ namespace Rvnx.CRM.Web.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(Guid id, string? returnUrl = null)
         {
-            Relationship? relationship = await Repository.GetByIdAsync<Relationship>(id);
-            if (relationship != null)
+            OperationResult result = await _relationshipService.DeleteRelationshipAsync(id);
+            if (result.Success)
             {
-                Guid entityId = relationship.EntityId;
-                string entityType = relationship.EntityType;
-                await Repository.DeleteAsync<Relationship>(id);
-                await Repository.SaveChangesAsync();
-
                 if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
                 {
                     return Redirect(returnUrl);
                 }
 
-                return RedirectToEntity(entityId, entityType);
+                return RedirectToEntity(result.RedirectId, result.RedirectType);
             }
 
             return RedirectToAction("Index", "Home");

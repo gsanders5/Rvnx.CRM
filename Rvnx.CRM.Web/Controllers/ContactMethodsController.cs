@@ -1,37 +1,37 @@
 using Microsoft.AspNetCore.Mvc;
 using Rvnx.CRM.Core.Constants;
 using Rvnx.CRM.Core.DTOs.Contact;
-using Rvnx.CRM.Core.Extensions;
 using Rvnx.CRM.Core.Interfaces;
+using Rvnx.CRM.Core.Models;
 using Rvnx.CRM.Core.Models.Contact;
 using Rvnx.CRM.Web.Controllers.Base;
 
 namespace Rvnx.CRM.Web.Controllers
 {
-    public class ContactMethodsController(IRepository repository) : RepositoryController(repository)
+    public class ContactMethodsController(IContactMethodService contactMethodService, IRepository repository) : RepositoryController(repository)
     {
+        private readonly IContactMethodService _contactMethodService = contactMethodService;
+
         public async Task<IActionResult> Create(Guid entityId, string entityType)
         {
-            return !await IsValidContactAsync(entityId)
-                ? NotFound()
-                : View(new ContactMethodFormDto { EntityId = entityId, EntityType = entityType });
+            ContactMethodFormDto? dto = await _contactMethodService.GetFormForCreateAsync(entityId, entityType);
+            return dto == null ? NotFound() : View(dto);
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(ContactMethodFormDto contactInfoInput)
         {
-            if (!await IsValidContactAsync(contactInfoInput.EntityId))
-            {
-                return NotFound();
-            }
-
             if (ModelState.IsValid)
             {
-                ContactMethod contactInfo = contactInfoInput.ToEntity();
-                await Repository.AddAsync(contactInfo);
-                await Repository.SaveChangesAsync();
-                return RedirectToEntity(contactInfo.ContactId ?? Guid.Empty, EntityTypes.Person);
+                OperationResult result = await _contactMethodService.CreateAsync(contactInfoInput);
+                if (result.Success)
+                {
+                    return RedirectToEntity(result.RedirectId, result.RedirectType);
+                }
+
+                // If service returns failure (e.g. contact not found), we should probably 404 or show error
+                if (result.ErrorMessage == "Contact not found.") return NotFound();
             }
             return View(contactInfoInput);
         }
@@ -43,24 +43,8 @@ namespace Rvnx.CRM.Web.Controllers
                 return NotFound();
             }
 
-            ContactMethod? contactInfo = await Repository.GetByIdAsync<ContactMethod>(id.Value);
-
-            if (contactInfo == null || !await IsValidContactAsync(contactInfo.ContactId ?? Guid.Empty))
-            {
-                return NotFound();
-            }
-
-            ContactMethodFormDto dto = new()
-            {
-                Id = contactInfo.Id,
-                Type = contactInfo.Type,
-                Value = contactInfo.Value,
-                Label = contactInfo.Label,
-                EntityId = contactInfo.ContactId ?? Guid.Empty,
-                EntityType = EntityTypes.Person
-            };
-
-            return View(dto);
+            ContactMethodFormDto? dto = await _contactMethodService.GetFormAsync(id.Value);
+            return dto == null ? NotFound() : View(dto);
         }
 
         [HttpPost]
@@ -76,29 +60,20 @@ namespace Rvnx.CRM.Web.Controllers
             {
                 try
                 {
-                    ContactMethod? existingContactInfo = await Repository.GetByIdAsync<ContactMethod>(id);
-                    if (existingContactInfo == null || !await IsValidContactAsync(existingContactInfo.ContactId ?? Guid.Empty))
+                    OperationResult result = await _contactMethodService.UpdateAsync(id, contactInfoInput);
+                    if (result.Success)
                     {
-                        return NotFound();
+                        return RedirectToEntity(result.RedirectId, result.RedirectType);
                     }
-
-                    existingContactInfo.UpdateEntity(contactInfoInput);
-
-                    await Repository.UpdateAsync(existingContactInfo);
-                    await Repository.SaveChangesAsync();
-
-                    return RedirectToEntity(existingContactInfo.ContactId ?? Guid.Empty, EntityTypes.Person);
+                    if (result.ErrorMessage == "Contact method not found.") return NotFound();
                 }
                 catch (Exception)
                 {
-                    if (!await Repository.ExistsAsync<ContactMethod>(contactInfoInput.Id.Value))
-                    {
-                        return NotFound();
-                    }
-                    else
-                    {
-                        throw;
-                    }
+                    // If we caught an exception but the service re-threw it, it might propagate.
+                    // The service currently rethrows if the entity exists but concurrency fails, or fails if not exists.
+                    // But here we rely on the service logic.
+                    // If we are here, it means service threw.
+                    throw;
                 }
             }
 
@@ -112,22 +87,18 @@ namespace Rvnx.CRM.Web.Controllers
                 return NotFound();
             }
 
-            ContactMethod? contactInfo = await Repository.GetByIdAsync<ContactMethod>(id.Value);
-            return contactInfo == null || !await IsValidContactAsync(contactInfo.ContactId ?? Guid.Empty) ? NotFound() : View(contactInfo);
+            ContactMethod? contactInfo = await _contactMethodService.GetByIdAsync(id.Value);
+            return contactInfo == null ? NotFound() : View(contactInfo);
         }
 
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(Guid id)
         {
-            ContactMethod? contactInfo = await Repository.GetByIdAsync<ContactMethod>(id);
-            if (contactInfo != null)
+            OperationResult result = await _contactMethodService.DeleteAsync(id);
+            if (result.Success)
             {
-                Guid entityId = contactInfo.ContactId ?? Guid.Empty;
-                string entityType = EntityTypes.Person;
-                await Repository.DeleteAsync<ContactMethod>(id);
-                await Repository.SaveChangesAsync();
-                return RedirectToEntity(entityId, entityType);
+                return RedirectToEntity(result.RedirectId, result.RedirectType);
             }
             return RedirectToAction("Index", "Home");
         }
