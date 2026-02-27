@@ -23,11 +23,9 @@ namespace Rvnx.CRM.Tests.Controllers
                 }
             };
 
-            // Set Request Host to localhost
             controller.Request.Host = new HostString("localhost");
 
             Mock<IUrlHelper> urlHelperMock = new();
-            // IsLocalUrl logic: starts with /
             urlHelperMock.Setup(x => x.IsLocalUrl(It.IsAny<string>()))
                 .Returns((string url) => !string.IsNullOrEmpty(url) && url.StartsWith('/'));
 
@@ -53,7 +51,6 @@ namespace Rvnx.CRM.Tests.Controllers
         [Fact]
         public async Task UploadShouldRedirectToReturnUrlWhenValidLocalUrl()
         {
-            // Arrange
             Mock<IAttachmentService> serviceMock = new();
             serviceMock.Setup(s => s.UploadAttachmentAsync(It.IsAny<Guid>(), It.IsAny<string>(), It.IsAny<byte[]>(), It.IsAny<string>()))
                 .ReturnsAsync(AttachmentOperationResult.Ok(Guid.NewGuid()));
@@ -62,10 +59,8 @@ namespace Rvnx.CRM.Tests.Controllers
             string returnUrl = "/Contacts/Details/123";
             IFormFile file = CreateMockFile();
 
-            // Act
             IActionResult result = await controller.Upload(Guid.NewGuid(), "Person", file, returnUrl);
 
-            // Assert
             LocalRedirectResult redirectResult = Assert.IsType<LocalRedirectResult>(result);
             Assert.Equal(returnUrl, redirectResult.Url);
         }
@@ -73,7 +68,6 @@ namespace Rvnx.CRM.Tests.Controllers
         [Fact]
         public async Task UploadShouldRedirectToRefererWhenReturnUrlMissingAndRefererIsSafe()
         {
-            // Arrange
             Mock<IAttachmentService> serviceMock = new();
             serviceMock.Setup(s => s.UploadAttachmentAsync(It.IsAny<Guid>(), It.IsAny<string>(), It.IsAny<byte[]>(), It.IsAny<string>()))
                 .ReturnsAsync(AttachmentOperationResult.Ok(Guid.NewGuid()));
@@ -84,10 +78,8 @@ namespace Rvnx.CRM.Tests.Controllers
             string safeReferer = "http://localhost/Contacts/Details/123";
             controller.Request.Headers["Referer"] = safeReferer;
 
-            // Act
             IActionResult result = await controller.Upload(Guid.NewGuid(), "Person", file, null);
 
-            // Assert
             RedirectResult redirectResult = Assert.IsType<RedirectResult>(result);
             Assert.Equal(safeReferer, redirectResult.Url);
         }
@@ -95,7 +87,6 @@ namespace Rvnx.CRM.Tests.Controllers
         [Fact]
         public async Task UploadShouldRedirectToHomeWhenReturnUrlMissingAndRefererIsUnsafe()
         {
-            // Arrange
             Mock<IAttachmentService> serviceMock = new();
             serviceMock.Setup(s => s.UploadAttachmentAsync(It.IsAny<Guid>(), It.IsAny<string>(), It.IsAny<byte[]>(), It.IsAny<string>()))
                 .ReturnsAsync(AttachmentOperationResult.Ok(Guid.NewGuid()));
@@ -106,10 +97,8 @@ namespace Rvnx.CRM.Tests.Controllers
             string unsafeReferer = "http://evil.com/exploit";
             controller.Request.Headers["Referer"] = unsafeReferer;
 
-            // Act
             IActionResult result = await controller.Upload(Guid.NewGuid(), "Person", file, null);
 
-            // Assert
             RedirectToActionResult redirectResult = Assert.IsType<RedirectToActionResult>(result);
             Assert.Equal("Index", redirectResult.ActionName);
             Assert.Equal("Home", redirectResult.ControllerName);
@@ -118,7 +107,6 @@ namespace Rvnx.CRM.Tests.Controllers
         [Fact]
         public async Task UploadShouldRedirectToHomeWhenReturnUrlAndRefererAreMissing()
         {
-            // Arrange
             Mock<IAttachmentService> serviceMock = new();
             serviceMock.Setup(s => s.UploadAttachmentAsync(It.IsAny<Guid>(), It.IsAny<string>(), It.IsAny<byte[]>(), It.IsAny<string>()))
                 .ReturnsAsync(AttachmentOperationResult.Ok(Guid.NewGuid()));
@@ -126,10 +114,8 @@ namespace Rvnx.CRM.Tests.Controllers
             AttachmentsController controller = GetController(serviceMock);
             IFormFile file = CreateMockFile();
 
-            // Act
             IActionResult result = await controller.Upload(Guid.NewGuid(), "Person", file, null);
 
-            // Assert
             RedirectToActionResult redirectResult = Assert.IsType<RedirectToActionResult>(result);
             Assert.Equal("Index", redirectResult.ActionName);
             Assert.Equal("Home", redirectResult.ControllerName);
@@ -138,7 +124,6 @@ namespace Rvnx.CRM.Tests.Controllers
         [Fact]
         public async Task DeleteShouldRedirectToReturnUrlWhenValidLocalUrl()
         {
-            // Arrange
             Mock<IAttachmentService> serviceMock = new();
             serviceMock.Setup(s => s.DeleteAttachmentAsync(It.IsAny<Guid>()))
                 .ReturnsAsync(AttachmentOperationResult.Ok(Guid.NewGuid()));
@@ -146,10 +131,8 @@ namespace Rvnx.CRM.Tests.Controllers
             AttachmentsController controller = GetController(serviceMock);
             string returnUrl = "/Contacts/Details/123";
 
-            // Act
             IActionResult result = await controller.Delete(Guid.NewGuid(), returnUrl);
 
-            // Assert
             LocalRedirectResult redirectResult = Assert.IsType<LocalRedirectResult>(result);
             Assert.Equal(returnUrl, redirectResult.Url);
         }
@@ -157,7 +140,6 @@ namespace Rvnx.CRM.Tests.Controllers
         [Fact]
         public async Task DeleteShouldRedirectToHomeWhenReturnUrlInvalidAndRefererUnsafe()
         {
-            // Arrange
             Mock<IAttachmentService> serviceMock = new();
             serviceMock.Setup(s => s.DeleteAttachmentAsync(It.IsAny<Guid>()))
                 .ReturnsAsync(AttachmentOperationResult.Ok(Guid.NewGuid()));
@@ -166,10 +148,8 @@ namespace Rvnx.CRM.Tests.Controllers
             string unsafeReferer = "http://evil.com/exploit";
             controller.Request.Headers["Referer"] = unsafeReferer;
 
-            // Act
             IActionResult result = await controller.Delete(Guid.NewGuid(), null);
 
-            // Assert
             RedirectToActionResult redirectResult = Assert.IsType<RedirectToActionResult>(result);
             Assert.Equal("Index", redirectResult.ActionName);
             Assert.Equal("Home", redirectResult.ControllerName);

@@ -45,7 +45,6 @@ namespace Rvnx.CRM.Tests.Controllers
         [Fact]
         public async Task CreateWithValidDataShouldCreateDate()
         {
-            // Arrange
             Guid contactId = Guid.NewGuid();
             _context.Contacts.Add(new Contact { Id = contactId, FirstName = "Test" });
             await _context.SaveChangesAsync();
@@ -59,10 +58,8 @@ namespace Rvnx.CRM.Tests.Controllers
                 EventFrequency = TimeSpan.FromDays(365)
             };
 
-            // Act
             IActionResult result = await _controller.Create(dto);
 
-            // Assert
             RedirectToActionResult redirectResult = Assert.IsType<RedirectToActionResult>(result);
             Assert.Equal("Details", redirectResult.ActionName);
 
@@ -74,11 +71,9 @@ namespace Rvnx.CRM.Tests.Controllers
         [Fact]
         public async Task CreateWhenDuplicateBirthdayExistsShouldReturnValidationError()
         {
-            // Arrange
             Guid contactId = Guid.NewGuid();
             _context.Contacts.Add(new Contact { Id = contactId, FirstName = "Test" });
 
-            // Existing Birthday
             _context.Set<SignificantDate>().Add(new SignificantDate
             {
                 Id = Guid.NewGuid(),
@@ -97,23 +92,19 @@ namespace Rvnx.CRM.Tests.Controllers
                 Date = DateTime.Today
             };
 
-            // Act
             IActionResult result = await _controller.Create(dto);
 
-            // Assert
             Assert.IsType<ViewResult>(result);
             Assert.False(_controller.ModelState.IsValid);
             Assert.True(_controller.ModelState.ContainsKey("Title"));
             Assert.Equal("A birthday is already set for this contact.", _controller.ModelState["Title"]!.Errors[0].ErrorMessage);
 
-            // Ensure no new date created
             Assert.Single(await _context.Set<SignificantDate>().ToListAsync());
         }
 
         [Fact]
         public async Task CreateWhenDuplicateBirthdayExistsWithDifferentCaseShouldReturnValidationError()
         {
-            // Arrange
             Guid contactId = Guid.NewGuid();
             _context.Contacts.Add(new Contact { Id = contactId, FirstName = "Test" });
 
@@ -136,10 +127,8 @@ namespace Rvnx.CRM.Tests.Controllers
                 Date = DateTime.Today
             };
 
-            // Act
             IActionResult result = await _controller.Create(dto);
 
-            // Assert
             // This expects failure (duplicate detection), but currently it will succeed because "birthday" != "Birthday"
             Assert.IsType<ViewResult>(result);
             Assert.False(_controller.ModelState.IsValid, "Model state should be invalid due to duplicate birthday");
@@ -150,11 +139,9 @@ namespace Rvnx.CRM.Tests.Controllers
         [Fact]
         public async Task EditWhenChangingToBirthdayButOneAlreadyExistsShouldReturnValidationError()
         {
-            // Arrange
             Guid contactId = Guid.NewGuid();
             _context.Contacts.Add(new Contact { Id = contactId, FirstName = "Test" });
 
-            // Existing Birthday
             _context.Set<SignificantDate>().Add(new SignificantDate
             {
                 Id = Guid.NewGuid(),
@@ -183,10 +170,8 @@ namespace Rvnx.CRM.Tests.Controllers
                 Date = new DateTime(2010, 5, 5)
             };
 
-            // Act
             IActionResult result = await _controller.Edit(anniversaryId, dto);
 
-            // Assert
             Assert.IsType<ViewResult>(result);
             Assert.False(_controller.ModelState.IsValid);
             Assert.Equal("A birthday is already set for this contact.", _controller.ModelState["Title"]!.Errors[0].ErrorMessage);
@@ -195,7 +180,6 @@ namespace Rvnx.CRM.Tests.Controllers
         [Fact]
         public async Task EditWhenExistingIsBirthdayAndUpdatingShouldSucceed()
         {
-            // Arrange
             Guid contactId = Guid.NewGuid();
             _context.Contacts.Add(new Contact { Id = contactId, FirstName = "Test" });
 
@@ -218,10 +202,8 @@ namespace Rvnx.CRM.Tests.Controllers
                 Date = new DateTime(1990, 1, 2) // Change date only
             };
 
-            // Act
             IActionResult result = await _controller.Edit(birthdayId, dto);
 
-            // Assert
             RedirectToActionResult redirectResult = Assert.IsType<RedirectToActionResult>(result);
             Assert.Equal("Details", redirectResult.ActionName);
 
@@ -233,7 +215,6 @@ namespace Rvnx.CRM.Tests.Controllers
         [Fact]
         public async Task DeleteConfirmedShouldDeleteDate()
         {
-            // Arrange
             Guid dateId = Guid.NewGuid();
             Guid contactId = Guid.NewGuid();
             _context.Set<SignificantDate>().Add(new SignificantDate
@@ -245,10 +226,8 @@ namespace Rvnx.CRM.Tests.Controllers
             });
             await _context.SaveChangesAsync();
 
-            // Act
             IActionResult result = await _controller.DeleteConfirmed(dateId);
 
-            // Assert
             Assert.IsType<RedirectToActionResult>(result);
             Assert.Null(await _context.Set<SignificantDate>().FindAsync(dateId));
         }

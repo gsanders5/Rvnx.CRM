@@ -15,7 +15,6 @@ namespace Rvnx.CRM.Tests.Controllers
         [Fact]
         public async Task IndexDelegatesToService()
         {
-            // Arrange
             Mock<ILogger<ContactsController>> loggerMock = new();
             Mock<ICurrentUserService> userMock = new();
             Mock<IUserSynchronizationService> syncMock = new();
@@ -34,10 +33,8 @@ namespace Rvnx.CRM.Tests.Controllers
             };
             controller.TempData = new TempDataDictionary(controller.HttpContext, Mock.Of<ITempDataProvider>());
 
-            // Act
             await controller.Index();
 
-            // Assert
             readServiceMock.Verify(s => s.GetIndexDataAsync(false), Times.Once);
         }
     }

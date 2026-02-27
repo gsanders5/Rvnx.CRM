@@ -6,7 +6,6 @@ public static class EntityTypes
     public const string Company = "Company";
     public const string Opportunity = "Opportunity";
 
-    // Auxiliary Entities
     public const string Note = "Note";
     public const string Reminder = "Reminder";
     public const string SignificantDate = "SignificantDate";

@@ -37,7 +37,6 @@ namespace Rvnx.CRM.Tests.Controllers
         [Fact]
         public void OnActionExecutingReturnsNotFoundWhenNotDevelopment()
         {
-            // Arrange
             Mock<IDebugDataService> debugServiceMock = new();
             Mock<IDebugOperationsService> debugOperationsServiceMock = new();
             Mock<IHostEnvironment> environmentMock = new();
@@ -58,17 +57,14 @@ namespace Rvnx.CRM.Tests.Controllers
                 controller
             );
 
-            // Act
             controller.OnActionExecuting(context);
 
-            // Assert
             Assert.IsType<NotFoundResult>(context.Result);
         }
 
         [Fact]
         public void OnActionExecutingAllowsExecutionWhenDevelopment()
         {
-            // Arrange
             Mock<IDebugDataService> debugServiceMock = new();
             Mock<IDebugOperationsService> debugOperationsServiceMock = new();
             Mock<IHostEnvironment> environmentMock = new();
@@ -89,10 +85,8 @@ namespace Rvnx.CRM.Tests.Controllers
                 controller
             );
 
-            // Act
             controller.OnActionExecuting(context);
 
-            // Assert
             Assert.Null(context.Result);
         }
     }

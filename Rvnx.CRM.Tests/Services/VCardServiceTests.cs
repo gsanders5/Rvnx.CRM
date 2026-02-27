@@ -33,7 +33,6 @@ namespace Rvnx.CRM.Tests.Services
         [Fact]
         public async Task ParseVCardAsyncShouldReturnContactWhenValidVCardProvided()
         {
-            // Arrange
             string vcfContent = @"BEGIN:VCARD
 VERSION:3.0
 N:Doe;John;;;
@@ -47,11 +46,9 @@ END:VCARD";
 
             using MemoryStream stream = new(Encoding.UTF8.GetBytes(vcfContent));
 
-            // Act
             IEnumerable<Contact> result = await _service.ParseVCardAsync(stream);
             List<Contact> contacts = result.ToList();
 
-            // Assert
             Assert.Single(contacts);
             Contact contact = contacts.First();
             Assert.Equal("John", contact.FirstName);
@@ -70,7 +67,6 @@ END:VCARD";
         [Fact]
         public async Task ParseVCardAsyncShouldExtractEmbeddedPhoto()
         {
-            // Arrange
             string vcfContent = @"BEGIN:VCARD
 VERSION:3.0
 FN:Photo Test
@@ -81,11 +77,9 @@ END:VCARD";
 
             using MemoryStream stream = new(Encoding.UTF8.GetBytes(vcfContent));
 
-            // Act
             IEnumerable<Contact> result = await _service.ParseVCardAsync(stream);
             List<Contact> contacts = result.ToList();
 
-            // Assert
             Assert.Single(contacts);
             Contact contact = contacts.First();
             Assert.Single(contact.Attachments);
@@ -99,7 +93,6 @@ END:VCARD";
         [Fact]
         public async Task ParseVCardAsyncShouldDownloadUrlPhoto()
         {
-            // Arrange
             string photoUrl = "https://example.com/photo.jpg";
             string vcfContent = $@"BEGIN:VCARD
 VERSION:3.0
@@ -124,11 +117,9 @@ END:VCARD";
 
             using MemoryStream stream = new(Encoding.UTF8.GetBytes(vcfContent));
 
-            // Act
             IEnumerable<Contact> result = await _service.ParseVCardAsync(stream);
             List<Contact> contacts = result.ToList();
 
-            // Assert
             Assert.Single(contacts);
             Contact contact = contacts.First();
             Assert.Single(contact.Attachments);
@@ -141,7 +132,6 @@ END:VCARD";
         [Fact]
         public async Task ParseVCardAsyncShouldHandleGifPhoto()
         {
-            // Arrange
             string vcfContent = @"BEGIN:VCARD
 VERSION:3.0
 FN:Gif Photo Test
@@ -152,11 +142,9 @@ END:VCARD";
 
             using MemoryStream stream = new(Encoding.UTF8.GetBytes(vcfContent));
 
-            // Act
             IEnumerable<Contact> result = await _service.ParseVCardAsync(stream);
             List<Contact> contacts = result.ToList();
 
-            // Assert
             Assert.Single(contacts);
             Contact contact = contacts.First();
             Assert.Single(contact.Attachments);
@@ -169,7 +157,6 @@ END:VCARD";
         [Fact]
         public void ExportVCardShouldReturnValidVcfWhenContactProvided()
         {
-            // Arrange
             Contact contact = new()
             {
                 Id = Guid.NewGuid(),
@@ -191,11 +178,9 @@ END:VCARD";
                 Date = new DateTime(1995, 5, 20)
             });
 
-            // Act
             byte[] bytes = _service.ExportVCard(contact);
             string vcf = Encoding.UTF8.GetString(bytes);
 
-            // Assert
             Assert.Contains("BEGIN:VCARD", vcf);
             Assert.Contains("VERSION:3.0", vcf);
             Assert.Contains("Jane", vcf);
@@ -210,7 +195,6 @@ END:VCARD";
         [Fact]
         public void ExportVCardShouldEmbedProfileImage()
         {
-            // Arrange
             Contact contact = new()
             {
                 FirstName = "Photo",
@@ -228,11 +212,9 @@ END:VCARD";
                 }
             });
 
-            // Act
             byte[] bytes = _service.ExportVCard(contact);
             string vcf = Encoding.UTF8.GetString(bytes);
 
-            // Assert
             Assert.Contains("PHOTO", vcf);
             // Base64 of "Exported Photo" is "RXhwb3J0ZWQgUGhvdG8="
             Assert.Contains("RXhwb3J0ZWQgUGhvdG8=", vcf);

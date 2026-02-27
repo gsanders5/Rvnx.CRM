@@ -10,7 +10,6 @@ namespace Rvnx.CRM.Tests.Extensions
         [Fact]
         public void ToDtoShouldMapPropertiesCorrectly()
         {
-            // Arrange
             Fact fact = new()
             {
                 Id = Guid.NewGuid(),
@@ -20,10 +19,8 @@ namespace Rvnx.CRM.Tests.Extensions
                 CreatedDate = DateTime.UtcNow
             };
 
-            // Act
             FactDto dto = fact.ToDto();
 
-            // Assert
             Assert.Equal(fact.Id, dto.Id);
             Assert.Equal(fact.Category, dto.Category);
             Assert.Equal(fact.Value, dto.Value);
@@ -35,7 +32,6 @@ namespace Rvnx.CRM.Tests.Extensions
         [Fact]
         public void ToDtoShouldMapNullContactIdToEmptyGuid()
         {
-            // Arrange
             Fact fact = new()
             {
                 Id = Guid.NewGuid(),
@@ -45,17 +41,14 @@ namespace Rvnx.CRM.Tests.Extensions
                 CreatedDate = DateTime.UtcNow
             };
 
-            // Act
             FactDto dto = fact.ToDto();
 
-            // Assert
             Assert.Equal(Guid.Empty, dto.EntityId);
         }
 
         [Fact]
         public void ToEntityShouldCreateNewFactWithCorrectProperties()
         {
-            // Arrange
             FactFormDto formDto = new()
             {
                 Category = "New Category",
@@ -63,10 +56,8 @@ namespace Rvnx.CRM.Tests.Extensions
                 EntityId = Guid.NewGuid()
             };
 
-            // Act
             Fact entity = formDto.ToEntity();
 
-            // Assert
             Assert.NotEqual(Guid.Empty, entity.Id);
             Assert.Equal(formDto.Category, entity.Category);
             Assert.Equal(formDto.Value, entity.Value);
@@ -76,7 +67,6 @@ namespace Rvnx.CRM.Tests.Extensions
         [Fact]
         public void UpdateEntityShouldUpdatePropertiesCorrectly()
         {
-            // Arrange
             Guid initialContactId = Guid.NewGuid();
             Fact fact = new()
             {
@@ -94,14 +84,11 @@ namespace Rvnx.CRM.Tests.Extensions
                 EntityId = Guid.NewGuid()
             };
 
-            // Act
             fact.UpdateEntity(formDto);
 
-            // Assert
             Assert.Equal("Updated Category", fact.Category);
             Assert.Equal("Updated Value", fact.Value);
 
-            // Verify ContactId remains unchanged
             Assert.Equal(initialContactId, fact.ContactId);
         }
     }

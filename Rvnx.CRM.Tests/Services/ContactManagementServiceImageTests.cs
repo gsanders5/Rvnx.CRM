@@ -25,7 +25,6 @@ namespace Rvnx.CRM.Tests.Services
             _fileValidationServiceMock = new Mock<IFileValidationService>();
             _service = new ContactManagementService(_repositoryMock.Object, _fileValidationServiceMock.Object);
 
-            // Setup ListAsync for Attachment
             _repositoryMock.Setup(r => r.ListAsync<Attachment>(
                 It.IsAny<Expression<Func<Attachment, bool>>>(),
                 It.IsAny<CancellationToken>()))
@@ -34,7 +33,6 @@ namespace Rvnx.CRM.Tests.Services
                     return _attachments.AsQueryable().Where(predicate).ToList();
                 });
 
-            // Setup ListAsync for ContactMethod
             _repositoryMock.Setup(r => r.ListAsync<ContactMethod>(
                 It.IsAny<Expression<Func<ContactMethod, bool>>>(),
                 It.IsAny<CancellationToken>()))
@@ -43,7 +41,6 @@ namespace Rvnx.CRM.Tests.Services
                     return _contactMethods.AsQueryable().Where(predicate).ToList();
                 });
 
-            // Setup ListAsync for SignificantDate
             _repositoryMock.Setup(r => r.ListAsync<SignificantDate>(
                 It.IsAny<Expression<Func<SignificantDate, bool>>>(),
                 It.IsAny<CancellationToken>()))
@@ -56,14 +53,12 @@ namespace Rvnx.CRM.Tests.Services
         [Fact]
         public async Task UpdateContactWithValidImageAddsAttachment()
         {
-            // Arrange
             Guid contactId = Guid.NewGuid();
             Contact contact = new() { Id = contactId, FirstName = "Test", LastName = "User" };
 
             _repositoryMock.Setup(r => r.GetByIdAsync<Contact>(contactId, It.IsAny<CancellationToken>()))
                 .ReturnsAsync(contact);
 
-            // Mock File Validation
             _fileValidationServiceMock.Setup(f => f.IsImageExtension(It.IsAny<string>())).Returns(true);
             _fileValidationServiceMock.Setup(f => f.IsValidImageSignature(It.IsAny<byte[]>(), It.IsAny<string>())).Returns(true);
 
@@ -74,10 +69,8 @@ namespace Rvnx.CRM.Tests.Services
             byte[] fileContent = [1, 2, 3];
             using MemoryStream stream = new(fileContent);
 
-            // Act
             ContactOperationResult result = await _service.UpdateContactAsync(contactId, dto, stream, fileName, contentType);
 
-            // Assert
             Assert.True(result.Success);
             _repositoryMock.Verify(r => r.AddAsync(It.Is<Attachment>(a =>
                 a.ContactId == contactId &&

@@ -51,7 +51,6 @@ namespace Rvnx.CRM.Tests.Controllers
         [Fact]
         public async Task CreatePostWithValidDataShouldCreateNote()
         {
-            // Arrange
             Guid contactId = Guid.NewGuid();
             _context.Contacts.Add(new Contact { Id = contactId, FirstName = "Test" });
             await _context.SaveChangesAsync();
@@ -64,10 +63,8 @@ namespace Rvnx.CRM.Tests.Controllers
                 Value = "Content"
             };
 
-            // Act
             IActionResult result = await _controller.Create(note);
 
-            // Assert
             RedirectToActionResult redirectResult = Assert.IsType<RedirectToActionResult>(result);
             Assert.Equal("Details", redirectResult.ActionName);
             Assert.Equal("Contacts", redirectResult.ControllerName);
@@ -81,7 +78,6 @@ namespace Rvnx.CRM.Tests.Controllers
         [Fact]
         public async Task EditPostWithValidDataShouldUpdateNote()
         {
-            // Arrange
             Guid noteId = Guid.NewGuid();
             Guid contactId = Guid.NewGuid();
             _context.Contacts.Add(new Contact { Id = contactId, FirstName = "Test" });
@@ -98,10 +94,8 @@ namespace Rvnx.CRM.Tests.Controllers
                 Value = "NewVal"
             };
 
-            // Act
             IActionResult result = await _controller.Edit(noteId, update);
 
-            // Assert
             RedirectToActionResult redirectResult = Assert.IsType<RedirectToActionResult>(result);
             Assert.Equal("Details", redirectResult.ActionName);
 
@@ -113,17 +107,14 @@ namespace Rvnx.CRM.Tests.Controllers
         [Fact]
         public async Task DeleteConfirmedWithValidIdShouldDeleteNote()
         {
-            // Arrange
             Guid noteId = Guid.NewGuid();
             Guid contactId = Guid.NewGuid();
             _context.Contacts.Add(new Contact { Id = contactId, FirstName = "Test" });
             _context.Set<Note>().Add(new Note { Id = noteId, ContactId = contactId, Title = "Del", Value = "Val" });
             await _context.SaveChangesAsync();
 
-            // Act
             IActionResult result = await _controller.DeleteConfirmed(noteId);
 
-            // Assert
             Assert.IsType<RedirectToActionResult>(result);
             Assert.Null(await _context.Set<Note>().FindAsync(noteId));
         }

@@ -43,15 +43,12 @@ namespace Rvnx.CRM.Tests.Controllers
         [Fact]
         public async Task CreateGetWithValidContactIdShouldReturnViewWithDto()
         {
-            // Arrange
             Guid contactId = Guid.NewGuid();
             _context.Contacts.Add(new Contact { Id = contactId, FirstName = "Test" });
             await _context.SaveChangesAsync();
 
-            // Act
             IActionResult result = await _controller.Create(contactId);
 
-            // Assert
             ViewResult viewResult = Assert.IsType<ViewResult>(result);
             PetFormDto? model = viewResult.Model as PetFormDto;
             Assert.NotNull(model);
@@ -61,7 +58,6 @@ namespace Rvnx.CRM.Tests.Controllers
         [Fact]
         public async Task CreatePostWithValidDataShouldCreatePet()
         {
-            // Arrange
             Guid contactId = Guid.NewGuid();
             _context.Contacts.Add(new Contact { Id = contactId, FirstName = "John" });
             await _context.SaveChangesAsync();
@@ -76,10 +72,8 @@ namespace Rvnx.CRM.Tests.Controllers
                 Notes = "Loves to fetch"
             };
 
-            // Act
             IActionResult result = await _controller.Create(dto);
 
-            // Assert
             RedirectToActionResult redirectResult = Assert.IsType<RedirectToActionResult>(result);
             Assert.Equal("Details", redirectResult.ActionName);
             Assert.Equal("Contacts", redirectResult.ControllerName);
@@ -95,7 +89,6 @@ namespace Rvnx.CRM.Tests.Controllers
         [Fact]
         public async Task EditGetWithValidIdShouldReturnViewWithPetData()
         {
-            // Arrange
             Guid petId = Guid.NewGuid();
             Guid contactId = Guid.NewGuid();
             _context.Contacts.Add(new Contact { Id = contactId, FirstName = "Test" });
@@ -109,10 +102,8 @@ namespace Rvnx.CRM.Tests.Controllers
             });
             await _context.SaveChangesAsync();
 
-            // Act
             IActionResult result = await _controller.Edit(petId);
 
-            // Assert
             ViewResult viewResult = Assert.IsType<ViewResult>(result);
             PetFormDto? model = viewResult.Model as PetFormDto;
             Assert.NotNull(model);
@@ -126,17 +117,14 @@ namespace Rvnx.CRM.Tests.Controllers
         [Fact]
         public async Task EditGetWhenPetDoesNotExistShouldReturnNotFound()
         {
-            // Act
             IActionResult result = await _controller.Edit(Guid.NewGuid());
 
-            // Assert
             Assert.IsType<NotFoundResult>(result);
         }
 
         [Fact]
         public async Task EditPostWithValidDataShouldUpdatePet()
         {
-            // Arrange
             Guid petId = Guid.NewGuid();
             Guid contactId = Guid.NewGuid();
             _context.Contacts.Add(new Contact { Id = contactId, FirstName = "Test" });
@@ -160,10 +148,8 @@ namespace Rvnx.CRM.Tests.Controllers
                 Notes = "Updated notes"
             };
 
-            // Act
             IActionResult result = await _controller.Edit(petId, dto);
 
-            // Assert
             RedirectToActionResult redirectResult = Assert.IsType<RedirectToActionResult>(result);
             Assert.Equal("Details", redirectResult.ActionName);
 
@@ -177,7 +163,6 @@ namespace Rvnx.CRM.Tests.Controllers
         [Fact]
         public async Task EditPostWhenIdMismatchShouldReturnNotFound()
         {
-            // Arrange
             Guid petId = Guid.NewGuid();
             Guid contactId = Guid.NewGuid();
             _context.Contacts.Add(new Contact { Id = contactId, FirstName = "Test" });
@@ -193,17 +178,14 @@ namespace Rvnx.CRM.Tests.Controllers
 
             PetFormDto dto = new() { Id = Guid.NewGuid(), Name = "Test", EntityId = contactId };
 
-            // Act
             IActionResult result = await _controller.Edit(petId, dto);
 
-            // Assert
             Assert.IsType<NotFoundResult>(result);
         }
 
         [Fact]
         public async Task DeleteGetWithValidIdShouldReturnViewWithPet()
         {
-            // Arrange
             Guid petId = Guid.NewGuid();
             Guid contactId = Guid.NewGuid();
             _context.Contacts.Add(new Contact { Id = contactId, FirstName = "Test" });
@@ -216,10 +198,8 @@ namespace Rvnx.CRM.Tests.Controllers
             });
             await _context.SaveChangesAsync();
 
-            // Act
             IActionResult result = await _controller.Delete(petId);
 
-            // Assert
             ViewResult viewResult = Assert.IsType<ViewResult>(result);
             PetDto? model = viewResult.Model as PetDto;
             Assert.NotNull(model);
@@ -229,7 +209,6 @@ namespace Rvnx.CRM.Tests.Controllers
         [Fact]
         public async Task DeleteConfirmedWithValidIdShouldRemovePet()
         {
-            // Arrange
             Guid petId = Guid.NewGuid();
             Guid contactId = Guid.NewGuid();
             _context.Contacts.Add(new Contact { Id = contactId, FirstName = "Test" });
@@ -241,10 +220,8 @@ namespace Rvnx.CRM.Tests.Controllers
             });
             await _context.SaveChangesAsync();
 
-            // Act
             IActionResult result = await _controller.DeleteConfirmed(petId);
 
-            // Assert
             RedirectToActionResult redirectResult = Assert.IsType<RedirectToActionResult>(result);
             Assert.Equal("Details", redirectResult.ActionName);
             Assert.Equal("Contacts", redirectResult.ControllerName);
@@ -255,10 +232,8 @@ namespace Rvnx.CRM.Tests.Controllers
         [Fact]
         public async Task DeleteConfirmedWhenPetNotFoundShouldRedirectToContacts()
         {
-            // Act
             IActionResult result = await _controller.DeleteConfirmed(Guid.NewGuid());
 
-            // Assert
             RedirectToActionResult redirectResult = Assert.IsType<RedirectToActionResult>(result);
             Assert.Equal("Index", redirectResult.ActionName);
             Assert.Equal("Contacts", redirectResult.ControllerName);

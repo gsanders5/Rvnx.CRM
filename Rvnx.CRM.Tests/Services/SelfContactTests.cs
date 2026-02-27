@@ -39,7 +39,6 @@ namespace Rvnx.CRM.Tests.Services
         [Fact]
         public async Task CreateSelfGetShouldPreFillData()
         {
-            // Arrange
             Mock<ISelfContactService> selfContactMock = new();
             selfContactMock.Setup(s => s.GetSelfContactIdAsync(It.IsAny<ClaimsPrincipal>())).ReturnsAsync((Guid?)null);
 
@@ -48,10 +47,8 @@ namespace Rvnx.CRM.Tests.Services
 
             ContactsController controller = CreateController(selfContactMock);
 
-            // Act
             IActionResult result = await controller.CreateSelf();
 
-            // Assert
             ViewResult viewResult = Assert.IsType<ViewResult>(result);
             ContactCreateViewModel model = Assert.IsType<ContactCreateViewModel>(viewResult.Model);
             Assert.Equal("test@example.com", model.Email);
@@ -62,17 +59,14 @@ namespace Rvnx.CRM.Tests.Services
         [Fact]
         public async Task SelfShouldRedirectToDetailsWhenSelfContactExists()
         {
-            // Arrange
             Guid selfContactId = Guid.NewGuid();
             Mock<ISelfContactService> selfContactMock = new();
             selfContactMock.Setup(s => s.GetSelfContactIdAsync(It.IsAny<ClaimsPrincipal>())).ReturnsAsync(selfContactId);
 
             ContactsController controller = CreateController(selfContactMock);
 
-            // Act
             IActionResult result = await controller.Self();
 
-            // Assert
             RedirectToActionResult redirectResult = Assert.IsType<RedirectToActionResult>(result);
             Assert.Equal("Details", redirectResult.ActionName);
             Assert.Equal(selfContactId, redirectResult.RouteValues?["id"]);
@@ -81,16 +75,13 @@ namespace Rvnx.CRM.Tests.Services
         [Fact]
         public async Task SelfShouldRedirectToCreateSelfWhenSelfContactDoesNotExist()
         {
-            // Arrange
             Mock<ISelfContactService> selfContactMock = new();
             selfContactMock.Setup(s => s.GetSelfContactIdAsync(It.IsAny<ClaimsPrincipal>())).ReturnsAsync((Guid?)null);
 
             ContactsController controller = CreateController(selfContactMock);
 
-            // Act
             IActionResult result = await controller.Self();
 
-            // Assert
             RedirectToActionResult redirectResult = Assert.IsType<RedirectToActionResult>(result);
             Assert.Equal("CreateSelf", redirectResult.ActionName);
         }
@@ -98,21 +89,17 @@ namespace Rvnx.CRM.Tests.Services
         [Fact]
         public async Task CreateSelfPostShouldCreateContactAndLinkUser()
         {
-            // Arrange
             Guid newContactId = Guid.NewGuid();
             Mock<ISelfContactService> selfContactMock = new();
 
-            // Mock CreateSelfContactAsync success
             selfContactMock.Setup(s => s.CreateSelfContactAsync(It.IsAny<ClaimsPrincipal>(), It.IsAny<ContactFormDto>()))
                 .ReturnsAsync(ContactOperationResult.Ok(newContactId));
 
             ContactsController controller = CreateController(selfContactMock);
             ContactCreateViewModel dto = new() { FirstName = "My Self", Email = "myself@example.com" };
 
-            // Act
             IActionResult result = await controller.CreateSelf(dto);
 
-            // Assert
             RedirectToActionResult redirectResult = Assert.IsType<RedirectToActionResult>(result);
             Assert.Equal("Details", redirectResult.ActionName);
             Assert.Equal(newContactId, redirectResult.RouteValues?["id"]);

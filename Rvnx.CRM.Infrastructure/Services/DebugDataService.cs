@@ -95,21 +95,18 @@ public class DebugDataService(IRepository repository) : IDebugDataService
 
     public async Task<int> AddRandomRelationshipsAsync(int maxRelationships = 50)
     {
-        // 1. Get available Relationship Types (Static)
         List<RelationshipTypeDefinition> types = (List<RelationshipTypeDefinition>)RelationshipTypeService.GetAll();
         if (types.Count == 0)
         {
             return 0;
         }
 
-        // 2. Get Contacts
         List<Contact> contacts = await _repository.ListAsNoTrackingAsync<Contact>();
         if (contacts.Count < 2)
         {
             return 0;
         }
 
-        // 3. Generate Random Relationships
         Random random = new();
         int relationshipsToCreate = Math.Min(contacts.Count * 2, maxRelationships);
         int createdCount = 0;

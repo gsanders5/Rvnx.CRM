@@ -45,7 +45,6 @@ namespace Rvnx.CRM.Tests.Controllers
         [Fact]
         public async Task CreatePostWithForwardDirectionShouldCreateRelationship()
         {
-            // Arrange
             Guid p1Id = Guid.NewGuid();
             Guid p2Id = Guid.NewGuid();
             _context.Contacts.Add(new Contact { Id = p1Id, FirstName = "P1" });
@@ -64,10 +63,8 @@ namespace Rvnx.CRM.Tests.Controllers
                 SelectedRelationshipType = selection
             };
 
-            // Act
             IActionResult result = await _controller.Create(viewModel);
 
-            // Assert
             RedirectToActionResult redirectResult = Assert.IsType<RedirectToActionResult>(result);
             Assert.Equal("Details", redirectResult.ActionName);
             Assert.Equal("Contacts", redirectResult.ControllerName);
@@ -83,7 +80,6 @@ namespace Rvnx.CRM.Tests.Controllers
         [Fact]
         public async Task CreatePostWithReverseDirectionShouldSwapEntitiesAndCreateRelationship()
         {
-            // Arrange
             Guid p1Id = Guid.NewGuid(); // User is on P1 page
             Guid p2Id = Guid.NewGuid(); // User selects P2 as related
             _context.Contacts.Add(new Contact { Id = p1Id, FirstName = "P1" });
@@ -102,17 +98,14 @@ namespace Rvnx.CRM.Tests.Controllers
                 SelectedRelationshipType = selection
             };
 
-            // Act
             IActionResult result = await _controller.Create(viewModel);
 
-            // Assert
             // Should redirect back to P1 (original EntityId)
             RedirectToActionResult redirectResult = Assert.IsType<RedirectToActionResult>(result);
             Assert.Equal(p1Id, redirectResult.RouteValues?["id"]);
 
             Relationship? created = await _context.Set<Relationship>().FirstOrDefaultAsync();
             Assert.NotNull(created);
-            // Swapped
             Assert.Equal(p2Id, created.EntityId);
             Assert.Equal(p1Id, created.RelatedEntityId);
             Assert.Equal(typeId, created.RelationshipTypeId);
@@ -121,7 +114,6 @@ namespace Rvnx.CRM.Tests.Controllers
         [Fact]
         public async Task DeleteConfirmedWithValidIdShouldDeleteRelationship()
         {
-            // Arrange
             Guid relId = Guid.NewGuid();
             Guid p1Id = Guid.NewGuid();
             _context.Set<Relationship>().Add(new Relationship
@@ -134,10 +126,8 @@ namespace Rvnx.CRM.Tests.Controllers
             });
             await _context.SaveChangesAsync();
 
-            // Act
             IActionResult result = await _controller.DeleteConfirmed(relId);
 
-            // Assert
             Assert.IsType<RedirectToActionResult>(result);
             Assert.Null(await _context.Set<Relationship>().FindAsync(relId));
         }
@@ -145,29 +135,23 @@ namespace Rvnx.CRM.Tests.Controllers
         [Fact]
         public async Task CreateGetShouldPopulateGroupedOptions()
         {
-            // Arrange
             Guid p1Id = Guid.NewGuid();
             _context.Contacts.Add(new Contact { Id = p1Id, FirstName = "P1" });
             await _context.SaveChangesAsync();
 
-            // Act
             IActionResult result = await _controller.Create(p1Id, EntityTypes.Person);
 
-            // Assert
             ViewResult viewResult = Assert.IsType<ViewResult>(result);
             RelationshipFormViewModel viewModel = Assert.IsType<RelationshipFormViewModel>(viewResult.Model);
 
             IEnumerable<SelectOptionDto> options = viewModel.RelationshipTypeOptions;
             Assert.NotNull(options);
 
-            // Check that options from static service are present
-            // Spouse
             Guid spouseId = Guid.Parse("b2e9a5c8-7f4d-4a1b-8c6e-5f9d3a0e2b4c");
             Assert.Contains(options,
                 o => o.Value == $"{spouseId}_Fwd" && o.Text == "is Spouse of" && o.Group == "Family");
 
             // Father (Parent/Child is defined as Parent/Child in service, not Father/Child explicitly with that ID, but checking logic)
-            // Let's check "Parent"
             Guid parentId = Guid.Parse("7c1f8d22-1b6a-4c28-9c1e-3f5a2b8e9d1a");
             Assert.Contains(options, o => o.Value == $"{parentId}_Fwd" && o.Text == "is Parent of (Child)");
             Assert.Contains(options, o => o.Value == $"{parentId}_Rev" && o.Text == "is Child of (Parent)");
@@ -176,10 +160,8 @@ namespace Rvnx.CRM.Tests.Controllers
         [Fact]
         public async Task CreatePostWhenRelationshipTypeSelectionIsEmptyShouldReturnViewWithPopulatedOptions()
         {
-            // Arrange
             Guid p1Id = Guid.NewGuid();
             _context.Contacts.Add(new Contact { Id = p1Id, FirstName = "P1", LastName = "User" });
-            // Add another contact so RelatedEntityOptions is not empty
             _context.Contacts.Add(new Contact { Id = Guid.NewGuid(), FirstName = "P2" });
             await _context.SaveChangesAsync();
 
@@ -191,10 +173,8 @@ namespace Rvnx.CRM.Tests.Controllers
                 SelectedRelationshipType = string.Empty
             };
 
-            // Act - Submit with empty selection
             IActionResult result = await _controller.Create(viewModel);
 
-            // Assert
             ViewResult viewResult = Assert.IsType<ViewResult>(result);
             RelationshipFormViewModel resultViewModel = Assert.IsType<RelationshipFormViewModel>(viewResult.Model);
 
@@ -215,7 +195,6 @@ namespace Rvnx.CRM.Tests.Controllers
         [Fact]
         public async Task CreatePartialWithValidDataCreatesRelationshipAndRedirects()
         {
-            // Arrange
             Guid p1Id = Guid.NewGuid();
             _context.Contacts.Add(new Contact { Id = p1Id, FirstName = "P1" });
             await _context.SaveChangesAsync();
@@ -226,10 +205,8 @@ namespace Rvnx.CRM.Tests.Controllers
                 SelectedRelationshipType = $"{Guid.NewGuid()}_Fwd"
             };
 
-            // Act
             IActionResult result = await _controller.CreatePartial(p1Id, EntityTypes.Person, dto);
 
-            // Assert
             RedirectToActionResult redirectResult = Assert.IsType<RedirectToActionResult>(result);
             Assert.Equal("Details", redirectResult.ActionName);
             Assert.Equal("Contacts", redirectResult.ControllerName);
@@ -243,15 +220,12 @@ namespace Rvnx.CRM.Tests.Controllers
         [Fact]
         public async Task PromoteWithValidContactIdReturnsRedirect()
         {
-            // Arrange
             Guid p1Id = Guid.NewGuid();
             _context.Contacts.Add(new Contact { Id = p1Id, FirstName = "P1", IsPartial = true });
             await _context.SaveChangesAsync();
 
-            // Act
             IActionResult result = await _controller.Promote(p1Id);
 
-            // Assert
             RedirectToActionResult redirectResult = Assert.IsType<RedirectToActionResult>(result);
             Assert.Equal("Edit", redirectResult.ActionName);
             Assert.Equal("Contacts", redirectResult.ControllerName);

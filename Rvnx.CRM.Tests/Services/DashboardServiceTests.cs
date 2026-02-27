@@ -25,7 +25,6 @@ namespace Rvnx.CRM.Tests.Services
         [Fact]
         public async Task GetDashboardDataAsyncFiltersRemindersAtDatabaseLevel()
         {
-            // Arrange
             List<Contact> contacts =
             [
                 new Contact { Id = Guid.NewGuid(), FirstName = "John", LastName = "Doe" }
@@ -59,7 +58,6 @@ namespace Rvnx.CRM.Tests.Services
                 }
             ];
 
-            // Setup mocks for other calls
             _repositoryMock.Setup(r => r.ListAsNoTrackingAsync<Contact>(It.IsAny<Expression<Func<Contact, bool>>>(),
                     It.IsAny<CancellationToken>(), It.IsAny<string[]>()))
                 .ReturnsAsync(contacts);
@@ -80,7 +78,6 @@ namespace Rvnx.CRM.Tests.Services
                     It.IsAny<CancellationToken>()))
                 .ReturnsAsync([]);
 
-            // Setup for the EXPECTED new behavior (with predicate)
             _repositoryMock.Setup(r => r.ListAsNoTrackingAsync<Reminder>(It.IsAny<Expression<Func<Reminder, bool>>>(),
                     It.IsAny<CancellationToken>(), It.IsAny<string[]>()))
                 .ReturnsAsync((Expression<Func<Reminder, bool>> predicate, CancellationToken token,
@@ -89,16 +86,13 @@ namespace Rvnx.CRM.Tests.Services
                     return reminders.AsQueryable().Where(predicate).ToList();
                 });
 
-            // Setup for the OLD behavior (parameterless / skip-take overload)
             _repositoryMock.Setup(r =>
                     r.ListAsNoTrackingAsync<Reminder>(It.IsAny<int?>(), It.IsAny<int?>(),
                         It.IsAny<CancellationToken>()))
                 .ReturnsAsync(reminders);
 
-            // Act
             Core.DTOs.Dashboard.DashboardDto result = await _dashboardService.GetDashboardDataAsync();
 
-            // Assert
             // 1. Verify the parameterless overload is NOT called (this fails initially)
             _repositoryMock.Verify(r => r.ListAsNoTrackingAsync<Reminder>(
                     It.IsAny<int?>(),

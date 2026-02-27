@@ -10,7 +10,6 @@ namespace Rvnx.CRM.Tests.Extensions
         [Fact]
         public void ToDtoShouldMapAllPropertiesWhenEntityIsFullyPopulated()
         {
-            // Arrange
             Reminder entity = new()
             {
                 Id = Guid.NewGuid(),
@@ -24,10 +23,8 @@ namespace Rvnx.CRM.Tests.Extensions
                 IsCompleted = true
             };
 
-            // Act
             ReminderDto dto = entity.ToDto();
 
-            // Assert
             Assert.Equal(entity.Id, dto.Id);
             Assert.Equal(entity.Title, dto.Title);
             Assert.Equal(entity.DueDate, dto.DueDate);
@@ -43,57 +40,47 @@ namespace Rvnx.CRM.Tests.Extensions
         [Fact]
         public void ToDtoShouldMapNullContactIdToEmptyGuid()
         {
-            // Arrange
             Reminder entity = new()
             {
                 ContactId = null,
                 DueDate = DateTime.Now
             };
 
-            // Act
             ReminderDto dto = entity.ToDto();
 
-            // Assert
             Assert.Equal(Guid.Empty, dto.EntityId);
         }
 
         [Fact]
         public void ToDtoShouldMapNullDescriptionAsNull()
         {
-            // Arrange
             Reminder entity = new()
             {
                 Description = null,
                 DueDate = DateTime.Now
             };
 
-            // Act
             ReminderDto dto = entity.ToDto();
 
-            // Assert
             Assert.Null(dto.Description);
         }
 
         [Fact]
         public void ToDtoShouldSetEntityTypeToPerson()
         {
-            // Arrange
             Reminder entity = new()
             {
                 DueDate = DateTime.Now
             };
 
-            // Act
             ReminderDto dto = entity.ToDto();
 
-            // Assert
             Assert.Equal(EntityTypes.Person, dto.EntityType);
         }
 
         [Fact]
         public void UpdateEntityShouldUpdatePropertiesCorrectly()
         {
-            // Arrange
             Guid initialContactId = Guid.NewGuid();
             Reminder entity = new()
             {
@@ -117,10 +104,8 @@ namespace Rvnx.CRM.Tests.Extensions
                 EventFrequency = TimeSpan.FromDays(1)
             };
 
-            // Act
             entity.UpdateEntity(dto);
 
-            // Assert
             Assert.Equal(dto.Title, entity.Title);
             Assert.Equal(dto.Description, entity.Description);
             Assert.Equal(dto.DueDate, entity.DueDate);
@@ -128,7 +113,6 @@ namespace Rvnx.CRM.Tests.Extensions
             Assert.Equal(dto.RemindMe, entity.RemindMe);
             Assert.Equal(dto.EventFrequency, entity.EventFrequency);
 
-            // Verify unchanged properties
             Assert.Equal(initialContactId, entity.ContactId);
         }
     }

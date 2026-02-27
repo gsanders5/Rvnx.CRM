@@ -51,15 +51,12 @@ namespace Rvnx.CRM.Tests.Controllers
         [Fact]
         public async Task CreateGetWithValidIdsShouldReturnViewWithDefaultValues()
         {
-            // Arrange
             Guid contactId = Guid.NewGuid();
             _context.Contacts.Add(new Contact { Id = contactId, FirstName = "Test" });
             await _context.SaveChangesAsync();
 
-            // Act
             IActionResult result = await _controller.Create(contactId, EntityTypes.Person);
 
-            // Assert
             ViewResult viewResult = Assert.IsType<ViewResult>(result);
             ReminderFormViewModel? model = viewResult.Model as ReminderFormViewModel;
             Assert.NotNull(model);
@@ -71,10 +68,8 @@ namespace Rvnx.CRM.Tests.Controllers
         [Fact]
         public async Task CreateGetWhenEntityIdEmptyShouldReturnNotFound()
         {
-            // Act
             IActionResult result = await _controller.Create(Guid.Empty, EntityTypes.Person);
 
-            // Assert
             Assert.IsType<NotFoundResult>(result);
         }
 
@@ -82,7 +77,6 @@ namespace Rvnx.CRM.Tests.Controllers
         [Fact]
         public async Task CreatePostWithValidDataShouldCreateReminder()
         {
-            // Arrange
             Guid contactId = Guid.NewGuid();
             _context.Contacts.Add(new Contact { Id = contactId, FirstName = "Test" });
             await _context.SaveChangesAsync();
@@ -98,10 +92,8 @@ namespace Rvnx.CRM.Tests.Controllers
                 EventFrequency = TimeSpan.FromDays(30)
             };
 
-            // Act
             IActionResult result = await _controller.Create(dto);
 
-            // Assert
             RedirectToActionResult redirectResult = Assert.IsType<RedirectToActionResult>(result);
             Assert.Equal("Details", redirectResult.ActionName);
             Assert.Equal("Contacts", redirectResult.ControllerName);
@@ -118,7 +110,6 @@ namespace Rvnx.CRM.Tests.Controllers
         [Fact]
         public async Task EditGetWithValidIdShouldReturnViewWithReminder()
         {
-            // Arrange
             Guid reminderId = Guid.NewGuid();
             Guid contactId = Guid.NewGuid();
             _context.Contacts.Add(new Contact { Id = contactId, FirstName = "Test" });
@@ -131,10 +122,8 @@ namespace Rvnx.CRM.Tests.Controllers
             });
             await _context.SaveChangesAsync();
 
-            // Act
             IActionResult result = await _controller.Edit(reminderId);
 
-            // Assert
             ViewResult viewResult = Assert.IsType<ViewResult>(result);
             ReminderFormViewModel? model = viewResult.Model as ReminderFormViewModel;
             Assert.NotNull(model);
@@ -145,27 +134,22 @@ namespace Rvnx.CRM.Tests.Controllers
         [Fact]
         public async Task EditGetWhenIdNullShouldReturnNotFound()
         {
-            // Act
             IActionResult result = await _controller.Edit(null);
 
-            // Assert
             Assert.IsType<NotFoundResult>(result);
         }
 
         [Fact]
         public async Task EditGetWhenReminderDoesNotExistShouldReturnNotFound()
         {
-            // Act
             IActionResult result = await _controller.Edit(Guid.NewGuid());
 
-            // Assert
             Assert.IsType<NotFoundResult>(result);
         }
 
         [Fact]
         public async Task EditPostWithValidDataShouldUpdateReminder()
         {
-            // Arrange
             Guid reminderId = Guid.NewGuid();
             Guid contactId = Guid.NewGuid();
             _context.Contacts.Add(new Contact { Id = contactId, FirstName = "Test" });
@@ -192,10 +176,8 @@ namespace Rvnx.CRM.Tests.Controllers
                 EventFrequency = TimeSpan.Zero
             };
 
-            // Act
             IActionResult result = await _controller.Edit(reminderId, dto);
 
-            // Assert
             RedirectToActionResult redirectResult = Assert.IsType<RedirectToActionResult>(result);
             Assert.Equal("Details", redirectResult.ActionName);
 
@@ -210,24 +192,20 @@ namespace Rvnx.CRM.Tests.Controllers
         [Fact]
         public async Task EditPostWhenIdMismatchShouldReturnNotFound()
         {
-            // Arrange
             ReminderFormViewModel dto = new()
             {
                 Id = Guid.NewGuid(),
                 Title = "Test"
             };
 
-            // Act
             IActionResult result = await _controller.Edit(Guid.NewGuid(), dto);
 
-            // Assert
             Assert.IsType<NotFoundResult>(result);
         }
 
         [Fact]
         public async Task DeleteGetWithValidIdShouldReturnViewWithReminder()
         {
-            // Arrange
             Guid reminderId = Guid.NewGuid();
             Guid contactId = Guid.NewGuid();
             _context.Contacts.Add(new Contact { Id = contactId, FirstName = "Test" });
@@ -240,10 +218,8 @@ namespace Rvnx.CRM.Tests.Controllers
             });
             await _context.SaveChangesAsync();
 
-            // Act
             IActionResult result = await _controller.Delete(reminderId);
 
-            // Assert
             ViewResult viewResult = Assert.IsType<ViewResult>(result);
             ReminderDeleteViewModel? model = viewResult.Model as ReminderDeleteViewModel;
             Assert.NotNull(model);
@@ -253,7 +229,6 @@ namespace Rvnx.CRM.Tests.Controllers
         [Fact]
         public async Task DeleteConfirmedWithValidIdShouldRemoveReminder()
         {
-            // Arrange
             Guid reminderId = Guid.NewGuid();
             Guid contactId = Guid.NewGuid();
             _context.Contacts.Add(new Contact { Id = contactId, FirstName = "Test" });
@@ -266,10 +241,8 @@ namespace Rvnx.CRM.Tests.Controllers
             });
             await _context.SaveChangesAsync();
 
-            // Act
             IActionResult result = await _controller.DeleteConfirmed(reminderId);
 
-            // Assert
             RedirectToActionResult redirectResult = Assert.IsType<RedirectToActionResult>(result);
             Assert.Equal("Details", redirectResult.ActionName);
             Assert.Equal("Contacts", redirectResult.ControllerName);
@@ -280,10 +253,8 @@ namespace Rvnx.CRM.Tests.Controllers
         [Fact]
         public async Task DeleteConfirmedWhenReminderNotFoundShouldRedirectToHome()
         {
-            // Act
             IActionResult result = await _controller.DeleteConfirmed(Guid.NewGuid());
 
-            // Assert
             RedirectToActionResult redirectResult = Assert.IsType<RedirectToActionResult>(result);
             Assert.Equal("Index", redirectResult.ActionName);
             Assert.Equal("Home", redirectResult.ControllerName);
@@ -292,7 +263,6 @@ namespace Rvnx.CRM.Tests.Controllers
         [Fact]
         public async Task CreatePostWithIsCompletedTrueShouldPreserveIsCompleted()
         {
-            // Arrange
             Guid contactId = Guid.NewGuid();
             _context.Contacts.Add(new Contact { Id = contactId, FirstName = "Test" });
             await _context.SaveChangesAsync();
@@ -306,10 +276,8 @@ namespace Rvnx.CRM.Tests.Controllers
                 IsCompleted = true
             };
 
-            // Act
             await _controller.Create(dto);
 
-            // Assert
             Reminder? created = await _context.Set<Reminder>().FirstOrDefaultAsync();
             Assert.NotNull(created);
             Assert.True(created.IsCompleted);

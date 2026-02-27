@@ -49,14 +49,12 @@ public class CRMDbContext(DbContextOptions<CRMDbContext> options, ICurrentUserSe
         modelBuilder.Entity<Relationship>().HasIndex(e => new { e.EntityId, e.EntityType });
         modelBuilder.Entity<Relationship>().HasIndex(e => new { e.RelatedEntityId, e.EntityType });
 
-        // Pet - Required FK
         modelBuilder.Entity<Pet>()
             .HasOne(p => p.Contact)
             .WithMany(c => c.Pets)
             .HasForeignKey(p => p.ContactId)
             .OnDelete(DeleteBehavior.Cascade);
 
-        // ContactLabel
         modelBuilder.Entity<ContactLabel>()
             .HasOne(cl => cl.Contact)
             .WithMany(c => c.ContactLabels)
@@ -71,7 +69,6 @@ public class CRMDbContext(DbContextOptions<CRMDbContext> options, ICurrentUserSe
 
         modelBuilder.Entity<ContactLabel>().HasIndex(cl => new { cl.ContactId, cl.LabelId }).IsUnique();
 
-        // ContactMethod
         modelBuilder.Entity<ContactMethod>()
             .HasOne(e => e.Contact)
             .WithMany(c => c.ContactMethods)
@@ -81,7 +78,6 @@ public class CRMDbContext(DbContextOptions<CRMDbContext> options, ICurrentUserSe
         modelBuilder.Entity<ContactMethod>()
             .ToTable(t => t.HasCheckConstraint("CHK_ContactMethod_Owner", "ContactId IS NOT NULL"));
 
-        // Fact
         modelBuilder.Entity<Fact>()
             .HasOne(e => e.Contact)
             .WithMany(c => c.Facts)
@@ -91,7 +87,6 @@ public class CRMDbContext(DbContextOptions<CRMDbContext> options, ICurrentUserSe
         modelBuilder.Entity<Fact>()
             .ToTable(t => t.HasCheckConstraint("CHK_Fact_Owner", "ContactId IS NOT NULL"));
 
-        // Address
         modelBuilder.Entity<Address>()
             .HasOne(e => e.Contact)
             .WithMany(c => c.Addresses)
@@ -101,7 +96,6 @@ public class CRMDbContext(DbContextOptions<CRMDbContext> options, ICurrentUserSe
         modelBuilder.Entity<Address>()
             .ToTable(t => t.HasCheckConstraint("CHK_Address_Owner", "ContactId IS NOT NULL"));
 
-        // PhoneNumber
         modelBuilder.Entity<PhoneNumber>()
             .HasOne(e => e.Contact)
             .WithMany()
@@ -111,7 +105,6 @@ public class CRMDbContext(DbContextOptions<CRMDbContext> options, ICurrentUserSe
         modelBuilder.Entity<PhoneNumber>()
             .ToTable(t => t.HasCheckConstraint("CHK_PhoneNumber_Owner", "ContactId IS NOT NULL"));
 
-        // Note
         modelBuilder.Entity<Note>()
             .HasOne(e => e.Contact)
             .WithMany(c => c.Notes)
@@ -121,7 +114,6 @@ public class CRMDbContext(DbContextOptions<CRMDbContext> options, ICurrentUserSe
         modelBuilder.Entity<Note>()
             .ToTable(t => t.HasCheckConstraint("CHK_Note_Owner", "ContactId IS NOT NULL"));
 
-        // Reminder
         modelBuilder.Entity<Reminder>()
             .HasOne(e => e.Contact)
             .WithMany(c => c.Reminders)
@@ -141,7 +133,6 @@ public class CRMDbContext(DbContextOptions<CRMDbContext> options, ICurrentUserSe
         modelBuilder.Entity<SignificantDate>()
             .ToTable(t => t.HasCheckConstraint("CHK_SignificantDate_Owner", "ContactId IS NOT NULL"));
 
-        // Attachment
         modelBuilder.Entity<Attachment>()
             .HasOne(e => e.Contact)
             .WithMany(c => c.Attachments)

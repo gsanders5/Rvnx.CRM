@@ -15,13 +15,10 @@ public class SecurityHeadersTests : IClassFixture<WebApplicationFactory<Program>
     [Fact]
     public async Task ResponseShouldContainXContentTypeOptionsHeader()
     {
-        // Arrange
         HttpClient client = _factory.CreateClient(new WebApplicationFactoryClientOptions { AllowAutoRedirect = false });
 
-        // Act
         HttpResponseMessage response = await client.GetAsync("/");
 
-        // Assert
         Assert.True(response.Headers.Contains("X-Content-Type-Options"),
             "X-Content-Type-Options header is missing from the response.");
 

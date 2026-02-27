@@ -22,7 +22,6 @@ namespace Rvnx.CRM.Tests.Controllers
                     HttpContext = new DefaultHttpContext()
                 }
             };
-            // Mock UrlHelper
             Mock<IUrlHelper> urlHelperMock = new();
             urlHelperMock.Setup(x => x.IsLocalUrl(It.IsAny<string>())).Returns(false);
             controller.Url = urlHelperMock.Object;
@@ -45,7 +44,6 @@ namespace Rvnx.CRM.Tests.Controllers
         [Fact]
         public async Task UploadShouldRejectWhenExtensionIsImageButContentIsNot()
         {
-            // Arrange
             Mock<IAttachmentService> serviceMock = new();
             serviceMock.Setup(s => s.UploadAttachmentAsync(It.IsAny<Guid>(), It.IsAny<string>(), It.IsAny<byte[]>(), It.IsAny<string>()))
                 .ReturnsAsync(AttachmentOperationResult.Failure("Invalid file signature."));
@@ -55,10 +53,8 @@ namespace Rvnx.CRM.Tests.Controllers
 
             IFormFile file = CreateMockFile("exploit.png", "image/png", 100);
 
-            // Act
             IActionResult result = await controller.Upload(Guid.NewGuid(), "Person", file);
 
-            // Assert
             BadRequestObjectResult badRequest = Assert.IsType<BadRequestObjectResult>(result);
             Assert.Equal("Invalid file signature.", badRequest.Value);
         }
@@ -66,7 +62,6 @@ namespace Rvnx.CRM.Tests.Controllers
         [Fact]
         public async Task UploadShouldSucceedWhenExtensionIsImageAndContentIsImage()
         {
-            // Arrange
             Mock<IAttachmentService> serviceMock = new();
             serviceMock.Setup(s => s.UploadAttachmentAsync(It.IsAny<Guid>(), It.IsAny<string>(), It.IsAny<byte[]>(), It.IsAny<string>()))
                 .ReturnsAsync(AttachmentOperationResult.Ok(Guid.NewGuid()));
@@ -76,17 +71,14 @@ namespace Rvnx.CRM.Tests.Controllers
 
             IFormFile file = CreateMockFile("valid.png", "image/png", 100);
 
-            // Act
             IActionResult result = await controller.Upload(Guid.NewGuid(), "Person", file);
 
-            // Assert
             Assert.IsType<RedirectResult>(result);
         }
 
         [Fact]
         public async Task UploadShouldRejectWhenExtensionIsPdfButContentIsNot()
         {
-            // Arrange
             Mock<IAttachmentService> serviceMock = new();
             serviceMock.Setup(s => s.UploadAttachmentAsync(It.IsAny<Guid>(), It.IsAny<string>(), It.IsAny<byte[]>(), It.IsAny<string>()))
                 .ReturnsAsync(AttachmentOperationResult.Failure("Invalid file signature."));
@@ -96,10 +88,8 @@ namespace Rvnx.CRM.Tests.Controllers
 
             IFormFile file = CreateMockFile("fake.pdf", "application/pdf", 100);
 
-            // Act
             IActionResult result = await controller.Upload(Guid.NewGuid(), "Person", file);
 
-            // Assert
             BadRequestObjectResult badRequest = Assert.IsType<BadRequestObjectResult>(result);
             Assert.Equal("Invalid file signature.", badRequest.Value);
         }
@@ -107,7 +97,6 @@ namespace Rvnx.CRM.Tests.Controllers
         [Fact]
         public async Task UploadShouldRejectWhenFileExceedsSizeLimit()
         {
-            // Arrange
             Mock<IAttachmentService> serviceMock = new();
             serviceMock.Setup(s => s.UploadAttachmentAsync(It.IsAny<Guid>(), It.IsAny<string>(), It.IsAny<byte[]>(), It.IsAny<string>()))
                 .ReturnsAsync(AttachmentOperationResult.Failure("File is too large."));
@@ -118,10 +107,8 @@ namespace Rvnx.CRM.Tests.Controllers
             long fileSize = 31 * 1024 * 1024;
             IFormFile file = CreateMockFile("largefile.pdf", "application/pdf", fileSize);
 
-            // Act
             IActionResult result = await controller.Upload(Guid.NewGuid(), "Person", file);
 
-            // Assert
             BadRequestObjectResult badRequest = Assert.IsType<BadRequestObjectResult>(result);
             Assert.Equal("File is too large.", badRequest.Value);
         }

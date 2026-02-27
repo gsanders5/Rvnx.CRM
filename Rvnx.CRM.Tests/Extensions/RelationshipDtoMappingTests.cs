@@ -6,7 +6,6 @@ namespace Rvnx.CRM.Tests.Extensions
 {
     public class RelationshipDtoMappingTests
     {
-        // IDs from RelationshipTypeService
         private static readonly Guid ParentRelationshipId = Guid.Parse("7c1f8d22-1b6a-4c28-9c1e-3f5a2b8e9d1a");
         private static readonly Guid FriendRelationshipId = Guid.Parse("a5b6c7d8-9e0f-1a2b-3c4d-5e6f7a8b9c0d");
         private static readonly Guid SpouseRelationshipId = Guid.Parse("b2e9a5c8-7f4d-4a1b-8c6e-5f9d3a0e2b4c");
@@ -14,7 +13,6 @@ namespace Rvnx.CRM.Tests.Extensions
         [Fact]
         public void ToDtoShouldMapGenderSpecificNamesForMaleParentAndChild()
         {
-            // Arrange
             Contact person = new()
             {
                 Id = Guid.NewGuid(),
@@ -40,10 +38,8 @@ namespace Rvnx.CRM.Tests.Extensions
                 EntityType = "Person"
             };
 
-            // Act
             RelationshipDto dto = relationship.ToDto();
 
-            // Assert
             Assert.Equal("Father", dto.RelationshipTypeName);
             Assert.Equal("Son", dto.RelationshipTypeOppositeName);
         }
@@ -51,7 +47,6 @@ namespace Rvnx.CRM.Tests.Extensions
         [Fact]
         public void ToDtoShouldMapGenderSpecificNamesForSpouseRelationship()
         {
-            // Arrange
             Contact husband = new()
             {
                 Id = Guid.NewGuid(),
@@ -77,10 +72,8 @@ namespace Rvnx.CRM.Tests.Extensions
                 EntityType = "Person"
             };
 
-            // Act
             RelationshipDto dto = relationship.ToDto();
 
-            // Assert
             Assert.Equal("Husband", dto.RelationshipTypeName);
             Assert.Equal("Wife", dto.RelationshipTypeOppositeName);
         }
@@ -88,7 +81,6 @@ namespace Rvnx.CRM.Tests.Extensions
         [Fact]
         public void ToDtoShouldMapGenderSpecificNamesForFemaleParentAndChild()
         {
-            // Arrange
             Contact person = new()
             {
                 Id = Guid.NewGuid(),
@@ -114,10 +106,8 @@ namespace Rvnx.CRM.Tests.Extensions
                 EntityType = "Person"
             };
 
-            // Act
             RelationshipDto dto = relationship.ToDto();
 
-            // Assert
             Assert.Equal("Mother", dto.RelationshipTypeName);
             Assert.Equal("Daughter", dto.RelationshipTypeOppositeName);
         }
@@ -125,7 +115,6 @@ namespace Rvnx.CRM.Tests.Extensions
         [Fact]
         public void ToDtoShouldMapNeutralNamesWhenGenderIsUnknownOrNonBinary()
         {
-            // Arrange
             Contact person = new()
             {
                 Id = Guid.NewGuid(),
@@ -151,10 +140,8 @@ namespace Rvnx.CRM.Tests.Extensions
                 EntityType = "Person"
             };
 
-            // Act
             RelationshipDto dto = relationship.ToDto();
 
-            // Assert
             // "Parent" is the default name, "Child" is the default opposite name
             Assert.Equal("Parent", dto.RelationshipTypeName);
             Assert.Equal("Child", dto.RelationshipTypeOppositeName);
@@ -163,7 +150,6 @@ namespace Rvnx.CRM.Tests.Extensions
         [Fact]
         public void ToDtoShouldMapConsistentNamesForGenderNeutralRelationships()
         {
-            // Arrange
             Contact person = new()
             {
                 Id = Guid.NewGuid(),
@@ -189,11 +175,8 @@ namespace Rvnx.CRM.Tests.Extensions
                 EntityType = "Person"
             };
 
-            // Act
             RelationshipDto dto = relationship.ToDto();
 
-            // Assert
-            // Friend/Friend regardless of gender
             Assert.Equal("Friend", dto.RelationshipTypeName);
             Assert.Equal("Friend", dto.RelationshipTypeOppositeName);
         }
@@ -201,7 +184,6 @@ namespace Rvnx.CRM.Tests.Extensions
         [Fact]
         public void ToDtoShouldHandleNullPersonReferencesGracefully()
         {
-            // Arrange
             Relationship relationship = new()
             {
                 Id = Guid.NewGuid(),
@@ -213,10 +195,8 @@ namespace Rvnx.CRM.Tests.Extensions
                 EntityType = "Person"
             };
 
-            // Act
             RelationshipDto dto = relationship.ToDto();
 
-            // Assert
             // Should fallback to default names since gender is null
             Assert.Equal("Parent", dto.RelationshipTypeName);
             Assert.Equal("Child", dto.RelationshipTypeOppositeName);
@@ -227,7 +207,6 @@ namespace Rvnx.CRM.Tests.Extensions
         [Fact]
         public void ToDtoShouldReturnUnknownIfTypeNotFound()
         {
-            // Arrange
             Relationship relationship = new()
             {
                 Id = Guid.NewGuid(),
@@ -237,10 +216,8 @@ namespace Rvnx.CRM.Tests.Extensions
                 EntityType = "Person"
             };
 
-            // Act
             RelationshipDto dto = relationship.ToDto();
 
-            // Assert
             Assert.Equal("Unknown", dto.RelationshipTypeName);
             Assert.Equal("Unknown", dto.RelationshipTypeOppositeName);
         }
@@ -248,7 +225,6 @@ namespace Rvnx.CRM.Tests.Extensions
         [Fact]
         public void ToEntityShouldMapPropertiesCorrectly()
         {
-            // Arrange
             RelationshipFormDto dto = new()
             {
                 EntityId = Guid.NewGuid(),
@@ -260,10 +236,8 @@ namespace Rvnx.CRM.Tests.Extensions
                 EndDate = DateTime.Now.Date.AddYears(1)
             };
 
-            // Act
             Relationship entity = dto.ToEntity();
 
-            // Assert
             Assert.NotEqual(Guid.Empty, entity.Id);
             Assert.Equal(dto.EntityId, entity.EntityId);
             Assert.Equal(dto.RelatedEntityId, entity.RelatedEntityId);
@@ -277,7 +251,6 @@ namespace Rvnx.CRM.Tests.Extensions
         [Fact]
         public void UpdateEntityShouldUpdatePropertiesCorrectly()
         {
-            // Arrange
             Relationship entity = new()
             {
                 Id = Guid.NewGuid(),
@@ -299,10 +272,8 @@ namespace Rvnx.CRM.Tests.Extensions
                 EndDate = DateTime.Now.Date.AddDays(5)
             };
 
-            // Act
             entity.UpdateEntity(dto);
 
-            // Assert
             Assert.Equal(dto.EntityId, entity.EntityId);
             Assert.Equal(dto.RelatedEntityId, entity.RelatedEntityId);
             Assert.Equal(dto.RelationshipTypeId, entity.RelationshipTypeId);
@@ -314,7 +285,6 @@ namespace Rvnx.CRM.Tests.Extensions
         [Fact]
         public void UpdateEntityShouldHandleNullValues()
         {
-            // Arrange
             Relationship entity = new()
             {
                 Id = Guid.NewGuid(),
@@ -336,10 +306,8 @@ namespace Rvnx.CRM.Tests.Extensions
                 EndDate = null
             };
 
-            // Act
             entity.UpdateEntity(dto);
 
-            // Assert
             Assert.Null(entity.Description);
             Assert.Null(entity.StartDate);
             Assert.Null(entity.EndDate);
@@ -348,7 +316,6 @@ namespace Rvnx.CRM.Tests.Extensions
         [Fact]
         public void UpdateEntityShouldNotModifyIdOrEntityType()
         {
-            // Arrange
             Guid originalId = Guid.NewGuid();
             string originalEntityType = "OriginalType";
 
@@ -371,10 +338,8 @@ namespace Rvnx.CRM.Tests.Extensions
                 RelationshipTypeId = Guid.NewGuid()
             };
 
-            // Act
             entity.UpdateEntity(dto);
 
-            // Assert
             Assert.Equal(originalId, entity.Id);
             Assert.Equal(originalEntityType, entity.EntityType);
         }
@@ -382,7 +347,6 @@ namespace Rvnx.CRM.Tests.Extensions
         [Fact]
         public void UpdateEntityShouldUpdateForeignKeys()
         {
-            // Arrange
             Relationship entity = new()
             {
                 Id = Guid.NewGuid(),
@@ -398,10 +362,8 @@ namespace Rvnx.CRM.Tests.Extensions
                 RelationshipTypeId = Guid.NewGuid() // Changed
             };
 
-            // Act
             entity.UpdateEntity(dto);
 
-            // Assert
             Assert.Equal(dto.EntityId, entity.EntityId);
             Assert.Equal(dto.RelatedEntityId, entity.RelatedEntityId);
             Assert.Equal(dto.RelationshipTypeId, entity.RelationshipTypeId);

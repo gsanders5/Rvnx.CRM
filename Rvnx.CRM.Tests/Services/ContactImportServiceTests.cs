@@ -30,7 +30,6 @@ namespace Rvnx.CRM.Tests.Services
         [Fact]
         public async Task ImportFromVCardAsyncValidContactsAddsToRepository()
         {
-            // Arrange
             List<Contact> contacts =
             [
                 new() { FirstName = "John", LastName = "Doe" },
@@ -40,7 +39,6 @@ namespace Rvnx.CRM.Tests.Services
             _vCardServiceMock.Setup(v => v.ParseVCardAsync(It.IsAny<Stream>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(contacts);
 
-            // Mock no duplicates found
             _repositoryMock.Setup(r => r.CountAsync(It.IsAny<Expression<Func<Contact, bool>>>(), default))
                 .ReturnsAsync(0);
             _repositoryMock.Setup(r => r.CountAsync(It.IsAny<Expression<Func<ContactMethod, bool>>>(), default))
@@ -48,10 +46,8 @@ namespace Rvnx.CRM.Tests.Services
 
             using MemoryStream stream = new();
 
-            // Act
             ContactImportResult result = await _service.ImportFromVCardAsync(stream);
 
-            // Assert
             Assert.Equal(2, result.AddedCount);
             Assert.Equal(0, result.SkippedCount);
 
@@ -63,7 +59,6 @@ namespace Rvnx.CRM.Tests.Services
         [Fact]
         public async Task ImportFromVCardAsyncDuplicateNameSkipsImport()
         {
-            // Arrange
             List<Contact> contacts =
             [
                 new() { FirstName = "Duplicate", LastName = "User" }
@@ -72,16 +67,13 @@ namespace Rvnx.CRM.Tests.Services
             _vCardServiceMock.Setup(v => v.ParseVCardAsync(It.IsAny<Stream>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(contacts);
 
-            // Mock duplicate found by name
             _repositoryMock.Setup(r => r.CountAsync(It.IsAny<Expression<Func<Contact, bool>>>(), default))
                 .ReturnsAsync(1);
 
             using MemoryStream stream = new();
 
-            // Act
             ContactImportResult result = await _service.ImportFromVCardAsync(stream);
 
-            // Assert
             Assert.Equal(0, result.AddedCount);
             Assert.Equal(1, result.SkippedCount);
 
@@ -92,7 +84,6 @@ namespace Rvnx.CRM.Tests.Services
         [Fact]
         public async Task ImportFromVCardAsyncDuplicateContactMethodSkipsImport()
         {
-            // Arrange
             Contact contact = new()
             {
                 FirstName = "Unique",
@@ -107,20 +98,16 @@ namespace Rvnx.CRM.Tests.Services
             _vCardServiceMock.Setup(v => v.ParseVCardAsync(It.IsAny<Stream>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(contacts);
 
-            // Mock unique name
             _repositoryMock.Setup(r => r.CountAsync(It.IsAny<Expression<Func<Contact, bool>>>(), default))
                 .ReturnsAsync(0);
 
-            // Mock duplicate method found
             _repositoryMock.Setup(r => r.CountAsync(It.IsAny<Expression<Func<ContactMethod, bool>>>(), default))
                 .ReturnsAsync(1);
 
             using MemoryStream stream = new();
 
-            // Act
             ContactImportResult result = await _service.ImportFromVCardAsync(stream);
 
-            // Assert
             Assert.Equal(0, result.AddedCount);
             Assert.Equal(1, result.SkippedCount);
 
@@ -130,17 +117,14 @@ namespace Rvnx.CRM.Tests.Services
         [Fact]
         public async Task ImportFromVCardAsyncExceptionInParsingLogsAndRethrows()
         {
-            // Arrange
             _vCardServiceMock.Setup(v => v.ParseVCardAsync(It.IsAny<Stream>(), It.IsAny<CancellationToken>()))
                 .ThrowsAsync(new InvalidOperationException("Parse error"));
 
             using MemoryStream stream = new();
 
-            // Act & Assert
             InvalidOperationException ex = await Assert.ThrowsAsync<InvalidOperationException>(() => _service.ImportFromVCardAsync(stream));
             Assert.Equal("Parse error", ex.Message);
 
-            // Verify logging
             _loggerMock.Verify(
                 x => x.Log(
                     LogLevel.Error,

@@ -38,7 +38,6 @@ namespace Rvnx.CRM.Tests.Security
         [Fact]
         public async Task NotesControllerEditShouldPreserveEntityId()
         {
-            // Arrange
             using CRMDbContext context = GetInMemoryDbContext();
             Repository repository = new(context);
 
@@ -53,11 +52,9 @@ namespace Rvnx.CRM.Tests.Security
             Guid originalContactId = Guid.NewGuid();
             Guid attackerContactId = Guid.NewGuid();
 
-            // Create two contacts (original owner and attacker target)
             context.Contacts.Add(new Contact { Id = originalContactId, FirstName = "Original" });
             context.Contacts.Add(new Contact { Id = attackerContactId, FirstName = "Attacker" });
 
-            // Create note owned by original contact
             context.Set<Note>().Add(new Note
             {
                 Id = noteId,
@@ -78,10 +75,8 @@ namespace Rvnx.CRM.Tests.Security
                 Value = "Updated Content"
             };
 
-            // Act
             await controller.Edit(noteId, tamperAttempt);
 
-            // Assert - EntityId and EntityType should NOT have changed
             Note? updatedNote = await context.Set<Note>().FindAsync(noteId);
             Assert.NotNull(updatedNote);
             Assert.Equal(originalContactId, updatedNote.ContactId); // Should stay original
@@ -92,7 +87,6 @@ namespace Rvnx.CRM.Tests.Security
         [Fact]
         public async Task NotesControllerEditShouldPreserveCreatedDateAndCreatedBy()
         {
-            // Arrange
             using CRMDbContext context = GetInMemoryDbContext();
             Repository repository = new(context);
 
@@ -115,7 +109,6 @@ namespace Rvnx.CRM.Tests.Security
                 Title = "Original",
                 Value = "Content"
                 // We do not set CreatedDate/CreatedBy here because CRMDbContext 
-                // will strictly overwrite them on 'Added'.
             };
             context.Set<Note>().Add(originalNote);
 
@@ -138,13 +131,11 @@ namespace Rvnx.CRM.Tests.Security
                 // CreatedDate and CreatedBy are not on the DTO, effectively testing that they can't be bound
             };
 
-            // Act
             await controller.Edit(noteId, tamperAttempt);
 
             // 5. Clear memory again to force a fresh read from the DB.
             context.ChangeTracker.Clear();
 
-            // Assert - The DB values should match the originally assigned values, NOT the attacker's values.
             Note? updatedNote = await context.Set<Note>().FindAsync(noteId);
             Assert.NotNull(updatedNote);
 
@@ -163,7 +154,6 @@ namespace Rvnx.CRM.Tests.Security
         [Fact]
         public async Task FactsControllerEditShouldPreserveEntityId()
         {
-            // Arrange
             using CRMDbContext context = GetInMemoryDbContext();
             Repository repository = new(context);
             IFactService factService = new FactService(repository);
@@ -186,7 +176,6 @@ namespace Rvnx.CRM.Tests.Security
             await context.SaveChangesAsync();
             context.ChangeTracker.Clear();
 
-            // Attacker tries to change EntityId
             FactFormDto tamperAttempt = new()
             {
                 Id = factId,
@@ -196,10 +185,8 @@ namespace Rvnx.CRM.Tests.Security
                 Value = "Updated Value"
             };
 
-            // Act
             await controller.Edit(factId, tamperAttempt);
 
-            // Assert
             Fact? updatedFact = await context.Set<Fact>().FindAsync(factId);
             Assert.NotNull(updatedFact);
             Assert.Equal(originalContactId, updatedFact.ContactId);
@@ -214,7 +201,6 @@ namespace Rvnx.CRM.Tests.Security
         [Fact]
         public async Task ContactMethodsControllerEditShouldPreserveEntityId()
         {
-            // Arrange
             using CRMDbContext context = GetInMemoryDbContext();
             Repository repository = new(context);
             IContactMethodService contactMethodService = new ContactMethodService(repository);
@@ -238,7 +224,6 @@ namespace Rvnx.CRM.Tests.Security
             await context.SaveChangesAsync();
             context.ChangeTracker.Clear();
 
-            // Attacker tries to change EntityId
             ContactMethodFormDto tamperAttempt = new()
             {
                 Id = contactMethodId,
@@ -249,10 +234,8 @@ namespace Rvnx.CRM.Tests.Security
                 Label = "Personal"
             };
 
-            // Act
             await controller.Edit(contactMethodId, tamperAttempt);
 
-            // Assert
             ContactMethod? updatedMethod = await context.Set<ContactMethod>().FindAsync(contactMethodId);
             Assert.NotNull(updatedMethod);
             Assert.Equal(originalContactId, updatedMethod.ContactId);
@@ -267,7 +250,6 @@ namespace Rvnx.CRM.Tests.Security
         [Fact]
         public async Task NotesControllerEditShouldReturnNotFoundWhenNoteDoesNotExist()
         {
-            // Arrange
             using CRMDbContext context = GetInMemoryDbContext();
             Repository repository = new(context);
 
@@ -286,17 +268,14 @@ namespace Rvnx.CRM.Tests.Security
                 Value = "Test"
             };
 
-            // Act
             IActionResult result = await controller.Edit(nonExistentId, note);
 
-            // Assert
             Assert.IsType<NotFoundResult>(result);
         }
 
         [Fact]
         public async Task FactsControllerEditShouldReturnNotFoundWhenIdMismatch()
         {
-            // Arrange
             using CRMDbContext context = GetInMemoryDbContext();
             Repository repository = new(context);
             IFactService factService = new FactService(repository);
@@ -311,10 +290,8 @@ namespace Rvnx.CRM.Tests.Security
                 Value = "Test"
             };
 
-            // Act
             IActionResult result = await controller.Edit(routeId, fact);
 
-            // Assert
             Assert.IsType<NotFoundResult>(result);
         }
 

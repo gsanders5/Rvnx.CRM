@@ -28,7 +28,6 @@ namespace Rvnx.CRM.Tests.Services
         [Fact]
         public async Task SyncUserAsyncNewUserShouldCreateUser()
         {
-            // Arrange
             using CRMDbContext context = GetInMemoryDbContext();
             UserSynchronizationService service = new(context);
 
@@ -41,16 +40,13 @@ namespace Rvnx.CRM.Tests.Services
             ClaimsIdentity identity = new(claims, "TestAuth");
             ClaimsPrincipal principal = new(identity);
 
-            // Act
             await service.SyncUserAsync(principal);
 
-            // Assert
             Core.Models.User? user = await context.Users.IgnoreQueryFilters().FirstOrDefaultAsync(u => u.SubjectId == "sub123");
             Assert.NotNull(user);
             Assert.Equal("test@example.com", user.Email);
             Assert.Equal("Test User", user.DisplayName);
 
-            // Check that internal user ID claim is added
             Assert.Contains(principal.Claims, c =>
                 c.Type == ClaimConstants.InternalUserIdClaimType &&
                 c.Value == user.Id.ToString());
@@ -59,7 +55,6 @@ namespace Rvnx.CRM.Tests.Services
         [Fact]
         public async Task SyncUserAsyncNewUserShouldPreserveOriginalNameIdentifier()
         {
-            // Arrange
             using CRMDbContext context = GetInMemoryDbContext();
             UserSynchronizationService service = new(context);
 
@@ -72,10 +67,8 @@ namespace Rvnx.CRM.Tests.Services
             ClaimsIdentity identity = new(claims, "TestAuth");
             ClaimsPrincipal principal = new(identity);
 
-            // Act
             await service.SyncUserAsync(principal);
 
-            // Assert - Original NameIdentifier should be preserved
             Assert.Contains(principal.Claims, c =>
                 c.Type == ClaimTypes.NameIdentifier &&
                 c.Value == originalSubject);
@@ -91,11 +84,9 @@ namespace Rvnx.CRM.Tests.Services
         [Fact]
         public async Task SyncUserAsyncExistingUserShouldUpdateDetailsAndAddInternalIdClaim()
         {
-            // Arrange
             using CRMDbContext context = GetInMemoryDbContext();
             UserSynchronizationService service = new(context);
 
-            // Pre-create user
             Core.Models.User existingUser = new()
             {
                 SubjectId = "sub456",
@@ -116,10 +107,8 @@ namespace Rvnx.CRM.Tests.Services
             ClaimsIdentity identity = new(claims, "TestAuth");
             ClaimsPrincipal principal = new(identity);
 
-            // Act
             await service.SyncUserAsync(principal);
 
-            // Assert
             Core.Models.User? user = await context.Users.IgnoreQueryFilters().FirstOrDefaultAsync(u => u.SubjectId == "sub456");
             Assert.NotNull(user);
             Assert.Equal("new@example.com", user.Email); // Should update
@@ -139,24 +128,19 @@ namespace Rvnx.CRM.Tests.Services
         [Fact]
         public async Task SyncUserAsyncShouldAddNameClaimWhenNotPresent()
         {
-            // Arrange
             using CRMDbContext context = GetInMemoryDbContext();
             UserSynchronizationService service = new(context);
 
-            // Create user without Name claim
             List<Claim> claims =
             [
                 new Claim(ClaimTypes.NameIdentifier, "sub789"),
                 new Claim(ClaimTypes.Email, "test@example.com")
-                // No ClaimTypes.Name
             ];
             ClaimsIdentity identity = new(claims, "TestAuth");
             ClaimsPrincipal principal = new(identity);
 
-            // Act
             await service.SyncUserAsync(principal);
 
-            // Assert
             Core.Models.User? user = await context.Users.IgnoreQueryFilters().FirstOrDefaultAsync(u => u.SubjectId == "sub789");
             Assert.NotNull(user);
 
@@ -169,7 +153,6 @@ namespace Rvnx.CRM.Tests.Services
         [Fact]
         public async Task SyncUserAsyncShouldNotAddNameClaimWhenAlreadyPresent()
         {
-            // Arrange
             using CRMDbContext context = GetInMemoryDbContext();
             UserSynchronizationService service = new(context);
 
@@ -183,10 +166,8 @@ namespace Rvnx.CRM.Tests.Services
             ClaimsIdentity identity = new(claims, "TestAuth");
             ClaimsPrincipal principal = new(identity);
 
-            // Act
             await service.SyncUserAsync(principal);
 
-            // Assert - Should only have one Name claim with original value
             List<Claim> nameClaims = principal.Claims.Where(c => c.Type == ClaimTypes.Name).ToList();
             Assert.Single(nameClaims);
             Assert.Equal(existingName, nameClaims[0].Value);
@@ -195,7 +176,6 @@ namespace Rvnx.CRM.Tests.Services
         [Fact]
         public async Task SyncUserAsyncShouldDoNothingWhenNoSubject()
         {
-            // Arrange
             using CRMDbContext context = GetInMemoryDbContext();
             UserSynchronizationService service = new(context);
 
@@ -207,14 +187,11 @@ namespace Rvnx.CRM.Tests.Services
             ClaimsIdentity identity = new(claims, "TestAuth");
             ClaimsPrincipal principal = new(identity);
 
-            // Act
             await service.SyncUserAsync(principal);
 
-            // Assert - No user created
             int userCount = await context.Users.IgnoreQueryFilters().CountAsync();
             Assert.Equal(0, userCount);
 
-            // No internal ID claim added
             Assert.DoesNotContain(principal.Claims, c =>
                 c.Type == ClaimConstants.InternalUserIdClaimType);
         }
@@ -222,7 +199,6 @@ namespace Rvnx.CRM.Tests.Services
         [Fact]
         public async Task SyncUserAsyncShouldReplaceInternalIdClaimWhenCalledMultipleTimes()
         {
-            // Arrange
             using CRMDbContext context = GetInMemoryDbContext();
             UserSynchronizationService service = new(context);
 
@@ -234,12 +210,10 @@ namespace Rvnx.CRM.Tests.Services
             ClaimsIdentity identity = new(claims, "TestAuth");
             ClaimsPrincipal principal = new(identity);
 
-            // Act - Call sync multiple times
             await service.SyncUserAsync(principal);
             await service.SyncUserAsync(principal);
             await service.SyncUserAsync(principal);
 
-            // Assert - Should only have one internal ID claim
             List<Claim> internalIdClaims = principal.Claims
                 .Where(c => c.Type == ClaimConstants.InternalUserIdClaimType)
                 .ToList();
@@ -249,7 +223,6 @@ namespace Rvnx.CRM.Tests.Services
         [Fact]
         public async Task SyncUserAsyncShouldUseSubClaimWhenNameIdentifierNotPresent()
         {
-            // Arrange
             using CRMDbContext context = GetInMemoryDbContext();
             UserSynchronizationService service = new(context);
 
@@ -262,10 +235,8 @@ namespace Rvnx.CRM.Tests.Services
             ClaimsIdentity identity = new(claims, "TestAuth");
             ClaimsPrincipal principal = new(identity);
 
-            // Act
             await service.SyncUserAsync(principal);
 
-            // Assert
             Core.Models.User? user = await context.Users.IgnoreQueryFilters().FirstOrDefaultAsync(u => u.SubjectId == "oauth-subject-id");
             Assert.NotNull(user);
             Assert.Equal("oauth@example.com", user.Email);

@@ -27,7 +27,6 @@ public abstract class SqliteIntegrationTestBase : IDisposable
 
         Context = new CRMDbContext(options, MockUserService.Object);
 
-        // Ensure clean slate
         Context.Database.EnsureDeleted();
         Context.Database.EnsureCreated();
     }

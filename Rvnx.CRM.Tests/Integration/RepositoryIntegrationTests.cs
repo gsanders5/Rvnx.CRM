@@ -21,14 +21,11 @@ public class RepositoryIntegrationTests : SqliteIntegrationTestBase
     [Fact]
     public async Task AddAsyncShouldPersistDataToRealSqliteDB()
     {
-        // Arrange
         Contact contact = new() { FirstName = "Real", LastName = "Database" };
 
-        // Act
         await _repository.AddAsync(contact);
         await _repository.SaveChangesAsync();
 
-        // Assert
         // Use a separate context/repo to verify persistence to disk
         // We can't easily create a new context pointing to the same file in the helper without exposing connection string,
         // but we can query Context directly if we clear change tracker or detach.
@@ -67,7 +64,6 @@ public class RepositoryIntegrationTests : SqliteIntegrationTestBase
             "VALUES ({0}, 'Other', 'Guy', 0, 'System', {1}, 'System', {1}, {2}, {3}, 0)",
             otherId, now, otherUserId, otherGroupId);
 
-        // 3. Act
         Context.ChangeTracker.Clear();
         List<Contact> visibleContacts = await _repository.ListAsync<Contact>();
 
@@ -79,12 +75,10 @@ public class RepositoryIntegrationTests : SqliteIntegrationTestBase
     [Fact]
     public async Task CascadeDeleteShouldWorkOnRealDB()
     {
-        // Arrange
         Contact contact = new() { FirstName = "Delete", LastName = "Me" };
         await _repository.AddAsync(contact);
         await _repository.SaveChangesAsync();
 
-        // Add related entities
         SignificantDate date = new()
         {
             Id = Guid.NewGuid(),
@@ -95,17 +89,13 @@ public class RepositoryIntegrationTests : SqliteIntegrationTestBase
         await _repository.AddAsync(date);
         await _repository.SaveChangesAsync();
 
-        // Let's test Employer (Standard FK)
         Employer employer = new() { CompanyName = "Work", EmployeeId = contact.Id };
         await _repository.AddAsync(employer);
         await _repository.SaveChangesAsync();
 
-        // Act
-        // Delete Contact
         await _repository.DeleteAsync<Contact>(contact.Id);
         await _repository.SaveChangesAsync();
 
-        // Assert
         Context.ChangeTracker.Clear();
 
         // Employer should be deleted (Cascade)

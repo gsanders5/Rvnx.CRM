@@ -53,7 +53,6 @@ namespace Rvnx.CRM.Tests.Repositories
             await repo.AddAsync(contact);
             await repo.SaveChangesAsync();
 
-            // Create Employer
             Employer employer = new()
             {
                 Id = Guid.NewGuid(),
@@ -63,10 +62,8 @@ namespace Rvnx.CRM.Tests.Repositories
             await repo.AddAsync(employer);
             await repo.SaveChangesAsync();
 
-            // Act
             List<Contact> result = await repo.ListAsNoTrackingAsync<Contact>(c => c.LastName == "Doe", default, "Employers");
 
-            // Assert
             Contact fetchedContact = result.Single();
             Assert.NotNull(fetchedContact.Employers);
             Assert.NotEmpty(fetchedContact.Employers);

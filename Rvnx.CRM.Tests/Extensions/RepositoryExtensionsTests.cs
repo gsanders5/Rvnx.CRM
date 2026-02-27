@@ -15,16 +15,13 @@ namespace Rvnx.CRM.Tests.Extensions
         [Fact]
         public async Task ListByChunkedContainsAsyncWhenEmptyKeysReturnsEmptyListAndDoesNotCallRepository()
         {
-            // Arrange
             Mock<IRepository> mockRepo = new();
             List<Guid> keys = [];
 
-            // Act
             List<TestEntity> result = await mockRepo.Object.ListByChunkedContainsAsync<TestEntity, Guid>(
                 keys,
                 chunk => e => chunk.Contains(e.Id));
 
-            // Assert
             Assert.Empty(result);
             mockRepo.Verify(r => r.ListAsNoTrackingAsync(It.IsAny<Expression<Func<TestEntity, bool>>>(), It.IsAny<CancellationToken>(), It.IsAny<string[]>()), Times.Never);
             mockRepo.Verify(r => r.ListAsync(It.IsAny<Expression<Func<TestEntity, bool>>>(), It.IsAny<CancellationToken>(), It.IsAny<string[]>()), Times.Never);
@@ -33,19 +30,16 @@ namespace Rvnx.CRM.Tests.Extensions
         [Fact]
         public async Task ListByChunkedContainsAsyncWhenUnder1000KeysCallsRepositoryOnce()
         {
-            // Arrange
             Mock<IRepository> mockRepo = new();
             List<Guid> keys = Enumerable.Range(0, 500).Select(_ => Guid.NewGuid()).ToList();
 
             mockRepo.Setup(r => r.ListAsNoTrackingAsync(It.IsAny<Expression<Func<TestEntity, bool>>>(), It.IsAny<CancellationToken>(), It.IsAny<string[]>()))
                 .ReturnsAsync([new TestEntity { Id = Guid.NewGuid() }]);
 
-            // Act
             List<TestEntity> result = await mockRepo.Object.ListByChunkedContainsAsync<TestEntity, Guid>(
                 keys,
                 chunk => e => chunk.Contains(e.Id));
 
-            // Assert
             Assert.Single(result);
             mockRepo.Verify(r => r.ListAsNoTrackingAsync(It.IsAny<Expression<Func<TestEntity, bool>>>(), It.IsAny<CancellationToken>(), It.IsAny<string[]>()), Times.Once);
         }
@@ -53,19 +47,16 @@ namespace Rvnx.CRM.Tests.Extensions
         [Fact]
         public async Task ListByChunkedContainsAsyncWhenOver1000KeysCallsRepositoryMultipleTimes()
         {
-            // Arrange
             Mock<IRepository> mockRepo = new();
             List<Guid> keys = Enumerable.Range(0, 2500).Select(_ => Guid.NewGuid()).ToList(); // Should split into 1000, 1000, 500
 
             mockRepo.Setup(r => r.ListAsNoTrackingAsync(It.IsAny<Expression<Func<TestEntity, bool>>>(), It.IsAny<CancellationToken>(), It.IsAny<string[]>()))
                 .ReturnsAsync([new TestEntity { Id = Guid.NewGuid() }]);
 
-            // Act
             List<TestEntity> result = await mockRepo.Object.ListByChunkedContainsAsync<TestEntity, Guid>(
                 keys,
                 chunk => e => chunk.Contains(e.Id));
 
-            // Assert
             Assert.Equal(3, result.Count); // 1 per chunk
             mockRepo.Verify(r => r.ListAsNoTrackingAsync(It.IsAny<Expression<Func<TestEntity, bool>>>(), It.IsAny<CancellationToken>(), It.IsAny<string[]>()), Times.Exactly(3));
         }
@@ -73,20 +64,17 @@ namespace Rvnx.CRM.Tests.Extensions
         [Fact]
         public async Task ListByChunkedContainsAsyncWhenAsNoTrackingFalseCallsListAsync()
         {
-            // Arrange
             Mock<IRepository> mockRepo = new();
             List<Guid> keys = [Guid.NewGuid()];
 
             mockRepo.Setup(r => r.ListAsync(It.IsAny<Expression<Func<TestEntity, bool>>>(), It.IsAny<CancellationToken>(), It.IsAny<string[]>()))
                 .ReturnsAsync([new TestEntity { Id = Guid.NewGuid() }]);
 
-            // Act
             List<TestEntity> result = await mockRepo.Object.ListByChunkedContainsAsync<TestEntity, Guid>(
                 keys,
                 chunk => e => chunk.Contains(e.Id),
                 asNoTracking: false);
 
-            // Assert
             Assert.Single(result);
             mockRepo.Verify(r => r.ListAsync(It.IsAny<Expression<Func<TestEntity, bool>>>(), It.IsAny<CancellationToken>(), It.IsAny<string[]>()), Times.Once);
             mockRepo.Verify(r => r.ListAsNoTrackingAsync(It.IsAny<Expression<Func<TestEntity, bool>>>(), It.IsAny<CancellationToken>(), It.IsAny<string[]>()), Times.Never);

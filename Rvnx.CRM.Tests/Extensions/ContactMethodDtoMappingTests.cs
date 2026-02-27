@@ -11,7 +11,6 @@ namespace Rvnx.CRM.Tests.Extensions
         [Fact]
         public void ToDtoShouldMapPropertiesCorrectly()
         {
-            // Arrange
             ContactMethod entity = new()
             {
                 Id = Guid.NewGuid(),
@@ -22,10 +21,8 @@ namespace Rvnx.CRM.Tests.Extensions
                 CreatedDate = DateTime.UtcNow
             };
 
-            // Act
             ContactMethodDto dto = entity.ToDto();
 
-            // Assert
             Assert.Equal(entity.Id, dto.Id);
             Assert.Equal(entity.Type, dto.Type);
             Assert.Equal(entity.Value, dto.Value);
@@ -38,7 +35,6 @@ namespace Rvnx.CRM.Tests.Extensions
         [Fact]
         public void ToDtoShouldHandleNullContactId()
         {
-            // Arrange
             ContactMethod entity = new()
             {
                 Id = Guid.NewGuid(),
@@ -49,10 +45,8 @@ namespace Rvnx.CRM.Tests.Extensions
                 CreatedDate = DateTime.UtcNow
             };
 
-            // Act
             ContactMethodDto dto = entity.ToDto();
 
-            // Assert
             Assert.Equal(entity.Id, dto.Id);
             Assert.Equal(entity.Type, dto.Type);
             Assert.Equal(entity.Value, dto.Value);
@@ -65,7 +59,6 @@ namespace Rvnx.CRM.Tests.Extensions
         [Fact]
         public void ToEntityShouldCreateNewContactMethodWithCorrectProperties()
         {
-            // Arrange
             ContactMethodFormDto dto = new()
             {
                 Type = ContactMethodType.Phone,
@@ -74,10 +67,8 @@ namespace Rvnx.CRM.Tests.Extensions
                 EntityId = Guid.NewGuid()
             };
 
-            // Act
             ContactMethod entity = dto.ToEntity();
 
-            // Assert
             Assert.NotEqual(Guid.Empty, entity.Id);
             Assert.Equal(dto.Type, entity.Type);
             Assert.Equal(dto.Value, entity.Value);
@@ -88,7 +79,6 @@ namespace Rvnx.CRM.Tests.Extensions
         [Fact]
         public void UpdateEntityShouldUpdatePropertiesCorrectly()
         {
-            // Arrange
             Guid initialContactId = Guid.NewGuid();
             ContactMethod entity = new()
             {
@@ -108,22 +98,18 @@ namespace Rvnx.CRM.Tests.Extensions
                 EntityId = Guid.NewGuid()
             };
 
-            // Act
             entity.UpdateEntity(dto);
 
-            // Assert
             Assert.Equal(dto.Type, entity.Type);
             Assert.Equal(dto.Value, entity.Value);
             Assert.Equal(dto.Label, entity.Label);
 
-            // Verify ContactId remains unchanged
             Assert.Equal(initialContactId, entity.ContactId);
         }
 
         [Fact]
         public void UpdateEntityShouldPreserveIdAndUpdateValues()
         {
-            // Arrange
             Guid initialId = Guid.NewGuid();
             ContactMethod entity = new()
             {
@@ -142,14 +128,10 @@ namespace Rvnx.CRM.Tests.Extensions
                 Label = "Mobile"
             };
 
-            // Act
             entity.UpdateEntity(dto);
 
-            // Assert
-            // Verify Id is preserved
             Assert.Equal(initialId, entity.Id);
 
-            // Verify other properties are updated (Happy Path)
             Assert.Equal(dto.Type, entity.Type);
             Assert.Equal(dto.Value, entity.Value);
             Assert.Equal(dto.Label, entity.Label);
@@ -158,7 +140,6 @@ namespace Rvnx.CRM.Tests.Extensions
         [Fact]
         public void UpdateEntityShouldHandleNullLabel()
         {
-            // Arrange
             ContactMethod entity = new()
             {
                 Type = ContactMethodType.Email,
@@ -173,10 +154,8 @@ namespace Rvnx.CRM.Tests.Extensions
                 Label = null
             };
 
-            // Act
             entity.UpdateEntity(dto);
 
-            // Assert
             Assert.Null(entity.Label);
         }
     }

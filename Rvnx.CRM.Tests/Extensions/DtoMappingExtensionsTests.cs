@@ -10,7 +10,6 @@ namespace Rvnx.CRM.Tests.Extensions
         [Fact]
         public void ToDtoShouldMapLastChangedDateFromContact()
         {
-            // Arrange
             DateTime lastChangedDate = new(2023, 10, 27, 12, 0, 0, DateTimeKind.Utc);
             Contact contact = new()
             {
@@ -20,10 +19,8 @@ namespace Rvnx.CRM.Tests.Extensions
                 LastChangedDate = lastChangedDate
             };
 
-            // Act
             ContactDto dto = contact.ToDto();
 
-            // Assert
             Assert.Equal(lastChangedDate, dto.LastChangedDate);
             Assert.NotEqual(DateTime.MinValue, dto.LastChangedDate);
         }
@@ -31,7 +28,6 @@ namespace Rvnx.CRM.Tests.Extensions
         [Fact]
         public void ToDtoShouldMapAllMatchingProperties()
         {
-            // Arrange
             Contact contact = new()
             {
                 Id = Guid.NewGuid(),
@@ -52,10 +48,8 @@ namespace Rvnx.CRM.Tests.Extensions
                 UserId = Guid.NewGuid()
             };
 
-            // Act
             ContactDto dto = contact.ToDto();
 
-            // Assert
             PropertyInfo[] entityProps = typeof(Contact).GetProperties();
             PropertyInfo[] dtoProps = typeof(ContactDto).GetProperties();
 

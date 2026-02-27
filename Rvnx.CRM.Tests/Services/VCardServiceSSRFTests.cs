@@ -30,8 +30,6 @@ namespace Rvnx.CRM.Tests.Services
         [Fact]
         public async Task ParseVCardAsyncShouldBlockPrivateIp()
         {
-            // Arrange
-            // 192.168.1.1 is a private IP.
             string privateIpUrl = "http://192.168.1.1/photo.jpg";
             string vcfContent = CreateVCardWithPhoto(privateIpUrl);
 
@@ -39,11 +37,9 @@ namespace Rvnx.CRM.Tests.Services
 
             using MemoryStream stream = new(Encoding.UTF8.GetBytes(vcfContent));
 
-            // Act
             IEnumerable<Contact> result = await _service.ParseVCardAsync(stream);
             List<Contact> contacts = result.ToList();
 
-            // Assert
             Assert.Single(contacts);
             Assert.Empty(contacts.First().Attachments);
         }
@@ -51,7 +47,6 @@ namespace Rvnx.CRM.Tests.Services
         [Fact]
         public async Task ParseVCardAsyncShouldBlockLoopback()
         {
-            // Arrange
             string loopbackUrl = "http://127.0.0.1/photo.jpg";
             string vcfContent = CreateVCardWithPhoto(loopbackUrl);
 
@@ -59,11 +54,9 @@ namespace Rvnx.CRM.Tests.Services
 
             using MemoryStream stream = new(Encoding.UTF8.GetBytes(vcfContent));
 
-            // Act
             IEnumerable<Contact> result = await _service.ParseVCardAsync(stream);
             List<Contact> contacts = result.ToList();
 
-            // Assert
             Assert.Single(contacts);
             Assert.Empty(contacts.First().Attachments);
         }
@@ -71,8 +64,6 @@ namespace Rvnx.CRM.Tests.Services
         [Fact]
         public async Task ParseVCardAsyncShouldBlockAnyAddress()
         {
-            // Arrange
-            // 0.0.0.0 often resolves to localhost
             string anyUrl = "http://0.0.0.0/photo.jpg";
             string vcfContent = CreateVCardWithPhoto(anyUrl);
 
@@ -80,11 +71,9 @@ namespace Rvnx.CRM.Tests.Services
 
             using MemoryStream stream = new(Encoding.UTF8.GetBytes(vcfContent));
 
-            // Act
             IEnumerable<Contact> result = await _service.ParseVCardAsync(stream);
             List<Contact> contacts = result.ToList();
 
-            // Assert
             Assert.Single(contacts);
             Assert.Empty(contacts.First().Attachments);
         }
@@ -92,8 +81,6 @@ namespace Rvnx.CRM.Tests.Services
         [Fact]
         public async Task ParseVCardAsyncShouldBlockIPv6MappedLoopback()
         {
-            // Arrange
-            // [::ffff:127.0.0.1] is IPv6 mapped IPv4 loopback
             string mappedUrl = "http://[::ffff:127.0.0.1]/photo.jpg";
             string vcfContent = CreateVCardWithPhoto(mappedUrl);
 
@@ -101,11 +88,9 @@ namespace Rvnx.CRM.Tests.Services
 
             using MemoryStream stream = new(Encoding.UTF8.GetBytes(vcfContent));
 
-            // Act
             IEnumerable<Contact> result = await _service.ParseVCardAsync(stream);
             List<Contact> contacts = result.ToList();
 
-            // Assert
             Assert.Single(contacts);
             Assert.Empty(contacts.First().Attachments);
         }
@@ -113,8 +98,6 @@ namespace Rvnx.CRM.Tests.Services
         [Fact]
         public async Task ParseVCardAsyncShouldAllowPublicIp()
         {
-            // Arrange
-            // 93.184.216.34 is example.com (Public IP)
             string publicIpUrl = "http://93.184.216.34/photo.jpg";
             string vcfContent = CreateVCardWithPhoto(publicIpUrl);
 
@@ -122,11 +105,9 @@ namespace Rvnx.CRM.Tests.Services
 
             using MemoryStream stream = new(Encoding.UTF8.GetBytes(vcfContent));
 
-            // Act
             IEnumerable<Contact> result = await _service.ParseVCardAsync(stream);
             List<Contact> contacts = result.ToList();
 
-            // Assert
             Assert.Single(contacts);
             Contact contact = contacts.First();
 

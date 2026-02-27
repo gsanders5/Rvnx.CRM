@@ -56,7 +56,6 @@ namespace Rvnx.CRM.Tests.Controllers
         [Fact]
         public async Task IndexReturnsViewWithContacts()
         {
-            // Arrange
             List<ContactDto> contacts =
             [
                 new ContactDto { Id = Guid.NewGuid(), FirstName = "John", LastName = "Doe" },
@@ -65,10 +64,8 @@ namespace Rvnx.CRM.Tests.Controllers
 
             _contactReadServiceMock.Setup(s => s.GetIndexDataAsync(It.IsAny<bool>())).ReturnsAsync(contacts);
 
-            // Act
             IActionResult result = await _controller.Index();
 
-            // Assert
             ViewResult viewResult = Assert.IsType<ViewResult>(result);
             ContactIndexViewModel model = Assert.IsAssignableFrom<ContactIndexViewModel>(viewResult.Model);
             Assert.Equal(2, model.Contacts.Count());
@@ -77,7 +74,6 @@ namespace Rvnx.CRM.Tests.Controllers
         [Fact]
         public async Task CreatePostWithValidDataShouldCreateContactAndRelatedEntities()
         {
-            // Arrange
             ContactCreateViewModel dto = new()
             {
                 FirstName = "New",
@@ -90,10 +86,8 @@ namespace Rvnx.CRM.Tests.Controllers
             _contactManagementServiceMock.Setup(s => s.CreateContactAsync(It.IsAny<ContactFormDto>()))
                 .ReturnsAsync(ContactOperationResult.Ok(Guid.NewGuid()));
 
-            // Act
             IActionResult result = await _controller.Create(dto);
 
-            // Assert
             RedirectToActionResult redirectResult = Assert.IsType<RedirectToActionResult>(result);
             Assert.Equal("Index", redirectResult.ActionName);
         }
@@ -101,13 +95,10 @@ namespace Rvnx.CRM.Tests.Controllers
         [Fact]
         public async Task DeleteConfirmedShouldCallServiceAndRedirect()
         {
-            // Arrange
             Guid contactId = Guid.NewGuid();
 
-            // Act
             IActionResult result = await _controller.DeleteConfirmed(contactId);
 
-            // Assert
             RedirectToActionResult redirectResult = Assert.IsType<RedirectToActionResult>(result);
             Assert.Equal("Index", redirectResult.ActionName);
 
@@ -117,7 +108,6 @@ namespace Rvnx.CRM.Tests.Controllers
         [Fact]
         public async Task EditPostWhenFileIsNotImageShouldReturnValidationError()
         {
-            // Arrange
             Guid contactId = Guid.NewGuid();
             ContactFormDto dto = new() { Id = contactId, FirstName = "John", LastName = "Doe" };
 
@@ -134,16 +124,13 @@ namespace Rvnx.CRM.Tests.Controllers
             fileMock.Setup(f => f.Length).Returns(ms.Length);
             fileMock.Setup(f => f.ContentType).Returns("text/plain");
 
-            // Mock Exist to return true so we don't get NotFound
             _contactReadServiceMock.Setup(s => s.ContactExistsAsync(contactId)).ReturnsAsync(true);
 
             _contactManagementServiceMock.Setup(s => s.UpdateContactAsync(It.IsAny<Guid>(), It.IsAny<ContactFormDto>(), It.IsAny<Stream>(), It.IsAny<string>(), It.IsAny<string>()))
                 .ReturnsAsync(ContactOperationResult.Failure("Only image files (jpg, jpeg, png, gif) are allowed."));
 
-            // Act
             IActionResult result = await _controller.Edit(contactId, dto, fileMock.Object);
 
-            // Assert
             ViewResult viewResult = Assert.IsType<ViewResult>(result); // Expecting view result with errors
             Assert.False(_controller.ModelState.IsValid);
             Assert.Equal("Only image files (jpg, jpeg, png, gif) are allowed.", _controller.ModelState[string.Empty]!.Errors[0].ErrorMessage);
@@ -152,7 +139,6 @@ namespace Rvnx.CRM.Tests.Controllers
         [Fact]
         public async Task ImportWhenServiceSucceedsShouldRedirectToIndex()
         {
-            // Arrange
             ContactImportResult importResult = new() { AddedCount = 1, SkippedCount = 1 };
             _contactImportServiceMock.Setup(s => s.ImportFromVCardAsync(It.IsAny<Stream>()))
                 .ReturnsAsync(importResult);
@@ -162,31 +148,25 @@ namespace Rvnx.CRM.Tests.Controllers
             fileMock.Setup(f => f.FileName).Returns("contacts.vcf");
             fileMock.Setup(f => f.OpenReadStream()).Returns(new MemoryStream());
 
-            // Act
             IActionResult result = await _controller.Import(fileMock.Object);
 
-            // Assert
             RedirectToActionResult redirectResult = Assert.IsType<RedirectToActionResult>(result);
             Assert.Equal("Index", redirectResult.ActionName);
 
-            // Verify message
             Assert.Equal("Import successful! Added: 1, Skipped: 1", _controller.TempData["SuccessMessage"]);
         }
 
         [Fact]
         public async Task ImportWhenFileIsTooLargeShouldReturnError()
         {
-            // Arrange
             Mock<IFormFile> fileMock = new();
             fileMock.Setup(f => f.Length).Returns(31 * 1024 * 1024); // 31 MB
             fileMock.Setup(f => f.FileName).Returns("contacts.vcf");
 
             _fileValidationServiceMock.Setup(s => s.IsAllowedFileSize(It.IsAny<long>())).Returns(false);
 
-            // Act
             IActionResult result = await _controller.Import(fileMock.Object);
 
-            // Assert
             ViewResult viewResult = Assert.IsType<ViewResult>(result);
             Assert.False(_controller.ModelState.IsValid);
             Assert.Equal("File is too large.", _controller.ModelState["file"]!.Errors[0].ErrorMessage);
@@ -195,15 +175,12 @@ namespace Rvnx.CRM.Tests.Controllers
         [Fact]
         public async Task DeleteReturnsViewWithContactDetailDto()
         {
-            // Arrange
             Guid contactId = Guid.NewGuid();
             ContactDetailDto contactDto = new() { Id = contactId, FirstName = "John", LastName = "Doe" };
             _contactReadServiceMock.Setup(s => s.GetContactDetailsAsync(contactId)).ReturnsAsync(contactDto);
 
-            // Act
             IActionResult result = await _controller.Delete(contactId);
 
-            // Assert
             ViewResult viewResult = Assert.IsType<ViewResult>(result);
             ContactDetailDto model = Assert.IsAssignableFrom<ContactDetailDto>(viewResult.Model);
             Assert.Equal(contactId, model.Id);
@@ -213,7 +190,6 @@ namespace Rvnx.CRM.Tests.Controllers
         [Fact]
         public async Task EditPostWhenContactNotFoundShouldReturnNotFound()
         {
-            // Arrange
             Guid contactId = Guid.NewGuid();
             ContactFormDto dto = new() { Id = contactId, FirstName = "John", LastName = "Doe" };
 
@@ -221,44 +197,35 @@ namespace Rvnx.CRM.Tests.Controllers
                     contactId, dto, It.IsAny<Stream>(), It.IsAny<string>(), It.IsAny<string>()))
                 .ReturnsAsync(ContactOperationResult.NotFound());
 
-            // Act
             IActionResult result = await _controller.Edit(contactId, dto, null);
 
-            // Assert
             Assert.IsType<NotFoundResult>(result);
         }
         [Fact]
         public async Task DetailsWhenServiceReturnsNullReturnsNotFound()
         {
-            // Arrange
             Guid contactId = Guid.NewGuid();
             _contactReadServiceMock.Setup(s => s.GetContactDetailsAsync(contactId)).ReturnsAsync((ContactDetailDto?)null);
 
-            // Act
             IActionResult result = await _controller.Details(contactId);
 
-            // Assert
             Assert.IsType<NotFoundResult>(result);
         }
 
         [Fact]
         public async Task EditGetWhenServiceReturnsNullReturnsNotFound()
         {
-            // Arrange
             Guid contactId = Guid.NewGuid();
             _contactReadServiceMock.Setup(s => s.GetContactFormAsync(contactId)).ReturnsAsync((ContactFormDto?)null);
 
-            // Act
             IActionResult result = await _controller.Edit(contactId);
 
-            // Assert
             Assert.IsType<NotFoundResult>(result);
         }
 
         [Fact]
         public async Task AssignLabelRedirectsToEdit()
         {
-            // Arrange
             Guid contactId = Guid.NewGuid();
             Guid labelId = Guid.NewGuid();
             Mock<ILabelService> mockLabelService = new();
@@ -268,10 +235,8 @@ namespace Rvnx.CRM.Tests.Controllers
             mockUrlHelper.Setup(u => u.IsLocalUrl(It.IsAny<string>())).Returns(false);
             _controller.Url = mockUrlHelper.Object;
 
-            // Act
             IActionResult result = await _controller.AssignLabel(contactId, labelId, mockLabelService.Object);
 
-            // Assert
             RedirectToActionResult redirectResult = Assert.IsType<RedirectToActionResult>(result);
             Assert.Equal("Edit", redirectResult.ActionName);
             Assert.Equal(contactId, redirectResult.RouteValues!["id"]);
@@ -281,7 +246,6 @@ namespace Rvnx.CRM.Tests.Controllers
         [Fact]
         public async Task RemoveLabelRedirectsToEdit()
         {
-            // Arrange
             Guid contactId = Guid.NewGuid();
             Guid labelId = Guid.NewGuid();
             Mock<ILabelService> mockLabelService = new();
@@ -291,10 +255,8 @@ namespace Rvnx.CRM.Tests.Controllers
             mockUrlHelper.Setup(u => u.IsLocalUrl(It.IsAny<string>())).Returns(false);
             _controller.Url = mockUrlHelper.Object;
 
-            // Act
             IActionResult result = await _controller.RemoveLabel(contactId, labelId, mockLabelService.Object);
 
-            // Assert
             RedirectToActionResult redirectResult = Assert.IsType<RedirectToActionResult>(result);
             Assert.Equal("Edit", redirectResult.ActionName);
             Assert.Equal(contactId, redirectResult.RouteValues!["id"]);

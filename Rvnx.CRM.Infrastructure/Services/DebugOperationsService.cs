@@ -97,8 +97,6 @@ public class DebugOperationsService(
             return new MergeAccountsResult { Success = false, Message = "Users are already in the same group." };
         }
 
-        // Decide which group to keep
-        // Prefer larger group
         UserGroup g1 = group1!;
         UserGroup g2 = group2!;
 
@@ -118,11 +116,9 @@ public class DebugOperationsService(
         UserGroup keptGroup = count1 >= count2 ? g1 : g2;
         UserGroup discardedGroup = keptGroup.Id == g1.Id ? g2 : g1;
 
-        // Move all entities
         Guid keptGroupId = keptGroup.Id;
         Guid discardedGroupId = discardedGroup.Id;
 
-        // Update all filtered entities
         IEnumerable<Microsoft.EntityFrameworkCore.Metadata.IEntityType> entityTypes = _context.Model.GetEntityTypes()
             .Where(e => typeof(BaseEntity).IsAssignableFrom(e.ClrType) && !typeof(IGlobalEntity).IsAssignableFrom(e.ClrType));
 
@@ -158,7 +154,6 @@ public class DebugOperationsService(
             }
         }
 
-        // Move users
         if (discardedGroup.Members != null)
         {
             foreach (User? member in discardedGroup.Members.ToList())
@@ -168,7 +163,6 @@ public class DebugOperationsService(
             }
         }
 
-        // Delete discarded group
         _context.UserGroups.Remove(discardedGroup);
 
         await _context.SaveChangesAsync();

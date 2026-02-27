@@ -20,7 +20,6 @@ public class LabelServiceTests
     [Fact]
     public async Task GetAllAsyncReturnsMappedDtos()
     {
-        // Arrange
         List<Core.DTOs.Contact.LabelDto> labelDtos =
         [
             new Core.DTOs.Contact.LabelDto { Id = Guid.NewGuid(), Name = "Work", Color = "#ff0000" },
@@ -35,10 +34,8 @@ public class LabelServiceTests
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(labelDtos);
 
-        // Act
         List<Core.DTOs.Contact.LabelDto> result = await _service.GetAllAsync();
 
-        // Assert
         Assert.Equal(2, result.Count);
         Assert.Contains(result, l => l.Name == "Work" && l.Color == "#ff0000");
     }
