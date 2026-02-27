@@ -95,6 +95,13 @@ namespace Rvnx.CRM.Web
 
             WebApplication app = builder.Build();
 
+            // Add security headers early in the pipeline
+            app.Use(async (context, next) =>
+            {
+                context.Response.Headers.Append("X-Content-Type-Options", "nosniff");
+                await next();
+            });
+
             using (IServiceScope scope = app.Services.CreateScope())
             {
                 IServiceProvider services = scope.ServiceProvider;
@@ -117,12 +124,6 @@ namespace Rvnx.CRM.Web
             }
 
             app.UseHttpsRedirection();
-
-            app.Use(async (context, next) =>
-            {
-                context.Response.Headers.Append("X-Content-Type-Options", "nosniff");
-                await next();
-            });
 
             app.UseStaticFiles();
 
