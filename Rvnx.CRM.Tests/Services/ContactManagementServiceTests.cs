@@ -449,5 +449,29 @@ namespace Rvnx.CRM.Tests.Services
             // Verify partial contact is NOT deleted
             _repositoryMock.Verify(r => r.DeleteAsync<Contact>(partialContactId, It.IsAny<CancellationToken>()), Times.Never);
         }
+
+        [Fact]
+        public async Task DeleteContactUnlinksSelfContactFromUser()
+        {
+            // Arrange
+            Guid contactId = Guid.NewGuid();
+            Contact contact = new() { Id = contactId, FirstName = "Linked", LastName = "Contact" };
+            User user = new()
+            {
+                Id = Guid.NewGuid(),
+                Email = "test@example.com",
+                SelfContactId = contactId
+            };
+
+            _contacts.Add(contact);
+            _users.Add(user);
+
+            // Act
+            await _service.DeleteContactAsync(contactId);
+
+            // Assert
+            // Verify that the user was updated with SelfContactId set to null
+            _repositoryMock.Verify(r => r.UpdateAsync(It.Is<User>(u => u.Id == user.Id && u.SelfContactId == null), It.IsAny<CancellationToken>()), Times.Once);
+        }
     }
 }
