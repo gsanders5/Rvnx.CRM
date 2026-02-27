@@ -4,10 +4,9 @@ using Rvnx.CRM.Core.Interfaces;
 using Rvnx.CRM.Web.Controllers.Base;
 using Rvnx.CRM.Web.Models;
 
-#pragma warning disable CS8602 // Dereference of a possibly null reference
-
 namespace Rvnx.CRM.Web.Controllers
 {
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "CS8602:Dereference of a possibly null reference.", Justification = "Services injected via DI are guaranteed to be non-null.")]
     public class DebugOperationsController(
         IDebugDataService debugDataService,
         IDebugOperationsService debugOperationsService,
