@@ -211,9 +211,9 @@ public class VCardService : IVCardService
         {
             contact.Gender = gender.Sex switch
             {
-                Sex.Male => "Male",
-                Sex.Female => "Female",
-                Sex.Other => "Other",
+                Sex.Male => PersonalAttributeOptions.Male,
+                Sex.Female => PersonalAttributeOptions.Female,
+                Sex.Other => PersonalAttributeOptions.Other,
                 _ => null
             };
         }
@@ -555,9 +555,9 @@ public class VCardService : IVCardService
         {
             Sex sex = contact.Gender switch
             {
-                "Male" => Sex.Male,
-                "Female" => Sex.Female,
-                "Non-Binary" => Sex.Other,
+                PersonalAttributeOptions.Male => Sex.Male,
+                PersonalAttributeOptions.Female => Sex.Female,
+                PersonalAttributeOptions.NonBinary => Sex.Other,
                 _ => Sex.Other
             };
             builder.GenderViews.Add(sex);

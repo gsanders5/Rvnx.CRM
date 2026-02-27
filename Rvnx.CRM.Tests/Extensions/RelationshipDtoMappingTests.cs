@@ -19,14 +19,14 @@ namespace Rvnx.CRM.Tests.Extensions
             {
                 Id = Guid.NewGuid(),
                 FirstName = "Father",
-                Gender = "Male"
+                Gender = Rvnx.CRM.Core.Constants.PersonalAttributeOptions.Male
             };
 
             Contact relatedPerson = new()
             {
                 Id = Guid.NewGuid(),
                 FirstName = "Son",
-                Gender = "Male"
+                Gender = Rvnx.CRM.Core.Constants.PersonalAttributeOptions.Male
             };
 
             Relationship relationship = new()
@@ -56,14 +56,14 @@ namespace Rvnx.CRM.Tests.Extensions
             {
                 Id = Guid.NewGuid(),
                 FirstName = "Husband",
-                Gender = "Male"
+                Gender = Rvnx.CRM.Core.Constants.PersonalAttributeOptions.Male
             };
 
             Contact wife = new()
             {
                 Id = Guid.NewGuid(),
                 FirstName = "Wife",
-                Gender = "Female"
+                Gender = Rvnx.CRM.Core.Constants.PersonalAttributeOptions.Female
             };
 
             Relationship relationship = new()
@@ -93,14 +93,14 @@ namespace Rvnx.CRM.Tests.Extensions
             {
                 Id = Guid.NewGuid(),
                 FirstName = "Mother",
-                Gender = "Female"
+                Gender = Rvnx.CRM.Core.Constants.PersonalAttributeOptions.Female
             };
 
             Contact relatedPerson = new()
             {
                 Id = Guid.NewGuid(),
                 FirstName = "Daughter",
-                Gender = "Female"
+                Gender = Rvnx.CRM.Core.Constants.PersonalAttributeOptions.Female
             };
 
             Relationship relationship = new()
@@ -168,14 +168,14 @@ namespace Rvnx.CRM.Tests.Extensions
             {
                 Id = Guid.NewGuid(),
                 FirstName = "Friend1",
-                Gender = "Male"
+                Gender = Rvnx.CRM.Core.Constants.PersonalAttributeOptions.Male
             };
 
             Contact relatedPerson = new()
             {
                 Id = Guid.NewGuid(),
                 FirstName = "Friend2",
-                Gender = "Female"
+                Gender = Rvnx.CRM.Core.Constants.PersonalAttributeOptions.Female
             };
 
             Relationship relationship = new()
