@@ -98,7 +98,14 @@ namespace Rvnx.CRM.Web
             // Add security headers early in the pipeline
             app.Use(async (context, next) =>
             {
-                context.Response.Headers.Append("X-Content-Type-Options", "nosniff");
+                context.Response.OnStarting(() =>
+                {
+                    if (!context.Response.Headers.ContainsKey("X-Content-Type-Options"))
+                    {
+                        context.Response.Headers.Append("X-Content-Type-Options", "nosniff");
+                    }
+                    return Task.CompletedTask;
+                });
                 await next();
             });
 
