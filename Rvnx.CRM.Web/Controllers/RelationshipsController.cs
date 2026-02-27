@@ -215,6 +215,10 @@ namespace Rvnx.CRM.Web.Controllers
             }
 
             RelationshipDto viewModel = relationship.ToDto();
+
+            // Sanitize returnUrl - if it's not local, treat it as null/empty
+            string? safeReturnUrl = !string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl) ? returnUrl : null;
+
             RelationshipDeleteViewModel deleteViewModel = new()
             {
                 Id = viewModel.Id,
@@ -229,7 +233,7 @@ namespace Rvnx.CRM.Web.Controllers
                 Description = viewModel.Description,
                 StartDate = viewModel.StartDate,
                 EndDate = viewModel.EndDate,
-                ReturnUrl = !string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl) ? returnUrl : null
+                ReturnUrl = safeReturnUrl
             };
 
             return View(deleteViewModel);

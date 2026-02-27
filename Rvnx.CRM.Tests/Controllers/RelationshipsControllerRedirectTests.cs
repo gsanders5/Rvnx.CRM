@@ -30,9 +30,13 @@ namespace Rvnx.CRM.Tests.Controllers
             _context = new CRMDbContext(options, mockCurrentUserService.Object);
             Repository repository = new(_context);
             RelationshipService relationshipService = new(repository);
+            Mock<IUrlHelper> mockUrlHelper = new();
+            mockUrlHelper.Setup(x => x.IsLocalUrl(It.IsAny<string>())).Returns((string url) => url.StartsWith('/'));
+
             _controller = new RelationshipsController(relationshipService, repository)
             {
-                ControllerContext = new ControllerContext { HttpContext = new DefaultHttpContext() }
+                ControllerContext = new ControllerContext { HttpContext = new DefaultHttpContext() },
+                Url = mockUrlHelper.Object
             };
             _controller.TempData = new TempDataDictionary(_controller.HttpContext, Mock.Of<ITempDataProvider>());
         }

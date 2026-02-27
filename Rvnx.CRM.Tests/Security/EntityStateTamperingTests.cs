@@ -9,6 +9,7 @@ using Rvnx.CRM.Core.Models.Base;
 using Rvnx.CRM.Core.Models.Contact;
 using Rvnx.CRM.Infrastructure.Data;
 using Rvnx.CRM.Infrastructure.Repositories;
+using Rvnx.CRM.Infrastructure.Services;
 using Rvnx.CRM.Web.Controllers;
 
 namespace Rvnx.CRM.Tests.Security
@@ -45,7 +46,8 @@ namespace Rvnx.CRM.Tests.Security
             mockEntityService.Setup(s => s.IsPartialAsync(It.IsAny<string>(), It.IsAny<Guid>())).ReturnsAsync(false);
             mockEntityService.Setup(s => s.GetEntityNameAsync(It.IsAny<string>(), It.IsAny<Guid>())).ReturnsAsync("Test Entity");
 
-            NotesController controller = new(repository, mockEntityService.Object);
+            INoteService noteService = new NoteService(repository, mockEntityService.Object);
+            NotesController controller = new(noteService, repository, mockEntityService.Object);
 
             Guid noteId = Guid.NewGuid();
             Guid originalContactId = Guid.NewGuid();
@@ -98,7 +100,8 @@ namespace Rvnx.CRM.Tests.Security
             mockEntityService.Setup(s => s.IsPartialAsync(It.IsAny<string>(), It.IsAny<Guid>())).ReturnsAsync(false);
             mockEntityService.Setup(s => s.GetEntityNameAsync(It.IsAny<string>(), It.IsAny<Guid>())).ReturnsAsync("Test Entity");
 
-            NotesController controller = new(repository, mockEntityService.Object);
+            INoteService noteService = new NoteService(repository, mockEntityService.Object);
+            NotesController controller = new(noteService, repository, mockEntityService.Object);
 
             Guid noteId = Guid.NewGuid();
             Guid contactId = Guid.NewGuid();
@@ -163,7 +166,8 @@ namespace Rvnx.CRM.Tests.Security
             // Arrange
             using CRMDbContext context = GetInMemoryDbContext();
             Repository repository = new(context);
-            FactsController controller = new(repository);
+            IFactService factService = new FactService(repository);
+            FactsController controller = new(factService, repository);
 
             Guid factId = Guid.NewGuid();
             Guid originalContactId = Guid.NewGuid();
@@ -213,7 +217,8 @@ namespace Rvnx.CRM.Tests.Security
             // Arrange
             using CRMDbContext context = GetInMemoryDbContext();
             Repository repository = new(context);
-            ContactMethodsController controller = new(repository);
+            IContactMethodService contactMethodService = new ContactMethodService(repository);
+            ContactMethodsController controller = new(contactMethodService, repository);
 
             Guid contactMethodId = Guid.NewGuid();
             Guid originalContactId = Guid.NewGuid();
@@ -270,7 +275,8 @@ namespace Rvnx.CRM.Tests.Security
             mockEntityService.Setup(s => s.IsPartialAsync(It.IsAny<string>(), It.IsAny<Guid>())).ReturnsAsync(false);
             mockEntityService.Setup(s => s.GetEntityNameAsync(It.IsAny<string>(), It.IsAny<Guid>())).ReturnsAsync("Test Entity");
 
-            NotesController controller = new(repository, mockEntityService.Object);
+            INoteService noteService = new NoteService(repository, mockEntityService.Object);
+            NotesController controller = new(noteService, repository, mockEntityService.Object);
 
             Guid nonExistentId = Guid.NewGuid();
             NoteFormViewModel note = new()
@@ -293,7 +299,8 @@ namespace Rvnx.CRM.Tests.Security
             // Arrange
             using CRMDbContext context = GetInMemoryDbContext();
             Repository repository = new(context);
-            FactsController controller = new(repository);
+            IFactService factService = new FactService(repository);
+            FactsController controller = new(factService, repository);
 
             Guid routeId = Guid.NewGuid();
             Guid bodyId = Guid.NewGuid();

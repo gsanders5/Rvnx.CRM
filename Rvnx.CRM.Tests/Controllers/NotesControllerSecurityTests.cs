@@ -4,6 +4,7 @@ using Moq;
 using Rvnx.CRM.Core.Constants;
 using Rvnx.CRM.Core.DTOs.Base;
 using Rvnx.CRM.Core.Interfaces;
+using Rvnx.CRM.Core.Models;
 using Rvnx.CRM.Core.Models.Contact;
 using Rvnx.CRM.Infrastructure.Data;
 using Rvnx.CRM.Infrastructure.Repositories;
@@ -38,7 +39,11 @@ namespace Rvnx.CRM.Tests.Controllers
             mockEntityService.Setup(s => s.IsPartialAsync(It.IsAny<string>(), It.IsAny<Guid>())).ReturnsAsync(false);
             mockEntityService.Setup(s => s.GetEntityNameAsync(It.IsAny<string>(), It.IsAny<Guid>())).ReturnsAsync("Test Entity");
 
-            _controller = new NotesController(repository, mockEntityService.Object);
+            Mock<INoteService> mockNoteService = new(); // Adding missing mock
+            mockNoteService.Setup(s => s.CreateAsync(It.IsAny<NoteFormViewModel>()))
+                .ReturnsAsync(new OperationResult { Success = false, ErrorMessage = "Contact not found." });
+
+            _controller = new NotesController(mockNoteService.Object, repository, mockEntityService.Object);
         }
 
         public void Dispose()

@@ -8,6 +8,7 @@ using Rvnx.CRM.Core.Interfaces;
 using Rvnx.CRM.Core.Models;
 using Rvnx.CRM.Core.Models.Contact;
 using Rvnx.CRM.Infrastructure.Data;
+using Rvnx.CRM.Infrastructure.Services;
 using Rvnx.CRM.Web.Controllers;
 
 namespace Rvnx.CRM.Tests.Integration;
@@ -66,14 +67,15 @@ public class MergeAccountsTests
         Mock<IDebugDataService> mockDebugService = new();
         Mock<IHostEnvironment> mockEnv = new();
         mockEnv.Setup(e => e.EnvironmentName).Returns("Development");
-        Mock<ILogger<DebugOperationsController>> mockLogger = new();
+        Mock<ILogger<DebugOperationsService>> mockLogger = new();
+
+        DebugOperationsService debugOperationsService = new(context, mockUserService.Object, mockLogger.Object);
 
         DebugOperationsController controller = new(
             mockDebugService.Object,
+            debugOperationsService,
             mockEnv.Object,
-            context,
-            mockUserService.Object,
-            mockLogger.Object);
+            mockUserService.Object);
 
         // Setup TempData
         controller.TempData = new Microsoft.AspNetCore.Mvc.ViewFeatures.TempDataDictionary(new DefaultHttpContext(), Mock.Of<Microsoft.AspNetCore.Mvc.ViewFeatures.ITempDataProvider>());
@@ -119,12 +121,14 @@ public class MergeAccountsTests
         context.Users.Add(new User { Id = regularUserId, Email = "regular@example.com", IsAdministrator = false, SubjectId = "reg" });
         await context.SaveChangesAsync();
 
+        Mock<ILogger<DebugOperationsService>> mockLogger = new();
+        DebugOperationsService debugOperationsService = new(context, mockUserService.Object, mockLogger.Object);
+
         DebugOperationsController controller = new(
             new Mock<IDebugDataService>().Object,
+            debugOperationsService,
             new Mock<IHostEnvironment>().Object,
-            context,
-            mockUserService.Object,
-            new Mock<ILogger<DebugOperationsController>>().Object);
+            mockUserService.Object);
 
         // Act
         IActionResult result = await controller.MergeAccounts(Guid.NewGuid(), Guid.NewGuid(), "MERGE");

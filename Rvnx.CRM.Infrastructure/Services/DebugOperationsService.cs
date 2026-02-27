@@ -26,7 +26,7 @@ public class DebugOperationsService(
     {
         var users = await _context.Users.IgnoreQueryFilters()
             .Include(u => u.Group)
-                .ThenInclude(g => g.Members)
+                .ThenInclude(g => g!.Members)
             .ToListAsync();
 
         return users.Select(u => {
@@ -69,12 +69,12 @@ public class DebugOperationsService(
 
         User? user1 = await _context.Users.IgnoreQueryFilters()
             .Include(u => u.Group)
-            .ThenInclude(g => g.Members)
+            .ThenInclude(g => g!.Members)
             .FirstOrDefaultAsync(u => u!.Id == user1Id);
 
         User? user2 = await _context.Users.IgnoreQueryFilters()
             .Include(u => u.Group)
-            .ThenInclude(g => g.Members)
+            .ThenInclude(g => g!.Members)
             .FirstOrDefaultAsync(u => u!.Id == user2Id);
 
         if (user1 == null || user2 == null)
