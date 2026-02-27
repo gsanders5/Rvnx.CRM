@@ -1,4 +1,3 @@
-#pragma warning disable CA1304, CA1311, CA1862
 using Rvnx.CRM.Core.DTOs.Contact;
 using Rvnx.CRM.Core.Interfaces;
 using Rvnx.CRM.Core.Models.Contact;
@@ -19,6 +18,9 @@ public class LabelService(IRepository repository) : ILabelService
         );
     }
 
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "CA1862:Prefer using 'string.Equals(string, StringComparison)' to perform a case-insensitive comparison", Justification = "EF Core SQLite translation requires parameterless .ToLower() for case-insensitive comparisons.")]
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Globalization", "CA1304:Specify CultureInfo", Justification = "EF Core SQLite translation requires parameterless .ToLower() for case-insensitive comparisons.")]
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Globalization", "CA1311:Specify a culture or use an invariant version", Justification = "EF Core SQLite translation requires parameterless .ToLower() for case-insensitive comparisons.")]
     public async Task<LabelOperationResult> CreateAsync(string name, string? color)
     {
         if (string.IsNullOrWhiteSpace(name))
@@ -42,6 +44,9 @@ public class LabelService(IRepository repository) : ILabelService
         return LabelOperationResult.Ok(label.Id);
     }
 
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "CA1862:Prefer using 'string.Equals(string, StringComparison)' to perform a case-insensitive comparison", Justification = "EF Core SQLite translation requires parameterless .ToLower() for case-insensitive comparisons.")]
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Globalization", "CA1304:Specify CultureInfo", Justification = "EF Core SQLite translation requires parameterless .ToLower() for case-insensitive comparisons.")]
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Globalization", "CA1311:Specify a culture or use an invariant version", Justification = "EF Core SQLite translation requires parameterless .ToLower() for case-insensitive comparisons.")]
     public async Task<LabelOperationResult> UpdateAsync(Guid id, string name, string? color)
     {
         if (string.IsNullOrWhiteSpace(name))

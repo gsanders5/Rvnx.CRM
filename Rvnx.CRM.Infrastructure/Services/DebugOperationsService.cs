@@ -61,6 +61,7 @@ public class DebugOperationsService(
         return user?.IsAdministrator ?? false;
     }
 
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Security", "EF1002:Risk of vulnerability to SQL injection.", Justification = "tableName is sourced from EF Core's GetTableName() metadata, not user input, and parameters are passed safely.")]
     public async Task<MergeAccountsResult> MergeAccountsAsync(Guid user1Id, Guid user2Id)
     {
         if (user1Id == user2Id)
@@ -128,7 +129,6 @@ public class DebugOperationsService(
         foreach (Microsoft.EntityFrameworkCore.Metadata.IEntityType? entityType in entityTypes)
         {
             string? tableName = entityType.GetTableName();
-#pragma warning disable EF1002 // SQL Injection risk
             if (tableName != null)
             {
                 // In-memory provider doesn't support raw SQL for updates like this.
@@ -156,7 +156,6 @@ public class DebugOperationsService(
                     }
                 }
             }
-#pragma warning restore EF1002
         }
 
         // Move users
