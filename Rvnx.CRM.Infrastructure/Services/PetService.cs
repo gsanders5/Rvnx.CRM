@@ -70,50 +70,33 @@ public class PetService(IRepository repository) : IPetService
     {
         Pet? pet = await _repository.GetByIdAsync<Pet>(id);
 
-        if (pet == null || !await IsValidContactAsync(pet.ContactId))
-        {
-            return null;
-        }
-
-        return new PetFormDto
-        {
-            Id = pet.Id,
-            EntityId = pet.ContactId,
-            Name = pet.Name,
-            Species = pet.Species,
-            Breed = pet.Breed,
-            Birthday = pet.Birthday,
-            Notes = pet.Notes
-        };
+        return pet == null || !await IsValidContactAsync(pet.ContactId)
+            ? null
+            : new PetFormDto
+            {
+                Id = pet.Id,
+                EntityId = pet.ContactId,
+                Name = pet.Name,
+                Species = pet.Species,
+                Breed = pet.Breed,
+                Birthday = pet.Birthday,
+                Notes = pet.Notes
+            };
     }
 
     public async Task<PetFormDto?> GetFormForCreateAsync(Guid entityId)
     {
-        if (!await IsValidContactAsync(entityId))
-        {
-            return null;
-        }
-
-        return new PetFormDto { EntityId = entityId };
+        return !await IsValidContactAsync(entityId) ? null : new PetFormDto { EntityId = entityId };
     }
 
     public async Task<Pet?> GetByIdAsync(Guid id)
     {
         Pet? pet = await _repository.GetByIdAsync<Pet>(id);
-        if (pet == null || !await IsValidContactAsync(pet.ContactId))
-        {
-            return null;
-        }
-        return pet;
+        return pet == null || !await IsValidContactAsync(pet.ContactId) ? null : pet;
     }
 
     private async Task<bool> IsValidContactAsync(Guid id)
     {
-        if (id == Guid.Empty)
-        {
-            return false;
-        }
-
-        return await _repository.CountAsync<Contact>(c => c.Id == id && !c.IsPartial) > 0;
+        return id != Guid.Empty && await _repository.CountAsync<Contact>(c => c.Id == id && !c.IsPartial) > 0;
     }
 }

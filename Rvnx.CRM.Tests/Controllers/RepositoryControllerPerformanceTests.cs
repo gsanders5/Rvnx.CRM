@@ -3,7 +3,6 @@ using Rvnx.CRM.Core.Interfaces;
 using Rvnx.CRM.Core.Models.Contact;
 using Rvnx.CRM.Web.Controllers.Base;
 using System.Linq.Expressions;
-using Xunit;
 
 namespace Rvnx.CRM.Tests.Controllers
 {

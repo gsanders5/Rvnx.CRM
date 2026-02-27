@@ -71,7 +71,7 @@ namespace Rvnx.CRM.Tests.Controllers
 
             // Assert
             ViewResult viewResult = Assert.IsType<ViewResult>(result);
-            var model = viewResult.Model as dynamic;
+            dynamic? model = viewResult.Model;
             // In Razor Pages/Views, we access properties. Here we check if ReturnUrl in model is null
             // Since deleteViewModel is strongly typed in controller, let's cast
             Assert.NotNull(model);

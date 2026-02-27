@@ -138,20 +138,11 @@ public class ReminderService(IRepository repository, IEntityService entityServic
     public async Task<ReminderDto?> GetDtoAsync(Guid id)
     {
         Reminder? reminder = await _repository.GetByIdAsync<Reminder>(id);
-        if (reminder == null || !await IsValidContactAsync(reminder.ContactId ?? Guid.Empty))
-        {
-            return null;
-        }
-        return reminder.ToDto();
+        return reminder == null || !await IsValidContactAsync(reminder.ContactId ?? Guid.Empty) ? null : reminder.ToDto();
     }
 
     private async Task<bool> IsValidContactAsync(Guid id)
     {
-        if (id == Guid.Empty)
-        {
-            return false;
-        }
-
-        return await _repository.CountAsync<Contact>(c => c.Id == id && !c.IsPartial) > 0;
+        return id != Guid.Empty && await _repository.CountAsync<Contact>(c => c.Id == id && !c.IsPartial) > 0;
     }
 }

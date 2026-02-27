@@ -137,21 +137,24 @@ namespace Rvnx.CRM.Infrastructure.Services
         public static List<Relationship> GenerateRelationships(List<Contact> contacts, int count)
         {
             List<Relationship> relationships = [];
-            var personTypes = RelationshipTypeService.GetByEntityType(EntityTypes.Person);
+            List<RelationshipTypeDefinition> personTypes = RelationshipTypeService.GetByEntityType(EntityTypes.Person);
 
-            if (contacts.Count < 2) return relationships;
+            if (contacts.Count < 2)
+            {
+                return relationships;
+            }
 
             for (int i = 0; i < count; i++)
             {
-                var contact1 = contacts[_random.Next(contacts.Count)];
-                var contact2 = contacts[_random.Next(contacts.Count)];
+                Contact contact1 = contacts[_random.Next(contacts.Count)];
+                Contact contact2 = contacts[_random.Next(contacts.Count)];
 
                 while (contact1.Id == contact2.Id)
                 {
                     contact2 = contacts[_random.Next(contacts.Count)];
                 }
 
-                var type = personTypes[_random.Next(personTypes.Count)];
+                RelationshipTypeDefinition type = personTypes[_random.Next(personTypes.Count)];
 
                 relationships.Add(new Relationship
                 {

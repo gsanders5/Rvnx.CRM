@@ -8,9 +8,9 @@ namespace Rvnx.CRM.Tests.Security
         public void AppSettingsShouldNotContainHardcodedSecret()
         {
             // Arrange
-            var appsettingsPath = Path.Combine(Directory.GetCurrentDirectory(), "..", "..", "..", "..", "Rvnx.CRM.Web", "appsettings.json");
+            string appsettingsPath = Path.Combine(Directory.GetCurrentDirectory(), "..", "..", "..", "..", "Rvnx.CRM.Web", "appsettings.json");
 
-            var config = new ConfigurationBuilder()
+            IConfigurationRoot config = new ConfigurationBuilder()
                 .AddJsonFile(appsettingsPath)
                 .Build();
 
@@ -28,24 +28,26 @@ namespace Rvnx.CRM.Tests.Security
         public void ValidationLogicShouldThrowWhenAuthEnabledAndSecretMissing()
         {
             // Arrange
-            var authSettings = new Dictionary<string, string?> {
+            Dictionary<string, string?> authSettings = new()
+            {
                 {"Authentication:Enabled", "true"},
                 {"Authentication:Authority", ""},
                 {"Authentication:ClientId", "test-id"},
                 {"Authentication:ClientSecret", "test-secret"}
             };
 
-            var config = new ConfigurationBuilder()
+            IConfigurationRoot config = new ConfigurationBuilder()
                 .AddInMemoryCollection(authSettings)
                 .Build();
 
-            var authConfig = config.GetSection("Authentication");
+            IConfigurationSection authConfig = config.GetSection("Authentication");
             bool authEnabled = authConfig.GetValue<bool>("Enabled");
 
             // Act & Assert
             if (authEnabled)
             {
-                Assert.Throws<InvalidOperationException>(() => {
+                Assert.Throws<InvalidOperationException>(() =>
+                {
                     if (string.IsNullOrWhiteSpace(authConfig["Authority"]) ||
                         string.IsNullOrWhiteSpace(authConfig["ClientId"]) ||
                         string.IsNullOrWhiteSpace(authConfig["ClientSecret"]))

@@ -214,7 +214,7 @@ namespace Rvnx.CRM.Tests.Services
             ContactDto dto2 = new() { Id = contactId2, FirstName = "C2" };
 
             // We mock the projection result directly
-            var attachmentProjection = (contactId1, imageId1);
+            (Guid contactId1, Guid imageId1) attachmentProjection = (contactId1, imageId1);
 
             _repositoryMock.Setup(r => r.ListProjectedAsync<Contact, ContactDto>(
                 It.IsAny<Expression<Func<Contact, bool>>>(),
@@ -257,7 +257,7 @@ namespace Rvnx.CRM.Tests.Services
             ContactDto dto = new() { Id = contactId, FirstName = "C1" };
 
             Label label1 = new() { Id = Guid.NewGuid(), Name = "VIP", Color = "Red" };
-            var labelProjection = (contactId, label1.Id, label1.Name, label1.Color);
+            (Guid contactId, Guid Id, string Name, string Color) labelProjection = (contactId, label1.Id, label1.Name, label1.Color);
 
             _repositoryMock.Setup(r => r.ListProjectedAsync<Contact, ContactDto>(
                 It.IsAny<Expression<Func<Contact, bool>>>(),

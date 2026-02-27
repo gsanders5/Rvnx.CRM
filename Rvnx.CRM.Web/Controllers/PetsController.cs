@@ -1,10 +1,9 @@
 using Microsoft.AspNetCore.Mvc;
-using Rvnx.CRM.Core.Constants;
 using Rvnx.CRM.Core.DTOs.Contact;
+using Rvnx.CRM.Core.Extensions;
 using Rvnx.CRM.Core.Interfaces;
 using Rvnx.CRM.Core.Models;
 using Rvnx.CRM.Core.Models.Contact;
-using Rvnx.CRM.Core.Extensions;
 using Rvnx.CRM.Web.Controllers.Base;
 
 namespace Rvnx.CRM.Web.Controllers
@@ -30,7 +29,10 @@ namespace Rvnx.CRM.Web.Controllers
                 {
                     return RedirectToEntity(result.RedirectId, result.RedirectType);
                 }
-                if (result.ErrorMessage == "Contact not found.") return NotFound();
+                if (result.ErrorMessage == "Contact not found.")
+                {
+                    return NotFound();
+                }
             }
             return View(petDto);
         }
@@ -57,7 +59,10 @@ namespace Rvnx.CRM.Web.Controllers
                 {
                     return RedirectToEntity(result.RedirectId, result.RedirectType);
                 }
-                if (result.ErrorMessage == "Pet not found.") return NotFound();
+                if (result.ErrorMessage == "Pet not found.")
+                {
+                    return NotFound();
+                }
             }
             return View(petDto);
         }
@@ -73,11 +78,7 @@ namespace Rvnx.CRM.Web.Controllers
         public async Task<IActionResult> DeleteConfirmed(Guid id)
         {
             OperationResult result = await _petService.DeleteAsync(id);
-            if (result.Success)
-            {
-                return RedirectToEntity(result.RedirectId, result.RedirectType);
-            }
-            return RedirectToAction("Index", "Contacts");
+            return result.Success ? RedirectToEntity(result.RedirectId, result.RedirectType) : RedirectToAction("Index", "Contacts");
         }
     }
 }

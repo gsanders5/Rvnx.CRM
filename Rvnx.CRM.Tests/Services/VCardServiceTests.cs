@@ -1,13 +1,13 @@
-using Rvnx.CRM.Core.Constants;
-using Rvnx.CRM.Core.Enumerations;
-using Rvnx.CRM.Core.Models.Contact;
-using Rvnx.CRM.Core.Models.Dates;
-using Rvnx.CRM.Core.Models.Base;
-using Rvnx.CRM.Infrastructure.Services;
-using System.Text;
 using Moq;
 using Moq.Protected;
+using Rvnx.CRM.Core.Constants;
+using Rvnx.CRM.Core.Enumerations;
+using Rvnx.CRM.Core.Models.Base;
+using Rvnx.CRM.Core.Models.Contact;
+using Rvnx.CRM.Core.Models.Dates;
+using Rvnx.CRM.Infrastructure.Services;
 using System.Net;
+using System.Text;
 
 namespace Rvnx.CRM.Tests.Services
 {
@@ -70,7 +70,7 @@ END:VCARD";
         [Fact]
         public async Task ParseVCardAsyncShouldExtractEmbeddedPhoto()
         {
-             // Arrange
+            // Arrange
             string vcfContent = @"BEGIN:VCARD
 VERSION:3.0
 FN:Photo Test

@@ -8,7 +8,6 @@ using Microsoft.Extensions.Logging;
 using Moq;
 using Rvnx.CRM.Core.Interfaces;
 using Rvnx.CRM.Infrastructure.Data;
-using Rvnx.CRM.Infrastructure.Services;
 using Rvnx.CRM.Web.Controllers;
 
 namespace Rvnx.CRM.Tests.Controllers

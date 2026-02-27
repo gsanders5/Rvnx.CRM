@@ -1,7 +1,6 @@
 using Rvnx.CRM.Core.DTOs.Contact;
 using Rvnx.CRM.Core.Extensions;
 using Rvnx.CRM.Core.Models.Contact;
-using Xunit;
 
 namespace Rvnx.CRM.Tests.Extensions
 {
@@ -11,7 +10,7 @@ namespace Rvnx.CRM.Tests.Extensions
         public void ToDtoShouldMapPropertiesCorrectly()
         {
             // Arrange
-            var entity = new Pet
+            Pet entity = new()
             {
                 Id = Guid.NewGuid(),
                 Name = "Buddy",
@@ -23,7 +22,7 @@ namespace Rvnx.CRM.Tests.Extensions
             };
 
             // Act
-            var dto = entity.ToDto();
+            PetDto dto = entity.ToDto();
 
             // Assert
             Assert.Equal(entity.Id, dto.Id);
@@ -42,7 +41,7 @@ namespace Rvnx.CRM.Tests.Extensions
         public void ToEntityShouldCreateNewPetWithCorrectProperties()
         {
             // Arrange
-            var dto = new PetFormDto
+            PetFormDto dto = new()
             {
                 Name = "Mittens",
                 Species = "Cat",
@@ -53,7 +52,7 @@ namespace Rvnx.CRM.Tests.Extensions
             };
 
             // Act
-            var entity = dto.ToEntity();
+            Pet entity = dto.ToEntity();
 
             // Assert
             Assert.NotEqual(Guid.Empty, entity.Id);
@@ -69,8 +68,8 @@ namespace Rvnx.CRM.Tests.Extensions
         public void UpdateEntityShouldUpdatePropertiesCorrectly()
         {
             // Arrange
-            var initialContactId = Guid.NewGuid();
-            var entity = new Pet
+            Guid initialContactId = Guid.NewGuid();
+            Pet entity = new()
             {
                 Id = Guid.NewGuid(),
                 Name = "Old Name",
@@ -81,7 +80,7 @@ namespace Rvnx.CRM.Tests.Extensions
                 ContactId = initialContactId
             };
 
-            var dto = new PetFormDto
+            PetFormDto dto = new()
             {
                 Name = "New Name",
                 Species = "New Species",

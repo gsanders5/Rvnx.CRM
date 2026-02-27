@@ -3,7 +3,6 @@ using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.AspNetCore.Mvc;
 using Moq;
 using Rvnx.CRM.Web.Controllers;
-using System.Linq;
 using System.Reflection;
 
 namespace Rvnx.CRM.Tests.Controllers
@@ -14,12 +13,12 @@ namespace Rvnx.CRM.Tests.Controllers
         public void LogoutShouldHaveHttpPostAndValidateAntiForgeryTokenAttributes()
         {
             // Arrange
-            var methodInfo = typeof(AccountController).GetMethod("Logout");
+            MethodInfo? methodInfo = typeof(AccountController).GetMethod("Logout");
             Assert.NotNull(methodInfo);
 
             // Act
-            var httpPostAttribute = methodInfo!.GetCustomAttributes(typeof(HttpPostAttribute), false).FirstOrDefault();
-            var validateAntiForgeryTokenAttribute = methodInfo!.GetCustomAttributes(typeof(ValidateAntiForgeryTokenAttribute), false).FirstOrDefault();
+            object? httpPostAttribute = methodInfo!.GetCustomAttributes(typeof(HttpPostAttribute), false).FirstOrDefault();
+            object? validateAntiForgeryTokenAttribute = methodInfo!.GetCustomAttributes(typeof(ValidateAntiForgeryTokenAttribute), false).FirstOrDefault();
 
             // Assert
             Assert.NotNull(httpPostAttribute);
@@ -29,7 +28,7 @@ namespace Rvnx.CRM.Tests.Controllers
         [Fact]
         public void LogoutShouldReturnSignOutResult()
         {
-             // Arrange
+            // Arrange
             AccountController controller = new();
 
             // Act

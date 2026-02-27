@@ -223,7 +223,7 @@ namespace Rvnx.CRM.Web.Controllers
 
             if (profileImage != null && !_fileValidationService.IsAllowedFileSize(profileImage.Length))
             {
-                 ModelState.AddModelError("profileImage", "File is too large.");
+                ModelState.AddModelError("profileImage", "File is too large.");
             }
 
             NormalizeContactForm(contactDto);

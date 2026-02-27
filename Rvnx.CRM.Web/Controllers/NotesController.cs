@@ -3,8 +3,6 @@ using Rvnx.CRM.Core.DTOs.Base;
 using Rvnx.CRM.Core.Interfaces;
 using Rvnx.CRM.Core.Models;
 using Rvnx.CRM.Core.Models.Base;
-using Rvnx.CRM.Core.Models.Contact;
-using Rvnx.CRM.Core.Extensions;
 using Rvnx.CRM.Web.Controllers.Base;
 
 namespace Rvnx.CRM.Web.Controllers
@@ -21,11 +19,7 @@ namespace Rvnx.CRM.Web.Controllers
             if (viewModel == null)
             {
                 // Replicate original error handling logic for consistency
-                if (entityType != Rvnx.CRM.Core.Constants.EntityTypes.Person)
-                {
-                    return BadRequest("Only Person entities are supported.");
-                }
-                return NotFound();
+                return entityType != Rvnx.CRM.Core.Constants.EntityTypes.Person ? BadRequest("Only Person entities are supported.") : NotFound();
             }
 
             return View(viewModel);
@@ -43,8 +37,15 @@ namespace Rvnx.CRM.Web.Controllers
                     return RedirectToEntity(result.RedirectId, result.RedirectType);
                 }
 
-                if (result.ErrorMessage == "Only Person entities are supported.") return BadRequest(result.ErrorMessage);
-                if (result.ErrorMessage == "Contact not found.") return NotFound();
+                if (result.ErrorMessage == "Only Person entities are supported.")
+                {
+                    return BadRequest(result.ErrorMessage);
+                }
+
+                if (result.ErrorMessage == "Contact not found.")
+                {
+                    return NotFound();
+                }
             }
 
             // Re-populate view data if validation failed
@@ -84,7 +85,10 @@ namespace Rvnx.CRM.Web.Controllers
                     {
                         return RedirectToEntity(result.RedirectId, result.RedirectType);
                     }
-                    if (result.ErrorMessage == "Note not found.") return NotFound();
+                    if (result.ErrorMessage == "Note not found.")
+                    {
+                        return NotFound();
+                    }
                 }
                 catch (Exception)
                 {
@@ -131,11 +135,7 @@ namespace Rvnx.CRM.Web.Controllers
         public async Task<IActionResult> DeleteConfirmed(Guid id)
         {
             OperationResult result = await _noteService.DeleteAsync(id);
-            if (result.Success)
-            {
-                return RedirectToEntity(result.RedirectId, result.RedirectType);
-            }
-            return RedirectToAction("Index", "Home");
+            return result.Success ? RedirectToEntity(result.RedirectId, result.RedirectType) : RedirectToAction("Index", "Home");
         }
     }
 }

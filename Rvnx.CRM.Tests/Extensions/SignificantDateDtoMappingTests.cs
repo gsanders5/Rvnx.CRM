@@ -2,8 +2,6 @@ using Rvnx.CRM.Core.Constants;
 using Rvnx.CRM.Core.DTOs.Dates;
 using Rvnx.CRM.Core.Extensions;
 using Rvnx.CRM.Core.Models.Dates;
-using System;
-using Xunit;
 
 namespace Rvnx.CRM.Tests.Extensions
 {
@@ -13,7 +11,7 @@ namespace Rvnx.CRM.Tests.Extensions
         public void ToDtoShouldMapAllPropertiesWhenEntityIsFullyPopulated()
         {
             // Arrange
-            var entity = new SignificantDate
+            SignificantDate entity = new()
             {
                 Id = Guid.NewGuid(),
                 Title = "Anniversary",
@@ -26,7 +24,7 @@ namespace Rvnx.CRM.Tests.Extensions
             };
 
             // Act
-            var dto = entity.ToDto();
+            SignificantDateDto dto = entity.ToDto();
 
             // Assert
             Assert.Equal(entity.Id, dto.Id);
@@ -44,14 +42,14 @@ namespace Rvnx.CRM.Tests.Extensions
         public void ToDtoShouldMapNullTitleToEmptyString()
         {
             // Arrange
-            var entity = new SignificantDate
+            SignificantDate entity = new()
             {
                 Title = null,
                 Date = DateTime.Now
             };
 
             // Act
-            var dto = entity.ToDto();
+            SignificantDateDto dto = entity.ToDto();
 
             // Assert
             Assert.Equal(string.Empty, dto.Title);
@@ -61,14 +59,14 @@ namespace Rvnx.CRM.Tests.Extensions
         public void ToDtoShouldMapNullContactIdToEmptyGuid()
         {
             // Arrange
-            var entity = new SignificantDate
+            SignificantDate entity = new()
             {
                 ContactId = null,
                 Date = DateTime.Now
             };
 
             // Act
-            var dto = entity.ToDto();
+            SignificantDateDto dto = entity.ToDto();
 
             // Assert
             Assert.Equal(Guid.Empty, dto.EntityId);
@@ -78,13 +76,13 @@ namespace Rvnx.CRM.Tests.Extensions
         public void ToDtoShouldSetEntityTypeToPerson()
         {
             // Arrange
-            var entity = new SignificantDate
+            SignificantDate entity = new()
             {
                 Date = DateTime.Now
             };
 
             // Act
-            var dto = entity.ToDto();
+            SignificantDateDto dto = entity.ToDto();
 
             // Assert
             Assert.Equal(EntityTypes.Person, dto.EntityType);
@@ -94,14 +92,14 @@ namespace Rvnx.CRM.Tests.Extensions
         public void ToDtoShouldMapNullDescriptionAsNull()
         {
             // Arrange
-            var entity = new SignificantDate
+            SignificantDate entity = new()
             {
                 Description = null,
                 Date = DateTime.Now
             };
 
             // Act
-            var dto = entity.ToDto();
+            SignificantDateDto dto = entity.ToDto();
 
             // Assert
             Assert.Null(dto.Description);

@@ -1,9 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
-using Microsoft.EntityFrameworkCore;
 using Rvnx.CRM.Core.Interfaces;
-using Rvnx.CRM.Core.Models;
-using Rvnx.CRM.Core.Models.Base;
 using Rvnx.CRM.Web.Controllers.Base;
 using Rvnx.CRM.Web.Models;
 
@@ -77,15 +74,16 @@ namespace Rvnx.CRM.Web.Controllers
         private async Task<bool> IsAdminAsync()
         {
             Guid? userId = _currentUserService.UserId;
-            if (userId == null) return false;
-
-            return await _debugOperationsService.IsAdministratorAsync(userId.Value);
+            return userId != null && await _debugOperationsService.IsAdministratorAsync(userId.Value);
         }
 
         [HttpGet]
         public async Task<IActionResult> MergeAccounts()
         {
-            if (!await IsAdminAsync()) return Forbid();
+            if (!await IsAdminAsync())
+            {
+                return Forbid();
+            }
 
             List<MergeUserDto> users = await _debugOperationsService.GetAllUsersWithGroupsAsync();
 
@@ -96,7 +94,10 @@ namespace Rvnx.CRM.Web.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> MergeAccounts(Guid user1Id, Guid user2Id, string confirmation)
         {
-            if (!await IsAdminAsync()) return Forbid();
+            if (!await IsAdminAsync())
+            {
+                return Forbid();
+            }
 
             if (confirmation != "MERGE")
             {

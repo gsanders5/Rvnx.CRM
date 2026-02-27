@@ -1,10 +1,8 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Rvnx.CRM.Core.Constants;
 using Rvnx.CRM.Core.DTOs.Dates;
 using Rvnx.CRM.Core.Interfaces;
 using Rvnx.CRM.Core.Models;
-using Rvnx.CRM.Core.Models.Dates;
 using Rvnx.CRM.Web.Controllers.Base;
 
 namespace Rvnx.CRM.Web.Controllers
@@ -44,7 +42,10 @@ namespace Rvnx.CRM.Web.Controllers
                     return View(dto);
                 }
 
-                if (result.ErrorMessage == "Contact not found.") return NotFound();
+                if (result.ErrorMessage == "Contact not found.")
+                {
+                    return NotFound();
+                }
             }
 
             return View(dto);
@@ -86,7 +87,10 @@ namespace Rvnx.CRM.Web.Controllers
                         return View(dto);
                     }
 
-                    if (result.ErrorMessage == "Significant date not found.") return NotFound();
+                    if (result.ErrorMessage == "Significant date not found.")
+                    {
+                        return NotFound();
+                    }
                 }
                 catch (DbUpdateConcurrencyException)
                 {
@@ -113,12 +117,7 @@ namespace Rvnx.CRM.Web.Controllers
         public async Task<IActionResult> DeleteConfirmed(Guid id)
         {
             OperationResult result = await _significantDateService.DeleteAsync(id);
-            if (result.Success)
-            {
-                return RedirectToEntity(result.RedirectId, result.RedirectType);
-            }
-
-            return RedirectToAction("Index", "Home");
+            return result.Success ? RedirectToEntity(result.RedirectId, result.RedirectType) : RedirectToAction("Index", "Home");
         }
     }
 }

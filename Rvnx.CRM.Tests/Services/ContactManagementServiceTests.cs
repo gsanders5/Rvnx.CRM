@@ -3,8 +3,8 @@ using Rvnx.CRM.Core.Constants;
 using Rvnx.CRM.Core.DTOs.Contact;
 using Rvnx.CRM.Core.Enumerations;
 using Rvnx.CRM.Core.Interfaces;
-using Rvnx.CRM.Core.Models.Base;
 using Rvnx.CRM.Core.Models;
+using Rvnx.CRM.Core.Models.Base;
 using Rvnx.CRM.Core.Models.Contact;
 using Rvnx.CRM.Core.Models.Dates;
 using Rvnx.CRM.Core.Services;
@@ -116,31 +116,43 @@ namespace Rvnx.CRM.Tests.Services
             _repositoryMock.Setup(r => r.DeleteAsync<Contact>(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
                 .Callback<Guid, CancellationToken>((id, ct) =>
                 {
-                    var item = _contacts.FirstOrDefault(c => c.Id == id);
-                    if (item != null) _contacts.Remove(item);
+                    Contact? item = _contacts.FirstOrDefault(c => c.Id == id);
+                    if (item != null)
+                    {
+                        _contacts.Remove(item);
+                    }
                 });
 
             _repositoryMock.Setup(r => r.DeleteAsync<ContactMethod>(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
                 .Callback<Guid, CancellationToken>((id, ct) =>
                 {
-                    var item = _contactMethods.FirstOrDefault(c => c.Id == id);
-                    if (item != null) _contactMethods.Remove(item);
+                    ContactMethod? item = _contactMethods.FirstOrDefault(c => c.Id == id);
+                    if (item != null)
+                    {
+                        _contactMethods.Remove(item);
+                    }
                 });
 
             _repositoryMock.Setup(r => r.DeleteAsync<SignificantDate>(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
                 .Callback<Guid, CancellationToken>((id, ct) =>
                 {
-                    var item = _significantDates.FirstOrDefault(c => c.Id == id);
-                    if (item != null) _significantDates.Remove(item);
+                    SignificantDate? item = _significantDates.FirstOrDefault(c => c.Id == id);
+                    if (item != null)
+                    {
+                        _significantDates.Remove(item);
+                    }
                 });
 
             _repositoryMock.Setup(r => r.DeleteRangeAsync(It.IsAny<IEnumerable<Relationship>>(), It.IsAny<CancellationToken>()))
                 .Callback<IEnumerable<Relationship>, CancellationToken>((items, ct) =>
                 {
-                    foreach (var item in items)
+                    foreach (Relationship item in items)
                     {
-                        var existing = _relationships.FirstOrDefault(r => r.Id == item.Id);
-                        if (existing != null) _relationships.Remove(existing);
+                        Relationship? existing = _relationships.FirstOrDefault(r => r.Id == item.Id);
+                        if (existing != null)
+                        {
+                            _relationships.Remove(existing);
+                        }
                     }
                 });
 
@@ -148,9 +160,12 @@ namespace Rvnx.CRM.Tests.Services
             _repositoryMock.Setup(r => r.DeleteAsync(It.IsAny<Expression<Func<Relationship, bool>>>(), It.IsAny<CancellationToken>()))
                 .Callback<Expression<Func<Relationship, bool>>, CancellationToken>((predicate, ct) =>
                 {
-                    var func = predicate.Compile();
-                    var itemsToRemove = _relationships.Where(func).ToList();
-                    foreach (var item in itemsToRemove) _relationships.Remove(item);
+                    Func<Relationship, bool> func = predicate.Compile();
+                    List<Relationship> itemsToRemove = _relationships.Where(func).ToList();
+                    foreach (Relationship? item in itemsToRemove)
+                    {
+                        _relationships.Remove(item);
+                    }
                 });
         }
 

@@ -108,21 +108,13 @@ public class SignificantDateService(IRepository repository) : ISignificantDateSe
     public async Task<SignificantDateDto?> GetDtoAsync(Guid id)
     {
         SignificantDate? importantDate = await _repository.GetByIdAsync<SignificantDate>(id);
-        if (importantDate == null || !await IsValidContactAsync(importantDate.ContactId ?? Guid.Empty))
-        {
-            return null;
-        }
-        return importantDate.ToDto();
+        return importantDate == null || !await IsValidContactAsync(importantDate.ContactId ?? Guid.Empty) ? null : importantDate.ToDto();
     }
 
     public async Task<SignificantDate?> GetByIdAsync(Guid id)
     {
         SignificantDate? importantDate = await _repository.GetByIdAsync<SignificantDate>(id);
-        if (importantDate == null || !await IsValidContactAsync(importantDate.ContactId ?? Guid.Empty))
-        {
-            return null;
-        }
-        return importantDate;
+        return importantDate == null || !await IsValidContactAsync(importantDate.ContactId ?? Guid.Empty) ? null : importantDate;
     }
 
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "CA1862:Use the 'StringComparison' method overloads to perform case-insensitive string comparisons", Justification = "EF Core cannot translate string.Equals with StringComparison. .ToLower() is used for SQLite-compatible translatable case-insensitivity.")]
@@ -140,11 +132,6 @@ public class SignificantDateService(IRepository repository) : ISignificantDateSe
 
     private async Task<bool> IsValidContactAsync(Guid id)
     {
-        if (id == Guid.Empty)
-        {
-            return false;
-        }
-
-        return await _repository.CountAsync<Contact>(c => c.Id == id && !c.IsPartial) > 0;
+        return id != Guid.Empty && await _repository.CountAsync<Contact>(c => c.Id == id && !c.IsPartial) > 0;
     }
 }

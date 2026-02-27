@@ -1,5 +1,4 @@
 using Rvnx.CRM.Core.DTOs.Contact;
-using Rvnx.CRM.Core.Interfaces;
 using Rvnx.CRM.Core.Models.Contact;
 using Rvnx.CRM.Core.Services;
 using Rvnx.CRM.Infrastructure.Repositories;
@@ -16,11 +15,11 @@ public class LabelServicePerformanceTests(ITestOutputHelper output) : SqliteInte
     public async Task GetAllAsyncPerformance()
     {
         // Arrange
-        var repository = new Repository(Context);
-        var labelService = new LabelService(repository);
+        Repository repository = new(Context);
+        LabelService labelService = new(repository);
 
         int labelCount = 2000;
-        var labels = new List<Label>();
+        List<Label> labels = [];
         for (int i = 0; i < labelCount; i++)
         {
             labels.Add(new Label
@@ -34,7 +33,7 @@ public class LabelServicePerformanceTests(ITestOutputHelper output) : SqliteInte
         await Context.SaveChangesAsync();
 
         // Act
-        var stopwatch = Stopwatch.StartNew();
+        Stopwatch stopwatch = Stopwatch.StartNew();
         List<LabelDto> result = await labelService.GetAllAsync();
         stopwatch.Stop();
 

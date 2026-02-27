@@ -15,21 +15,21 @@ namespace Rvnx.CRM.Tests.Extensions
         public void ToDtoShouldMapGenderSpecificNamesForMaleParentAndChild()
         {
             // Arrange
-            var person = new Contact
+            Contact person = new()
             {
                 Id = Guid.NewGuid(),
                 FirstName = "Father",
                 Gender = "Male"
             };
 
-            var relatedPerson = new Contact
+            Contact relatedPerson = new()
             {
                 Id = Guid.NewGuid(),
                 FirstName = "Son",
                 Gender = "Male"
             };
 
-            var relationship = new Relationship
+            Relationship relationship = new()
             {
                 Id = Guid.NewGuid(),
                 RelationshipTypeId = ParentRelationshipId,
@@ -41,7 +41,7 @@ namespace Rvnx.CRM.Tests.Extensions
             };
 
             // Act
-            var dto = relationship.ToDto();
+            RelationshipDto dto = relationship.ToDto();
 
             // Assert
             Assert.Equal("Father", dto.RelationshipTypeName);
@@ -52,21 +52,21 @@ namespace Rvnx.CRM.Tests.Extensions
         public void ToDtoShouldMapGenderSpecificNamesForSpouseRelationship()
         {
             // Arrange
-            var husband = new Contact
+            Contact husband = new()
             {
                 Id = Guid.NewGuid(),
                 FirstName = "Husband",
                 Gender = "Male"
             };
 
-            var wife = new Contact
+            Contact wife = new()
             {
                 Id = Guid.NewGuid(),
                 FirstName = "Wife",
                 Gender = "Female"
             };
 
-            var relationship = new Relationship
+            Relationship relationship = new()
             {
                 Id = Guid.NewGuid(),
                 RelationshipTypeId = SpouseRelationshipId,
@@ -78,7 +78,7 @@ namespace Rvnx.CRM.Tests.Extensions
             };
 
             // Act
-            var dto = relationship.ToDto();
+            RelationshipDto dto = relationship.ToDto();
 
             // Assert
             Assert.Equal("Husband", dto.RelationshipTypeName);
@@ -89,21 +89,21 @@ namespace Rvnx.CRM.Tests.Extensions
         public void ToDtoShouldMapGenderSpecificNamesForFemaleParentAndChild()
         {
             // Arrange
-            var person = new Contact
+            Contact person = new()
             {
                 Id = Guid.NewGuid(),
                 FirstName = "Mother",
                 Gender = "Female"
             };
 
-            var relatedPerson = new Contact
+            Contact relatedPerson = new()
             {
                 Id = Guid.NewGuid(),
                 FirstName = "Daughter",
                 Gender = "Female"
             };
 
-            var relationship = new Relationship
+            Relationship relationship = new()
             {
                 Id = Guid.NewGuid(),
                 RelationshipTypeId = ParentRelationshipId,
@@ -115,7 +115,7 @@ namespace Rvnx.CRM.Tests.Extensions
             };
 
             // Act
-            var dto = relationship.ToDto();
+            RelationshipDto dto = relationship.ToDto();
 
             // Assert
             Assert.Equal("Mother", dto.RelationshipTypeName);
@@ -126,21 +126,21 @@ namespace Rvnx.CRM.Tests.Extensions
         public void ToDtoShouldMapNeutralNamesWhenGenderIsUnknownOrNonBinary()
         {
             // Arrange
-            var person = new Contact
+            Contact person = new()
             {
                 Id = Guid.NewGuid(),
                 FirstName = "Parent",
                 Gender = "Non-binary"
             };
 
-            var relatedPerson = new Contact
+            Contact relatedPerson = new()
             {
                 Id = Guid.NewGuid(),
                 FirstName = "Child",
                 Gender = null // Unknown
             };
 
-            var relationship = new Relationship
+            Relationship relationship = new()
             {
                 Id = Guid.NewGuid(),
                 RelationshipTypeId = ParentRelationshipId,
@@ -152,7 +152,7 @@ namespace Rvnx.CRM.Tests.Extensions
             };
 
             // Act
-            var dto = relationship.ToDto();
+            RelationshipDto dto = relationship.ToDto();
 
             // Assert
             // "Parent" is the default name, "Child" is the default opposite name
@@ -164,21 +164,21 @@ namespace Rvnx.CRM.Tests.Extensions
         public void ToDtoShouldMapConsistentNamesForGenderNeutralRelationships()
         {
             // Arrange
-            var person = new Contact
+            Contact person = new()
             {
                 Id = Guid.NewGuid(),
                 FirstName = "Friend1",
                 Gender = "Male"
             };
 
-            var relatedPerson = new Contact
+            Contact relatedPerson = new()
             {
                 Id = Guid.NewGuid(),
                 FirstName = "Friend2",
                 Gender = "Female"
             };
 
-            var relationship = new Relationship
+            Relationship relationship = new()
             {
                 Id = Guid.NewGuid(),
                 RelationshipTypeId = FriendRelationshipId,
@@ -190,7 +190,7 @@ namespace Rvnx.CRM.Tests.Extensions
             };
 
             // Act
-            var dto = relationship.ToDto();
+            RelationshipDto dto = relationship.ToDto();
 
             // Assert
             // Friend/Friend regardless of gender
@@ -202,7 +202,7 @@ namespace Rvnx.CRM.Tests.Extensions
         public void ToDtoShouldHandleNullPersonReferencesGracefully()
         {
             // Arrange
-            var relationship = new Relationship
+            Relationship relationship = new()
             {
                 Id = Guid.NewGuid(),
                 RelationshipTypeId = ParentRelationshipId,
@@ -214,7 +214,7 @@ namespace Rvnx.CRM.Tests.Extensions
             };
 
             // Act
-            var dto = relationship.ToDto();
+            RelationshipDto dto = relationship.ToDto();
 
             // Assert
             // Should fallback to default names since gender is null
@@ -227,8 +227,8 @@ namespace Rvnx.CRM.Tests.Extensions
         [Fact]
         public void ToDtoShouldReturnUnknownIfTypeNotFound()
         {
-             // Arrange
-            var relationship = new Relationship
+            // Arrange
+            Relationship relationship = new()
             {
                 Id = Guid.NewGuid(),
                 RelationshipTypeId = Guid.NewGuid(), // Random ID not in service
@@ -238,7 +238,7 @@ namespace Rvnx.CRM.Tests.Extensions
             };
 
             // Act
-            var dto = relationship.ToDto();
+            RelationshipDto dto = relationship.ToDto();
 
             // Assert
             Assert.Equal("Unknown", dto.RelationshipTypeName);
@@ -249,7 +249,7 @@ namespace Rvnx.CRM.Tests.Extensions
         public void ToEntityShouldMapPropertiesCorrectly()
         {
             // Arrange
-            var dto = new RelationshipFormDto
+            RelationshipFormDto dto = new()
             {
                 EntityId = Guid.NewGuid(),
                 RelatedEntityId = Guid.NewGuid(),
@@ -261,7 +261,7 @@ namespace Rvnx.CRM.Tests.Extensions
             };
 
             // Act
-            var entity = dto.ToEntity();
+            Relationship entity = dto.ToEntity();
 
             // Assert
             Assert.NotEqual(Guid.Empty, entity.Id);
@@ -278,7 +278,7 @@ namespace Rvnx.CRM.Tests.Extensions
         public void UpdateEntityShouldUpdatePropertiesCorrectly()
         {
             // Arrange
-            var entity = new Relationship
+            Relationship entity = new()
             {
                 Id = Guid.NewGuid(),
                 EntityId = Guid.NewGuid(),
@@ -289,7 +289,7 @@ namespace Rvnx.CRM.Tests.Extensions
                 EndDate = DateTime.Now.Date
             };
 
-            var dto = new RelationshipFormDto
+            RelationshipFormDto dto = new()
             {
                 EntityId = Guid.NewGuid(), // Changed
                 RelatedEntityId = Guid.NewGuid(), // Changed
@@ -315,7 +315,7 @@ namespace Rvnx.CRM.Tests.Extensions
         public void UpdateEntityShouldHandleNullValues()
         {
             // Arrange
-            var entity = new Relationship
+            Relationship entity = new()
             {
                 Id = Guid.NewGuid(),
                 EntityId = Guid.NewGuid(),
@@ -326,7 +326,7 @@ namespace Rvnx.CRM.Tests.Extensions
                 EndDate = DateTime.Now.Date
             };
 
-            var dto = new RelationshipFormDto
+            RelationshipFormDto dto = new()
             {
                 EntityId = entity.EntityId,
                 RelatedEntityId = entity.RelatedEntityId,
@@ -349,10 +349,10 @@ namespace Rvnx.CRM.Tests.Extensions
         public void UpdateEntityShouldNotModifyIdOrEntityType()
         {
             // Arrange
-            var originalId = Guid.NewGuid();
-            var originalEntityType = "OriginalType";
+            Guid originalId = Guid.NewGuid();
+            string originalEntityType = "OriginalType";
 
-            var entity = new Relationship
+            Relationship entity = new()
             {
                 Id = originalId,
                 EntityId = Guid.NewGuid(),
@@ -361,7 +361,7 @@ namespace Rvnx.CRM.Tests.Extensions
                 EntityType = originalEntityType
             };
 
-            var dto = new RelationshipFormDto
+            RelationshipFormDto dto = new()
             {
                 // Different ID and EntityType in DTO (though DTO ID is nullable and EntityType usually ignored in Update)
                 Id = Guid.NewGuid(),
@@ -383,7 +383,7 @@ namespace Rvnx.CRM.Tests.Extensions
         public void UpdateEntityShouldUpdateForeignKeys()
         {
             // Arrange
-            var entity = new Relationship
+            Relationship entity = new()
             {
                 Id = Guid.NewGuid(),
                 EntityId = Guid.NewGuid(),
@@ -391,7 +391,7 @@ namespace Rvnx.CRM.Tests.Extensions
                 RelationshipTypeId = Guid.NewGuid()
             };
 
-            var dto = new RelationshipFormDto
+            RelationshipFormDto dto = new()
             {
                 EntityId = Guid.NewGuid(), // Changed
                 RelatedEntityId = Guid.NewGuid(), // Changed

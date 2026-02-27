@@ -1,15 +1,10 @@
 
 using Moq;
-using Rvnx.CRM.Core.Constants;
-using Rvnx.CRM.Core.DTOs.Contact;
-using Rvnx.CRM.Core.Enumerations;
 using Rvnx.CRM.Core.Interfaces;
 using Rvnx.CRM.Core.Models.Base;
 using Rvnx.CRM.Core.Models.Contact;
-using Rvnx.CRM.Core.Models.Dates;
 using Rvnx.CRM.Core.Services;
 using System.Linq.Expressions;
-using Xunit;
 
 namespace Rvnx.CRM.Tests.Services
 {
@@ -35,17 +30,17 @@ namespace Rvnx.CRM.Tests.Services
             Guid contactId = Guid.NewGuid();
 
             // Setup Repository to track calls
-             _repositoryMock.Setup(r => r.ListAsync<Rvnx.CRM.Core.Models.User>(It.IsAny<Expression<Func<Rvnx.CRM.Core.Models.User, bool>>>(), It.IsAny<CancellationToken>()))
-                .ReturnsAsync([]);
+            _repositoryMock.Setup(r => r.ListAsync<Rvnx.CRM.Core.Models.User>(It.IsAny<Expression<Func<Rvnx.CRM.Core.Models.User, bool>>>(), It.IsAny<CancellationToken>()))
+               .ReturnsAsync([]);
 
             _repositoryMock.Setup(r => r.ListAsync<Relationship>(It.IsAny<Expression<Func<Relationship, bool>>>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync((Expression<Func<Relationship, bool>> predicate, CancellationToken ct) =>
                 {
                     _relationshipListCalls++;
-                    return new List<Relationship>();
+                    return [];
                 });
 
-             // Also mock dependencies
+            // Also mock dependencies
             _repositoryMock.Setup(r => r.ListAsync<Pet>(It.IsAny<Expression<Func<Pet, bool>>>(), It.IsAny<CancellationToken>())).ReturnsAsync([]);
             _repositoryMock.Setup(r => r.ListAsync<Fact>(It.IsAny<Expression<Func<Fact, bool>>>(), It.IsAny<CancellationToken>())).ReturnsAsync([]);
             _repositoryMock.Setup(r => r.ListAsync<Note>(It.IsAny<Expression<Func<Note, bool>>>(), It.IsAny<CancellationToken>())).ReturnsAsync([]);

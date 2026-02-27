@@ -1,7 +1,6 @@
 using Rvnx.CRM.Core.DTOs.Base;
 using Rvnx.CRM.Core.Models;
 using Rvnx.CRM.Core.Models.Base;
-using Rvnx.CRM.Core.Models.Contact;
 
 namespace Rvnx.CRM.Core.Interfaces;
 

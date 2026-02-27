@@ -1,6 +1,5 @@
 using Rvnx.CRM.Core.DTOs.Dates;
 using Rvnx.CRM.Core.Models;
-using Rvnx.CRM.Core.Models.Dates;
 
 namespace Rvnx.CRM.Core.Interfaces;
 

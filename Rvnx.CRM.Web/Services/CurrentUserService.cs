@@ -76,12 +76,15 @@ public class CurrentUserService(IHttpContextAccessor httpContextAccessor, IConfi
         try
         {
             string? connectionString = _configuration.GetConnectionString("DefaultConnection");
-            if (string.IsNullOrEmpty(connectionString)) return null;
+            if (string.IsNullOrEmpty(connectionString))
+            {
+                return null;
+            }
 
-            using var connection = new SqliteConnection(connectionString);
+            using SqliteConnection connection = new(connectionString);
             connection.Open();
 
-            using var command = connection.CreateCommand();
+            using SqliteCommand command = connection.CreateCommand();
             command.CommandText = "SELECT GroupId FROM Users WHERE Id = @UserId";
             command.Parameters.AddWithValue("@UserId", userId);
 

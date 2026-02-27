@@ -1,9 +1,8 @@
 using Rvnx.CRM.Core.DTOs.Contact;
 using Rvnx.CRM.Core.Extensions;
-using Rvnx.CRM.Core.Models.Contact;
 using Rvnx.CRM.Core.Models.Base;
+using Rvnx.CRM.Core.Models.Contact;
 using Rvnx.CRM.Core.Models.Dates;
-using Rvnx.CRM.Core.DTOs.Base;
 
 namespace Rvnx.CRM.Tests.Extensions
 {
@@ -13,7 +12,7 @@ namespace Rvnx.CRM.Tests.Extensions
         public void ToDetailDtoShouldMapSimplePropertiesCorrectly()
         {
             // Arrange
-            var contact = new Contact
+            Contact contact = new()
             {
                 Id = Guid.NewGuid(),
                 FirstName = "TestFirst",
@@ -30,7 +29,7 @@ namespace Rvnx.CRM.Tests.Extensions
             };
 
             // Act
-            var result = contact.ToDetailDto();
+            ContactDetailDto result = contact.ToDetailDto();
 
             // Assert
             Assert.Equal(contact.Id, result.Id);
@@ -52,24 +51,24 @@ namespace Rvnx.CRM.Tests.Extensions
         public void ToDetailDtoShouldMapCollectionsCorrectly()
         {
             // Arrange
-            var contactId = Guid.NewGuid();
-            var contact = new Contact
+            Guid contactId = Guid.NewGuid();
+            Contact contact = new()
             {
                 Id = contactId,
                 FirstName = "Test",
                 LastName = "Contact",
-                Notes = new List<Note> { new Note { Id = Guid.NewGuid(), Title = "Note1", Value = "Content1", ContactId = contactId } },
-                Reminders = new List<Reminder> { new Reminder { Id = Guid.NewGuid(), Title = "Reminder1", ContactId = contactId } },
-                SignificantDates = new List<SignificantDate> { new SignificantDate { Id = Guid.NewGuid(), Title = "Birthday", ContactId = contactId } },
-                Relationships = new List<Relationship> { new Relationship { Id = Guid.NewGuid(), EntityId = contactId, RelatedEntityId = Guid.NewGuid() } },
-                RelatedTo = new List<Relationship> { new Relationship { Id = Guid.NewGuid(), EntityId = Guid.NewGuid(), RelatedEntityId = contactId } },
-                ContactMethods = new List<ContactMethod> { new ContactMethod { Id = Guid.NewGuid(), Label = "Email", Value = "test@example.com", ContactId = contactId } },
-                Facts = new List<Fact> { new Fact { Id = Guid.NewGuid(), Category = "Fun Fact", Value = "Likes testing", ContactId = contactId } },
-                Attachments = new List<Attachment> { new Attachment { Id = Guid.NewGuid(), FileName = "test.pdf", ContactId = contactId } }
+                Notes = [new Note { Id = Guid.NewGuid(), Title = "Note1", Value = "Content1", ContactId = contactId }],
+                Reminders = [new Reminder { Id = Guid.NewGuid(), Title = "Reminder1", ContactId = contactId }],
+                SignificantDates = [new SignificantDate { Id = Guid.NewGuid(), Title = "Birthday", ContactId = contactId }],
+                Relationships = [new Relationship { Id = Guid.NewGuid(), EntityId = contactId, RelatedEntityId = Guid.NewGuid() }],
+                RelatedTo = [new Relationship { Id = Guid.NewGuid(), EntityId = Guid.NewGuid(), RelatedEntityId = contactId }],
+                ContactMethods = [new ContactMethod { Id = Guid.NewGuid(), Label = "Email", Value = "test@example.com", ContactId = contactId }],
+                Facts = [new Fact { Id = Guid.NewGuid(), Category = "Fun Fact", Value = "Likes testing", ContactId = contactId }],
+                Attachments = [new Attachment { Id = Guid.NewGuid(), FileName = "test.pdf", ContactId = contactId }]
             };
 
             // Act
-            var result = contact.ToDetailDto();
+            ContactDetailDto result = contact.ToDetailDto();
 
             // Assert
             Assert.Single(result.Notes);
@@ -101,7 +100,7 @@ namespace Rvnx.CRM.Tests.Extensions
         public void ToDetailDtoShouldHandleNullCollectionsReturnsEmptyLists()
         {
             // Arrange
-            var contact = new Contact
+            Contact contact = new()
             {
                 Id = Guid.NewGuid(),
                 FirstName = "Test",
@@ -119,7 +118,7 @@ namespace Rvnx.CRM.Tests.Extensions
             };
 
             // Act
-            var result = contact.ToDetailDto();
+            ContactDetailDto result = contact.ToDetailDto();
 
             // Assert
             Assert.NotNull(result.Notes);

@@ -45,7 +45,7 @@ public class UserSynchronizationService : IUserSynchronizationService
                 LastChangedBy = "System",
             };
 
-            var group = new UserGroup
+            UserGroup group = new()
             {
                 Name = user.DisplayName ?? "My Group",
                 CreatedBy = "System",
@@ -74,7 +74,7 @@ public class UserSynchronizationService : IUserSynchronizationService
 
             if (user.GroupId == null)
             {
-                var group = new UserGroup
+                UserGroup group = new()
                 {
                     Name = user.DisplayName ?? "My Group",
                     CreatedBy = "System",

@@ -244,17 +244,11 @@ namespace Rvnx.CRM.Web.Controllers
         public async Task<IActionResult> DeleteConfirmed(Guid id, string? returnUrl = null)
         {
             OperationResult result = await _relationshipService.DeleteRelationshipAsync(id);
-            if (result.Success)
-            {
-                if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
-                {
-                    return Redirect(returnUrl);
-                }
-
-                return RedirectToEntity(result.RedirectId, result.RedirectType);
-            }
-
-            return RedirectToAction("Index", "Home");
+            return result.Success
+                ? !string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl)
+                    ? Redirect(returnUrl)
+                    : RedirectToEntity(result.RedirectId, result.RedirectType)
+                : RedirectToAction("Index", "Home");
         }
     }
 }

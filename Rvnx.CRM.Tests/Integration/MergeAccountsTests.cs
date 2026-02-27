@@ -75,10 +75,11 @@ public class MergeAccountsTests
             mockDebugService.Object,
             debugOperationsService,
             mockEnv.Object,
-            mockUserService.Object);
-
-        // Setup TempData
-        controller.TempData = new Microsoft.AspNetCore.Mvc.ViewFeatures.TempDataDictionary(new DefaultHttpContext(), Mock.Of<Microsoft.AspNetCore.Mvc.ViewFeatures.ITempDataProvider>());
+            mockUserService.Object)
+        {
+            // Setup TempData
+            TempData = new Microsoft.AspNetCore.Mvc.ViewFeatures.TempDataDictionary(new DefaultHttpContext(), Mock.Of<Microsoft.AspNetCore.Mvc.ViewFeatures.ITempDataProvider>())
+        };
 
         // Act
         // Merge user2 (Group 2) into user1 (Group 1)

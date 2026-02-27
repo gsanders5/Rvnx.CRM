@@ -24,12 +24,13 @@ public class DebugOperationsService(
 
     public async Task<List<MergeUserDto>> GetAllUsersWithGroupsAsync()
     {
-        var users = await _context.Users.IgnoreQueryFilters()
+        List<User> users = await _context.Users.IgnoreQueryFilters()
             .Include(u => u.Group)
                 .ThenInclude(g => g!.Members)
             .ToListAsync();
 
-        return users.Select(u => {
+        return users.Select(u =>
+        {
             string groupName = "No Group";
             int memberCount = 0;
 

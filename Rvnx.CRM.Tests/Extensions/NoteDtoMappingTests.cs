@@ -11,7 +11,7 @@ namespace Rvnx.CRM.Tests.Extensions
         public void ToDtoShouldMapPropertiesCorrectly()
         {
             // Arrange
-            var note = new Note
+            Note note = new()
             {
                 Id = Guid.NewGuid(),
                 Title = "Test Title",
@@ -21,7 +21,7 @@ namespace Rvnx.CRM.Tests.Extensions
             };
 
             // Act
-            var dto = note.ToDto();
+            NoteDto dto = note.ToDto();
 
             // Assert
             Assert.Equal(note.Id, dto.Id);
@@ -36,7 +36,7 @@ namespace Rvnx.CRM.Tests.Extensions
         public void ToDtoShouldMapNullContactIdToEmptyGuid()
         {
             // Arrange
-            var note = new Note
+            Note note = new()
             {
                 Id = Guid.NewGuid(),
                 Title = "Test Title",
@@ -46,7 +46,7 @@ namespace Rvnx.CRM.Tests.Extensions
             };
 
             // Act
-            var dto = note.ToDto();
+            NoteDto dto = note.ToDto();
 
             // Assert
             Assert.Equal(Guid.Empty, dto.EntityId);
@@ -56,7 +56,7 @@ namespace Rvnx.CRM.Tests.Extensions
         public void ToEntityShouldCreateNewNoteWithCorrectProperties()
         {
             // Arrange
-            var formDto = new NoteFormDto
+            NoteFormDto formDto = new()
             {
                 Title = "New Title",
                 Value = "New Value",
@@ -64,7 +64,7 @@ namespace Rvnx.CRM.Tests.Extensions
             };
 
             // Act
-            var entity = formDto.ToEntity();
+            Note entity = formDto.ToEntity();
 
             // Assert
             Assert.NotEqual(Guid.Empty, entity.Id);
@@ -77,8 +77,8 @@ namespace Rvnx.CRM.Tests.Extensions
         public void UpdateEntityShouldUpdatePropertiesCorrectly()
         {
             // Arrange
-            var initialContactId = Guid.NewGuid();
-            var note = new Note
+            Guid initialContactId = Guid.NewGuid();
+            Note note = new()
             {
                 Id = Guid.NewGuid(),
                 Title = "Old Title",
@@ -86,7 +86,7 @@ namespace Rvnx.CRM.Tests.Extensions
                 ContactId = initialContactId
             };
 
-            var formDto = new NoteFormDto
+            NoteFormDto formDto = new()
             {
                 Title = "Updated Title",
                 Value = "Updated Value",

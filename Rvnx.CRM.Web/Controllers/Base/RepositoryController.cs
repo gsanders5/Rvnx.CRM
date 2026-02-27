@@ -44,12 +44,7 @@ public abstract class RepositoryController : AuthorizedController
     /// </summary>
     protected async Task<bool> IsValidContactAsync(Guid id)
     {
-        if (id == Guid.Empty)
-        {
-            return false;
-        }
-
-        return await _repository.CountAsync<Contact>(c => c.Id == id && !c.IsPartial) > 0;
+        return id != Guid.Empty && await _repository.CountAsync<Contact>(c => c.Id == id && !c.IsPartial) > 0;
     }
 
     protected IActionResult RedirectToEntity(Guid id, string? type)

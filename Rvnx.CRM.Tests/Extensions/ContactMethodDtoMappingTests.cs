@@ -3,7 +3,6 @@ using Rvnx.CRM.Core.DTOs.Contact;
 using Rvnx.CRM.Core.Enumerations;
 using Rvnx.CRM.Core.Extensions;
 using Rvnx.CRM.Core.Models.Contact;
-using Xunit;
 
 namespace Rvnx.CRM.Tests.Extensions
 {
@@ -13,7 +12,7 @@ namespace Rvnx.CRM.Tests.Extensions
         public void ToDtoShouldMapPropertiesCorrectly()
         {
             // Arrange
-            var entity = new ContactMethod
+            ContactMethod entity = new()
             {
                 Id = Guid.NewGuid(),
                 Type = ContactMethodType.Email,
@@ -24,7 +23,7 @@ namespace Rvnx.CRM.Tests.Extensions
             };
 
             // Act
-            var dto = entity.ToDto();
+            ContactMethodDto dto = entity.ToDto();
 
             // Assert
             Assert.Equal(entity.Id, dto.Id);
@@ -40,7 +39,7 @@ namespace Rvnx.CRM.Tests.Extensions
         public void ToDtoShouldHandleNullContactId()
         {
             // Arrange
-            var entity = new ContactMethod
+            ContactMethod entity = new()
             {
                 Id = Guid.NewGuid(),
                 Type = ContactMethodType.Phone,
@@ -51,7 +50,7 @@ namespace Rvnx.CRM.Tests.Extensions
             };
 
             // Act
-            var dto = entity.ToDto();
+            ContactMethodDto dto = entity.ToDto();
 
             // Assert
             Assert.Equal(entity.Id, dto.Id);
@@ -67,7 +66,7 @@ namespace Rvnx.CRM.Tests.Extensions
         public void ToEntityShouldCreateNewContactMethodWithCorrectProperties()
         {
             // Arrange
-            var dto = new ContactMethodFormDto
+            ContactMethodFormDto dto = new()
             {
                 Type = ContactMethodType.Phone,
                 Value = "+1234567890",
@@ -76,7 +75,7 @@ namespace Rvnx.CRM.Tests.Extensions
             };
 
             // Act
-            var entity = dto.ToEntity();
+            ContactMethod entity = dto.ToEntity();
 
             // Assert
             Assert.NotEqual(Guid.Empty, entity.Id);
@@ -90,8 +89,8 @@ namespace Rvnx.CRM.Tests.Extensions
         public void UpdateEntityShouldUpdatePropertiesCorrectly()
         {
             // Arrange
-            var initialContactId = Guid.NewGuid();
-            var entity = new ContactMethod
+            Guid initialContactId = Guid.NewGuid();
+            ContactMethod entity = new()
             {
                 Id = Guid.NewGuid(),
                 Type = ContactMethodType.Email,
@@ -100,7 +99,7 @@ namespace Rvnx.CRM.Tests.Extensions
                 ContactId = initialContactId
             };
 
-            var dto = new ContactMethodFormDto
+            ContactMethodFormDto dto = new()
             {
                 Type = ContactMethodType.Website,
                 Value = "https://example.com",
@@ -125,8 +124,8 @@ namespace Rvnx.CRM.Tests.Extensions
         public void UpdateEntityShouldPreserveIdAndUpdateValues()
         {
             // Arrange
-            var initialId = Guid.NewGuid();
-            var entity = new ContactMethod
+            Guid initialId = Guid.NewGuid();
+            ContactMethod entity = new()
             {
                 Id = initialId,
                 Type = ContactMethodType.Email,
@@ -134,7 +133,7 @@ namespace Rvnx.CRM.Tests.Extensions
                 Label = "Work"
             };
 
-            var dto = new ContactMethodFormDto
+            ContactMethodFormDto dto = new()
             {
                 // DTO might have a different ID or none, but Entity ID should never change
                 Id = Guid.NewGuid(),
@@ -160,14 +159,14 @@ namespace Rvnx.CRM.Tests.Extensions
         public void UpdateEntityShouldHandleNullLabel()
         {
             // Arrange
-            var entity = new ContactMethod
+            ContactMethod entity = new()
             {
                 Type = ContactMethodType.Email,
                 Value = "test@example.com",
                 Label = "Work"
             };
 
-            var dto = new ContactMethodFormDto
+            ContactMethodFormDto dto = new()
             {
                 Type = ContactMethodType.Email,
                 Value = "test@example.com",

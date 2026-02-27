@@ -77,59 +77,41 @@ public class NoteService(IRepository repository, IEntityService entityService) :
     {
         Note? note = await _repository.GetByIdAsync<Note>(id);
 
-        if (note == null || !await IsValidContactAsync(note.ContactId ?? Guid.Empty))
-        {
-            return null;
-        }
-
-        return new NoteFormViewModel
-        {
-            Id = note.Id,
-            Title = note.Title,
-            Value = note.Value,
-            EntityId = note.ContactId ?? Guid.Empty,
-            EntityType = EntityTypes.Person,
-            EntityName = await _entityService.GetEntityNameAsync(EntityTypes.Person, note.ContactId ?? Guid.Empty)
-        };
+        return note == null || !await IsValidContactAsync(note.ContactId ?? Guid.Empty)
+            ? null
+            : new NoteFormViewModel
+            {
+                Id = note.Id,
+                Title = note.Title,
+                Value = note.Value,
+                EntityId = note.ContactId ?? Guid.Empty,
+                EntityType = EntityTypes.Person,
+                EntityName = await _entityService.GetEntityNameAsync(EntityTypes.Person, note.ContactId ?? Guid.Empty)
+            };
     }
 
     public async Task<NoteFormViewModel?> GetFormForCreateAsync(Guid entityId, string entityType)
     {
-        if (entityId == Guid.Empty || entityType != EntityTypes.Person)
-        {
-            return null;
-        }
-
-        if (!await IsValidContactAsync(entityId))
-        {
-            return null;
-        }
-
-        return new NoteFormViewModel
-        {
-            EntityId = entityId,
-            EntityType = entityType,
-            EntityName = await _entityService.GetEntityNameAsync(entityType, entityId)
-        };
+        return entityId == Guid.Empty || entityType != EntityTypes.Person
+            ? null
+            : !await IsValidContactAsync(entityId)
+            ? null
+            : new NoteFormViewModel
+            {
+                EntityId = entityId,
+                EntityType = entityType,
+                EntityName = await _entityService.GetEntityNameAsync(entityType, entityId)
+            };
     }
 
     public async Task<Note?> GetByIdAsync(Guid id)
     {
         Note? note = await _repository.GetByIdAsync<Note>(id);
-        if (note == null || !await IsValidContactAsync(note.ContactId ?? Guid.Empty))
-        {
-            return null;
-        }
-        return note;
+        return note == null || !await IsValidContactAsync(note.ContactId ?? Guid.Empty) ? null : note;
     }
 
     private async Task<bool> IsValidContactAsync(Guid id)
     {
-        if (id == Guid.Empty)
-        {
-            return false;
-        }
-
-        return await _repository.CountAsync<Contact>(c => c.Id == id && !c.IsPartial) > 0;
+        return id != Guid.Empty && await _repository.CountAsync<Contact>(c => c.Id == id && !c.IsPartial) > 0;
     }
 }

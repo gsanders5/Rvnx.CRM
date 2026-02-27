@@ -2,7 +2,6 @@ using Rvnx.CRM.Core.Constants;
 using Rvnx.CRM.Core.Models.Contact;
 using Rvnx.CRM.Core.Services;
 using Rvnx.CRM.Infrastructure.Services;
-using Xunit;
 
 namespace Rvnx.CRM.Tests.Services;
 
@@ -15,11 +14,11 @@ public class FakeDataGeneratorTests
         int count = 20; // Increased count to ensure better chance of hitting both genders
 
         // Act
-        var contacts = FakeDataGenerator.GenerateContacts(count);
+        List<Contact> contacts = FakeDataGenerator.GenerateContacts(count);
 
         // Assert
         Assert.Equal(count, contacts.Count);
-        foreach (var contact in contacts)
+        foreach (Contact contact in contacts)
         {
             Assert.NotNull(contact.Gender);
             Assert.NotNull(contact.Pronouns);
@@ -36,16 +35,16 @@ public class FakeDataGeneratorTests
         // Arrange
         int contactCount = 10;
         int relationshipCount = 5;
-        var contacts = FakeDataGenerator.GenerateContacts(contactCount);
+        List<Contact> contacts = FakeDataGenerator.GenerateContacts(contactCount);
 
         // Act
-        var relationships = FakeDataGenerator.GenerateRelationships(contacts, relationshipCount);
+        List<Relationship> relationships = FakeDataGenerator.GenerateRelationships(contacts, relationshipCount);
 
         // Assert
         Assert.Equal(relationshipCount, relationships.Count);
-        var validTypes = RelationshipTypeService.GetByEntityType(EntityTypes.Person).Select(t => t.Id).ToHashSet();
+        HashSet<Guid> validTypes = RelationshipTypeService.GetByEntityType(EntityTypes.Person).Select(t => t.Id).ToHashSet();
 
-        foreach (var rel in relationships)
+        foreach (Relationship rel in relationships)
         {
             Assert.Equal(EntityTypes.Person, rel.EntityType);
             Assert.Contains(rel.RelationshipTypeId, validTypes);

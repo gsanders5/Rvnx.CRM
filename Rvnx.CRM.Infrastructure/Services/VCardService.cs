@@ -269,7 +269,7 @@ public class VCardService : IVCardService
 
     private async Task<(byte[]? Content, string? MediaType)> TryGetPhotoAsync(VCard vc, bool resolveUrls, CancellationToken cancellationToken)
     {
-        var photoProp = vc.Photos?.FirstOrNull();
+        FolkerKinzel.VCards.Models.Properties.DataProperty? photoProp = vc.Photos?.FirstOrNull();
         if (photoProp?.Value is not RawData rawData)
         {
             return (null, null);
@@ -381,7 +381,7 @@ public class VCardService : IVCardService
         // Photo
         if (contact.Attachments != null)
         {
-            var profileImage = contact.Attachments.FirstOrDefault(a => a.AttachmentType == AttachmentTypes.ProfileImage);
+            Attachment? profileImage = contact.Attachments.FirstOrDefault(a => a.AttachmentType == AttachmentTypes.ProfileImage);
             if (profileImage != null && profileImage.AttachmentContent != null && profileImage.AttachmentContent.Content.Length > 0)
             {
                 builder.Photos.AddBytes(profileImage.AttachmentContent.Content, profileImage.ContentType ?? "image/jpeg");

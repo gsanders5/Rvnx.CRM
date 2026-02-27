@@ -70,48 +70,31 @@ public class FactService(IRepository repository) : IFactService
     {
         Fact? fact = await _repository.GetByIdAsync<Fact>(id);
 
-        if (fact == null || !await IsValidContactAsync(fact.ContactId ?? Guid.Empty))
-        {
-            return null;
-        }
-
-        return new FactFormDto
-        {
-            Id = fact.Id,
-            Category = fact.Category,
-            Value = fact.Value,
-            EntityId = fact.ContactId ?? Guid.Empty,
-            EntityType = EntityTypes.Person
-        };
+        return fact == null || !await IsValidContactAsync(fact.ContactId ?? Guid.Empty)
+            ? null
+            : new FactFormDto
+            {
+                Id = fact.Id,
+                Category = fact.Category,
+                Value = fact.Value,
+                EntityId = fact.ContactId ?? Guid.Empty,
+                EntityType = EntityTypes.Person
+            };
     }
 
     public async Task<FactFormDto?> GetFormForCreateAsync(Guid entityId, string entityType)
     {
-        if (!await IsValidContactAsync(entityId))
-        {
-            return null;
-        }
-
-        return new FactFormDto { EntityId = entityId, EntityType = entityType };
+        return !await IsValidContactAsync(entityId) ? null : new FactFormDto { EntityId = entityId, EntityType = entityType };
     }
 
     public async Task<Fact?> GetByIdAsync(Guid id)
     {
         Fact? fact = await _repository.GetByIdAsync<Fact>(id);
-        if (fact == null || !await IsValidContactAsync(fact.ContactId ?? Guid.Empty))
-        {
-            return null;
-        }
-        return fact;
+        return fact == null || !await IsValidContactAsync(fact.ContactId ?? Guid.Empty) ? null : fact;
     }
 
     private async Task<bool> IsValidContactAsync(Guid id)
     {
-        if (id == Guid.Empty)
-        {
-            return false;
-        }
-
-        return await _repository.CountAsync<Contact>(c => c.Id == id && !c.IsPartial) > 0;
+        return id != Guid.Empty && await _repository.CountAsync<Contact>(c => c.Id == id && !c.IsPartial) > 0;
     }
 }

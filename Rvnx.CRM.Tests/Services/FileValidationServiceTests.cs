@@ -152,7 +152,10 @@ namespace Rvnx.CRM.Tests.Services
         {
             // Zip header + padding
             byte[] bytes = new byte[20];
-            bytes[0] = 0x50; bytes[1] = 0x4B; bytes[2] = 0x03; bytes[3] = 0x04;
+            bytes[0] = 0x50;
+            bytes[1] = 0x4B;
+            bytes[2] = 0x03;
+            bytes[3] = 0x04;
             Assert.True(_service.IsValidFileSignature(bytes, ".docx"));
         }
 

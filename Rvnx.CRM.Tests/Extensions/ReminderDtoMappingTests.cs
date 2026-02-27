@@ -2,8 +2,6 @@ using Rvnx.CRM.Core.Constants;
 using Rvnx.CRM.Core.DTOs.Dates;
 using Rvnx.CRM.Core.Extensions;
 using Rvnx.CRM.Core.Models.Dates;
-using System;
-using Xunit;
 
 namespace Rvnx.CRM.Tests.Extensions
 {
@@ -13,7 +11,7 @@ namespace Rvnx.CRM.Tests.Extensions
         public void ToDtoShouldMapAllPropertiesWhenEntityIsFullyPopulated()
         {
             // Arrange
-            var entity = new Reminder
+            Reminder entity = new()
             {
                 Id = Guid.NewGuid(),
                 Title = "Meeting",
@@ -27,7 +25,7 @@ namespace Rvnx.CRM.Tests.Extensions
             };
 
             // Act
-            var dto = entity.ToDto();
+            ReminderDto dto = entity.ToDto();
 
             // Assert
             Assert.Equal(entity.Id, dto.Id);
@@ -46,14 +44,14 @@ namespace Rvnx.CRM.Tests.Extensions
         public void ToDtoShouldMapNullContactIdToEmptyGuid()
         {
             // Arrange
-            var entity = new Reminder
+            Reminder entity = new()
             {
                 ContactId = null,
                 DueDate = DateTime.Now
             };
 
             // Act
-            var dto = entity.ToDto();
+            ReminderDto dto = entity.ToDto();
 
             // Assert
             Assert.Equal(Guid.Empty, dto.EntityId);
@@ -63,14 +61,14 @@ namespace Rvnx.CRM.Tests.Extensions
         public void ToDtoShouldMapNullDescriptionAsNull()
         {
             // Arrange
-            var entity = new Reminder
+            Reminder entity = new()
             {
                 Description = null,
                 DueDate = DateTime.Now
             };
 
             // Act
-            var dto = entity.ToDto();
+            ReminderDto dto = entity.ToDto();
 
             // Assert
             Assert.Null(dto.Description);
@@ -80,13 +78,13 @@ namespace Rvnx.CRM.Tests.Extensions
         public void ToDtoShouldSetEntityTypeToPerson()
         {
             // Arrange
-            var entity = new Reminder
+            Reminder entity = new()
             {
                 DueDate = DateTime.Now
             };
 
             // Act
-            var dto = entity.ToDto();
+            ReminderDto dto = entity.ToDto();
 
             // Assert
             Assert.Equal(EntityTypes.Person, dto.EntityType);
@@ -96,8 +94,8 @@ namespace Rvnx.CRM.Tests.Extensions
         public void UpdateEntityShouldUpdatePropertiesCorrectly()
         {
             // Arrange
-            var initialContactId = Guid.NewGuid();
-            var entity = new Reminder
+            Guid initialContactId = Guid.NewGuid();
+            Reminder entity = new()
             {
                 Id = Guid.NewGuid(),
                 Title = "Original Title",
@@ -109,7 +107,7 @@ namespace Rvnx.CRM.Tests.Extensions
                 ContactId = initialContactId
             };
 
-            var dto = new ReminderDto
+            ReminderDto dto = new()
             {
                 Title = "Updated Title",
                 Description = "Updated Description",

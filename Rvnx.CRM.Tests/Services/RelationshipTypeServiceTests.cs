@@ -10,7 +10,7 @@ public class RelationshipTypeServiceTests
     public void GetAllReturnsAllTypes()
     {
         // Act
-        var result = RelationshipTypeService.GetAll();
+        IReadOnlyList<RelationshipTypeDefinition> result = RelationshipTypeService.GetAll();
 
         // Assert
         Assert.NotNull(result);
@@ -22,7 +22,7 @@ public class RelationshipTypeServiceTests
     public void GetByEntityTypePersonReturnsOnlyPersonTypes()
     {
         // Act
-        var result = RelationshipTypeService.GetByEntityType(EntityTypes.Person);
+        List<RelationshipTypeDefinition> result = RelationshipTypeService.GetByEntityType(EntityTypes.Person);
 
         // Assert
         Assert.NotNull(result);
@@ -34,7 +34,7 @@ public class RelationshipTypeServiceTests
     public void GetByEntityTypeCompanyReturnsOnlyCompanyTypes()
     {
         // Act
-        var result = RelationshipTypeService.GetByEntityType(EntityTypes.Company);
+        List<RelationshipTypeDefinition> result = RelationshipTypeService.GetByEntityType(EntityTypes.Company);
 
         // Assert
         Assert.NotNull(result);
@@ -46,7 +46,7 @@ public class RelationshipTypeServiceTests
     public void GetByEntityTypeInvalidTypeReturnsEmptyList()
     {
         // Act
-        var result = RelationshipTypeService.GetByEntityType("InvalidType");
+        List<RelationshipTypeDefinition> result = RelationshipTypeService.GetByEntityType("InvalidType");
 
         // Assert
         Assert.NotNull(result);
@@ -57,10 +57,10 @@ public class RelationshipTypeServiceTests
     public void GetByIdValidIdReturnsCorrectType()
     {
         // Arrange
-        var spouseId = Guid.Parse("b2e9a5c8-7f4d-4a1b-8c6e-5f9d3a0e2b4c");
+        Guid spouseId = Guid.Parse("b2e9a5c8-7f4d-4a1b-8c6e-5f9d3a0e2b4c");
 
         // Act
-        var result = RelationshipTypeService.GetById(spouseId);
+        RelationshipTypeDefinition? result = RelationshipTypeService.GetById(spouseId);
 
         // Assert
         Assert.NotNull(result);
@@ -72,10 +72,10 @@ public class RelationshipTypeServiceTests
     public void GetByIdInvalidIdReturnsNull()
     {
         // Arrange
-        var randomId = Guid.NewGuid();
+        Guid randomId = Guid.NewGuid();
 
         // Act
-        var result = RelationshipTypeService.GetById(randomId);
+        RelationshipTypeDefinition? result = RelationshipTypeService.GetById(randomId);
 
         // Assert
         Assert.Null(result);

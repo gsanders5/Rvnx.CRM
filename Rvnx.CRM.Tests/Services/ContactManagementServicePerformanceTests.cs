@@ -1,14 +1,12 @@
 using Moq;
 using Rvnx.CRM.Core.Constants;
 using Rvnx.CRM.Core.DTOs.Contact;
-using Rvnx.CRM.Core.Enumerations;
 using Rvnx.CRM.Core.Interfaces;
 using Rvnx.CRM.Core.Models.Base;
 using Rvnx.CRM.Core.Models.Contact;
 using Rvnx.CRM.Core.Models.Dates;
 using Rvnx.CRM.Core.Services;
 using System.Linq.Expressions;
-using Xunit;
 
 namespace Rvnx.CRM.Tests.Services
 {
@@ -43,7 +41,7 @@ namespace Rvnx.CRM.Tests.Services
 
             // Generate Sibling Relationships (stable IDs)
             // Each partial contact is related to a "Full" contact (sibling), ensuring they are NOT orphans.
-            var siblingRelationships = partialContacts.Select(p => new Relationship
+            List<Relationship> siblingRelationships = partialContacts.Select(p => new Relationship
             {
                 EntityId = p.Id,
                 RelatedEntityId = Guid.NewGuid(), // Unique sibling
@@ -59,14 +57,14 @@ namespace Rvnx.CRM.Tests.Services
             }).ToList();
 
             // Prepare Memory Data
-            var allRelationships = new List<Relationship>();
-            allRelationships.AddRange(initialRelationships);
-            allRelationships.AddRange(siblingRelationships);
+            List<Relationship> allRelationships = [.. initialRelationships, .. siblingRelationships];
 
-            var allContacts = new List<Contact>();
-            allContacts.AddRange(partialContacts);
-            // Add Siblings as Full Contacts
-            allContacts.AddRange(siblingRelationships.Select(r => new Contact { Id = r.RelatedEntityId, IsPartial = false }));
+            List<Contact> allContacts =
+            [
+                .. partialContacts,
+                // Add Siblings as Full Contacts
+                .. siblingRelationships.Select(r => new Contact { Id = r.RelatedEntityId, IsPartial = false }),
+            ];
 
 
             // Setup 1: Get Users (return empty)
@@ -110,7 +108,7 @@ namespace Rvnx.CRM.Tests.Services
                  });
 
             // Also mock dependencies deletion calls to avoid null ref if we accidentally delete something
-             _repositoryMock.Setup(r => r.ListAsync<Pet>(It.IsAny<Expression<Func<Pet, bool>>>(), It.IsAny<CancellationToken>())).ReturnsAsync([]);
+            _repositoryMock.Setup(r => r.ListAsync<Pet>(It.IsAny<Expression<Func<Pet, bool>>>(), It.IsAny<CancellationToken>())).ReturnsAsync([]);
             _repositoryMock.Setup(r => r.ListAsync<Fact>(It.IsAny<Expression<Func<Fact, bool>>>(), It.IsAny<CancellationToken>())).ReturnsAsync([]);
             _repositoryMock.Setup(r => r.ListAsync<Note>(It.IsAny<Expression<Func<Note, bool>>>(), It.IsAny<CancellationToken>())).ReturnsAsync([]);
 

@@ -101,11 +101,18 @@ public static class RelationshipTypeService
     private static readonly Lazy<ILookup<string, RelationshipTypeDefinition>> _byEntityType =
         new(() => _types.Value.ToLookup(t => t.EntityType));
 
-    public static IReadOnlyList<RelationshipTypeDefinition> GetAll() => _types.Value;
+    public static IReadOnlyList<RelationshipTypeDefinition> GetAll()
+    {
+        return _types.Value;
+    }
 
-    public static List<RelationshipTypeDefinition> GetByEntityType(string entityType) =>
-        [.. _byEntityType.Value[entityType]];
+    public static List<RelationshipTypeDefinition> GetByEntityType(string entityType)
+    {
+        return [.. _byEntityType.Value[entityType]];
+    }
 
-    public static RelationshipTypeDefinition? GetById(Guid id) =>
-        _byId.Value.TryGetValue(id, out var result) ? result : null;
+    public static RelationshipTypeDefinition? GetById(Guid id)
+    {
+        return _byId.Value.TryGetValue(id, out RelationshipTypeDefinition? result) ? result : null;
+    }
 }

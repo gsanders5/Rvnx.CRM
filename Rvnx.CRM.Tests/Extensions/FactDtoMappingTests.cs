@@ -11,7 +11,7 @@ namespace Rvnx.CRM.Tests.Extensions
         public void ToDtoShouldMapPropertiesCorrectly()
         {
             // Arrange
-            var fact = new Fact
+            Fact fact = new()
             {
                 Id = Guid.NewGuid(),
                 Category = "Test Category",
@@ -21,7 +21,7 @@ namespace Rvnx.CRM.Tests.Extensions
             };
 
             // Act
-            var dto = fact.ToDto();
+            FactDto dto = fact.ToDto();
 
             // Assert
             Assert.Equal(fact.Id, dto.Id);
@@ -36,7 +36,7 @@ namespace Rvnx.CRM.Tests.Extensions
         public void ToDtoShouldMapNullContactIdToEmptyGuid()
         {
             // Arrange
-            var fact = new Fact
+            Fact fact = new()
             {
                 Id = Guid.NewGuid(),
                 Category = "Test Category",
@@ -46,7 +46,7 @@ namespace Rvnx.CRM.Tests.Extensions
             };
 
             // Act
-            var dto = fact.ToDto();
+            FactDto dto = fact.ToDto();
 
             // Assert
             Assert.Equal(Guid.Empty, dto.EntityId);
@@ -56,7 +56,7 @@ namespace Rvnx.CRM.Tests.Extensions
         public void ToEntityShouldCreateNewFactWithCorrectProperties()
         {
             // Arrange
-            var formDto = new FactFormDto
+            FactFormDto formDto = new()
             {
                 Category = "New Category",
                 Value = "New Value",
@@ -64,7 +64,7 @@ namespace Rvnx.CRM.Tests.Extensions
             };
 
             // Act
-            var entity = formDto.ToEntity();
+            Fact entity = formDto.ToEntity();
 
             // Assert
             Assert.NotEqual(Guid.Empty, entity.Id);
@@ -77,8 +77,8 @@ namespace Rvnx.CRM.Tests.Extensions
         public void UpdateEntityShouldUpdatePropertiesCorrectly()
         {
             // Arrange
-            var initialContactId = Guid.NewGuid();
-            var fact = new Fact
+            Guid initialContactId = Guid.NewGuid();
+            Fact fact = new()
             {
                 Id = Guid.NewGuid(),
                 Category = "Old Category",
@@ -86,7 +86,7 @@ namespace Rvnx.CRM.Tests.Extensions
                 ContactId = initialContactId
             };
 
-            var formDto = new FactFormDto
+            FactFormDto formDto = new()
             {
                 Category = "Updated Category",
                 Value = "Updated Value",

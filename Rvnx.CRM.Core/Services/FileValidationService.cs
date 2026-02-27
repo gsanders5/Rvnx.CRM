@@ -102,12 +102,9 @@ namespace Rvnx.CRM.Core.Services
 
         public string GetMimeType(string extension)
         {
-            if (string.IsNullOrEmpty(extension))
-            {
-                return "application/octet-stream";
-            }
-
-            return MimeTypeMap.TryGetValue(extension, out string? mimeType) ? mimeType : "application/octet-stream";
+            return string.IsNullOrEmpty(extension)
+                ? "application/octet-stream"
+                : MimeTypeMap.TryGetValue(extension, out string? mimeType) ? mimeType : "application/octet-stream";
         }
     }
 }

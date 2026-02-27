@@ -2,7 +2,6 @@ using Rvnx.CRM.Core.Constants;
 using Rvnx.CRM.Core.DTOs.Base;
 using Rvnx.CRM.Core.Extensions;
 using Rvnx.CRM.Core.Models.Base;
-using Xunit;
 
 namespace Rvnx.CRM.Tests.Extensions
 {
@@ -12,9 +11,9 @@ namespace Rvnx.CRM.Tests.Extensions
         public void ToDtoShouldMapAllPropertiesWhenTheyArePopulated()
         {
             // Arrange
-            var attachmentId = Guid.NewGuid();
-            var contactId = Guid.NewGuid();
-            var attachment = new Attachment
+            Guid attachmentId = Guid.NewGuid();
+            Guid contactId = Guid.NewGuid();
+            Attachment attachment = new()
             {
                 Id = attachmentId,
                 FileName = "test-document.pdf",
@@ -24,7 +23,7 @@ namespace Rvnx.CRM.Tests.Extensions
             };
 
             // Act
-            var dto = attachment.ToDto();
+            AttachmentDto dto = attachment.ToDto();
 
             // Assert
             Assert.Equal(attachmentId, dto.Id);
@@ -39,7 +38,7 @@ namespace Rvnx.CRM.Tests.Extensions
         public void ToDtoShouldMapNullFileNameToEmptyString()
         {
             // Arrange
-            var attachment = new Attachment
+            Attachment attachment = new()
             {
                 Id = Guid.NewGuid(),
                 FileName = null,
@@ -49,7 +48,7 @@ namespace Rvnx.CRM.Tests.Extensions
             };
 
             // Act
-            var dto = attachment.ToDto();
+            AttachmentDto dto = attachment.ToDto();
 
             // Assert
             Assert.Equal(string.Empty, dto.FileName);
@@ -59,7 +58,7 @@ namespace Rvnx.CRM.Tests.Extensions
         public void ToDtoShouldMapNullContactIdToEmptyGuid()
         {
             // Arrange
-            var attachment = new Attachment
+            Attachment attachment = new()
             {
                 Id = Guid.NewGuid(),
                 FileName = "orphaned.txt",
@@ -69,7 +68,7 @@ namespace Rvnx.CRM.Tests.Extensions
             };
 
             // Act
-            var dto = attachment.ToDto();
+            AttachmentDto dto = attachment.ToDto();
 
             // Assert
             Assert.Equal(Guid.Empty, dto.EntityId);
@@ -79,7 +78,7 @@ namespace Rvnx.CRM.Tests.Extensions
         public void ToDtoShouldAlwaysMapEntityTypeToPerson()
         {
             // Arrange
-            var attachment = new Attachment
+            Attachment attachment = new()
             {
                 Id = Guid.NewGuid(),
                 FileName = "test.jpg",
@@ -89,7 +88,7 @@ namespace Rvnx.CRM.Tests.Extensions
             };
 
             // Act
-            var dto = attachment.ToDto();
+            AttachmentDto dto = attachment.ToDto();
 
             // Assert
             Assert.Equal(EntityTypes.Person, dto.EntityType);
