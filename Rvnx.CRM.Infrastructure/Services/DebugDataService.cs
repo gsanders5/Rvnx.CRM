@@ -72,9 +72,6 @@ public class DebugDataService(IRepository repository) : IDebugDataService
         List<Note> notes = await _repository.ListAsync<Note>();
         await _repository.DeleteRangeAsync(notes);
 
-        List<Reminder> reminders = await _repository.ListAsync<Reminder>();
-        await _repository.DeleteRangeAsync(reminders);
-
         List<SignificantDate> dates = await _repository.ListAsync<SignificantDate>();
         await _repository.DeleteRangeAsync(dates);
 

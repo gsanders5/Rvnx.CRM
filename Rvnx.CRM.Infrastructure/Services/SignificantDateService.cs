@@ -12,6 +12,16 @@ public class SignificantDateService(IRepository repository) : ISignificantDateSe
 {
     private readonly IRepository _repository = repository;
 
+    public async Task<List<SignificantDateDto>> GetByContactAsync(Guid contactId)
+    {
+        List<SignificantDate> dates = await _repository.ListAsync<SignificantDate>(
+            d => d.ContactId == contactId,
+            default,
+            nameof(SignificantDate.ReminderOffsets)
+        );
+        return dates.Select(d => d.ToDto()).ToList();
+    }
+
     public async Task<OperationResult> CreateAsync(SignificantDateDto dto)
     {
         if (!await _repository.IsValidContactAsync(dto.EntityId))
@@ -23,11 +33,10 @@ public class SignificantDateService(IRepository repository) : ISignificantDateSe
         {
             if (await IsBirthdayAlreadySetAsync(dto.EntityId))
             {
-                // This message will be used to add a model error in the controller
                 return OperationResult.Failure("A birthday is already set for this contact.");
             }
 
-            dto.EventFrequency = TimeSpan.FromDays(365);
+            dto.RecurrenceType = Core.Enumerations.RecurrenceType.Annual;
         }
 
         SignificantDate importantDate = new()
@@ -35,10 +44,17 @@ public class SignificantDateService(IRepository repository) : ISignificantDateSe
             Id = Guid.NewGuid(),
             Title = dto.Title,
             Description = dto.Description,
-            Date = dto.Date,
+            EventDate = dto.EventDate,
             ContactId = dto.EntityId,
-            RemindMe = dto.RemindMe,
-            EventFrequency = dto.EventFrequency
+            RecurrenceType = dto.RecurrenceType,
+            CustomIntervalDays = dto.CustomIntervalDays,
+            IsActive = dto.IsActive,
+            ReminderOffsets = dto.ReminderOffsets.Select(ro => new ReminderOffset
+            {
+                Id = Guid.NewGuid(),
+                DaysBeforeEvent = ro.DaysBeforeEvent,
+                IsActive = ro.IsActive
+            }).ToList()
         };
 
         await _repository.AddAsync(importantDate);
@@ -64,14 +80,15 @@ public class SignificantDateService(IRepository repository) : ISignificantDateSe
                     return OperationResult.Failure("A birthday is already set for this contact.");
                 }
 
-                dto.EventFrequency = TimeSpan.FromDays(365);
+                dto.RecurrenceType = Core.Enumerations.RecurrenceType.Annual;
             }
 
             importantDate.Title = dto.Title;
             importantDate.Description = dto.Description;
-            importantDate.Date = dto.Date;
-            importantDate.RemindMe = dto.RemindMe;
-            importantDate.EventFrequency = dto.EventFrequency;
+            importantDate.EventDate = dto.EventDate;
+            importantDate.RecurrenceType = dto.RecurrenceType;
+            importantDate.CustomIntervalDays = dto.CustomIntervalDays;
+            importantDate.IsActive = dto.IsActive;
 
             await _repository.UpdateAsync(importantDate);
             await _repository.SaveChangesAsync();
@@ -86,6 +103,48 @@ public class SignificantDateService(IRepository repository) : ISignificantDateSe
             }
             throw;
         }
+    }
+
+    public async Task<OperationResult> AddReminderOffsetAsync(Guid significantDateId, int daysBeforeEvent)
+    {
+        SignificantDate? importantDate = await _repository.GetByIdAsync<SignificantDate>(significantDateId);
+        if (importantDate == null || !await _repository.IsValidContactAsync(importantDate.ContactId ?? Guid.Empty))
+        {
+            return OperationResult.Failure("Significant date not found.");
+        }
+
+        ReminderOffset offset = new()
+        {
+            Id = Guid.NewGuid(),
+            SignificantDateId = significantDateId,
+            DaysBeforeEvent = daysBeforeEvent,
+            IsActive = true
+        };
+
+        await _repository.AddAsync(offset);
+        await _repository.SaveChangesAsync();
+
+        return OperationResult.Ok(importantDate.ContactId ?? Guid.Empty, EntityTypes.Person);
+    }
+
+    public async Task<OperationResult> DeleteReminderOffsetAsync(Guid offsetId)
+    {
+        ReminderOffset? offset = await _repository.GetByIdAsync<ReminderOffset>(offsetId);
+        if (offset == null)
+        {
+            return OperationResult.Failure("Reminder offset not found.");
+        }
+
+        SignificantDate? importantDate = await _repository.GetByIdAsync<SignificantDate>(offset.SignificantDateId);
+        if (importantDate == null)
+        {
+            return OperationResult.Failure("Significant date not found.");
+        }
+
+        await _repository.DeleteAsync<ReminderOffset>(offsetId);
+        await _repository.SaveChangesAsync();
+
+        return OperationResult.Ok(importantDate.ContactId ?? Guid.Empty, EntityTypes.Person);
     }
 
     public async Task<OperationResult> DeleteAsync(Guid id)
@@ -106,7 +165,12 @@ public class SignificantDateService(IRepository repository) : ISignificantDateSe
 
     public async Task<SignificantDateDto?> GetDtoAsync(Guid id)
     {
-        SignificantDate? importantDate = await _repository.GetByIdAsync<SignificantDate>(id);
+        var dates = await _repository.ListAsync<SignificantDate>(
+            d => d.Id == id,
+            default,
+            nameof(SignificantDate.ReminderOffsets)
+        );
+        SignificantDate? importantDate = dates.FirstOrDefault();
         return importantDate == null || !await _repository.IsValidContactAsync(importantDate.ContactId ?? Guid.Empty) ? null : importantDate.ToDto();
     }
 

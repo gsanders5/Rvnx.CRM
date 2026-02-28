@@ -11,29 +11,54 @@ namespace Rvnx.CRM.Web.Controllers
     {
         private readonly ISignificantDateService _significantDateService = significantDateService;
 
-        public async Task<IActionResult> Create(Guid entityId, string entityType)
+        public async Task<IActionResult> Index(Guid contactId)
         {
-            return !await IsValidContactAsync(entityId)
+            if (!await IsValidContactAsync(contactId))
+            {
+                return NotFound();
+            }
+            List<SignificantDateDto> dates = await _significantDateService.GetByContactAsync(contactId);
+            ViewBag.ContactId = contactId;
+            return View(dates);
+        }
+
+        public async Task<IActionResult> Create(Guid contactId)
+        {
+            return !await IsValidContactAsync(contactId)
                 ? NotFound()
-                : View(new SignificantDateDto
+                : View(new Rvnx.CRM.Core.DTOs.Dates.CreateSignificantDateRequest
                 {
-                    EntityId = entityId,
-                    EntityType = entityType,
-                    Date = DateTime.Today,
-                    EventFrequency = TimeSpan.FromDays(365) // Default to Yearly
+                    EntityId = contactId,
+                    EntityType = Core.Constants.EntityTypes.Person,
+                    EventDate = DateOnly.FromDateTime(DateTime.Today),
+                    RecurrenceType = Core.Enumerations.RecurrenceType.Annual,
+                    ReminderOffsetDays = [0, 7, 30]
                 });
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(SignificantDateDto dto)
+        public async Task<IActionResult> Create(Rvnx.CRM.Core.DTOs.Dates.CreateSignificantDateRequest dto)
         {
             if (ModelState.IsValid)
             {
-                OperationResult result = await _significantDateService.CreateAsync(dto);
+                SignificantDateDto sdDto = new()
+                {
+                    EntityId = dto.EntityId,
+                    EntityType = dto.EntityType,
+                    Title = dto.Title,
+                    Description = dto.Description,
+                    EventDate = dto.EventDate,
+                    RecurrenceType = dto.RecurrenceType,
+                    CustomIntervalDays = dto.CustomIntervalDays,
+                    IsActive = true,
+                    ReminderOffsets = dto.ReminderOffsetDays.Select(d => new ReminderOffsetDto { DaysBeforeEvent = d, IsActive = true }).ToList()
+                };
+
+                OperationResult result = await _significantDateService.CreateAsync(sdDto);
                 if (result.Success)
                 {
-                    return RedirectToEntity(result.RedirectId, result.RedirectType);
+                    return RedirectToAction(nameof(Index), new { contactId = dto.EntityId });
                 }
 
                 if (result.ErrorMessage == "A birthday is already set for this contact.")
@@ -59,12 +84,30 @@ namespace Rvnx.CRM.Web.Controllers
             }
 
             SignificantDateDto? dto = await _significantDateService.GetDtoAsync(id.Value);
-            return dto == null ? NotFound() : View(dto);
+            if (dto == null)
+            {
+                return NotFound();
+            }
+
+            ViewBag.Offsets = dto.ReminderOffsets;
+
+            return View(new Rvnx.CRM.Core.DTOs.Dates.UpdateSignificantDateRequest
+            {
+                Id = dto.Id,
+                EntityId = dto.EntityId,
+                EntityType = dto.EntityType,
+                Title = dto.Title,
+                Description = dto.Description,
+                EventDate = dto.EventDate,
+                RecurrenceType = dto.RecurrenceType,
+                CustomIntervalDays = dto.CustomIntervalDays,
+                IsActive = dto.IsActive
+            });
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(Guid id, SignificantDateDto dto)
+        public async Task<IActionResult> Edit(Guid id, Rvnx.CRM.Core.DTOs.Dates.UpdateSignificantDateRequest dto)
         {
             if (id != dto.Id)
             {
@@ -75,10 +118,23 @@ namespace Rvnx.CRM.Web.Controllers
             {
                 try
                 {
-                    OperationResult result = await _significantDateService.UpdateAsync(id, dto);
+                    SignificantDateDto sdDto = new()
+                    {
+                        Id = dto.Id,
+                        EntityId = dto.EntityId,
+                        EntityType = dto.EntityType,
+                        Title = dto.Title,
+                        Description = dto.Description,
+                        EventDate = dto.EventDate,
+                        RecurrenceType = dto.RecurrenceType,
+                        CustomIntervalDays = dto.CustomIntervalDays,
+                        IsActive = dto.IsActive
+                    };
+
+                    OperationResult result = await _significantDateService.UpdateAsync(id, sdDto);
                     if (result.Success)
                     {
-                        return RedirectToEntity(result.RedirectId, result.RedirectType);
+                        return RedirectToAction(nameof(Index), new { contactId = dto.EntityId });
                     }
 
                     if (result.ErrorMessage == "A birthday is already set for this contact.")
@@ -101,6 +157,22 @@ namespace Rvnx.CRM.Web.Controllers
             return View(dto);
         }
 
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> AddOffset(Guid significantDateId, int daysBeforeEvent, Guid contactId)
+        {
+            await _significantDateService.AddReminderOffsetAsync(significantDateId, daysBeforeEvent);
+            return RedirectToAction(nameof(Edit), new { id = significantDateId });
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteOffset(Guid offsetId, Guid significantDateId, Guid contactId)
+        {
+            await _significantDateService.DeleteReminderOffsetAsync(offsetId);
+            return RedirectToAction(nameof(Edit), new { id = significantDateId });
+        }
+
         public async Task<IActionResult> Delete(Guid? id)
         {
             if (id == null)
@@ -114,10 +186,10 @@ namespace Rvnx.CRM.Web.Controllers
 
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> DeleteConfirmed(Guid id)
+        public async Task<IActionResult> DeleteConfirmed(Guid id, Guid contactId)
         {
             OperationResult result = await _significantDateService.DeleteAsync(id);
-            return result.Success ? RedirectToEntity(result.RedirectId, result.RedirectType) : RedirectToAction("Index", "Home");
+            return result.Success ? RedirectToAction(nameof(Index), new { contactId = contactId }) : RedirectToAction("Index", "Home");
         }
     }
 }

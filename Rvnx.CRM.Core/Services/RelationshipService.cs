@@ -198,10 +198,10 @@ namespace Rvnx.CRM.Core.Services
                     Id = Guid.NewGuid(),
                     ContactId = partialContact.Id,
                     Title = SignificantDateTitles.Birthday,
-                    Date = dto.Birthday.Value,
+                    EventDate = DateOnly.FromDateTime(dto.Birthday.Value),
                     Description = "Birthday",
-                    RemindMe = true,
-                    EventFrequency = TimeSpan.FromDays(365)
+                    RecurrenceType = Enumerations.RecurrenceType.Annual,
+                    IsActive = true
                 };
                 await repository.AddAsync(bday);
             }

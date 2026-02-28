@@ -41,8 +41,6 @@ public abstract class Person : BaseEntity
     // NotMapped Properties for View Compatibility
     public virtual ICollection<Note> Notes { get; set; } = [];
 
-    public virtual ICollection<Reminder> Reminders { get; set; } = [];
-
     public virtual ICollection<SignificantDate> SignificantDates { get; set; } = [];
 
     [NotMapped]

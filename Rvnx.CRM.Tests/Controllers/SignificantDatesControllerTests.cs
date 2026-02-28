@@ -49,19 +49,19 @@ namespace Rvnx.CRM.Tests.Controllers
             _context.Contacts.Add(new Contact { Id = contactId, FirstName = "Test" });
             await _context.SaveChangesAsync();
 
-            SignificantDateDto dto = new()
+            CreateSignificantDateRequest dto = new()
             {
                 EntityId = contactId,
                 EntityType = EntityTypes.Person,
                 Title = "Anniversary",
-                Date = DateTime.Today,
-                EventFrequency = TimeSpan.FromDays(365)
+                EventDate = DateOnly.FromDateTime(DateTime.Today),
+                RecurrenceType = Core.Enumerations.RecurrenceType.Annual
             };
 
             IActionResult result = await _controller.Create(dto);
 
             RedirectToActionResult redirectResult = Assert.IsType<RedirectToActionResult>(result);
-            Assert.Equal("Details", redirectResult.ActionName);
+            Assert.Equal("Index", redirectResult.ActionName);
 
             SignificantDate? created = await _context.Set<SignificantDate>().FirstOrDefaultAsync();
             Assert.NotNull(created);
@@ -79,17 +79,18 @@ namespace Rvnx.CRM.Tests.Controllers
                 Id = Guid.NewGuid(),
                 ContactId = contactId,
                 Title = SignificantDateTitles.Birthday,
-                Date = new DateTime(1990, 1, 1),
-                EventFrequency = TimeSpan.FromDays(365)
+                EventDate = new DateOnly(1990, 1, 1),
+                RecurrenceType = Core.Enumerations.RecurrenceType.Annual,
+                IsActive = true
             });
             await _context.SaveChangesAsync();
 
-            SignificantDateDto dto = new()
+            CreateSignificantDateRequest dto = new()
             {
                 EntityId = contactId,
                 EntityType = EntityTypes.Person,
                 Title = SignificantDateTitles.Birthday, // Duplicate Title
-                Date = DateTime.Today
+                EventDate = DateOnly.FromDateTime(DateTime.Today)
             };
 
             IActionResult result = await _controller.Create(dto);
@@ -114,17 +115,18 @@ namespace Rvnx.CRM.Tests.Controllers
                 Id = Guid.NewGuid(),
                 ContactId = contactId,
                 Title = "birthday", // Lowercase
-                Date = new DateTime(1990, 1, 1),
-                EventFrequency = TimeSpan.FromDays(365)
+                EventDate = new DateOnly(1990, 1, 1),
+                RecurrenceType = Core.Enumerations.RecurrenceType.Annual,
+                IsActive = true
             });
             await _context.SaveChangesAsync();
 
-            SignificantDateDto dto = new()
+            CreateSignificantDateRequest dto = new()
             {
                 EntityId = contactId,
                 EntityType = EntityTypes.Person,
                 Title = SignificantDateTitles.Birthday, // Uppercase (Standard)
-                Date = DateTime.Today
+                EventDate = DateOnly.FromDateTime(DateTime.Today)
             };
 
             IActionResult result = await _controller.Create(dto);
@@ -147,7 +149,7 @@ namespace Rvnx.CRM.Tests.Controllers
                 Id = Guid.NewGuid(),
                 ContactId = contactId,
                 Title = SignificantDateTitles.Birthday,
-                Date = new DateTime(1990, 1, 1)
+                EventDate = new DateOnly(1990, 1, 1)
             });
 
             // Another Date we will try to change to Birthday
@@ -157,17 +159,17 @@ namespace Rvnx.CRM.Tests.Controllers
                 Id = anniversaryId,
                 ContactId = contactId,
                 Title = "Anniversary",
-                Date = new DateTime(2010, 5, 5)
+                EventDate = new DateOnly(2010, 5, 5)
             });
             await _context.SaveChangesAsync();
 
-            SignificantDateDto dto = new()
+            UpdateSignificantDateRequest dto = new()
             {
                 Id = anniversaryId,
                 EntityId = contactId,
                 EntityType = EntityTypes.Person,
                 Title = SignificantDateTitles.Birthday, // Change Anniversary to Birthday
-                Date = new DateTime(2010, 5, 5)
+                EventDate = new DateOnly(2010, 5, 5)
             };
 
             IActionResult result = await _controller.Edit(anniversaryId, dto);
@@ -189,27 +191,27 @@ namespace Rvnx.CRM.Tests.Controllers
                 Id = birthdayId,
                 ContactId = contactId,
                 Title = SignificantDateTitles.Birthday,
-                Date = new DateTime(1990, 1, 1)
+                EventDate = new DateOnly(1990, 1, 1)
             });
             await _context.SaveChangesAsync();
 
-            SignificantDateDto dto = new()
+            UpdateSignificantDateRequest dto = new()
             {
                 Id = birthdayId,
                 EntityId = contactId,
                 EntityType = EntityTypes.Person,
                 Title = SignificantDateTitles.Birthday,
-                Date = new DateTime(1990, 1, 2) // Change date only
+                EventDate = new DateOnly(1990, 1, 2) // Change date only
             };
 
             IActionResult result = await _controller.Edit(birthdayId, dto);
 
             RedirectToActionResult redirectResult = Assert.IsType<RedirectToActionResult>(result);
-            Assert.Equal("Details", redirectResult.ActionName);
+            Assert.Equal("Index", redirectResult.ActionName);
 
             SignificantDate? updated = await _context.Set<SignificantDate>().FindAsync(birthdayId);
             Assert.NotNull(updated);
-            Assert.Equal(new DateTime(1990, 1, 2), updated.Date);
+            Assert.Equal(new DateOnly(1990, 1, 2), updated.EventDate);
         }
 
         [Fact]
@@ -222,11 +224,11 @@ namespace Rvnx.CRM.Tests.Controllers
                 Id = dateId,
                 ContactId = contactId,
                 Title = "Del",
-                Date = DateTime.Today
+                EventDate = DateOnly.FromDateTime(DateTime.Today)
             });
             await _context.SaveChangesAsync();
 
-            IActionResult result = await _controller.DeleteConfirmed(dateId);
+            IActionResult result = await _controller.DeleteConfirmed(dateId, contactId);
 
             Assert.IsType<RedirectToActionResult>(result);
             Assert.Null(await _context.Set<SignificantDate>().FindAsync(dateId));
