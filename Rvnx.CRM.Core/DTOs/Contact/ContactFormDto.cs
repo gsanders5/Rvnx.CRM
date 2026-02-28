@@ -33,6 +33,10 @@ namespace Rvnx.CRM.Core.DTOs.Contact
 
         [DataType(DataType.Date)]
         public DateTime? Birthday { get; set; }
+
+        [Display(Name = "Remind on Birthday")]
+        public bool RemindOnBirthday { get; set; } = true;
+
         public bool IsHidden { get; set; }
 
         [MaxLength(100)]

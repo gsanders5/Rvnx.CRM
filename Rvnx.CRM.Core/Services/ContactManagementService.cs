@@ -119,7 +119,7 @@ public class ContactManagementService(IRepository repository, IFileValidationSer
 
         await UpdateOrAddContactMethod(contact.Id, ContactMethodType.Email, contactDto.Email, null);
         await UpdateOrAddContactMethod(contact.Id, ContactMethodType.Phone, contactDto.Phone, null);
-        await UpdateOrAddBirthday(contact.Id, contactDto.Birthday, null);
+        await UpdateOrAddBirthday(contact.Id, contactDto.Birthday, null, contactDto.RemindOnBirthday);
 
         await _repository.SaveChangesAsync();
         return ContactOperationResult.Ok(contact.Id);
@@ -142,7 +142,7 @@ public class ContactManagementService(IRepository repository, IFileValidationSer
         await UpdateOrAddContactMethod(id, ContactMethodType.Phone, contactDto.Phone, existingPhone);
 
         SignificantDate? existingBday = await GetBirthdayAsync(id);
-        await UpdateOrAddBirthday(id, contactDto.Birthday, existingBday);
+        await UpdateOrAddBirthday(id, contactDto.Birthday, existingBday, contactDto.RemindOnBirthday);
 
         ContactOperationResult imageResult = await HandleProfileImageUpdateAsync(id, imageStream, fileName, contentType);
         if (!imageResult.Success)
@@ -322,11 +322,13 @@ public class ContactManagementService(IRepository repository, IFileValidationSer
         }
     }
 
-    private async Task UpdateOrAddBirthday(Guid contactId, DateTime? newDate, SignificantDate? existingDate)
+    private async Task UpdateOrAddBirthday(Guid contactId, DateTime? newDate, SignificantDate? existingDate, bool remindOnBirthday)
     {
         if (newDate.HasValue)
         {
             DateOnly newDateOnly = DateOnly.FromDateTime(newDate.Value);
+            SignificantDate targetDate = existingDate!;
+
             if (existingDate != null)
             {
                 if (existingDate.EventDate != newDateOnly)
@@ -337,7 +339,7 @@ public class ContactManagementService(IRepository repository, IFileValidationSer
             }
             else
             {
-                await _repository.AddAsync(new SignificantDate
+                targetDate = new SignificantDate
                 {
                     Id = Guid.NewGuid(),
                     ContactId = contactId,
@@ -346,7 +348,42 @@ public class ContactManagementService(IRepository repository, IFileValidationSer
                     Description = "Birthday",
                     RecurrenceType = Enumerations.RecurrenceType.Annual,
                     IsActive = true
-                });
+                };
+                await _repository.AddAsync(targetDate);
+            }
+
+            // Sync ReminderOffset based on remindOnBirthday
+            var offsets = await _repository.ListAsync<ReminderOffset>(o => o.SignificantDateId == targetDate.Id && o.DaysBeforeEvent == 0);
+            var offset = offsets.FirstOrDefault();
+
+            if (remindOnBirthday)
+            {
+                if (offset == null)
+                {
+                    await _repository.AddAsync(new ReminderOffset
+                    {
+                        Id = Guid.NewGuid(),
+                        SignificantDateId = targetDate.Id,
+                        DaysBeforeEvent = 0,
+                        IsActive = true
+                    });
+                }
+                else if (!offset.IsActive)
+                {
+                    offset.IsActive = true;
+                    await _repository.UpdateAsync(offset);
+                }
+            }
+            else
+            {
+                if (offset != null)
+                {
+                    if (offset.IsActive)
+                    {
+                        offset.IsActive = false;
+                        await _repository.UpdateAsync(offset);
+                    }
+                }
             }
         }
         else if (existingDate != null)

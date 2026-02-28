@@ -129,6 +129,9 @@ namespace Rvnx.CRM.Tests.Services
         [Fact]
         public async Task CreateContactAsyncUsesSingleSaveChangesAsync()
         {
+            _repositoryMock.Setup(r => r.ListAsync<ReminderOffset>(It.IsAny<System.Linq.Expressions.Expression<Func<ReminderOffset, bool>>>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(new List<ReminderOffset>());
+
             ContactFormDto dto = new()
             {
                 FirstName = "Performance",
