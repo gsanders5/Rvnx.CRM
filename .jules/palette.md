@@ -33,3 +33,7 @@
 <a href="#main-content" class="visually-hidden-focusable position-absolute top-0 start-0 p-3 z-3 bg-primary text-white text-decoration-none rounded-bottom-end">Skip to main content</a>
 ```
 Ensure the target container has `id="main-content"` and `tabindex="-1"` to correctly receive focus.
+
+## 2026-02-28 - ARIA labels for Icon-Only Graph Controls
+**Learning:** Found several icon-only buttons in the Home Dashboard network graph missing `aria-label` attributes.
+**Action:** Ensure all controls intended for graph manipulation (like zoom and fullscreen buttons) always include `aria-label` attributes to make their function clear to screen reader users, especially when they only contain an icon (like `bi-arrows-fullscreen`).
