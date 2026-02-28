@@ -17,11 +17,9 @@ document.addEventListener('click', function (e) {
             btn.dataset.originalTitle = originalTitle;
         }
 
-        // Change icon to check
         icon.className = 'bi bi-check-lg';
         btn.setAttribute('title', 'Copied!');
 
-        // Clear existing timeout
         if (btn.dataset.timeoutId) {
             clearTimeout(parseInt(btn.dataset.timeoutId));
         }
@@ -38,7 +36,6 @@ document.addEventListener('click', function (e) {
     });
 });
 
-// Image Preview Logic
 document.addEventListener('change', function(e) {
     if (!e.target.matches('input[type="file"][data-preview-target]')) return;
 
@@ -62,14 +59,12 @@ document.addEventListener('change', function(e) {
 });
 
 $(function() {
-    // Global form submission loading state
     $('form').on('submit', function() {
         var $form = $(this);
 
         // Don't show spinner if form has target="_blank" (e.g. download)
         if ($form.attr('target') === '_blank') return;
 
-        // Check if validation is available and passes
         if (typeof $form.valid === 'function' && !$form.valid()) {
             return;
         }
@@ -86,7 +81,6 @@ $(function() {
             $btn.prepend('<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>');
         }
 
-        // Disable button to prevent double submit
         $btn.prop('disabled', true);
 
         // Timeout to re-enable button after 10 seconds in case of network issue or 204 No Content
