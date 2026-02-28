@@ -43,7 +43,9 @@ public class RelationshipsControllerTests
                     default))
                 .ReturnsAsync(["Test Contact"]);
 
-            RelationshipsController controller = new(relationshipServiceMock.Object, repositoryMock.Object);
+            var mockEntityService = new Mock<IEntityService>();
+            mockEntityService.Setup(s => s.ExistsAsync(It.IsAny<string>(), It.IsAny<Guid>())).ReturnsAsync(true);
+            RelationshipsController controller = new(relationshipServiceMock.Object, repositoryMock.Object, mockEntityService.Object);
 
             Guid entityId = Guid.NewGuid();
 
@@ -75,7 +77,9 @@ public class RelationshipsControllerTests
             Mock<IUrlHelper> mockUrlHelper = new();
             mockUrlHelper.Setup(x => x.IsLocalUrl(It.IsAny<string>())).Returns((string url) => url.StartsWith('/'));
 
-            _controller = new RelationshipsController(relationshipService, repository)
+            var mockEntityService = new Mock<IEntityService>();
+            mockEntityService.Setup(s => s.ExistsAsync(It.IsAny<string>(), It.IsAny<Guid>())).ReturnsAsync(true);
+            _controller = new RelationshipsController(relationshipService, repository, mockEntityService.Object)
             {
                 ControllerContext = new ControllerContext { HttpContext = new DefaultHttpContext() },
                 Url = mockUrlHelper.Object
@@ -159,7 +163,9 @@ public class RelationshipsControllerTests
             Mock<IUrlHelper> mockUrlHelper = new();
             mockUrlHelper.Setup(x => x.IsLocalUrl(It.IsAny<string>())).Returns((string url) => url.StartsWith('/'));
 
-            _controller = new RelationshipsController(relationshipService, repository)
+            var mockEntityService = new Mock<IEntityService>();
+            mockEntityService.Setup(s => s.ExistsAsync(It.IsAny<string>(), It.IsAny<Guid>())).ReturnsAsync(true);
+            _controller = new RelationshipsController(relationshipService, repository, mockEntityService.Object)
             {
                 ControllerContext = new ControllerContext { HttpContext = new DefaultHttpContext() },
                 Url = mockUrlHelper.Object
@@ -224,7 +230,9 @@ public class RelationshipsControllerTests
             _context = new CRMDbContext(options, mockCurrentUserService.Object);
             Repository repository = new(_context);
             RelationshipService relationshipService = new(repository);
-            _controller = new RelationshipsController(relationshipService, repository);
+            var mockEntityService = new Mock<IEntityService>();
+            mockEntityService.Setup(s => s.ExistsAsync(It.IsAny<string>(), It.IsAny<Guid>())).ReturnsAsync(true);
+            _controller = new RelationshipsController(relationshipService, repository, mockEntityService.Object);
         }
 
         public void Dispose()
