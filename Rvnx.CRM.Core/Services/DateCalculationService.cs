@@ -17,29 +17,15 @@ namespace Rvnx.CRM.Core.Services
             if (significantDate.RecurrenceType == Enumerations.RecurrenceType.Annual)
             {
                 int year = fromDate.Year;
-                DateOnly nextOccurrence;
-
-                try
-                {
-                    nextOccurrence = new DateOnly(year, significantDate.EventDate.Month, significantDate.EventDate.Day);
-                }
-                catch (ArgumentOutOfRangeException)
-                {
-                    // Feb 29 on non leap year
-                    nextOccurrence = new DateOnly(year, 2, 28);
-                }
+                int month = significantDate.EventDate.Month;
+                int day = Math.Min(significantDate.EventDate.Day, DateTime.DaysInMonth(year, month));
+                DateOnly nextOccurrence = new DateOnly(year, month, day);
 
                 if (nextOccurrence < fromDate)
                 {
                     year++;
-                    try
-                    {
-                        nextOccurrence = new DateOnly(year, significantDate.EventDate.Month, significantDate.EventDate.Day);
-                    }
-                    catch (ArgumentOutOfRangeException)
-                    {
-                        nextOccurrence = new DateOnly(year, 2, 28);
-                    }
+                    day = Math.Min(significantDate.EventDate.Day, DateTime.DaysInMonth(year, month));
+                    nextOccurrence = new DateOnly(year, month, day);
                 }
                 return nextOccurrence;
             }

@@ -12,3 +12,4 @@
 
 **Learning:** Relying solely on `IsPartialContactAsync` for validation allows non-existent contacts to bypass checks (as they are "not partial"). This can lead to orphaned records.
 **Action:** Use `IsValidContactAsync` in `RepositoryController` which explicitly enforces both existence and non-partial status for contact-related operations.
+## 2026-02-28 - [DateCalculationService - Avoid using try-catch for leap year flow control] **Learning:** The codebase contained a pattern of handling leap year edge cases (instantiating February 29th on non-leap years) by intentionally throwing and catching `ArgumentOutOfRangeException` and defaulting to February 28th. **Action:** Replace this exception-driven control flow with mathematical bounding using `Math.Min(expectedDay, DateTime.DaysInMonth(year, month))` to correctly and safely handle month-end day calculations.
