@@ -6,6 +6,12 @@ namespace Rvnx.CRM.Core.Interfaces;
 public interface IRepository
 {
     /// <summary>
+    /// Provides an unfiltered IQueryable for the entity, bypassing Global Query Filters.
+    /// Used for administrative, system-level, or cross-tenant operations.
+    /// </summary>
+    IQueryable<T> QueryUnfiltered<T>() where T : BaseEntity;
+
+    /// <summary>
     /// Retrieves an entity by its ID.
     /// </summary>
     Task<T?> GetByIdAsync<T>(Guid id, CancellationToken cancellationToken = default) where T : BaseEntity;

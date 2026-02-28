@@ -61,9 +61,8 @@ internal static class TaskManager
 
     private static async Task<bool> RunCountContactsAsync(IServiceProvider services)
     {
-        CRMDbContext context = services.GetRequiredService<CRMDbContext>();
-        int count = await context.Contacts
-            .IgnoreQueryFilters()
+        var repository = services.GetRequiredService<Rvnx.CRM.Core.Interfaces.IRepository>();
+        int count = await repository.QueryUnfiltered<Rvnx.CRM.Core.Models.Contact.Contact>()
             .CountAsync(c => !c.IsPartial);
         Console.WriteLine($"Total contacts: {count}");
         return true;
