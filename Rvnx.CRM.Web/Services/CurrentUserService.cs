@@ -1,45 +1,21 @@
-using Microsoft.Data.Sqlite;
+using Microsoft.EntityFrameworkCore;
 using Rvnx.CRM.Core.Constants;
 using Rvnx.CRM.Core.Interfaces;
+using Rvnx.CRM.Core.Models;
 using System.Security.Claims;
 
 namespace Rvnx.CRM.Web.Services;
 
-public class CurrentUserService(IHttpContextAccessor httpContextAccessor, IConfiguration configuration) : ICurrentUserService
+public class CurrentUserService(IHttpContextAccessor httpContextAccessor, IConfiguration configuration, IServiceProvider serviceProvider) : ICurrentUserService
 {
     private readonly IHttpContextAccessor _httpContextAccessor = httpContextAccessor;
     private readonly IConfiguration _configuration = configuration;
+    private readonly IServiceProvider _serviceProvider = serviceProvider;
+
     private Guid? _groupId;
     private bool _groupIdResolved;
 
-    public Guid? UserId
-    {
-        get
-        {
-            if (!IsAuthEnabled())
-            {
-                return null;
-            }
-
-            ClaimsPrincipal? user = _httpContextAccessor.HttpContext?.User;
-            if (user == null)
-            {
-                return null;
-            }
-
-            // First, try to get the internal CRM user ID (set by UserSynchronizationService)
-            string? internalId = user.FindFirst(ClaimConstants.InternalUserIdClaimType)?.Value;
-            if (Guid.TryParse(internalId, out Guid internalGuid))
-            {
-                return internalGuid;
-            }
-
-            // Fallback to NameIdentifier for backwards compatibility
-            // This handles cases where UserSynchronizationService hasn't run yet
-            string? nameId = user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            return Guid.TryParse(nameId, out Guid guid) ? guid : null;
-        }
-    }
+    public Guid? UserId => GetUserIdFromClaims();
 
     public Guid? GroupId
     {
@@ -50,71 +26,71 @@ public class CurrentUserService(IHttpContextAccessor httpContextAccessor, IConfi
                 return _groupId;
             }
 
-            if (!IsAuthEnabled())
+            if (!IsAuthEnabled() || UserId == null)
             {
                 _groupIdResolved = true;
-                _groupId = null;
-                return null;
+                return _groupId = null;
             }
 
-            Guid? userId = UserId;
-            if (userId == null)
-            {
-                _groupIdResolved = true;
-                _groupId = null;
-                return null;
-            }
+            // Clean resolution via ServiceProvider breaks the circularity
+            using IServiceScope scope = _serviceProvider.CreateScope();
+            IRepository repo = scope.ServiceProvider.GetRequiredService<IRepository>();
 
-            _groupId = ResolveGroupIdFromDb(userId.Value);
+            // Query logic using your existing architecture
+            var user = repo.QueryUnfiltered<User>()
+                           .Select(u => new { u.Id, u.GroupId })
+                           .FirstOrDefault(u => u.Id == UserId);
+
+            _groupId = user?.GroupId;
             _groupIdResolved = true;
             return _groupId;
         }
     }
 
-    private Guid? ResolveGroupIdFromDb(Guid userId)
+    public async Task<bool> IsAdministratorAsync(Guid userId)
     {
-        try
+        if (!IsAuthEnabled())
         {
-            string? connectionString = _configuration.GetConnectionString("DefaultConnection");
-            if (string.IsNullOrEmpty(connectionString))
-            {
-                return null;
-            }
-
-            using SqliteConnection connection = new(connectionString);
-            connection.Open();
-
-            using SqliteCommand command = connection.CreateCommand();
-            command.CommandText = "SELECT GroupId FROM Users WHERE Id = @UserId";
-            command.Parameters.AddWithValue("@UserId", userId);
-
-            object? result = command.ExecuteScalar();
-            if (result != null && result != DBNull.Value)
-            {
-                if (Guid.TryParse(result.ToString(), out Guid groupId))
-                {
-                    return groupId;
-                }
-                if (result is byte[] bytes && bytes.Length == 16)
-                {
-                    return new Guid(bytes);
-                }
-            }
-            return null;
+            return false;
         }
-        catch
-        {
-            return null;
-        }
+
+        using IServiceScope scope = _serviceProvider.CreateScope();
+        IRepository repo = scope.ServiceProvider.GetRequiredService<IRepository>();
+
+        User? user = await repo.QueryUnfiltered<User>().FirstOrDefaultAsync(u => u.Id == userId);
+
+        return user?.IsAdministrator ?? false;
     }
 
-    public string? UserName => !IsAuthEnabled()
-                ? "System"
-                : _httpContextAccessor.HttpContext?.User?.FindFirst(ClaimTypes.Name)?.Value
-                ?? _httpContextAccessor.HttpContext?.User?.FindFirst(ClaimTypes.Email)?.Value
-                ?? "System";
+    // Helper to keep the properties clean
+    private Guid? GetUserIdFromClaims()
+    {
+        if (!IsAuthEnabled())
+        {
+            return null;
+        }
 
-    public bool IsAuthenticated => IsAuthEnabled() && (_httpContextAccessor.HttpContext?.User?.Identity?.IsAuthenticated ?? false);
+        ClaimsPrincipal? user = _httpContextAccessor.HttpContext?.User;
+        if (user == null)
+        {
+            return null;
+        }
+
+        string? internalId = user.FindFirst(ClaimConstants.InternalUserIdClaimType)?.Value;
+        if (Guid.TryParse(internalId, out Guid internalGuid))
+        {
+            return internalGuid;
+        }
+
+        string? nameId = user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        return Guid.TryParse(nameId, out Guid guid) ? guid : null;
+    }
+
+    public string? UserName => !IsAuthEnabled() ? "System" :
+        _httpContextAccessor.HttpContext?.User?.Identity?.Name ?? "System";
+
+    public bool IsAuthenticated => IsAuthEnabled() &&
+        (_httpContextAccessor.HttpContext?.User?.Identity?.IsAuthenticated ?? false);
 
     private bool IsAuthEnabled()
     {

@@ -2,7 +2,6 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using Rvnx.CRM.Infrastructure.Data;
 
 namespace Rvnx.CRM.ConsoleApp;
 
@@ -61,7 +60,7 @@ internal static class TaskManager
 
     private static async Task<bool> RunCountContactsAsync(IServiceProvider services)
     {
-        var repository = services.GetRequiredService<Rvnx.CRM.Core.Interfaces.IRepository>();
+        Core.Interfaces.IRepository repository = services.GetRequiredService<Rvnx.CRM.Core.Interfaces.IRepository>();
         int count = await repository.QueryUnfiltered<Rvnx.CRM.Core.Models.Contact.Contact>()
             .CountAsync(c => !c.IsPartial);
         Console.WriteLine($"Total contacts: {count}");
@@ -70,7 +69,7 @@ internal static class TaskManager
 
     private static async Task<bool> RunSendDateRemindersAsync(IServiceProvider services)
     {
-        var service = services.GetRequiredService<Rvnx.CRM.Core.Interfaces.IReminderNotificationService>();
+        Core.Interfaces.IReminderNotificationService service = services.GetRequiredService<Rvnx.CRM.Core.Interfaces.IReminderNotificationService>();
         await service.SendDueRemindersAsync(DateOnly.FromDateTime(DateTime.Today));
         return true;
     }

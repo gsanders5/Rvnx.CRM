@@ -15,13 +15,6 @@ public interface IDebugOperationsService
     /// </summary>
     /// <returns>A list of <see cref="MergeUserDto"/>.</returns>
     Task<List<MergeUserDto>> GetAllUsersWithGroupsAsync();
-
-    /// <summary>
-    /// Checks if a user has administrator privileges.
-    /// </summary>
-    /// <param name="userId">The ID of the user to check.</param>
-    /// <returns>True if the user is an administrator; otherwise, false.</returns>
-    Task<bool> IsAdministratorAsync(Guid userId);
 }
 
 public class MergeAccountsResult

@@ -7,7 +7,6 @@ using Rvnx.CRM.Infrastructure;
 using Rvnx.CRM.Infrastructure.Data;
 using Rvnx.CRM.Web.Services;
 
-// using FileTypeChecker.Web.Registration; // Method not present in 2.0.0
 
 namespace Rvnx.CRM.Web
 {

@@ -165,7 +165,7 @@ public class SignificantDateService(IRepository repository) : ISignificantDateSe
 
     public async Task<SignificantDateDto?> GetDtoAsync(Guid id)
     {
-        var dates = await _repository.ListAsync<SignificantDate>(
+        List<SignificantDate> dates = await _repository.ListAsync<SignificantDate>(
             d => d.Id == id,
             default,
             nameof(SignificantDate.ReminderOffsets)

@@ -189,7 +189,7 @@ namespace Rvnx.CRM.Web.Controllers
         public async Task<IActionResult> DeleteConfirmed(Guid id, Guid contactId)
         {
             OperationResult result = await _significantDateService.DeleteAsync(id);
-            return result.Success ? RedirectToAction(nameof(Index), new { contactId = contactId }) : RedirectToAction("Index", "Home");
+            return result.Success ? RedirectToAction(nameof(Index), new { contactId }) : RedirectToAction("Index", "Home");
         }
     }
 }

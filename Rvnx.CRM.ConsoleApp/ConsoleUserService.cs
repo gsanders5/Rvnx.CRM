@@ -11,4 +11,9 @@ internal sealed class ConsoleUserService : ICurrentUserService
     public string? UserName => "System";
 
     public bool IsAuthenticated => false;
+
+    public Task<bool> IsAdministratorAsync(Guid userId)
+    {
+        return Task.FromResult(false);
+    }
 }

@@ -4,10 +4,9 @@ using Rvnx.CRM.Core.Models;
 using Rvnx.CRM.Core.Models.Dates;
 using Rvnx.CRM.Core.Services;
 
-namespace Rvnx.CRM.Infrastructure.Services;
-
 using Rvnx.CRM.Infrastructure.Data;
 
+namespace Rvnx.CRM.Infrastructure.Services;
 public class ReminderNotificationService(IRepository repository, CRMDbContext context) : IReminderNotificationService
 {
     private readonly IRepository _repository = repository;

@@ -1,5 +1,7 @@
 @using Microsoft.Extensions.Configuration
 @inject IConfiguration Configuration
+@inject Rvnx.CRM.Core.Interfaces.ICurrentUserService CurrentUserService
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -47,9 +49,12 @@
                         <a class="nav-link" asp-area="" asp-controller="Contacts" asp-action="Index">Contacts</a>
                     </li>
                     <environment include="Development">
-                        <li class="nav-item">
-                            <a class="nav-link" asp-area="" asp-controller="DebugOperations" asp-action="Index">Debug</a>
-                        </li>
+                        @if (CurrentUserService.UserId != null && await CurrentUserService.IsAdministratorAsync(CurrentUserService.UserId.Value))
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link" asp-area="" asp-controller="DebugOperations" asp-action="Index">Debug</a>
+                            </li>
+                        }
                     </environment>
                 </ul>
                 <ul class="navbar-nav">

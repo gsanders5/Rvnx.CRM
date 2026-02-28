@@ -57,12 +57,6 @@ public class DebugOperationsService(
         }).ToList();
     }
 
-    public async Task<bool> IsAdministratorAsync(Guid userId)
-    {
-        User? user = await _repository.QueryUnfiltered<User>().FirstOrDefaultAsync(u => u.Id == userId);
-        return user?.IsAdministrator ?? false;
-    }
-
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Security", "EF1002:Risk of vulnerability to SQL injection.", Justification = "tableName is sourced from EF Core's GetTableName() metadata, not user input, and parameters are passed safely.")]
     public async Task<MergeAccountsResult> MergeAccountsAsync(Guid user1Id, Guid user2Id)
     {

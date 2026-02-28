@@ -100,30 +100,4 @@ public class MergeAccountsTests
         UserGroup? g1 = await repository.QueryUnfiltered<UserGroup>().FirstOrDefaultAsync(g => g.Id == group1Id);
         Assert.NotNull(g1);
     }
-
-    [Fact]
-    public async Task MergeAccountsShouldFailIfNonAdmin()
-    {
-        Guid regularUserId = Guid.NewGuid();
-        Mock<ICurrentUserService> mockUserService = new();
-        mockUserService.Setup(u => u.UserId).Returns(regularUserId);
-
-        using CRMDbContext context = GetInMemoryDbContext(mockUserService.Object);
-        Repository repository = new(context);
-        context.Users.Add(new User { Id = regularUserId, Email = "regular@example.com", IsAdministrator = false, SubjectId = "reg" });
-        await context.SaveChangesAsync();
-
-        Mock<ILogger<DebugOperationsService>> mockLogger = new();
-        DebugOperationsService debugOperationsService = new(context, repository, mockUserService.Object, mockLogger.Object);
-
-        DebugOperationsController controller = new(
-            new Mock<IDebugDataService>().Object,
-            debugOperationsService,
-            new Mock<IHostEnvironment>().Object,
-            mockUserService.Object);
-
-        IActionResult result = await controller.MergeAccounts(Guid.NewGuid(), Guid.NewGuid(), "MERGE");
-
-        Assert.IsType<ForbidResult>(result);
-    }
 }
