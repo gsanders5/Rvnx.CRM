@@ -34,13 +34,19 @@ public class EntityService : IEntityService
     {
         if (entityType == EntityTypes.Person)
         {
-            Contact? p = await _repository.GetByIdAsync<Contact>(id);
-            return p?.FullName ?? "Unknown Person";
+            // Optimization: Fetch only the names instead of the entire Contact entity
+            List<string> names = await _repository.ListProjectedAsync<Contact, string>(
+                c => c.Id == id,
+                c => c.FirstName + " " + (c.LastName ?? ""));
+            return names.FirstOrDefault()?.Trim() ?? "Unknown Person";
         }
         else if (entityType == EntityTypes.Company)
         {
-            Employer? c = await _repository.GetByIdAsync<Employer>(id);
-            return c?.CompanyName ?? "Unknown Company";
+            // Optimization: Fetch only the name instead of the entire Employer entity
+            List<string> names = await _repository.ListProjectedAsync<Employer, string>(
+                c => c.Id == id,
+                c => c.CompanyName);
+            return names.FirstOrDefault() ?? "Unknown Company";
         }
         return "Unknown Entity";
     }
@@ -50,8 +56,11 @@ public class EntityService : IEntityService
     {
         if (entityType == EntityTypes.Person)
         {
-            Contact? c = await _repository.GetByIdAsync<Contact>(id);
-            return c?.IsPartial == true;
+            // Optimization: Fetch only the IsPartial flag instead of the entire Contact entity
+            List<bool> partials = await _repository.ListProjectedAsync<Contact, bool>(
+                c => c.Id == id,
+                c => c.IsPartial);
+            return partials.FirstOrDefault();
         }
         return false;
     }

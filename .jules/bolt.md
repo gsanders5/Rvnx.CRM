@@ -39,3 +39,8 @@
 
 **Learning:** Common helper methods like `GetEntityName` and `IsPartialContactAsync` were fetching entire entities (via `GetByIdAsync`) just to retrieve a single string or boolean property. This adds unnecessary I/O overhead for every controller action that uses them.
 **Action:** Replace `GetByIdAsync` with `ListProjectedAsync` in read-only helper methods to fetch only the specific columns needed (e.g., `FirstName`, `LastName`, `IsPartial`). Ensure unit tests mocking these helpers are updated to mock the projection method.
+
+## 2026-06-26 - Helper Method Over-fetching in EntityService
+
+**Learning:** Common helper methods like `GetEntityNameAsync` and `IsPartialAsync` in `EntityService` were fetching entire entities (via `GetByIdAsync`) just to retrieve a single string or boolean property. This adds unnecessary I/O overhead for every controller action that uses them.
+**Action:** Replaced `GetByIdAsync` with `ListProjectedAsync` in read-only helper methods to fetch only the specific columns needed (e.g., `FirstName`, `LastName`, `IsPartial`). Ensured unit tests mocking these helpers are updated to mock the projection method using collection expressions (e.g., `["John Doe"]`).

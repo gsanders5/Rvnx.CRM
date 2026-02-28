@@ -83,9 +83,11 @@ namespace Rvnx.CRM.Tests.Services
         public async Task GetEntityNameAsyncPersonReturnsFullName()
         {
             Guid id = Guid.NewGuid();
-            Contact contact = new()
-            { Id = id, FirstName = "John", LastName = "Doe" };
-            _repositoryMock.Setup(r => r.GetByIdAsync<Contact>(id, It.IsAny<CancellationToken>())).ReturnsAsync(contact);
+            _repositoryMock.Setup(r => r.ListProjectedAsync(
+                    It.IsAny<System.Linq.Expressions.Expression<Func<Contact, bool>>>(),
+                    It.IsAny<System.Linq.Expressions.Expression<Func<Contact, string>>>(),
+                    It.IsAny<CancellationToken>()))
+                .ReturnsAsync(["John Doe"]);
 
             string result = await _service.GetEntityNameAsync(EntityTypes.Person, id);
 
@@ -96,9 +98,11 @@ namespace Rvnx.CRM.Tests.Services
         public async Task GetEntityNameAsyncCompanyReturnsCompanyName()
         {
             Guid id = Guid.NewGuid();
-            Employer employer = new()
-            { Id = id, CompanyName = "Acme Corp" };
-            _repositoryMock.Setup(r => r.GetByIdAsync<Employer>(id, It.IsAny<CancellationToken>())).ReturnsAsync(employer);
+            _repositoryMock.Setup(r => r.ListProjectedAsync(
+                    It.IsAny<System.Linq.Expressions.Expression<Func<Employer, bool>>>(),
+                    It.IsAny<System.Linq.Expressions.Expression<Func<Employer, string>>>(),
+                    It.IsAny<CancellationToken>()))
+                .ReturnsAsync(["Acme Corp"]);
 
             string result = await _service.GetEntityNameAsync(EntityTypes.Company, id);
 
@@ -119,9 +123,11 @@ namespace Rvnx.CRM.Tests.Services
         public async Task IsPartialAsyncPersonPartialReturnsTrue()
         {
             Guid id = Guid.NewGuid();
-            Contact contact = new()
-            { Id = id, IsPartial = true };
-            _repositoryMock.Setup(r => r.GetByIdAsync<Contact>(id, It.IsAny<CancellationToken>())).ReturnsAsync(contact);
+            _repositoryMock.Setup(r => r.ListProjectedAsync(
+                    It.IsAny<System.Linq.Expressions.Expression<Func<Contact, bool>>>(),
+                    It.IsAny<System.Linq.Expressions.Expression<Func<Contact, bool>>>(),
+                    It.IsAny<CancellationToken>()))
+                .ReturnsAsync([true]);
 
             bool result = await _service.IsPartialAsync(EntityTypes.Person, id);
 
@@ -132,9 +138,11 @@ namespace Rvnx.CRM.Tests.Services
         public async Task IsPartialAsyncPersonNotPartialReturnsFalse()
         {
             Guid id = Guid.NewGuid();
-            Contact contact = new()
-            { Id = id, IsPartial = false };
-            _repositoryMock.Setup(r => r.GetByIdAsync<Contact>(id, It.IsAny<CancellationToken>())).ReturnsAsync(contact);
+            _repositoryMock.Setup(r => r.ListProjectedAsync(
+                    It.IsAny<System.Linq.Expressions.Expression<Func<Contact, bool>>>(),
+                    It.IsAny<System.Linq.Expressions.Expression<Func<Contact, bool>>>(),
+                    It.IsAny<CancellationToken>()))
+                .ReturnsAsync([false]);
 
             bool result = await _service.IsPartialAsync(EntityTypes.Person, id);
 
