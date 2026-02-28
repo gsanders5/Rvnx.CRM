@@ -380,6 +380,11 @@
                                         <span class="badge bg-success text-dark">Active</span>
                                     }
 
+                                    @if (date.ReminderOffsets != null && date.ReminderOffsets.Any(r => r.IsActive))
+                                    {
+                                        <span class="badge bg-warning text-dark"><i class="bi bi-bell-fill"></i> Reminders</span>
+                                    }
+
                                     <div class="btn-group btn-group-sm">
                                         <a asp-controller="SignificantDates" asp-action="Edit" asp-route-id="@date.Id" class="btn btn-outline-secondary" title="Edit" aria-label="Edit @date.Title">
                                             <i class="bi bi-pencil-square"></i>
