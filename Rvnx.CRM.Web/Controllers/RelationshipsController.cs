@@ -9,14 +9,20 @@ using Rvnx.CRM.Web.Controllers.Base;
 
 namespace Rvnx.CRM.Web.Controllers
 {
-    public class RelationshipsController(IRelationshipService relationshipService, IRepository repository)
+    public class RelationshipsController(IRelationshipService relationshipService, IRepository repository, IEntityService entityService)
         : RepositoryController(repository)
     {
         private readonly IRelationshipService _relationshipService = relationshipService;
+        private readonly IEntityService _entityService = entityService;
 
         public async Task<IActionResult> Create(Guid entityId, string entityType)
         {
             if (entityId == Guid.Empty || string.IsNullOrEmpty(entityType))
+            {
+                return NotFound();
+            }
+
+            if (!await _entityService.ExistsAsync(entityType, entityId))
             {
                 return NotFound();
             }
@@ -46,6 +52,11 @@ namespace Rvnx.CRM.Web.Controllers
 
             if (ModelState.IsValid)
             {
+                if (!await _entityService.ExistsAsync(viewModel.EntityType, viewModel.EntityId))
+                {
+                    return NotFound();
+                }
+
                 Relationship relationship = viewModel.ToEntity();
                 RelationshipOperationResult result =
                     await _relationshipService.CreateRelationshipAsync(relationship,
@@ -83,6 +94,11 @@ namespace Rvnx.CRM.Web.Controllers
 
             if (ModelState.IsValid)
             {
+                if (!await _entityService.ExistsAsync(entityType, entityId))
+                {
+                    return NotFound();
+                }
+
                 RelationshipOperationResult result = await _relationshipService.CreatePartialContactRelationshipAsync(entityId, dto.SelectedRelationshipType, dto);
                 if (result.Success)
                 {
@@ -132,6 +148,11 @@ namespace Rvnx.CRM.Web.Controllers
                 return NotFound();
             }
 
+            if (!await _entityService.ExistsAsync(relationship.EntityType, relationship.EntityId))
+            {
+                return NotFound();
+            }
+
             string currentSelection = $"{relationship.RelationshipTypeId}_Fwd";
 
             RelationshipFormViewModel viewModel = new()
@@ -175,6 +196,11 @@ namespace Rvnx.CRM.Web.Controllers
 
             if (ModelState.IsValid)
             {
+                if (!await _entityService.ExistsAsync(viewModel.EntityType, viewModel.EntityId))
+                {
+                    return NotFound();
+                }
+
                 Relationship relationship = viewModel.ToEntity();
                 RelationshipOperationResult result =
                     await _relationshipService.UpdateRelationshipAsync(id, relationship,
@@ -210,6 +236,11 @@ namespace Rvnx.CRM.Web.Controllers
 
             Relationship? relationship = await _relationshipService.GetRelationshipForDeleteAsync(id.Value);
             if (relationship == null)
+            {
+                return NotFound();
+            }
+
+            if (!await _entityService.ExistsAsync(relationship.EntityType, relationship.EntityId))
             {
                 return NotFound();
             }
