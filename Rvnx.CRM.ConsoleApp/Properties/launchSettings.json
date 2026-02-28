@@ -1,8 +1,0 @@
-{
-  "profiles": {
-    "Rvnx.CRM.ConsoleApp": {
-      "commandName": "Project",
-      "commandLineArgs": "COUNT-CONTACTS"
-    }
-  }
-}
