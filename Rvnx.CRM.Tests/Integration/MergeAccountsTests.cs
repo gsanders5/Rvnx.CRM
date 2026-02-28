@@ -8,6 +8,7 @@ using Rvnx.CRM.Core.Interfaces;
 using Rvnx.CRM.Core.Models;
 using Rvnx.CRM.Core.Models.Contact;
 using Rvnx.CRM.Infrastructure.Data;
+using Rvnx.CRM.Infrastructure.Repositories;
 using Rvnx.CRM.Infrastructure.Services;
 using Rvnx.CRM.Web.Controllers;
 
@@ -58,13 +59,14 @@ public class MergeAccountsTests
         context.Contacts.Add(contact2);
 
         await context.SaveChangesAsync();
+        Repository repository = new(context);
 
         Mock<IDebugDataService> mockDebugService = new();
         Mock<IHostEnvironment> mockEnv = new();
         mockEnv.Setup(e => e.EnvironmentName).Returns("Development");
         Mock<ILogger<DebugOperationsService>> mockLogger = new();
 
-        DebugOperationsService debugOperationsService = new(context, mockUserService.Object, mockLogger.Object);
+        DebugOperationsService debugOperationsService = new(context, repository, mockUserService.Object, mockLogger.Object);
 
         DebugOperationsController controller = new(
             mockDebugService.Object,
@@ -82,20 +84,20 @@ public class MergeAccountsTests
 
         context.ChangeTracker.Clear();
 
-        UserGroup? g2 = await context.UserGroups.IgnoreQueryFilters().FirstOrDefaultAsync(g => g.Id == group2Id);
+        UserGroup? g2 = await repository.QueryUnfiltered<UserGroup>().FirstOrDefaultAsync(g => g.Id == group2Id);
         Assert.Null(g2);
 
         // 2. User 2 should now be in Group 1
-        User? u2 = await context.Users.IgnoreQueryFilters().FirstOrDefaultAsync(u => u.Id == user2Id);
+        User? u2 = await repository.QueryUnfiltered<User>().FirstOrDefaultAsync(u => u.Id == user2Id);
         Assert.NotNull(u2);
         Assert.Equal(group1Id, u2!.GroupId);
 
         // 3. Contact entities from Group 2 should now belong to Group 1
-        Contact? c2 = await context.Contacts.IgnoreQueryFilters().FirstOrDefaultAsync(c => c.Id == contact2.Id);
+        Contact? c2 = await repository.QueryUnfiltered<Contact>().FirstOrDefaultAsync(c => c.Id == contact2.Id);
         Assert.NotNull(c2);
         Assert.Equal(group1Id, c2!.GroupId);
 
-        UserGroup? g1 = await context.UserGroups.IgnoreQueryFilters().FirstOrDefaultAsync(g => g.Id == group1Id);
+        UserGroup? g1 = await repository.QueryUnfiltered<UserGroup>().FirstOrDefaultAsync(g => g.Id == group1Id);
         Assert.NotNull(g1);
     }
 
@@ -107,11 +109,12 @@ public class MergeAccountsTests
         mockUserService.Setup(u => u.UserId).Returns(regularUserId);
 
         using CRMDbContext context = GetInMemoryDbContext(mockUserService.Object);
+        Repository repository = new(context);
         context.Users.Add(new User { Id = regularUserId, Email = "regular@example.com", IsAdministrator = false, SubjectId = "reg" });
         await context.SaveChangesAsync();
 
         Mock<ILogger<DebugOperationsService>> mockLogger = new();
-        DebugOperationsService debugOperationsService = new(context, mockUserService.Object, mockLogger.Object);
+        DebugOperationsService debugOperationsService = new(context, repository, mockUserService.Object, mockLogger.Object);
 
         DebugOperationsController controller = new(
             new Mock<IDebugDataService>().Object,

@@ -15,8 +15,7 @@ public class ReminderNotificationService(IRepository repository, CRMDbContext co
 
     public async Task<OperationResult> SendDueRemindersAsync(DateOnly forDate)
     {
-        List<ReminderOffset> offsets = await _context.ReminderOffsets
-            .IgnoreQueryFilters()
+        List<ReminderOffset> offsets = await _repository.QueryUnfiltered<ReminderOffset>()
             .Include(ro => ro.SignificantDate)
             .Include(ro => ro.ReminderLogs)
             .Where(ro => ro.IsActive && ro.SignificantDate != null && ro.SignificantDate.IsActive)

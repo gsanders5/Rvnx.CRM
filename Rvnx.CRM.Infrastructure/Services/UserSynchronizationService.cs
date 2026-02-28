@@ -10,10 +10,12 @@ namespace Rvnx.CRM.Infrastructure.Services;
 public class UserSynchronizationService : IUserSynchronizationService
 {
     private readonly CRMDbContext _dbContext;
+    private readonly IRepository _repository;
 
-    public UserSynchronizationService(CRMDbContext dbContext)
+    public UserSynchronizationService(CRMDbContext dbContext, IRepository repository)
     {
         _dbContext = dbContext;
+        _repository = repository;
     }
 
     public async Task SyncUserAsync(ClaimsPrincipal principal)
@@ -32,7 +34,7 @@ public class UserSynchronizationService : IUserSynchronizationService
             return; // Cannot sync without a subject identifier
         }
 
-        User? user = await _dbContext.Users.IgnoreQueryFilters().FirstOrDefaultAsync(u => u.SubjectId == subject);
+        User? user = await _repository.QueryUnfiltered<User>().FirstOrDefaultAsync(u => u.SubjectId == subject);
 
         if (user == null)
         {

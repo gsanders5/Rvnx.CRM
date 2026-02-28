@@ -9,10 +9,12 @@ namespace Rvnx.CRM.Infrastructure.Services;
 
 public class DebugOperationsService(
     CRMDbContext context,
+    IRepository repository,
     ICurrentUserService currentUserService,
     ILogger<DebugOperationsService> logger) : IDebugOperationsService
 {
     private readonly CRMDbContext _context = context;
+    private readonly IRepository _repository = repository;
     private readonly ICurrentUserService _currentUserService = currentUserService;
     private readonly ILogger<DebugOperationsService> _logger = logger;
 
@@ -24,7 +26,7 @@ public class DebugOperationsService(
 
     public async Task<List<MergeUserDto>> GetAllUsersWithGroupsAsync()
     {
-        List<User> users = await _context.Users.IgnoreQueryFilters()
+        List<User> users = await _repository.QueryUnfiltered<User>()
             .Include(u => u.Group)
                 .ThenInclude(g => g!.Members)
             .ToListAsync();
@@ -57,7 +59,7 @@ public class DebugOperationsService(
 
     public async Task<bool> IsAdministratorAsync(Guid userId)
     {
-        User? user = await _context.Users.IgnoreQueryFilters().FirstOrDefaultAsync(u => u.Id == userId);
+        User? user = await _repository.QueryUnfiltered<User>().FirstOrDefaultAsync(u => u.Id == userId);
         return user?.IsAdministrator ?? false;
     }
 
@@ -69,12 +71,12 @@ public class DebugOperationsService(
             return new MergeAccountsResult { Success = false, Error = "Cannot merge same user." };
         }
 
-        User? user1 = await _context.Users.IgnoreQueryFilters()
+        User? user1 = await _repository.QueryUnfiltered<User>()
             .Include(u => u.Group)
             .ThenInclude(g => g!.Members)
             .FirstOrDefaultAsync(u => u!.Id == user1Id);
 
-        User? user2 = await _context.Users.IgnoreQueryFilters()
+        User? user2 = await _repository.QueryUnfiltered<User>()
             .Include(u => u.Group)
             .ThenInclude(g => g!.Members)
             .FirstOrDefaultAsync(u => u!.Id == user2Id);
@@ -178,7 +180,7 @@ public class DebugOperationsService(
 
     private async Task UpdateGroupIdsInMemory<T>(Guid keptGroupId, Guid discardedGroupId) where T : BaseEntity
     {
-        List<T> entities = await _context.Set<T>().IgnoreQueryFilters().Where(e => e.GroupId == discardedGroupId).ToListAsync();
+        List<T> entities = await _repository.QueryUnfiltered<T>().Where(e => e.GroupId == discardedGroupId).ToListAsync();
         foreach (T entity in entities)
         {
             entity.GroupId = keptGroupId;

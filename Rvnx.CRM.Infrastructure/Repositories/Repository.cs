@@ -10,6 +10,9 @@ public class Repository(CRMDbContext context) : IRepository
 {
     private readonly CRMDbContext _context = context;
 
+    public IQueryable<T> QueryUnfiltered<T>() where T : BaseEntity
+        => _context.Set<T>().IgnoreQueryFilters();
+
     public async Task<T?> GetByIdAsync<T>(Guid id, CancellationToken cancellationToken = default) where T : BaseEntity
     {
         return await _context.Set<T>().FindAsync([id], cancellationToken);
