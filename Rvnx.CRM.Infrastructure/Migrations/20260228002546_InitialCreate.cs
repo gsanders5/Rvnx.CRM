@@ -8,6 +8,7 @@ namespace Rvnx.CRM.Infrastructure.Migrations
     public partial class InitialCreate : Migration
     {
         /// <inheritdoc />
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Performance", "CA1861:Prefer 'static readonly' fields over constant array arguments", Justification = "EF Core Migrations are auto-generated and use inline arrays for column definitions.")]
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.CreateTable(
@@ -556,13 +557,13 @@ namespace Rvnx.CRM.Infrastructure.Migrations
                 table: "Contact",
                 column: "UserId");
 
-#pragma warning disable CA1861 // Prefer 'static readonly' fields over constant array arguments
+
             migrationBuilder.CreateIndex(
                 name: "IX_ContactLabel_ContactId_LabelId",
                 table: "ContactLabel",
                 columns: new[] { "ContactId", "LabelId" },
                 unique: true);
-#pragma warning restore CA1861 // Prefer 'static readonly' fields over constant array arguments
+
 
             migrationBuilder.CreateIndex(
                 name: "IX_ContactLabel_GroupId",
@@ -679,24 +680,24 @@ namespace Rvnx.CRM.Infrastructure.Migrations
                 table: "PhoneNumber",
                 column: "UserId");
 
-#pragma warning disable CA1861 // Prefer 'static readonly' fields over constant array arguments
+
             migrationBuilder.CreateIndex(
                 name: "IX_Relationship_EntityId_EntityType",
                 table: "Relationship",
                 columns: new[] { "EntityId", "EntityType" });
-#pragma warning restore CA1861 // Prefer 'static readonly' fields over constant array arguments
+
 
             migrationBuilder.CreateIndex(
                 name: "IX_Relationship_GroupId",
                 table: "Relationship",
                 column: "GroupId");
 
-#pragma warning disable CA1861 // Prefer 'static readonly' fields over constant array arguments
+
             migrationBuilder.CreateIndex(
                 name: "IX_Relationship_RelatedEntityId_EntityType",
                 table: "Relationship",
                 columns: new[] { "RelatedEntityId", "EntityType" });
-#pragma warning restore CA1861 // Prefer 'static readonly' fields over constant array arguments
+
 
             migrationBuilder.CreateIndex(
                 name: "IX_Relationship_UserId",
@@ -708,13 +709,13 @@ namespace Rvnx.CRM.Infrastructure.Migrations
                 table: "ReminderLog",
                 column: "GroupId");
 
-#pragma warning disable CA1861 // Prefer 'static readonly' fields over constant array arguments
+
             migrationBuilder.CreateIndex(
                 name: "IX_ReminderLog_ReminderOffsetId_OccurrenceDate",
                 table: "ReminderLog",
                 columns: new[] { "ReminderOffsetId", "OccurrenceDate" },
                 unique: true);
-#pragma warning restore CA1861 // Prefer 'static readonly' fields over constant array arguments
+
 
             migrationBuilder.CreateIndex(
                 name: "IX_ReminderLog_UserId",
