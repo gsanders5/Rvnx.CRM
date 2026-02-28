@@ -61,6 +61,11 @@
                 <span asp-validation-for="Birthday" class="text-danger"></span>
             </div>
 
+            <div class="mb-3 form-check form-switch">
+                <input asp-for="RemindOnBirthday" class="form-check-input" />
+                <label asp-for="RemindOnBirthday" class="form-check-label"></label>
+            </div>
+
             <div class="mb-3">
                 <label asp-for="Pronouns" class="form-label">Pronouns</label>
                 <select id="pronouns-select" class="form-select">

@@ -380,6 +380,11 @@
                                         <span class="badge bg-success text-dark">Active</span>
                                     }
 
+                                    @if (date.ReminderOffsets != null && date.ReminderOffsets.Any(r => r.IsActive))
+                                    {
+                                        <span class="badge bg-warning text-dark"><i class="bi bi-bell-fill"></i> Reminders</span>
+                                    }
+
                                     <div class="btn-group btn-group-sm">
                                         <a asp-controller="SignificantDates" asp-action="Edit" asp-route-id="@date.Id" class="btn btn-outline-secondary" title="Edit" aria-label="Edit @date.Title">
                                             <i class="bi bi-pencil-square"></i>
@@ -409,50 +414,6 @@
         </div>
     </div>
 
-    <!-- Reminders -->
-    <div class="card mb-4">
-        <div class="card-header d-flex justify-content-between align-items-center">
-            <h5 class="card-title mb-0"><i class="bi bi-alarm"></i> Reminders</h5>
-            <a asp-controller="Reminders" asp-action="Create" asp-route-entityId="@Model.Id" asp-route-entityType="Person" class="btn btn-sm btn-outline-primary"><i class="bi bi-plus-lg"></i> Add</a>
-        </div>
-        <div class="card-body">
-            @if (Model.Reminders != null && Model.Reminders.Any())
-            {
-                <ul class="list-group">
-                    @foreach (var reminder in Model.Reminders.OrderBy(r => r.DueDate))
-                    {
-                        <li class="list-group-item">
-                            <div class="d-flex w-100 justify-content-between align-items-center">
-                                <h6 class="mb-1 me-2">@reminder.Title</h6>
-                                <div class="d-flex flex-wrap gap-2 align-items-center justify-content-end">
-                                    <small class="@(reminder.DueDate < DateTime.Now ? "text-danger" : "text-muted")">
-                                        @reminder.DueDate.ToShortDateString()
-                                    </small>
-                                    <div class="btn-group btn-group-sm">
-                                        <a asp-controller="Reminders" asp-action="Edit" asp-route-id="@reminder.Id" class="btn btn-outline-secondary" title="Edit" aria-label="Edit @reminder.Title">
-                                            <i class="bi bi-pencil-square"></i>
-                                        </a>
-                                        <a asp-controller="Reminders" asp-action="Delete" asp-route-id="@reminder.Id" class="btn btn-outline-danger" title="Delete" aria-label="Delete @reminder.Title">
-                                            <i class="bi bi-trash"></i>
-                                        </a>
-                                    </div>
-                                </div>
-                            </div>
-                            <p class="mb-1">@reminder.Description</p>
-                        </li>
-                    }
-                </ul>
-            }
-            else
-            {
-                <div class="text-center py-4 text-muted">
-                    <i class="bi bi-alarm display-6 d-block mb-3 opacity-25"></i>
-                    <p class="mb-2">No reminders set.</p>
-                    <a asp-controller="Reminders" asp-action="Create" asp-route-entityId="@Model.Id" asp-route-entityType="Person" class="btn btn-sm btn-primary mt-2"><i class="bi bi-plus-lg"></i> Add Reminder</a>
-                </div>
-            }
-        </div>
-    </div>
 
     <!-- Notes -->
     <div class="card mb-4">

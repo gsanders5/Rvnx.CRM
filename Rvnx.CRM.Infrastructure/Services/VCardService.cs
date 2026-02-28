@@ -169,9 +169,10 @@ public class VCardService : IVCardService
             FolkerKinzel.VCards.Models.Properties.DateAndOrTimeProperty? bdayProp = vc.BirthDayViews.FirstOrNull();
             if (bdayProp?.Value is DateAndOrTime val)
             {
+                SignificantDate? bday = null;
                 if (val.DateTimeOffset.HasValue)
                 {
-                    contact.SignificantDates.Add(new SignificantDate
+                    bday = new SignificantDate
                     {
                         Id = Guid.NewGuid(),
                         ContactId = contact.Id,
@@ -180,21 +181,32 @@ public class VCardService : IVCardService
                         Description = "Birthday from VCard",
                         RecurrenceType = Core.Enumerations.RecurrenceType.Annual,
                         IsActive = true
-                    });
+                    };
                 }
                 else if (val.DateOnly.HasValue)
                 {
-                    DateOnly d = val.DateOnly.Value;
-                    contact.SignificantDates.Add(new SignificantDate
+                    bday = new SignificantDate
                     {
                         Id = Guid.NewGuid(),
                         ContactId = contact.Id,
                         Title = SignificantDateTitles.Birthday,
-                        EventDate = d,
+                        EventDate = val.DateOnly.Value,
                         Description = "Birthday from VCard",
                         RecurrenceType = Core.Enumerations.RecurrenceType.Annual,
                         IsActive = true
+                    };
+                }
+
+                if (bday != null)
+                {
+                    bday.ReminderOffsets.Add(new ReminderOffset
+                    {
+                        Id = Guid.NewGuid(),
+                        SignificantDateId = bday.Id,
+                        DaysBeforeEvent = 0,
+                        IsActive = true
                     });
+                    contact.SignificantDates.Add(bday);
                 }
             }
         }
