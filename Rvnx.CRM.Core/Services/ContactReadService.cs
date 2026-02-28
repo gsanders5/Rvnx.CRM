@@ -95,6 +95,7 @@ public class ContactReadService(IRepository repository) : IContactReadService
             nameof(Contact.Pets),
             nameof(Contact.Notes),
             nameof(Contact.SignificantDates),
+            nameof(Contact.SignificantDates) + "." + nameof(SignificantDate.ReminderOffsets),
             nameof(Contact.ContactMethods),
             nameof(Contact.Facts),
             nameof(Contact.Addresses),
