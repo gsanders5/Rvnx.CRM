@@ -24,46 +24,27 @@ namespace Rvnx.CRM.Core.Extensions
             };
         }
 
-        public static ReminderDto ToDto(this Reminder entity)
-        {
-            return new ReminderDto
-            {
-                Id = entity.Id,
-                Title = entity.Title,
-                Description = entity.Description,
-                DueDate = entity.DueDate,
-                IsCompleted = entity.IsCompleted,
-                EntityId = entity.ContactId ?? Guid.Empty,
-                EntityType = EntityTypes.Person,
-                RemindMe = entity.RemindMe,
-                ReminderSent = entity.ReminderSent,
-                EventFrequency = entity.EventFrequency
-            };
-        }
-
-        public static void UpdateEntity(this Reminder entity, ReminderDto dto)
-        {
-            entity.Title = dto.Title;
-            entity.Description = dto.Description;
-            entity.DueDate = dto.DueDate;
-            entity.IsCompleted = dto.IsCompleted;
-            entity.RemindMe = dto.RemindMe;
-            entity.EventFrequency = dto.EventFrequency;
-        }
-
         public static SignificantDateDto ToDto(this SignificantDate entity)
         {
             return new SignificantDateDto
             {
                 Id = entity.Id,
                 Title = entity.Title ?? string.Empty,
-                Date = entity.Date,
+                EventDate = entity.EventDate,
                 Description = entity.Description,
                 EntityId = entity.ContactId ?? Guid.Empty,
                 EntityType = EntityTypes.Person,
-                RemindMe = entity.RemindMe,
-                ReminderSent = entity.ReminderSent,
-                EventFrequency = entity.EventFrequency
+                RecurrenceType = entity.RecurrenceType,
+                CustomIntervalDays = entity.CustomIntervalDays,
+                IsActive = entity.IsActive,
+                NextOccurrence = entity.GetNextOccurrence(),
+                ReminderOffsets = entity.ReminderOffsets?.Select(ro => new ReminderOffsetDto
+                {
+                    Id = ro.Id,
+                    DaysBeforeEvent = ro.DaysBeforeEvent,
+                    IsActive = ro.IsActive,
+                    ScheduledFor = Services.DateCalculationService.GetScheduledForDate(entity, ro, DateOnly.FromDateTime(DateTime.Today))
+                }).ToList() ?? []
             };
         }
 
@@ -188,7 +169,6 @@ namespace Rvnx.CRM.Core.Extensions
 
                 // Lists will be populated separately or via mapping if loaded
                 Notes = entity.Notes?.Select(n => n.ToDto()) ?? [],
-                Reminders = entity.Reminders?.Select(r => r.ToDto()) ?? [],
                 SignificantDates = entity.SignificantDates?.Select(d => d.ToDto()) ?? [],
                 Relationships = entity.Relationships?.Select(r => r.ToDto()) ?? [],
                 RelatedTo = entity.RelatedTo?.Select(r => r.ToDto()) ?? [],

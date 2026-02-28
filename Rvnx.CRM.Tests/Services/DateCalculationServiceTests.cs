@@ -1,3 +1,5 @@
+using Rvnx.CRM.Core.Enumerations;
+using Rvnx.CRM.Core.Models.Dates;
 using Rvnx.CRM.Core.Services;
 
 namespace Rvnx.CRM.Tests.Services
@@ -5,147 +7,148 @@ namespace Rvnx.CRM.Tests.Services
     public class DateCalculationServiceTests
     {
         [Fact]
-        public void GetNextOccurrenceSevenDaysAddsSevenDays()
+        public void GetNextOccurrenceAnnualSameYearWhenDateNotYetPassed()
         {
-            DateTime start = new(2023, 1, 1);
-            TimeSpan frequency = TimeSpan.FromDays(7);
-            DateTime today = new(2023, 1, 2);
+            var significantDate = new SignificantDate
+            {
+                EventDate = new DateOnly(2020, 5, 15),
+                RecurrenceType = RecurrenceType.Annual
+            };
+            var today = new DateOnly(2023, 2, 1);
 
-            DateTime result = DateCalculationService.GetNextOccurrence(start, frequency, today);
+            var result = DateCalculationService.GetNextOccurrence(significantDate, today);
 
-            Assert.Equal(new DateTime(2023, 1, 8), result);
+            Assert.Equal(new DateOnly(2023, 5, 15), result);
         }
 
         [Fact]
-        public void GetNextOccurrence365DaysTreatsAsOneYear()
+        public void GetNextOccurrenceAnnualRollsToNextYearWhenDateHasPassed()
         {
-            // 2024 is a leap year (366 days).
-            // If we use strictly 365 days logic, 2023-01-01 + 365 days = 2024-01-01.
-            // 2024-01-01 + 365 days = 2024-12-31 (because 2024 has 366 days).
-            // BUT the service logic treats 365 days as AddYears(1).
-            // So 2024-01-01 + 1 year = 2025-01-01.
-            DateTime start = new(2024, 1, 1);
-            TimeSpan frequency = TimeSpan.FromDays(365);
-            DateTime today = new(2024, 6, 1);
+            var significantDate = new SignificantDate
+            {
+                EventDate = new DateOnly(2020, 5, 15),
+                RecurrenceType = RecurrenceType.Annual
+            };
+            var today = new DateOnly(2023, 6, 1);
 
-            DateTime result = DateCalculationService.GetNextOccurrence(start, frequency, today, treatFrequencyAsCalendarYears: true);
+            var result = DateCalculationService.GetNextOccurrence(significantDate, today);
 
-            Assert.Equal(new DateTime(2025, 1, 1), result);
+            Assert.Equal(new DateOnly(2024, 5, 15), result);
         }
 
         [Fact]
-        public void GetNextOccurrenceLeapYearPreservesFeb29()
+        public void GetNextOccurrenceAnnualFeb29ReturnsFeb28InNonLeapYear()
         {
-            DateTime start = new(2020, 2, 29); // Leap day
-            TimeSpan frequency = TimeSpan.FromDays(365); // "Yearly"
-            DateTime today = new(2021, 3, 1);
+            var significantDate = new SignificantDate
+            {
+                EventDate = new DateOnly(2020, 2, 29),
+                RecurrenceType = RecurrenceType.Annual
+            };
+            var today = new DateOnly(2023, 1, 1); // 2023 is not a leap year
 
-            DateTime result = DateCalculationService.GetNextOccurrence(start, frequency, today, treatFrequencyAsCalendarYears: true);
+            var result = DateCalculationService.GetNextOccurrence(significantDate, today);
 
-            Assert.Equal(new DateTime(2022, 2, 28), result);
+            Assert.Equal(new DateOnly(2023, 2, 28), result);
         }
 
         [Fact]
-        public void GetNextOccurrenceLeapYearReturnsToFeb29OnNextLeapYear()
+        public void GetNextOccurrenceAnnualFeb29ReturnsFeb29InLeapYear()
         {
-            DateTime start = new(2020, 2, 29);
-            TimeSpan frequency = TimeSpan.FromDays(365);
-            DateTime today = new(2023, 3, 1); // After Feb 2023
+            var significantDate = new SignificantDate
+            {
+                EventDate = new DateOnly(2020, 2, 29),
+                RecurrenceType = RecurrenceType.Annual
+            };
+            var today = new DateOnly(2023, 3, 1); // After Feb 2023. Next is 2024 (Leap year)
 
-            DateTime result = DateCalculationService.GetNextOccurrence(start, frequency, today, treatFrequencyAsCalendarYears: true);
+            var result = DateCalculationService.GetNextOccurrence(significantDate, today);
 
-            // 2020 -> 2021 (Feb 28) -> 2022 (Feb 28) -> 2023 (Feb 28).
-            // Next is 2024 (Leap Year). Should match Feb 29.
-            Assert.Equal(new DateTime(2024, 2, 29), result);
+            Assert.Equal(new DateOnly(2024, 2, 29), result);
         }
 
         [Fact]
-        public void GetNextOccurrenceFarPastDateCatchesUp()
+        public void GetNextOccurrenceNoneAlwaysReturnsFixedEventDate()
         {
-            DateTime start = new(2000, 1, 1);
-            TimeSpan frequency = TimeSpan.FromDays(365);
-            DateTime today = new(2023, 6, 1);
+            var significantDate = new SignificantDate
+            {
+                EventDate = new DateOnly(2020, 5, 15),
+                RecurrenceType = RecurrenceType.None
+            };
+            var today = new DateOnly(2023, 6, 1);
 
-            DateTime result = DateCalculationService.GetNextOccurrence(start, frequency, today, treatFrequencyAsCalendarYears: true);
+            var result = DateCalculationService.GetNextOccurrence(significantDate, today);
 
-            // Should be next Jan 1 after June 2023
-            Assert.Equal(new DateTime(2024, 1, 1), result);
+            Assert.Equal(new DateOnly(2020, 5, 15), result);
         }
 
         [Fact]
-        public void GetNextOccurrenceZeroFrequencyReturnsOriginalDate()
+        public void GetNextOccurrenceMonthlyAdvancesToNextMonthWhenDayHasPassed()
         {
-            DateTime start = new(2023, 1, 1);
-            TimeSpan frequency = TimeSpan.Zero;
-            DateTime today = new(2023, 6, 1);
+            var significantDate = new SignificantDate
+            {
+                EventDate = new DateOnly(2023, 1, 15),
+                RecurrenceType = RecurrenceType.Monthly
+            };
+            var today = new DateOnly(2023, 3, 20);
 
-            DateTime result = DateCalculationService.GetNextOccurrence(start, frequency, today);
+            var result = DateCalculationService.GetNextOccurrence(significantDate, today);
 
-            // Even though it's in the past, zero frequency means no recurrence.
-            Assert.Equal(start, result);
+            Assert.Equal(new DateOnly(2023, 4, 15), result);
         }
 
         [Fact]
-        public void GetNextOccurrenceDueTodayReturnsToday()
+        public void GetNextOccurrenceMonthlyClampsToEndOfMonth()
         {
-            DateTime start = new(2023, 1, 1);
-            TimeSpan frequency = TimeSpan.FromDays(1);
-            DateTime today = new(2023, 1, 5);
+            var significantDate = new SignificantDate
+            {
+                EventDate = new DateOnly(2023, 1, 31),
+                RecurrenceType = RecurrenceType.Monthly
+            };
+            var today = new DateOnly(2023, 2, 1);
 
-            DateTime result = DateCalculationService.GetNextOccurrence(start, frequency, today);
+            var result = DateCalculationService.GetNextOccurrence(significantDate, today);
 
-            Assert.Equal(today, result);
+            // Jan 31 advanced 1 month clamps to Feb 28 in 2023.
+            Assert.Equal(new DateOnly(2023, 2, 28), result);
         }
 
         [Fact]
-        public void GetNextOccurrenceStandardIntervalDriftsCorrectly()
+        public void GetNextOccurrenceCustomLandsOnValidIntervalBoundary()
         {
-            DateTime start = new(2023, 1, 1);
-            TimeSpan frequency = TimeSpan.FromDays(30);
-            DateTime today = new(2023, 2, 1); // 31 days later
+            var significantDate = new SignificantDate
+            {
+                EventDate = new DateOnly(2023, 1, 1),
+                RecurrenceType = RecurrenceType.Custom,
+                CustomIntervalDays = 10
+            };
+            var today = new DateOnly(2023, 1, 15);
 
-            DateTime result = DateCalculationService.GetNextOccurrence(start, frequency, today);
+            var result = DateCalculationService.GetNextOccurrence(significantDate, today);
 
-            // Jan 1 + 30 days = Jan 31.
-            // Jan 31 is not > today (Feb 1). Loop continues.
-            // Jan 31 + 30 days = Mar 2 (2023 non-leap: Jan 31 + 28 = Feb 28 + 2 = Mar 2).
-            Assert.Equal(new DateTime(2023, 3, 2), result);
+            // Start: Jan 1
+            // Inter: +10 days -> Jan 11 (Passed)
+            // Inter: +10 days -> Jan 21
+            Assert.Equal(new DateOnly(2023, 1, 21), result);
         }
 
         [Fact]
-        public void GetNextOccurrenceFutureDateReturnsOriginal()
+        public void GetScheduledForDateReturnsNextOccurrenceMinusDaysBeforeEvent()
         {
-            DateTime start = new(2025, 1, 1);
-            TimeSpan frequency = TimeSpan.FromDays(1);
-            DateTime today = new(2023, 1, 1);
+            var significantDate = new SignificantDate
+            {
+                EventDate = new DateOnly(2023, 5, 15),
+                RecurrenceType = RecurrenceType.Annual
+            };
+            var offset = new ReminderOffset
+            {
+                DaysBeforeEvent = 7
+            };
+            var today = new DateOnly(2023, 5, 1);
 
-            DateTime result = DateCalculationService.GetNextOccurrence(start, frequency, today);
+            // Next occurrence is May 15. Scheduled for should be May 8.
+            var result = DateCalculationService.GetScheduledForDate(significantDate, offset, today);
 
-            Assert.Equal(start, result);
-        }
-
-        [Fact]
-        public void GetNextOccurrenceMultipleOf365ButNotOneYearCalculatesCorrectly()
-        {
-            DateTime start = new(2020, 1, 1);
-            TimeSpan frequency = TimeSpan.FromDays(730); // 2 years
-            DateTime today = new(2021, 1, 1);
-
-            DateTime result = DateCalculationService.GetNextOccurrence(start, frequency, today, treatFrequencyAsCalendarYears: true);
-
-            Assert.Equal(new DateTime(2022, 1, 1), result);
-        }
-
-        [Fact]
-        public void GetNextOccurrenceLeapYearIntervalDriftsOneDayPerYear()
-        {
-            DateTime start = new(2021, 1, 1);
-            TimeSpan frequency = TimeSpan.FromDays(366); // Leap year length
-            DateTime today = new(2023, 1, 1);
-
-            DateTime result = DateCalculationService.GetNextOccurrence(start, frequency, today);
-
-            Assert.Equal(new DateTime(2023, 1, 3), result);
+            Assert.Equal(new DateOnly(2023, 5, 8), result);
         }
     }
 }

@@ -784,13 +784,10 @@ namespace Rvnx.CRM.Infrastructure.Migrations
                     b.ToTable("Relationship");
                 });
 
-            modelBuilder.Entity("Rvnx.CRM.Core.Models.Dates.Reminder", b =>
+            modelBuilder.Entity("Rvnx.CRM.Core.Models.Dates.ReminderLog", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("TEXT");
-
-                    b.Property<Guid?>("ContactId")
                         .HasColumnType("TEXT");
 
                     b.Property<string>("CreatedBy")
@@ -801,19 +798,76 @@ namespace Rvnx.CRM.Infrastructure.Migrations
                     b.Property<DateTime>("CreatedDate")
                         .HasColumnType("TEXT");
 
-                    b.Property<string>("Description")
+                    b.Property<string>("EmailAddress")
+                        .HasMaxLength(200)
                         .HasColumnType("TEXT");
 
-                    b.Property<DateTime>("DueDate")
-                        .HasColumnType("TEXT");
-
-                    b.Property<TimeSpan>("EventFrequency")
+                    b.Property<string>("ErrorMessage")
                         .HasColumnType("TEXT");
 
                     b.Property<Guid?>("GroupId")
                         .HasColumnType("TEXT");
 
-                    b.Property<bool>("IsCompleted")
+                    b.Property<string>("LastChangedBy")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("LastChangedDate")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateOnly>("OccurrenceDate")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("ReminderOffsetId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateOnly>("ScheduledFor")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("SentAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("Success")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<Guid?>("UserId")
+                        .HasMaxLength(450)
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("GroupId");
+
+                    b.HasIndex("UserId");
+
+                    b.HasIndex("ReminderOffsetId", "OccurrenceDate")
+                        .IsUnique();
+
+                    b.ToTable("ReminderLog");
+                });
+
+            modelBuilder.Entity("Rvnx.CRM.Core.Models.Dates.ReminderOffset", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("CreatedBy")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("DaysBeforeEvent")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<Guid?>("GroupId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("IsActive")
                         .HasColumnType("INTEGER");
 
                     b.Property<string>("LastChangedBy")
@@ -824,15 +878,7 @@ namespace Rvnx.CRM.Infrastructure.Migrations
                     b.Property<DateTime>("LastChangedDate")
                         .HasColumnType("TEXT");
 
-                    b.Property<bool>("RemindMe")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<DateTime?>("ReminderSent")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Title")
-                        .IsRequired()
-                        .HasMaxLength(200)
+                    b.Property<Guid>("SignificantDateId")
                         .HasColumnType("TEXT");
 
                     b.Property<Guid?>("UserId")
@@ -841,16 +887,13 @@ namespace Rvnx.CRM.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("ContactId");
-
                     b.HasIndex("GroupId");
+
+                    b.HasIndex("SignificantDateId");
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("Reminder", t =>
-                        {
-                            t.HasCheckConstraint("CHK_Reminder_Owner", "ContactId IS NOT NULL");
-                        });
+                    b.ToTable("ReminderOffset");
                 });
 
             modelBuilder.Entity("Rvnx.CRM.Core.Models.Dates.SignificantDate", b =>
@@ -870,17 +913,20 @@ namespace Rvnx.CRM.Infrastructure.Migrations
                     b.Property<DateTime>("CreatedDate")
                         .HasColumnType("TEXT");
 
-                    b.Property<DateTime>("Date")
-                        .HasColumnType("TEXT");
+                    b.Property<int?>("CustomIntervalDays")
+                        .HasColumnType("INTEGER");
 
                     b.Property<string>("Description")
                         .HasColumnType("TEXT");
 
-                    b.Property<TimeSpan>("EventFrequency")
+                    b.Property<DateOnly>("EventDate")
                         .HasColumnType("TEXT");
 
                     b.Property<Guid?>("GroupId")
                         .HasColumnType("TEXT");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("INTEGER");
 
                     b.Property<string>("LastChangedBy")
                         .IsRequired()
@@ -890,11 +936,8 @@ namespace Rvnx.CRM.Infrastructure.Migrations
                     b.Property<DateTime>("LastChangedDate")
                         .HasColumnType("TEXT");
 
-                    b.Property<bool>("RemindMe")
+                    b.Property<int>("RecurrenceType")
                         .HasColumnType("INTEGER");
-
-                    b.Property<DateTime?>("ReminderSent")
-                        .HasColumnType("TEXT");
 
                     b.Property<string>("Title")
                         .HasMaxLength(200)
@@ -1134,14 +1177,26 @@ namespace Rvnx.CRM.Infrastructure.Migrations
                     b.Navigation("Contact");
                 });
 
-            modelBuilder.Entity("Rvnx.CRM.Core.Models.Dates.Reminder", b =>
+            modelBuilder.Entity("Rvnx.CRM.Core.Models.Dates.ReminderLog", b =>
                 {
-                    b.HasOne("Rvnx.CRM.Core.Models.Contact.Contact", "Contact")
-                        .WithMany("Reminders")
-                        .HasForeignKey("ContactId")
-                        .OnDelete(DeleteBehavior.Cascade);
+                    b.HasOne("Rvnx.CRM.Core.Models.Dates.ReminderOffset", "ReminderOffset")
+                        .WithMany("ReminderLogs")
+                        .HasForeignKey("ReminderOffsetId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
-                    b.Navigation("Contact");
+                    b.Navigation("ReminderOffset");
+                });
+
+            modelBuilder.Entity("Rvnx.CRM.Core.Models.Dates.ReminderOffset", b =>
+                {
+                    b.HasOne("Rvnx.CRM.Core.Models.Dates.SignificantDate", "SignificantDate")
+                        .WithMany("ReminderOffsets")
+                        .HasForeignKey("SignificantDateId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("SignificantDate");
                 });
 
             modelBuilder.Entity("Rvnx.CRM.Core.Models.Dates.SignificantDate", b =>
@@ -1193,14 +1248,22 @@ namespace Rvnx.CRM.Infrastructure.Migrations
 
                     b.Navigation("Pets");
 
-                    b.Navigation("Reminders");
-
                     b.Navigation("SignificantDates");
                 });
 
             modelBuilder.Entity("Rvnx.CRM.Core.Models.Contact.Label", b =>
                 {
                     b.Navigation("ContactLabels");
+                });
+
+            modelBuilder.Entity("Rvnx.CRM.Core.Models.Dates.ReminderOffset", b =>
+                {
+                    b.Navigation("ReminderLogs");
+                });
+
+            modelBuilder.Entity("Rvnx.CRM.Core.Models.Dates.SignificantDate", b =>
+                {
+                    b.Navigation("ReminderOffsets");
                 });
 
             modelBuilder.Entity("Rvnx.CRM.Core.Models.UserGroup", b =>

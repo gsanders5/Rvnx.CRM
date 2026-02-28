@@ -52,7 +52,6 @@ public class DashboardService(IRepository repository, ILogger<DashboardService> 
 
         PriorityQueue<UpcomingEventDto, DateTime> topEvents = new();
 
-        await ProcessRemindersAsync(topEvents, contactDict);
         await ProcessSignificantDatesAsync(topEvents, contactDict);
 
         while (topEvents.Count > 0 && result.UpcomingEvents.Count < MaxUpcomingEvents)
@@ -92,58 +91,12 @@ public class DashboardService(IRepository repository, ILogger<DashboardService> 
         return result;
     }
 
-    private async Task ProcessRemindersAsync(
-        PriorityQueue<UpcomingEventDto, DateTime> topEvents,
-        Dictionary<Guid, Contact> contactDict)
-    {
-        List<Reminder> allReminders = await _repository.ListAsNoTrackingAsync<Reminder>(
-            r => !r.IsCompleted);
-
-        int processedCount = 0;
-        foreach (Reminder reminder in allReminders)
-        {
-            DateTime nextDate = reminder.GetNextOccurrence();
-            if (reminder.IsCompleted && nextDate == reminder.DueDate)
-            {
-                continue;
-            }
-
-            string entityName = "Unknown";
-            if (reminder.ContactId.HasValue)
-            {
-                if (contactDict.TryGetValue(reminder.ContactId.Value, out Contact? contact))
-                {
-                    entityName = contact.FullName;
-                }
-            }
-
-            UpcomingEventDto eventDto = new()
-            {
-                Title = reminder.Title,
-                Description = reminder.Description ?? "",
-                Date = nextDate,
-                Type = "Reminder",
-                RelatedEntityId = reminder.ContactId ?? Guid.Empty,
-                RelatedEntityName = entityName,
-                TimeUntil = GetTimeUntil(nextDate)
-            };
-
-            topEvents.Enqueue(eventDto, nextDate);
-            processedCount++;
-            if (processedCount >= MaxEventsToProcess)
-            {
-                LogReminderProcessingLimitReached(_logger, MaxEventsToProcess, null);
-                break;
-            }
-        }
-    }
-
     private async Task ProcessSignificantDatesAsync(
         PriorityQueue<UpcomingEventDto, DateTime> topEvents,
         Dictionary<Guid, Contact> contactDict)
     {
         List<SignificantDate> importantDates = await _repository.ListAsNoTrackingAsync<SignificantDate>(
-            d => d.ContactId != null);
+            d => d.ContactId != null && d.IsActive);
 
         int processedCount = 0;
         foreach (SignificantDate date in importantDates)
@@ -153,12 +106,13 @@ public class DashboardService(IRepository repository, ILogger<DashboardService> 
                 continue;
             }
 
-            DateTime nextOccurrence = date.GetNextOccurrence();
+            DateOnly nextOcc = date.GetNextOccurrence();
+            DateTime nextOccurrence = nextOcc.ToDateTime(TimeOnly.MinValue);
 
             bool isBirthday = date.Title?.Equals(SignificantDateTitles.Birthday, StringComparison.OrdinalIgnoreCase) == true;
             string desc = isBirthday
-                ? $"Turns {nextOccurrence.Year - date.Date.Year}"
-                : $"{date.Title} ({date.Date.ToShortDateString()})";
+                ? $"Turns {nextOcc.Year - date.EventDate.Year}"
+                : $"{date.Title} ({date.EventDate.ToShortDateString()})";
 
             UpcomingEventDto eventDto = new()
             {

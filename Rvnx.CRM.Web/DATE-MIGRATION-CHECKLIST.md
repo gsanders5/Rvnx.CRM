@@ -89,21 +89,21 @@ Three-layer separation: **SignificantDate** (what/when) → **ReminderOffset** (
 ---
 
 ## Phase 10: Tests (`Rvnx.CRM.Tests/DateCalculationServiceTests.cs`)
-- [ ] Annual: same-year occurrence when date not yet passed
-- [ ] Annual: rolls to next year when date has passed
-- [ ] Annual: Feb 29 birthday → Feb 28 in non-leap year
-- [ ] Annual: Feb 29 birthday → Feb 29 in leap year
-- [ ] None: always returns fixed `EventDate`
-- [ ] Monthly: advances to next month when day has passed
-- [ ] Monthly: clamps to end of month (e.g. Jan 31 → Feb 28)
-- [ ] Custom: next occurrence lands on a valid interval boundary
-- [ ] `GetScheduledForDate`: returns `nextOccurrence - DaysBeforeEvent`
+- [x] Annual: same-year occurrence when date not yet passed
+- [x] Annual: rolls to next year when date has passed
+- [x] Annual: Feb 29 birthday → Feb 28 in non-leap year
+- [x] Annual: Feb 29 birthday → Feb 29 in leap year
+- [x] None: always returns fixed `EventDate`
+- [x] Monthly: advances to next month when day has passed
+- [x] Monthly: clamps to end of month (e.g. Jan 31 → Feb 28)
+- [x] Custom: next occurrence lands on a valid interval boundary
+- [x] `GetScheduledForDate`: returns `nextOccurrence - DaysBeforeEvent`
 
 ---
 
 ## Phase 11: Migrations
-- [ ] Delete all files in `Rvnx.CRM.Infrastructure/Migrations/`
-- [ ] Delete the SQLite database file if it exists
-- [ ] Run: `dotnet ef migrations add InitialCreate --project Rvnx.CRM.Infrastructure --startup-project Rvnx.CRM.Web`
-- [ ] Run: `dotnet ef database update --project Rvnx.CRM.Infrastructure --startup-project Rvnx.CRM.Web`
-- [ ] Verify migration file contains the unique index `IX_ReminderLogs_OffsetId_OccurrenceDate`
+- [x] Delete all files in `Rvnx.CRM.Infrastructure/Migrations/`
+- [x] Delete the SQLite database file if it exists
+- [x] Run: `dotnet ef migrations add InitialCreate --project Rvnx.CRM.Infrastructure --startup-project Rvnx.CRM.Web`
+- [x] Run: `dotnet ef database update --project Rvnx.CRM.Infrastructure --startup-project Rvnx.CRM.Web`
+- [x] Verify migration file contains the unique index `IX_ReminderLogs_OffsetId_OccurrenceDate`

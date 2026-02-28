@@ -100,7 +100,11 @@ namespace Rvnx.CRM.Web
             // Set security headers on every response, including redirects
             app.Use(async (context, next) =>
             {
-                context.Response.Headers["X-Content-Type-Options"] = "nosniff";
+                context.Response.OnStarting(() =>
+                {
+                    context.Response.Headers["X-Content-Type-Options"] = "nosniff";
+                    return Task.CompletedTask;
+                });
                 await next();
             });
 

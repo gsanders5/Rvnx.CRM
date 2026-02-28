@@ -1,4 +1,4 @@
-@model Rvnx.CRM.Core.DTOs.Dates.SignificantDateDto
+@model Rvnx.CRM.Core.DTOs.Dates.UpdateSignificantDateRequest
 
 @{
     ViewData["Title"] = "Edit Important Date";
@@ -6,7 +6,7 @@
 
 <div class="row justify-content-center">
     <div class="col-md-8 col-lg-7">
-        <form asp-action="Edit" onsubmit="prepareFrequency()">
+        <form asp-action="Edit">
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
             <input type="hidden" asp-for="Id"/>
             <input type="hidden" asp-for="EntityId"/>
@@ -26,9 +26,25 @@
                     </div>
 
                     <div class="form-floating mb-3">
-                        <input asp-for="Date" class="form-control" type="date" onchange="updateSummary()" id="Date" placeholder=" "/>
-                        <label asp-for="Date">Date</label>
-                        <span asp-validation-for="Date" class="text-danger"></span>
+                        <input asp-for="EventDate" class="form-control" type="date" id="EventDate" placeholder=" "/>
+                        <label asp-for="EventDate">Event Date</label>
+                        <span asp-validation-for="EventDate" class="text-danger"></span>
+                    </div>
+
+                    <div class="form-floating mb-4">
+                        <select asp-for="RecurrenceType" class="form-select" id="RecurrenceType">
+                            <option value="0">None (One-time)</option>
+                            <option value="1">Annual</option>
+                            <option value="2">Monthly</option>
+                            <option value="3">Custom Interval</option>
+                        </select>
+                        <label asp-for="RecurrenceType">Recurrence Type</label>
+                    </div>
+
+                    <div class="form-floating mb-4" id="customIntervalDiv" style="display: none;">
+                        <input asp-for="CustomIntervalDays" class="form-control" type="number" id="CustomIntervalDays" placeholder=" "/>
+                        <label asp-for="CustomIntervalDays">Custom Interval (Days)</label>
+                        <span asp-validation-for="CustomIntervalDays" class="text-danger"></span>
                     </div>
 
                     <div class="form-floating mb-4">
@@ -37,21 +53,76 @@
                         <span asp-validation-for="Description" class="text-danger"></span>
                     </div>
 
-                    <hr class="my-4">
-
-                    <!-- Reminder Duration Partial -->
-                    <partial name="_ReminderDurationPartial" model="Model"/>
+                    <div class="form-check form-switch mb-4">
+                        <input class="form-check-input" type="checkbox" role="switch" id="IsActive" name="IsActive" value="true" @(Model.IsActive ? "checked" : "")>
+                        <label class="form-check-label" for="IsActive">Active</label>
+                        <input type="hidden" name="IsActive" value="false" />
+                    </div>
 
                     <div class="d-grid gap-2 mt-4">
                         <input type="submit" value="Save" class="btn btn-primary btn-lg"/>
-                        <a asp-controller="@(Model.EntityType == Rvnx.CRM.Core.Constants.EntityTypes.Person ? "Contacts" : "Home")" asp-action="Details" asp-route-id="@Model.EntityId" class="btn btn-secondary">Back</a>
+                        <a asp-action="Index" asp-route-contactId="@Model.EntityId" class="btn btn-secondary">Cancel</a>
                     </div>
                 </div>
             </div>
         </form>
+
+        <div class="card mt-4 shadow-sm border-0">
+            <div class="card-body">
+                <h5>Reminder Offsets</h5>
+                <p class="text-muted small">Manage when you are notified before the event.</p>
+
+                <form asp-action="AddOffset" method="post" class="d-flex align-items-center mb-3">
+                    <input type="hidden" name="significantDateId" value="@Model.Id" />
+                    <input type="hidden" name="contactId" value="@Model.EntityId" />
+                    <div class="input-group">
+                        <input type="number" name="daysBeforeEvent" class="form-control" placeholder="Days before" required min="0" />
+                        <button type="submit" class="btn btn-outline-success">Add</button>
+                    </div>
+                </form>
+
+                <ul class="list-group">
+                    @{
+                        var offsets = ViewBag.Offsets as IEnumerable<Rvnx.CRM.Core.DTOs.Dates.ReminderOffsetDto>;
+                    }
+                    @if (offsets != null)
+                    {
+                        foreach (var offset in offsets)
+                        {
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                @(offset.DaysBeforeEvent == 0 ? "Day of event" : $"{offset.DaysBeforeEvent} days before")
+                                <form asp-action="DeleteOffset" method="post" style="display:inline;">
+                                    <input type="hidden" name="offsetId" value="@offset.Id" />
+                                    <input type="hidden" name="significantDateId" value="@Model.Id" />
+                                    <input type="hidden" name="contactId" value="@Model.EntityId" />
+                                    <button type="submit" class="btn btn-sm btn-outline-danger"><i class="bi bi-x"></i></button>
+                                </form>
+                            </li>
+                        }
+                    }
+                </ul>
+            </div>
+        </div>
     </div>
 </div>
 
 @section Scripts {
     @{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); }
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            var recurrenceSelect = document.getElementById('RecurrenceType');
+            var customIntervalDiv = document.getElementById('customIntervalDiv');
+
+            function toggleCustomInterval() {
+                if (recurrenceSelect.value === '3') { // 3 is Custom
+                    customIntervalDiv.style.display = 'block';
+                } else {
+                    customIntervalDiv.style.display = 'none';
+                }
+            }
+
+            recurrenceSelect.addEventListener('change', toggleCustomInterval);
+            toggleCustomInterval(); // Initial check
+        });
+    </script>
 }

@@ -1,4 +1,4 @@
-@model Rvnx.CRM.Core.DTOs.Dates.SignificantDateDto
+@model Rvnx.CRM.Core.DTOs.Dates.CreateSignificantDateRequest
 
 @{
     ViewData["Title"] = "Create Important Date";
@@ -6,7 +6,7 @@
 
 <div class="row justify-content-center">
     <div class="col-md-8 col-lg-7">
-        <form asp-action="Create" onsubmit="prepareFrequency()">
+        <form asp-action="Create">
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
             <input type="hidden" asp-for="EntityId"/>
             <input type="hidden" asp-for="EntityType"/>
@@ -25,9 +25,25 @@
                     </div>
 
                     <div class="form-floating mb-3">
-                        <input asp-for="Date" class="form-control" type="date" onchange="updateSummary()" id="Date" placeholder=" "/>
-                        <label asp-for="Date">Date</label>
-                        <span asp-validation-for="Date" class="text-danger"></span>
+                        <input asp-for="EventDate" class="form-control" type="date" id="EventDate" placeholder=" "/>
+                        <label asp-for="EventDate">Event Date</label>
+                        <span asp-validation-for="EventDate" class="text-danger"></span>
+                    </div>
+
+                    <div class="form-floating mb-4">
+                        <select asp-for="RecurrenceType" class="form-select" id="RecurrenceType">
+                            <option value="0">None (One-time)</option>
+                            <option value="1">Annual</option>
+                            <option value="2">Monthly</option>
+                            <option value="3">Custom Interval</option>
+                        </select>
+                        <label asp-for="RecurrenceType">Recurrence Type</label>
+                    </div>
+
+                    <div class="form-floating mb-4" id="customIntervalDiv" style="display: none;">
+                        <input asp-for="CustomIntervalDays" class="form-control" type="number" id="CustomIntervalDays" placeholder=" "/>
+                        <label asp-for="CustomIntervalDays">Custom Interval (Days)</label>
+                        <span asp-validation-for="CustomIntervalDays" class="text-danger"></span>
                     </div>
 
                     <div class="form-floating mb-4">
@@ -38,12 +54,28 @@
 
                     <hr class="my-4">
 
-                    <!-- Reminder Duration Partial -->
-                    <partial name="_ReminderDurationPartial" model="Model"/>
+                    <h5>Reminders</h5>
+                    <p class="text-muted small mb-3">Select when you want to be reminded before the event occurs.</p>
+
+                    <div class="mb-3">
+                        @{
+                            var defaultOffsets = new[] { 30, 7, 0 };
+                        }
+                        @foreach (var days in defaultOffsets)
+                        {
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="checkbox" name="ReminderOffsetDays" value="@days" id="offset_@days"
+                                       @(Model.ReminderOffsetDays.Contains(days) ? "checked" : "")>
+                                <label class="form-check-label" for="offset_@days">
+                                    @(days == 0 ? "On day of event" : $"{days} days before")
+                                </label>
+                            </div>
+                        }
+                    </div>
 
                     <div class="d-grid gap-2 mt-4">
                         <input type="submit" value="Create" class="btn btn-primary btn-lg"/>
-                        <a asp-controller="@(Model.EntityType == Rvnx.CRM.Core.Constants.EntityTypes.Person ? "Contacts" : "Home")" asp-action="Details" asp-route-id="@Model.EntityId" class="btn btn-secondary">Back</a>
+                        <a asp-action="Index" asp-route-contactId="@Model.EntityId" class="btn btn-secondary">Cancel</a>
                     </div>
                 </div>
             </div>
@@ -53,4 +85,21 @@
 
 @section Scripts {
     @{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); }
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            var recurrenceSelect = document.getElementById('RecurrenceType');
+            var customIntervalDiv = document.getElementById('customIntervalDiv');
+
+            function toggleCustomInterval() {
+                if (recurrenceSelect.value === '3') { // 3 is Custom
+                    customIntervalDiv.style.display = 'block';
+                } else {
+                    customIntervalDiv.style.display = 'none';
+                }
+            }
+
+            recurrenceSelect.addEventListener('change', toggleCustomInterval);
+            toggleCustomInterval(); // Initial check
+        });
+    </script>
 }

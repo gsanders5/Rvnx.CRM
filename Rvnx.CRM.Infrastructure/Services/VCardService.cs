@@ -176,10 +176,10 @@ public class VCardService : IVCardService
                         Id = Guid.NewGuid(),
                         ContactId = contact.Id,
                         Title = SignificantDateTitles.Birthday,
-                        Date = val.DateTimeOffset.Value.DateTime,
+                        EventDate = DateOnly.FromDateTime(val.DateTimeOffset.Value.DateTime),
                         Description = "Birthday from VCard",
-                        RemindMe = true,
-                        EventFrequency = TimeSpan.FromDays(365)
+                        RecurrenceType = Core.Enumerations.RecurrenceType.Annual,
+                        IsActive = true
                     });
                 }
                 else if (val.DateOnly.HasValue)
@@ -190,10 +190,10 @@ public class VCardService : IVCardService
                         Id = Guid.NewGuid(),
                         ContactId = contact.Id,
                         Title = SignificantDateTitles.Birthday,
-                        Date = d.ToDateTime(TimeOnly.MinValue),
+                        EventDate = d,
                         Description = "Birthday from VCard",
-                        RemindMe = true,
-                        EventFrequency = TimeSpan.FromDays(365)
+                        RecurrenceType = Core.Enumerations.RecurrenceType.Annual,
+                        IsActive = true
                     });
                 }
             }
@@ -508,7 +508,7 @@ public class VCardService : IVCardService
             SignificantDate? bday = contact.SignificantDates.FirstOrDefault(d => d.Title == SignificantDateTitles.Birthday);
             if (bday != null)
             {
-                builder.BirthDayViews.Add(bday.Date.Year, bday.Date.Month, bday.Date.Day);
+                builder.BirthDayViews.Add(bday.EventDate.Year, bday.EventDate.Month, bday.EventDate.Day);
             }
         }
 
