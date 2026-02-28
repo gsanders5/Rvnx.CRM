@@ -7,7 +7,6 @@ public static class EntityTypes
     public const string Opportunity = "Opportunity";
 
     public const string Note = "Note";
-    public const string Reminder = "Reminder";
     public const string SignificantDate = "SignificantDate";
     public const string Relationship = "Relationship";
     public const string Attachment = "Attachment";
@@ -17,7 +16,6 @@ public static class EntityTypes
         Company,
         Opportunity,
         Note,
-        Reminder,
         SignificantDate,
         Relationship,
         Attachment
