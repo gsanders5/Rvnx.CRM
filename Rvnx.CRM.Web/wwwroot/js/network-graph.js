@@ -60,7 +60,6 @@ function initializeNetworkGraph(nodes, links) {
     });
   }
 
-  // Drag to Pan State
   let isPanning = false;
   let panStartX = 0;
   let panStartY = 0;
@@ -68,11 +67,9 @@ function initializeNetworkGraph(nodes, links) {
   let currentPanY = 0;
   let currentScale = 1;
 
-  // A group to hold everything so we can pan the camera
   const cameraLayer = document.createElementNS(svgNS, "g");
   svg.appendChild(cameraLayer);
 
-  // Define clipPath for profile images
   const defs = document.createElementNS(svgNS, "defs");
   const clipPath = document.createElementNS(svgNS, "clipPath");
   clipPath.setAttribute("id", "circle-clip");
@@ -91,7 +88,6 @@ function initializeNetworkGraph(nodes, links) {
     );
   };
 
-  // Apply panning listener to the SVG itself
   svg.style.cursor = "grab";
   svg.addEventListener("mousedown", (e) => {
     if (e.target === svg) {
@@ -118,7 +114,6 @@ function initializeNetworkGraph(nodes, links) {
     }
   });
 
-  // Zoom Logic
   svg.addEventListener("wheel", (e) => {
     e.preventDefault();
     const zoomIntensity = 0.1;
@@ -138,7 +133,6 @@ function initializeNetworkGraph(nodes, links) {
     updateTransform();
   });
 
-  // Zoom Buttons
   const zoomInBtn = document.getElementById("zoom-in-btn");
   const zoomOutBtn = document.getElementById("zoom-out-btn");
   const resetZoomBtn = document.getElementById("reset-zoom-btn");
@@ -147,7 +141,6 @@ function initializeNetworkGraph(nodes, links) {
     const newScale = Math.max(0.1, Math.min(5, currentScale * factor));
     const scaleRatio = newScale / currentScale;
 
-    // Zoom to center
     const rect = svg.getBoundingClientRect();
     const cx = rect.width / 2;
     const cy = rect.height / 2;
@@ -175,7 +168,6 @@ function initializeNetworkGraph(nodes, links) {
     });
   }
 
-  // Helper for colors
   const getGenderColor = (gender) => {
     if (!gender) return "#9e9e9e"; // Unset/Unknown
     const g = gender.toLowerCase();
@@ -185,7 +177,6 @@ function initializeNetworkGraph(nodes, links) {
     return "#9e9e9e"; // Other/Unspecified
   };
 
-  // Create Link elements first
   const linkElements = links.map((link) => {
     const line = document.createElementNS(svgNS, "line");
     line.setAttribute("stroke", "#6c757d");
@@ -195,7 +186,6 @@ function initializeNetworkGraph(nodes, links) {
     return { data: link, el: line };
   });
 
-  // Create Node elements
   const nodeElements = nodes.map((node) => {
     const g = document.createElementNS(svgNS, "g");
     g.style.cursor = "grab";
@@ -250,7 +240,6 @@ function initializeNetworkGraph(nodes, links) {
 
     cameraLayer.appendChild(g);
 
-    // Drag logic
     g.addEventListener("mousedown", (e) => startDrag(e, node));
     g.addEventListener("click", (e) => {
       if (!node.wasDragged) {
@@ -261,7 +250,6 @@ function initializeNetworkGraph(nodes, links) {
     return { data: node, el: g };
   });
 
-  // Initialize positions
   nodes.forEach((node) => {
     node.x = Math.random() * width;
     node.y = Math.random() * height;
@@ -269,12 +257,10 @@ function initializeNetworkGraph(nodes, links) {
     node.vy = 0;
   });
 
-  // Drag State
   let draggedNode = null;
 
   function startDrag(e, node) {
     e.preventDefault();
-    // Prevent pan start
     e.stopPropagation();
 
     draggedNode = node;
@@ -309,7 +295,6 @@ function initializeNetworkGraph(nodes, links) {
     const damping = 0.85;
     const centerForce = 0.008;
 
-    // Repulsion
     for (let i = 0; i < nodes.length; i++) {
       const n1 = nodes[i];
       for (let j = i + 1; j < nodes.length; j++) {
@@ -334,7 +319,6 @@ function initializeNetworkGraph(nodes, links) {
       }
     }
 
-    // Attraction
     links.forEach((link) => {
       const source = nodes.find((n) => n.id === link.source);
       const target = nodes.find((n) => n.id === link.target);
@@ -359,15 +343,12 @@ function initializeNetworkGraph(nodes, links) {
       }
     });
 
-    // Center & Bounds & Update
     nodes.forEach((node) => {
       if (node === draggedNode) return;
 
-      // Center
       node.vx += (width / 2 - node.x) * centerForce;
       node.vy += (height / 2 - node.y) * centerForce;
 
-      // Update
       node.x += node.vx;
       node.y += node.vy;
       node.vx *= damping;
@@ -376,7 +357,6 @@ function initializeNetworkGraph(nodes, links) {
       // Bounds - Removed to allow nodes to spread into the panned space!
     });
 
-    // Render Updates
     nodeElements.forEach((item) => {
       item.el.setAttribute(
         "transform",

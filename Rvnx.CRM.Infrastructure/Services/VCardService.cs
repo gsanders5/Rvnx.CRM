@@ -281,14 +281,12 @@ public class VCardService : IVCardService
             return (null, null);
         }
 
-        // Try to get embedded bytes first
         byte[]? bytes = rawData.Bytes;
         if (bytes != null && bytes.Length > 0)
         {
             return (bytes, photoProp.Parameters.MediaType);
         }
 
-        // Try to resolve from URI if we have an HttpClient and URL resolution is enabled
         Uri? photoUri = rawData.Uri;
         if (photoUri != null && resolveUrls && _httpClient != null)
         {
@@ -357,7 +355,6 @@ public class VCardService : IVCardService
             return IsPublicIpAddress(ipAddress);
         }
 
-        // If host is a domain name, resolve it to IPs and check them
         try
         {
             IPAddress[] ips = await Dns.GetHostAddressesAsync(uri.Host);
@@ -365,7 +362,6 @@ public class VCardService : IVCardService
         }
         catch
         {
-            // If DNS resolution fails, consider it unsafe
             return false;
         }
     }
