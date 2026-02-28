@@ -353,8 +353,8 @@ public class ContactManagementService(IRepository repository, IFileValidationSer
             }
 
             // Sync ReminderOffset based on remindOnBirthday
-            var offsets = await _repository.ListAsync<ReminderOffset>(o => o.SignificantDateId == targetDate.Id && o.DaysBeforeEvent == 0);
-            var offset = offsets.FirstOrDefault();
+            List<ReminderOffset> offsets = await _repository.ListAsync<ReminderOffset>(o => o.SignificantDateId == targetDate.Id && o.DaysBeforeEvent == 0);
+            ReminderOffset? offset = offsets.FirstOrDefault();
 
             if (remindOnBirthday)
             {

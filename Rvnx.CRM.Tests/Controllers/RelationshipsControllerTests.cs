@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc.ViewFeatures;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.ViewFeatures;
 using Microsoft.EntityFrameworkCore;
 using Moq;
 using Rvnx.CRM.Core.Constants;
@@ -20,414 +20,414 @@ public class RelationshipsControllerTests
     public class RelationshipsControllerPerformanceTests
     {
 
-            [Fact]
-            public async Task CreateShouldUseSingleQueryForOptions()
-            {
-                Mock<IRepository> repositoryMock = new();
-                Mock<IRelationshipService> relationshipServiceMock = new();
+        [Fact]
+        public async Task CreateShouldUseSingleQueryForOptions()
+        {
+            Mock<IRepository> repositoryMock = new();
+            Mock<IRelationshipService> relationshipServiceMock = new();
 
-                // Setup mocks to return empty lists to avoid null ref in view model construction
-                relationshipServiceMock.Setup(s => s.GetRelatedEntityOptionsAsync(It.IsAny<Guid>(), It.IsAny<string>(), It.IsAny<Guid?>()))
-                    .ReturnsAsync([]);
-                relationshipServiceMock.Setup(s => s.GetRelationshipTypeOptions(It.IsAny<string>(), It.IsAny<string?>()))
-                    .Returns([]);
-                relationshipServiceMock.Setup(s => s.GetRelationshipTypes(It.IsAny<string>()))
-                    .Returns([]);
+            // Setup mocks to return empty lists to avoid null ref in view model construction
+            relationshipServiceMock.Setup(s => s.GetRelatedEntityOptionsAsync(It.IsAny<Guid>(), It.IsAny<string>(), It.IsAny<Guid?>()))
+                .ReturnsAsync([]);
+            relationshipServiceMock.Setup(s => s.GetRelationshipTypeOptions(It.IsAny<string>(), It.IsAny<string?>()))
+                .Returns([]);
+            relationshipServiceMock.Setup(s => s.GetRelationshipTypes(It.IsAny<string>()))
+                .Returns([]);
 
-                repositoryMock.Setup(r => r.CountAsync<Contact>(It.IsAny<System.Linq.Expressions.Expression<Func<Contact, bool>>>(), default))
-                    .ReturnsAsync(1); // IsValidContactAsync
+            repositoryMock.Setup(r => r.CountAsync<Contact>(It.IsAny<System.Linq.Expressions.Expression<Func<Contact, bool>>>(), default))
+                .ReturnsAsync(1); // IsValidContactAsync
 
-                repositoryMock.Setup(r => r.ListProjectedAsync(
-                        It.IsAny<System.Linq.Expressions.Expression<Func<Contact, bool>>>(),
-                        It.IsAny<System.Linq.Expressions.Expression<Func<Contact, string>>>(),
-                        default))
-                    .ReturnsAsync(["Test Contact"]);
+            repositoryMock.Setup(r => r.ListProjectedAsync(
+                    It.IsAny<System.Linq.Expressions.Expression<Func<Contact, bool>>>(),
+                    It.IsAny<System.Linq.Expressions.Expression<Func<Contact, string>>>(),
+                    default))
+                .ReturnsAsync(["Test Contact"]);
 
-                RelationshipsController controller = new(relationshipServiceMock.Object, repositoryMock.Object);
+            RelationshipsController controller = new(relationshipServiceMock.Object, repositoryMock.Object);
 
-                Guid entityId = Guid.NewGuid();
+            Guid entityId = Guid.NewGuid();
 
-                await controller.Create(entityId, EntityTypes.Person);
+            await controller.Create(entityId, EntityTypes.Person);
 
-                relationshipServiceMock.Verify(s => s.GetRelatedEntityOptionsAsync(entityId, EntityTypes.Person, null), Times.Once);
-            }
+            relationshipServiceMock.Verify(s => s.GetRelatedEntityOptionsAsync(entityId, EntityTypes.Person, null), Times.Once);
+        }
 
     }
     public class RelationshipsControllerRedirectTests : IDisposable
     {
 
-            private readonly CRMDbContext _context;
-            private readonly RelationshipsController _controller;
+        private readonly CRMDbContext _context;
+        private readonly RelationshipsController _controller;
 
-            public RelationshipsControllerRedirectTests()
+        public RelationshipsControllerRedirectTests()
+        {
+            DbContextOptions<CRMDbContext> options = new DbContextOptionsBuilder<CRMDbContext>()
+                .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
+                .Options;
+
+            Mock<ICurrentUserService> mockCurrentUserService = new();
+            mockCurrentUserService.Setup(s => s.UserId).Returns(Guid.Parse("c5b50a20-34b2-44b2-8b9c-aa4135f60938"));
+            mockCurrentUserService.Setup(s => s.UserName).Returns("test-user");
+
+            _context = new CRMDbContext(options, mockCurrentUserService.Object);
+            Repository repository = new(_context);
+            RelationshipService relationshipService = new(repository);
+            Mock<IUrlHelper> mockUrlHelper = new();
+            mockUrlHelper.Setup(x => x.IsLocalUrl(It.IsAny<string>())).Returns((string url) => url.StartsWith('/'));
+
+            _controller = new RelationshipsController(relationshipService, repository)
             {
-                DbContextOptions<CRMDbContext> options = new DbContextOptionsBuilder<CRMDbContext>()
-                    .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
-                    .Options;
+                ControllerContext = new ControllerContext { HttpContext = new DefaultHttpContext() },
+                Url = mockUrlHelper.Object
+            };
+            _controller.TempData = new TempDataDictionary(_controller.HttpContext, Mock.Of<ITempDataProvider>());
+        }
 
-                Mock<ICurrentUserService> mockCurrentUserService = new();
-                mockCurrentUserService.Setup(s => s.UserId).Returns(Guid.Parse("c5b50a20-34b2-44b2-8b9c-aa4135f60938"));
-                mockCurrentUserService.Setup(s => s.UserName).Returns("test-user");
+        public void Dispose()
+        {
+            _context.Database.EnsureDeleted();
+            _context.Dispose();
 
-                _context = new CRMDbContext(options, mockCurrentUserService.Object);
-                Repository repository = new(_context);
-                RelationshipService relationshipService = new(repository);
-                Mock<IUrlHelper> mockUrlHelper = new();
-                mockUrlHelper.Setup(x => x.IsLocalUrl(It.IsAny<string>())).Returns((string url) => url.StartsWith('/'));
+            GC.SuppressFinalize(this);
+        }
 
-                _controller = new RelationshipsController(relationshipService, repository)
-                {
-                    ControllerContext = new ControllerContext { HttpContext = new DefaultHttpContext() },
-                    Url = mockUrlHelper.Object
-                };
-                _controller.TempData = new TempDataDictionary(_controller.HttpContext, Mock.Of<ITempDataProvider>());
-            }
-
-            public void Dispose()
+        [Fact]
+        public async Task DeleteConfirmedWithValidReturnUrlShouldRedirectToUrl()
+        {
+            Guid relId = Guid.NewGuid();
+            _context.Relationships.Add(new Core.Models.Contact.Relationship
             {
-                _context.Database.EnsureDeleted();
-                _context.Dispose();
+                Id = relId,
+                EntityId = Guid.NewGuid(),
+                RelatedEntityId = Guid.NewGuid(),
+                EntityType = EntityTypes.Person
+            });
+            await _context.SaveChangesAsync();
 
-                GC.SuppressFinalize(this);
-            }
+            string returnUrl = "/local/path";
 
-            [Fact]
-            public async Task DeleteConfirmedWithValidReturnUrlShouldRedirectToUrl()
+            IActionResult result = await _controller.DeleteConfirmed(relId, returnUrl);
+
+            RedirectResult redirectResult = Assert.IsType<RedirectResult>(result);
+            Assert.Equal(returnUrl, redirectResult.Url);
+        }
+
+        [Fact]
+        public async Task DeleteConfirmedWithInvalidReturnUrlShouldRedirectToEntity()
+        {
+            Guid relId = Guid.NewGuid();
+            Guid entityId = Guid.NewGuid();
+            _context.Relationships.Add(new Core.Models.Contact.Relationship
             {
-                Guid relId = Guid.NewGuid();
-                _context.Relationships.Add(new Core.Models.Contact.Relationship
-                {
-                    Id = relId,
-                    EntityId = Guid.NewGuid(),
-                    RelatedEntityId = Guid.NewGuid(),
-                    EntityType = EntityTypes.Person
-                });
-                await _context.SaveChangesAsync();
+                Id = relId,
+                EntityId = entityId,
+                RelatedEntityId = Guid.NewGuid(),
+                EntityType = EntityTypes.Person
+            });
+            await _context.SaveChangesAsync();
 
-                string returnUrl = "/local/path";
+            string returnUrl = "http://malicious.com";
 
-                IActionResult result = await _controller.DeleteConfirmed(relId, returnUrl);
+            IActionResult result = await _controller.DeleteConfirmed(relId, returnUrl);
 
-                RedirectResult redirectResult = Assert.IsType<RedirectResult>(result);
-                Assert.Equal(returnUrl, redirectResult.Url);
-            }
-
-            [Fact]
-            public async Task DeleteConfirmedWithInvalidReturnUrlShouldRedirectToEntity()
-            {
-                Guid relId = Guid.NewGuid();
-                Guid entityId = Guid.NewGuid();
-                _context.Relationships.Add(new Core.Models.Contact.Relationship
-                {
-                    Id = relId,
-                    EntityId = entityId,
-                    RelatedEntityId = Guid.NewGuid(),
-                    EntityType = EntityTypes.Person
-                });
-                await _context.SaveChangesAsync();
-
-                string returnUrl = "http://malicious.com";
-
-                IActionResult result = await _controller.DeleteConfirmed(relId, returnUrl);
-
-                RedirectToActionResult redirectResult = Assert.IsType<RedirectToActionResult>(result);
-                Assert.Equal("Details", redirectResult.ActionName);
-                Assert.Equal("Contacts", redirectResult.ControllerName);
-                Assert.Equal(entityId, redirectResult.RouteValues?["id"]);
-            }
+            RedirectToActionResult redirectResult = Assert.IsType<RedirectToActionResult>(result);
+            Assert.Equal("Details", redirectResult.ActionName);
+            Assert.Equal("Contacts", redirectResult.ControllerName);
+            Assert.Equal(entityId, redirectResult.RouteValues?["id"]);
+        }
 
     }
     public class RelationshipsControllerSecurityTests : IDisposable
     {
 
-            private readonly CRMDbContext _context;
-            private readonly RelationshipsController _controller;
+        private readonly CRMDbContext _context;
+        private readonly RelationshipsController _controller;
 
-            public RelationshipsControllerSecurityTests()
+        public RelationshipsControllerSecurityTests()
+        {
+            DbContextOptions<CRMDbContext> options = new DbContextOptionsBuilder<CRMDbContext>()
+                .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
+                .Options;
+
+            Mock<ICurrentUserService> mockCurrentUserService = new();
+            mockCurrentUserService.Setup(s => s.UserId).Returns(Guid.Parse("c5b50a20-34b2-44b2-8b9c-aa4135f60938"));
+            mockCurrentUserService.Setup(s => s.UserName).Returns("test-user");
+
+            _context = new CRMDbContext(options, mockCurrentUserService.Object);
+            Repository repository = new(_context);
+            RelationshipService relationshipService = new(repository);
+            Mock<IUrlHelper> mockUrlHelper = new();
+            mockUrlHelper.Setup(x => x.IsLocalUrl(It.IsAny<string>())).Returns((string url) => url.StartsWith('/'));
+
+            _controller = new RelationshipsController(relationshipService, repository)
             {
-                DbContextOptions<CRMDbContext> options = new DbContextOptionsBuilder<CRMDbContext>()
-                    .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
-                    .Options;
+                ControllerContext = new ControllerContext { HttpContext = new DefaultHttpContext() },
+                Url = mockUrlHelper.Object
+            };
+            _controller.TempData = new TempDataDictionary(_controller.HttpContext, Mock.Of<ITempDataProvider>());
+        }
 
-                Mock<ICurrentUserService> mockCurrentUserService = new();
-                mockCurrentUserService.Setup(s => s.UserId).Returns(Guid.Parse("c5b50a20-34b2-44b2-8b9c-aa4135f60938"));
-                mockCurrentUserService.Setup(s => s.UserName).Returns("test-user");
+        public void Dispose()
+        {
+            _context.Database.EnsureDeleted();
+            _context.Dispose();
 
-                _context = new CRMDbContext(options, mockCurrentUserService.Object);
-                Repository repository = new(_context);
-                RelationshipService relationshipService = new(repository);
-                Mock<IUrlHelper> mockUrlHelper = new();
-                mockUrlHelper.Setup(x => x.IsLocalUrl(It.IsAny<string>())).Returns((string url) => url.StartsWith('/'));
+            GC.SuppressFinalize(this);
+        }
 
-                _controller = new RelationshipsController(relationshipService, repository)
-                {
-                    ControllerContext = new ControllerContext { HttpContext = new DefaultHttpContext() },
-                    Url = mockUrlHelper.Object
-                };
-                _controller.TempData = new TempDataDictionary(_controller.HttpContext, Mock.Of<ITempDataProvider>());
-            }
-
-            public void Dispose()
+        [Fact]
+        public async Task DeleteGetWithUnvalidatedReturnUrlShouldSanitizeIt()
+        {
+            // We need a valid relationship ID to reach the logic
+            Guid relId = Guid.NewGuid();
+            _context.Relationships.Add(new Core.Models.Contact.Relationship
             {
-                _context.Database.EnsureDeleted();
-                _context.Dispose();
+                Id = relId,
+                EntityId = Guid.NewGuid(),
+                RelatedEntityId = Guid.NewGuid(),
+                EntityType = EntityTypes.Person
+            });
+            await _context.SaveChangesAsync();
 
-                GC.SuppressFinalize(this);
-            }
+            string maliciousUrl = "http://malicious.com";
 
-            [Fact]
-            public async Task DeleteGetWithUnvalidatedReturnUrlShouldSanitizeIt()
+            IActionResult result = await _controller.Delete(relId, maliciousUrl);
+
+            ViewResult viewResult = Assert.IsType<ViewResult>(result);
+            dynamic? model = viewResult.Model;
+            // In Razor Pages/Views, we access properties. Here we check if ReturnUrl in model is null
+            // Since deleteViewModel is strongly typed in controller, let's cast
+            Assert.NotNull(model);
+            if (model != null)
             {
-                // We need a valid relationship ID to reach the logic
-                Guid relId = Guid.NewGuid();
-                _context.Relationships.Add(new Core.Models.Contact.Relationship
-                {
-                    Id = relId,
-                    EntityId = Guid.NewGuid(),
-                    RelatedEntityId = Guid.NewGuid(),
-                    EntityType = EntityTypes.Person
-                });
-                await _context.SaveChangesAsync();
-
-                string maliciousUrl = "http://malicious.com";
-
-                IActionResult result = await _controller.Delete(relId, maliciousUrl);
-
-                ViewResult viewResult = Assert.IsType<ViewResult>(result);
-                dynamic? model = viewResult.Model;
-                // In Razor Pages/Views, we access properties. Here we check if ReturnUrl in model is null
-                // Since deleteViewModel is strongly typed in controller, let's cast
-                Assert.NotNull(model);
-                if (model != null)
-                {
-                    Assert.Null(model.ReturnUrl);
-                }
+                Assert.Null(model.ReturnUrl);
             }
+        }
 
     }
     public class General : IDisposable
     {
 
-            private readonly CRMDbContext _context;
-            private readonly RelationshipsController _controller;
+        private readonly CRMDbContext _context;
+        private readonly RelationshipsController _controller;
 
-            public General()
+        public General()
+        {
+            DbContextOptions<CRMDbContext> options = new DbContextOptionsBuilder<CRMDbContext>()
+                .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
+                .Options;
+
+            Mock<ICurrentUserService> mockCurrentUserService = new();
+            mockCurrentUserService.Setup(s => s.UserId).Returns(Guid.Parse("c5b50a20-34b2-44b2-8b9c-aa4135f60938"));
+            mockCurrentUserService.Setup(s => s.UserName).Returns("test-user");
+
+            _context = new CRMDbContext(options, mockCurrentUserService.Object);
+            Repository repository = new(_context);
+            RelationshipService relationshipService = new(repository);
+            _controller = new RelationshipsController(relationshipService, repository);
+        }
+
+        public void Dispose()
+        {
+            _context.Database.EnsureDeleted();
+            _context.Dispose();
+
+            GC.SuppressFinalize(this);
+        }
+
+        [Fact]
+        public async Task CreatePostWithForwardDirectionShouldCreateRelationship()
+        {
+            Guid p1Id = Guid.NewGuid();
+            Guid p2Id = Guid.NewGuid();
+            _context.Contacts.Add(new Contact { Id = p1Id, FirstName = "P1" });
+            _context.Contacts.Add(new Contact { Id = p2Id, FirstName = "P2" });
+            await _context.SaveChangesAsync();
+
+            // Use a real static ID from Service
+            Guid typeId = Guid.Parse("7c1f8d22-1b6a-4c28-9c1e-3f5a2b8e9d1a"); // Parent
+
+            string selection = $"{typeId}_Fwd";
+            RelationshipFormViewModel viewModel = new()
             {
-                DbContextOptions<CRMDbContext> options = new DbContextOptionsBuilder<CRMDbContext>()
-                    .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
-                    .Options;
+                EntityId = p1Id,
+                RelatedEntityId = p2Id,
+                EntityType = EntityTypes.Person,
+                SelectedRelationshipType = selection
+            };
 
-                Mock<ICurrentUserService> mockCurrentUserService = new();
-                mockCurrentUserService.Setup(s => s.UserId).Returns(Guid.Parse("c5b50a20-34b2-44b2-8b9c-aa4135f60938"));
-                mockCurrentUserService.Setup(s => s.UserName).Returns("test-user");
+            IActionResult result = await _controller.Create(viewModel);
 
-                _context = new CRMDbContext(options, mockCurrentUserService.Object);
-                Repository repository = new(_context);
-                RelationshipService relationshipService = new(repository);
-                _controller = new RelationshipsController(relationshipService, repository);
-            }
+            RedirectToActionResult redirectResult = Assert.IsType<RedirectToActionResult>(result);
+            Assert.Equal("Details", redirectResult.ActionName);
+            Assert.Equal("Contacts", redirectResult.ControllerName);
+            Assert.Equal(p1Id, redirectResult.RouteValues?["id"]);
 
-            public void Dispose()
+            Relationship? created = await _context.Set<Relationship>().FirstOrDefaultAsync();
+            Assert.NotNull(created);
+            Assert.Equal(p1Id, created.EntityId);
+            Assert.Equal(p2Id, created.RelatedEntityId);
+            Assert.Equal(typeId, created.RelationshipTypeId);
+        }
+
+        [Fact]
+        public async Task CreatePostWithReverseDirectionShouldSwapEntitiesAndCreateRelationship()
+        {
+            Guid p1Id = Guid.NewGuid(); // User is on P1 page
+            Guid p2Id = Guid.NewGuid(); // User selects P2 as related
+            _context.Contacts.Add(new Contact { Id = p1Id, FirstName = "P1" });
+            _context.Contacts.Add(new Contact { Id = p2Id, FirstName = "P2" });
+            await _context.SaveChangesAsync();
+
+            // Use a real static ID from Service
+            Guid typeId = Guid.Parse("7c1f8d22-1b6a-4c28-9c1e-3f5a2b8e9d1a"); // Parent
+
+            string selection = $"{typeId}_Rev";
+            RelationshipFormViewModel viewModel = new()
             {
-                _context.Database.EnsureDeleted();
-                _context.Dispose();
+                EntityId = p1Id,
+                RelatedEntityId = p2Id,
+                EntityType = EntityTypes.Person,
+                SelectedRelationshipType = selection
+            };
 
-                GC.SuppressFinalize(this);
-            }
+            IActionResult result = await _controller.Create(viewModel);
 
-            [Fact]
-            public async Task CreatePostWithForwardDirectionShouldCreateRelationship()
+            // Should redirect back to P1 (original EntityId)
+            RedirectToActionResult redirectResult = Assert.IsType<RedirectToActionResult>(result);
+            Assert.Equal(p1Id, redirectResult.RouteValues?["id"]);
+
+            Relationship? created = await _context.Set<Relationship>().FirstOrDefaultAsync();
+            Assert.NotNull(created);
+            Assert.Equal(p2Id, created.EntityId);
+            Assert.Equal(p1Id, created.RelatedEntityId);
+            Assert.Equal(typeId, created.RelationshipTypeId);
+        }
+
+        [Fact]
+        public async Task DeleteConfirmedWithValidIdShouldDeleteRelationship()
+        {
+            Guid relId = Guid.NewGuid();
+            Guid p1Id = Guid.NewGuid();
+            _context.Set<Relationship>().Add(new Relationship
             {
-                Guid p1Id = Guid.NewGuid();
-                Guid p2Id = Guid.NewGuid();
-                _context.Contacts.Add(new Contact { Id = p1Id, FirstName = "P1" });
-                _context.Contacts.Add(new Contact { Id = p2Id, FirstName = "P2" });
-                await _context.SaveChangesAsync();
+                Id = relId,
+                EntityId = p1Id,
+                RelatedEntityId = Guid.NewGuid(),
+                EntityType = EntityTypes.Person,
+                RelationshipTypeId = Guid.Parse("7c1f8d22-1b6a-4c28-9c1e-3f5a2b8e9d1a")
+            });
+            await _context.SaveChangesAsync();
 
-                // Use a real static ID from Service
-                Guid typeId = Guid.Parse("7c1f8d22-1b6a-4c28-9c1e-3f5a2b8e9d1a"); // Parent
+            IActionResult result = await _controller.DeleteConfirmed(relId);
 
-                string selection = $"{typeId}_Fwd";
-                RelationshipFormViewModel viewModel = new()
-                {
-                    EntityId = p1Id,
-                    RelatedEntityId = p2Id,
-                    EntityType = EntityTypes.Person,
-                    SelectedRelationshipType = selection
-                };
+            Assert.IsType<RedirectToActionResult>(result);
+            Assert.Null(await _context.Set<Relationship>().FindAsync(relId));
+        }
 
-                IActionResult result = await _controller.Create(viewModel);
+        [Fact]
+        public async Task CreateGetShouldPopulateGroupedOptions()
+        {
+            Guid p1Id = Guid.NewGuid();
+            _context.Contacts.Add(new Contact { Id = p1Id, FirstName = "P1" });
+            await _context.SaveChangesAsync();
 
-                RedirectToActionResult redirectResult = Assert.IsType<RedirectToActionResult>(result);
-                Assert.Equal("Details", redirectResult.ActionName);
-                Assert.Equal("Contacts", redirectResult.ControllerName);
-                Assert.Equal(p1Id, redirectResult.RouteValues?["id"]);
+            IActionResult result = await _controller.Create(p1Id, EntityTypes.Person);
 
-                Relationship? created = await _context.Set<Relationship>().FirstOrDefaultAsync();
-                Assert.NotNull(created);
-                Assert.Equal(p1Id, created.EntityId);
-                Assert.Equal(p2Id, created.RelatedEntityId);
-                Assert.Equal(typeId, created.RelationshipTypeId);
-            }
+            ViewResult viewResult = Assert.IsType<ViewResult>(result);
+            RelationshipFormViewModel viewModel = Assert.IsType<RelationshipFormViewModel>(viewResult.Model);
 
-            [Fact]
-            public async Task CreatePostWithReverseDirectionShouldSwapEntitiesAndCreateRelationship()
+            IEnumerable<SelectOptionDto> options = viewModel.RelationshipTypeOptions;
+            Assert.NotNull(options);
+
+            Guid spouseId = Guid.Parse("b2e9a5c8-7f4d-4a1b-8c6e-5f9d3a0e2b4c");
+            Assert.Contains(options,
+                o => o.Value == $"{spouseId}_Fwd" && o.Text == "is Spouse of" && o.Group == "Family");
+
+            // Father (Parent/Child is defined as Parent/Child in service, not Father/Child explicitly with that ID, but checking logic)
+            Guid parentId = Guid.Parse("7c1f8d22-1b6a-4c28-9c1e-3f5a2b8e9d1a");
+            Assert.Contains(options, o => o.Value == $"{parentId}_Fwd" && o.Text == "is Parent of (Child)");
+            Assert.Contains(options, o => o.Value == $"{parentId}_Rev" && o.Text == "is Child of (Parent)");
+        }
+
+        [Fact]
+        public async Task CreatePostWhenRelationshipTypeSelectionIsEmptyShouldReturnViewWithPopulatedOptions()
+        {
+            Guid p1Id = Guid.NewGuid();
+            _context.Contacts.Add(new Contact { Id = p1Id, FirstName = "P1", LastName = "User" });
+            _context.Contacts.Add(new Contact { Id = Guid.NewGuid(), FirstName = "P2" });
+            await _context.SaveChangesAsync();
+
+            RelationshipFormViewModel viewModel = new()
             {
-                Guid p1Id = Guid.NewGuid(); // User is on P1 page
-                Guid p2Id = Guid.NewGuid(); // User selects P2 as related
-                _context.Contacts.Add(new Contact { Id = p1Id, FirstName = "P1" });
-                _context.Contacts.Add(new Contact { Id = p2Id, FirstName = "P2" });
-                await _context.SaveChangesAsync();
+                EntityId = p1Id,
+                RelatedEntityId = Guid.NewGuid(),
+                EntityType = EntityTypes.Person,
+                SelectedRelationshipType = string.Empty
+            };
 
-                // Use a real static ID from Service
-                Guid typeId = Guid.Parse("7c1f8d22-1b6a-4c28-9c1e-3f5a2b8e9d1a"); // Parent
+            IActionResult result = await _controller.Create(viewModel);
 
-                string selection = $"{typeId}_Rev";
-                RelationshipFormViewModel viewModel = new()
-                {
-                    EntityId = p1Id,
-                    RelatedEntityId = p2Id,
-                    EntityType = EntityTypes.Person,
-                    SelectedRelationshipType = selection
-                };
+            ViewResult viewResult = Assert.IsType<ViewResult>(result);
+            RelationshipFormViewModel resultViewModel = Assert.IsType<RelationshipFormViewModel>(viewResult.Model);
 
-                IActionResult result = await _controller.Create(viewModel);
+            Assert.False(_controller.ModelState.IsValid);
+            Assert.True(_controller.ModelState.ContainsKey("SelectedRelationshipType"));
 
-                // Should redirect back to P1 (original EntityId)
-                RedirectToActionResult redirectResult = Assert.IsType<RedirectToActionResult>(result);
-                Assert.Equal(p1Id, redirectResult.RouteValues?["id"]);
+            // Verifying that options are repopulated so the View doesn't crash on render
+            Assert.NotNull(resultViewModel.RelatedEntityOptions);
+            Assert.NotEmpty(resultViewModel.RelatedEntityOptions);
 
-                Relationship? created = await _context.Set<Relationship>().FirstOrDefaultAsync();
-                Assert.NotNull(created);
-                Assert.Equal(p2Id, created.EntityId);
-                Assert.Equal(p1Id, created.RelatedEntityId);
-                Assert.Equal(typeId, created.RelationshipTypeId);
-            }
+            Assert.NotNull(resultViewModel.RelationshipTypeOptions);
+            Assert.NotEmpty(resultViewModel.RelationshipTypeOptions);
 
-            [Fact]
-            public async Task DeleteConfirmedWithValidIdShouldDeleteRelationship()
+            Assert.Equal(p1Id, resultViewModel.EntityId);
+            Assert.Equal(EntityTypes.Person, resultViewModel.EntityType);
+        }
+
+        [Fact]
+        public async Task CreatePartialWithValidDataCreatesRelationshipAndRedirects()
+        {
+            Guid p1Id = Guid.NewGuid();
+            _context.Contacts.Add(new Contact { Id = p1Id, FirstName = "P1" });
+            await _context.SaveChangesAsync();
+
+            CreatePartialContactRelationshipDto dto = new()
             {
-                Guid relId = Guid.NewGuid();
-                Guid p1Id = Guid.NewGuid();
-                _context.Set<Relationship>().Add(new Relationship
-                {
-                    Id = relId,
-                    EntityId = p1Id,
-                    RelatedEntityId = Guid.NewGuid(),
-                    EntityType = EntityTypes.Person,
-                    RelationshipTypeId = Guid.Parse("7c1f8d22-1b6a-4c28-9c1e-3f5a2b8e9d1a")
-                });
-                await _context.SaveChangesAsync();
+                PartialContactFirstName = "NewPartial",
+                SelectedRelationshipType = $"{Guid.NewGuid()}_Fwd"
+            };
 
-                IActionResult result = await _controller.DeleteConfirmed(relId);
+            IActionResult result = await _controller.CreatePartial(p1Id, EntityTypes.Person, dto);
 
-                Assert.IsType<RedirectToActionResult>(result);
-                Assert.Null(await _context.Set<Relationship>().FindAsync(relId));
-            }
+            RedirectToActionResult redirectResult = Assert.IsType<RedirectToActionResult>(result);
+            Assert.Equal("Details", redirectResult.ActionName);
+            Assert.Equal("Contacts", redirectResult.ControllerName);
+            Assert.Equal(p1Id, redirectResult.RouteValues?["id"]);
 
-            [Fact]
-            public async Task CreateGetShouldPopulateGroupedOptions()
-            {
-                Guid p1Id = Guid.NewGuid();
-                _context.Contacts.Add(new Contact { Id = p1Id, FirstName = "P1" });
-                await _context.SaveChangesAsync();
+            Relationship? created = await _context.Set<Relationship>().FirstOrDefaultAsync();
+            Assert.NotNull(created);
+            Assert.Equal(p1Id, created.EntityId);
+        }
 
-                IActionResult result = await _controller.Create(p1Id, EntityTypes.Person);
+        [Fact]
+        public async Task PromoteWithValidContactIdReturnsRedirect()
+        {
+            Guid p1Id = Guid.NewGuid();
+            _context.Contacts.Add(new Contact { Id = p1Id, FirstName = "P1", IsPartial = true });
+            await _context.SaveChangesAsync();
 
-                ViewResult viewResult = Assert.IsType<ViewResult>(result);
-                RelationshipFormViewModel viewModel = Assert.IsType<RelationshipFormViewModel>(viewResult.Model);
+            IActionResult result = await _controller.Promote(p1Id);
 
-                IEnumerable<SelectOptionDto> options = viewModel.RelationshipTypeOptions;
-                Assert.NotNull(options);
+            RedirectToActionResult redirectResult = Assert.IsType<RedirectToActionResult>(result);
+            Assert.Equal("Edit", redirectResult.ActionName);
+            Assert.Equal("Contacts", redirectResult.ControllerName);
+            Assert.Equal(p1Id, redirectResult.RouteValues?["id"]);
 
-                Guid spouseId = Guid.Parse("b2e9a5c8-7f4d-4a1b-8c6e-5f9d3a0e2b4c");
-                Assert.Contains(options,
-                    o => o.Value == $"{spouseId}_Fwd" && o.Text == "is Spouse of" && o.Group == "Family");
-
-                // Father (Parent/Child is defined as Parent/Child in service, not Father/Child explicitly with that ID, but checking logic)
-                Guid parentId = Guid.Parse("7c1f8d22-1b6a-4c28-9c1e-3f5a2b8e9d1a");
-                Assert.Contains(options, o => o.Value == $"{parentId}_Fwd" && o.Text == "is Parent of (Child)");
-                Assert.Contains(options, o => o.Value == $"{parentId}_Rev" && o.Text == "is Child of (Parent)");
-            }
-
-            [Fact]
-            public async Task CreatePostWhenRelationshipTypeSelectionIsEmptyShouldReturnViewWithPopulatedOptions()
-            {
-                Guid p1Id = Guid.NewGuid();
-                _context.Contacts.Add(new Contact { Id = p1Id, FirstName = "P1", LastName = "User" });
-                _context.Contacts.Add(new Contact { Id = Guid.NewGuid(), FirstName = "P2" });
-                await _context.SaveChangesAsync();
-
-                RelationshipFormViewModel viewModel = new()
-                {
-                    EntityId = p1Id,
-                    RelatedEntityId = Guid.NewGuid(),
-                    EntityType = EntityTypes.Person,
-                    SelectedRelationshipType = string.Empty
-                };
-
-                IActionResult result = await _controller.Create(viewModel);
-
-                ViewResult viewResult = Assert.IsType<ViewResult>(result);
-                RelationshipFormViewModel resultViewModel = Assert.IsType<RelationshipFormViewModel>(viewResult.Model);
-
-                Assert.False(_controller.ModelState.IsValid);
-                Assert.True(_controller.ModelState.ContainsKey("SelectedRelationshipType"));
-
-                // Verifying that options are repopulated so the View doesn't crash on render
-                Assert.NotNull(resultViewModel.RelatedEntityOptions);
-                Assert.NotEmpty(resultViewModel.RelatedEntityOptions);
-
-                Assert.NotNull(resultViewModel.RelationshipTypeOptions);
-                Assert.NotEmpty(resultViewModel.RelationshipTypeOptions);
-
-                Assert.Equal(p1Id, resultViewModel.EntityId);
-                Assert.Equal(EntityTypes.Person, resultViewModel.EntityType);
-            }
-
-            [Fact]
-            public async Task CreatePartialWithValidDataCreatesRelationshipAndRedirects()
-            {
-                Guid p1Id = Guid.NewGuid();
-                _context.Contacts.Add(new Contact { Id = p1Id, FirstName = "P1" });
-                await _context.SaveChangesAsync();
-
-                CreatePartialContactRelationshipDto dto = new()
-                {
-                    PartialContactFirstName = "NewPartial",
-                    SelectedRelationshipType = $"{Guid.NewGuid()}_Fwd"
-                };
-
-                IActionResult result = await _controller.CreatePartial(p1Id, EntityTypes.Person, dto);
-
-                RedirectToActionResult redirectResult = Assert.IsType<RedirectToActionResult>(result);
-                Assert.Equal("Details", redirectResult.ActionName);
-                Assert.Equal("Contacts", redirectResult.ControllerName);
-                Assert.Equal(p1Id, redirectResult.RouteValues?["id"]);
-
-                Relationship? created = await _context.Set<Relationship>().FirstOrDefaultAsync();
-                Assert.NotNull(created);
-                Assert.Equal(p1Id, created.EntityId);
-            }
-
-            [Fact]
-            public async Task PromoteWithValidContactIdReturnsRedirect()
-            {
-                Guid p1Id = Guid.NewGuid();
-                _context.Contacts.Add(new Contact { Id = p1Id, FirstName = "P1", IsPartial = true });
-                await _context.SaveChangesAsync();
-
-                IActionResult result = await _controller.Promote(p1Id);
-
-                RedirectToActionResult redirectResult = Assert.IsType<RedirectToActionResult>(result);
-                Assert.Equal("Edit", redirectResult.ActionName);
-                Assert.Equal("Contacts", redirectResult.ControllerName);
-                Assert.Equal(p1Id, redirectResult.RouteValues?["id"]);
-
-                Contact? promoted = await _context.Set<Contact>().FindAsync(p1Id);
-                Assert.NotNull(promoted);
-                Assert.False(promoted.IsPartial);
-            }
+            Contact? promoted = await _context.Set<Contact>().FindAsync(p1Id);
+            Assert.NotNull(promoted);
+            Assert.False(promoted.IsPartial);
+        }
 
     }
 }
