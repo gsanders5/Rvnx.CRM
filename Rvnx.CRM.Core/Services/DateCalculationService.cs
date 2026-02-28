@@ -2,74 +2,97 @@ namespace Rvnx.CRM.Core.Services
 {
     public static class DateCalculationService
     {
-        /// <summary>
-        /// Calculates the next occurrence of a recurring date.
-        /// Handles complex logic for leap years and calendar-based vs. timespan-based recurrence.
-        /// </summary>
-        /// <param name="originalDate">The starting date of the event.</param>
-        /// <param name="frequency">The interval between occurrences.</param>
-        /// <param name="referenceDate">The date to calculate the next occurrence relative to (defaults to Today).</param>
-        /// <param name="treatFrequencyAsCalendarYears">If true, treats intervals of 365 days as 1 calendar year (handling leap years correctly).</param>
-        /// <returns>The date of the next occurrence.</returns>
-        public static DateTime GetNextOccurrence(DateTime originalDate, TimeSpan frequency, DateTime? referenceDate = null, bool treatFrequencyAsCalendarYears = false)
+        public static DateOnly GetNextOccurrence(Rvnx.CRM.Core.Models.Dates.SignificantDate significantDate, DateOnly fromDate)
         {
-            DateTime today = referenceDate ?? DateTime.Today;
-            DateTime nextOccurrence = originalDate;
-
-            if (nextOccurrence > today)
+            if (significantDate.EventDate > fromDate)
             {
+                return significantDate.EventDate;
+            }
+
+            if (significantDate.RecurrenceType == Enumerations.RecurrenceType.None)
+            {
+                return significantDate.EventDate;
+            }
+
+            if (significantDate.RecurrenceType == Enumerations.RecurrenceType.Annual)
+            {
+                int year = fromDate.Year;
+                DateOnly nextOccurrence;
+
+                try
+                {
+                    nextOccurrence = new DateOnly(year, significantDate.EventDate.Month, significantDate.EventDate.Day);
+                }
+                catch (ArgumentOutOfRangeException)
+                {
+                    // Feb 29 on non leap year
+                    nextOccurrence = new DateOnly(year, 2, 28);
+                }
+
+                if (nextOccurrence < fromDate)
+                {
+                    year++;
+                    try
+                    {
+                        nextOccurrence = new DateOnly(year, significantDate.EventDate.Month, significantDate.EventDate.Day);
+                    }
+                    catch (ArgumentOutOfRangeException)
+                    {
+                        nextOccurrence = new DateOnly(year, 2, 28);
+                    }
+                }
                 return nextOccurrence;
             }
 
-            if (frequency <= TimeSpan.Zero)
+            if (significantDate.RecurrenceType == Enumerations.RecurrenceType.Monthly)
             {
-                // If no frequency, it's a one-time event (or already happened)
+                DateOnly nextOccurrence = significantDate.EventDate;
+
+                int monthDiff = ((fromDate.Year - significantDate.EventDate.Year) * 12) + fromDate.Month - significantDate.EventDate.Month;
+                if (monthDiff > 0)
+                {
+                    nextOccurrence = significantDate.EventDate.AddMonths(monthDiff);
+                }
+
+                if (nextOccurrence < fromDate)
+                {
+                    nextOccurrence = nextOccurrence.AddMonths(1);
+                }
+
                 return nextOccurrence;
             }
 
-            if (treatFrequencyAsCalendarYears)
+            if (significantDate.RecurrenceType == Enumerations.RecurrenceType.Custom && significantDate.CustomIntervalDays.HasValue && significantDate.CustomIntervalDays.Value > 0)
             {
-                int yearsPerCycle = (int)(frequency.TotalDays / 365);
-                int yearsSinceOriginal = today.Year - originalDate.Year;
-                int yearsToAdd = 0;
+                DateOnly nextOccurrence = significantDate.EventDate;
+                int interval = significantDate.CustomIntervalDays.Value;
 
-                if (yearsSinceOriginal > 0 && yearsPerCycle > 0)
+                int daysDiff = fromDate.DayNumber - significantDate.EventDate.DayNumber;
+
+                if (daysDiff > 0)
                 {
-                    int cycles = yearsSinceOriginal / yearsPerCycle;
+                    int cycles = daysDiff / interval;
                     if (cycles > 0)
                     {
-                        yearsToAdd = cycles * yearsPerCycle;
+                        nextOccurrence = nextOccurrence.AddDays(cycles * interval);
                     }
                 }
 
-                nextOccurrence = originalDate.AddYears(yearsToAdd);
-
-                while (nextOccurrence < today)
+                while (nextOccurrence < fromDate)
                 {
-                    yearsToAdd += yearsPerCycle;
-                    nextOccurrence = originalDate.AddYears(yearsToAdd);
-                }
-            }
-            else
-            {
-                double daysSinceOriginal = (today - nextOccurrence).TotalDays;
-
-                if (daysSinceOriginal > 0 && frequency.TotalDays > 0)
-                {
-                    double cycles = Math.Floor(daysSinceOriginal / frequency.TotalDays);
-                    if (cycles > 0)
-                    {
-                        nextOccurrence = nextOccurrence.Add(frequency * cycles);
-                    }
+                    nextOccurrence = nextOccurrence.AddDays(interval);
                 }
 
-                while (nextOccurrence < today)
-                {
-                    nextOccurrence = nextOccurrence.Add(frequency);
-                }
+                return nextOccurrence;
             }
 
-            return nextOccurrence;
+            return significantDate.EventDate;
+        }
+
+        public static DateOnly GetScheduledForDate(Rvnx.CRM.Core.Models.Dates.SignificantDate significantDate, Rvnx.CRM.Core.Models.Dates.ReminderOffset offset, DateOnly fromDate)
+        {
+            DateOnly nextOccurrence = GetNextOccurrence(significantDate, fromDate);
+            return nextOccurrence.AddDays(-offset.DaysBeforeEvent);
         }
     }
 }

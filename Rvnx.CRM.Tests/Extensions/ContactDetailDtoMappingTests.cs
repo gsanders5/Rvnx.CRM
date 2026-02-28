@@ -54,7 +54,6 @@ namespace Rvnx.CRM.Tests.Extensions
                 FirstName = "Test",
                 LastName = "Contact",
                 Notes = [new Note { Id = Guid.NewGuid(), Title = "Note1", Value = "Content1", ContactId = contactId }],
-                Reminders = [new Reminder { Id = Guid.NewGuid(), Title = "Reminder1", ContactId = contactId }],
                 SignificantDates = [new SignificantDate { Id = Guid.NewGuid(), Title = "Birthday", ContactId = contactId }],
                 Relationships = [new Relationship { Id = Guid.NewGuid(), EntityId = contactId, RelatedEntityId = Guid.NewGuid() }],
                 RelatedTo = [new Relationship { Id = Guid.NewGuid(), EntityId = Guid.NewGuid(), RelatedEntityId = contactId }],
@@ -67,9 +66,6 @@ namespace Rvnx.CRM.Tests.Extensions
 
             Assert.Single(result.Notes);
             Assert.Equal(contact.Notes.First().Id, result.Notes.First().Id);
-
-            Assert.Single(result.Reminders);
-            Assert.Equal(contact.Reminders.First().Id, result.Reminders.First().Id);
 
             Assert.Single(result.SignificantDates);
             Assert.Equal(contact.SignificantDates.First().Id, result.SignificantDates.First().Id);
@@ -101,7 +97,6 @@ namespace Rvnx.CRM.Tests.Extensions
                 // Explicitly setting collections to null (default behavior, but being explicit for test clarity)
                 // Using null! to suppress nullable warnings because we are testing behavior when they are null
                 Notes = null!,
-                Reminders = null!,
                 SignificantDates = null!,
                 Relationships = null!,
                 RelatedTo = null!,
@@ -114,9 +109,6 @@ namespace Rvnx.CRM.Tests.Extensions
 
             Assert.NotNull(result.Notes);
             Assert.Empty(result.Notes);
-
-            Assert.NotNull(result.Reminders);
-            Assert.Empty(result.Reminders);
 
             Assert.NotNull(result.SignificantDates);
             Assert.Empty(result.SignificantDates);

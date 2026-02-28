@@ -20,8 +20,9 @@ public class CRMDbContext(DbContextOptions<CRMDbContext> options, ICurrentUserSe
     public DbSet<Attachment> Attachments { get; set; }
     public DbSet<AttachmentContent> AttachmentContents { get; set; }
     public DbSet<SignificantDate> SignificantDates { get; set; }
+    public DbSet<ReminderOffset> ReminderOffsets { get; set; }
+    public DbSet<ReminderLog> ReminderLogs { get; set; }
     public DbSet<Relationship> Relationships { get; set; }
-    public DbSet<Reminder> Reminders { get; set; }
     public DbSet<Pet> Pets { get; set; }
     public DbSet<ContactMethod> ContactMethods { get; set; }
     public DbSet<Fact> Facts { get; set; }
@@ -114,15 +115,6 @@ public class CRMDbContext(DbContextOptions<CRMDbContext> options, ICurrentUserSe
         modelBuilder.Entity<Note>()
             .ToTable(t => t.HasCheckConstraint("CHK_Note_Owner", "ContactId IS NOT NULL"));
 
-        modelBuilder.Entity<Reminder>()
-            .HasOne(e => e.Contact)
-            .WithMany(c => c.Reminders)
-            .HasForeignKey(e => e.ContactId)
-            .OnDelete(DeleteBehavior.Cascade);
-
-        modelBuilder.Entity<Reminder>()
-            .ToTable(t => t.HasCheckConstraint("CHK_Reminder_Owner", "ContactId IS NOT NULL"));
-
         // SignificantDate
         modelBuilder.Entity<SignificantDate>()
             .HasOne(e => e.Contact)
@@ -132,6 +124,22 @@ public class CRMDbContext(DbContextOptions<CRMDbContext> options, ICurrentUserSe
 
         modelBuilder.Entity<SignificantDate>()
             .ToTable(t => t.HasCheckConstraint("CHK_SignificantDate_Owner", "ContactId IS NOT NULL"));
+
+        modelBuilder.Entity<ReminderOffset>()
+            .HasOne(ro => ro.SignificantDate)
+            .WithMany(sd => sd.ReminderOffsets)
+            .HasForeignKey(ro => ro.SignificantDateId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<ReminderLog>()
+            .HasOne(rl => rl.ReminderOffset)
+            .WithMany(ro => ro.ReminderLogs)
+            .HasForeignKey(rl => rl.ReminderOffsetId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<ReminderLog>()
+            .HasIndex(rl => new { rl.ReminderOffsetId, rl.OccurrenceDate })
+            .IsUnique();
 
         modelBuilder.Entity<Attachment>()
             .HasOne(e => e.Contact)

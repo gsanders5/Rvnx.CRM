@@ -45,18 +45,6 @@ namespace Rvnx.CRM.Tests.Services
         }
 
         [Fact]
-        public async Task ExistsAsyncReminderCallsRepositoryForReminder()
-        {
-            Guid id = Guid.NewGuid();
-            _repositoryMock.Setup(r => r.ExistsAsync<Reminder>(id, It.IsAny<CancellationToken>())).ReturnsAsync(true);
-
-            bool result = await _service.ExistsAsync(EntityTypes.Reminder, id);
-
-            Assert.True(result);
-            _repositoryMock.Verify(r => r.ExistsAsync<Reminder>(id, It.IsAny<CancellationToken>()), Times.Once);
-        }
-
-        [Fact]
         public async Task ExistsAsyncSignificantDateCallsRepositoryForSignificantDate()
         {
             Guid id = Guid.NewGuid();

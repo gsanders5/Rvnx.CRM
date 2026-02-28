@@ -39,6 +39,7 @@ internal static class TaskManager
             bool success = taskName switch
             {
                 "COUNT-CONTACTS" => await RunCountContactsAsync(services),
+                "SEND-DATE-REMINDERS" => await RunSendDateRemindersAsync(services),
                 _ => false
             };
 
@@ -65,6 +66,13 @@ internal static class TaskManager
             .IgnoreQueryFilters()
             .CountAsync(c => !c.IsPartial);
         Console.WriteLine($"Total contacts: {count}");
+        return true;
+    }
+
+    private static async Task<bool> RunSendDateRemindersAsync(IServiceProvider services)
+    {
+        var service = services.GetRequiredService<Rvnx.CRM.Core.Interfaces.IReminderNotificationService>();
+        await service.SendDueRemindersAsync(DateOnly.FromDateTime(DateTime.Today));
         return true;
     }
 }

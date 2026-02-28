@@ -353,31 +353,31 @@
     <div class="card mb-4">
         <div class="card-header d-flex justify-content-between align-items-center">
             <h5 class="card-title mb-0"><i class="bi bi-calendar-event"></i> Important Dates</h5>
-            <a asp-controller="SignificantDates" asp-action="Create" asp-route-entityId="@Model.Id" asp-route-entityType="Person" class="btn btn-sm btn-outline-primary"><i class="bi bi-plus-lg"></i> Add</a>
+            <a asp-controller="SignificantDates" asp-action="Index" asp-route-contactId="@Model.Id" class="btn btn-sm btn-outline-primary"><i class="bi bi-gear"></i> Manage Dates</a>
         </div>
         <div class="card-body">
             @if (Model.SignificantDates != null && Model.SignificantDates.Any())
             {
                 <ul class="list-group">
-                    @foreach (var date in Model.SignificantDates.OrderBy(d => d.Date))
+                    @foreach (var date in Model.SignificantDates.OrderBy(d => d.EventDate))
                     {
                         <li class="list-group-item">
                             <div class="d-flex w-100 justify-content-between align-items-center">
                                 <h6 class="mb-1 me-2">@date.Title</h6>
                                 <div class="d-flex flex-wrap gap-1 align-items-center justify-content-end">
-                                    <span class="badge bg-info text-dark">@date.Date.ToShortDateString()</span>
+                                    <span class="badge bg-info text-dark">@date.EventDate.ToShortDateString()</span>
 
                                     @if (string.Equals(date.Title, SignificantDateTitles.Birthday, StringComparison.OrdinalIgnoreCase))
                                     {
                                         var today = DateTime.Today;
-                                        var age = today.Year - date.Date.Year;
-                                        if (date.Date.Date > today.AddYears(-age)) age--;
+                                        var age = today.Year - date.EventDate.Year;
+                                        if (date.EventDate.ToDateTime(TimeOnly.MinValue).Date > today.AddYears(-age)) age--;
                                         <span class="badge bg-secondary">@age years old</span>
                                     }
 
-                                    @if (date.RemindMe)
+                                    @if (date.IsActive)
                                     {
-                                        <span class="badge bg-warning text-dark">Remind Me</span>
+                                        <span class="badge bg-success text-dark">Active</span>
                                     }
 
                                     <div class="btn-group btn-group-sm">

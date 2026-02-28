@@ -23,7 +23,6 @@ public class EntityService : IEntityService
         {
             EntityTypes.Person => await _repository.ExistsAsync<Contact>(id),
             EntityTypes.Note => await _repository.ExistsAsync<Note>(id),
-            EntityTypes.Reminder => await _repository.ExistsAsync<Reminder>(id),
             EntityTypes.SignificantDate => await _repository.ExistsAsync<SignificantDate>(id),
             EntityTypes.Relationship => await _repository.ExistsAsync<Relationship>(id),
             _ => false

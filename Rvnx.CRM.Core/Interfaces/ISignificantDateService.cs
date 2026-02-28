@@ -6,12 +6,18 @@ namespace Rvnx.CRM.Core.Interfaces;
 
 public interface ISignificantDateService
 {
+    Task<List<SignificantDateDto>> GetByContactAsync(Guid contactId);
+
     /// <summary>
     /// Creates a new significant date (e.g., anniversary) for a contact.
     /// </summary>
     /// <param name="dto">The date data.</param>
     /// <returns>An <see cref="OperationResult"/> indicating success or failure.</returns>
     Task<OperationResult> CreateAsync(SignificantDateDto dto);
+
+    Task<OperationResult> AddReminderOffsetAsync(Guid significantDateId, int daysBeforeEvent);
+
+    Task<OperationResult> DeleteReminderOffsetAsync(Guid offsetId);
 
     /// <summary>
     /// Updates an existing significant date.

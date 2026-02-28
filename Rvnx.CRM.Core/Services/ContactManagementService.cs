@@ -326,11 +326,12 @@ public class ContactManagementService(IRepository repository, IFileValidationSer
     {
         if (newDate.HasValue)
         {
+            DateOnly newDateOnly = DateOnly.FromDateTime(newDate.Value);
             if (existingDate != null)
             {
-                if (existingDate.Date != newDate.Value)
+                if (existingDate.EventDate != newDateOnly)
                 {
-                    existingDate.Date = newDate.Value;
+                    existingDate.EventDate = newDateOnly;
                     await _repository.UpdateAsync(existingDate);
                 }
             }
@@ -341,10 +342,10 @@ public class ContactManagementService(IRepository repository, IFileValidationSer
                     Id = Guid.NewGuid(),
                     ContactId = contactId,
                     Title = SignificantDateTitles.Birthday,
-                    Date = newDate.Value,
+                    EventDate = newDateOnly,
                     Description = "Birthday",
-                    RemindMe = true,
-                    EventFrequency = TimeSpan.FromDays(365)
+                    RecurrenceType = Enumerations.RecurrenceType.Annual,
+                    IsActive = true
                 });
             }
         }

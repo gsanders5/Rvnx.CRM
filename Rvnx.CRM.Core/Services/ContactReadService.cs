@@ -94,7 +94,6 @@ public class ContactReadService(IRepository repository) : IContactReadService
             nameof(Contact.Employers),
             nameof(Contact.Pets),
             nameof(Contact.Notes),
-            nameof(Contact.Reminders),
             nameof(Contact.SignificantDates),
             nameof(Contact.ContactMethods),
             nameof(Contact.Facts),
@@ -216,7 +215,7 @@ public class ContactReadService(IRepository repository) : IContactReadService
 
         SignificantDate? bday = contact.SignificantDates
             .FirstOrDefault(d => d.Title == SignificantDateTitles.Birthday);
-        dto.Birthday = bday?.Date;
+        dto.Birthday = bday?.EventDate.ToDateTime(TimeOnly.MinValue);
 
         // Explicitly await the task to ensure Result is not accessed prematurely or incorrectly, and handle null result from ListAsync safely
         List<Attachment> attachments = await _repository.ListAsync<Attachment>(a => a.ContactId == id && a.AttachmentType == AttachmentTypes.ProfileImage);

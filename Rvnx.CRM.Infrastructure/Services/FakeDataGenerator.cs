@@ -111,8 +111,10 @@ namespace Rvnx.CRM.Infrastructure.Services
                     Id = Guid.NewGuid(),
                     ContactId = contact.Id,
                     Title = "Birthday",
-                    Date = new DateTime(year, month, day),
-                    Description = "Birthday"
+                    EventDate = new DateOnly(year, month, day),
+                    Description = "Birthday",
+                    RecurrenceType = Core.Enumerations.RecurrenceType.Annual,
+                    IsActive = true
                 });
             }
 

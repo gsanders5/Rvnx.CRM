@@ -14,25 +14,25 @@ namespace Rvnx.CRM.Tests.Extensions
             {
                 Id = Guid.NewGuid(),
                 Title = "Anniversary",
-                Date = new DateTime(2023, 10, 27),
+                EventDate = new DateOnly(2023, 10, 27),
                 Description = "A special day",
                 ContactId = Guid.NewGuid(),
-                RemindMe = true,
-                ReminderSent = DateTime.UtcNow.AddDays(-1),
-                EventFrequency = TimeSpan.FromDays(365)
+                RecurrenceType = Core.Enumerations.RecurrenceType.Annual,
+                CustomIntervalDays = null,
+                IsActive = true
             };
 
             SignificantDateDto dto = entity.ToDto();
 
             Assert.Equal(entity.Id, dto.Id);
             Assert.Equal(entity.Title, dto.Title);
-            Assert.Equal(entity.Date, dto.Date);
+            Assert.Equal(entity.EventDate, dto.EventDate);
             Assert.Equal(entity.Description, dto.Description);
             Assert.Equal(entity.ContactId, dto.EntityId);
             Assert.Equal(EntityTypes.Person, dto.EntityType);
-            Assert.Equal(entity.RemindMe, dto.RemindMe);
-            Assert.Equal(entity.ReminderSent, dto.ReminderSent);
-            Assert.Equal(entity.EventFrequency, dto.EventFrequency);
+            Assert.Equal(entity.RecurrenceType, dto.RecurrenceType);
+            Assert.Equal(entity.CustomIntervalDays, dto.CustomIntervalDays);
+            Assert.Equal(entity.IsActive, dto.IsActive);
         }
 
         [Fact]
@@ -41,7 +41,7 @@ namespace Rvnx.CRM.Tests.Extensions
             SignificantDate entity = new()
             {
                 Title = null,
-                Date = DateTime.Now
+                EventDate = DateOnly.FromDateTime(DateTime.Now)
             };
 
             SignificantDateDto dto = entity.ToDto();
@@ -55,7 +55,7 @@ namespace Rvnx.CRM.Tests.Extensions
             SignificantDate entity = new()
             {
                 ContactId = null,
-                Date = DateTime.Now
+                EventDate = DateOnly.FromDateTime(DateTime.Now)
             };
 
             SignificantDateDto dto = entity.ToDto();
@@ -68,7 +68,7 @@ namespace Rvnx.CRM.Tests.Extensions
         {
             SignificantDate entity = new()
             {
-                Date = DateTime.Now
+                EventDate = DateOnly.FromDateTime(DateTime.Now)
             };
 
             SignificantDateDto dto = entity.ToDto();
@@ -82,7 +82,7 @@ namespace Rvnx.CRM.Tests.Extensions
             SignificantDate entity = new()
             {
                 Description = null,
-                Date = DateTime.Now
+                EventDate = DateOnly.FromDateTime(DateTime.Now)
             };
 
             SignificantDateDto dto = entity.ToDto();
