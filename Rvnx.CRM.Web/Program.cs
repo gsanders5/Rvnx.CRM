@@ -25,6 +25,7 @@ namespace Rvnx.CRM.Web
 
             builder.Services.AddHttpContextAccessor();
             builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
+            builder.Services.AddTransient<Microsoft.AspNetCore.Authentication.IClaimsTransformation, Rvnx.CRM.Web.Security.UserClaimsTransformation>();
             // File.TypeChecker.Web 2.0.0 does not expose AddFileTypesValidation.
             // Assuming automatic or no registration required for this version.
 
@@ -62,6 +63,12 @@ namespace Rvnx.CRM.Web
                         options.CallbackPath = authConfig["CallbackPath"] ?? "/signin-oidc";
                         options.RemoteSignOutPath = authConfig["RemoteSignOutPath"] ?? "/signout-oidc";
 
+                        // Fix "Correlation failed" on localhost HTTP by relaxing cookie security
+                        options.CorrelationCookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
+                        options.CorrelationCookie.SameSite = SameSiteMode.Unspecified;
+                        options.NonceCookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
+                        options.NonceCookie.SameSite = SameSiteMode.Unspecified;
+
                         options.MapInboundClaims = true; // Explicitly map standard OIDC claims to .NET ClaimTypes
                         options.GetClaimsFromUserInfoEndpoint =
                             true; // Fetch additional profile info if not in ID token
@@ -84,6 +91,12 @@ namespace Rvnx.CRM.Web
                                 {
                                     await userSyncService.SyncUserAsync(context.Principal);
                                 }
+                            },
+                            OnRemoteFailure = context =>
+                            {
+                                context.HandleResponse();
+                                context.Response.Redirect("/");
+                                return Task.CompletedTask;
                             }
                         };
                     });
@@ -137,6 +150,15 @@ namespace Rvnx.CRM.Web
             if (authEnabled)
             {
                 app.UseAuthentication();
+                app.Use(async (context, next) =>
+                {
+                    if (context.User.Identity?.IsAuthenticated == true)
+                    {
+                        IUserSynchronizationService? userSync = context.RequestServices.GetRequiredService<IUserSynchronizationService>();
+                        await userSync.SyncUserAsync(context.User);
+                    }
+                    await next();
+                });
             }
 
             app.UseAuthorization();

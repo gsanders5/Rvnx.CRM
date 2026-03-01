@@ -8,4 +8,5 @@ public static class ClaimConstants
     /// which other middleware or logging systems may have already read.
     /// </summary>
     public const string InternalUserIdClaimType = "urn:crm:internal-user-id";
+    public const string InternalGroupIdClaimType = "urn:crm:internal-group-id";
 }

@@ -7,16 +7,10 @@ using System.Security.Claims;
 
 namespace Rvnx.CRM.Infrastructure.Services;
 
-public class UserSynchronizationService : IUserSynchronizationService
+public class UserSynchronizationService(CRMDbContext dbContext, IRepository repository) : IUserSynchronizationService
 {
-    private readonly CRMDbContext _dbContext;
-    private readonly IRepository _repository;
-
-    public UserSynchronizationService(CRMDbContext dbContext, IRepository repository)
-    {
-        _dbContext = dbContext;
-        _repository = repository;
-    }
+    private readonly CRMDbContext _dbContext = dbContext;
+    private readonly IRepository _repository = repository;
 
     public async Task SyncUserAsync(ClaimsPrincipal principal)
     {
@@ -97,13 +91,23 @@ public class UserSynchronizationService : IUserSynchronizationService
         // providing the internal ID for CRM operations
         if (principal.Identity is ClaimsIdentity identity)
         {
-            Claim? existingInternalClaim = identity.FindFirst(ClaimConstants.InternalUserIdClaimType);
-            if (existingInternalClaim != null)
+            Claim? existingUserClaim = identity.FindFirst(ClaimConstants.InternalUserIdClaimType);
+            if (existingUserClaim != null)
             {
-                identity.RemoveClaim(existingInternalClaim);
+                identity.RemoveClaim(existingUserClaim);
+            }
+            identity.AddClaim(new Claim(ClaimConstants.InternalUserIdClaimType, user.Id.ToString()));
+
+            Claim? existingGroupClaim = identity.FindFirst(ClaimConstants.InternalGroupIdClaimType);
+            if (existingGroupClaim != null)
+            {
+                identity.RemoveClaim(existingGroupClaim);
             }
 
-            identity.AddClaim(new Claim(ClaimConstants.InternalUserIdClaimType, user.Id.ToString()));
+            if (user.GroupId.HasValue)
+            {
+                identity.AddClaim(new Claim(ClaimConstants.InternalGroupIdClaimType, user.GroupId.Value.ToString()));
+            }
 
             if (!identity.HasClaim(c => c.Type == ClaimTypes.Name) && !string.IsNullOrEmpty(user.DisplayName))
             {

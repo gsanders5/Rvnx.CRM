@@ -12,39 +12,20 @@ public class CurrentUserService(IHttpContextAccessor httpContextAccessor, IConfi
     private readonly IConfiguration _configuration = configuration;
     private readonly IServiceProvider _serviceProvider = serviceProvider;
 
-    private Guid? _groupId;
-    private bool _groupIdResolved;
-
     public Guid? UserId => GetUserIdFromClaims();
+    public Guid? GroupId => GetGroupIdFromClaims();
 
-    public Guid? GroupId
+    private Guid? GetGroupIdFromClaims()
     {
-        get
+        if (!IsAuthEnabled())
         {
-            if (_groupIdResolved)
-            {
-                return _groupId;
-            }
-
-            if (!IsAuthEnabled() || UserId == null)
-            {
-                _groupIdResolved = true;
-                return _groupId = null;
-            }
-
-            // Clean resolution via ServiceProvider breaks the circularity
-            using IServiceScope scope = _serviceProvider.CreateScope();
-            IRepository repo = scope.ServiceProvider.GetRequiredService<IRepository>();
-
-            // Query logic using your existing architecture
-            var user = repo.QueryUnfiltered<User>()
-                           .Select(u => new { u.Id, u.GroupId })
-                           .FirstOrDefault(u => u.Id == UserId);
-
-            _groupId = user?.GroupId;
-            _groupIdResolved = true;
-            return _groupId;
+            return null;
         }
+
+        ClaimsPrincipal? user = _httpContextAccessor.HttpContext?.User;
+        string? groupId = user?.FindFirst(ClaimConstants.InternalGroupIdClaimType)?.Value;
+
+        return Guid.TryParse(groupId, out Guid guid) ? guid : null;
     }
 
     public async Task<bool> IsAdministratorAsync(Guid userId)
