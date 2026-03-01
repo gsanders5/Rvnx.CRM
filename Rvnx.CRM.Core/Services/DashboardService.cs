@@ -34,7 +34,25 @@ public class DashboardService(IRepository repository, ILogger<DashboardService> 
     {
         DashboardDto result = new();
 
-        List<Contact> contacts = await _repository.ListAsNoTrackingAsync<Contact>(x => x.IsHidden == false);
+        // Optimization: Use ListProjectedAsync into an anonymous type to fetch only necessary columns for the dashboard nodes and event processing
+        var projectedContacts = await _repository.ListProjectedAsync(
+            (Contact x) => x.IsHidden == false,
+            c => new
+            {
+                c.Id,
+                c.FirstName,
+                c.LastName,
+                c.Gender
+            });
+
+        List<Contact> contacts = projectedContacts.Select(c => new Contact
+        {
+            Id = c.Id,
+            FirstName = c.FirstName,
+            LastName = c.LastName,
+            Gender = c.Gender
+        }).ToList();
+
         Dictionary<Guid, Contact> contactDict = contacts.ToDictionary(c => c.Id, c => c);
 
         List<Guid> contactIds = [.. contacts.Select(c => c.Id)];
@@ -77,7 +95,21 @@ public class DashboardService(IRepository repository, ILogger<DashboardService> 
             });
         }
 
-        List<Relationship> relationships = await _repository.ListAsNoTrackingAsync<Relationship>(r => r.EntityType == EntityTypes.Person);
+        // Optimization: Project only necessary fields (EntityId, RelatedEntityId) into an anonymous type to avoid fetching all columns
+        var projectedRelationships = await _repository.ListProjectedAsync(
+            (Relationship r) => r.EntityType == EntityTypes.Person,
+            r => new
+            {
+                r.EntityId,
+                r.RelatedEntityId
+            });
+
+        List<Relationship> relationships = projectedRelationships.Select(r => new Relationship
+        {
+            EntityId = r.EntityId,
+            RelatedEntityId = r.RelatedEntityId
+        }).ToList();
+
         foreach (Relationship rel in relationships)
         {
             result.GraphLinks.Add(new GraphLinkDto
