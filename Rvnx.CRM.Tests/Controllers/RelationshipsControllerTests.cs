@@ -433,5 +433,56 @@ public class RelationshipsControllerTests
             Assert.False(promoted.IsPartial);
         }
 
+        [Fact]
+        public async Task EditPostWhenRelationshipTypeSelectionIsEmptyShouldReturnViewWithPopulatedOptions()
+        {
+            Guid relId = Guid.NewGuid();
+            Guid p1Id = Guid.NewGuid();
+            Guid p2Id = Guid.NewGuid();
+            _context.Contacts.Add(new Contact { Id = p1Id, FirstName = "P1" });
+            _context.Contacts.Add(new Contact { Id = p2Id, FirstName = "P2" });
+
+            _context.Relationships.Add(new Relationship
+            {
+                Id = relId,
+                EntityId = p1Id,
+                RelatedEntityId = p2Id,
+                EntityType = EntityTypes.Person,
+                RelationshipTypeId = Guid.NewGuid()
+            });
+            await _context.SaveChangesAsync();
+
+            RelationshipFormViewModel viewModel = new()
+            {
+                Id = relId,
+                EntityId = p1Id,
+                RelatedEntityId = p2Id,
+                EntityType = EntityTypes.Person,
+                SelectedRelationshipType = string.Empty // Simulate validation error
+            };
+
+            IActionResult result = await _controller.Edit(relId, viewModel);
+
+            ViewResult viewResult = Assert.IsType<ViewResult>(result);
+            RelationshipFormViewModel resultViewModel = Assert.IsType<RelationshipFormViewModel>(viewResult.Model);
+
+            Assert.False(_controller.ModelState.IsValid);
+            Assert.True(_controller.ModelState.ContainsKey("SelectedRelationshipType"));
+
+            // Verifying that options are repopulated so the View doesn't crash on render
+            Assert.NotNull(resultViewModel.RelatedEntityOptions);
+            Assert.NotEmpty(resultViewModel.RelatedEntityOptions);
+
+            Assert.NotNull(resultViewModel.RelationshipTypeOptions);
+            Assert.NotEmpty(resultViewModel.RelationshipTypeOptions);
+
+            Assert.NotNull(resultViewModel.RelationshipTypes);
+            Assert.NotEmpty(resultViewModel.RelationshipTypes);
+
+            Assert.Equal(relId, resultViewModel.Id);
+            Assert.Equal(p1Id, resultViewModel.EntityId);
+            Assert.Equal(EntityTypes.Person, resultViewModel.EntityType);
+        }
+
     }
 }
