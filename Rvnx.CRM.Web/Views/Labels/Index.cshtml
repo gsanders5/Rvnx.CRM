@@ -45,11 +45,11 @@ else
                                 </td>
                                 <td class="text-end">
                                     <div class="btn-group btn-group-sm">
-                                        <a asp-action="Edit" asp-route-id="@label.Id" class="btn btn-outline-secondary" title="Edit">
+                                        <a asp-action="Edit" asp-route-id="@label.Id" class="btn btn-outline-secondary" title="Edit" aria-label="Edit @label.Name">
                                             <i class="bi bi-pencil-square"></i>
                                         </a>
                                         <form asp-action="Delete" asp-route-id="@label.Id" method="post" class="d-inline" onsubmit="return confirm('Are you sure you want to delete this label?');">
-                                            <button type="submit" class="btn btn-outline-danger" title="Delete">
+                                            <button type="submit" class="btn btn-outline-danger" title="Delete" aria-label="Delete @label.Name">
                                                 <i class="bi bi-trash"></i>
                                             </button>
                                         </form>
