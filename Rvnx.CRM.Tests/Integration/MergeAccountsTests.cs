@@ -77,7 +77,6 @@ public class MergeAccountsTests
             TempData = new Microsoft.AspNetCore.Mvc.ViewFeatures.TempDataDictionary(new DefaultHttpContext(), Mock.Of<Microsoft.AspNetCore.Mvc.ViewFeatures.ITempDataProvider>())
         };
 
-        // Merge user2 (Group 2) into user1 (Group 1)
         IActionResult result = await controller.MergeAccounts(user1Id, user2Id, "MERGE");
 
         Assert.IsType<RedirectToActionResult>(result);
@@ -87,12 +86,10 @@ public class MergeAccountsTests
         UserGroup? g2 = await repository.QueryUnfiltered<UserGroup>().FirstOrDefaultAsync(g => g.Id == group2Id);
         Assert.Null(g2);
 
-        // 2. User 2 should now be in Group 1
         User? u2 = await repository.QueryUnfiltered<User>().FirstOrDefaultAsync(u => u.Id == user2Id);
         Assert.NotNull(u2);
         Assert.Equal(group1Id, u2!.GroupId);
 
-        // 3. Contact entities from Group 2 should now belong to Group 1
         Contact? c2 = await repository.QueryUnfiltered<Contact>().FirstOrDefaultAsync(c => c.Id == contact2.Id);
         Assert.NotNull(c2);
         Assert.Equal(group1Id, c2!.GroupId);

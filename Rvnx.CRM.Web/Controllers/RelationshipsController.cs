@@ -127,11 +127,9 @@ namespace Rvnx.CRM.Web.Controllers
 
             if (result.Success)
             {
-                // Redirect to the newly promoted contact's edit page
                 return RedirectToAction("Edit", "Contacts", new { id = result.RedirectId });
             }
 
-            // If promotion fails (e.g. not found, or not partial), redirect safely
             return RedirectToAction("Index", "Contacts");
         }
 

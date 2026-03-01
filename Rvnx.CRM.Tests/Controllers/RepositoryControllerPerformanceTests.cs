@@ -22,7 +22,6 @@ namespace Rvnx.CRM.Tests.Controllers
             Mock<IRepository> repositoryMock = new();
             Guid contactId = Guid.NewGuid();
 
-            // Setup: CountAsync returns 1, meaning the contact exists and matches criteria
             repositoryMock.Setup(r => r.CountAsync<Contact>(It.IsAny<Expression<Func<Contact, bool>>>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(1);
 

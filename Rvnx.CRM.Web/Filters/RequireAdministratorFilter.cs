@@ -17,7 +17,6 @@ public class RequireAdministratorFilter(
     {
         bool authEnabled = _configuration.GetValue<bool>("Authentication:Enabled");
 
-        // If auth is enabled but user isn't logged in, redirect to login
         if (authEnabled && context.HttpContext.User.Identity?.IsAuthenticated != true)
         {
             context.Result = new ChallengeResult();

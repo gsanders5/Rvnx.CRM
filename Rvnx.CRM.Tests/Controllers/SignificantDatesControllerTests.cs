@@ -109,7 +109,6 @@ namespace Rvnx.CRM.Tests.Controllers
             Guid contactId = Guid.NewGuid();
             _context.Contacts.Add(new Contact { Id = contactId, FirstName = "Test" });
 
-            // Existing Birthday with lowercase 'birthday'
             _context.Set<SignificantDate>().Add(new SignificantDate
             {
                 Id = Guid.NewGuid(),
@@ -152,7 +151,6 @@ namespace Rvnx.CRM.Tests.Controllers
                 EventDate = new DateOnly(1990, 1, 1)
             });
 
-            // Another Date we will try to change to Birthday
             Guid anniversaryId = Guid.NewGuid();
             _context.Set<SignificantDate>().Add(new SignificantDate
             {

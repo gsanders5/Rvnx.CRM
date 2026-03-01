@@ -81,7 +81,6 @@ public class NotesControllerTests
             await _context.SaveChangesAsync();
             _context.ChangeTracker.Clear();
 
-            // Verify that the current user cannot see this contact via repository
             Repository repo = new(_context);
             bool canSee = await repo.ExistsAsync<Contact>(otherUserContactId);
             Assert.False(canSee, "Test setup failed: Current user should not see other user's contact.");

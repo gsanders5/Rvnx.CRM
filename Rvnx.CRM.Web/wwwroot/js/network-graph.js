@@ -12,7 +12,6 @@ function initializeNetworkGraph(nodes, links) {
   svg.setAttribute("viewBox", `0 0 ${width} ${height}`);
   container.appendChild(svg);
 
-  // Fullscreen behavior
   const fullscreenBtn = document.getElementById("fullscreen-btn");
   const networkCard = document.getElementById("network-card");
 
@@ -198,7 +197,6 @@ function initializeNetworkGraph(nodes, links) {
     circle.setAttribute("stroke-width", "2");
     g.appendChild(circle);
 
-    // Profile photo image
     if (node.photoUrl) {
       const image = document.createElementNS(svgNS, "image");
       image.setAttribute("href", node.photoUrl);
@@ -289,7 +287,6 @@ function initializeNetworkGraph(nodes, links) {
   }
 
   function tick() {
-    // Simulation Parameters
     const k = 2500; // Repulsion constant
     const linkDistance = 180;
     const damping = 0.85;
