@@ -55,7 +55,6 @@ public class VCardService : IVCardService
             LastName = ""
         };
 
-        // 1. Name - use extension method FirstOrNull() for safer access
         FolkerKinzel.VCards.Models.Properties.NameProperty? nameProp = vc.NameViews?.FirstOrNull();
         if (nameProp?.Value is Name n)
         {
@@ -336,7 +335,6 @@ public class VCardService : IVCardService
             }
             catch
             {
-                // Failed to fetch photo - continue without it
             }
         }
 
@@ -373,13 +371,11 @@ public class VCardService : IVCardService
             return false;
         }
 
-        // 2. Map to IPv6 to handle mapped addresses (::ffff:127.0.0.1) consistently
         // If it's an IPv4 address, MapToIPv6 adds the ::ffff: prefix.
         // If it's already IPv6, it stays IPv6.
         IPAddress ipv6 = ipAddress.MapToIPv6();
         byte[] bytes = ipv6.GetAddressBytes();
 
-        // 3. Check "Any" address (0.0.0.0 or ::)
         // In IPv6 mapped format, 0.0.0.0 becomes ::ffff:0.0.0.0 (::ffff:0:0)
         bool isAny = true;
         for (int i = 0; i < bytes.Length; i++)
@@ -406,7 +402,6 @@ public class VCardService : IVCardService
         }
 
 
-        // 4. Check for private ranges
         // We can check based on the original address family for simplicity
 
         if (ipAddress.AddressFamily == AddressFamily.InterNetwork)
@@ -461,7 +456,6 @@ public class VCardService : IVCardService
                 return IsPublicIpAddress(v4); // Recursively check the IPv4 part
             }
 
-            // :: Unspecified is handled
 
             return (bytes[0] != 0xFE || (bytes[1] & 0xC0) != 0x80) && (bytes[0] & 0xFE) != 0xFC && (bytes[0] != 0x20 || bytes[1] != 0x01 || bytes[2] != 0x0D || bytes[3] != 0xB8);
         }
@@ -471,7 +465,6 @@ public class VCardService : IVCardService
 
     public byte[] ExportVCard(Contact contact)
     {
-        // v8: Use VCardBuilder fluent API for creating VCards
         VCard vCard = VCardBuilder
             .Create()
             .NameViews.Add(NameBuilder
@@ -482,7 +475,6 @@ public class VCardService : IVCardService
             .DisplayNames.Add(contact.FullName)
             .VCard;
 
-        // Continue building with Edit() for conditional properties
         VCardBuilder builder = VCardBuilder.Create(vCard);
 
         if (!string.IsNullOrEmpty(contact.Company))
@@ -543,7 +535,6 @@ public class VCardService : IVCardService
 
         vCard = builder.VCard;
 
-        // v8: Use ToVcfString extension method for serialization
         string vcfString = vCard.ToVcfString(VCdVersion.V3_0);
 
         // Fix compatibility: Replace "ENCODING=b" with "ENCODING=BASE64"

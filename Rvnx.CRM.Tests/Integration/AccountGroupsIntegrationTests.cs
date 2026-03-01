@@ -77,7 +77,6 @@ public class AccountGroupsIntegrationTests
             await repo.SaveChangesAsync();
         }
 
-        // 2. User B (same group) queries data
         Mock<ICurrentUserService> mockUserServiceB = new();
         mockUserServiceB.Setup(u => u.UserId).Returns(userB_Id);
         mockUserServiceB.Setup(u => u.GroupId).Returns(sharedGroupId); // Same Group

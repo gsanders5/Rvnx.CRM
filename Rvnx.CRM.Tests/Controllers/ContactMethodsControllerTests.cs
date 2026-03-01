@@ -136,7 +136,6 @@ namespace Rvnx.CRM.Tests.Controllers
 
             Assert.IsType<NotFoundResult>(result);
 
-            // Verify record does NOT exist in DB
             ContactMethod? created = await _context.Set<ContactMethod>().FirstOrDefaultAsync(c => c.Value == "orphan@example.com");
             Assert.Null(created);
         }

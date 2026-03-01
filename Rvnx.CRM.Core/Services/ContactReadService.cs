@@ -139,7 +139,6 @@ public class ContactReadService(IRepository repository) : IContactReadService
                 });
         }
 
-        // Manually populate navigation properties for display
         foreach (Relationship rel in relationships)
         {
             rel.RelatedPerson = relatedContacts.FirstOrDefault(c => c.Id == rel.RelatedEntityId);

@@ -46,7 +46,6 @@ public class DebugOperationsService(
                 }
             }
 
-            // Using null coalescing for optional fields that might be null
             return new MergeUserDto
             {
                 Id = u.Id,

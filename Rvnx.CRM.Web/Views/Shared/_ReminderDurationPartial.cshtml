@@ -226,7 +226,6 @@
         // Simplified conversion: 1 year = 365 days, 1 month = 30 days
         let totalDays = (years * 365) + (months * 30) + days;
 
-        // Format: d.hh:mm:ss
         const timeSpanString = `${totalDays}.${hours.toString().padStart(2, '0')}:00:00`;
         document.getElementById('EventFrequency').value = timeSpanString;
     }
@@ -263,7 +262,6 @@
             document.getElementById('Duration_Days').value = days;
             document.getElementById('Duration_Hours').value = hours;
         } else {
-             // Default to 1 year if empty and RemindMe is checked?
              if (!freq && document.getElementById('RemindMe').checked) {
                  setDuration(1, 0, 0, 0);
              }

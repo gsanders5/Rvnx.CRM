@@ -31,7 +31,6 @@ public class Relationship : PolymorphicEntity
     [NotMapped]
     public virtual Person? RelatedPerson { get; set; }
 
-    // Helper properties for UI convenience, looking up from static service
     [NotMapped]
     public string RelationshipTypeName =>
         RelationshipTypeService.GetById(RelationshipTypeId)?.Name ?? "Unknown";

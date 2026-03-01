@@ -201,7 +201,6 @@ public class RelationshipsControllerTests
 
             ViewResult viewResult = Assert.IsType<ViewResult>(result);
             dynamic? model = viewResult.Model;
-            // In Razor Pages/Views, we access properties. Here we check if ReturnUrl in model is null
             // Since deleteViewModel is strongly typed in controller, let's cast
             Assert.NotNull(model);
             if (model != null)
@@ -252,7 +251,6 @@ public class RelationshipsControllerTests
             _context.Contacts.Add(new Contact { Id = p2Id, FirstName = "P2" });
             await _context.SaveChangesAsync();
 
-            // Use a real static ID from Service
             Guid typeId = Guid.Parse("7c1f8d22-1b6a-4c28-9c1e-3f5a2b8e9d1a"); // Parent
 
             string selection = $"{typeId}_Fwd";
@@ -287,7 +285,6 @@ public class RelationshipsControllerTests
             _context.Contacts.Add(new Contact { Id = p2Id, FirstName = "P2" });
             await _context.SaveChangesAsync();
 
-            // Use a real static ID from Service
             Guid typeId = Guid.Parse("7c1f8d22-1b6a-4c28-9c1e-3f5a2b8e9d1a"); // Parent
 
             string selection = $"{typeId}_Rev";
@@ -301,7 +298,6 @@ public class RelationshipsControllerTests
 
             IActionResult result = await _controller.Create(viewModel);
 
-            // Should redirect back to P1 (original EntityId)
             RedirectToActionResult redirectResult = Assert.IsType<RedirectToActionResult>(result);
             Assert.Equal(p1Id, redirectResult.RouteValues?["id"]);
 

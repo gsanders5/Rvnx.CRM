@@ -43,7 +43,6 @@ public class CurrentUserService(IHttpContextAccessor httpContextAccessor, IConfi
         return user?.IsAdministrator ?? false;
     }
 
-    // Helper to keep the properties clean
     private Guid? GetUserIdFromClaims()
     {
         if (!IsAuthEnabled())

@@ -29,7 +29,6 @@ namespace Rvnx.CRM.Web.Controllers
                     return RedirectToEntity(result.RedirectId, result.RedirectType);
                 }
 
-                // If service returns failure (e.g. contact not found), we should probably 404 or show error
                 if (result.ErrorMessage == "Contact not found.")
                 {
                     return NotFound();
