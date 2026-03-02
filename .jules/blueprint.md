@@ -29,3 +29,6 @@
 
 **Learning:** `DebugOperationsController` contained significant data manipulation logic (seeding, reset) directly in action methods, coupling the web layer to concrete infrastructure utilities (`FakeDataGenerator`) and orchestrating complex repository operations.
 **Action:** Extract such logic into a dedicated service (e.g., `IDebugDataService` in Core, implementation in Infrastructure) so the controller only delegates commands. This decouples the web layer from implementation details of data management.
+## 2023-10-27 - [Infrastructure Leak in Web Layer]
+**Learning:** `DbUpdateConcurrencyException` (and `Microsoft.EntityFrameworkCore`) was leaked into the Web layer (`SignificantDatesController`). The controller was catching it just to rethrow (`throw;`), which is both redundant and violates clean architecture by making the presentation layer depend directly on the ORM.
+**Action:** When working on controllers or core domain services, explicitly check for `using Microsoft.EntityFrameworkCore;` or explicit usage of `DbUpdateConcurrencyException`. Remove these where possible, and if handling is needed, ensure the infrastructure layer (or service layer) wraps it in a domain-friendly `OperationResult` or custom exception.

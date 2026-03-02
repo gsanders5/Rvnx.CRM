@@ -1,5 +1,4 @@
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using Rvnx.CRM.Core.DTOs.Dates;
 using Rvnx.CRM.Core.Interfaces;
 using Rvnx.CRM.Core.Models;
@@ -116,41 +115,34 @@ namespace Rvnx.CRM.Web.Controllers
 
             if (ModelState.IsValid)
             {
-                try
+                SignificantDateDto sdDto = new()
                 {
-                    SignificantDateDto sdDto = new()
-                    {
-                        Id = dto.Id,
-                        EntityId = dto.EntityId,
-                        EntityType = dto.EntityType,
-                        Title = dto.Title,
-                        Description = dto.Description,
-                        EventDate = dto.EventDate,
-                        RecurrenceType = dto.RecurrenceType,
-                        CustomIntervalDays = dto.CustomIntervalDays,
-                        IsActive = dto.IsActive
-                    };
+                    Id = dto.Id,
+                    EntityId = dto.EntityId,
+                    EntityType = dto.EntityType,
+                    Title = dto.Title,
+                    Description = dto.Description,
+                    EventDate = dto.EventDate,
+                    RecurrenceType = dto.RecurrenceType,
+                    CustomIntervalDays = dto.CustomIntervalDays,
+                    IsActive = dto.IsActive
+                };
 
-                    OperationResult result = await _significantDateService.UpdateAsync(id, sdDto);
-                    if (result.Success)
-                    {
-                        return RedirectToAction(nameof(Index), new { contactId = dto.EntityId });
-                    }
-
-                    if (result.ErrorMessage == "A birthday is already set for this contact.")
-                    {
-                        ModelState.AddModelError("Title", result.ErrorMessage);
-                        return View(dto);
-                    }
-
-                    if (result.ErrorMessage == "Significant date not found.")
-                    {
-                        return NotFound();
-                    }
+                OperationResult result = await _significantDateService.UpdateAsync(id, sdDto);
+                if (result.Success)
+                {
+                    return RedirectToAction(nameof(Index), new { contactId = dto.EntityId });
                 }
-                catch (DbUpdateConcurrencyException)
+
+                if (result.ErrorMessage == "A birthday is already set for this contact.")
                 {
-                    throw;
+                    ModelState.AddModelError("Title", result.ErrorMessage);
+                    return View(dto);
+                }
+
+                if (result.ErrorMessage == "Significant date not found.")
+                {
+                    return NotFound();
                 }
             }
 
