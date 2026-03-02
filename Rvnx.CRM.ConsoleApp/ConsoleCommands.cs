@@ -25,14 +25,14 @@ internal static class ConsoleCommands
     {
         Core.Interfaces.IRepository repository = services.GetRequiredService<Core.Interfaces.IRepository>();
         List<Core.Models.User> users = await repository.QueryUnfiltered<Core.Models.User>().ToListAsync();
-        
+
         Console.WriteLine($"Found {users.Count} users:");
         foreach (Core.Models.User user in users)
         {
             string adminStatus = user.IsAdministrator ? "[Admin]" : "[User]";
             Console.WriteLine($"- {user.Email} {adminStatus} (Name: {user.DisplayName ?? "N/A"})");
         }
-        
+
         return true;
     }
 
@@ -46,7 +46,7 @@ internal static class ConsoleCommands
 
         string email = args[1];
         Core.Interfaces.IRepository repository = services.GetRequiredService<Core.Interfaces.IRepository>();
-        
+
         Core.Models.User? user = await repository.QueryUnfiltered<Core.Models.User>()
             .FirstOrDefaultAsync(u => EF.Functions.Like(u.Email, email));
 
@@ -65,7 +65,7 @@ internal static class ConsoleCommands
         user.IsAdministrator = true;
         await repository.UpdateAsync(user);
         await repository.SaveChangesAsync();
-        
+
         Console.WriteLine($"Successfully promoted user '{email}' to administrator.");
         return true;
     }
@@ -80,7 +80,7 @@ internal static class ConsoleCommands
 
         string email = args[1];
         Core.Interfaces.IRepository repository = services.GetRequiredService<Core.Interfaces.IRepository>();
-        
+
         Core.Models.User? user = await repository.QueryUnfiltered<Core.Models.User>()
             .FirstOrDefaultAsync(u => EF.Functions.Like(u.Email, email));
 
@@ -99,7 +99,7 @@ internal static class ConsoleCommands
         user.IsAdministrator = false;
         await repository.UpdateAsync(user);
         await repository.SaveChangesAsync();
-        
+
         Console.WriteLine($"Successfully demoted user '{email}' from administrator.");
         return true;
     }

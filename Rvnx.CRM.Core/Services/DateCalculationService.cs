@@ -19,7 +19,7 @@ namespace Rvnx.CRM.Core.Services
                 int year = fromDate.Year;
                 int month = significantDate.EventDate.Month;
                 int day = Math.Min(significantDate.EventDate.Day, DateTime.DaysInMonth(year, month));
-                DateOnly nextOccurrence = new DateOnly(year, month, day);
+                DateOnly nextOccurrence = new(year, month, day);
 
                 if (nextOccurrence < fromDate)
                 {

@@ -43,7 +43,7 @@ public class RelationshipsControllerTests
                     default))
                 .ReturnsAsync(["Test Contact"]);
 
-            var mockEntityService = new Mock<IEntityService>();
+            Mock<IEntityService> mockEntityService = new();
             mockEntityService.Setup(s => s.ExistsAsync(It.IsAny<string>(), It.IsAny<Guid>())).ReturnsAsync(true);
             RelationshipsController controller = new(relationshipServiceMock.Object, repositoryMock.Object, mockEntityService.Object);
 
@@ -77,7 +77,7 @@ public class RelationshipsControllerTests
             Mock<IUrlHelper> mockUrlHelper = new();
             mockUrlHelper.Setup(x => x.IsLocalUrl(It.IsAny<string>())).Returns((string url) => url.StartsWith('/'));
 
-            var mockEntityService = new Mock<IEntityService>();
+            Mock<IEntityService> mockEntityService = new();
             mockEntityService.Setup(s => s.ExistsAsync(It.IsAny<string>(), It.IsAny<Guid>())).ReturnsAsync(true);
             _controller = new RelationshipsController(relationshipService, repository, mockEntityService.Object)
             {
@@ -163,7 +163,7 @@ public class RelationshipsControllerTests
             Mock<IUrlHelper> mockUrlHelper = new();
             mockUrlHelper.Setup(x => x.IsLocalUrl(It.IsAny<string>())).Returns((string url) => url.StartsWith('/'));
 
-            var mockEntityService = new Mock<IEntityService>();
+            Mock<IEntityService> mockEntityService = new();
             mockEntityService.Setup(s => s.ExistsAsync(It.IsAny<string>(), It.IsAny<Guid>())).ReturnsAsync(true);
             _controller = new RelationshipsController(relationshipService, repository, mockEntityService.Object)
             {
@@ -229,7 +229,7 @@ public class RelationshipsControllerTests
             _context = new CRMDbContext(options, mockCurrentUserService.Object);
             Repository repository = new(_context);
             RelationshipService relationshipService = new(repository);
-            var mockEntityService = new Mock<IEntityService>();
+            Mock<IEntityService> mockEntityService = new();
             mockEntityService.Setup(s => s.ExistsAsync(It.IsAny<string>(), It.IsAny<Guid>())).ReturnsAsync(true);
             _controller = new RelationshipsController(relationshipService, repository, mockEntityService.Object);
         }

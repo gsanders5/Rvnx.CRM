@@ -125,12 +125,7 @@ namespace Rvnx.CRM.Web.Controllers
 
             RelationshipOperationResult result = await _relationshipService.PromotePartialContactAsync(contactId);
 
-            if (result.Success)
-            {
-                return RedirectToAction("Edit", "Contacts", new { id = result.RedirectId });
-            }
-
-            return RedirectToAction("Index", "Contacts");
+            return result.Success ? RedirectToAction("Edit", "Contacts", new { id = result.RedirectId }) : RedirectToAction("Index", "Contacts");
         }
 
         public async Task<IActionResult> Edit(Guid? id)

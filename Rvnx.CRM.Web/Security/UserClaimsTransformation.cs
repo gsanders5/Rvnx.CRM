@@ -1,7 +1,5 @@
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
 using Rvnx.CRM.Core.Constants;
 using Rvnx.CRM.Core.Interfaces;
 using Rvnx.CRM.Core.Models;
@@ -48,8 +46,8 @@ public class UserClaimsTransformation(IServiceProvider serviceProvider, IConfigu
             return principal;
         }
 
-        using var scope = _serviceProvider.CreateScope();
-        var repo = scope.ServiceProvider.GetRequiredService<IRepository>();
+        using IServiceScope scope = _serviceProvider.CreateScope();
+        IRepository repo = scope.ServiceProvider.GetRequiredService<IRepository>();
 
         var user = await repo.QueryUnfiltered<User>()
                              .Select(u => new { u.Id, u.GroupId, u.SubjectId })
