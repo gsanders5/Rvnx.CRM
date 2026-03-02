@@ -64,7 +64,16 @@ namespace Rvnx.CRM.Core.Services
             try
             {
                 using MemoryStream stream = new(fileBytes);
-                return stream.IsImage();
+                if (!stream.IsImage())
+                {
+                    return false;
+                }
+
+                stream.Position = 0;
+                var fileType = FileTypeValidator.GetFileType(stream);
+                string expectedMimeType = GetMimeType(extension);
+
+                return fileType != null && string.Equals(expectedMimeType, fileType.MimeType, StringComparison.OrdinalIgnoreCase);
             }
             catch (Exception)
             {
@@ -92,7 +101,16 @@ namespace Rvnx.CRM.Core.Services
             try
             {
                 using MemoryStream stream = new(fileBytes);
-                return FileTypeValidator.IsTypeRecognizable(stream);
+                if (!FileTypeValidator.IsTypeRecognizable(stream))
+                {
+                    return false;
+                }
+
+                stream.Position = 0;
+                var fileType = FileTypeValidator.GetFileType(stream);
+                string expectedMimeType = GetMimeType(extension);
+
+                return fileType != null && string.Equals(expectedMimeType, fileType.MimeType, StringComparison.OrdinalIgnoreCase);
             }
             catch
             {

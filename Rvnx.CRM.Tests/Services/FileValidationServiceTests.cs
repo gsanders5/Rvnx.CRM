@@ -190,5 +190,21 @@ namespace Rvnx.CRM.Tests.Services
         {
             Assert.False(_service.IsValidFileSignature(null!, ".pdf"));
         }
+
+        [Fact]
+        public void IsValidFileSignatureShouldReturnFalseForMismatchingExtensionAndContent()
+        {
+            // PDF content but with .png extension
+            byte[] pdfBytes = { 0x25, 0x50, 0x44, 0x46, 0x2D, 0x31, 0x2E, 0x34 };
+            Assert.False(_service.IsValidFileSignature(pdfBytes, ".png"));
+        }
+
+        [Fact]
+        public void IsValidImageSignatureShouldReturnFalseForMismatchingImageExtension()
+        {
+            // PNG content but with .jpg extension
+            byte[] pngSignature = { 0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A };
+            Assert.False(_service.IsValidImageSignature(pngSignature, ".jpg"));
+        }
     }
 }
