@@ -37,3 +37,7 @@ Ensure the target container has `id="main-content"` and `tabindex="-1"` to corre
 ## 2026-02-28 - ARIA labels for Icon-Only Graph Controls
 **Learning:** Found several icon-only buttons in the Home Dashboard network graph missing `aria-label` attributes.
 **Action:** Ensure all controls intended for graph manipulation (like zoom and fullscreen buttons) always include `aria-label` attributes to make their function clear to screen reader users, especially when they only contain an icon (like `bi-arrows-fullscreen`).
+
+## 2024-03-01 - [ARIA Labels for Bootstrap Icons]
+**Learning:** Bootstrap Icons in action buttons (`btn-outline-primary`, `btn-outline-danger`) often lack `aria-label` attributes for screen readers, especially in generic CRUD views like `Labels` and `SignificantDates`. The `title` attribute is visually helpful for hover tooltips but `aria-label` provides a more robust screen reader experience.
+**Action:** When adding or auditing icon-only action buttons in standard CRUD tables, consistently verify that `aria-label` is present and interpolates the relevant entity name (e.g., `@label.Name` or `@item.Title`) for context.
