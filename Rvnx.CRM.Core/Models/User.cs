@@ -1,4 +1,3 @@
-using Microsoft.EntityFrameworkCore;
 using Rvnx.CRM.Core.Interfaces;
 using Rvnx.CRM.Core.Models.Base;
 using System.ComponentModel.DataAnnotations;
@@ -6,7 +5,6 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Rvnx.CRM.Core.Models;
 
-[Index(nameof(SelfContactId), IsUnique = true)]
 public class User : BaseEntity, IGlobalEntity
 {
     [Required]
