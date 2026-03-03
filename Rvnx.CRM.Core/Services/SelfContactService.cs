@@ -93,9 +93,9 @@ public class SelfContactService(IRepository repository, ICurrentUserService curr
 
         await _repository.SaveChangesAsync();
 
-        await UpdateOrAddContactMethod(contact.Id, ContactMethodType.Email, contactDto.Email, null);
-        await UpdateOrAddContactMethod(contact.Id, ContactMethodType.Phone, contactDto.Phone, null);
-        await UpdateOrAddBirthday(contact.Id, contactDto.Birthday, null, contactDto.RemindOnBirthday);
+        await ContactUpdateHelper.UpdateOrAddContactMethodAsync(_repository, contact.Id, ContactMethodType.Email, contactDto.Email, null);
+        await ContactUpdateHelper.UpdateOrAddContactMethodAsync(_repository, contact.Id, ContactMethodType.Phone, contactDto.Phone, null);
+        await ContactUpdateHelper.UpdateOrAddBirthdayAsync(_repository, contact.Id, contactDto.Birthday, null, contactDto.RemindOnBirthday);
 
         await _repository.SaveChangesAsync();
 
@@ -108,103 +108,4 @@ public class SelfContactService(IRepository repository, ICurrentUserService curr
         return user ?? (await _repository.ListAsync<Rvnx.CRM.Core.Models.User>(u => u.SubjectId == userId.ToString())).FirstOrDefault();
     }
 
-    private async Task UpdateOrAddContactMethod(Guid contactId, ContactMethodType type, string? newValue, ContactMethod? existingMethod)
-    {
-        if (!string.IsNullOrEmpty(newValue))
-        {
-            if (existingMethod != null)
-            {
-                if (existingMethod.Value != newValue)
-                {
-                    existingMethod.Value = newValue;
-                    await _repository.UpdateAsync(existingMethod);
-                }
-            }
-            else
-            {
-                await _repository.AddAsync(new ContactMethod
-                {
-                    Id = Guid.NewGuid(),
-                    ContactId = contactId,
-                    Type = type,
-                    Value = newValue,
-                    Label = ContactMethodLabels.Primary
-                });
-            }
-        }
-        else if (existingMethod != null)
-        {
-            await _repository.DeleteAsync<ContactMethod>(existingMethod.Id);
-        }
-    }
-
-    private async Task UpdateOrAddBirthday(Guid contactId, DateTime? newDate, SignificantDate? existingDate, bool remindOnBirthday)
-    {
-        if (newDate.HasValue)
-        {
-            DateOnly newDateOnly = DateOnly.FromDateTime(newDate.Value);
-            SignificantDate targetDate = existingDate!;
-
-            if (existingDate != null)
-            {
-                if (existingDate.EventDate != newDateOnly)
-                {
-                    existingDate.EventDate = newDateOnly;
-                    await _repository.UpdateAsync(existingDate);
-                }
-            }
-            else
-            {
-                targetDate = new SignificantDate
-                {
-                    Id = Guid.NewGuid(),
-                    ContactId = contactId,
-                    Title = SignificantDateTitles.Birthday,
-                    EventDate = newDateOnly,
-                    Description = "Birthday",
-                    RecurrenceType = RecurrenceType.Annual,
-                    IsActive = true
-                };
-                await _repository.AddAsync(targetDate);
-            }
-
-            // Sync ReminderOffset based on remindOnBirthday
-            List<ReminderOffset> offsets = await _repository.ListAsync<ReminderOffset>(o => o.SignificantDateId == targetDate.Id && o.DaysBeforeEvent == 0);
-            ReminderOffset? offset = offsets.FirstOrDefault();
-
-            if (remindOnBirthday)
-            {
-                if (offset == null)
-                {
-                    await _repository.AddAsync(new ReminderOffset
-                    {
-                        Id = Guid.NewGuid(),
-                        SignificantDateId = targetDate.Id,
-                        DaysBeforeEvent = 0,
-                        IsActive = true
-                    });
-                }
-                else if (!offset.IsActive)
-                {
-                    offset.IsActive = true;
-                    await _repository.UpdateAsync(offset);
-                }
-            }
-            else
-            {
-                if (offset != null)
-                {
-                    if (offset.IsActive)
-                    {
-                        offset.IsActive = false;
-                        await _repository.UpdateAsync(offset);
-                    }
-                }
-            }
-        }
-        else if (existingDate != null)
-        {
-            await _repository.DeleteAsync<SignificantDate>(existingDate.Id);
-        }
-    }
 }
