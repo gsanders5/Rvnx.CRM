@@ -25,7 +25,8 @@ public class DashboardServiceTests
     }
 
     [Fact]
-    [SuppressMessage("Naming", "CA1707:Identifiers should not contain underscores", Justification = "Test names can contain underscores for readability.")]
+    [SuppressMessage("Naming", "CA1707:Identifiers should not contain underscores",
+        Justification = "Test names can contain underscores for readability.")]
     public async Task GetDashboardDataAsync_ReturnsAggregatedData()
     {
         // Arrange
@@ -34,16 +35,29 @@ public class DashboardServiceTests
 
         List<Contact> contacts =
         [
-            new Contact { Id = contactId1, FirstName = "Alice", LastName = "Smith", Gender = "Female", IsHidden = false },
-            new Contact { Id = contactId2, FirstName = "Bob", LastName = "Jones", Gender = "Male", IsHidden = false }
+            new Contact
+            {
+                Id = contactId1,
+                FirstName = "Alice",
+                LastName = "Smith",
+                Gender = "Female",
+                IsHidden = false
+            },
+            new Contact
+            {
+                Id = contactId2,
+                FirstName = "Bob",
+                LastName = "Jones",
+                Gender = "Male",
+                IsHidden = false
+            }
         ];
 
         _repositoryMock.Setup(r => r.ListAsNoTrackingAsync<Contact>(
-            It.IsAny<Expression<Func<Contact, bool>>>(),
-            It.IsAny<CancellationToken>(),
-            It.IsAny<string[]>()))
+                It.IsAny<Expression<Func<Contact, bool>>>(),
+                It.IsAny<CancellationToken>(),
+                It.IsAny<string[]>()))
             .ReturnsAsync(contacts);
-
 
         // Setup significant dates
         DateTime today = DateTime.Today;
@@ -66,9 +80,9 @@ public class DashboardServiceTests
         ];
 
         _repositoryMock.Setup(r => r.ListAsNoTrackingAsync<SignificantDate>(
-            It.IsAny<Expression<Func<SignificantDate, bool>>>(),
-            It.IsAny<CancellationToken>(),
-            It.IsAny<string[]>()))
+                It.IsAny<Expression<Func<SignificantDate, bool>>>(),
+                It.IsAny<CancellationToken>(),
+                It.IsAny<string[]>()))
             .ReturnsAsync(dates);
 
         // Setup relationships
@@ -78,17 +92,17 @@ public class DashboardServiceTests
         ];
 
         _repositoryMock.Setup(r => r.ListAsNoTrackingAsync<Relationship>(
-            It.IsAny<Expression<Func<Relationship, bool>>>(),
-            It.IsAny<CancellationToken>(),
-            It.IsAny<string[]>()))
+                It.IsAny<Expression<Func<Relationship, bool>>>(),
+                It.IsAny<CancellationToken>(),
+                It.IsAny<string[]>()))
             .ReturnsAsync(relationships);
 
         // Setup attachment map
         Guid attachmentId = Guid.NewGuid();
         _repositoryMock.Setup(r => r.ListProjectedAsync<Attachment, (Guid ContactId, Guid AttachmentId)>(
-            It.IsAny<Expression<Func<Attachment, bool>>>(),
-            It.IsAny<Expression<Func<Attachment, (Guid, Guid)>>>(),
-            It.IsAny<CancellationToken>()))
+                It.IsAny<Expression<Func<Attachment, bool>>>(),
+                It.IsAny<Expression<Func<Attachment, (Guid, Guid)>>>(),
+                It.IsAny<CancellationToken>()))
             .ReturnsAsync([(contactId1, attachmentId)]);
 
         // Ensure logger allows logging for warning
@@ -108,8 +122,11 @@ public class DashboardServiceTests
 
         // Check GraphNodes
         Assert.Equal(2, result.GraphNodes.Count);
-        Assert.Contains(result.GraphNodes, n => n.Id == contactId1.ToString() && n.Name == "Alice Smith" && n.PhotoUrl == $"/Attachments/View/{attachmentId}");
-        Assert.Contains(result.GraphNodes, n => n.Id == contactId2.ToString() && n.Name == "Bob Jones" && n.PhotoUrl == null);
+        Assert.Contains(result.GraphNodes,
+            n => n.Id == contactId1.ToString() && n.Name == "Alice Smith" &&
+                 n.PhotoUrl == $"/Attachments/View/{attachmentId}");
+        Assert.Contains(result.GraphNodes,
+            n => n.Id == contactId2.ToString() && n.Name == "Bob Jones" && n.PhotoUrl == null);
 
         // Check GraphLinks
         Assert.Single(result.GraphLinks);
@@ -118,26 +135,27 @@ public class DashboardServiceTests
     }
 
     [Fact]
-    [SuppressMessage("Naming", "CA1707:Identifiers should not contain underscores", Justification = "Test names can contain underscores for readability.")]
+    [SuppressMessage("Naming", "CA1707:Identifiers should not contain underscores",
+        Justification = "Test names can contain underscores for readability.")]
     public async Task GetDashboardDataAsync_ZeroContacts_ReturnsEmptyData()
     {
         // Arrange
         _repositoryMock.Setup(r => r.ListAsNoTrackingAsync<Contact>(
-            It.IsAny<Expression<Func<Contact, bool>>>(),
-            It.IsAny<CancellationToken>(),
-            It.IsAny<string[]>()))
+                It.IsAny<Expression<Func<Contact, bool>>>(),
+                It.IsAny<CancellationToken>(),
+                It.IsAny<string[]>()))
             .ReturnsAsync([]);
 
         _repositoryMock.Setup(r => r.ListAsNoTrackingAsync<SignificantDate>(
-            It.IsAny<Expression<Func<SignificantDate, bool>>>(),
-            It.IsAny<CancellationToken>(),
-            It.IsAny<string[]>()))
+                It.IsAny<Expression<Func<SignificantDate, bool>>>(),
+                It.IsAny<CancellationToken>(),
+                It.IsAny<string[]>()))
             .ReturnsAsync([]);
 
         _repositoryMock.Setup(r => r.ListAsNoTrackingAsync<Relationship>(
-            It.IsAny<Expression<Func<Relationship, bool>>>(),
-            It.IsAny<CancellationToken>(),
-            It.IsAny<string[]>()))
+                It.IsAny<Expression<Func<Relationship, bool>>>(),
+                It.IsAny<CancellationToken>(),
+                It.IsAny<string[]>()))
             .ReturnsAsync([]);
 
         // Act
@@ -149,7 +167,7 @@ public class DashboardServiceTests
         Assert.Empty(result.GraphLinks);
         Assert.Empty(result.UpcomingEvents);
 
-        // Ensure ListProjectedAsync is never called for attachments if no contacts exist
+        // Ensure ListProjectedByChunkedContainsAsync is never called for attachments if no contacts exist
         _repositoryMock.Verify(r => r.ListProjectedAsync<Attachment, (Guid ContactId, Guid AttachmentId)>(
             It.IsAny<Expression<Func<Attachment, bool>>>(),
             It.IsAny<Expression<Func<Attachment, (Guid, Guid)>>>(),
@@ -157,36 +175,38 @@ public class DashboardServiceTests
     }
 
     [Fact]
-    [SuppressMessage("Naming", "CA1707:Identifiers should not contain underscores", Justification = "Test names can contain underscores for readability.")]
+    [SuppressMessage("Naming", "CA1707:Identifiers should not contain underscores",
+        Justification = "Test names can contain underscores for readability.")]
     public async Task GetDashboardDataAsync_NoSignificantDates_ReturnsEmptyUpcomingEvents()
     {
         // Arrange
         Guid contactId = Guid.NewGuid();
-        List<Contact> contacts = [new Contact { Id = contactId, FirstName = "Jane", LastName = "Doe", Gender = "Female" }];
+        List<Contact> contacts =
+            [new Contact { Id = contactId, FirstName = "Jane", LastName = "Doe", Gender = "Female" }];
 
         _repositoryMock.Setup(r => r.ListAsNoTrackingAsync<Contact>(
-            It.IsAny<Expression<Func<Contact, bool>>>(),
-            It.IsAny<CancellationToken>(),
-            It.IsAny<string[]>()))
+                It.IsAny<Expression<Func<Contact, bool>>>(),
+                It.IsAny<CancellationToken>(),
+                It.IsAny<string[]>()))
             .ReturnsAsync(contacts);
 
         _repositoryMock.Setup(r => r.ListProjectedAsync<Attachment, (Guid ContactId, Guid AttachmentId)>(
-            It.IsAny<Expression<Func<Attachment, bool>>>(),
-            It.IsAny<Expression<Func<Attachment, (Guid, Guid)>>>(),
-            It.IsAny<CancellationToken>()))
+                It.IsAny<Expression<Func<Attachment, bool>>>(),
+                It.IsAny<Expression<Func<Attachment, (Guid, Guid)>>>(),
+                It.IsAny<CancellationToken>()))
             .ReturnsAsync([]);
 
         // No dates returned
         _repositoryMock.Setup(r => r.ListAsNoTrackingAsync<SignificantDate>(
-            It.IsAny<Expression<Func<SignificantDate, bool>>>(),
-            It.IsAny<CancellationToken>(),
-            It.IsAny<string[]>()))
+                It.IsAny<Expression<Func<SignificantDate, bool>>>(),
+                It.IsAny<CancellationToken>(),
+                It.IsAny<string[]>()))
             .ReturnsAsync([]);
 
         _repositoryMock.Setup(r => r.ListAsNoTrackingAsync<Relationship>(
-            It.IsAny<Expression<Func<Relationship, bool>>>(),
-            It.IsAny<CancellationToken>(),
-            It.IsAny<string[]>()))
+                It.IsAny<Expression<Func<Relationship, bool>>>(),
+                It.IsAny<CancellationToken>(),
+                It.IsAny<string[]>()))
             .ReturnsAsync([]);
 
         // Act
@@ -199,27 +219,37 @@ public class DashboardServiceTests
     }
 
     [Fact]
-    [SuppressMessage("Naming", "CA1707:Identifiers should not contain underscores", Justification = "Test names can contain underscores for readability.")]
+    [SuppressMessage("Naming", "CA1707:Identifiers should not contain underscores",
+        Justification = "Test names can contain underscores for readability.")]
     public async Task GetDashboardDataAsync_ExceedsMaxEventsToProcess_LogsWarning()
     {
         // Arrange
         Guid contactId = Guid.NewGuid();
-        List<Contact> contacts = [new Contact { Id = contactId, FirstName = "Max", LastName = "Events", Gender = "Male" }];
+        List<Contact> contacts =
+        [
+            new Contact
+            {
+                Id = contactId,
+                FirstName = "Max",
+                LastName = "Events",
+                Gender = "Male",
+                IsHidden = false
+            }
+        ];
 
         _repositoryMock.Setup(r => r.ListAsNoTrackingAsync<Contact>(
-            It.IsAny<Expression<Func<Contact, bool>>>(),
-            It.IsAny<CancellationToken>(),
-            It.IsAny<string[]>()))
+                It.IsAny<Expression<Func<Contact, bool>>>(),
+                It.IsAny<CancellationToken>(),
+                It.IsAny<string[]>()))
             .ReturnsAsync(contacts);
 
         _repositoryMock.Setup(r => r.ListProjectedAsync<Attachment, (Guid ContactId, Guid AttachmentId)>(
-            It.IsAny<Expression<Func<Attachment, bool>>>(),
-            It.IsAny<Expression<Func<Attachment, (Guid, Guid)>>>(),
-            It.IsAny<CancellationToken>()))
+                It.IsAny<Expression<Func<Attachment, bool>>>(),
+                It.IsAny<Expression<Func<Attachment, (Guid, Guid)>>>(),
+                It.IsAny<CancellationToken>()))
             .ReturnsAsync([]);
 
         // Create 501 dates to trigger the MaxEventsToProcess (500) limit logic
-        // We must include the contact in contactDict for it to count as processed
         List<SignificantDate> dates = Enumerable.Range(0, 501).Select(i => new SignificantDate
         {
             ContactId = contactId,
@@ -228,19 +258,16 @@ public class DashboardServiceTests
             IsActive = true
         }).ToList();
 
-        // Need contact to not be hidden to be returned
-        contacts[0].IsHidden = false;
-
         _repositoryMock.Setup(r => r.ListAsNoTrackingAsync<SignificantDate>(
-            It.IsAny<Expression<Func<SignificantDate, bool>>>(),
-            It.IsAny<CancellationToken>(),
-            It.IsAny<string[]>()))
+                It.IsAny<Expression<Func<SignificantDate, bool>>>(),
+                It.IsAny<CancellationToken>(),
+                It.IsAny<string[]>()))
             .ReturnsAsync(dates);
 
         _repositoryMock.Setup(r => r.ListAsNoTrackingAsync<Relationship>(
-            It.IsAny<Expression<Func<Relationship, bool>>>(),
-            It.IsAny<CancellationToken>(),
-            It.IsAny<string[]>()))
+                It.IsAny<Expression<Func<Relationship, bool>>>(),
+                It.IsAny<CancellationToken>(),
+                It.IsAny<string[]>()))
             .ReturnsAsync([]);
 
         // Act
@@ -249,28 +276,45 @@ public class DashboardServiceTests
         // Assert
         Assert.NotNull(result);
         Assert.Equal(5, result.UpcomingEvents.Count); // Should still limit to MaxUpcomingEvents (5)
-
     }
 
     [Fact]
-    [SuppressMessage("Naming", "CA1707:Identifiers should not contain underscores", Justification = "Test names can contain underscores for readability.")]
+    [SuppressMessage("Naming", "CA1707:Identifiers should not contain underscores",
+        Justification = "Test names can contain underscores for readability.")]
     public async Task GetDashboardDataAsync_EventIsToday_ReturnsToday()
     {
         // Arrange
         Guid contactId = Guid.NewGuid();
         List<Contact> contacts = [new Contact { Id = contactId, FirstName = "Test", LastName = "User" }];
 
-        _repositoryMock.Setup(r => r.ListAsNoTrackingAsync<Contact>(It.IsAny<Expression<Func<Contact, bool>>>(), It.IsAny<CancellationToken>(), It.IsAny<string[]>()))
+        _repositoryMock.Setup(r => r.ListAsNoTrackingAsync<Contact>(It.IsAny<Expression<Func<Contact, bool>>>(),
+                It.IsAny<CancellationToken>(), It.IsAny<string[]>()))
             .ReturnsAsync(contacts);
 
-        _repositoryMock.Setup(r => r.ListProjectedAsync<Attachment, (Guid ContactId, Guid AttachmentId)>(It.IsAny<Expression<Func<Attachment, bool>>>(), It.IsAny<Expression<Func<Attachment, (Guid, Guid)>>>(), It.IsAny<CancellationToken>()))
+        _repositoryMock.Setup(r =>
+                r.ListProjectedAsync<Attachment, (Guid ContactId, Guid AttachmentId)>(
+                    It.IsAny<Expression<Func<Attachment, bool>>>(),
+                    It.IsAny<Expression<Func<Attachment, (Guid, Guid)>>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync([]);
 
-        List<SignificantDate> dates = [new SignificantDate { ContactId = contactId, Title = "Event", EventDate = DateOnly.FromDateTime(DateTime.Today), IsActive = true }];
-        _repositoryMock.Setup(r => r.ListAsNoTrackingAsync<SignificantDate>(It.IsAny<Expression<Func<SignificantDate, bool>>>(), It.IsAny<CancellationToken>(), It.IsAny<string[]>()))
+        List<SignificantDate> dates =
+        [
+            new SignificantDate
+            {
+                ContactId = contactId,
+                Title = "Event",
+                EventDate = DateOnly.FromDateTime(DateTime.Today),
+                IsActive = true
+            }
+        ];
+        _repositoryMock.Setup(r =>
+                r.ListAsNoTrackingAsync<SignificantDate>(It.IsAny<Expression<Func<SignificantDate, bool>>>(),
+                    It.IsAny<CancellationToken>(), It.IsAny<string[]>()))
             .ReturnsAsync(dates);
 
-        _repositoryMock.Setup(r => r.ListAsNoTrackingAsync<Relationship>(It.IsAny<Expression<Func<Relationship, bool>>>(), It.IsAny<CancellationToken>(), It.IsAny<string[]>()))
+        _repositoryMock.Setup(r =>
+                r.ListAsNoTrackingAsync<Relationship>(It.IsAny<Expression<Func<Relationship, bool>>>(),
+                    It.IsAny<CancellationToken>(), It.IsAny<string[]>()))
             .ReturnsAsync([]);
 
         // Act
@@ -282,24 +326,42 @@ public class DashboardServiceTests
     }
 
     [Fact]
-    [SuppressMessage("Naming", "CA1707:Identifiers should not contain underscores", Justification = "Test names can contain underscores for readability.")]
+    [SuppressMessage("Naming", "CA1707:Identifiers should not contain underscores",
+        Justification = "Test names can contain underscores for readability.")]
     public async Task GetDashboardDataAsync_EventIsTomorrow_ReturnsTomorrow()
     {
         // Arrange
         Guid contactId = Guid.NewGuid();
         List<Contact> contacts = [new Contact { Id = contactId, FirstName = "Test", LastName = "User" }];
 
-        _repositoryMock.Setup(r => r.ListAsNoTrackingAsync<Contact>(It.IsAny<Expression<Func<Contact, bool>>>(), It.IsAny<CancellationToken>(), It.IsAny<string[]>()))
+        _repositoryMock.Setup(r => r.ListAsNoTrackingAsync<Contact>(It.IsAny<Expression<Func<Contact, bool>>>(),
+                It.IsAny<CancellationToken>(), It.IsAny<string[]>()))
             .ReturnsAsync(contacts);
 
-        _repositoryMock.Setup(r => r.ListProjectedAsync<Attachment, (Guid ContactId, Guid AttachmentId)>(It.IsAny<Expression<Func<Attachment, bool>>>(), It.IsAny<Expression<Func<Attachment, (Guid, Guid)>>>(), It.IsAny<CancellationToken>()))
+        _repositoryMock.Setup(r =>
+                r.ListProjectedAsync<Attachment, (Guid ContactId, Guid AttachmentId)>(
+                    It.IsAny<Expression<Func<Attachment, bool>>>(),
+                    It.IsAny<Expression<Func<Attachment, (Guid, Guid)>>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync([]);
 
-        List<SignificantDate> dates = [new SignificantDate { ContactId = contactId, Title = "Event", EventDate = DateOnly.FromDateTime(DateTime.Today.AddDays(1)), IsActive = true }];
-        _repositoryMock.Setup(r => r.ListAsNoTrackingAsync<SignificantDate>(It.IsAny<Expression<Func<SignificantDate, bool>>>(), It.IsAny<CancellationToken>(), It.IsAny<string[]>()))
+        List<SignificantDate> dates =
+        [
+            new SignificantDate
+            {
+                ContactId = contactId,
+                Title = "Event",
+                EventDate = DateOnly.FromDateTime(DateTime.Today.AddDays(1)),
+                IsActive = true
+            }
+        ];
+        _repositoryMock.Setup(r =>
+                r.ListAsNoTrackingAsync<SignificantDate>(It.IsAny<Expression<Func<SignificantDate, bool>>>(),
+                    It.IsAny<CancellationToken>(), It.IsAny<string[]>()))
             .ReturnsAsync(dates);
 
-        _repositoryMock.Setup(r => r.ListAsNoTrackingAsync<Relationship>(It.IsAny<Expression<Func<Relationship, bool>>>(), It.IsAny<CancellationToken>(), It.IsAny<string[]>()))
+        _repositoryMock.Setup(r =>
+                r.ListAsNoTrackingAsync<Relationship>(It.IsAny<Expression<Func<Relationship, bool>>>(),
+                    It.IsAny<CancellationToken>(), It.IsAny<string[]>()))
             .ReturnsAsync([]);
 
         // Act
@@ -311,27 +373,44 @@ public class DashboardServiceTests
     }
 
     [Fact]
-    [SuppressMessage("Naming", "CA1707:Identifiers should not contain underscores", Justification = "Test names can contain underscores for readability.")]
+    [SuppressMessage("Naming", "CA1707:Identifiers should not contain underscores",
+        Justification = "Test names can contain underscores for readability.")]
     public async Task GetDashboardDataAsync_EventIsOverdue_ReturnsOverdue()
     {
         // Arrange
         Guid contactId = Guid.NewGuid();
         List<Contact> contacts = [new Contact { Id = contactId, FirstName = "Test", LastName = "User" }];
 
-        _repositoryMock.Setup(r => r.ListAsNoTrackingAsync<Contact>(It.IsAny<Expression<Func<Contact, bool>>>(), It.IsAny<CancellationToken>(), It.IsAny<string[]>()))
+        _repositoryMock.Setup(r => r.ListAsNoTrackingAsync<Contact>(It.IsAny<Expression<Func<Contact, bool>>>(),
+                It.IsAny<CancellationToken>(), It.IsAny<string[]>()))
             .ReturnsAsync(contacts);
 
-        _repositoryMock.Setup(r => r.ListProjectedAsync<Attachment, (Guid ContactId, Guid AttachmentId)>(It.IsAny<Expression<Func<Attachment, bool>>>(), It.IsAny<Expression<Func<Attachment, (Guid, Guid)>>>(), It.IsAny<CancellationToken>()))
+        _repositoryMock.Setup(r =>
+                r.ListProjectedAsync<Attachment, (Guid ContactId, Guid AttachmentId)>(
+                    It.IsAny<Expression<Func<Attachment, bool>>>(),
+                    It.IsAny<Expression<Func<Attachment, (Guid, Guid)>>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync([]);
 
         // Dates are calculated using GetNextOccurrence(). For an event to be "overdue", the next occurrence must be in the past.
-        // This validates the switch branch logic handling past dates.
-        List<SignificantDate> dates = [new SignificantDate { ContactId = contactId, Title = "Event", EventDate = DateOnly.FromDateTime(DateTime.Today.AddDays(-1)), IsActive = true }];
+        List<SignificantDate> dates =
+        [
+            new SignificantDate
+            {
+                ContactId = contactId,
+                Title = "Event",
+                EventDate = DateOnly.FromDateTime(DateTime.Today.AddDays(-1)),
+                IsActive = true
+            }
+        ];
 
-        _repositoryMock.Setup(r => r.ListAsNoTrackingAsync<SignificantDate>(It.IsAny<Expression<Func<SignificantDate, bool>>>(), It.IsAny<CancellationToken>(), It.IsAny<string[]>()))
+        _repositoryMock.Setup(r =>
+                r.ListAsNoTrackingAsync<SignificantDate>(It.IsAny<Expression<Func<SignificantDate, bool>>>(),
+                    It.IsAny<CancellationToken>(), It.IsAny<string[]>()))
             .ReturnsAsync(dates);
 
-        _repositoryMock.Setup(r => r.ListAsNoTrackingAsync<Relationship>(It.IsAny<Expression<Func<Relationship, bool>>>(), It.IsAny<CancellationToken>(), It.IsAny<string[]>()))
+        _repositoryMock.Setup(r =>
+                r.ListAsNoTrackingAsync<Relationship>(It.IsAny<Expression<Func<Relationship, bool>>>(),
+                    It.IsAny<CancellationToken>(), It.IsAny<string[]>()))
             .ReturnsAsync([]);
 
         // Act
@@ -343,25 +422,43 @@ public class DashboardServiceTests
     }
 
     [Fact]
-    [SuppressMessage("Naming", "CA1707:Identifiers should not contain underscores", Justification = "Test names can contain underscores for readability.")]
+    [SuppressMessage("Naming", "CA1707:Identifiers should not contain underscores",
+        Justification = "Test names can contain underscores for readability.")]
     public async Task GetDashboardDataAsync_EventIsInFiveDays_ReturnsInFiveDays()
     {
         // Arrange
         Guid contactId = Guid.NewGuid();
         List<Contact> contacts = [new Contact { Id = contactId, FirstName = "Test", LastName = "User" }];
 
-        _repositoryMock.Setup(r => r.ListAsNoTrackingAsync<Contact>(It.IsAny<Expression<Func<Contact, bool>>>(), It.IsAny<CancellationToken>(), It.IsAny<string[]>()))
+        _repositoryMock.Setup(r => r.ListAsNoTrackingAsync<Contact>(It.IsAny<Expression<Func<Contact, bool>>>(),
+                It.IsAny<CancellationToken>(), It.IsAny<string[]>()))
             .ReturnsAsync(contacts);
 
-        _repositoryMock.Setup(r => r.ListProjectedAsync<Attachment, (Guid ContactId, Guid AttachmentId)>(It.IsAny<Expression<Func<Attachment, bool>>>(), It.IsAny<Expression<Func<Attachment, (Guid, Guid)>>>(), It.IsAny<CancellationToken>()))
+        _repositoryMock.Setup(r =>
+                r.ListProjectedAsync<Attachment, (Guid ContactId, Guid AttachmentId)>(
+                    It.IsAny<Expression<Func<Attachment, bool>>>(),
+                    It.IsAny<Expression<Func<Attachment, (Guid, Guid)>>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync([]);
 
-        List<SignificantDate> dates = [new SignificantDate { ContactId = contactId, Title = "Event", EventDate = DateOnly.FromDateTime(DateTime.Today.AddDays(5)), IsActive = true }];
+        List<SignificantDate> dates =
+        [
+            new SignificantDate
+            {
+                ContactId = contactId,
+                Title = "Event",
+                EventDate = DateOnly.FromDateTime(DateTime.Today.AddDays(5)),
+                IsActive = true
+            }
+        ];
 
-        _repositoryMock.Setup(r => r.ListAsNoTrackingAsync<SignificantDate>(It.IsAny<Expression<Func<SignificantDate, bool>>>(), It.IsAny<CancellationToken>(), It.IsAny<string[]>()))
+        _repositoryMock.Setup(r =>
+                r.ListAsNoTrackingAsync<SignificantDate>(It.IsAny<Expression<Func<SignificantDate, bool>>>(),
+                    It.IsAny<CancellationToken>(), It.IsAny<string[]>()))
             .ReturnsAsync(dates);
 
-        _repositoryMock.Setup(r => r.ListAsNoTrackingAsync<Relationship>(It.IsAny<Expression<Func<Relationship, bool>>>(), It.IsAny<CancellationToken>(), It.IsAny<string[]>()))
+        _repositoryMock.Setup(r =>
+                r.ListAsNoTrackingAsync<Relationship>(It.IsAny<Expression<Func<Relationship, bool>>>(),
+                    It.IsAny<CancellationToken>(), It.IsAny<string[]>()))
             .ReturnsAsync([]);
 
         // Act
@@ -373,25 +470,43 @@ public class DashboardServiceTests
     }
 
     [Fact]
-    [SuppressMessage("Naming", "CA1707:Identifiers should not contain underscores", Justification = "Test names can contain underscores for readability.")]
+    [SuppressMessage("Naming", "CA1707:Identifiers should not contain underscores",
+        Justification = "Test names can contain underscores for readability.")]
     public async Task GetDashboardDataAsync_EventIsInOneWeek_ReturnsInOneWeek()
     {
         // Arrange
         Guid contactId = Guid.NewGuid();
         List<Contact> contacts = [new Contact { Id = contactId, FirstName = "Test", LastName = "User" }];
 
-        _repositoryMock.Setup(r => r.ListAsNoTrackingAsync<Contact>(It.IsAny<Expression<Func<Contact, bool>>>(), It.IsAny<CancellationToken>(), It.IsAny<string[]>()))
+        _repositoryMock.Setup(r => r.ListAsNoTrackingAsync<Contact>(It.IsAny<Expression<Func<Contact, bool>>>(),
+                It.IsAny<CancellationToken>(), It.IsAny<string[]>()))
             .ReturnsAsync(contacts);
 
-        _repositoryMock.Setup(r => r.ListProjectedAsync<Attachment, (Guid ContactId, Guid AttachmentId)>(It.IsAny<Expression<Func<Attachment, bool>>>(), It.IsAny<Expression<Func<Attachment, (Guid, Guid)>>>(), It.IsAny<CancellationToken>()))
+        _repositoryMock.Setup(r =>
+                r.ListProjectedAsync<Attachment, (Guid ContactId, Guid AttachmentId)>(
+                    It.IsAny<Expression<Func<Attachment, bool>>>(),
+                    It.IsAny<Expression<Func<Attachment, (Guid, Guid)>>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync([]);
 
-        List<SignificantDate> dates = [new SignificantDate { ContactId = contactId, Title = "Event", EventDate = DateOnly.FromDateTime(DateTime.Today.AddDays(7)), IsActive = true }];
+        List<SignificantDate> dates =
+        [
+            new SignificantDate
+            {
+                ContactId = contactId,
+                Title = "Event",
+                EventDate = DateOnly.FromDateTime(DateTime.Today.AddDays(7)),
+                IsActive = true
+            }
+        ];
 
-        _repositoryMock.Setup(r => r.ListAsNoTrackingAsync<SignificantDate>(It.IsAny<Expression<Func<SignificantDate, bool>>>(), It.IsAny<CancellationToken>(), It.IsAny<string[]>()))
+        _repositoryMock.Setup(r =>
+                r.ListAsNoTrackingAsync<SignificantDate>(It.IsAny<Expression<Func<SignificantDate, bool>>>(),
+                    It.IsAny<CancellationToken>(), It.IsAny<string[]>()))
             .ReturnsAsync(dates);
 
-        _repositoryMock.Setup(r => r.ListAsNoTrackingAsync<Relationship>(It.IsAny<Expression<Func<Relationship, bool>>>(), It.IsAny<CancellationToken>(), It.IsAny<string[]>()))
+        _repositoryMock.Setup(r =>
+                r.ListAsNoTrackingAsync<Relationship>(It.IsAny<Expression<Func<Relationship, bool>>>(),
+                    It.IsAny<CancellationToken>(), It.IsAny<string[]>()))
             .ReturnsAsync([]);
 
         // Act
@@ -403,25 +518,43 @@ public class DashboardServiceTests
     }
 
     [Fact]
-    [SuppressMessage("Naming", "CA1707:Identifiers should not contain underscores", Justification = "Test names can contain underscores for readability.")]
+    [SuppressMessage("Naming", "CA1707:Identifiers should not contain underscores",
+        Justification = "Test names can contain underscores for readability.")]
     public async Task GetDashboardDataAsync_EventIsInTwoWeeks_ReturnsInTwoWeeks()
     {
         // Arrange
         Guid contactId = Guid.NewGuid();
         List<Contact> contacts = [new Contact { Id = contactId, FirstName = "Test", LastName = "User" }];
 
-        _repositoryMock.Setup(r => r.ListAsNoTrackingAsync<Contact>(It.IsAny<Expression<Func<Contact, bool>>>(), It.IsAny<CancellationToken>(), It.IsAny<string[]>()))
+        _repositoryMock.Setup(r => r.ListAsNoTrackingAsync<Contact>(It.IsAny<Expression<Func<Contact, bool>>>(),
+                It.IsAny<CancellationToken>(), It.IsAny<string[]>()))
             .ReturnsAsync(contacts);
 
-        _repositoryMock.Setup(r => r.ListProjectedAsync<Attachment, (Guid ContactId, Guid AttachmentId)>(It.IsAny<Expression<Func<Attachment, bool>>>(), It.IsAny<Expression<Func<Attachment, (Guid, Guid)>>>(), It.IsAny<CancellationToken>()))
+        _repositoryMock.Setup(r =>
+                r.ListProjectedAsync<Attachment, (Guid ContactId, Guid AttachmentId)>(
+                    It.IsAny<Expression<Func<Attachment, bool>>>(),
+                    It.IsAny<Expression<Func<Attachment, (Guid, Guid)>>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync([]);
 
-        List<SignificantDate> dates = [new SignificantDate { ContactId = contactId, Title = "Event", EventDate = DateOnly.FromDateTime(DateTime.Today.AddDays(15)), IsActive = true }];
+        List<SignificantDate> dates =
+        [
+            new SignificantDate
+            {
+                ContactId = contactId,
+                Title = "Event",
+                EventDate = DateOnly.FromDateTime(DateTime.Today.AddDays(15)),
+                IsActive = true
+            }
+        ];
 
-        _repositoryMock.Setup(r => r.ListAsNoTrackingAsync<SignificantDate>(It.IsAny<Expression<Func<SignificantDate, bool>>>(), It.IsAny<CancellationToken>(), It.IsAny<string[]>()))
+        _repositoryMock.Setup(r =>
+                r.ListAsNoTrackingAsync<SignificantDate>(It.IsAny<Expression<Func<SignificantDate, bool>>>(),
+                    It.IsAny<CancellationToken>(), It.IsAny<string[]>()))
             .ReturnsAsync(dates);
 
-        _repositoryMock.Setup(r => r.ListAsNoTrackingAsync<Relationship>(It.IsAny<Expression<Func<Relationship, bool>>>(), It.IsAny<CancellationToken>(), It.IsAny<string[]>()))
+        _repositoryMock.Setup(r =>
+                r.ListAsNoTrackingAsync<Relationship>(It.IsAny<Expression<Func<Relationship, bool>>>(),
+                    It.IsAny<CancellationToken>(), It.IsAny<string[]>()))
             .ReturnsAsync([]);
 
         // Act

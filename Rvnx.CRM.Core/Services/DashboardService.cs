@@ -17,12 +17,6 @@ public class DashboardService(IRepository repository, ILogger<DashboardService> 
     private const int MaxUpcomingEvents = 5;
     private const int MaxEventsToProcess = 500;
 
-    private static readonly Action<ILogger, int, Exception?> LogReminderProcessingLimitReached =
-        LoggerMessage.Define<int>(
-            LogLevel.Warning,
-            new EventId(1, nameof(LogReminderProcessingLimitReached)),
-            "Reminder processing limit reached ({Limit}). Some reminders may not appear in dashboard.");
-
     private static readonly Action<ILogger, int, Exception?> LogSignificantDateProcessingLimitReached =
         LoggerMessage.Define<int>(
             LogLevel.Warning,
@@ -34,24 +28,7 @@ public class DashboardService(IRepository repository, ILogger<DashboardService> 
     {
         DashboardDto result = new();
 
-        // Optimization: Use ListProjectedAsync into an anonymous type to fetch only necessary columns for the dashboard nodes and event processing
-        var projectedContacts = await _repository.ListProjectedAsync(
-            (Contact x) => x.IsHidden == false,
-            c => new
-            {
-                c.Id,
-                c.FirstName,
-                c.LastName,
-                c.Gender
-            });
-
-        List<Contact> contacts = projectedContacts.Select(c => new Contact
-        {
-            Id = c.Id,
-            FirstName = c.FirstName,
-            LastName = c.LastName,
-            Gender = c.Gender
-        }).ToList();
+        List<Contact> contacts = await _repository.ListAsNoTrackingAsync<Contact>(x => x.IsHidden == false);
 
         Dictionary<Guid, Contact> contactDict = contacts.ToDictionary(c => c.Id, c => c);
 
@@ -60,7 +37,9 @@ public class DashboardService(IRepository repository, ILogger<DashboardService> 
         List<(Guid ContactId, Guid AttachmentId)> profileAttachments = contactIds.Count > 0
             ? await _repository.ListProjectedByChunkedContainsAsync<Attachment, (Guid, Guid), Guid>(
                 contactIds,
-                chunk => a => a.ContactId != null && a.AttachmentType == AttachmentTypes.ProfileImage && chunk.Contains(a.ContactId.Value),
+                chunk => a =>
+                    a.ContactId != null && a.AttachmentType == AttachmentTypes.ProfileImage &&
+                    chunk.Contains(a.ContactId.Value),
                 a => new ValueTuple<Guid, Guid>(a.ContactId!.Value, a.Id))
             : [];
 
@@ -95,28 +74,14 @@ public class DashboardService(IRepository repository, ILogger<DashboardService> 
             });
         }
 
-        // Optimization: Project only necessary fields (EntityId, RelatedEntityId) into an anonymous type to avoid fetching all columns
-        var projectedRelationships = await _repository.ListProjectedAsync(
-            (Relationship r) => r.EntityType == EntityTypes.Person,
-            r => new
-            {
-                r.EntityId,
-                r.RelatedEntityId
-            });
-
-        List<Relationship> relationships = projectedRelationships.Select(r => new Relationship
-        {
-            EntityId = r.EntityId,
-            RelatedEntityId = r.RelatedEntityId
-        }).ToList();
+        List<Relationship> relationships =
+            await _repository.ListAsNoTrackingAsync<Relationship>(r => r.EntityType == EntityTypes.Person);
 
         foreach (Relationship rel in relationships)
         {
             result.GraphLinks.Add(new GraphLinkDto
             {
-                Source = rel.EntityId.ToString(),
-                Target = rel.RelatedEntityId.ToString(),
-                Type = "Relationship"
+                Source = rel.EntityId.ToString(), Target = rel.RelatedEntityId.ToString(), Type = "Relationship"
             });
         }
 
@@ -127,8 +92,8 @@ public class DashboardService(IRepository repository, ILogger<DashboardService> 
         PriorityQueue<UpcomingEventDto, DateTime> topEvents,
         Dictionary<Guid, Contact> contactDict)
     {
-        List<SignificantDate> importantDates = await _repository.ListAsNoTrackingAsync<SignificantDate>(
-            d => d.ContactId != null && d.IsActive);
+        List<SignificantDate> importantDates =
+            await _repository.ListAsNoTrackingAsync<SignificantDate>(d => d.ContactId != null && d.IsActive);
 
         int processedCount = 0;
         foreach (SignificantDate date in importantDates)
@@ -141,7 +106,8 @@ public class DashboardService(IRepository repository, ILogger<DashboardService> 
             DateOnly nextOcc = date.GetNextOccurrence();
             DateTime nextOccurrence = nextOcc.ToDateTime(TimeOnly.MinValue);
 
-            bool isBirthday = date.Title?.Equals(SignificantDateTitles.Birthday, StringComparison.OrdinalIgnoreCase) == true;
+            bool isBirthday = date.Title?.Equals(SignificantDateTitles.Birthday, StringComparison.OrdinalIgnoreCase) ==
+                              true;
             string desc = isBirthday
                 ? $"Turns {nextOcc.Year - date.EventDate.Year}"
                 : $"{date.Title} ({date.EventDate.ToShortDateString()})";

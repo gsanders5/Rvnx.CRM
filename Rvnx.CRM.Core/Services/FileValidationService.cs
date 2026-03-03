@@ -8,8 +8,17 @@ namespace Rvnx.CRM.Core.Services
     {
         private static readonly HashSet<string> AllowedExtensions = new(StringComparer.OrdinalIgnoreCase)
         {
-            ".jpg", ".jpeg", ".png", ".gif", ".pdf",
-            ".txt", ".doc", ".docx", ".xls", ".xlsx", ".vcf"
+            ".jpg",
+            ".jpeg",
+            ".png",
+            ".gif",
+            ".pdf",
+            ".txt",
+            ".doc",
+            ".docx",
+            ".xls",
+            ".xlsx",
+            ".vcf"
         };
 
         private static readonly HashSet<string> ImageExtensions = new(StringComparer.OrdinalIgnoreCase)
@@ -31,6 +40,23 @@ namespace Rvnx.CRM.Core.Services
             { ".xlsx", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" },
             { ".vcf", "text/vcard" }
         };
+
+        // Map from normalized lowercase extension to the FileTypeChecker type name.
+        // FileTypeChecker identifies types by their Name property (e.g. "Joint Photographic Experts Group").
+        // We use the Extension property (e.g. "jpg") which is more reliable and version-stable.
+        private static readonly Dictionary<string, HashSet<string>> ExtensionToFileTypeExtensions =
+            new(StringComparer.OrdinalIgnoreCase)
+            {
+                { ".jpg", new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "jpg", "jpeg" } },
+                { ".jpeg", new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "jpg", "jpeg" } },
+                { ".png", new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "png" } },
+                { ".gif", new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "gif" } },
+                { ".pdf", new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "pdf" } },
+                { ".doc", new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "doc" } },
+                { ".docx", new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "docx", "zip" } },
+                { ".xls", new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "xls", "doc" } },
+                { ".xlsx", new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "xlsx", "zip" } },
+            };
 
         private const long MaxFileSize = 30 * 1024 * 1024; // 30 MB
 
@@ -70,10 +96,19 @@ namespace Rvnx.CRM.Core.Services
                 }
 
                 stream.Position = 0;
-                var fileType = FileTypeValidator.GetFileType(stream);
-                string expectedMimeType = GetMimeType(extension);
+                FileTypeChecker.Abstracts.IFileType fileType = FileTypeValidator.GetFileType(stream);
+                if (fileType == null)
+                {
+                    return false;
+                }
 
-                return fileType != null && string.Equals(expectedMimeType, fileType.MimeType, StringComparison.OrdinalIgnoreCase);
+                // Use the Extension property instead of MimeType for version compatibility.
+                if (!ExtensionToFileTypeExtensions.TryGetValue(extension, out HashSet<string>? validTypeExts))
+                {
+                    return false;
+                }
+
+                return validTypeExts.Contains(fileType.Extension);
             }
             catch (Exception)
             {
@@ -107,10 +142,19 @@ namespace Rvnx.CRM.Core.Services
                 }
 
                 stream.Position = 0;
-                var fileType = FileTypeValidator.GetFileType(stream);
-                string expectedMimeType = GetMimeType(extension);
+                FileTypeChecker.Abstracts.IFileType fileType = FileTypeValidator.GetFileType(stream);
+                if (fileType == null)
+                {
+                    return false;
+                }
 
-                return fileType != null && string.Equals(expectedMimeType, fileType.MimeType, StringComparison.OrdinalIgnoreCase);
+                // Use the Extension property instead of MimeType for version compatibility.
+                if (!ExtensionToFileTypeExtensions.TryGetValue(extension, out HashSet<string>? validTypeExts))
+                {
+                    return false;
+                }
+
+                return validTypeExts.Contains(fileType.Extension);
             }
             catch
             {
@@ -122,7 +166,9 @@ namespace Rvnx.CRM.Core.Services
         {
             return string.IsNullOrEmpty(extension)
                 ? "application/octet-stream"
-                : MimeTypeMap.TryGetValue(extension, out string? mimeType) ? mimeType : "application/octet-stream";
+                : MimeTypeMap.TryGetValue(extension, out string? mimeType)
+                    ? mimeType
+                    : "application/octet-stream";
         }
     }
 }
