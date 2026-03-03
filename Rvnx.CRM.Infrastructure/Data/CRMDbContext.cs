@@ -47,6 +47,10 @@ public class CRMDbContext(DbContextOptions<CRMDbContext> options, ICurrentUserSe
             .WithOne()
             .OnDelete(DeleteBehavior.SetNull);
 
+        modelBuilder.Entity<User>()
+            .HasIndex(u => u.SelfContactId)
+            .IsUnique();
+
         modelBuilder.Entity<Relationship>().HasIndex(e => new { e.EntityId, e.EntityType });
         modelBuilder.Entity<Relationship>().HasIndex(e => new { e.RelatedEntityId, e.EntityType });
 
