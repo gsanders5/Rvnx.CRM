@@ -1,0 +1,194 @@
+using Moq;
+using Rvnx.CRM.Core.Constants;
+using Rvnx.CRM.Core.DTOs.Contact;
+using Rvnx.CRM.Core.Interfaces;
+using Rvnx.CRM.Core.Models;
+using Rvnx.CRM.Core.Models.Contact;
+using Rvnx.CRM.Core.Models.Dates;
+using Rvnx.CRM.Core.Services;
+
+namespace Rvnx.CRM.Tests.Services
+{
+    public class RelationshipServiceTests
+    {
+        private readonly Mock<IRepository> _repositoryMock;
+        private readonly RelationshipService _service;
+
+        public RelationshipServiceTests()
+        {
+            _repositoryMock = new Mock<IRepository>();
+            _service = new RelationshipService(_repositoryMock.Object);
+        }
+
+        [Theory]
+        [InlineData("")]
+        [InlineData(null)]
+        [InlineData("InvalidFormat")]
+        [InlineData("NotAGuid_Fwd")]
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Naming", "CA1707:Identifiers should not contain underscores", Justification = "Test names follow a standard convention")]
+        public async Task CreateRelationshipAsync_WithInvalidSelection_ReturnsFailure(string? invalidSelection)
+        {
+            // Arrange
+            Relationship relationship = new();
+
+            // Act
+            RelationshipOperationResult result = await _service.CreateRelationshipAsync(relationship, invalidSelection!);
+
+            // Assert
+            Assert.False(result.Success);
+            Assert.NotNull(result.ErrorMessage);
+            _repositoryMock.Verify(r => r.AddAsync(It.IsAny<Relationship>(), It.IsAny<CancellationToken>()), Times.Never);
+        }
+
+        [Fact]
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Naming", "CA1707:Identifiers should not contain underscores", Justification = "Test names follow a standard convention")]
+        public async Task CreateRelationshipAsync_WithValidForwardSelection_SavesWithoutSwapping()
+        {
+            // Arrange
+            Guid typeId = Guid.NewGuid();
+            string selection = $"{typeId}_Fwd";
+            Guid entityId = Guid.NewGuid();
+            Guid relatedEntityId = Guid.NewGuid();
+
+            Relationship relationship = new()
+            {
+                EntityId = entityId,
+                RelatedEntityId = relatedEntityId,
+                EntityType = EntityTypes.Person
+            };
+
+            // Act
+            RelationshipOperationResult result = await _service.CreateRelationshipAsync(relationship, selection);
+
+            // Assert
+            Assert.True(result.Success);
+            Assert.Equal(entityId, result.RedirectId);
+            Assert.Equal(EntityTypes.Person, result.EntityType);
+
+            Assert.Equal(typeId, relationship.RelationshipTypeId);
+            Assert.Equal(entityId, relationship.EntityId);
+            Assert.Equal(relatedEntityId, relationship.RelatedEntityId);
+
+            _repositoryMock.Verify(r => r.AddAsync(relationship, It.IsAny<CancellationToken>()), Times.Once);
+            _repositoryMock.Verify(r => r.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
+        }
+
+        [Fact]
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Naming", "CA1707:Identifiers should not contain underscores", Justification = "Test names follow a standard convention")]
+        public async Task CreateRelationshipAsync_WithValidReverseSelection_SwapsEntities()
+        {
+            // Arrange
+            Guid typeId = Guid.NewGuid();
+            string selection = $"{typeId}_Rev";
+            Guid entityId = Guid.NewGuid();
+            Guid relatedEntityId = Guid.NewGuid();
+
+            Relationship relationship = new()
+            {
+                EntityId = entityId,
+                RelatedEntityId = relatedEntityId,
+                EntityType = EntityTypes.Person
+            };
+
+            // Act
+            RelationshipOperationResult result = await _service.CreateRelationshipAsync(relationship, selection);
+
+            // Assert
+            Assert.True(result.Success);
+            Assert.Equal(entityId, result.RedirectId); // The original entity stays the primary entity because Swap is called before Ok
+            Assert.Equal(EntityTypes.Person, result.EntityType);
+
+            Assert.Equal(typeId, relationship.RelationshipTypeId);
+            Assert.Equal(relatedEntityId, relationship.EntityId); // Swapped
+            Assert.Equal(entityId, relationship.RelatedEntityId); // Swapped
+
+            _repositoryMock.Verify(r => r.AddAsync(relationship, It.IsAny<CancellationToken>()), Times.Once);
+            _repositoryMock.Verify(r => r.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
+        }
+
+        [Fact]
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Naming", "CA1707:Identifiers should not contain underscores", Justification = "Test names follow a standard convention")]
+        public async Task CreatePartialContact_WithBirthday_CreatesContactDateAndRelationship()
+        {
+            // Arrange
+            Guid parentEntityId = Guid.NewGuid();
+            Guid typeId = Guid.NewGuid();
+            string selection = $"{typeId}_Fwd";
+
+            CreatePartialContactRelationshipDto dto = new()
+            {
+                PartialContactFirstName = "Jane",
+                PartialContactLastName = "Doe",
+                Birthday = new DateTime(1990, 5, 15),
+                Description = "A new partial contact"
+            };
+
+            // Act
+            RelationshipOperationResult result = await _service.CreatePartialContactRelationshipAsync(parentEntityId, selection, dto);
+
+            // Assert
+            Assert.True(result.Success);
+            Assert.Equal(parentEntityId, result.RedirectId);
+
+            _repositoryMock.Verify(r => r.AddAsync(It.Is<Contact>(c =>
+                c.IsPartial &&
+                c.FirstName == "Jane" &&
+                c.LastName == "Doe"), It.IsAny<CancellationToken>()), Times.Once);
+
+            _repositoryMock.Verify(r => r.AddAsync(It.Is<SignificantDate>(sd =>
+                sd.Title == SignificantDateTitles.Birthday &&
+                sd.EventDate == new DateOnly(1990, 5, 15)), It.IsAny<CancellationToken>()), Times.Once);
+
+            _repositoryMock.Verify(r => r.AddAsync(It.Is<Relationship>(rel =>
+                rel.EntityId == parentEntityId &&
+                rel.RelationshipTypeId == typeId &&
+                rel.Description == "A new partial contact"), It.IsAny<CancellationToken>()), Times.Once);
+
+            _repositoryMock.Verify(r => r.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
+        }
+
+        [Fact]
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Naming", "CA1707:Identifiers should not contain underscores", Justification = "Test names follow a standard convention")]
+        public async Task PromotePartialContact_WhenContactIsAlreadyPromoted_ReturnsFailure()
+        {
+            // Arrange
+            Guid contactId = Guid.NewGuid();
+            Contact fullyPromotedContact = new() { Id = contactId, IsPartial = false };
+
+            _repositoryMock.Setup(r => r.GetByIdAsync<Contact>(contactId, It.IsAny<CancellationToken>()))
+                .ReturnsAsync(fullyPromotedContact);
+
+            // Act
+            RelationshipOperationResult result = await _service.PromotePartialContactAsync(contactId);
+
+            // Assert
+            Assert.False(result.Success);
+            Assert.Equal("Contact is not a partial contact.", result.ErrorMessage);
+
+            _repositoryMock.Verify(r => r.UpdateAsync(It.IsAny<Contact>(), It.IsAny<CancellationToken>()), Times.Never);
+        }
+
+        [Fact]
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Naming", "CA1707:Identifiers should not contain underscores", Justification = "Test names follow a standard convention")]
+        public async Task PromotePartialContact_WhenContactIsPartial_SetsIsPartialFalse()
+        {
+            // Arrange
+            Guid contactId = Guid.NewGuid();
+            Contact partialContact = new() { Id = contactId, IsPartial = true };
+
+            _repositoryMock.Setup(r => r.GetByIdAsync<Contact>(contactId, It.IsAny<CancellationToken>()))
+                .ReturnsAsync(partialContact);
+
+            // Act
+            RelationshipOperationResult result = await _service.PromotePartialContactAsync(contactId);
+
+            // Assert
+            Assert.True(result.Success);
+            Assert.Equal(contactId, result.RedirectId);
+            Assert.False(partialContact.IsPartial);
+
+            _repositoryMock.Verify(r => r.UpdateAsync(partialContact, It.IsAny<CancellationToken>()), Times.Once);
+            _repositoryMock.Verify(r => r.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
+        }
+    }
+}
