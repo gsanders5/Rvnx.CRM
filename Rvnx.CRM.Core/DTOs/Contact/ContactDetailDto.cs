@@ -9,7 +9,6 @@ namespace Rvnx.CRM.Core.DTOs.Contact
         public string? Nickname { get; set; }
 
         public IEnumerable<NoteDto> Notes { get; set; } = [];
-        public IEnumerable<ReminderDto> Reminders { get; set; } = [];
         public IEnumerable<SignificantDateDto> SignificantDates { get; set; } = [];
         public IEnumerable<RelationshipDto> Relationships { get; set; } = [];
         public IEnumerable<RelationshipDto> RelatedTo { get; set; } = [];

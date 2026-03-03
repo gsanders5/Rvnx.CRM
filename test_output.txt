@@ -1,0 +1,258 @@
+  Determining projects to restore...
+  All projects are up-to-date for restore.
+  Rvnx.CRM.Core -> /app/Rvnx.CRM.Core/bin/Debug/net8.0/Rvnx.CRM.Core.dll
+  Rvnx.CRM.Infrastructure -> /app/Rvnx.CRM.Infrastructure/bin/Debug/net8.0/Rvnx.CRM.Infrastructure.dll
+  Rvnx.CRM.ConsoleApp -> /app/Rvnx.CRM.ConsoleApp/bin/Debug/net8.0/Rvnx.CRM.ConsoleApp.dll
+  Rvnx.CRM.Web -> /app/Rvnx.CRM.Web/bin/Debug/net8.0/Rvnx.CRM.Web.dll
+  Rvnx.CRM.Tests -> /app/Rvnx.CRM.Tests/bin/Debug/net8.0/Rvnx.CRM.Tests.dll
+Test run for /app/Rvnx.CRM.Tests/bin/Debug/net8.0/Rvnx.CRM.Tests.dll (.NETCoreApp,Version=v8.0)
+VSTest version 18.0.1 (x64)
+
+Starting test execution, please wait...
+A total of 1 test files matched the specified pattern.
+[xUnit.net 00:00:03.57]     Rvnx.CRM.Tests.Services.DashboardServiceTests.GetDashboardDataAsync_ZeroContacts_ReturnsEmptyData [FAIL]
+  Failed Rvnx.CRM.Tests.Services.DashboardServiceTests.GetDashboardDataAsync_ZeroContacts_ReturnsEmptyData [25 ms]
+  Error Message:
+   System.ArgumentNullException : Value cannot be null. (Parameter 'source')
+  Stack Trace:
+     at System.Linq.ThrowHelper.ThrowArgumentNullException(ExceptionArgument argument)
+   at System.Linq.Enumerable.Select[TSource,TResult](IEnumerable`1 source, Func`2 selector)
+   at Rvnx.CRM.Core.Services.DashboardService.GetDashboardDataAsync() in /app/Rvnx.CRM.Core/Services/DashboardService.cs:line 48
+   at Rvnx.CRM.Tests.Services.DashboardServiceTests.GetDashboardDataAsync_ZeroContacts_ReturnsEmptyData() in /app/Rvnx.CRM.Tests/Services/DashboardServiceTests.cs:line 144
+--- End of stack trace from previous location ---
+[xUnit.net 00:00:03.62]     Rvnx.CRM.Tests.Services.DashboardServiceTests.GetDashboardDataAsync_EventIsInTwoWeeks_ReturnsInTwoWeeks [FAIL]
+[xUnit.net 00:00:03.62]     Rvnx.CRM.Tests.Services.DashboardServiceTests.GetDashboardDataAsync_EventIsInFiveDays_ReturnsInFiveDays [FAIL]
+[xUnit.net 00:00:03.63]     Rvnx.CRM.Tests.Services.DashboardServiceTests.GetDashboardDataAsync_ReturnsAggregatedData [FAIL]
+  Failed Rvnx.CRM.Tests.Services.DashboardServiceTests.GetDashboardDataAsync_EventIsInTwoWeeks_ReturnsInTwoWeeks [41 ms]
+  Error Message:
+   System.ArgumentNullException : Value cannot be null. (Parameter 'source')
+  Stack Trace:
+     at System.Linq.ThrowHelper.ThrowArgumentNullException(ExceptionArgument argument)
+   at System.Linq.Enumerable.Select[TSource,TResult](IEnumerable`1 source, Func`2 selector)
+   at Rvnx.CRM.Core.Services.DashboardService.GetDashboardDataAsync() in /app/Rvnx.CRM.Core/Services/DashboardService.cs:line 48
+   at Rvnx.CRM.Tests.Services.DashboardServiceTests.GetDashboardDataAsync_EventIsInTwoWeeks_ReturnsInTwoWeeks() in /app/Rvnx.CRM.Tests/Services/DashboardServiceTests.cs:line 428
+--- End of stack trace from previous location ---
+  Failed Rvnx.CRM.Tests.Services.DashboardServiceTests.GetDashboardDataAsync_EventIsInFiveDays_ReturnsInFiveDays [26 ms]
+  Error Message:
+   System.ArgumentNullException : Value cannot be null. (Parameter 'source')
+  Stack Trace:
+     at System.Linq.ThrowHelper.ThrowArgumentNullException(ExceptionArgument argument)
+   at System.Linq.Enumerable.Select[TSource,TResult](IEnumerable`1 source, Func`2 selector)
+   at Rvnx.CRM.Core.Services.DashboardService.GetDashboardDataAsync() in /app/Rvnx.CRM.Core/Services/DashboardService.cs:line 48
+   at Rvnx.CRM.Tests.Services.DashboardServiceTests.GetDashboardDataAsync_EventIsInFiveDays_ReturnsInFiveDays() in /app/Rvnx.CRM.Tests/Services/DashboardServiceTests.cs:line 368
+--- End of stack trace from previous location ---
+  Failed Rvnx.CRM.Tests.Services.DashboardServiceTests.GetDashboardDataAsync_ReturnsAggregatedData [11 ms]
+  Error Message:
+   System.ArgumentNullException : Value cannot be null. (Parameter 'source')
+  Stack Trace:
+     at System.Linq.ThrowHelper.ThrowArgumentNullException(ExceptionArgument argument)
+   at System.Linq.Enumerable.Select[TSource,TResult](IEnumerable`1 source, Func`2 selector)
+   at Rvnx.CRM.Core.Services.DashboardService.GetDashboardDataAsync() in /app/Rvnx.CRM.Core/Services/DashboardService.cs:line 48
+   at Rvnx.CRM.Tests.Services.DashboardServiceTests.GetDashboardDataAsync_ReturnsAggregatedData() in /app/Rvnx.CRM.Tests/Services/DashboardServiceTests.cs:line 98
+--- End of stack trace from previous location ---
+[xUnit.net 00:00:03.65]     Rvnx.CRM.Tests.Services.DashboardServiceTests.GetDashboardDataAsync_EventIsToday_ReturnsToday [FAIL]
+[xUnit.net 00:00:03.66]     Rvnx.CRM.Tests.Services.DashboardServiceTests.GetDashboardDataAsync_EventIsTomorrow_ReturnsTomorrow [FAIL]
+[xUnit.net 00:00:03.68]     Rvnx.CRM.Tests.Services.DashboardServiceTests.GetDashboardDataAsync_EventIsInOneWeek_ReturnsInOneWeek [FAIL]
+[xUnit.net 00:00:03.69]     Rvnx.CRM.Tests.Services.DashboardServiceTests.GetDashboardDataAsync_EventIsOverdue_ReturnsOverdue [FAIL]
+[xUnit.net 00:00:03.71]     Rvnx.CRM.Tests.Services.DashboardServiceTests.GetDashboardDataAsync_NoSignificantDates_ReturnsEmptyUpcomingEvents [FAIL]
+[xUnit.net 00:00:03.72]     Rvnx.CRM.Tests.Services.DashboardServiceTests.GetDashboardDataAsync_ExceedsMaxEventsToProcess_LogsWarning [FAIL]
+  Failed Rvnx.CRM.Tests.Services.DashboardServiceTests.GetDashboardDataAsync_EventIsToday_ReturnsToday [20 ms]
+  Error Message:
+   System.ArgumentNullException : Value cannot be null. (Parameter 'source')
+  Stack Trace:
+     at System.Linq.ThrowHelper.ThrowArgumentNullException(ExceptionArgument argument)
+   at System.Linq.Enumerable.Select[TSource,TResult](IEnumerable`1 source, Func`2 selector)
+   at Rvnx.CRM.Core.Services.DashboardService.GetDashboardDataAsync() in /app/Rvnx.CRM.Core/Services/DashboardService.cs:line 48
+   at Rvnx.CRM.Tests.Services.DashboardServiceTests.GetDashboardDataAsync_EventIsToday_ReturnsToday() in /app/Rvnx.CRM.Tests/Services/DashboardServiceTests.cs:line 277
+--- End of stack trace from previous location ---
+  Failed Rvnx.CRM.Tests.Services.DashboardServiceTests.GetDashboardDataAsync_EventIsTomorrow_ReturnsTomorrow [20 ms]
+  Error Message:
+   System.ArgumentNullException : Value cannot be null. (Parameter 'source')
+  Stack Trace:
+     at System.Linq.ThrowHelper.ThrowArgumentNullException(ExceptionArgument argument)
+   at System.Linq.Enumerable.Select[TSource,TResult](IEnumerable`1 source, Func`2 selector)
+   at Rvnx.CRM.Core.Services.DashboardService.GetDashboardDataAsync() in /app/Rvnx.CRM.Core/Services/DashboardService.cs:line 48
+   at Rvnx.CRM.Tests.Services.DashboardServiceTests.GetDashboardDataAsync_EventIsTomorrow_ReturnsTomorrow() in /app/Rvnx.CRM.Tests/Services/DashboardServiceTests.cs:line 306
+--- End of stack trace from previous location ---
+  Failed Rvnx.CRM.Tests.Services.DashboardServiceTests.GetDashboardDataAsync_EventIsInOneWeek_ReturnsInOneWeek [14 ms]
+  Error Message:
+   System.ArgumentNullException : Value cannot be null. (Parameter 'source')
+  Stack Trace:
+     at System.Linq.ThrowHelper.ThrowArgumentNullException(ExceptionArgument argument)
+   at System.Linq.Enumerable.Select[TSource,TResult](IEnumerable`1 source, Func`2 selector)
+   at Rvnx.CRM.Core.Services.DashboardService.GetDashboardDataAsync() in /app/Rvnx.CRM.Core/Services/DashboardService.cs:line 48
+   at Rvnx.CRM.Tests.Services.DashboardServiceTests.GetDashboardDataAsync_EventIsInOneWeek_ReturnsInOneWeek() in /app/Rvnx.CRM.Tests/Services/DashboardServiceTests.cs:line 398
+--- End of stack trace from previous location ---
+  Failed Rvnx.CRM.Tests.Services.DashboardServiceTests.GetDashboardDataAsync_EventIsOverdue_ReturnsOverdue [12 ms]
+  Error Message:
+   System.ArgumentNullException : Value cannot be null. (Parameter 'source')
+  Stack Trace:
+     at System.Linq.ThrowHelper.ThrowArgumentNullException(ExceptionArgument argument)
+   at System.Linq.Enumerable.Select[TSource,TResult](IEnumerable`1 source, Func`2 selector)
+   at Rvnx.CRM.Core.Services.DashboardService.GetDashboardDataAsync() in /app/Rvnx.CRM.Core/Services/DashboardService.cs:line 48
+   at Rvnx.CRM.Tests.Services.DashboardServiceTests.GetDashboardDataAsync_EventIsOverdue_ReturnsOverdue() in /app/Rvnx.CRM.Tests/Services/DashboardServiceTests.cs:line 338
+--- End of stack trace from previous location ---
+  Failed Rvnx.CRM.Tests.Services.DashboardServiceTests.GetDashboardDataAsync_NoSignificantDates_ReturnsEmptyUpcomingEvents [12 ms]
+  Error Message:
+   System.ArgumentNullException : Value cannot be null. (Parameter 'source')
+  Stack Trace:
+     at System.Linq.ThrowHelper.ThrowArgumentNullException(ExceptionArgument argument)
+   at System.Linq.Enumerable.Select[TSource,TResult](IEnumerable`1 source, Func`2 selector)
+   at Rvnx.CRM.Core.Services.DashboardService.GetDashboardDataAsync() in /app/Rvnx.CRM.Core/Services/DashboardService.cs:line 48
+   at Rvnx.CRM.Tests.Services.DashboardServiceTests.GetDashboardDataAsync_NoSignificantDates_ReturnsEmptyUpcomingEvents() in /app/Rvnx.CRM.Tests/Services/DashboardServiceTests.cs:line 193
+--- End of stack trace from previous location ---
+  Failed Rvnx.CRM.Tests.Services.DashboardServiceTests.GetDashboardDataAsync_ExceedsMaxEventsToProcess_LogsWarning [18 ms]
+  Error Message:
+   System.ArgumentNullException : Value cannot be null. (Parameter 'source')
+  Stack Trace:
+     at System.Linq.ThrowHelper.ThrowArgumentNullException(ExceptionArgument argument)
+   at System.Linq.Enumerable.Select[TSource,TResult](IEnumerable`1 source, Func`2 selector)
+   at Rvnx.CRM.Core.Services.DashboardService.GetDashboardDataAsync() in /app/Rvnx.CRM.Core/Services/DashboardService.cs:line 48
+   at Rvnx.CRM.Tests.Services.DashboardServiceTests.GetDashboardDataAsync_ExceedsMaxEventsToProcess_LogsWarning() in /app/Rvnx.CRM.Tests/Services/DashboardServiceTests.cs:line 247
+--- End of stack trace from previous location ---
+[xUnit.net 00:00:04.72]     Rvnx.CRM.Tests.Services.FileValidationServiceTests.IsValidFileSignatureShouldReturnFalseForInvalidPdf [FAIL]
+[xUnit.net 00:00:04.72]     Rvnx.CRM.Tests.Services.FileValidationServiceTests.IsValidImageSignatureShouldReturnTrueForValidPng [FAIL]
+[xUnit.net 00:00:04.73]     Rvnx.CRM.Tests.Services.FileValidationServiceTests.IsValidFileSignatureShouldReturnTrueForValidPdf [FAIL]
+  Failed Rvnx.CRM.Tests.Services.FileValidationServiceTests.IsValidFileSignatureShouldReturnFalseForInvalidPdf [1 ms]
+  Error Message:
+   System.MissingMethodException : Method not found: 'System.String FileTypeChecker.Abstracts.IFileType.get_MimeType()'.
+  Stack Trace:
+     at Rvnx.CRM.Core.Services.FileValidationService.IsValidFileSignature(Byte[] fileBytes, String extension)
+   at Rvnx.CRM.Tests.Services.FileValidationServiceTests.IsValidFileSignatureShouldReturnFalseForInvalidPdf() in /app/Rvnx.CRM.Tests/Services/FileValidationServiceTests.cs:line 146
+   at System.RuntimeMethodHandle.InvokeMethod(Object target, Void** arguments, Signature sig, Boolean isConstructor)
+   at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+  Failed Rvnx.CRM.Tests.Services.FileValidationServiceTests.IsValidImageSignatureShouldReturnTrueForValidPng [< 1 ms]
+  Error Message:
+   System.MissingMethodException : Method not found: 'System.String FileTypeChecker.Abstracts.IFileType.get_MimeType()'.
+  Stack Trace:
+     at Rvnx.CRM.Core.Services.FileValidationService.IsValidImageSignature(Byte[] fileBytes, String extension)
+   at Rvnx.CRM.Tests.Services.FileValidationServiceTests.IsValidImageSignatureShouldReturnTrueForValidPng() in /app/Rvnx.CRM.Tests/Services/FileValidationServiceTests.cs:line 93
+   at System.RuntimeMethodHandle.InvokeMethod(Object target, Void** arguments, Signature sig, Boolean isConstructor)
+   at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+  Failed Rvnx.CRM.Tests.Services.FileValidationServiceTests.IsValidFileSignatureShouldReturnTrueForValidPdf [1 ms]
+  Error Message:
+   System.MissingMethodException : Method not found: 'System.String FileTypeChecker.Abstracts.IFileType.get_MimeType()'.
+  Stack Trace:
+     at Rvnx.CRM.Core.Services.FileValidationService.IsValidFileSignature(Byte[] fileBytes, String extension)
+   at Rvnx.CRM.Tests.Services.FileValidationServiceTests.IsValidFileSignatureShouldReturnTrueForValidPdf() in /app/Rvnx.CRM.Tests/Services/FileValidationServiceTests.cs:line 139
+   at System.RuntimeMethodHandle.InvokeMethod(Object target, Void** arguments, Signature sig, Boolean isConstructor)
+   at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+[xUnit.net 00:00:04.74]     Rvnx.CRM.Tests.Services.FileValidationServiceTests.IsValidImageSignatureShouldReturnTrueForValidJpg [FAIL]
+[xUnit.net 00:00:04.74]     Rvnx.CRM.Tests.Services.FileValidationServiceTests.IsValidFileSignatureShouldReturnTrueForValidDoc [FAIL]
+[xUnit.net 00:00:04.74]     Rvnx.CRM.Tests.Services.FileValidationServiceTests.IsValidFileSignatureShouldReturnTrueForTxt [FAIL]
+[xUnit.net 00:00:04.74]     Rvnx.CRM.Tests.Services.FileValidationServiceTests.IsValidImageSignatureShouldReturnFalseForShortFile [FAIL]
+[xUnit.net 00:00:04.74]     Rvnx.CRM.Tests.Services.FileValidationServiceTests.IsValidImageSignatureShouldReturnFalseForMismatchingImageExtension [FAIL]
+[xUnit.net 00:00:04.75]     Rvnx.CRM.Tests.Services.FileValidationServiceTests.IsValidFileSignatureShouldReturnTrueForValidDocx [FAIL]
+  Failed Rvnx.CRM.Tests.Services.FileValidationServiceTests.IsValidImageSignatureShouldReturnTrueForValidJpg [< 1 ms]
+  Error Message:
+   System.MissingMethodException : Method not found: 'System.String FileTypeChecker.Abstracts.IFileType.get_MimeType()'.
+  Stack Trace:
+     at Rvnx.CRM.Core.Services.FileValidationService.IsValidImageSignature(Byte[] fileBytes, String extension)
+   at Rvnx.CRM.Tests.Services.FileValidationServiceTests.IsValidImageSignatureShouldReturnTrueForValidJpg() in /app/Rvnx.CRM.Tests/Services/FileValidationServiceTests.cs:line 100
+   at System.RuntimeMethodHandle.InvokeMethod(Object target, Void** arguments, Signature sig, Boolean isConstructor)
+   at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+  Failed Rvnx.CRM.Tests.Services.FileValidationServiceTests.IsValidFileSignatureShouldReturnTrueForValidDoc [< 1 ms]
+  Error Message:
+   System.MissingMethodException : Method not found: 'System.String FileTypeChecker.Abstracts.IFileType.get_MimeType()'.
+  Stack Trace:
+     at Rvnx.CRM.Core.Services.FileValidationService.IsValidFileSignature(Byte[] fileBytes, String extension)
+   at Rvnx.CRM.Tests.Services.FileValidationServiceTests.IsValidFileSignatureShouldReturnTrueForValidDoc() in /app/Rvnx.CRM.Tests/Services/FileValidationServiceTests.cs:line 164
+   at System.RuntimeMethodHandle.InvokeMethod(Object target, Void** arguments, Signature sig, Boolean isConstructor)
+   at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+  Failed Rvnx.CRM.Tests.Services.FileValidationServiceTests.IsValidFileSignatureShouldReturnTrueForTxt [< 1 ms]
+  Error Message:
+   System.MissingMethodException : Method not found: 'System.String FileTypeChecker.Abstracts.IFileType.get_MimeType()'.
+  Stack Trace:
+     at Rvnx.CRM.Core.Services.FileValidationService.IsValidFileSignature(Byte[] fileBytes, String extension)
+   at Rvnx.CRM.Tests.Services.FileValidationServiceTests.IsValidFileSignatureShouldReturnTrueForTxt() in /app/Rvnx.CRM.Tests/Services/FileValidationServiceTests.cs:line 171
+   at System.RuntimeMethodHandle.InvokeMethod(Object target, Void** arguments, Signature sig, Boolean isConstructor)
+   at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+  Failed Rvnx.CRM.Tests.Services.FileValidationServiceTests.IsValidImageSignatureShouldReturnFalseForShortFile [< 1 ms]
+  Error Message:
+   System.MissingMethodException : Method not found: 'System.String FileTypeChecker.Abstracts.IFileType.get_MimeType()'.
+  Stack Trace:
+     at Rvnx.CRM.Core.Services.FileValidationService.IsValidImageSignature(Byte[] fileBytes, String extension)
+   at Rvnx.CRM.Tests.Services.FileValidationServiceTests.IsValidImageSignatureShouldReturnFalseForShortFile() in /app/Rvnx.CRM.Tests/Services/FileValidationServiceTests.cs:line 114
+   at System.RuntimeMethodHandle.InvokeMethod(Object target, Void** arguments, Signature sig, Boolean isConstructor)
+   at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+  Failed Rvnx.CRM.Tests.Services.FileValidationServiceTests.IsValidImageSignatureShouldReturnFalseForMismatchingImageExtension [< 1 ms]
+  Error Message:
+   System.MissingMethodException : Method not found: 'System.String FileTypeChecker.Abstracts.IFileType.get_MimeType()'.
+  Stack Trace:
+     at Rvnx.CRM.Core.Services.FileValidationService.IsValidImageSignature(Byte[] fileBytes, String extension)
+   at Rvnx.CRM.Tests.Services.FileValidationServiceTests.IsValidImageSignatureShouldReturnFalseForMismatchingImageExtension() in /app/Rvnx.CRM.Tests/Services/FileValidationServiceTests.cs:line 207
+   at System.RuntimeMethodHandle.InvokeMethod(Object target, Void** arguments, Signature sig, Boolean isConstructor)
+   at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+  Failed Rvnx.CRM.Tests.Services.FileValidationServiceTests.IsValidFileSignatureShouldReturnTrueForValidDocx [< 1 ms]
+  Error Message:
+   System.MissingMethodException : Method not found: 'System.String FileTypeChecker.Abstracts.IFileType.get_MimeType()'.
+  Stack Trace:
+     at Rvnx.CRM.Core.Services.FileValidationService.IsValidFileSignature(Byte[] fileBytes, String extension)
+   at Rvnx.CRM.Tests.Services.FileValidationServiceTests.IsValidFileSignatureShouldReturnTrueForValidDocx() in /app/Rvnx.CRM.Tests/Services/FileValidationServiceTests.cs:line 157
+   at System.RuntimeMethodHandle.InvokeMethod(Object target, Void** arguments, Signature sig, Boolean isConstructor)
+   at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+[xUnit.net 00:00:04.75]     Rvnx.CRM.Tests.Services.FileValidationServiceTests.IsValidFileSignatureShouldReturnFalseWhenFileBytesIsNull [FAIL]
+[xUnit.net 00:00:04.75]     Rvnx.CRM.Tests.Services.FileValidationServiceTests.IsValidImageSignatureShouldReturnFalseForInvalidSignature [FAIL]
+[xUnit.net 00:00:04.75]     Rvnx.CRM.Tests.Services.FileValidationServiceTests.IsValidImageSignatureShouldReturnFalseWhenFileBytesIsNull [FAIL]
+[xUnit.net 00:00:04.76]     Rvnx.CRM.Tests.Services.FileValidationServiceTests.IsValidFileSignatureShouldReturnTrueForValidImage [FAIL]
+[xUnit.net 00:00:04.76]     Rvnx.CRM.Tests.Services.FileValidationServiceTests.IsValidFileSignatureShouldReturnFalseForMismatchingExtensionAndContent [FAIL]
+[xUnit.net 00:00:04.76]     Rvnx.CRM.Tests.Services.FileValidationServiceTests.IsValidImageSignatureShouldHandleCaseInsensitiveExtension [FAIL]
+[xUnit.net 00:00:04.76]     Rvnx.CRM.Tests.Services.FileValidationServiceTests.IsValidFileSignatureShouldReturnFalseForUnknownExtension [FAIL]
+  Failed Rvnx.CRM.Tests.Services.FileValidationServiceTests.IsValidFileSignatureShouldReturnFalseWhenFileBytesIsNull [< 1 ms]
+  Error Message:
+   System.MissingMethodException : Method not found: 'System.String FileTypeChecker.Abstracts.IFileType.get_MimeType()'.
+  Stack Trace:
+     at Rvnx.CRM.Core.Services.FileValidationService.IsValidFileSignature(Byte[] fileBytes, String extension)
+   at Rvnx.CRM.Tests.Services.FileValidationServiceTests.IsValidFileSignatureShouldReturnFalseWhenFileBytesIsNull() in /app/Rvnx.CRM.Tests/Services/FileValidationServiceTests.cs:line 191
+   at System.RuntimeMethodHandle.InvokeMethod(Object target, Void** arguments, Signature sig, Boolean isConstructor)
+   at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+  Failed Rvnx.CRM.Tests.Services.FileValidationServiceTests.IsValidImageSignatureShouldReturnFalseForInvalidSignature [< 1 ms]
+  Error Message:
+   System.MissingMethodException : Method not found: 'System.String FileTypeChecker.Abstracts.IFileType.get_MimeType()'.
+  Stack Trace:
+     at Rvnx.CRM.Core.Services.FileValidationService.IsValidImageSignature(Byte[] fileBytes, String extension)
+   at Rvnx.CRM.Tests.Services.FileValidationServiceTests.IsValidImageSignatureShouldReturnFalseForInvalidSignature() in /app/Rvnx.CRM.Tests/Services/FileValidationServiceTests.cs:line 107
+   at System.RuntimeMethodHandle.InvokeMethod(Object target, Void** arguments, Signature sig, Boolean isConstructor)
+   at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+  Failed Rvnx.CRM.Tests.Services.FileValidationServiceTests.IsValidImageSignatureShouldReturnFalseWhenFileBytesIsNull [< 1 ms]
+  Error Message:
+   System.MissingMethodException : Method not found: 'System.String FileTypeChecker.Abstracts.IFileType.get_MimeType()'.
+  Stack Trace:
+     at Rvnx.CRM.Core.Services.FileValidationService.IsValidImageSignature(Byte[] fileBytes, String extension)
+   at Rvnx.CRM.Tests.Services.FileValidationServiceTests.IsValidImageSignatureShouldReturnFalseWhenFileBytesIsNull() in /app/Rvnx.CRM.Tests/Services/FileValidationServiceTests.cs:line 127
+   at System.RuntimeMethodHandle.InvokeMethod(Object target, Void** arguments, Signature sig, Boolean isConstructor)
+   at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+  Failed Rvnx.CRM.Tests.Services.FileValidationServiceTests.IsValidFileSignatureShouldReturnTrueForValidImage [< 1 ms]
+  Error Message:
+   System.MissingMethodException : Method not found: 'System.String FileTypeChecker.Abstracts.IFileType.get_MimeType()'.
+  Stack Trace:
+     at Rvnx.CRM.Core.Services.FileValidationService.IsValidFileSignature(Byte[] fileBytes, String extension)
+   at Rvnx.CRM.Tests.Services.FileValidationServiceTests.IsValidFileSignatureShouldReturnTrueForValidImage() in /app/Rvnx.CRM.Tests/Services/FileValidationServiceTests.cs:line 185
+   at System.RuntimeMethodHandle.InvokeMethod(Object target, Void** arguments, Signature sig, Boolean isConstructor)
+   at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+  Failed Rvnx.CRM.Tests.Services.FileValidationServiceTests.IsValidFileSignatureShouldReturnFalseForMismatchingExtensionAndContent [< 1 ms]
+  Error Message:
+   System.MissingMethodException : Method not found: 'System.String FileTypeChecker.Abstracts.IFileType.get_MimeType()'.
+  Stack Trace:
+     at Rvnx.CRM.Core.Services.FileValidationService.IsValidFileSignature(Byte[] fileBytes, String extension)
+   at Rvnx.CRM.Tests.Services.FileValidationServiceTests.IsValidFileSignatureShouldReturnFalseForMismatchingExtensionAndContent() in /app/Rvnx.CRM.Tests/Services/FileValidationServiceTests.cs:line 199
+   at System.RuntimeMethodHandle.InvokeMethod(Object target, Void** arguments, Signature sig, Boolean isConstructor)
+   at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+  Failed Rvnx.CRM.Tests.Services.FileValidationServiceTests.IsValidImageSignatureShouldHandleCaseInsensitiveExtension [< 1 ms]
+  Error Message:
+   System.MissingMethodException : Method not found: 'System.String FileTypeChecker.Abstracts.IFileType.get_MimeType()'.
+  Stack Trace:
+     at Rvnx.CRM.Core.Services.FileValidationService.IsValidImageSignature(Byte[] fileBytes, String extension)
+   at Rvnx.CRM.Tests.Services.FileValidationServiceTests.IsValidImageSignatureShouldHandleCaseInsensitiveExtension() in /app/Rvnx.CRM.Tests/Services/FileValidationServiceTests.cs:line 121
+   at System.RuntimeMethodHandle.InvokeMethod(Object target, Void** arguments, Signature sig, Boolean isConstructor)
+   at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+  Failed Rvnx.CRM.Tests.Services.FileValidationServiceTests.IsValidFileSignatureShouldReturnFalseForUnknownExtension [< 1 ms]
+  Error Message:
+   System.MissingMethodException : Method not found: 'System.String FileTypeChecker.Abstracts.IFileType.get_MimeType()'.
+  Stack Trace:
+     at Rvnx.CRM.Core.Services.FileValidationService.IsValidFileSignature(Byte[] fileBytes, String extension)
+   at Rvnx.CRM.Tests.Services.FileValidationServiceTests.IsValidFileSignatureShouldReturnFalseForUnknownExtension() in /app/Rvnx.CRM.Tests/Services/FileValidationServiceTests.cs:line 178
+   at System.RuntimeMethodHandle.InvokeMethod(Object target, Void** arguments, Signature sig, Boolean isConstructor)
+   at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+
+Failed!  - Failed:    26, Passed:   266, Skipped:     0, Total:   292, Duration: 5 s - Rvnx.CRM.Tests.dll (net8.0)
