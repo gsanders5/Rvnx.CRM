@@ -665,60 +665,6 @@ namespace Rvnx.CRM.Infrastructure.Migrations
                     b.ToTable("Pet");
                 });
 
-            modelBuilder.Entity("Rvnx.CRM.Core.Models.Contact.PhoneNumber", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("TEXT");
-
-                    b.Property<Guid?>("ContactId")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("CreatedBy")
-                        .IsRequired()
-                        .HasMaxLength(256)
-                        .HasColumnType("TEXT");
-
-                    b.Property<DateTime>("CreatedDate")
-                        .HasColumnType("TEXT");
-
-                    b.Property<Guid?>("GroupId")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("LastChangedBy")
-                        .IsRequired()
-                        .HasMaxLength(256)
-                        .HasColumnType("TEXT");
-
-                    b.Property<DateTime>("LastChangedDate")
-                        .HasColumnType("TEXT");
-
-                    b.Property<int>("Type")
-                        .HasMaxLength(20)
-                        .HasColumnType("INTEGER");
-
-                    b.Property<Guid?>("UserId")
-                        .HasMaxLength(450)
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Value")
-                        .HasMaxLength(20)
-                        .HasColumnType("TEXT");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ContactId");
-
-                    b.HasIndex("GroupId");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("PhoneNumber", t =>
-                        {
-                            t.HasCheckConstraint("CHK_PhoneNumber_Owner", "ContactId IS NOT NULL");
-                        });
-                });
-
             modelBuilder.Entity("Rvnx.CRM.Core.Models.Contact.Relationship", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1163,16 +1109,6 @@ namespace Rvnx.CRM.Infrastructure.Migrations
                         .HasForeignKey("ContactId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.Navigation("Contact");
-                });
-
-            modelBuilder.Entity("Rvnx.CRM.Core.Models.Contact.PhoneNumber", b =>
-                {
-                    b.HasOne("Rvnx.CRM.Core.Models.Contact.Contact", "Contact")
-                        .WithMany()
-                        .HasForeignKey("ContactId")
-                        .OnDelete(DeleteBehavior.Cascade);
 
                     b.Navigation("Contact");
                 });

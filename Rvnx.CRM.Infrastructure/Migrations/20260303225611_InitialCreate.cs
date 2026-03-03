@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore.Migrations;
+﻿using System;
+using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
@@ -8,7 +9,7 @@ namespace Rvnx.CRM.Infrastructure.Migrations
     public partial class InitialCreate : Migration
     {
         /// <inheritdoc />
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Performance", "CA1861:Prefer 'static readonly' fields over constant array arguments", Justification = "EF Core Migrations are auto-generated and use inline arrays for column definitions.")]
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Performance", "CA1861:Avoid constant arrays as arguments", Justification = "This is a one-time run for DB migrations.")]
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.CreateTable(
@@ -299,33 +300,6 @@ namespace Rvnx.CRM.Infrastructure.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "PhoneNumber",
-                columns: table => new
-                {
-                    Id = table.Column<Guid>(type: "TEXT", nullable: false),
-                    ContactId = table.Column<Guid>(type: "TEXT", nullable: true),
-                    Type = table.Column<int>(type: "INTEGER", maxLength: 20, nullable: false),
-                    Value = table.Column<string>(type: "TEXT", maxLength: 20, nullable: true),
-                    CreatedBy = table.Column<string>(type: "TEXT", maxLength: 256, nullable: false),
-                    LastChangedBy = table.Column<string>(type: "TEXT", maxLength: 256, nullable: false),
-                    CreatedDate = table.Column<DateTime>(type: "TEXT", nullable: false),
-                    LastChangedDate = table.Column<DateTime>(type: "TEXT", nullable: false),
-                    UserId = table.Column<Guid>(type: "TEXT", maxLength: 450, nullable: true),
-                    GroupId = table.Column<Guid>(type: "TEXT", nullable: true)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_PhoneNumber", x => x.Id);
-                    table.CheckConstraint("CHK_PhoneNumber_Owner", "ContactId IS NOT NULL");
-                    table.ForeignKey(
-                        name: "FK_PhoneNumber_Contact_ContactId",
-                        column: x => x.ContactId,
-                        principalTable: "Contact",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                });
-
-            migrationBuilder.CreateTable(
                 name: "SignificantDate",
                 columns: table => new
                 {
@@ -557,13 +531,11 @@ namespace Rvnx.CRM.Infrastructure.Migrations
                 table: "Contact",
                 column: "UserId");
 
-
             migrationBuilder.CreateIndex(
                 name: "IX_ContactLabel_ContactId_LabelId",
                 table: "ContactLabel",
                 columns: new[] { "ContactId", "LabelId" },
                 unique: true);
-
 
             migrationBuilder.CreateIndex(
                 name: "IX_ContactLabel_GroupId",
@@ -666,38 +638,19 @@ namespace Rvnx.CRM.Infrastructure.Migrations
                 column: "UserId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_PhoneNumber_ContactId",
-                table: "PhoneNumber",
-                column: "ContactId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_PhoneNumber_GroupId",
-                table: "PhoneNumber",
-                column: "GroupId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_PhoneNumber_UserId",
-                table: "PhoneNumber",
-                column: "UserId");
-
-
-            migrationBuilder.CreateIndex(
                 name: "IX_Relationship_EntityId_EntityType",
                 table: "Relationship",
                 columns: new[] { "EntityId", "EntityType" });
-
 
             migrationBuilder.CreateIndex(
                 name: "IX_Relationship_GroupId",
                 table: "Relationship",
                 column: "GroupId");
 
-
             migrationBuilder.CreateIndex(
                 name: "IX_Relationship_RelatedEntityId_EntityType",
                 table: "Relationship",
                 columns: new[] { "RelatedEntityId", "EntityType" });
-
 
             migrationBuilder.CreateIndex(
                 name: "IX_Relationship_UserId",
@@ -709,13 +662,11 @@ namespace Rvnx.CRM.Infrastructure.Migrations
                 table: "ReminderLog",
                 column: "GroupId");
 
-
             migrationBuilder.CreateIndex(
                 name: "IX_ReminderLog_ReminderOffsetId_OccurrenceDate",
                 table: "ReminderLog",
                 columns: new[] { "ReminderOffsetId", "OccurrenceDate" },
                 unique: true);
-
 
             migrationBuilder.CreateIndex(
                 name: "IX_ReminderLog_UserId",
@@ -805,9 +756,6 @@ namespace Rvnx.CRM.Infrastructure.Migrations
 
             migrationBuilder.DropTable(
                 name: "Pet");
-
-            migrationBuilder.DropTable(
-                name: "PhoneNumber");
 
             migrationBuilder.DropTable(
                 name: "Relationship");

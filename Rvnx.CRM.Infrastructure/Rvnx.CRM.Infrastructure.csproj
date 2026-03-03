@@ -38,7 +38,6 @@
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 			<PrivateAssets>all</PrivateAssets>
 		</PackageReference>
-	  <Folder Include="Migrations\" />
 	</ItemGroup>
 
 </Project>

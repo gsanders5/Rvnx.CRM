@@ -15,7 +15,6 @@ public class CRMDbContext(DbContextOptions<CRMDbContext> options, ICurrentUserSe
 
     public DbSet<Contact> Contacts { get; set; }
     public DbSet<Employer> Employers { get; set; }
-    public DbSet<PhoneNumber> PhoneNumbers { get; set; }
     public DbSet<Note> Notes { get; set; }
     public DbSet<Attachment> Attachments { get; set; }
     public DbSet<AttachmentContent> AttachmentContents { get; set; }
@@ -100,15 +99,6 @@ public class CRMDbContext(DbContextOptions<CRMDbContext> options, ICurrentUserSe
 
         modelBuilder.Entity<Address>()
             .ToTable(t => t.HasCheckConstraint("CHK_Address_Owner", "ContactId IS NOT NULL"));
-
-        modelBuilder.Entity<PhoneNumber>()
-            .HasOne(e => e.Contact)
-            .WithMany()
-            .HasForeignKey(e => e.ContactId)
-            .OnDelete(DeleteBehavior.Cascade);
-
-        modelBuilder.Entity<PhoneNumber>()
-            .ToTable(t => t.HasCheckConstraint("CHK_PhoneNumber_Owner", "ContactId IS NOT NULL"));
 
         modelBuilder.Entity<Note>()
             .HasOne(e => e.Contact)
