@@ -61,6 +61,7 @@ public class VCardService : IVCardService
             // v8: Name uses Surnames and Given (both IReadOnlyList<string>)
             contact.LastName = n.Surnames.Count > 0 ? n.Surnames[0] : "";
             contact.FirstName = n.Given.Count > 0 ? n.Given[0] : "";
+            contact.MaidenName = n.Surnames.Count > 1 ? n.Surnames[1] : null;
         }
 
         // Name Fallback using Display Name
@@ -465,13 +466,19 @@ public class VCardService : IVCardService
 
     public byte[] ExportVCard(Contact contact)
     {
+        var nameBuilder = NameBuilder
+            .Create()
+            .AddSurname(contact.LastName ?? "")
+            .AddGiven(contact.FirstName);
+
+        if (!string.IsNullOrEmpty(contact.MaidenName))
+        {
+            nameBuilder.AddSurname(contact.MaidenName);
+        }
+
         VCard vCard = VCardBuilder
             .Create()
-            .NameViews.Add(NameBuilder
-                .Create()
-                .AddSurname(contact.LastName ?? "")
-                .AddGiven(contact.FirstName)
-                .Build())
+            .NameViews.Add(nameBuilder.Build())
             .DisplayNames.Add(contact.FullName)
             .VCard;
 
