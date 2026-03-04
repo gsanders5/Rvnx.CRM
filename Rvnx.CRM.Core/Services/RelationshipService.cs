@@ -207,19 +207,24 @@ namespace Rvnx.CRM.Core.Services
             string group = t.Category;
 
             string fwdText = t.IsSymmetric ? $"is {t.Name} of" : $"is {t.Name} of ({t.OppositeName})";
-            yield return new SelectOptionDto
-            {
-                Value = $"{t.Id}_Fwd", Text = fwdText, Group = group, Selected = selectedValue == $"{t.Id}_Fwd"
-            };
+            yield return CreateSelectOptionDto($"{t.Id}_Fwd", fwdText, group, selectedValue);
 
             if (!t.IsSymmetric)
             {
                 string revText = $"is {t.OppositeName} of ({t.Name})";
-                yield return new SelectOptionDto
-                {
-                    Value = $"{t.Id}_Rev", Text = revText, Group = group, Selected = selectedValue == $"{t.Id}_Rev"
-                };
+                yield return CreateSelectOptionDto($"{t.Id}_Rev", revText, group, selectedValue);
             }
+        }
+
+        private static SelectOptionDto CreateSelectOptionDto(string value, string text, string group, string? selectedValue)
+        {
+            return new SelectOptionDto
+            {
+                Value = value,
+                Text = text,
+                Group = group,
+                Selected = selectedValue == value
+            };
         }
 
         public List<RelationshipTypeDefinition> GetRelationshipTypes(string entityType)
