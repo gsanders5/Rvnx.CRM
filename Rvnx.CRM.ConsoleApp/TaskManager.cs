@@ -41,6 +41,7 @@ internal static class TaskManager
                 "LIST-USERS" => await ConsoleCommands.RunListUsersAsync(services),
                 "PROMOTE-USER" => await ConsoleCommands.RunPromoteUserAsync(services, args),
                 "DEMOTE-USER" => await ConsoleCommands.RunDemoteUserAsync(services, args),
+                "MERGE-USERS" => await ConsoleCommands.RunMergeUsersAsync(services, args),
                 _ => false
             };
 
@@ -59,5 +60,4 @@ internal static class TaskManager
             return 1;
         }
     }
-
 }

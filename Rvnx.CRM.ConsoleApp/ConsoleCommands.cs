@@ -1,5 +1,8 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Rvnx.CRM.Core.Interfaces;
+using Rvnx.CRM.Core.Models;
+using Rvnx.CRM.Core.Models.Contact;
 
 namespace Rvnx.CRM.ConsoleApp;
 
@@ -7,8 +10,8 @@ internal static class ConsoleCommands
 {
     public static async Task<bool> RunCountContactsAsync(IServiceProvider services)
     {
-        Core.Interfaces.IRepository repository = services.GetRequiredService<Rvnx.CRM.Core.Interfaces.IRepository>();
-        int count = await repository.QueryUnfiltered<Rvnx.CRM.Core.Models.Contact.Contact>()
+        IRepository repository = services.GetRequiredService<IRepository>();
+        int count = await repository.QueryUnfiltered<Contact>()
             .CountAsync(c => !c.IsPartial);
         Console.WriteLine($"Total contacts: {count}");
         return true;
@@ -16,18 +19,19 @@ internal static class ConsoleCommands
 
     public static async Task<bool> RunSendDateRemindersAsync(IServiceProvider services)
     {
-        Core.Interfaces.IReminderNotificationService service = services.GetRequiredService<Rvnx.CRM.Core.Interfaces.IReminderNotificationService>();
+        IReminderNotificationService service =
+            services.GetRequiredService<IReminderNotificationService>();
         await service.SendDueRemindersAsync(DateOnly.FromDateTime(DateTime.Today));
         return true;
     }
 
     public static async Task<bool> RunListUsersAsync(IServiceProvider services)
     {
-        Core.Interfaces.IRepository repository = services.GetRequiredService<Core.Interfaces.IRepository>();
-        List<Core.Models.User> users = await repository.QueryUnfiltered<Core.Models.User>().ToListAsync();
+        IRepository repository = services.GetRequiredService<IRepository>();
+        List<User> users = await repository.QueryUnfiltered<User>().ToListAsync();
 
         Console.WriteLine($"Found {users.Count} users:");
-        foreach (Core.Models.User user in users)
+        foreach (User user in users)
         {
             string adminStatus = user.IsAdministrator ? "[Admin]" : "[User]";
             Console.WriteLine($"- {user.Email} {adminStatus} (Name: {user.DisplayName ?? "N/A"})");
@@ -45,9 +49,9 @@ internal static class ConsoleCommands
         }
 
         string email = args[1];
-        Core.Interfaces.IRepository repository = services.GetRequiredService<Core.Interfaces.IRepository>();
+        IRepository repository = services.GetRequiredService<IRepository>();
 
-        Core.Models.User? user = await repository.QueryUnfiltered<Core.Models.User>()
+        User? user = await repository.QueryUnfiltered<User>()
             .FirstOrDefaultAsync(u => EF.Functions.Like(u.Email, email));
 
         if (user == null)
@@ -101,6 +105,82 @@ internal static class ConsoleCommands
         await repository.SaveChangesAsync();
 
         Console.WriteLine($"Successfully demoted user '{email}' from administrator.");
+        return true;
+    }
+
+    /// <summary>
+    /// Usage:
+    ///   MERGE-USERS                                    — list all users
+    ///   MERGE-USERS &lt;email1&gt; &lt;email2&gt;                  — dry-run (shows what would happen)
+    ///   MERGE-USERS &lt;email1&gt; &lt;email2&gt; --confirm        — actually performs the merge
+    ///
+    /// email1 is the TARGET (keeps the data); email2 is the SOURCE (is deleted).
+    /// </summary>
+    public static async Task<bool> RunMergeUsersAsync(IServiceProvider services, string[] args)
+    {
+        IDebugOperationsService debugOps = services.GetRequiredService<IDebugOperationsService>();
+
+        // No args — just list users.
+        if (args.Length < 3)
+        {
+            List<MergeUserDto> users = await debugOps.GetAllUsersWithGroupsAsync();
+            Console.WriteLine($"{"Email / Name",-40} {"Group",-30} Members");
+            Console.WriteLine(new string('-', 80));
+            foreach (MergeUserDto u in users)
+            {
+                Console.WriteLine($"{u.Name,-40} {u.GroupName,-30} {u.GroupMemberCount}");
+                Console.WriteLine($"  ID: {u.Id}");
+            }
+
+            Console.WriteLine();
+            Console.WriteLine("Usage: MERGE-USERS <email1> <email2> [--confirm]");
+            Console.WriteLine("  email1 = target (keeps data), email2 = source (deleted)");
+            return true;
+        }
+
+        string email1 = args[1];
+        string email2 = args[2];
+        bool confirmed = args.Length >= 4 && args[3].Equals("--confirm", StringComparison.OrdinalIgnoreCase);
+
+        // Resolve emails to user records.
+        IRepository repository = services.GetRequiredService<IRepository>();
+
+        User? user1 = await repository.QueryUnfiltered<User>()
+            .FirstOrDefaultAsync(u => EF.Functions.Like(u.Email, email1));
+        User? user2 = await repository.QueryUnfiltered<User>()
+            .FirstOrDefaultAsync(u => EF.Functions.Like(u.Email, email2));
+
+        if (user1 == null)
+        {
+            Console.WriteLine($"Error: User '{email1}' not found.");
+            return false;
+        }
+
+        if (user2 == null)
+        {
+            Console.WriteLine($"Error: User '{email2}' not found.");
+            return false;
+        }
+
+        Console.WriteLine($"TARGET (keeps data): {user1.Email} (ID: {user1.Id})");
+        Console.WriteLine($"SOURCE (will be deleted): {user2.Email} (ID: {user2.Id})");
+
+        if (!confirmed)
+        {
+            Console.WriteLine();
+            Console.WriteLine("Dry-run complete. Re-run with --confirm to perform the merge.");
+            return true;
+        }
+
+        MergeAccountsResult result = await debugOps.MergeAccountsAsync(user1.Id, user2.Id);
+
+        if (!result.Success)
+        {
+            Console.WriteLine($"Error: {result.Error ?? "An error occurred during merge."}");
+            return false;
+        }
+
+        Console.WriteLine(result.Message ?? "Merge completed successfully.");
         return true;
     }
 }
