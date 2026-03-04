@@ -81,7 +81,9 @@ public class DashboardService(IRepository repository, ILogger<DashboardService> 
         {
             result.GraphLinks.Add(new GraphLinkDto
             {
-                Source = rel.EntityId.ToString(), Target = rel.RelatedEntityId.ToString(), Type = "Relationship"
+                Source = rel.EntityId.ToString(),
+                Target = rel.RelatedEntityId.ToString(),
+                Type = "Relationship"
             });
         }
 

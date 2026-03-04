@@ -103,12 +103,7 @@ namespace Rvnx.CRM.Core.Services
                 }
 
                 // Use the Extension property instead of MimeType for version compatibility.
-                if (!ExtensionToFileTypeExtensions.TryGetValue(extension, out HashSet<string>? validTypeExts))
-                {
-                    return false;
-                }
-
-                return validTypeExts.Contains(fileType.Extension);
+                return ExtensionToFileTypeExtensions.TryGetValue(extension, out HashSet<string>? validTypeExts) && validTypeExts.Contains(fileType.Extension);
             }
             catch (Exception)
             {
@@ -149,12 +144,7 @@ namespace Rvnx.CRM.Core.Services
                 }
 
                 // Use the Extension property instead of MimeType for version compatibility.
-                if (!ExtensionToFileTypeExtensions.TryGetValue(extension, out HashSet<string>? validTypeExts))
-                {
-                    return false;
-                }
-
-                return validTypeExts.Contains(fileType.Extension);
+                return ExtensionToFileTypeExtensions.TryGetValue(extension, out HashSet<string>? validTypeExts) && validTypeExts.Contains(fileType.Extension);
             }
             catch
             {
