@@ -247,6 +247,32 @@ function initializeNetworkGraph(nodes, links) {
 
     cameraLayer.appendChild(g);
 
+    g.addEventListener("mouseover", () => {
+      linkElements.forEach((linkItem) => {
+        if (
+          linkItem.data.source === node.id ||
+          linkItem.data.target === node.id
+        ) {
+          linkItem.el.setAttribute("stroke", "#0d6efd"); // Bootstrap primary blue
+          linkItem.el.setAttribute("stroke-width", "3");
+          linkItem.el.setAttribute("stroke-opacity", "1");
+        }
+      });
+    });
+
+    g.addEventListener("mouseout", () => {
+      linkElements.forEach((linkItem) => {
+        if (
+          linkItem.data.source === node.id ||
+          linkItem.data.target === node.id
+        ) {
+          linkItem.el.setAttribute("stroke", "#6c757d"); // Default gray
+          linkItem.el.setAttribute("stroke-width", "2");
+          linkItem.el.setAttribute("stroke-opacity", "0.5");
+        }
+      });
+    });
+
     g.addEventListener("mousedown", (e) => startDrag(e, node));
     g.addEventListener("click", (e) => {
       if (!node.wasDragged) {
