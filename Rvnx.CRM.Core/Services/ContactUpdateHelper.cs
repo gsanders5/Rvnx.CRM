@@ -72,39 +72,38 @@ internal static class ContactUpdateHelper
             List<ReminderOffset> offsets = await repository.ListAsync<ReminderOffset>(o => o.SignificantDateId == targetDate.Id && o.DaysBeforeEvent == 0);
             ReminderOffset? offset = offsets.FirstOrDefault();
 
-            if (remindOnBirthday)
-            {
-                if (offset == null)
-                {
-                    await repository.AddAsync(new ReminderOffset
-                    {
-                        Id = Guid.NewGuid(),
-                        SignificantDateId = targetDate.Id,
-                        DaysBeforeEvent = 0,
-                        IsActive = true
-                    });
-                }
-                else if (!offset.IsActive)
-                {
-                    offset.IsActive = true;
-                    await repository.UpdateAsync(offset);
-                }
-            }
-            else
-            {
-                if (offset != null)
-                {
-                    if (offset.IsActive)
-                    {
-                        offset.IsActive = false;
-                        await repository.UpdateAsync(offset);
-                    }
-                }
-            }
+            await SyncReminderOffsetAsync(repository, targetDate.Id, offset, remindOnBirthday);
         }
         else if (existingDate != null)
         {
             await repository.DeleteAsync<SignificantDate>(existingDate.Id);
+        }
+    }
+
+    private static async Task SyncReminderOffsetAsync(IRepository repository, Guid targetDateId, ReminderOffset? offset, bool remindOnBirthday)
+    {
+        if (remindOnBirthday)
+        {
+            if (offset == null)
+            {
+                await repository.AddAsync(new ReminderOffset
+                {
+                    Id = Guid.NewGuid(),
+                    SignificantDateId = targetDateId,
+                    DaysBeforeEvent = 0,
+                    IsActive = true
+                });
+            }
+            else if (!offset.IsActive)
+            {
+                offset.IsActive = true;
+                await repository.UpdateAsync(offset);
+            }
+        }
+        else if (offset?.IsActive == true)
+        {
+            offset.IsActive = false;
+            await repository.UpdateAsync(offset);
         }
     }
 }
