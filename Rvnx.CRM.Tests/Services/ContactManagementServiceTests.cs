@@ -249,6 +249,31 @@ public class ContactManagementServiceTests
         }
 
         [Fact]
+        public async Task UnsetProfilePhotoAsyncUsesUpdateRangeToAvoidNPlusOne()
+        {
+            Guid contactId = Guid.NewGuid();
+            List<Attachment> existingAttachments = [
+                new() { Id = Guid.NewGuid(), ContactId = contactId, AttachmentType = AttachmentTypes.ProfileImage },
+                new() { Id = Guid.NewGuid(), ContactId = contactId, AttachmentType = AttachmentTypes.ProfileImage },
+                new() { Id = Guid.NewGuid(), ContactId = contactId, AttachmentType = AttachmentTypes.ProfileImage }
+            ];
+
+            _repositoryMock.Setup(r => r.ListAsync<Attachment>(It.IsAny<Expression<Func<Attachment, bool>>>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync((Expression<Func<Attachment, bool>> predicate, CancellationToken ct) =>
+                {
+                    return existingAttachments.Where(predicate.Compile()).ToList();
+                });
+
+            await _service.UnsetProfilePhotoAsync(contactId);
+
+            _repositoryMock.Verify(r => r.UpdateAsync(It.IsAny<Attachment>(), It.IsAny<CancellationToken>()), Times.Never);
+            _repositoryMock.Verify(r => r.UpdateRangeAsync(It.IsAny<IEnumerable<Attachment>>(), It.IsAny<CancellationToken>()), Times.Once);
+            _repositoryMock.Verify(r => r.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
+
+            Assert.All(existingAttachments, a => Assert.Equal("General", a.AttachmentType));
+        }
+
+        [Fact]
         public async Task CreateContactAsyncUsesSingleSaveChangesAsync()
         {
             _repositoryMock.Setup(r => r.ListAsync<ReminderOffset>(It.IsAny<System.Linq.Expressions.Expression<Func<ReminderOffset, bool>>>(), It.IsAny<CancellationToken>()))

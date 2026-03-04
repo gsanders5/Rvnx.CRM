@@ -82,6 +82,11 @@ public interface IRepository
     /// </summary>
     Task<T> UpdateAsync<T>(T entity, CancellationToken cancellationToken = default) where T : BaseEntity;
 
+    /// <summary>
+    /// Updates a range of existing entities.
+    /// </summary>
+    Task UpdateRangeAsync<T>(IEnumerable<T> entities, CancellationToken cancellationToken = default) where T : BaseEntity;
+
 
     /// <summary>
     /// Deletes an entity by its ID.
