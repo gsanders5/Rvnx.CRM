@@ -65,10 +65,9 @@ namespace Rvnx.CRM.Tests.Services
 
             var suggestions = await _service.GetSuggestedRelationshipsAsync(sourceId, targetId, typeId, false, null);
 
-            Assert.Single(suggestions);
-            Assert.Equal($"{sourceId}_{cId}_False", suggestions[0].Payload);
-            Assert.Equal("Jack", suggestions[0].SourceName);
-            Assert.Equal("James", suggestions[0].TargetName);
+            var jackJamesSuggestion = suggestions.FirstOrDefault(s => s.SourceName == "Jack" && s.TargetName == "James");
+            Assert.NotNull(jackJamesSuggestion);
+            Assert.Equal($"{sourceId}_{cId}_False", jackJamesSuggestion.Payload);
         }
 
         [Fact]

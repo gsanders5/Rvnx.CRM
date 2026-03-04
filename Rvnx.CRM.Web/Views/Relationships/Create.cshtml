@@ -455,26 +455,70 @@
                         this.suggestionsContainer.innerHTML = '';
 
                         if (data && data.length > 0) {
-                            data.forEach(sugg => {
-                                const div = document.createElement('div');
-                                div.className = 'form-check mb-1';
+                            const card = document.createElement('div');
+                            card.className = 'card bg-primary-subtle border-primary border-opacity-25 mb-3 shadow-none';
+
+                            const cardBody = document.createElement('div');
+                            cardBody.className = 'card-body p-3';
+
+                            const header = document.createElement('h6');
+                            header.className = 'card-title text-primary d-flex align-items-center mb-2';
+                            header.innerHTML = '<i class="bi bi-magic me-2 fs-5"></i> Suggested Connections';
+                            cardBody.appendChild(header);
+
+                            const desc = document.createElement('p');
+                            desc.className = 'small text-muted mb-3';
+                            desc.textContent = 'Based on the relationship network, we found some other connections you might want to establish:';
+                            cardBody.appendChild(desc);
+
+                            const listGroup = document.createElement('div');
+                            listGroup.className = 'list-group list-group-flush border-top border-primary border-opacity-10';
+
+                            data.forEach((sugg, index) => {
+                                const listItem = document.createElement('div');
+                                listItem.className = 'list-group-item bg-transparent px-0 py-2 border-primary border-opacity-10';
+
+                                const switchDiv = document.createElement('div');
+                                switchDiv.className = 'form-check form-switch d-flex align-items-center mb-0';
 
                                 const input = document.createElement('input');
-                                input.className = 'form-check-input';
+                                input.className = 'form-check-input fs-5 me-3';
                                 input.type = 'checkbox';
+                                input.role = 'switch';
                                 input.name = 'SuggestedRelationships';
                                 input.value = sugg.payload;
-                                input.id = `sugg_${sugg.payload}`;
+                                // Sanitize the payload for ID use
+                                const safeId = sugg.payload.replace(/[^a-zA-Z0-9]/g, '_');
+                                input.id = `sugg_${safeId}_${index}`;
 
                                 const label = document.createElement('label');
-                                label.className = 'form-check-label fw-bold';
+                                label.className = 'form-check-label pt-1';
                                 label.htmlFor = input.id;
-                                label.textContent = `Is ${sugg.sourceName} also a ${sugg.relationshipName} of ${sugg.targetName}?`;
 
-                                div.appendChild(input);
-                                div.appendChild(label);
-                                this.suggestionsContainer.appendChild(div);
+                                label.appendChild(document.createTextNode('Set '));
+                                const strong1 = document.createElement('strong');
+                                strong1.textContent = sugg.sourceName;
+                                label.appendChild(strong1);
+
+                                label.appendChild(document.createTextNode(' as '));
+                                const strong2 = document.createElement('strong');
+                                strong2.textContent = sugg.relationshipName;
+                                label.appendChild(strong2);
+
+                                label.appendChild(document.createTextNode(' of '));
+                                const strong3 = document.createElement('strong');
+                                strong3.textContent = sugg.targetName;
+                                label.appendChild(strong3);
+
+                                switchDiv.appendChild(input);
+                                switchDiv.appendChild(label);
+                                listItem.appendChild(switchDiv);
+                                listGroup.appendChild(listItem);
                             });
+
+                            cardBody.appendChild(listGroup);
+                            card.appendChild(cardBody);
+                            this.suggestionsContainer.appendChild(card);
 
                             this.suggestionsContainer.style.display = 'block';
                         } else {

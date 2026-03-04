@@ -333,27 +333,20 @@ namespace Rvnx.CRM.Core.Services
                 q.Enqueue(startId);
                 comp.Add(startId);
 
-                var allEdges = await repository.ListAsNoTrackingAsync<Relationship>(r => r.RelationshipTypeId == typeIdToSearch);
-                var adj = new Dictionary<Guid, List<Guid>>();
-                foreach (var edge in allEdges)
-                {
-                    if (!adj.ContainsKey(edge.EntityId)) adj[edge.EntityId] = [];
-                    if (!adj.ContainsKey(edge.RelatedEntityId)) adj[edge.RelatedEntityId] = [];
-                    adj[edge.EntityId].Add(edge.RelatedEntityId);
-                    adj[edge.RelatedEntityId].Add(edge.EntityId);
-                }
+                int maxNodes = 50;
 
-                while (q.Count > 0)
+                while (q.Count > 0 && comp.Count < maxNodes)
                 {
                     var curr = q.Dequeue();
-                    if (adj.TryGetValue(curr, out var nbrs))
+                    var edges = await repository.ListAsNoTrackingAsync<Relationship>(
+                        r => r.RelationshipTypeId == typeIdToSearch && (r.EntityId == curr || r.RelatedEntityId == curr));
+
+                    foreach (var edge in edges)
                     {
-                        foreach (var nbr in nbrs)
+                        var nbr = edge.EntityId == curr ? edge.RelatedEntityId : edge.EntityId;
+                        if (comp.Add(nbr))
                         {
-                            if (comp.Add(nbr))
-                            {
-                                q.Enqueue(nbr);
-                            }
+                            q.Enqueue(nbr);
                         }
                     }
                 }
