@@ -2,15 +2,24 @@ function initializeNetworkGraph(nodes, links) {
   const container = document.getElementById("network-graph");
   if (!container) return;
 
-  const width = container.clientWidth;
-  const height = container.clientHeight;
+  let currentWidth = container.clientWidth;
+  let currentHeight = container.clientHeight;
 
   const svgNS = "http://www.w3.org/2000/svg";
   const svg = document.createElementNS(svgNS, "svg");
   svg.setAttribute("width", "100%");
   svg.setAttribute("height", "100%");
-  svg.setAttribute("viewBox", `0 0 ${width} ${height}`);
+  svg.setAttribute("viewBox", `0 0 ${currentWidth} ${currentHeight}`);
   container.appendChild(svg);
+
+  const resizeObserver = new ResizeObserver(() => {
+    if (container.clientWidth > 0 && container.clientHeight > 0) {
+      currentWidth = container.clientWidth;
+      currentHeight = container.clientHeight;
+      svg.setAttribute("viewBox", `0 0 ${currentWidth} ${currentHeight}`);
+    }
+  });
+  resizeObserver.observe(container);
 
   const fullscreenBtn = document.getElementById("fullscreen-btn");
   const networkCard = document.getElementById("network-card");
@@ -249,17 +258,23 @@ function initializeNetworkGraph(nodes, links) {
   });
 
   nodes.forEach((node) => {
-    node.x = Math.random() * width;
-    node.y = Math.random() * height;
+    node.x = Math.random() * currentWidth;
+    node.y = Math.random() * currentHeight;
     node.vx = 0;
     node.vy = 0;
   });
 
   let draggedNode = null;
+  let simulationAlpha = 1.0;
 
   function startDrag(e, node) {
     e.preventDefault();
     e.stopPropagation();
+
+    // Wake up physics slightly when interacting so the network responds naturally
+    if (simulationAlpha < 0.1) {
+      simulationAlpha = 0.1;
+    }
 
     draggedNode = node;
     node.wasDragged = false;
@@ -287,10 +302,19 @@ function initializeNetworkGraph(nodes, links) {
   }
 
   function tick() {
-    const k = 2500; // Repulsion constant
+    // Decay alpha by roughly 1% per frame, leaving a tiny fraction for loose interaction
+    if (simulationAlpha > 0.005) {
+      simulationAlpha *= 0.99;
+    } else {
+      simulationAlpha = 0.005;
+    }
+
+    const k = 2500 * simulationAlpha; // Repulsion constant
+    const linkForceWeight = 0.05 * simulationAlpha;
+    const centerForce = 0.008 * simulationAlpha;
+    
+    const damping = 0.85; 
     const linkDistance = 180;
-    const damping = 0.85;
-    const centerForce = 0.008;
 
     for (let i = 0; i < nodes.length; i++) {
       const n1 = nodes[i];
@@ -326,7 +350,7 @@ function initializeNetworkGraph(nodes, links) {
       let dist = Math.sqrt(dx * dx + dy * dy);
       if (dist === 0) dist = 0.1;
 
-      const force = (dist - linkDistance) * 0.05;
+      const force = (dist - linkDistance) * linkForceWeight;
       const fx = (dx / dist) * force;
       const fy = (dy / dist) * force;
 
@@ -343,8 +367,8 @@ function initializeNetworkGraph(nodes, links) {
     nodes.forEach((node) => {
       if (node === draggedNode) return;
 
-      node.vx += (width / 2 - node.x) * centerForce;
-      node.vy += (height / 2 - node.y) * centerForce;
+      node.vx += (currentWidth / 2 - node.x) * centerForce;
+      node.vy += (currentHeight / 2 - node.y) * centerForce;
 
       node.x += node.vx;
       node.y += node.vy;
