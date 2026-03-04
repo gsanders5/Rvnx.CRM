@@ -1,5 +1,111 @@
 // MDB auto-initializes components via data attributes — no manual init needed.
 
+// ---------------------------------------------------------------------------
+// Generic confirm modal
+// Any element with [data-confirm-action] triggers #confirmModal before POSTing.
+//
+// Supported data attributes on the trigger element:
+//   data-confirm-action        (required) — form POST URL
+//   data-confirm-title         (optional) — modal heading  (default: "Confirm")
+//   data-confirm-body          (optional) — modal body text (default: "Are you sure?")
+//   data-confirm-btn-label     (optional) — submit button label (default: "Delete")
+//   data-confirm-btn-class     (optional) — submit button CSS class (default: "btn-danger")
+//   data-confirm-btn-icon      (optional) — Bootstrap icon class (default: "bi-trash")
+//   data-confirm-table         (optional) — CSS selector for a DataTable; when set, the
+//                                           POST is sent via fetch and the containing <tr>
+//                                           is removed from the table without a page reload.
+// ---------------------------------------------------------------------------
+(function () {
+    let _triggerEl = null;   // button that opened the current modal
+
+    // Open modal on trigger click
+    document.addEventListener('click', function (e) {
+        const trigger = e.target.closest('[data-confirm-action]');
+        if (!trigger) return;
+
+        e.preventDefault();
+
+        _triggerEl = trigger;
+
+        const action   = trigger.dataset.confirmAction;
+        const title    = trigger.dataset.confirmTitle    || 'Confirm';
+        const body     = trigger.dataset.confirmBody     || 'Are you sure?';
+        const btnLabel = trigger.dataset.confirmBtnLabel || 'Delete';
+        const btnClass = trigger.dataset.confirmBtnClass || 'btn-danger';
+        const btnIcon  = trigger.dataset.confirmBtnIcon  || 'bi-trash';
+
+        const modalEl  = document.getElementById('confirmModal');
+        const form     = document.getElementById('confirmModalForm');
+        const submitBtn = document.getElementById('confirmModalSubmit');
+
+        if (!modalEl || !form || !submitBtn) return;
+
+        // Populate modal content
+        document.getElementById('confirmModalLabel').textContent = title;
+        document.getElementById('confirmModalBody').textContent  = body;
+
+        // Update submit button appearance
+        submitBtn.className = `btn ${btnClass}`;
+        submitBtn.innerHTML = `<i class="bi ${btnIcon} me-1"></i> ${btnLabel}`;
+
+        // Point the form at the right endpoint
+        form.action = action;
+
+        // Show modal
+        mdb.Modal.getOrCreateInstance(modalEl).show();
+    });
+
+    // Handle AJAX submission when data-confirm-table is present on the trigger
+    document.addEventListener('submit', function (e) {
+        if (e.target.id !== 'confirmModalForm') return;
+        if (!_triggerEl) return;
+
+        const tableSelector = _triggerEl.dataset.confirmTable;
+        if (!tableSelector) return;   // no table — fall through to normal form submit
+
+        e.preventDefault();
+
+        const form     = e.target;
+        const submitBtn = document.getElementById('confirmModalSubmit');
+        const modalEl  = document.getElementById('confirmModal');
+
+        // Disable button and show spinner while waiting
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span> Deleting…';
+
+        const formData = new FormData(form);
+
+        fetch(form.action, {
+            method: 'POST',
+            body: formData,
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        })
+        .then(function (response) {
+            if (!response.ok) throw new Error('Server returned ' + response.status);
+
+            // Remove the row from DataTable without resetting to page 1
+            const tableEl = document.querySelector(tableSelector);
+            if (tableEl && typeof $.fn !== 'undefined' && $.fn.dataTable && $.fn.dataTable.isDataTable(tableEl)) {
+                const dt  = $(tableEl).DataTable();
+                const row = $(_triggerEl).closest('tr');
+                dt.row(row).remove().draw(false);
+            }
+
+            mdb.Modal.getOrCreateInstance(modalEl).hide();
+        })
+        .catch(function (err) {
+            console.error('Delete failed:', err);
+            // Re-enable button so the user can retry or submit normally
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = submitBtn.innerHTML.replace(/<span.*?<\/span>\s*/, '');
+        })
+        .finally(function () {
+            _triggerEl = null;
+        });
+    });
+}());
+
+
 document.addEventListener('click', function (e) {
     const btn = e.target.closest('.btn-copy');
     if (!btn) return;

@@ -19,7 +19,7 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <!-- DataTables CSS -->
     <link href="https://cdn.datatables.net/v/bs5/dt-2.3.7/b-3.2.6/b-colvis-3.2.6/r-3.0.8/sc-2.4.3/datatables.min.css" rel="stylesheet" integrity="sha384-nwKdXO0ejYwD095h00qsKcBWhogVC6HsJnWjWQSLhKe/vnckKhdcnxzXUZ9ZzJQe" crossorigin="anonymous">
-    <link rel="preload" href="~/logo.svg" as="image" type="image/svg+xml" />
+    <link rel="preload" href="~/logo.svg" as="image" type="image/svg+xml"/>
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true"/>
     <link rel="stylesheet" href="~/Rvnx.CRM.Web.styles.css" asp-append-version="true"/>
     <script>
@@ -34,7 +34,7 @@
     <nav class="navbar navbar-expand-sm navbar-toggleable-sm border-bottom box-shadow mb-3 bg-primary" data-mdb-theme="dark">
         <div class="container-fluid">
             <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">
-                <img src="~/logo.svg" alt="" height="30" width="73" class="d-inline-block align-text-top" />
+                <img src="~/logo.svg" alt="" height="30" width="73" class="d-inline-block align-text-top"/>
             </a>
             <button class="navbar-toggler" type="button" data-mdb-collapse-init data-mdb-toggle="collapse" data-mdb-target="#navbarSupportedContent" aria-controls="navbarSupportedContent"
                     aria-expanded="false" aria-label="Toggle navigation">
@@ -133,8 +133,9 @@
             });
         });
     </script>
-    <!-- DataTables JS -->
-    <script src="https://cdn.datatables.net/v/bs5/dt-2.3.7/b-3.2.6/b-colvis-3.2.6/r-3.0.8/sc-2.4.3/datatables.min.js" integrity="sha384-6eOoVFZRSk41/xcylba5o06WN5CikrMZCEII2Op2g/d+igf0esL5JAvotvzLC1q1" crossorigin="anonymous"></script>
+<!-- DataTables JS -->
+<script src="https://cdn.datatables.net/v/bs5/dt-2.3.7/b-3.2.6/b-colvis-3.2.6/r-3.0.8/sc-2.4.3/datatables.min.js" integrity="sha384-6eOoVFZRSk41/xcylba5o06WN5CikrMZCEII2Op2g/d+igf0esL5JAvotvzLC1q1" crossorigin="anonymous"></script>
 @await RenderSectionAsync("Scripts", required: false)
+@await Html.PartialAsync("_ConfirmModal")
 </body>
 </html>
