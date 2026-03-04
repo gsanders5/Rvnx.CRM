@@ -16,6 +16,8 @@ namespace Rvnx.CRM.Core.DTOs.Contact
         public string? Gender { get; set; }
         public string? Religion { get; set; }
 
+        public DateTime? Birthday { get; set; }
+
         public bool IsPartial { get; set; }
 
         public IEnumerable<LabelDto> Labels { get; set; } = [];

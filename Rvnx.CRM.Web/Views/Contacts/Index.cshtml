@@ -43,6 +43,8 @@
                 <th scope="col" class="default-hidden">Gender</th>
                 <th scope="col" class="default-hidden">Religion</th>
                 <th scope="col" class="default-hidden">Last Changed</th>
+                <th scope="col" class="default-hidden">Last Changed By</th>
+                <th scope="col" class="default-hidden">Birthday</th>
                 <th scope="col" class="no-sort col-actions">Actions</th>
             </tr>
             </thead>
@@ -91,6 +93,10 @@
                     <td>@item.Gender</td>
                     <td>@item.Religion</td>
                     <td>@item.LastChangedDate.ToShortDateString()</td>
+                    <td>@item.LastChangedBy</td>
+                    <td data-order="@(item.Birthday.HasValue ? item.Birthday.Value.ToString("yyyy-MM-dd") : "")">
+                        @(item.Birthday.HasValue ? item.Birthday.Value.ToShortDateString() : "—")
+                    </td>
                     <td>
                         <div class="btn-group btn-group-sm">
                             <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-outline-secondary" title="Edit" aria-label="Edit @item.FullName">

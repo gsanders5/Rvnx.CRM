@@ -45,7 +45,9 @@ public class ContactReadService(IRepository repository) : IContactReadService
         List<(Guid ContactId, Guid AttachmentId)> profileAttachments = contactIds.Count > 0
             ? await _repository.ListProjectedByChunkedContainsAsync<Attachment, (Guid, Guid), Guid>(
                 contactIds,
-                chunk => a => a.ContactId != null && a.AttachmentType == AttachmentTypes.ProfileImage && chunk.Contains(a.ContactId.Value),
+                chunk => a =>
+                    a.ContactId != null && a.AttachmentType == AttachmentTypes.ProfileImage &&
+                    chunk.Contains(a.ContactId.Value),
                 a => new ValueTuple<Guid, Guid>(a.ContactId!.Value, a.Id))
             : [];
 
@@ -69,12 +71,15 @@ public class ContactReadService(IRepository repository) : IContactReadService
             ? await _repository.ListProjectedByChunkedContainsAsync<ContactLabel, (Guid, Guid, string, string?), Guid>(
                 contactIds,
                 chunk => cl => chunk.Contains(cl.ContactId),
-                cl => new ValueTuple<Guid, Guid, string, string?>(cl.ContactId, cl.Label.Id, cl.Label.Name, cl.Label.Color))
+                cl => new ValueTuple<Guid, Guid, string, string?>(cl.ContactId, cl.Label.Id, cl.Label.Name,
+                    cl.Label.Color))
             : [];
 
         Dictionary<Guid, List<LabelDto>> labelsByContact = allContactLabels
             .GroupBy(cl => cl.ContactId)
-            .ToDictionary(g => g.Key, g => g.Select(cl => new LabelDto { Id = cl.LabelId, Name = cl.Name, Color = cl.Color }).OrderBy(l => l.Name).ToList());
+            .ToDictionary(g => g.Key,
+                g => g.Select(cl => new LabelDto { Id = cl.LabelId, Name = cl.Name, Color = cl.Color })
+                    .OrderBy(l => l.Name).ToList());
 
         foreach (ContactDto? dto in contactDtos)
         {
@@ -84,13 +89,40 @@ public class ContactReadService(IRepository repository) : IContactReadService
             }
         }
 
+        // Batch-load birthdays (one query for all contacts using chunked contains)
+        List<(Guid ContactId, DateOnly EventDate)> birthdayDates = contactIds.Count > 0
+            ? await _repository.ListProjectedByChunkedContainsAsync<SignificantDate, (Guid, DateOnly), Guid>(
+                contactIds,
+                chunk => sd =>
+                    sd.ContactId.HasValue && chunk.Contains(sd.ContactId.Value) &&
+                    sd.Title == SignificantDateTitles.Birthday,
+                sd => new ValueTuple<Guid, DateOnly>(sd.ContactId!.Value, sd.EventDate))
+            : [];
+
+
+        if (birthdayDates.Count > 0)
+        {
+            Dictionary<Guid, DateOnly> birthdayMap = birthdayDates
+                .GroupBy(b => b.ContactId)
+                .ToDictionary(g => g.Key, g => g.First().EventDate);
+
+            foreach (ContactDto? dto in contactDtos)
+            {
+                if (dto != null && birthdayMap.TryGetValue(dto.Id, out DateOnly bday))
+                {
+                    dto.Birthday = bday.ToDateTime(TimeOnly.MinValue);
+                }
+            }
+        }
+
         return contactDtos;
     }
 
     public async Task<ContactDetailDto?> GetContactDetailsAsync(Guid id)
     {
         // Optimization: Use ListAsNoTrackingAsync to avoid change tracking overhead for read-only operation
-        List<Contact> contacts = await _repository.ListAsNoTrackingAsync<Contact>(c => c.Id == id && !c.IsPartial, default,
+        List<Contact> contacts = await _repository.ListAsNoTrackingAsync<Contact>(c => c.Id == id && !c.IsPartial,
+            default,
             nameof(Contact.Employers),
             nameof(Contact.Pets),
             nameof(Contact.Notes),
@@ -143,12 +175,14 @@ public class ContactReadService(IRepository repository) : IContactReadService
         {
             rel.RelatedPerson = relatedContacts.FirstOrDefault(c => c.Id == rel.RelatedEntityId);
         }
+
         contact.Relationships = relationships;
 
         foreach (Relationship rel in relatedTo)
         {
             rel.Person = relatedContacts.FirstOrDefault(c => c.Id == rel.EntityId);
         }
+
         contact.RelatedTo = relatedTo;
 
         ContactDetailDto contactDto = contact.ToDetailDto();
@@ -166,7 +200,8 @@ public class ContactReadService(IRepository repository) : IContactReadService
             .Where(a => a.AttachmentType != AttachmentTypes.ProfileImage)
             .ToList();
 
-        contactDto.Labels = contact.ContactLabels.Select(cl => cl.Label).OrderBy(l => l.Name).Select(l => new LabelDto { Id = l.Id, Name = l.Name, Color = l.Color }).ToList();
+        contactDto.Labels = contact.ContactLabels.Select(cl => cl.Label).OrderBy(l => l.Name)
+            .Select(l => new LabelDto { Id = l.Id, Name = l.Name, Color = l.Color }).ToList();
 
         return contactDto;
     }
@@ -174,11 +209,11 @@ public class ContactReadService(IRepository repository) : IContactReadService
     public async Task<ContactFormDto?> GetContactFormAsync(Guid id)
     {
         List<Contact> contacts = await _repository.ListAsNoTrackingAsync<Contact>(
-             c => c.Id == id && !c.IsPartial,
-             default,
-             nameof(Contact.ContactMethods),
-             nameof(Contact.SignificantDates) + "." + nameof(SignificantDate.ReminderOffsets),
-             nameof(Contact.ContactLabels));
+            c => c.Id == id && !c.IsPartial,
+            default,
+            nameof(Contact.ContactMethods),
+            nameof(Contact.SignificantDates) + "." + nameof(SignificantDate.ReminderOffsets),
+            nameof(Contact.ContactLabels));
 
         Contact? contact = contacts.FirstOrDefault();
 
@@ -222,7 +257,8 @@ public class ContactReadService(IRepository repository) : IContactReadService
         }
 
         // Explicitly await the task to ensure Result is not accessed prematurely or incorrectly, and handle null result from ListAsync safely
-        List<Attachment> attachments = await _repository.ListAsync<Attachment>(a => a.ContactId == id && a.AttachmentType == AttachmentTypes.ProfileImage);
+        List<Attachment> attachments = await _repository.ListAsync<Attachment>(a =>
+            a.ContactId == id && a.AttachmentType == AttachmentTypes.ProfileImage);
         Attachment? profileAttachment = attachments.FirstOrDefault();
 
         if (profileAttachment != null)
@@ -232,7 +268,8 @@ public class ContactReadService(IRepository repository) : IContactReadService
 
         List<Label> allLabels = await _repository.ListAsNoTrackingAsync<Label>(l => true) ?? [];
 
-        dto.AllLabels = allLabels.OrderBy(l => l.Name).Select(l => new LabelDto { Id = l.Id, Name = l.Name, Color = l.Color }).ToList();
+        dto.AllLabels = allLabels.OrderBy(l => l.Name)
+            .Select(l => new LabelDto { Id = l.Id, Name = l.Name, Color = l.Color }).ToList();
         dto.AssignedLabelIds = contact.ContactLabels.Select(cl => cl.LabelId).ToList();
 
         return dto;
