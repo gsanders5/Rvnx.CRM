@@ -30,7 +30,7 @@ public class ReminderNotificationService(
 
         List<ReminderOffset> offsets = await _repository.QueryUnfiltered<ReminderOffset>()
             .Include(ro => ro.SignificantDate)
-                .ThenInclude(sd => sd!.Contact)
+            .ThenInclude(sd => sd!.Contact)
             .Include(ro => ro.ReminderLogs)
             .Where(ro => ro.IsActive && ro.SignificantDate != null && ro.SignificantDate.IsActive)
             .AsSplitQuery()
@@ -56,7 +56,25 @@ public class ReminderNotificationService(
                 continue;
             }
 
-            (bool success, string? errorMessage) = await SendEmailAsync(offset, nextOccurrence, emailConfig);
+            // Resolve recipient emails: all users in the same group as the contact.
+            Guid? contactGroupId = offset.SignificantDate?.Contact?.GroupId;
+            List<string> recipientEmails = [];
+
+            if (contactGroupId.HasValue)
+            {
+                recipientEmails = await _repository.QueryUnfiltered<User>()
+                    .Where(u => u.GroupId == contactGroupId.Value && !string.IsNullOrEmpty(u.Email))
+                    .Select(u => u.Email)
+                    .ToListAsync();
+            }
+
+            if (recipientEmails.Count == 0)
+            {
+                continue;
+            }
+
+            (bool success, string? errorMessage) =
+                await SendEmailAsync(offset, nextOccurrence, recipientEmails, emailConfig);
 
             if (existingLog != null)
             {
@@ -94,12 +112,16 @@ public class ReminderNotificationService(
         return OperationResult.Ok(Guid.Empty, $"Processed: {sentCount} sent, {failedCount} failed.");
     }
 
-    private static async Task<(bool Success, string? Error)> SendEmailAsync(ReminderOffset offset, DateOnly occurrenceDate, IConfigurationSection emailConfig)
+    private static async Task<(bool Success, string? Error)> SendEmailAsync(
+        ReminderOffset offset,
+        DateOnly occurrenceDate,
+        List<string> recipientEmails,
+        IConfigurationSection emailConfig)
     {
         try
         {
             IConfigurationSection smtpSettings = emailConfig.GetSection("SmtpSettings");
-            MimeMessage message = BuildMimeMessage(offset, occurrenceDate, smtpSettings);
+            MimeMessage message = BuildMimeMessage(offset, occurrenceDate, recipientEmails, smtpSettings);
 
             using SmtpClient client = new();
 
@@ -127,9 +149,14 @@ public class ReminderNotificationService(
         }
     }
 
-    private static MimeMessage BuildMimeMessage(ReminderOffset offset, DateOnly occurrenceDate, IConfigurationSection smtpSettings)
+    private static MimeMessage BuildMimeMessage(
+        ReminderOffset offset,
+        DateOnly occurrenceDate,
+        List<string> recipientEmails,
+        IConfigurationSection smtpSettings)
     {
-        string senderEmail = smtpSettings["SenderEmail"] ?? throw new InvalidOperationException("SenderEmail is not configured.");
+        string senderEmail = smtpSettings["SenderEmail"] ??
+                             throw new InvalidOperationException("SenderEmail is not configured.");
         string senderName = smtpSettings["SenderName"] ?? "Rvnx CRM";
 
         Core.Models.Contact.Contact? contact = offset.SignificantDate?.Contact;
@@ -147,7 +174,12 @@ public class ReminderNotificationService(
 
         MimeMessage message = new();
         message.From.Add(new MailboxAddress(senderName, senderEmail));
-        message.To.Add(new MailboxAddress("CRM User", senderEmail));
+
+        foreach (string email in recipientEmails)
+        {
+            message.To.Add(new MailboxAddress(string.Empty, email));
+        }
+
         message.Subject = $"Reminder: {title} for {contactName}";
 
         BodyBuilder bodyBuilder = new()
