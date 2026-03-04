@@ -56,6 +56,25 @@ public class Repository(CRMDbContext context) : IRepository
         return await _context.Set<T>().Where(predicate).ToListAsync(cancellationToken);
     }
 
+    public async Task<T?> FirstOrDefaultAsync<T>(Expression<Func<T, bool>> predicate,
+        CancellationToken cancellationToken = default) where T : BaseEntity
+    {
+        return await _context.Set<T>().FirstOrDefaultAsync(predicate, cancellationToken);
+    }
+
+    public async Task<T?> FirstOrDefaultAsNoTrackingAsync<T>(Expression<Func<T, bool>> predicate,
+        CancellationToken cancellationToken = default, params string[] includes) where T : BaseEntity
+    {
+        IQueryable<T> query = _context.Set<T>().AsNoTracking().Where(predicate);
+
+        foreach (string include in includes)
+        {
+            query = query.Include(include);
+        }
+
+        return await query.FirstOrDefaultAsync(cancellationToken);
+    }
+
     public async Task<List<T>> ListAsync<T>(Expression<Func<T, bool>> predicate,
         CancellationToken cancellationToken = default, params string[] includes) where T : BaseEntity
     {
@@ -108,6 +127,16 @@ public class Repository(CRMDbContext context) : IRepository
             .Where(predicate)
             .Select(selector)
             .ToListAsync(cancellationToken);
+    }
+
+    public async Task<TDto?> FirstOrDefaultProjectedAsync<T, TDto>(Expression<Func<T, bool>> predicate,
+        Expression<Func<T, TDto>> selector, CancellationToken cancellationToken = default) where T : BaseEntity
+    {
+        return await _context.Set<T>()
+            .AsNoTracking()
+            .Where(predicate)
+            .Select(selector)
+            .FirstOrDefaultAsync(cancellationToken);
     }
 
     public async Task<List<TDto>> ListProjectedAsync<T, TDto, TKey>(Expression<Func<T, bool>> predicate,

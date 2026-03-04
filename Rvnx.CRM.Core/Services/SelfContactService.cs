@@ -103,7 +103,7 @@ public class SelfContactService(IRepository repository, ICurrentUserService curr
     private async Task<Rvnx.CRM.Core.Models.User?> GetUserAsync(Guid userId)
     {
         Rvnx.CRM.Core.Models.User? user = await _repository.GetByIdAsync<Rvnx.CRM.Core.Models.User>(userId);
-        return user ?? (await _repository.ListAsync<Rvnx.CRM.Core.Models.User>(u => u.SubjectId == userId.ToString())).FirstOrDefault();
+        return user ?? await _repository.FirstOrDefaultAsync<Rvnx.CRM.Core.Models.User>(u => u.SubjectId == userId.ToString());
     }
 
 }

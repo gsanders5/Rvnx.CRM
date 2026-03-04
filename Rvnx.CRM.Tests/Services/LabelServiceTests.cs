@@ -128,8 +128,8 @@ public class LabelServiceTests
         Guid id = Guid.NewGuid();
         ContactLabel contactLabel = new() { Id = id };
         _mockRepo.Setup(r =>
-                r.ListAsync(It.IsAny<Expression<Func<ContactLabel, bool>>>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync([contactLabel]);
+                r.FirstOrDefaultAsync(It.IsAny<Expression<Func<ContactLabel, bool>>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(contactLabel);
 
         await _service.RemoveLabelAsync(Guid.NewGuid(), Guid.NewGuid());
 

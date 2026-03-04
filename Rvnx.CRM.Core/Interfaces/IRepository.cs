@@ -34,6 +34,18 @@ public interface IRepository
         where T : BaseEntity;
 
     /// <summary>
+    /// Retrieves the first entity matching a predicate, or null if no such entity exists.
+    /// </summary>
+    Task<T?> FirstOrDefaultAsync<T>(Expression<Func<T, bool>> predicate, CancellationToken cancellationToken = default)
+        where T : BaseEntity;
+
+    /// <summary>
+    /// Retrieves the first entity matching a predicate without tracking changes, eagerly loading specified navigation properties.
+    /// </summary>
+    Task<T?> FirstOrDefaultAsNoTrackingAsync<T>(Expression<Func<T, bool>> predicate, CancellationToken cancellationToken = default, params string[] includes)
+        where T : BaseEntity;
+
+    /// <summary>
     /// Retrieves a list of entities matching a predicate, eagerly loading specified navigation properties.
     /// </summary>
     Task<List<T>> ListAsync<T>(Expression<Func<T, bool>> predicate, CancellationToken cancellationToken = default,
@@ -55,6 +67,12 @@ public interface IRepository
     /// Projects entities to a DTO matching a predicate.
     /// </summary>
     Task<List<TDto>> ListProjectedAsync<T, TDto>(Expression<Func<T, bool>> predicate,
+        Expression<Func<T, TDto>> selector, CancellationToken cancellationToken = default) where T : BaseEntity;
+
+    /// <summary>
+    /// Projects the first entity matching a predicate to a DTO, or returns null if no entity matches.
+    /// </summary>
+    Task<TDto?> FirstOrDefaultProjectedAsync<T, TDto>(Expression<Func<T, bool>> predicate,
         Expression<Func<T, TDto>> selector, CancellationToken cancellationToken = default) where T : BaseEntity;
 
     /// <summary>

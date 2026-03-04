@@ -35,18 +35,18 @@ public class EntityService : IEntityService
         if (entityType == EntityTypes.Person)
         {
             // Optimization: Fetch only the names instead of the entire Contact entity
-            List<string> names = await _repository.ListProjectedAsync<Contact, string>(
+            string? name = await _repository.FirstOrDefaultProjectedAsync<Contact, string>(
                 c => c.Id == id,
                 c => c.FirstName + " " + (c.LastName ?? ""));
-            return names.FirstOrDefault()?.Trim() ?? "Unknown Person";
+            return name?.Trim() ?? "Unknown Person";
         }
         else if (entityType == EntityTypes.Company)
         {
             // Optimization: Fetch only the name instead of the entire Employer entity
-            List<string> names = await _repository.ListProjectedAsync<Employer, string>(
+            string? name = await _repository.FirstOrDefaultProjectedAsync<Employer, string>(
                 c => c.Id == id,
                 c => c.CompanyName);
-            return names.FirstOrDefault() ?? "Unknown Company";
+            return name ?? "Unknown Company";
         }
         return "Unknown Entity";
     }
@@ -57,10 +57,10 @@ public class EntityService : IEntityService
         if (entityType == EntityTypes.Person)
         {
             // Optimization: Fetch only the IsPartial flag instead of the entire Contact entity
-            List<bool> partials = await _repository.ListProjectedAsync<Contact, bool>(
+            bool partial = await _repository.FirstOrDefaultProjectedAsync<Contact, bool>(
                 c => c.Id == id,
                 c => c.IsPartial);
-            return partials.FirstOrDefault();
+            return partial;
         }
         return false;
     }

@@ -89,8 +89,8 @@ public class ContactReadService(IRepository repository) : IContactReadService
 
     public async Task<ContactDetailDto?> GetContactDetailsAsync(Guid id)
     {
-        // Optimization: Use ListAsNoTrackingAsync to avoid change tracking overhead for read-only operation
-        List<Contact> contacts = await _repository.ListAsNoTrackingAsync<Contact>(c => c.Id == id && !c.IsPartial, default,
+        // Optimization: Use FirstOrDefaultAsNoTrackingAsync to avoid change tracking overhead for read-only operation and ensure only one query is executed
+        Contact? contact = await _repository.FirstOrDefaultAsNoTrackingAsync<Contact>(c => c.Id == id && !c.IsPartial, default,
             nameof(Contact.Employers),
             nameof(Contact.Pets),
             nameof(Contact.Notes),
@@ -102,7 +102,6 @@ public class ContactReadService(IRepository repository) : IContactReadService
             nameof(Contact.Attachments),
             nameof(Contact.ContactLabels) + "." + nameof(ContactLabel.Label));
 
-        Contact? contact = contacts.FirstOrDefault();
         if (contact == null)
         {
             return null;
@@ -173,14 +172,12 @@ public class ContactReadService(IRepository repository) : IContactReadService
 
     public async Task<ContactFormDto?> GetContactFormAsync(Guid id)
     {
-        List<Contact> contacts = await _repository.ListAsNoTrackingAsync<Contact>(
+        Contact? contact = await _repository.FirstOrDefaultAsNoTrackingAsync<Contact>(
              c => c.Id == id && !c.IsPartial,
              default,
              nameof(Contact.ContactMethods),
              nameof(Contact.SignificantDates) + "." + nameof(SignificantDate.ReminderOffsets),
              nameof(Contact.ContactLabels));
-
-        Contact? contact = contacts.FirstOrDefault();
 
         if (contact == null)
         {
@@ -222,8 +219,7 @@ public class ContactReadService(IRepository repository) : IContactReadService
         }
 
         // Explicitly await the task to ensure Result is not accessed prematurely or incorrectly, and handle null result from ListAsync safely
-        List<Attachment> attachments = await _repository.ListAsync<Attachment>(a => a.ContactId == id && a.AttachmentType == AttachmentTypes.ProfileImage);
-        Attachment? profileAttachment = attachments.FirstOrDefault();
+        Attachment? profileAttachment = await _repository.FirstOrDefaultAsync<Attachment>(a => a.ContactId == id && a.AttachmentType == AttachmentTypes.ProfileImage);
 
         if (profileAttachment != null)
         {

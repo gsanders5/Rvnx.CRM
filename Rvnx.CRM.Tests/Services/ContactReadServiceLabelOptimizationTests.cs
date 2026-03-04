@@ -31,11 +31,11 @@ namespace Rvnx.CRM.Tests.Services
 
             // We use It.IsAny<string[]> because we are testing if the optimization works regardless of exact includes for now,
             // but we expect "ContactLabels" to be present eventually.
-            _repositoryMock.Setup(r => r.ListAsNoTrackingAsync<Contact>(
+            _repositoryMock.Setup(r => r.FirstOrDefaultAsNoTrackingAsync<Contact>(
                 It.IsAny<Expression<Func<Contact, bool>>>(),
                 It.IsAny<CancellationToken>(),
                 It.IsAny<string[]>()))
-                .ReturnsAsync([contact]);
+                .ReturnsAsync(contact);
 
             _repositoryMock.Setup(r => r.ListAsNoTrackingAsync<Label>(
                It.IsAny<Expression<Func<Label, bool>>>(),
@@ -79,11 +79,11 @@ namespace Rvnx.CRM.Tests.Services
             // Populate ContactLabels for eager loading
             contact.ContactLabels.Add(new ContactLabel { ContactId = contactId, LabelId = labelId, Label = label });
 
-            _repositoryMock.Setup(r => r.ListAsNoTrackingAsync<Contact>(
+            _repositoryMock.Setup(r => r.FirstOrDefaultAsNoTrackingAsync<Contact>(
                 It.IsAny<Expression<Func<Contact, bool>>>(),
                 It.IsAny<CancellationToken>(),
                 It.IsAny<string[]>()))
-                .ReturnsAsync([contact]);
+                .ReturnsAsync(contact);
 
             // Setup related entities (needed for GetContactDetailsAsync) to return empty lists to avoid null ref if logic expects them
             // We can rely on default null/empty behavior if logic handles it, but let's be safe

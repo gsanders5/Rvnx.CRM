@@ -101,9 +101,8 @@ public class LabelService(IRepository repository) : ILabelService
 
     public async Task RemoveLabelAsync(Guid contactId, Guid labelId)
     {
-        List<ContactLabel> existing =
-            await _repository.ListAsync<ContactLabel>(cl => cl.ContactId == contactId && cl.LabelId == labelId) ?? [];
-        ContactLabel? toRemove = existing.FirstOrDefault();
+        ContactLabel? toRemove =
+            await _repository.FirstOrDefaultAsync<ContactLabel>(cl => cl.ContactId == contactId && cl.LabelId == labelId);
         if (toRemove != null)
         {
             await _repository.DeleteAsync<ContactLabel>(toRemove.Id);

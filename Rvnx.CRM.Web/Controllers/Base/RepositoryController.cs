@@ -22,27 +22,27 @@ public abstract class RepositoryController : AuthorizedController
     {
         if (type == EntityTypes.Person)
         {
-            List<string> names = await _repository.ListProjectedAsync<Contact, string>(
+            string? name = await _repository.FirstOrDefaultProjectedAsync<Contact, string>(
                 c => c.Id == id,
                 c => c.FirstName + " " + (c.LastName ?? ""));
-            return names.FirstOrDefault()?.Trim() ?? "Unknown Person";
+            return name?.Trim() ?? "Unknown Person";
         }
         else if (type == EntityTypes.Company)
         {
-            List<string> names = await _repository.ListProjectedAsync<Employer, string>(
+            string? name = await _repository.FirstOrDefaultProjectedAsync<Employer, string>(
                 c => c.Id == id,
                 c => c.CompanyName);
-            return names.FirstOrDefault() ?? "Unknown Company";
+            return name ?? "Unknown Company";
         }
         return "Unknown Entity";
     }
 
     protected async Task<bool> IsPartialContactAsync(Guid id)
     {
-        List<bool> partials = await _repository.ListProjectedAsync<Contact, bool>(
+        bool partial = await _repository.FirstOrDefaultProjectedAsync<Contact, bool>(
             c => c.Id == id,
             c => c.IsPartial);
-        return partials.FirstOrDefault();
+        return partial;
     }
 
     /// <summary>

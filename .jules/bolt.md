@@ -49,3 +49,7 @@
 
 **Learning:** `DashboardService` was fetching all columns of `Contact` and `Relationship` entities using `ListAsNoTrackingAsync` just to populate the network graph (which only needs `Id`, `FullName`/`Gender`, and `EntityId`/`RelatedEntityId`). This significantly impacts memory and network performance for accounts with many contacts.
 **Action:** Use `ListProjectedAsync` to fetch only the minimum required properties for generating graph nodes and links.
+
+## 2025-02-12 - Database Fetch Optmization
+**Learning:** Calling `.ListAsync().FirstOrDefault()` will fetch *all* matched rows from the database before performing `.FirstOrDefault()` in memory, wasting bandwidth, DB execution time, and C# list allocation resources. Additionally, you cannot reliably perform property length evaluation operations directly in the Razor projection layer without explicitly casting IEnumerable arrays to a List structure if you want `.Count > 0` over `.Any()`.
+**Action:** Added `FirstOrDefaultProjectedAsync` and `FirstOrDefaultAsync` directly onto the `IRepository` and DbContext `Repository` instances to fetch only a single record natively via database translation (`LIMIT 1`). Use `FirstOrDefaultAsync` or `FirstOrDefaultProjectedAsync` directly everywhere a `LIMIT 1` or single top lookup is required to save application resources.

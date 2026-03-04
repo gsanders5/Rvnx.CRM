@@ -280,14 +280,13 @@ public class ContactManagementService(IRepository repository, IFileValidationSer
 
     private async Task<ContactMethod?> GetPrimaryContactMethodAsync(Guid contactId, ContactMethodType type)
     {
-        List<ContactMethod> methods = await _repository.ListAsync<ContactMethod>(c => c.ContactId == contactId && c.Type == type);
-        return methods.FirstOrDefault(e => e.Label == ContactMethodLabels.Primary) ?? methods.FirstOrDefault();
+        ContactMethod? primary = await _repository.FirstOrDefaultAsync<ContactMethod>(c => c.ContactId == contactId && c.Type == type && c.Label == ContactMethodLabels.Primary);
+        return primary ?? await _repository.FirstOrDefaultAsync<ContactMethod>(c => c.ContactId == contactId && c.Type == type);
     }
 
     private async Task<SignificantDate?> GetBirthdayAsync(Guid contactId)
     {
-        List<SignificantDate> bdays = await _repository.ListAsync<SignificantDate>(d => d.ContactId == contactId && d.Title == SignificantDateTitles.Birthday);
-        return bdays.FirstOrDefault();
+        return await _repository.FirstOrDefaultAsync<SignificantDate>(d => d.ContactId == contactId && d.Title == SignificantDateTitles.Birthday);
     }
 
 }
