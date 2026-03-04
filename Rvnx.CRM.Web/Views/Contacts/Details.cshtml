@@ -212,86 +212,102 @@
             <h5 class="card-title mb-0 fw-bold"><i class="bi bi-people"></i> Relationships</h5>
         </div>
         <div class="card-body px-3 pb-3">
-            <div class="d-grid gap-2 mb-3">
-                @if ((Model.Relationships != null && Model.Relationships.Any()) || (Model.RelatedTo != null && Model.RelatedTo.Any()))
-                {
-                    @if (Model.Relationships != null)
-                    {
-                        foreach (var rel in Model.Relationships)
-                        {
-                            <div class="d-flex justify-content-between align-items-center p-3 rounded border hover-shadow" style="background-color: var(--bs-tertiary-bg);">
-                                <div class="d-flex align-items-center">
-                                    @if (rel.IsRelatedEntityPartial)
-                                    {
-                                        <span class="fw-bold text-muted me-2">@rel.RelatedEntityName</span>
-                                        <span class="badge rounded-pill bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25">@rel.RelationshipTypeOppositeName</span>
-                                    }
-                                    else
-                                    {
-                                        <a asp-action="Details" asp-route-id="@rel.RelatedEntityId" class="text-decoration-none fw-bold text-body me-2">
-                                            @rel.RelatedEntityName
-                                        </a>
-                                        <span class="badge rounded-pill bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25">@rel.RelationshipTypeOppositeName</span>
-                                    }
-                                </div>
-                                <div class="d-flex align-items-center">
-                                    @if (rel.IsRelatedEntityPartial)
-                                    {
-                                        <div class="d-inline me-2" title="Partial Contact">
-                                            <span class="badge bg-secondary opacity-50">
-                                                <i class="bi bi-person-fill-exclamation text-white"></i>
-                                            </span>
-                                        </div>
-                                    }
-                                    <a asp-controller="Relationships" asp-action="Edit" asp-route-id="@rel.Id" class="text-secondary me-2" title="Edit relationship" aria-label="Edit relationship with @rel.RelatedEntityName">
-                                        <i class="bi bi-pencil-square"></i>
-                                    </a>
-                                    <a asp-controller="Relationships" asp-action="Delete" asp-route-id="@rel.Id" asp-route-returnUrl="@(Context.Request.Path + Context.Request.QueryString)" class="text-danger" title="Delete relationship" aria-label="Delete relationship with @rel.RelatedEntityName">
-                                        <i class="bi bi-trash"></i>
-                                    </a>
-                                </div>
-                            </div>
-                        }
-                    }
+            @{
+                var categoryOrder = new[] { "Romantic", "Family", "Professional", "Social" };
+                var alwaysExpanded = new HashSet<string> { "Romantic", "Family" };
 
-                    @if (Model.RelatedTo != null)
+                var allRels = (Model.Relationships ?? [])
+                    .Select(r => new
                     {
-                        foreach (var rel in Model.RelatedTo)
+                        Name = r.RelatedEntityName,
+                        LinkId = r.RelatedEntityId,
+                        IsPartial = r.IsRelatedEntityPartial,
+                        Badge = r.RelationshipTypeOppositeName,
+                        Category = r.RelationshipTypeCategory,
+                        r.Id
+                    })
+                    .Concat((Model.RelatedTo ?? [])
+                        .Select(r => new
                         {
-                            <div class="d-flex justify-content-between align-items-center p-3 rounded border hover-shadow" style="background-color: var(--bs-tertiary-bg);">
-                                <div class="d-flex align-items-center">
-                                    @if (rel.IsEntityPartial)
-                                    {
-                                        <span class="fw-bold text-muted me-2">@rel.EntityName</span>
-                                        <span class="badge rounded-pill bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25">@rel.RelationshipTypeName</span>
-                                    }
-                                    else
-                                    {
-                                        <a asp-action="Details" asp-route-id="@rel.EntityId" class="text-decoration-none fw-bold text-body me-2">
-                                            @rel.EntityName
-                                        </a>
-                                        <span class="badge rounded-pill bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25">@rel.RelationshipTypeName</span>
-                                    }
-                                </div>
-                                <div class="d-flex align-items-center">
-                                    @if (rel.IsEntityPartial)
-                                    {
-                                        <div class="d-inline me-2" title="Partial Contact">
-                                            <span class="badge bg-secondary opacity-50">
-                                                <i class="bi bi-person-fill-exclamation text-white"></i>
-                                            </span>
+                            Name = r.EntityName,
+                            LinkId = r.EntityId,
+                            IsPartial = r.IsEntityPartial,
+                            Badge = r.RelationshipTypeName,
+                            Category = r.RelationshipTypeCategory,
+                            r.Id
+                        }))
+                    .ToList();
+
+                var grouped = allRels
+                    .GroupBy(r => r.Category)
+                    .OrderBy(g =>
+                    {
+                        var idx = Array.IndexOf(categoryOrder, g.Key);
+                        return idx < 0 ? 99 : idx;
+                    })
+                    .ToList();
+            }
+
+            <div class="d-grid gap-2 mb-3">
+                @if (grouped.Any())
+                {
+                    var accordionId = "relAccordion";
+                    <div class="accordion accordion-flush" id="@accordionId">
+                        @foreach (var group in grouped)
+                        {
+                            var collapseId = $"relCollapse_{group.Key.Replace(" ", "")}";
+                            var count = group.Count();
+                            var expanded = alwaysExpanded.Contains(group.Key) || count <= 5;
+                            <div class="accordion-item border rounded mb-2">
+                                <h2 class="accordion-header">
+                                    <button class="accordion-button @(expanded ? "" : "collapsed") rounded fw-semibold py-2" type="button"
+                                            data-bs-toggle="collapse" data-bs-target="#@collapseId"
+                                            aria-expanded="@(expanded ? "true" : "false")" aria-controls="@collapseId">
+                                        @group.Key
+                                        <span class="badge bg-secondary ms-2 fw-normal">@count</span>
+                                    </button>
+                                </h2>
+                                <div id="@collapseId" class="accordion-collapse collapse @(expanded ? "show" : "")">
+                                    <div class="accordion-body px-0 pt-0 pb-2">
+                                        <div class="d-grid gap-2 px-3 pt-2">
+                                            @foreach (var rel in group)
+                                            {
+                                                <div class="d-flex justify-content-between align-items-center p-3 rounded border hover-shadow" style="background-color: var(--bs-tertiary-bg);">
+                                                    <div class="d-flex align-items-center">
+                                                        @if (rel.IsPartial)
+                                                        {
+                                                            <span class="fw-bold text-muted me-2">@rel.Name</span>
+                                                        }
+                                                        else
+                                                        {
+                                                            <a asp-action="Details" asp-route-id="@rel.LinkId" class="text-decoration-none fw-bold text-body me-2">@rel.Name</a>
+                                                        }
+                                                        <span class="badge rounded-pill bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25">@rel.Badge</span>
+                                                    </div>
+                                                    <div class="d-flex align-items-center">
+                                                        @if (rel.IsPartial)
+                                                        {
+                                                            <div class="d-inline me-2" title="Partial Contact">
+                                                                <span class="badge bg-secondary opacity-50">
+                                                                    <i class="bi bi-person-fill-exclamation text-white"></i>
+                                                                </span>
+                                                            </div>
+                                                        }
+                                                        <a asp-controller="Relationships" asp-action="Edit" asp-route-id="@rel.Id" class="text-secondary me-2" title="Edit relationship">
+                                                            <i class="bi bi-pencil-square"></i>
+                                                        </a>
+                                                        <a asp-controller="Relationships" asp-action="Delete" asp-route-id="@rel.Id" asp-route-returnUrl="@(Context.Request.Path + Context.Request.QueryString)" class="text-danger" title="Delete relationship">
+                                                            <i class="bi bi-trash"></i>
+                                                        </a>
+                                                    </div>
+                                                </div>
+                                            }
                                         </div>
-                                    }
-                                    <a asp-controller="Relationships" asp-action="Edit" asp-route-id="@rel.Id" class="text-secondary me-2" title="Edit relationship" aria-label="Edit relationship with @rel.EntityName">
-                                        <i class="bi bi-pencil-square"></i>
-                                    </a>
-                                    <a asp-controller="Relationships" asp-action="Delete" asp-route-id="@rel.Id" asp-route-returnUrl="@(Context.Request.Path + Context.Request.QueryString)" class="text-danger" title="Delete relationship" aria-label="Delete relationship with @rel.EntityName">
-                                        <i class="bi bi-trash"></i>
-                                    </a>
+                                    </div>
                                 </div>
                             </div>
                         }
-                    }
+                    </div>
                 }
                 else
                 {
@@ -303,7 +319,7 @@
                 }
             </div>
 
-            @if ((Model.Relationships != null && Model.Relationships.Any()) || (Model.RelatedTo != null && Model.RelatedTo.Any()))
+            @if (grouped.Any())
             {
                 <div class="text-end">
                     <a asp-controller="Relationships" asp-action="Create" asp-route-entityId="@Model.Id" asp-route-entityType="Person" class="btn btn-primary btn-sm">Add Relationship</a>
