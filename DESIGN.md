@@ -154,6 +154,7 @@ Abstract base class for all domain entities with built-in audit trail and owners
 [Required] DateTime CreatedDate
 [Required] DateTime LastChangedDate
 [MaxLength(450)] Guid? UserId // Owner for isolation
+Guid? GroupId
 ```
 
 ### Person
@@ -162,8 +163,13 @@ Abstract base class for contact entities:
 ```csharp
 [Required, MaxLength(100)] string FirstName
 [MaxLength(100)] string? LastName
+[MaxLength(100)] string? Nickname
+[MaxLength(100)] string? JobTitle
+[MaxLength(200)] string? Company
 string FullName (computed property)
-// Has many [NotMapped] collections for related entities
+bool IsHidden
+Guid? ProfileImageId [NotMapped]
+// Has many collections for related entities (some virtual, some [NotMapped])
 ```
 
 The `[NotMapped]` collections on `Person` (like `Relationships`, `RelatedTo`) are populated manually by services (e.g., `ContactReadService`) when needed for display, rather than being managed automatically by EF Core navigation properties.
@@ -173,6 +179,9 @@ The `[NotMapped]` collections on `Person` (like `Relationships`, `RelatedTo`) ar
 Concrete entity inheriting `Person`.
 
 - **IsPartial**: Boolean flag indicating if the contact is a full profile or a placeholder.
+- **Pronouns**: String (max 100).
+- **Gender**: String (max 100).
+- **Religion**: String (max 100).
 - **Pets**: Managed via `Pet` entity with `ContactId` FK.
 - **Employers**: Managed via `Employer` entity with `EmployeeId` FK.
 - **Labels**: Managed via `ContactLabel` join entity.
@@ -189,8 +198,8 @@ Polymorphic entity linking two entities.
 
 Attachments are split into two tables to optimize performance (loading metadata without heavy blobs).
 
--   **Attachment**: Stores metadata (`FileName`, `ContentType`, `AttachmentType`).
--   **AttachmentContent**: Stores the actual file bytes (`byte[] Content`) and links back to `Attachment` via 1:1 relationship.
+-   **Attachment**: Stores metadata (`FileName`, `ContentType`, `AttachmentType`) and links to a `ContactId`.
+-   **AttachmentContent**: Stores the actual file bytes (`byte[] Content`) and links back to `Attachment` via 1:1 relationship (`AttachmentId`).
 
 ## Service Layer
 
