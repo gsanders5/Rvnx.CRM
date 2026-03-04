@@ -109,6 +109,12 @@ namespace Rvnx.CRM.Web
 
             WebApplication app = builder.Build();
 
+            app.UseForwardedHeaders(new ForwardedHeadersOptions
+            {
+                ForwardedHeaders = Microsoft.AspNetCore.HttpOverrides.ForwardedHeaders.XForwardedFor
+                     | Microsoft.AspNetCore.HttpOverrides.ForwardedHeaders.XForwardedProto
+            });
+
             // Set security headers on every response, including redirects
             app.Use(async (context, next) =>
             {
@@ -140,8 +146,6 @@ namespace Rvnx.CRM.Web
                 app.UseExceptionHandler("/Home/Error");
                 app.UseHsts();
             }
-
-            app.UseHttpsRedirection();
 
             app.UseStaticFiles();
 
