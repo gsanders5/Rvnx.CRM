@@ -83,7 +83,7 @@ function initializeNetworkGraph(nodes, links) {
   const updateTransform = () => {
     cameraLayer.setAttribute(
       "transform",
-      `translate(${currentPanX}, ${currentPanY}) scale(${currentScale})`
+      `translate(${currentPanX}, ${currentPanY}) scale(${currentScale})`,
     );
   };
 
@@ -272,9 +272,9 @@ function initializeNetworkGraph(nodes, links) {
     draggedNode.wasDragged = true;
     const rect = svg.getBoundingClientRect();
 
-    // Subtract current pan offset to convert screen space to SVG space
-    draggedNode.x = e.clientX - rect.left - currentPanX;
-    draggedNode.y = e.clientY - rect.top - currentPanY;
+    // Subtract current pan offset and scale to convert screen space to SVG space
+    draggedNode.x = (e.clientX - rect.left - currentPanX) / currentScale;
+    draggedNode.y = (e.clientY - rect.top - currentPanY) / currentScale;
 
     draggedNode.vx = 0; // Stop velocity while dragging
     draggedNode.vy = 0;
