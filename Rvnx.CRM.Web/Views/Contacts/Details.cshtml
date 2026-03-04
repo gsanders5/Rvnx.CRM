@@ -258,10 +258,10 @@
                             var collapseId = $"relCollapse_{group.Key.Replace(" ", "")}";
                             var count = group.Count();
                             var expanded = alwaysExpanded.Contains(group.Key) || count <= 5;
-                            <div class="accordion-item border rounded mb-2">
+                            <div class="accordion-item border rounded p-1 mb-2">
                                 <h2 class="accordion-header">
-                                    <button class="accordion-button @(expanded ? "" : "collapsed") rounded fw-semibold py-2" type="button"
-                                            data-bs-toggle="collapse" data-bs-target="#@collapseId"
+                                    <button class="accordion-button @(expanded ? "" : "collapsed") fw-semibold py-2 bg-body text-body" type="button"
+                                            data-mdb-collapse-init data-mdb-toggle="collapse" data-mdb-target="#@collapseId"
                                             aria-expanded="@(expanded ? "true" : "false")" aria-controls="@collapseId">
                                         @group.Key
                                         <span class="badge bg-secondary ms-2 fw-normal">@count</span>
