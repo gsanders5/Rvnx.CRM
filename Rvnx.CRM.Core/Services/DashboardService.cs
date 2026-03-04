@@ -88,7 +88,6 @@ public class DashboardService(IRepository repository, ILogger<DashboardService> 
             });
         }
 
-        // --- Recently added / modified ---
         const int MaxRecentContacts = 5;
         DateTime sevenDaysAgo = DateTime.UtcNow.AddDays(-7);
 
@@ -107,7 +106,6 @@ public class DashboardService(IRepository repository, ILogger<DashboardService> 
             .ToList();
 
 
-        // --- Stats ---
         HashSet<Guid> contactsWithRelationships =
         [
             .. relationships.Select(r => r.EntityId),
