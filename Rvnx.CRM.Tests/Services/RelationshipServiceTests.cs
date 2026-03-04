@@ -2,6 +2,7 @@ using Moq;
 using Rvnx.CRM.Core.Constants;
 using Rvnx.CRM.Core.DTOs.Contact;
 using Rvnx.CRM.Core.Interfaces;
+using Rvnx.CRM.Core.Models;
 using Rvnx.CRM.Core.Models.Contact;
 using Rvnx.CRM.Core.Models.Dates;
 using Rvnx.CRM.Core.Services;
@@ -245,6 +246,60 @@ namespace Rvnx.CRM.Tests.Services
 
             _repositoryMock.Verify(r => r.UpdateAsync(partialContact, It.IsAny<CancellationToken>()), Times.Once);
             _repositoryMock.Verify(r => r.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
+        }
+
+        [Fact]
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Naming", "CA1707:Identifiers should not contain underscores",
+            Justification = "Test names follow a standard convention")]
+        public async Task DeleteRelationshipAsyncWhenFoundReturnsOk()
+        {
+            // Arrange
+            Guid relationshipId = Guid.NewGuid();
+            Guid entityId = Guid.NewGuid();
+            string entityType = EntityTypes.Person;
+
+            Relationship relationship = new()
+            {
+                Id = relationshipId,
+                EntityId = entityId,
+                EntityType = entityType
+            };
+
+            _repositoryMock.Setup(r => r.GetByIdAsync<Relationship>(relationshipId, It.IsAny<CancellationToken>()))
+                .ReturnsAsync(relationship);
+
+            // Act
+            OperationResult result = await _service.DeleteRelationshipAsync(relationshipId);
+
+            // Assert
+            Assert.True(result.Success);
+            Assert.Equal(entityId, result.RedirectId);
+            Assert.Equal(entityType, result.RedirectType);
+
+            _repositoryMock.Verify(r => r.DeleteAsync<Relationship>(relationshipId, It.IsAny<CancellationToken>()), Times.Once);
+            _repositoryMock.Verify(r => r.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
+        }
+
+        [Fact]
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Naming", "CA1707:Identifiers should not contain underscores",
+            Justification = "Test names follow a standard convention")]
+        public async Task DeleteRelationshipAsyncWhenNotFoundReturnsFailure()
+        {
+            // Arrange
+            Guid relationshipId = Guid.NewGuid();
+
+            _repositoryMock.Setup(r => r.GetByIdAsync<Relationship>(relationshipId, It.IsAny<CancellationToken>()))
+                .ReturnsAsync((Relationship?)null);
+
+            // Act
+            OperationResult result = await _service.DeleteRelationshipAsync(relationshipId);
+
+            // Assert
+            Assert.False(result.Success);
+            Assert.Equal("Relationship not found.", result.ErrorMessage);
+
+            _repositoryMock.Verify(r => r.DeleteAsync<Relationship>(It.IsAny<Guid>(), It.IsAny<CancellationToken>()), Times.Never);
+            _repositoryMock.Verify(r => r.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
         }
     }
 }
