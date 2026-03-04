@@ -128,7 +128,8 @@ namespace Rvnx.CRM.Web.Controllers
 
             ContactIndexViewModel viewModel = new()
             {
-                Contacts = contactDtos, SuccessMessage = TempData["SuccessMessage"] as string
+                Contacts = contactDtos,
+                SuccessMessage = TempData["SuccessMessage"] as string
             };
 
             return View(viewModel);

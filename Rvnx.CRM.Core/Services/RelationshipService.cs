@@ -266,8 +266,15 @@ namespace Rvnx.CRM.Core.Services
                     if (parts.Length == 3 && Guid.TryParse(parts[0], out Guid sId) &&
                         Guid.TryParse(parts[1], out Guid tId) && bool.TryParse(parts[2], out bool reverse))
                     {
-                        if (sId == Guid.Empty) sId = partialContact.Id;
-                        if (tId == Guid.Empty) tId = partialContact.Id;
+                        if (sId == Guid.Empty)
+                        {
+                            sId = partialContact.Id;
+                        }
+
+                        if (tId == Guid.Empty)
+                        {
+                            tId = partialContact.Id;
+                        }
 
                         Relationship newRel = new()
                         {
@@ -316,10 +323,17 @@ namespace Rvnx.CRM.Core.Services
             }
 
             RelationshipTypeDefinition? typeDef = RelationshipTypeService.GetById(relationshipTypeId);
-            if (typeDef == null) return suggestions;
+            if (typeDef == null)
+            {
+                return suggestions;
+            }
 
             Contact? entity = await repository.GetByIdAsync<Contact>(entityId);
-            if (entity == null) return suggestions;
+            if (entity == null)
+            {
+                return suggestions;
+            }
+
             string entityName = $"{entity.FirstName} {entity.LastName}".Trim();
 
             string relatedEntityName = partialContactName ?? string.Empty;
@@ -327,13 +341,15 @@ namespace Rvnx.CRM.Core.Services
             {
                 Contact? relatedEntity = await repository.GetByIdAsync<Contact>(relatedEntityId.Value);
                 if (relatedEntity != null)
+                {
                     relatedEntityName = $"{relatedEntity.FirstName} {relatedEntity.LastName}".Trim();
+                }
             }
 
             async Task<HashSet<Guid>> GetComponentAsync(Guid startId, Guid typeIdToSearch)
             {
-                var comp = new HashSet<Guid>();
-                var q = new Queue<Guid>();
+                HashSet<Guid> comp = [];
+                Queue<Guid> q = new();
                 q.Enqueue(startId);
                 comp.Add(startId);
 
@@ -341,13 +357,13 @@ namespace Rvnx.CRM.Core.Services
 
                 while (q.Count > 0 && comp.Count < maxNodes)
                 {
-                    var curr = q.Dequeue();
-                    var edges = await repository.ListAsNoTrackingAsync<Relationship>(r =>
+                    Guid curr = q.Dequeue();
+                    List<Relationship> edges = await repository.ListAsNoTrackingAsync<Relationship>(r =>
                         r.RelationshipTypeId == typeIdToSearch && (r.EntityId == curr || r.RelatedEntityId == curr));
 
-                    foreach (var edge in edges)
+                    foreach (Relationship edge in edges)
                     {
-                        var nbr = edge.EntityId == curr ? edge.RelatedEntityId : edge.EntityId;
+                        Guid nbr = edge.EntityId == curr ? edge.RelatedEntityId : edge.EntityId;
                         if (comp.Add(nbr))
                         {
                             q.Enqueue(nbr);
@@ -366,7 +382,10 @@ namespace Rvnx.CRM.Core.Services
                         r.RelationshipTypeId == relationshipTypeId &&
                         ((r.EntityId == sId && r.RelatedEntityId == tId) ||
                          (r.EntityId == tId && r.RelatedEntityId == sId))) > 0;
-                    if (exists) return;
+                    if (exists)
+                    {
+                        return;
+                    }
                 }
 
                 string payload = $"{sId}_{tId}_{reverse}";
@@ -385,22 +404,22 @@ namespace Rvnx.CRM.Core.Services
 
             if (isTransitive)
             {
-                var compE = await GetComponentAsync(entityId, relationshipTypeId);
-                var compR = relatedEntityId.HasValue
+                HashSet<Guid> compE = await GetComponentAsync(entityId, relationshipTypeId);
+                HashSet<Guid> compR = relatedEntityId.HasValue
                     ? await GetComponentAsync(relatedEntityId.Value, relationshipTypeId)
-                    : new HashSet<Guid> { Guid.Empty };
+                    : [Guid.Empty];
 
                 // Batch-load all contacts from both components in two queries instead of one per node
-                var compEIds = compE.Where(id => id != entityId).ToHashSet();
-                var compRIds = compR.Where(id => id != Guid.Empty && id != relatedEntityId).ToHashSet();
+                HashSet<Guid> compEIds = compE.Where(id => id != entityId).ToHashSet();
+                HashSet<Guid> compRIds = compR.Where(id => id != Guid.Empty && id != relatedEntityId).ToHashSet();
 
-                var allNeededIds = new HashSet<Guid>(compEIds.Concat(compRIds));
+                HashSet<Guid> allNeededIds = [.. compEIds.Concat(compRIds)];
                 List<Contact> batchContacts = allNeededIds.Count > 0
                     ? await repository.ListAsNoTrackingAsync<Contact>(c => allNeededIds.Contains(c.Id))
                     : [];
                 Dictionary<Guid, Contact> contactMap = batchContacts.ToDictionary(c => c.Id);
 
-                foreach (var x in compEIds)
+                foreach (Guid x in compEIds)
                 {
                     if (contactMap.TryGetValue(x, out Contact? xContact))
                     {
@@ -410,7 +429,7 @@ namespace Rvnx.CRM.Core.Services
                     }
                 }
 
-                foreach (var y in compRIds)
+                foreach (Guid y in compRIds)
                 {
                     if (contactMap.TryGetValue(y, out Contact? yContact))
                     {
@@ -428,8 +447,8 @@ namespace Rvnx.CRM.Core.Services
 
                 if (childId != Guid.Empty)
                 {
-                    var childSiblings = await GetComponentAsync(childId, RelationshipTypeIds.Sibling);
-                    var siblingIds = childSiblings.Where(id => id != childId).ToHashSet();
+                    HashSet<Guid> childSiblings = await GetComponentAsync(childId, RelationshipTypeIds.Sibling);
+                    HashSet<Guid> siblingIds = childSiblings.Where(id => id != childId).ToHashSet();
 
                     // Batch-load all sibling contacts in one query
                     List<Contact> sibContacts = siblingIds.Count > 0

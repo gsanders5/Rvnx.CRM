@@ -5,6 +5,28 @@ public class DashboardDto
     public List<UpcomingEventDto> UpcomingEvents { get; set; } = [];
     public List<GraphNodeDto> GraphNodes { get; set; } = [];
     public List<GraphLinkDto> GraphLinks { get; set; } = [];
+    public List<RecentContactDto> RecentContacts { get; set; } = [];
+    public DashboardStatsDto Stats { get; set; } = new();
+}
+
+public class RecentContactDto
+{
+    public Guid Id { get; set; }
+    public string FullName { get; set; } = string.Empty;
+    public DateTime LastChangedDate { get; set; }
+    public DateTime CreatedDate { get; set; }
+    public Guid? ProfileImageId { get; set; }
+
+    /// <summary>True when the contact was created within the last 7 days.</summary>
+    public bool IsNew { get; set; }
+}
+
+public class DashboardStatsDto
+{
+    public int TotalContacts { get; set; }
+    public int ContactsWithBirthday { get; set; }
+    public int ContactsWithRelationships { get; set; }
+    public int ContactsHidden { get; set; }
 }
 
 public class UpcomingEventDto

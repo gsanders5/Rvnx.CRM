@@ -144,7 +144,7 @@ else
 @section Scripts {
     <script>
         $(document).ready(function () {
-            $('#contacts-table').DataTable({
+            var table = $('#contacts-table').DataTable({
                 paging: true,
                 pageLength: 25,
                 order: [[1, 'asc']],
@@ -169,6 +169,7 @@ else
                 columnDefs: [
                     { orderable: false, targets: 'no-sort' },
                     { visible: false, targets: 'default-hidden' },
+                    { searchable: false, targets: 'default-hidden' }, // off by default; toggled in event below
                     { width: '60px', targets: 'col-photo' },
                     { width: '120px', targets: 'col-actions' }
                 ],
@@ -176,6 +177,17 @@ else
                     search: ''
                 }
             });
+
+            // When a column is shown/hidden via the chooser, sync its searchable flag
+            // so searching only applies to columns the user can actually see.
+            // Note: table.on() auto-appends the .dt namespace, so do NOT add it here.
+            // rows().invalidate() is required to rebuild DataTables' internal search cache
+            // for the newly visible column — flipping bSearchable alone is not enough.
+            table.on('column-visibility', function (e, settings, colIdx, state) {
+                settings.aoColumns[colIdx].bSearchable = state;
+                table.rows().invalidate('data').draw(false);
+            });
         });
+
     </script>
 }

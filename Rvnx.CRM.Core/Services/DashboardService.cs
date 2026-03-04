@@ -82,9 +82,55 @@ public class DashboardService(IRepository repository, ILogger<DashboardService> 
         {
             result.GraphLinks.Add(new GraphLinkDto
             {
-                Source = rel.EntityId.ToString(), Target = rel.RelatedEntityId.ToString(), Type = "Relationship"
+                Source = rel.EntityId.ToString(),
+                Target = rel.RelatedEntityId.ToString(),
+                Type = "Relationship"
             });
         }
+
+        // --- Recently added / modified ---
+        const int MaxRecentContacts = 5;
+        DateTime sevenDaysAgo = DateTime.UtcNow.AddDays(-7);
+
+        result.RecentContacts = contacts
+            .OrderByDescending(c => c.LastChangedDate)
+            .Take(MaxRecentContacts)
+            .Select(c => new RecentContactDto
+            {
+                Id = c.Id,
+                FullName = (c.FirstName + " " + (c.LastName ?? "")).Trim(),
+                CreatedDate = c.CreatedDate,
+                LastChangedDate = c.LastChangedDate,
+                ProfileImageId = attachmentMap.TryGetValue(c.Id, out Guid aid) ? aid : null,
+                IsNew = c.CreatedDate >= sevenDaysAgo
+            })
+            .ToList();
+
+
+        // --- Stats ---
+        HashSet<Guid> contactsWithRelationships =
+        [
+            .. relationships.Select(r => r.EntityId),
+            .. relationships.Select(r => r.RelatedEntityId)
+        ];
+
+        List<Guid> allContactIds = [.. contacts.Select(c => c.Id)];
+        int birthdayCount = allContactIds.Count > 0
+            ? await _repository.CountAsync<SignificantDate>(sd => sd.ContactId.HasValue &&
+                                                                  allContactIds.Contains(sd.ContactId.Value) &&
+                                                                  sd.Title == SignificantDateTitles.Birthday)
+            : 0;
+
+        List<Contact> hiddenContacts =
+            await _repository.ListAsNoTrackingAsync<Contact>(x => x.IsHidden && !x.IsPartial);
+
+        result.Stats = new DashboardStatsDto
+        {
+            TotalContacts = contacts.Count,
+            ContactsWithBirthday = birthdayCount,
+            ContactsWithRelationships = contactsWithRelationships.Count(id => contacts.Any(c => c.Id == id)),
+            ContactsHidden = hiddenContacts.Count
+        };
 
         return result;
     }

@@ -1,11 +1,11 @@
 using Moq;
-using System.Linq.Expressions;
 using Rvnx.CRM.Core.Constants;
 using Rvnx.CRM.Core.DTOs.Contact;
 using Rvnx.CRM.Core.Interfaces;
 using Rvnx.CRM.Core.Models.Contact;
 using Rvnx.CRM.Core.Models.Dates;
 using Rvnx.CRM.Core.Services;
+using System.Linq.Expressions;
 
 namespace Rvnx.CRM.Tests.Services
 {
@@ -64,16 +64,16 @@ namespace Rvnx.CRM.Tests.Services
             _repositoryMock.Setup(r => r.ListAsNoTrackingAsync(
                     It.IsAny<Expression<Func<Relationship, bool>>>(),
                     It.IsAny<CancellationToken>()))
-                .ReturnsAsync(new List<Relationship>
-                {
+                .ReturnsAsync(
+                [
                     new Relationship { EntityId = targetId, RelatedEntityId = cId, RelationshipTypeId = typeId }
-                });
+                ]);
 
             // Batch contact load for BFS component nodes (cId is the discovered neighbour)
             _repositoryMock.Setup(r => r.ListAsNoTrackingAsync(
                     It.IsAny<Expression<Func<Contact, bool>>>(),
                     It.IsAny<CancellationToken>()))
-                .ReturnsAsync(new List<Contact> { new Contact { Id = cId, FirstName = "James" } });
+                .ReturnsAsync([new Contact { Id = cId, FirstName = "James" }]);
 
             // No existing relationships - explicitly mock to make the intent clear
             _repositoryMock.Setup(r => r.CountAsync(
@@ -81,9 +81,9 @@ namespace Rvnx.CRM.Tests.Services
                     It.IsAny<CancellationToken>()))
                 .ReturnsAsync(0);
 
-            var suggestions = await _service.GetSuggestedRelationshipsAsync(sourceId, targetId, typeId, false, null);
+            List<SuggestedRelationshipDto> suggestions = await _service.GetSuggestedRelationshipsAsync(sourceId, targetId, typeId, false, null);
 
-            var jackJamesSuggestion =
+            SuggestedRelationshipDto? jackJamesSuggestion =
                 suggestions.FirstOrDefault(s => s.SourceName == "Jack" && s.TargetName == "James");
             Assert.NotNull(jackJamesSuggestion);
             Assert.Equal($"{sourceId}_{cId}_False", jackJamesSuggestion.Payload);
@@ -102,7 +102,9 @@ namespace Rvnx.CRM.Tests.Services
 
             Relationship relationship = new()
             {
-                EntityId = entityId, RelatedEntityId = relatedEntityId, EntityType = EntityTypes.Person
+                EntityId = entityId,
+                RelatedEntityId = relatedEntityId,
+                EntityType = EntityTypes.Person
             };
 
             // Act
@@ -134,7 +136,9 @@ namespace Rvnx.CRM.Tests.Services
 
             Relationship relationship = new()
             {
-                EntityId = entityId, RelatedEntityId = relatedEntityId, EntityType = EntityTypes.Person
+                EntityId = entityId,
+                RelatedEntityId = relatedEntityId,
+                EntityType = EntityTypes.Person
             };
 
             // Act

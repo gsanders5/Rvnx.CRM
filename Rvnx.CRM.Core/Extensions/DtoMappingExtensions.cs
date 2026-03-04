@@ -270,7 +270,10 @@ namespace Rvnx.CRM.Core.Extensions
         {
             return new Fact
             {
-                Id = Guid.NewGuid(), Category = dto.Category, Value = dto.Value, ContactId = dto.EntityId
+                Id = Guid.NewGuid(),
+                Category = dto.Category,
+                Value = dto.Value,
+                ContactId = dto.EntityId
             };
         }
 
