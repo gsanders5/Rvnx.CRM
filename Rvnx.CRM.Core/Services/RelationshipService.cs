@@ -204,22 +204,35 @@ namespace Rvnx.CRM.Core.Services
         private static IEnumerable<SelectOptionDto> MapToSelectOptions(RelationshipTypeDefinition t,
             string? selectedValue)
         {
-            string group = t.Category;
-
-            string fwdText = t.IsSymmetric ? $"is {t.Name} of" : $"is {t.Name} of ({t.OppositeName})";
-            yield return new SelectOptionDto
-            {
-                Value = $"{t.Id}_Fwd", Text = fwdText, Group = group, Selected = selectedValue == $"{t.Id}_Fwd"
-            };
+            yield return CreateForwardOption(t, selectedValue);
 
             if (!t.IsSymmetric)
             {
-                string revText = $"is {t.OppositeName} of ({t.Name})";
-                yield return new SelectOptionDto
-                {
-                    Value = $"{t.Id}_Rev", Text = revText, Group = group, Selected = selectedValue == $"{t.Id}_Rev"
-                };
+                yield return CreateReverseOption(t, selectedValue);
             }
+        }
+
+        private static SelectOptionDto CreateForwardOption(RelationshipTypeDefinition t, string? selectedValue)
+        {
+            string fwdText = t.IsSymmetric ? $"is {t.Name} of" : $"is {t.Name} of ({t.OppositeName})";
+            return new SelectOptionDto
+            {
+                Value = $"{t.Id}_Fwd",
+                Text = fwdText,
+                Group = t.Category,
+                Selected = selectedValue == $"{t.Id}_Fwd"
+            };
+        }
+
+        private static SelectOptionDto CreateReverseOption(RelationshipTypeDefinition t, string? selectedValue)
+        {
+            return new SelectOptionDto
+            {
+                Value = $"{t.Id}_Rev",
+                Text = $"is {t.OppositeName} of ({t.Name})",
+                Group = t.Category,
+                Selected = selectedValue == $"{t.Id}_Rev"
+            };
         }
 
         public List<RelationshipTypeDefinition> GetRelationshipTypes(string entityType)
