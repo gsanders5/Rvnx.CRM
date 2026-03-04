@@ -43,7 +43,9 @@ namespace Rvnx.CRM.Core.Extensions
                     Id = ro.Id,
                     DaysBeforeEvent = ro.DaysBeforeEvent,
                     IsActive = ro.IsActive,
-                    ScheduledFor = Services.DateCalculationService.GetScheduledForDate(entity, ro, DateOnly.FromDateTime(DateTime.Today))
+                    ScheduledFor =
+                        Services.DateCalculationService.GetScheduledForDate(entity, ro,
+                            DateOnly.FromDateTime(DateTime.Today))
                 }).ToList() ?? []
             };
         }
@@ -52,7 +54,8 @@ namespace Rvnx.CRM.Core.Extensions
         {
             RelationshipTypeDefinition? def = RelationshipTypeService.GetById(entity.RelationshipTypeId);
             string typeName = def?.GetName((entity.Person as Contact)?.Gender) ?? entity.RelationshipTypeName;
-            string oppositeName = def?.GetOppositeName((entity.RelatedPerson as Contact)?.Gender) ?? entity.RelationshipTypeOppositeName;
+            string oppositeName = def?.GetOppositeName((entity.RelatedPerson as Contact)?.Gender) ??
+                                  entity.RelationshipTypeOppositeName;
 
             return new RelationshipDto
             {
@@ -63,6 +66,7 @@ namespace Rvnx.CRM.Core.Extensions
                 RelationshipTypeId = entity.RelationshipTypeId,
                 RelationshipTypeName = typeName,
                 RelationshipTypeOppositeName = oppositeName,
+                RelationshipTypeCategory = def?.Category ?? "Uncategorized",
                 RelatedEntityName = entity.RelatedPerson?.FullName ?? "Unknown",
                 EntityName = entity.Person?.FullName ?? "Unknown",
                 IsEntityPartial = (entity.Person as Contact)?.IsPartial == true,
@@ -231,6 +235,7 @@ namespace Rvnx.CRM.Core.Extensions
             entity.Birthday = dto.Birthday;
             entity.Notes = dto.Notes;
         }
+
         public static ContactMethod ToEntity(this ContactMethodFormDto dto)
         {
             return new ContactMethod
@@ -249,15 +254,10 @@ namespace Rvnx.CRM.Core.Extensions
             entity.Value = dto.Value;
             entity.Label = dto.Label;
         }
+
         public static Note ToEntity(this NoteFormDto dto)
         {
-            return new Note
-            {
-                Id = Guid.NewGuid(),
-                Title = dto.Title,
-                Value = dto.Value,
-                ContactId = dto.EntityId
-            };
+            return new Note { Id = Guid.NewGuid(), Title = dto.Title, Value = dto.Value, ContactId = dto.EntityId };
         }
 
         public static void UpdateEntity(this Note entity, NoteFormDto dto)
@@ -270,10 +270,7 @@ namespace Rvnx.CRM.Core.Extensions
         {
             return new Fact
             {
-                Id = Guid.NewGuid(),
-                Category = dto.Category,
-                Value = dto.Value,
-                ContactId = dto.EntityId
+                Id = Guid.NewGuid(), Category = dto.Category, Value = dto.Value, ContactId = dto.EntityId
             };
         }
 
