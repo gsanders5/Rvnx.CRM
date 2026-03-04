@@ -17,6 +17,10 @@ public abstract class Person : BaseEntity
     public string? LastName { get; set; }
 
     [MaxLength(100)]
+    [Display(Name = "Maiden Name")]
+    public string? MaidenName { get; set; }
+
+    [MaxLength(100)]
     [Display(Name = "Nickname")]
     public string? Nickname { get; set; }
 
