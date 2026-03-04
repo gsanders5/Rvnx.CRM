@@ -25,23 +25,27 @@ namespace Rvnx.CRM.Tests.Services
         [InlineData(null)]
         [InlineData("InvalidFormat")]
         [InlineData("NotAGuid_Fwd")]
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Naming", "CA1707:Identifiers should not contain underscores", Justification = "Test names follow a standard convention")]
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Naming", "CA1707:Identifiers should not contain underscores",
+            Justification = "Test names follow a standard convention")]
         public async Task CreateRelationshipAsync_WithInvalidSelection_ReturnsFailure(string? invalidSelection)
         {
             // Arrange
             Relationship relationship = new();
 
             // Act
-            RelationshipOperationResult result = await _service.CreateRelationshipAsync(relationship, invalidSelection!);
+            RelationshipOperationResult
+                result = await _service.CreateRelationshipAsync(relationship, invalidSelection!);
 
             // Assert
             Assert.False(result.Success);
             Assert.NotNull(result.ErrorMessage);
-            _repositoryMock.Verify(r => r.AddAsync(It.IsAny<Relationship>(), It.IsAny<CancellationToken>()), Times.Never);
+            _repositoryMock.Verify(r => r.AddAsync(It.IsAny<Relationship>(), It.IsAny<CancellationToken>()),
+                Times.Never);
         }
 
         [Fact]
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Naming", "CA1707:Identifiers should not contain underscores", Justification = "Test names follow a standard convention")]
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Naming", "CA1707:Identifiers should not contain underscores",
+            Justification = "Test names follow a standard convention")]
         public async Task GetSuggestedRelationshipsAsync_ReturnsSuggestions()
         {
             Guid sourceId = Guid.NewGuid();
@@ -49,29 +53,45 @@ namespace Rvnx.CRM.Tests.Services
             Guid cId = Guid.NewGuid();
             Guid typeId = RelationshipTypeIds.Colleague;
 
+            // Load the primary entity (source) and the directly-specified related entity (target)
             _repositoryMock.Setup(r => r.GetByIdAsync<Contact>(sourceId, It.IsAny<CancellationToken>()))
                 .ReturnsAsync(new Contact { Id = sourceId, FirstName = "Jack" });
 
             _repositoryMock.Setup(r => r.GetByIdAsync<Contact>(targetId, It.IsAny<CancellationToken>()))
                 .ReturnsAsync(new Contact { Id = targetId, FirstName = "Jill" });
 
-            _repositoryMock.Setup(r => r.GetByIdAsync<Contact>(cId, It.IsAny<CancellationToken>()))
-                .ReturnsAsync(new Contact { Id = cId, FirstName = "James" });
-
+            // BFS edge query: target is connected to cId via the Colleague relationship
             _repositoryMock.Setup(r => r.ListAsNoTrackingAsync(
-                It.IsAny<Expression<Func<Relationship, bool>>>(),
-                It.IsAny<CancellationToken>()))
-                .ReturnsAsync(new List<Relationship> { new Relationship { EntityId = targetId, RelatedEntityId = cId, RelationshipTypeId = typeId } });
+                    It.IsAny<Expression<Func<Relationship, bool>>>(),
+                    It.IsAny<CancellationToken>()))
+                .ReturnsAsync(new List<Relationship>
+                {
+                    new Relationship { EntityId = targetId, RelatedEntityId = cId, RelationshipTypeId = typeId }
+                });
+
+            // Batch contact load for BFS component nodes (cId is the discovered neighbour)
+            _repositoryMock.Setup(r => r.ListAsNoTrackingAsync(
+                    It.IsAny<Expression<Func<Contact, bool>>>(),
+                    It.IsAny<CancellationToken>()))
+                .ReturnsAsync(new List<Contact> { new Contact { Id = cId, FirstName = "James" } });
+
+            // No existing relationships - explicitly mock to make the intent clear
+            _repositoryMock.Setup(r => r.CountAsync(
+                    It.IsAny<Expression<Func<Relationship, bool>>>(),
+                    It.IsAny<CancellationToken>()))
+                .ReturnsAsync(0);
 
             var suggestions = await _service.GetSuggestedRelationshipsAsync(sourceId, targetId, typeId, false, null);
 
-            var jackJamesSuggestion = suggestions.FirstOrDefault(s => s.SourceName == "Jack" && s.TargetName == "James");
+            var jackJamesSuggestion =
+                suggestions.FirstOrDefault(s => s.SourceName == "Jack" && s.TargetName == "James");
             Assert.NotNull(jackJamesSuggestion);
             Assert.Equal($"{sourceId}_{cId}_False", jackJamesSuggestion.Payload);
         }
 
         [Fact]
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Naming", "CA1707:Identifiers should not contain underscores", Justification = "Test names follow a standard convention")]
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Naming", "CA1707:Identifiers should not contain underscores",
+            Justification = "Test names follow a standard convention")]
         public async Task CreateRelationshipAsync_WithValidForwardSelection_SavesWithoutSwapping()
         {
             // Arrange
@@ -82,9 +102,7 @@ namespace Rvnx.CRM.Tests.Services
 
             Relationship relationship = new()
             {
-                EntityId = entityId,
-                RelatedEntityId = relatedEntityId,
-                EntityType = EntityTypes.Person
+                EntityId = entityId, RelatedEntityId = relatedEntityId, EntityType = EntityTypes.Person
             };
 
             // Act
@@ -104,7 +122,8 @@ namespace Rvnx.CRM.Tests.Services
         }
 
         [Fact]
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Naming", "CA1707:Identifiers should not contain underscores", Justification = "Test names follow a standard convention")]
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Naming", "CA1707:Identifiers should not contain underscores",
+            Justification = "Test names follow a standard convention")]
         public async Task CreateRelationshipAsync_WithValidReverseSelection_SwapsEntities()
         {
             // Arrange
@@ -115,9 +134,7 @@ namespace Rvnx.CRM.Tests.Services
 
             Relationship relationship = new()
             {
-                EntityId = entityId,
-                RelatedEntityId = relatedEntityId,
-                EntityType = EntityTypes.Person
+                EntityId = entityId, RelatedEntityId = relatedEntityId, EntityType = EntityTypes.Person
             };
 
             // Act
@@ -125,7 +142,8 @@ namespace Rvnx.CRM.Tests.Services
 
             // Assert
             Assert.True(result.Success);
-            Assert.Equal(entityId, result.RedirectId); // The original entity stays the primary entity because Swap is called before Ok
+            Assert.Equal(entityId,
+                result.RedirectId); // The original entity stays the primary entity because Swap is called before Ok
             Assert.Equal(EntityTypes.Person, result.EntityType);
 
             Assert.Equal(typeId, relationship.RelationshipTypeId);
@@ -137,7 +155,8 @@ namespace Rvnx.CRM.Tests.Services
         }
 
         [Fact]
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Naming", "CA1707:Identifiers should not contain underscores", Justification = "Test names follow a standard convention")]
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Naming", "CA1707:Identifiers should not contain underscores",
+            Justification = "Test names follow a standard convention")]
         public async Task CreatePartialContact_WithBirthday_CreatesContactDateAndRelationship()
         {
             // Arrange
@@ -154,7 +173,8 @@ namespace Rvnx.CRM.Tests.Services
             };
 
             // Act
-            RelationshipOperationResult result = await _service.CreatePartialContactRelationshipAsync(parentEntityId, selection, dto);
+            RelationshipOperationResult result =
+                await _service.CreatePartialContactRelationshipAsync(parentEntityId, selection, dto);
 
             // Assert
             Assert.True(result.Success);
@@ -178,7 +198,8 @@ namespace Rvnx.CRM.Tests.Services
         }
 
         [Fact]
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Naming", "CA1707:Identifiers should not contain underscores", Justification = "Test names follow a standard convention")]
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Naming", "CA1707:Identifiers should not contain underscores",
+            Justification = "Test names follow a standard convention")]
         public async Task PromotePartialContact_WhenContactIsAlreadyPromoted_ReturnsFailure()
         {
             // Arrange
@@ -199,7 +220,8 @@ namespace Rvnx.CRM.Tests.Services
         }
 
         [Fact]
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Naming", "CA1707:Identifiers should not contain underscores", Justification = "Test names follow a standard convention")]
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Naming", "CA1707:Identifiers should not contain underscores",
+            Justification = "Test names follow a standard convention")]
         public async Task PromotePartialContact_WhenContactIsPartial_SetsIsPartialFalse()
         {
             // Arrange

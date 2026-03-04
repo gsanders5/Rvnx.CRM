@@ -34,7 +34,8 @@ namespace Rvnx.CRM.Core.Services
                 foreach (string payload in suggestedEntityIds)
                 {
                     string[] parts = payload.Split('_');
-                    if (parts.Length == 3 && Guid.TryParse(parts[0], out Guid sId) && Guid.TryParse(parts[1], out Guid tId) && bool.TryParse(parts[2], out bool reverse))
+                    if (parts.Length == 3 && Guid.TryParse(parts[0], out Guid sId) &&
+                        Guid.TryParse(parts[1], out Guid tId) && bool.TryParse(parts[2], out bool reverse))
                     {
                         Relationship newRel = new()
                         {
@@ -155,9 +156,7 @@ namespace Rvnx.CRM.Core.Services
                             c => c.Id != entityId,
                             c => new SelectOptionDto
                             {
-                                Value = c.Id.ToString(),
-                                Text = c.CompanyName,
-                                Selected = selectedId == c.Id
+                                Value = c.Id.ToString(), Text = c.CompanyName, Selected = selectedId == c.Id
                             },
                             c => c.CompanyName);
                         break;
@@ -181,10 +180,7 @@ namespace Rvnx.CRM.Core.Services
                 string fwdText = t.IsSymmetric ? $"is {t.Name} of" : $"is {t.Name} of ({t.OppositeName})";
                 options.Add(new SelectOptionDto
                 {
-                    Value = $"{t.Id}_Fwd",
-                    Text = fwdText,
-                    Group = group,
-                    Selected = selectedValue == $"{t.Id}_Fwd"
+                    Value = $"{t.Id}_Fwd", Text = fwdText, Group = group, Selected = selectedValue == $"{t.Id}_Fwd"
                 });
 
                 if (!t.IsSymmetric)
@@ -205,10 +201,12 @@ namespace Rvnx.CRM.Core.Services
 
         public List<RelationshipTypeDefinition> GetRelationshipTypes(string entityType)
         {
-            return [.. RelationshipTypeService.GetByEntityType(entityType).OrderBy(t => t.Category).ThenBy(t => t.Name)];
+            return
+                [.. RelationshipTypeService.GetByEntityType(entityType).OrderBy(t => t.Category).ThenBy(t => t.Name)];
         }
 
-        public async Task<RelationshipOperationResult> CreatePartialContactRelationshipAsync(Guid parentEntityId, string selectedRelationshipType, CreatePartialContactRelationshipDto dto)
+        public async Task<RelationshipOperationResult> CreatePartialContactRelationshipAsync(Guid parentEntityId,
+            string selectedRelationshipType, CreatePartialContactRelationshipDto dto)
         {
             (Guid typeId, bool isReverse, string? error) = ParseRelationshipSelection(selectedRelationshipType);
             if (error != null)
@@ -263,7 +261,8 @@ namespace Rvnx.CRM.Core.Services
                 foreach (string payload in dto.SuggestedRelationships)
                 {
                     string[] parts = payload.Split('_');
-                    if (parts.Length == 3 && Guid.TryParse(parts[0], out Guid sId) && Guid.TryParse(parts[1], out Guid tId) && bool.TryParse(parts[2], out bool reverse))
+                    if (parts.Length == 3 && Guid.TryParse(parts[0], out Guid sId) &&
+                        Guid.TryParse(parts[1], out Guid tId) && bool.TryParse(parts[2], out bool reverse))
                     {
                         if (sId == Guid.Empty) sId = partialContact.Id;
                         if (tId == Guid.Empty) tId = partialContact.Id;
@@ -300,12 +299,14 @@ namespace Rvnx.CRM.Core.Services
             return RelationshipOperationResult.Ok(parentEntityId, EntityTypes.Person);
         }
 
-        public async Task<List<SuggestedRelationshipDto>> GetSuggestedRelationshipsAsync(Guid entityId, Guid? relatedEntityId, Guid relationshipTypeId, bool isReverse, string? partialContactName)
+        public async Task<List<SuggestedRelationshipDto>> GetSuggestedRelationshipsAsync(Guid entityId,
+            Guid? relatedEntityId, Guid relationshipTypeId, bool isReverse, string? partialContactName)
         {
             List<SuggestedRelationshipDto> suggestions = [];
 
             bool isTransitive = RelationshipTypeService.TransitiveRelationshipTypeIds.Contains(relationshipTypeId);
-            bool isFamilyAdultChild = RelationshipTypeService.FamilyAdultChildRelationshipTypeIds.Contains(relationshipTypeId);
+            bool isFamilyAdultChild =
+                RelationshipTypeService.FamilyAdultChildRelationshipTypeIds.Contains(relationshipTypeId);
 
             if (!isTransitive && !isFamilyAdultChild)
             {
@@ -323,7 +324,8 @@ namespace Rvnx.CRM.Core.Services
             if (relatedEntityId.HasValue)
             {
                 Contact? relatedEntity = await repository.GetByIdAsync<Contact>(relatedEntityId.Value);
-                if (relatedEntity != null) relatedEntityName = $"{relatedEntity.FirstName} {relatedEntity.LastName}".Trim();
+                if (relatedEntity != null)
+                    relatedEntityName = $"{relatedEntity.FirstName} {relatedEntity.LastName}".Trim();
             }
 
             async Task<HashSet<Guid>> GetComponentAsync(Guid startId, Guid typeIdToSearch)
@@ -338,8 +340,8 @@ namespace Rvnx.CRM.Core.Services
                 while (q.Count > 0 && comp.Count < maxNodes)
                 {
                     var curr = q.Dequeue();
-                    var edges = await repository.ListAsNoTrackingAsync<Relationship>(
-                        r => r.RelationshipTypeId == typeIdToSearch && (r.EntityId == curr || r.RelatedEntityId == curr));
+                    var edges = await repository.ListAsNoTrackingAsync<Relationship>(r =>
+                        r.RelationshipTypeId == typeIdToSearch && (r.EntityId == curr || r.RelatedEntityId == curr));
 
                     foreach (var edge in edges)
                     {
@@ -350,6 +352,7 @@ namespace Rvnx.CRM.Core.Services
                         }
                     }
                 }
+
                 return comp;
             }
 
@@ -357,8 +360,10 @@ namespace Rvnx.CRM.Core.Services
             {
                 if (sId != Guid.Empty && tId != Guid.Empty)
                 {
-                    bool exists = await repository.CountAsync<Relationship>(r => r.RelationshipTypeId == relationshipTypeId &&
-                        ((r.EntityId == sId && r.RelatedEntityId == tId) || (r.EntityId == tId && r.RelatedEntityId == sId))) > 0;
+                    bool exists = await repository.CountAsync<Relationship>(r =>
+                        r.RelationshipTypeId == relationshipTypeId &&
+                        ((r.EntityId == sId && r.RelatedEntityId == tId) ||
+                         (r.EntityId == tId && r.RelatedEntityId == sId))) > 0;
                     if (exists) return;
                 }
 
@@ -379,13 +384,23 @@ namespace Rvnx.CRM.Core.Services
             if (isTransitive)
             {
                 var compE = await GetComponentAsync(entityId, relationshipTypeId);
-                var compR = relatedEntityId.HasValue ? await GetComponentAsync(relatedEntityId.Value, relationshipTypeId) : new HashSet<Guid> { Guid.Empty };
+                var compR = relatedEntityId.HasValue
+                    ? await GetComponentAsync(relatedEntityId.Value, relationshipTypeId)
+                    : new HashSet<Guid> { Guid.Empty };
 
-                foreach (var x in compE)
+                // Batch-load all contacts from both components in two queries instead of one per node
+                var compEIds = compE.Where(id => id != entityId).ToHashSet();
+                var compRIds = compR.Where(id => id != Guid.Empty && id != relatedEntityId).ToHashSet();
+
+                var allNeededIds = new HashSet<Guid>(compEIds.Concat(compRIds));
+                List<Contact> batchContacts = allNeededIds.Count > 0
+                    ? await repository.ListAsNoTrackingAsync<Contact>(c => allNeededIds.Contains(c.Id))
+                    : [];
+                Dictionary<Guid, Contact> contactMap = batchContacts.ToDictionary(c => c.Id);
+
+                foreach (var x in compEIds)
                 {
-                    if (x == entityId) continue;
-                    Contact? xContact = await repository.GetByIdAsync<Contact>(x);
-                    if (xContact != null)
+                    if (contactMap.TryGetValue(x, out Contact? xContact))
                     {
                         string xName = $"{xContact.FirstName} {xContact.LastName}".Trim();
                         Guid tId = relatedEntityId ?? Guid.Empty;
@@ -393,11 +408,9 @@ namespace Rvnx.CRM.Core.Services
                     }
                 }
 
-                foreach (var y in compR)
+                foreach (var y in compRIds)
                 {
-                    if (y == relatedEntityId || y == Guid.Empty) continue;
-                    Contact? yContact = await repository.GetByIdAsync<Contact>(y);
-                    if (yContact != null)
+                    if (contactMap.TryGetValue(y, out Contact? yContact))
                     {
                         string yName = $"{yContact.FirstName} {yContact.LastName}".Trim();
                         await AddSuggestionAsync(entityId, y, entityName, yName, isReverse);
@@ -410,20 +423,21 @@ namespace Rvnx.CRM.Core.Services
                 Guid childId = isReverse ? entityId : (relatedEntityId ?? Guid.Empty);
 
                 string adultName = isReverse ? relatedEntityName : entityName;
-                string childName = isReverse ? entityName : relatedEntityName;
 
                 if (childId != Guid.Empty)
                 {
                     var childSiblings = await GetComponentAsync(childId, RelationshipTypeIds.Sibling);
-                    foreach (var sibling in childSiblings)
+                    var siblingIds = childSiblings.Where(id => id != childId).ToHashSet();
+
+                    // Batch-load all sibling contacts in one query
+                    List<Contact> sibContacts = siblingIds.Count > 0
+                        ? await repository.ListAsNoTrackingAsync<Contact>(c => siblingIds.Contains(c.Id))
+                        : [];
+
+                    foreach (Contact sibContact in sibContacts)
                     {
-                        if (sibling == childId) continue;
-                        Contact? sibContact = await repository.GetByIdAsync<Contact>(sibling);
-                        if (sibContact != null)
-                        {
-                            string sibName = $"{sibContact.FirstName} {sibContact.LastName}".Trim();
-                            await AddSuggestionAsync(adultId, sibling, adultName, sibName, false);
-                        }
+                        string sibName = $"{sibContact.FirstName} {sibContact.LastName}".Trim();
+                        await AddSuggestionAsync(adultId, sibContact.Id, adultName, sibName, false);
                     }
                 }
             }
@@ -485,6 +499,7 @@ namespace Rvnx.CRM.Core.Services
                 await repository.SaveChangesAsync();
                 return OperationResult.Ok(entityId, entityType);
             }
+
             return OperationResult.Failure("Relationship not found.");
         }
     }
