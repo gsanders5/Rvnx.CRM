@@ -6,6 +6,7 @@ namespace Rvnx.CRM.Core.DTOs.Contact
     {
         public string FirstName { get; set; } = string.Empty;
         public string LastName { get; set; } = string.Empty;
+        public string? MaidenName { get; set; }
         public string FullName { get; set; } = string.Empty;
         public string? Company { get; set; }
         public string? JobTitle { get; set; }

@@ -26,6 +26,12 @@
             </div>
 
             <div class="form-floating mb-3">
+                <input asp-for="MaidenName" class="form-control" placeholder="MaidenName"/>
+                <label asp-for="MaidenName"></label>
+                <span asp-validation-for="MaidenName" class="text-danger"></span>
+            </div>
+
+            <div class="form-floating mb-3">
                 <input asp-for="Nickname" class="form-control" placeholder="Nickname"/>
                 <label asp-for="Nickname"></label>
                 <span asp-validation-for="Nickname" class="text-danger"></span>

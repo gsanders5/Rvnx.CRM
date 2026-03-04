@@ -138,6 +138,7 @@ namespace Rvnx.CRM.Core.Extensions
                 Id = entity.Id,
                 FirstName = entity.FirstName,
                 LastName = entity.LastName ?? string.Empty,
+                MaidenName = entity.MaidenName,
                 FullName = entity.FullName,
                 Company = entity.Company,
                 JobTitle = entity.JobTitle,
@@ -162,6 +163,7 @@ namespace Rvnx.CRM.Core.Extensions
                 Id = entity.Id,
                 FirstName = entity.FirstName,
                 LastName = entity.LastName ?? string.Empty,
+                MaidenName = entity.MaidenName,
                 FullName = entity.FullName,
                 Company = entity.Company,
                 JobTitle = entity.JobTitle,
@@ -190,6 +192,7 @@ namespace Rvnx.CRM.Core.Extensions
                 Id = Guid.NewGuid(),
                 FirstName = dto.FirstName,
                 LastName = dto.LastName,
+                MaidenName = dto.MaidenName,
                 Nickname = dto.Nickname,
                 JobTitle = dto.JobTitle,
                 Company = dto.Company,
@@ -204,6 +207,7 @@ namespace Rvnx.CRM.Core.Extensions
         {
             entity.FirstName = dto.FirstName;
             entity.LastName = dto.LastName;
+            entity.MaidenName = dto.MaidenName;
             entity.Nickname = dto.Nickname;
             entity.JobTitle = dto.JobTitle;
             entity.Company = dto.Company;

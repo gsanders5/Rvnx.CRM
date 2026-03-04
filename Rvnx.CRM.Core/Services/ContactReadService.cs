@@ -23,6 +23,7 @@ public class ContactReadService(IRepository repository) : IContactReadService
                 Id = c.Id,
                 FirstName = c.FirstName,
                 LastName = c.LastName ?? string.Empty,
+                MaidenName = c.MaidenName,
                 // Optimization: Compute FullName in database projection to avoid extra memory loop
                 FullName = (c.FirstName + " " + (c.LastName ?? "")).Trim(),
                 Company = c.Company,
@@ -166,6 +167,7 @@ public class ContactReadService(IRepository repository) : IContactReadService
                     Id = c.Id,
                     FirstName = c.FirstName,
                     LastName = c.LastName,
+                    MaidenName = c.MaidenName,
                     Gender = c.Gender,
                     IsPartial = c.IsPartial
                 });
@@ -227,6 +229,7 @@ public class ContactReadService(IRepository repository) : IContactReadService
             Id = contact.Id,
             FirstName = contact.FirstName,
             LastName = contact.LastName ?? string.Empty,
+            MaidenName = contact.MaidenName,
             Nickname = contact.Nickname,
             JobTitle = contact.JobTitle,
             Company = contact.Company,
