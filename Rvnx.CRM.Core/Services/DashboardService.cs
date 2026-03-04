@@ -28,7 +28,8 @@ public class DashboardService(IRepository repository, ILogger<DashboardService> 
     {
         DashboardDto result = new();
 
-        List<Contact> contacts = await _repository.ListAsNoTrackingAsync<Contact>(x => x.IsHidden == false);
+        List<Contact> contacts =
+            await _repository.ListAsNoTrackingAsync<Contact>(x => x.IsHidden == false && x.IsPartial == false);
 
         Dictionary<Guid, Contact> contactDict = contacts.ToDictionary(c => c.Id, c => c);
 
@@ -81,9 +82,7 @@ public class DashboardService(IRepository repository, ILogger<DashboardService> 
         {
             result.GraphLinks.Add(new GraphLinkDto
             {
-                Source = rel.EntityId.ToString(),
-                Target = rel.RelatedEntityId.ToString(),
-                Type = "Relationship"
+                Source = rel.EntityId.ToString(), Target = rel.RelatedEntityId.ToString(), Type = "Relationship"
             });
         }
 
