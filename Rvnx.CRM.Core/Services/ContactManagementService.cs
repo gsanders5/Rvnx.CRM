@@ -18,10 +18,13 @@ public class ContactManagementService(IRepository repository, IFileValidationSer
     public async Task DeleteContactAsync(Guid contactId)
     {
         List<Rvnx.CRM.Core.Models.User> userWithSelfContact = await _repository.ListAsync<Rvnx.CRM.Core.Models.User>(u => u.SelfContactId == contactId);
-        foreach (Rvnx.CRM.Core.Models.User user in userWithSelfContact)
+        if (userWithSelfContact.Count > 0)
         {
-            user.SelfContactId = null;
-            await _repository.UpdateAsync(user);
+            foreach (Rvnx.CRM.Core.Models.User user in userWithSelfContact)
+            {
+                user.SelfContactId = null;
+            }
+            await _repository.UpdateRangeAsync(userWithSelfContact);
         }
 
         List<Relationship> userRelationships = await _repository.ListAsync<Relationship>(r =>

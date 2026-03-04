@@ -146,6 +146,13 @@ public class Repository(CRMDbContext context) : IRepository
         return Task.FromResult(entity);
     }
 
+    public Task<IEnumerable<T>> UpdateRangeAsync<T>(IEnumerable<T> entities, CancellationToken cancellationToken = default) where T : BaseEntity
+    {
+        List<T> entitiesList = entities.ToList();
+        _context.Set<T>().UpdateRange(entitiesList);
+        return Task.FromResult<IEnumerable<T>>(entitiesList);
+    }
+
     public async Task DeleteAsync<T>(Guid id, CancellationToken cancellationToken = default) where T : BaseEntity
     {
         T? entity = _context.Set<T>().Local.FirstOrDefault(e => e.Id == id);
