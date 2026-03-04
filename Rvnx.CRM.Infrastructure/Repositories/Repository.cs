@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Rvnx.CRM.Core.Exceptions;
 using Rvnx.CRM.Core.Interfaces;
 using Rvnx.CRM.Core.Models.Base;
 using Rvnx.CRM.Infrastructure.Data;
@@ -196,7 +197,14 @@ public class Repository(CRMDbContext context) : IRepository
 
     public async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
     {
-        return await _context.SaveChangesAsync(cancellationToken);
+        try
+        {
+            return await _context.SaveChangesAsync(cancellationToken);
+        }
+        catch (DbUpdateConcurrencyException ex)
+        {
+            throw new EntityConcurrencyException("A concurrency conflict occurred while saving changes.", ex);
+        }
     }
 
     public async Task<bool> ExistsAsync<T>(Guid id, CancellationToken cancellationToken = default) where T : BaseEntity

@@ -1,6 +1,6 @@
-using Microsoft.EntityFrameworkCore;
 using Rvnx.CRM.Core.Constants;
 using Rvnx.CRM.Core.DTOs.Contact;
+using Rvnx.CRM.Core.Exceptions;
 using Rvnx.CRM.Core.Enumerations;
 using Rvnx.CRM.Core.Extensions;
 using Rvnx.CRM.Core.Interfaces;
@@ -158,7 +158,7 @@ public class ContactManagementService(IRepository repository, IFileValidationSer
             await _repository.SaveChangesAsync();
             return ContactOperationResult.Ok(id);
         }
-        catch (DbUpdateConcurrencyException)
+        catch (EntityConcurrencyException)
         {
             return !await _repository.ExistsAsync<Contact>(id)
                 ? ContactOperationResult.NotFound()
