@@ -41,3 +41,7 @@ Ensure the target container has `id="main-content"` and `tabindex="-1"` to corre
 ## 2024-03-01 - [ARIA Labels for Bootstrap Icons]
 **Learning:** Bootstrap Icons in action buttons (`btn-outline-primary`, `btn-outline-danger`) often lack `aria-label` attributes for screen readers, especially in generic CRUD views like `Labels` and `SignificantDates`. The `title` attribute is visually helpful for hover tooltips but `aria-label` provides a more robust screen reader experience.
 **Action:** When adding or auditing icon-only action buttons in standard CRUD tables, consistently verify that `aria-label` is present and interpolates the relevant entity name (e.g., `@label.Name` or `@item.Title`) for context.
+
+## 2025-05-25 - Standardized Form Action Buttons Pattern
+**Learning:** Standard `<input type="submit">` tags and `form-group` wrappers lead to inconsistent styling across auxiliary entity forms compared to the main `Contacts` forms.
+**Action:** When updating or creating forms in `.cshtml` views, wrap the submit and cancel action buttons in `<div class="d-grid gap-2 d-md-flex mt-4">` for responsiveness (stacking on mobile, inline on desktop). Use Bootstrap `<button>` elements with descriptive icons (e.g., `<i class="bi bi-save me-2"></i>`, `<i class="bi bi-plus-lg me-2"></i>`, `<i class="bi bi-x-lg me-2"></i>`) instead of basic `<input type="submit">` tags to improve visual hierarchy and consistency.
