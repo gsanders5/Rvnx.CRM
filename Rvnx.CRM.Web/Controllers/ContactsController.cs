@@ -7,7 +7,15 @@ using Rvnx.CRM.Web.Controllers.Base;
 
 namespace Rvnx.CRM.Web.Controllers
 {
-    public class ContactsController(ILogger<ContactsController> logger, ICurrentUserService currentUserService, IContactImportService contactImportService, IContactExportService contactExportService, IContactManagementService contactManagementService, IContactReadService contactReadService, ISelfContactService selfContactService, IFileValidationService fileValidationService) : AuthorizedController
+    public class ContactsController(
+        ILogger<ContactsController> logger,
+        ICurrentUserService currentUserService,
+        IContactImportService contactImportService,
+        IContactExportService contactExportService,
+        IContactManagementService contactManagementService,
+        IContactReadService contactReadService,
+        ISelfContactService selfContactService,
+        IFileValidationService fileValidationService) : AuthorizedController
     {
         private readonly ILogger<ContactsController> _logger = logger;
         private readonly ICurrentUserService _currentUserService = currentUserService;
@@ -95,11 +103,13 @@ namespace Rvnx.CRM.Web.Controllers
 
             if (ModelState.IsValid)
             {
-                ContactOperationResult result = await _selfContactService.CreateSelfContactAsync(HttpContext.User, contactDto);
+                ContactOperationResult result =
+                    await _selfContactService.CreateSelfContactAsync(HttpContext.User, contactDto);
                 if (result.Success && result.ContactId.HasValue)
                 {
                     return RedirectToAction(nameof(Details), new { id = result.ContactId.Value });
                 }
+
                 foreach (string error in result.Errors)
                 {
                     ModelState.AddModelError("", error);
@@ -118,8 +128,7 @@ namespace Rvnx.CRM.Web.Controllers
 
             ContactIndexViewModel viewModel = new()
             {
-                Contacts = contactDtos,
-                SuccessMessage = TempData["SuccessMessage"] as string
+                Contacts = contactDtos, SuccessMessage = TempData["SuccessMessage"] as string
             };
 
             return View(viewModel);
@@ -159,6 +168,7 @@ namespace Rvnx.CRM.Web.Controllers
                 {
                     return RedirectToAction(nameof(Index));
                 }
+
                 foreach (string error in result.Errors)
                 {
                     ModelState.AddModelError("", error);
@@ -241,11 +251,12 @@ namespace Rvnx.CRM.Web.Controllers
 
                 using (stream)
                 {
-                    ContactOperationResult result = await _contactManagementService.UpdateContactAsync(id, contactDto, stream, profileImage?.FileName, profileImage?.ContentType);
+                    ContactOperationResult result = await _contactManagementService.UpdateContactAsync(id, contactDto,
+                        stream, profileImage?.FileName, profileImage?.ContentType);
 
                     if (result.Success)
                     {
-                        return RedirectToAction(nameof(Index));
+                        return RedirectToAction(nameof(Details), new { id });
                     }
 
                     if (result.IsNotFound)
@@ -323,12 +334,15 @@ namespace Rvnx.CRM.Web.Controllers
 
             ContactOperationResult result = await _contactManagementService.UnsetProfilePhotoAsync(id);
 
-            return result.Success ? RedirectToAction(nameof(Edit), new { id }) : BadRequest("Could not unset profile photo.");
+            return result.Success
+                ? RedirectToAction(nameof(Edit), new { id })
+                : BadRequest("Could not unset profile photo.");
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> AssignLabel(Guid contactId, Guid labelId, [FromServices] ILabelService labelService, string? returnUrl = null)
+        public async Task<IActionResult> AssignLabel(Guid contactId, Guid labelId,
+            [FromServices] ILabelService labelService, string? returnUrl = null)
         {
             if (contactId != Guid.Empty && labelId != Guid.Empty)
             {
@@ -342,7 +356,8 @@ namespace Rvnx.CRM.Web.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> RemoveLabel(Guid contactId, Guid labelId, [FromServices] ILabelService labelService, string? returnUrl = null)
+        public async Task<IActionResult> RemoveLabel(Guid contactId, Guid labelId,
+            [FromServices] ILabelService labelService, string? returnUrl = null)
         {
             if (contactId != Guid.Empty && labelId != Guid.Empty)
             {
@@ -387,7 +402,8 @@ namespace Rvnx.CRM.Web.Controllers
                 using Stream stream = file.OpenReadStream();
                 ContactImportResult result = await _contactImportService.ImportFromVCardAsync(stream);
 
-                TempData["SuccessMessage"] = $"Import successful! Added: {result.AddedCount}, Skipped: {result.SkippedCount}";
+                TempData["SuccessMessage"] =
+                    $"Import successful! Added: {result.AddedCount}, Skipped: {result.SkippedCount}";
                 return RedirectToAction(nameof(Index));
             }
             catch (Exception ex)
