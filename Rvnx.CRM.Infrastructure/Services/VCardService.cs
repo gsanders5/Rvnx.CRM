@@ -16,6 +16,8 @@ namespace Rvnx.CRM.Infrastructure.Services;
 
 public class VCardService : IVCardService
 {
+    private const string MaidenNameKey = "X-MAIDENNAME";
+
     private readonly HttpClient? _httpClient;
 
     public VCardService(HttpClient? httpClient = null)
@@ -61,7 +63,16 @@ public class VCardService : IVCardService
             // v8: Name uses Surnames and Given (both IReadOnlyList<string>)
             contact.LastName = n.Surnames.Count > 0 ? n.Surnames[0] : "";
             contact.FirstName = n.Given.Count > 0 ? n.Given[0] : "";
-            contact.MaidenName = n.Surnames.Count > 1 ? n.Surnames[1] : null;
+        }
+
+        // Read maiden name from the X-MAIDENNAME extension property
+        FolkerKinzel.VCards.Models.Properties.NonStandardProperty? maidenNameProp =
+            vc.NonStandards?.FirstOrDefault(p =>
+                p is not null && MaidenNameKey.Equals(p.Key, StringComparison.OrdinalIgnoreCase));
+
+        if (!string.IsNullOrWhiteSpace(maidenNameProp?.Value))
+        {
+            contact.MaidenName = maidenNameProp.Value;
         }
 
         // Name Fallback using Display Name
@@ -301,30 +312,6 @@ public class VCardService : IVCardService
                         return (null, null);
                     }
 
-                    // Manually handle redirects to validate each hop
-                    using HttpRequestMessage request = new(HttpMethod.Get, targetUri);
-                    // Disable automatic redirects on the client logic side by creating a new request context if needed
-                    // But standard HttpClient behavior is controlled by HttpClientHandler.AllowAutoRedirect which is set at construction.
-                    // We can't change it on the injected client.
-                    // However, we can use the injected client but we must accept that if it has AllowAutoRedirect=true (default),
-                    // we might be vulnerable to open redirect SSRF if the client follows it automatically to a private IP.
-
-                    // To mitigate this with an injected client that likely has defaults:
-                    // We can't easily force it to stop redirecting without a new handler.
-                    // BUT, we can try to use HEAD requests or check logic, but the most robust way if we can't control the client configuration
-                    // is to rely on the fact that we can't fix "Open Redirect" perfectly with an injected client that follows redirects automatically.
-
-                    // HOWEVER, if we are allowed to create a fresh client (which we aren't, per DI patterns usually), we could.
-                    // Given the constraints, we will attempt to fetch. If the injected client is configured securely, good.
-                    // If not, we adding a "Best Effort" check on the initial URI.
-                    // Wait, if we use SendAsync with a specific completion option, we can stop redirects? No, that's strictly handler.
-
-                    // Let's assume for this fix we validate the initial URI and acknowledge the limitation,
-                    // OR we can implement a loop if we assume the user might have configured the client to NOT follow redirects.
-
-                    // For this task, let's significantly improve the `IsSafeUriAsync` to catch the edge cases mentioned in the review
-                    // (0.0.0.0, IPv6 mapped) which solves the "Bypass" part of the review for direct IPs.
-
                     using HttpResponseMessage response = await _httpClient.GetAsync(targetUri, cancellationToken);
                     if (response.IsSuccessStatusCode)
                     {
@@ -372,18 +359,12 @@ public class VCardService : IVCardService
             return false;
         }
 
-        // If it's an IPv4 address, MapToIPv6 adds the ::ffff: prefix.
-        // If it's already IPv6, it stays IPv6.
         IPAddress ipv6 = ipAddress.MapToIPv6();
         byte[] bytes = ipv6.GetAddressBytes();
 
-        // In IPv6 mapped format, 0.0.0.0 becomes ::ffff:0.0.0.0 (::ffff:0:0)
         bool isAny = true;
         for (int i = 0; i < bytes.Length; i++)
         {
-            // For IPv4 mapped, the first 10 bytes are 0, next 2 are 0xFF.
-            // But strict "Any" (0.0.0.0) mapped is ::ffff:0.0.0.0
-            // Let's check the original address for 0.0.0.0 specifically if it was IPv4
             if (bytes[i] != 0)
             {
                 isAny = false;
@@ -391,7 +372,7 @@ public class VCardService : IVCardService
         }
         if (isAny)
         {
-            return false; // ::0
+            return false;
         }
 
         if (ipAddress.AddressFamily == AddressFamily.InterNetwork)
@@ -401,9 +382,6 @@ public class VCardService : IVCardService
                 return false;
             }
         }
-
-
-        // We can check based on the original address family for simplicity
 
         if (ipAddress.AddressFamily == AddressFamily.InterNetwork)
         {
@@ -429,36 +407,19 @@ public class VCardService : IVCardService
                 return false;
             }
 
-            if (v4bytes[0] == 169 && v4bytes[1] == 254)
-            {
-                return false;
-            }
-
-            // 127.0.0.0/8 (Loopback) - IsLoopback only catches 127.0.0.1 usually?
-            // .NET IsLoopback checks 127.0.0.1 but 127.x.x.x is all loopback.
-            if (v4bytes[0] == 127)
-            {
-                return false;
-            }
-
-            // 100.64.0.0/10 (Shared Address Space - CGNAT) - RFC 6598
-            // Often considered "public" on WAN but internal to carrier.
-            // Safer to block if we want strict public internet.
-            // Let's stick to RFC 1918 + Link Local + Loopback for now as per plan.
-
-            return true;
+            return (v4bytes[0] != 169 || v4bytes[1] != 254) && v4bytes[0] != 127;
         }
         else if (ipAddress.AddressFamily == AddressFamily.InterNetworkV6)
         {
-            // If it is an IPv4-mapped address (::ffff:x.x.x.x), we should check the embedded IPv4
             if (ipAddress.IsIPv4MappedToIPv6)
             {
                 IPAddress v4 = ipAddress.MapToIPv4();
-                return IsPublicIpAddress(v4); // Recursively check the IPv4 part
+                return IsPublicIpAddress(v4);
             }
 
-
-            return (bytes[0] != 0xFE || (bytes[1] & 0xC0) != 0x80) && (bytes[0] & 0xFE) != 0xFC && (bytes[0] != 0x20 || bytes[1] != 0x01 || bytes[2] != 0x0D || bytes[3] != 0xB8);
+            return (bytes[0] != 0xFE || (bytes[1] & 0xC0) != 0x80) &&
+                   (bytes[0] & 0xFE) != 0xFC &&
+                   (bytes[0] != 0x20 || bytes[1] != 0x01 || bytes[2] != 0x0D || bytes[3] != 0xB8);
         }
 
         return false;
@@ -466,23 +427,24 @@ public class VCardService : IVCardService
 
     public byte[] ExportVCard(Contact contact)
     {
-        var nameBuilder = NameBuilder
-            .Create()
-            .AddSurname(contact.LastName ?? "")
-            .AddGiven(contact.FirstName);
-
-        if (!string.IsNullOrEmpty(contact.MaidenName))
-        {
-            nameBuilder.AddSurname(contact.MaidenName);
-        }
-
         VCard vCard = VCardBuilder
             .Create()
-            .NameViews.Add(nameBuilder.Build())
+            .NameViews.Add(NameBuilder
+                .Create()
+                .AddSurname(contact.LastName ?? "")
+                .AddGiven(contact.FirstName)
+                .Build())
             .DisplayNames.Add(contact.FullName)
             .VCard;
 
         VCardBuilder builder = VCardBuilder.Create(vCard);
+
+        // Maiden name has no standard vCard 3.0 field; use the widely-recognised
+        // X-MAIDENNAME extension so the value round-trips through import/export.
+        if (!string.IsNullOrEmpty(contact.MaidenName))
+        {
+            builder.NonStandards.Add(MaidenNameKey, contact.MaidenName);
+        }
 
         if (!string.IsNullOrEmpty(contact.Company))
         {
