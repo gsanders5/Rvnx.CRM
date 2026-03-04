@@ -60,7 +60,7 @@ namespace Rvnx.CRM.Web.Controllers
                 Relationship relationship = viewModel.ToEntity();
                 RelationshipOperationResult result =
                     await _relationshipService.CreateRelationshipAsync(relationship,
-                        viewModel.SelectedRelationshipType, viewModel.SuggestedEntityIds);
+                        viewModel.SelectedRelationshipType, viewModel.SuggestedRelationships);
                 if (result.Success)
                 {
                     return RedirectToEntity(result.RedirectId, result.EntityType ?? string.Empty);
@@ -128,7 +128,9 @@ namespace Rvnx.CRM.Web.Controllers
                 return Json(new List<SuggestedRelationshipDto>());
             }
 
-            List<SuggestedRelationshipDto> suggestions = await _relationshipService.GetSuggestedRelationshipsAsync(entityId, relatedEntityId, typeId, partialContactName);
+            bool isReverse = parts[1] == "Rev";
+
+            List<SuggestedRelationshipDto> suggestions = await _relationshipService.GetSuggestedRelationshipsAsync(entityId, relatedEntityId, typeId, isReverse, partialContactName);
             return Json(suggestions);
         }
 

@@ -19,6 +19,6 @@ namespace Rvnx.CRM.Core.DTOs.Contact
         [MaxLength(500)]
         public string? Description { get; set; }
 
-        public List<Guid> SuggestedEntityIds { get; set; } = [];
+        public List<string> SuggestedRelationships { get; set; } = [];
     }
 }

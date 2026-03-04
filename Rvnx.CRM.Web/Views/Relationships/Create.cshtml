@@ -462,9 +462,9 @@
                                 const input = document.createElement('input');
                                 input.className = 'form-check-input';
                                 input.type = 'checkbox';
-                                input.name = 'SuggestedEntityIds';
-                                input.value = sugg.existingContactId;
-                                input.id = `sugg_${sugg.existingContactId}`;
+                                input.name = 'SuggestedRelationships';
+                                input.value = sugg.payload;
+                                input.id = `sugg_${sugg.payload}`;
 
                                 const label = document.createElement('label');
                                 label.className = 'form-check-label fw-bold';

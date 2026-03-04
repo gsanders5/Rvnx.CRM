@@ -14,7 +14,7 @@ public interface IRelationshipService
     /// <param name="relationship">The relationship entity to create.</param>
     /// <param name="selectedRelationshipType">The selected relationship type (e.g., "{TypeId}_Fwd").</param>
     /// <returns>A <see cref="RelationshipOperationResult"/> indicating success or failure, with the ID of the redirect entity.</returns>
-    Task<RelationshipOperationResult> CreateRelationshipAsync(Relationship relationship, string selectedRelationshipType, List<Guid>? suggestedEntityIds = null);
+    Task<RelationshipOperationResult> CreateRelationshipAsync(Relationship relationship, string selectedRelationshipType, List<string>? suggestedEntityIds = null);
 
     /// <summary>
     /// Updates an existing relationship.
@@ -69,7 +69,7 @@ public interface IRelationshipService
     /// <returns>A <see cref="RelationshipOperationResult"/> indicating success or failure.</returns>
     Task<RelationshipOperationResult> PromotePartialContactAsync(Guid contactId);
 
-    Task<List<SuggestedRelationshipDto>> GetSuggestedRelationshipsAsync(Guid entityId, Guid? relatedEntityId, Guid relationshipTypeId, string? partialContactName);
+    Task<List<SuggestedRelationshipDto>> GetSuggestedRelationshipsAsync(Guid entityId, Guid? relatedEntityId, Guid relationshipTypeId, bool isReverse, string? partialContactName);
 
     Task<Relationship?> GetRelationshipForEditAsync(Guid id);
     Task<Relationship?> GetRelationshipForDeleteAsync(Guid id);

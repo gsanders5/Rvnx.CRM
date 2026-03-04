@@ -58,22 +58,15 @@ namespace Rvnx.CRM.Tests.Services
             _repositoryMock.Setup(r => r.GetByIdAsync<Contact>(cId, It.IsAny<CancellationToken>()))
                 .ReturnsAsync(new Contact { Id = cId, FirstName = "James" });
 
-            // source has no relations
             _repositoryMock.Setup(r => r.ListAsNoTrackingAsync(
-                It.Is<Expression<Func<Relationship, bool>>>(expr => expr.Compile().Invoke(new Relationship { EntityId = sourceId, RelationshipTypeId = typeId })),
-                It.IsAny<CancellationToken>()))
-                .ReturnsAsync(new List<Relationship>());
-
-            // target has one relation with C
-            _repositoryMock.Setup(r => r.ListAsNoTrackingAsync(
-                It.Is<Expression<Func<Relationship, bool>>>(expr => expr.Compile().Invoke(new Relationship { EntityId = targetId, RelationshipTypeId = typeId })),
+                It.IsAny<Expression<Func<Relationship, bool>>>(),
                 It.IsAny<CancellationToken>()))
                 .ReturnsAsync(new List<Relationship> { new Relationship { EntityId = targetId, RelatedEntityId = cId, RelationshipTypeId = typeId } });
 
-            var suggestions = await _service.GetSuggestedRelationshipsAsync(sourceId, targetId, typeId, null);
+            var suggestions = await _service.GetSuggestedRelationshipsAsync(sourceId, targetId, typeId, false, null);
 
             Assert.Single(suggestions);
-            Assert.Equal(cId, suggestions[0].ExistingContactId);
+            Assert.Equal($"{sourceId}_{cId}_False", suggestions[0].Payload);
             Assert.Equal("Jack", suggestions[0].SourceName);
             Assert.Equal("James", suggestions[0].TargetName);
         }
