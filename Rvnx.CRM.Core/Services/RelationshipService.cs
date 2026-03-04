@@ -171,32 +171,33 @@ namespace Rvnx.CRM.Core.Services
             List<RelationshipTypeDefinition> types = RelationshipTypeService.GetByEntityType(entityType);
             types = [.. types.OrderBy(t => t.Category).ThenBy(t => t.Name)];
 
-            List<SelectOptionDto> options = [];
+            return types.SelectMany(t => MapToSelectOptions(t, selectedValue)).ToList();
+        }
 
-            foreach (RelationshipTypeDefinition t in types)
+        private static IEnumerable<SelectOptionDto> MapToSelectOptions(RelationshipTypeDefinition t, string? selectedValue)
+        {
+            string group = t.Category;
+
+            string fwdText = t.IsSymmetric ? $"is {t.Name} of" : $"is {t.Name} of ({t.OppositeName})";
+            yield return new SelectOptionDto
             {
-                string group = t.Category;
+                Value = $"{t.Id}_Fwd",
+                Text = fwdText,
+                Group = group,
+                Selected = selectedValue == $"{t.Id}_Fwd"
+            };
 
-                string fwdText = t.IsSymmetric ? $"is {t.Name} of" : $"is {t.Name} of ({t.OppositeName})";
-                options.Add(new SelectOptionDto
+            if (!t.IsSymmetric)
+            {
+                string revText = $"is {t.OppositeName} of ({t.Name})";
+                yield return new SelectOptionDto
                 {
-                    Value = $"{t.Id}_Fwd", Text = fwdText, Group = group, Selected = selectedValue == $"{t.Id}_Fwd"
-                });
-
-                if (!t.IsSymmetric)
-                {
-                    string revText = $"is {t.OppositeName} of ({t.Name})";
-                    options.Add(new SelectOptionDto
-                    {
-                        Value = $"{t.Id}_Rev",
-                        Text = revText,
-                        Group = group,
-                        Selected = selectedValue == $"{t.Id}_Rev"
-                    });
-                }
+                    Value = $"{t.Id}_Rev",
+                    Text = revText,
+                    Group = group,
+                    Selected = selectedValue == $"{t.Id}_Rev"
+                };
             }
-
-            return options;
         }
 
         public List<RelationshipTypeDefinition> GetRelationshipTypes(string entityType)
