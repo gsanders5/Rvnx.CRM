@@ -17,6 +17,7 @@ namespace Rvnx.CRM.Infrastructure.Services;
 public class VCardService : IVCardService
 {
     private const string MaidenNameKey = "X-MAIDENNAME";
+    private const string GenderKey = "X-GENDER";
 
     private readonly HttpClient? _httpClient;
 
@@ -222,7 +223,8 @@ public class VCardService : IVCardService
             }
         }
 
-        // Gender - v8: GenderProperty.Value.Sex returns Sex enum
+        // Gender - try standard GenderViews first (v4.0 files), then fall back to
+        // X-GENDER non-standard property (v3.0 files exported by this app and others)
         FolkerKinzel.VCards.Models.Properties.GenderProperty? genderProp = vc.GenderViews?.FirstOrNull();
         if (genderProp?.Value is Gender gender)
         {
@@ -233,6 +235,18 @@ public class VCardService : IVCardService
                 Sex.Other => PersonalAttributeOptions.Other,
                 _ => null
             };
+        }
+        else
+        {
+            // X-GENDER is the widely-used v3.0 extension for gender
+            FolkerKinzel.VCards.Models.Properties.NonStandardProperty? xGenderProp =
+                vc.NonStandards?.FirstOrDefault(p =>
+                    p is not null && GenderKey.Equals(p.Key, StringComparison.OrdinalIgnoreCase));
+
+            if (!string.IsNullOrWhiteSpace(xGenderProp?.Value))
+            {
+                contact.Gender = xGenderProp.Value;
+            }
         }
 
         (byte[]? photoBytes, string? mediaType) = await TryGetPhotoAsync(vc, _httpClient != null, cancellationToken);
@@ -439,13 +453,6 @@ public class VCardService : IVCardService
 
         VCardBuilder builder = VCardBuilder.Create(vCard);
 
-        // Maiden name has no standard vCard 3.0 field; use the widely-recognised
-        // X-MAIDENNAME extension so the value round-trips through import/export.
-        if (!string.IsNullOrEmpty(contact.MaidenName))
-        {
-            builder.NonStandards.Add(MaidenNameKey, contact.MaidenName);
-        }
-
         if (!string.IsNullOrEmpty(contact.Company))
         {
             builder.Organizations.Add(contact.Company);
@@ -481,18 +488,6 @@ public class VCardService : IVCardService
             }
         }
 
-        if (!string.IsNullOrEmpty(contact.Gender))
-        {
-            Sex sex = contact.Gender switch
-            {
-                PersonalAttributeOptions.Male => Sex.Male,
-                PersonalAttributeOptions.Female => Sex.Female,
-                PersonalAttributeOptions.NonBinary => Sex.Other,
-                _ => Sex.Other
-            };
-            builder.GenderViews.Add(sex);
-        }
-
         if (contact.Attachments != null)
         {
             Attachment? profileImage = contact.Attachments.FirstOrDefault(a => a.AttachmentType == AttachmentTypes.ProfileImage);
@@ -511,6 +506,20 @@ public class VCardService : IVCardService
         // (including Google Contacts) only recognize the full "BASE64" form
         vcfString = vcfString.Replace("ENCODING=b;", "ENCODING=BASE64;")
                              .Replace("ENCODING=b:", "ENCODING=BASE64:");
+
+        // X-MAIDENNAME and X-GENDER have no standard vCard 3.0 fields and are silently
+        // dropped by FolkerKinzel during v3.0 serialization. Inject them manually before
+        // END:VCARD so they round-trip correctly through import/export.
+        var extensions = new System.Text.StringBuilder();
+
+        if (!string.IsNullOrEmpty(contact.MaidenName))
+            extensions.AppendLine(System.Globalization.CultureInfo.InvariantCulture, $"{MaidenNameKey}:{contact.MaidenName}");
+
+        if (!string.IsNullOrEmpty(contact.Gender))
+            extensions.AppendLine(System.Globalization.CultureInfo.InvariantCulture, $"{GenderKey}:{contact.Gender}");
+
+        if (extensions.Length > 0)
+            vcfString = vcfString.Replace("END:VCARD", extensions + "END:VCARD");
 
         return System.Text.Encoding.UTF8.GetBytes(vcfString);
     }
