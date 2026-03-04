@@ -20,5 +20,7 @@ namespace Rvnx.CRM.Core.DTOs.Contact
 
         [DataType(DataType.Date)]
         public DateTime? EndDate { get; set; }
+
+        public List<Guid> SuggestedEntityIds { get; set; } = [];
     }
 }

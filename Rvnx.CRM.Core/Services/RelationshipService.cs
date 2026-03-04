@@ -12,7 +12,7 @@ namespace Rvnx.CRM.Core.Services
     public class RelationshipService(IRepository repository) : IRelationshipService
     {
         public async Task<RelationshipOperationResult> CreateRelationshipAsync(Relationship relationship,
-            string selectedRelationshipType)
+            string selectedRelationshipType, List<Guid>? suggestedEntityIds = null)
         {
             (Guid typeId, bool isReverse, string? error) = ParseRelationshipSelection(selectedRelationshipType);
             if (error != null)
@@ -28,6 +28,42 @@ namespace Rvnx.CRM.Core.Services
             }
 
             await repository.AddAsync(relationship);
+
+            if (suggestedEntityIds != null && suggestedEntityIds.Count > 0 && RelationshipTypeService.TransitiveRelationshipTypeIds.Contains(typeId))
+            {
+                Guid mainEntityId = relationship.EntityId;
+                Guid mainRelatedEntityId = relationship.RelatedEntityId;
+
+                foreach (Guid suggestedId in suggestedEntityIds)
+                {
+                    // Check if suggestedId is already linked to mainEntityId
+                    bool isLinkedToEntity = await repository.CountAsync<Relationship>(
+                        r => r.RelationshipTypeId == typeId &&
+                             ((r.EntityId == mainEntityId && r.RelatedEntityId == suggestedId) ||
+                              (r.RelatedEntityId == mainEntityId && r.EntityId == suggestedId))) > 0;
+
+                    Guid targetIdToLink = isLinkedToEntity ? mainRelatedEntityId : mainEntityId;
+
+                    // Double check it's not already linked to the target
+                    bool isAlreadyLinkedToTarget = await repository.CountAsync<Relationship>(
+                        r => r.RelationshipTypeId == typeId &&
+                             ((r.EntityId == targetIdToLink && r.RelatedEntityId == suggestedId) ||
+                              (r.RelatedEntityId == targetIdToLink && r.EntityId == suggestedId))) > 0;
+
+                    if (!isAlreadyLinkedToTarget)
+                    {
+                        await repository.AddAsync(new Relationship
+                        {
+                            EntityId = targetIdToLink,
+                            RelatedEntityId = suggestedId,
+                            EntityType = relationship.EntityType,
+                            RelationshipTypeId = typeId,
+                            Description = "Automatically added from suggested relationship."
+                        });
+                    }
+                }
+            }
+
             await repository.SaveChangesAsync();
 
             Guid redirectId = isReverse ? relationship.RelatedEntityId : relationship.EntityId;
@@ -222,9 +258,125 @@ namespace Rvnx.CRM.Core.Services
             }
 
             await repository.AddAsync(relationship);
+
+            if (dto.SuggestedEntityIds != null && dto.SuggestedEntityIds.Count > 0 && RelationshipTypeService.TransitiveRelationshipTypeIds.Contains(typeId))
+            {
+                foreach (Guid suggestedId in dto.SuggestedEntityIds)
+                {
+                    // The suggested id is already related to parentEntityId, so we link it to the new partial contact
+                    await repository.AddAsync(new Relationship
+                    {
+                        EntityId = partialContact.Id,
+                        RelatedEntityId = suggestedId,
+                        EntityType = EntityTypes.Person,
+                        RelationshipTypeId = typeId,
+                        Description = "Automatically added from suggested relationship."
+                    });
+                }
+            }
+
             await repository.SaveChangesAsync();
 
             return RelationshipOperationResult.Ok(parentEntityId, EntityTypes.Person);
+        }
+
+        public async Task<List<SuggestedRelationshipDto>> GetSuggestedRelationshipsAsync(Guid entityId, Guid? relatedEntityId, Guid relationshipTypeId, string? partialContactName)
+        {
+            List<SuggestedRelationshipDto> suggestions = [];
+
+            if (!RelationshipTypeService.TransitiveRelationshipTypeIds.Contains(relationshipTypeId))
+            {
+                return suggestions;
+            }
+
+            RelationshipTypeDefinition? typeDef = RelationshipTypeService.GetById(relationshipTypeId);
+            if (typeDef == null)
+            {
+                return suggestions;
+            }
+
+            // Get names (to construct the suggestion label)
+            Contact? entity = await repository.GetByIdAsync<Contact>(entityId);
+            if (entity == null) return suggestions;
+            string entityName = $"{entity.FirstName} {entity.LastName}".Trim();
+
+            // All contacts related to entityId via this relationshipTypeId
+            var eRels = await repository.ListAsNoTrackingAsync<Relationship>(
+                r => r.RelationshipTypeId == relationshipTypeId && (r.EntityId == entityId || r.RelatedEntityId == entityId));
+
+            if (relatedEntityId.HasValue)
+            {
+                Contact? relatedEntity = await repository.GetByIdAsync<Contact>(relatedEntityId.Value);
+                if (relatedEntity == null) return suggestions;
+                string relatedEntityName = $"{relatedEntity.FirstName} {relatedEntity.LastName}".Trim();
+
+                // All contacts related to relatedEntityId via this relationshipTypeId
+                var rRels = await repository.ListAsNoTrackingAsync<Relationship>(
+                    r => r.RelationshipTypeId == relationshipTypeId && (r.EntityId == relatedEntityId.Value || r.RelatedEntityId == relatedEntityId.Value));
+
+                HashSet<Guid> eRelIds = eRels.Select(r => r.EntityId == entityId ? r.RelatedEntityId : r.EntityId).ToHashSet();
+                HashSet<Guid> rRelIds = rRels.Select(r => r.EntityId == relatedEntityId.Value ? r.RelatedEntityId : r.EntityId).ToHashSet();
+
+                // For each contact C related to relatedEntityId, if C is NOT related to entityId, suggest entityId <-> C
+                foreach (Guid cId in rRelIds)
+                {
+                    if (cId != entityId && !eRelIds.Contains(cId))
+                    {
+                        Contact? cContact = await repository.GetByIdAsync<Contact>(cId);
+                        if (cContact != null)
+                        {
+                            suggestions.Add(new SuggestedRelationshipDto
+                            {
+                                ExistingContactId = cId,
+                                SourceName = entityName,
+                                TargetName = $"{cContact.FirstName} {cContact.LastName}".Trim(),
+                                RelationshipName = typeDef.Name
+                            });
+                        }
+                    }
+                }
+
+                // For each contact C related to entityId, if C is NOT related to relatedEntityId, suggest relatedEntityId <-> C
+                foreach (Guid cId in eRelIds)
+                {
+                    if (cId != relatedEntityId.Value && !rRelIds.Contains(cId))
+                    {
+                        Contact? cContact = await repository.GetByIdAsync<Contact>(cId);
+                        if (cContact != null)
+                        {
+                            suggestions.Add(new SuggestedRelationshipDto
+                            {
+                                ExistingContactId = cId,
+                                SourceName = relatedEntityName,
+                                TargetName = $"{cContact.FirstName} {cContact.LastName}".Trim(),
+                                RelationshipName = typeDef.Name
+                            });
+                        }
+                    }
+                }
+            }
+            else if (!string.IsNullOrWhiteSpace(partialContactName))
+            {
+                // New partial contact: has no existing relations.
+                // For each contact C related to entityId, suggest partialContact <-> C
+                HashSet<Guid> eRelIds = eRels.Select(r => r.EntityId == entityId ? r.RelatedEntityId : r.EntityId).ToHashSet();
+                foreach (Guid cId in eRelIds)
+                {
+                    Contact? cContact = await repository.GetByIdAsync<Contact>(cId);
+                    if (cContact != null)
+                    {
+                        suggestions.Add(new SuggestedRelationshipDto
+                        {
+                            ExistingContactId = cId,
+                            SourceName = partialContactName,
+                            TargetName = $"{cContact.FirstName} {cContact.LastName}".Trim(),
+                            RelationshipName = typeDef.Name
+                        });
+                    }
+                }
+            }
+
+            return suggestions;
         }
 
         public async Task<RelationshipOperationResult> PromotePartialContactAsync(Guid contactId)
