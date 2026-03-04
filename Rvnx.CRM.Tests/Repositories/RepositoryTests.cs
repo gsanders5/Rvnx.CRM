@@ -85,5 +85,65 @@ namespace Rvnx.CRM.Tests.Repositories
 
             Assert.Equal(2, count);
         }
+
+        [Fact]
+        public async Task ListProjectedAsyncReturnsProjectedData()
+        {
+            // Arrange
+            using CRMDbContext context = GetInMemoryDbContext();
+            Repository repo = new(context);
+
+            await repo.AddAsync(new Contact { Id = Guid.NewGuid(), FirstName = "John", LastName = "Doe" });
+            await repo.AddAsync(new Contact { Id = Guid.NewGuid(), FirstName = "Jane", LastName = "Doe" });
+            await repo.AddAsync(new Contact { Id = Guid.NewGuid(), FirstName = "Bob", LastName = "Smith" });
+            await repo.SaveChangesAsync();
+
+            // Act
+            List<string> result = await repo.ListProjectedAsync<Contact, string>(
+                c => c.LastName == "Doe",
+                c => c.FirstName + " " + c.LastName);
+
+            // Assert
+            Assert.Equal(2, result.Count);
+            Assert.Contains("John Doe", result);
+            Assert.Contains("Jane Doe", result);
+        }
+
+        [Fact]
+        public async Task ListProjectedAsyncWithOrderByOrdersDataCorrectly()
+        {
+            // Arrange
+            using CRMDbContext context = GetInMemoryDbContext();
+            Repository repo = new(context);
+
+            await repo.AddAsync(new Contact { Id = Guid.NewGuid(), FirstName = "Charlie", LastName = "Doe" });
+            await repo.AddAsync(new Contact { Id = Guid.NewGuid(), FirstName = "Alice", LastName = "Doe" });
+            await repo.AddAsync(new Contact { Id = Guid.NewGuid(), FirstName = "Bob", LastName = "Doe" });
+            await repo.SaveChangesAsync();
+
+            // Act
+            List<string> resultAsc = await repo.ListProjectedAsync<Contact, string, string>(
+                c => c.LastName == "Doe",
+                c => c.FirstName,
+                c => c.FirstName,
+                descending: false);
+
+            List<string> resultDesc = await repo.ListProjectedAsync<Contact, string, string>(
+                c => c.LastName == "Doe",
+                c => c.FirstName,
+                c => c.FirstName,
+                descending: true);
+
+            // Assert
+            Assert.Equal(3, resultAsc.Count);
+            Assert.Equal("Alice", resultAsc[0]);
+            Assert.Equal("Bob", resultAsc[1]);
+            Assert.Equal("Charlie", resultAsc[2]);
+
+            Assert.Equal(3, resultDesc.Count);
+            Assert.Equal("Charlie", resultDesc[0]);
+            Assert.Equal("Bob", resultDesc[1]);
+            Assert.Equal("Alice", resultDesc[2]);
+        }
     }
 }
