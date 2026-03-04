@@ -19,6 +19,7 @@ namespace Rvnx.CRM.Web.Helpers
                     ContactMethodType.Twitter => path,
                     ContactMethodType.Twitch => path,
                     ContactMethodType.YouTube => path.StartsWith('@') ? path.Substring(1) : path,
+                    ContactMethodType.TikTok => path.StartsWith('@') ? path.Substring(1) : path,
                     _ => path
                 };
             }
