@@ -131,39 +131,40 @@ namespace Rvnx.CRM.Core.Services
         public async Task<List<SelectOptionDto>> GetRelatedEntityOptionsAsync(Guid entityId, string entityType,
             Guid? selectedId = null)
         {
-            List<SelectOptionDto> options = [];
-
-            switch (entityType)
+            return entityType switch
             {
-                case EntityTypes.Person:
-                    {
-                        options = await repository.ListProjectedAsync<Contact, SelectOptionDto, string>(
-                            p => p.Id != entityId,
-                            p => new SelectOptionDto
-                            {
-                                Value = p.Id.ToString(),
-                                Text = p.IsPartial
-                                    ? p.FirstName + " " + (p.LastName ?? "") + " (partial contact)"
-                                    : p.FirstName + " " + (p.LastName ?? ""),
-                                Selected = selectedId == p.Id
-                            },
-                            p => p.FirstName + " " + (p.LastName ?? ""));
-                        break;
-                    }
-                case EntityTypes.Company:
-                    {
-                        options = await repository.ListProjectedAsync<Employer, SelectOptionDto, string>(
-                            c => c.Id != entityId,
-                            c => new SelectOptionDto
-                            {
-                                Value = c.Id.ToString(), Text = c.CompanyName, Selected = selectedId == c.Id
-                            },
-                            c => c.CompanyName);
-                        break;
-                    }
-            }
+                EntityTypes.Person => await GetPersonOptionsAsync(entityId, selectedId),
+                EntityTypes.Company => await GetCompanyOptionsAsync(entityId, selectedId),
+                _ => []
+            };
+        }
 
-            return options;
+        private async Task<List<SelectOptionDto>> GetPersonOptionsAsync(Guid entityId, Guid? selectedId)
+        {
+            return await repository.ListProjectedAsync<Contact, SelectOptionDto, string>(
+                p => p.Id != entityId,
+                p => new SelectOptionDto
+                {
+                    Value = p.Id.ToString(),
+                    Text = p.IsPartial
+                        ? p.FirstName + " " + (p.LastName ?? "") + " (partial contact)"
+                        : p.FirstName + " " + (p.LastName ?? ""),
+                    Selected = selectedId == p.Id
+                },
+                p => p.FirstName + " " + (p.LastName ?? ""));
+        }
+
+        private async Task<List<SelectOptionDto>> GetCompanyOptionsAsync(Guid entityId, Guid? selectedId)
+        {
+            return await repository.ListProjectedAsync<Employer, SelectOptionDto, string>(
+                c => c.Id != entityId,
+                c => new SelectOptionDto
+                {
+                    Value = c.Id.ToString(),
+                    Text = c.CompanyName,
+                    Selected = selectedId == c.Id
+                },
+                c => c.CompanyName);
         }
 
         public List<SelectOptionDto> GetRelationshipTypeOptions(string entityType, string? selectedValue = null)
