@@ -1,6 +1,7 @@
 using Rvnx.CRM.Core.Constants;
 using Rvnx.CRM.Core.DTOs.Contact;
 using Rvnx.CRM.Core.Extensions;
+using Rvnx.CRM.Core.Helpers;
 using Rvnx.CRM.Core.Interfaces;
 using Rvnx.CRM.Core.Models;
 using Rvnx.CRM.Core.Models.Contact;
@@ -19,6 +20,8 @@ public class ContactMethodService(IRepository repository) : IContactMethodServic
         }
 
         ContactMethod contactInfo = dto.ToEntity();
+        contactInfo.Value = SocialMediaUrlNormalizer.Normalize(contactInfo.Type, contactInfo.Value);
+
         await _repository.AddAsync(contactInfo);
         await _repository.SaveChangesAsync();
 
@@ -36,6 +39,7 @@ public class ContactMethodService(IRepository repository) : IContactMethodServic
             }
 
             existingContactInfo.UpdateEntity(dto);
+            existingContactInfo.Value = SocialMediaUrlNormalizer.Normalize(existingContactInfo.Type, existingContactInfo.Value);
 
             await _repository.UpdateAsync(existingContactInfo);
             await _repository.SaveChangesAsync();
