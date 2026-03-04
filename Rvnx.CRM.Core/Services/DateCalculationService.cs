@@ -58,13 +58,10 @@ namespace Rvnx.CRM.Core.Services
                 if (daysDiff > 0)
                 {
                     int cycles = daysDiff / interval;
-                    if (cycles > 0)
-                    {
-                        nextOccurrence = nextOccurrence.AddDays(cycles * interval);
-                    }
+                    nextOccurrence = nextOccurrence.AddDays(cycles * interval);
                 }
 
-                while (nextOccurrence < fromDate)
+                if (nextOccurrence < fromDate)
                 {
                     nextOccurrence = nextOccurrence.AddDays(interval);
                 }
