@@ -1,4 +1,5 @@
 using Moq;
+using System.Linq.Expressions;
 using Rvnx.CRM.Core.Constants;
 using Rvnx.CRM.Core.DTOs.Contact;
 using Rvnx.CRM.Core.Interfaces;
@@ -37,6 +38,36 @@ namespace Rvnx.CRM.Tests.Services
             Assert.False(result.Success);
             Assert.NotNull(result.ErrorMessage);
             _repositoryMock.Verify(r => r.AddAsync(It.IsAny<Relationship>(), It.IsAny<CancellationToken>()), Times.Never);
+        }
+
+        [Fact]
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Naming", "CA1707:Identifiers should not contain underscores", Justification = "Test names follow a standard convention")]
+        public async Task GetSuggestedRelationshipsAsync_ReturnsSuggestions()
+        {
+            Guid sourceId = Guid.NewGuid();
+            Guid targetId = Guid.NewGuid();
+            Guid cId = Guid.NewGuid();
+            Guid typeId = RelationshipTypeIds.Colleague;
+
+            _repositoryMock.Setup(r => r.GetByIdAsync<Contact>(sourceId, It.IsAny<CancellationToken>()))
+                .ReturnsAsync(new Contact { Id = sourceId, FirstName = "Jack" });
+
+            _repositoryMock.Setup(r => r.GetByIdAsync<Contact>(targetId, It.IsAny<CancellationToken>()))
+                .ReturnsAsync(new Contact { Id = targetId, FirstName = "Jill" });
+
+            _repositoryMock.Setup(r => r.GetByIdAsync<Contact>(cId, It.IsAny<CancellationToken>()))
+                .ReturnsAsync(new Contact { Id = cId, FirstName = "James" });
+
+            _repositoryMock.Setup(r => r.ListAsNoTrackingAsync(
+                It.IsAny<Expression<Func<Relationship, bool>>>(),
+                It.IsAny<CancellationToken>()))
+                .ReturnsAsync(new List<Relationship> { new Relationship { EntityId = targetId, RelatedEntityId = cId, RelationshipTypeId = typeId } });
+
+            var suggestions = await _service.GetSuggestedRelationshipsAsync(sourceId, targetId, typeId, false, null);
+
+            var jackJamesSuggestion = suggestions.FirstOrDefault(s => s.SourceName == "Jack" && s.TargetName == "James");
+            Assert.NotNull(jackJamesSuggestion);
+            Assert.Equal($"{sourceId}_{cId}_False", jackJamesSuggestion.Payload);
         }
 
         [Fact]

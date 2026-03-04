@@ -101,6 +101,9 @@
                         <!-- Preview text will be injected here -->
                     </div>
 
+                    <div id="suggestions-container" class="mb-4" style="display: none;">
+                    </div>
+
                     <div class="form-floating mb-3">
                         <input asp-for="StartDate" class="form-control" type="date" id="StartDate" placeholder=" "/>
                         <label asp-for="StartDate">StartDate</label>
@@ -206,6 +209,9 @@
                             <!-- Preview text will be injected here -->
                         </div>
 
+                        <div id="suggestions-container-partial" class="mb-4" style="display: none;">
+                        </div>
+
                         <div class="form-floating mb-3">
                             <input id="Birthday" name="Birthday" type="date" class="form-control" placeholder=" " />
                             <label for="Birthday">Birthday</label>
@@ -240,6 +246,7 @@
                     this.fwdBtn = document.getElementById(config.fwdBtnId);
                     this.revBtn = document.getElementById(config.revBtnId);
                     this.preview = document.getElementById(config.previewId);
+                    this.suggestionsContainer = document.getElementById(config.suggestionsContainerId);
                     this.relatedInput = document.getElementById(config.relatedInputId); // Select or Text Input
                     this.relatedInput2 = document.getElementById(config.relatedInputId2); // Optional second input (lastname)
 
@@ -419,6 +426,108 @@
                     this.preview.appendChild(s2);
 
                     this.preview.appendChild(document.createTextNode('.'));
+
+                    this.fetchSuggestions(relatedName);
+                }
+
+                async fetchSuggestions(relatedName) {
+                    if (!this.suggestionsContainer) return;
+
+                    const entityId = '@Model.EntityId';
+                    let url = `/Relationships/GetSuggestions?entityId=${entityId}&relationshipType=${this.hiddenInput.value}`;
+
+                    if (this.isPartialForm) {
+                        url += `&partialContactName=${encodeURIComponent(relatedName)}`;
+                    } else {
+                        const relatedId = this.relatedInput.value;
+                        if (!relatedId) {
+                            this.suggestionsContainer.style.display = 'none';
+                            return;
+                        }
+                        url += `&relatedEntityId=${relatedId}`;
+                    }
+
+                    try {
+                        const response = await fetch(url);
+                        if (!response.ok) throw new Error('Network response was not ok');
+                        const data = await response.json();
+
+                        this.suggestionsContainer.innerHTML = '';
+
+                        if (data && data.length > 0) {
+                            const card = document.createElement('div');
+                            card.className = 'card bg-primary-subtle border-primary border-opacity-25 mb-3 shadow-none';
+
+                            const cardBody = document.createElement('div');
+                            cardBody.className = 'card-body p-3';
+
+                            const header = document.createElement('h6');
+                            header.className = 'card-title text-primary d-flex align-items-center mb-2';
+                            header.innerHTML = '<i class="bi bi-magic me-2 fs-5"></i> Suggested Connections';
+                            cardBody.appendChild(header);
+
+                            const desc = document.createElement('p');
+                            desc.className = 'small text-muted mb-3';
+                            desc.textContent = 'Based on the relationship network, we found some other connections you might want to establish:';
+                            cardBody.appendChild(desc);
+
+                            const listGroup = document.createElement('div');
+                            listGroup.className = 'list-group list-group-flush border-top border-primary border-opacity-10';
+
+                            data.forEach((sugg, index) => {
+                                const listItem = document.createElement('div');
+                                listItem.className = 'list-group-item bg-transparent px-0 py-2 border-primary border-opacity-10';
+
+                                const switchDiv = document.createElement('div');
+                                switchDiv.className = 'form-check form-switch d-flex align-items-center mb-0';
+
+                                const input = document.createElement('input');
+                                input.className = 'form-check-input fs-5 me-3';
+                                input.type = 'checkbox';
+                                input.role = 'switch';
+                                input.name = 'SuggestedRelationships';
+                                input.value = sugg.payload;
+                                // Sanitize the payload for ID use
+                                const safeId = sugg.payload.replace(/[^a-zA-Z0-9]/g, '_');
+                                input.id = `sugg_${safeId}_${index}`;
+
+                                const label = document.createElement('label');
+                                label.className = 'form-check-label pt-1';
+                                label.htmlFor = input.id;
+
+                                label.appendChild(document.createTextNode('Set '));
+                                const strong1 = document.createElement('strong');
+                                strong1.textContent = sugg.sourceName;
+                                label.appendChild(strong1);
+
+                                label.appendChild(document.createTextNode(' as '));
+                                const strong2 = document.createElement('strong');
+                                strong2.textContent = sugg.relationshipName;
+                                label.appendChild(strong2);
+
+                                label.appendChild(document.createTextNode(' of '));
+                                const strong3 = document.createElement('strong');
+                                strong3.textContent = sugg.targetName;
+                                label.appendChild(strong3);
+
+                                switchDiv.appendChild(input);
+                                switchDiv.appendChild(label);
+                                listItem.appendChild(switchDiv);
+                                listGroup.appendChild(listItem);
+                            });
+
+                            cardBody.appendChild(listGroup);
+                            card.appendChild(cardBody);
+                            this.suggestionsContainer.appendChild(card);
+
+                            this.suggestionsContainer.style.display = 'block';
+                        } else {
+                            this.suggestionsContainer.style.display = 'none';
+                        }
+                    } catch (error) {
+                        console.error('Error fetching suggestions:', error);
+                        this.suggestionsContainer.style.display = 'none';
+                    }
                 }
             }
 
@@ -431,6 +540,7 @@
                 fwdBtnId: 'role-fwd-btn',
                 revBtnId: 'role-rev-btn',
                 previewId: 'relationshipPreview',
+                suggestionsContainerId: 'suggestions-container',
                 relatedInputId: 'RelatedEntityId',
 
                 collapseId: 'typeSelectionCollapse',
@@ -451,6 +561,7 @@
                     fwdBtnId: 'role-fwd-btn-partial',
                     revBtnId: 'role-rev-btn-partial',
                     previewId: 'relationshipPreviewPartial',
+                    suggestionsContainerId: 'suggestions-container-partial',
                     relatedInputId: 'PartialContactFirstName',
                     relatedInputId2: 'PartialContactLastName',
 

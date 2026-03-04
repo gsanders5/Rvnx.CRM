@@ -12,7 +12,7 @@ namespace Rvnx.CRM.Core.Services
     public class RelationshipService(IRepository repository) : IRelationshipService
     {
         public async Task<RelationshipOperationResult> CreateRelationshipAsync(Relationship relationship,
-            string selectedRelationshipType)
+            string selectedRelationshipType, List<string>? suggestedEntityIds = null)
         {
             (Guid typeId, bool isReverse, string? error) = ParseRelationshipSelection(selectedRelationshipType);
             if (error != null)
@@ -28,6 +28,41 @@ namespace Rvnx.CRM.Core.Services
             }
 
             await repository.AddAsync(relationship);
+
+            if (suggestedEntityIds != null && suggestedEntityIds.Count > 0)
+            {
+                foreach (string payload in suggestedEntityIds)
+                {
+                    string[] parts = payload.Split('_');
+                    if (parts.Length == 3 && Guid.TryParse(parts[0], out Guid sId) && Guid.TryParse(parts[1], out Guid tId) && bool.TryParse(parts[2], out bool reverse))
+                    {
+                        Relationship newRel = new()
+                        {
+                            EntityId = sId,
+                            RelatedEntityId = tId,
+                            EntityType = relationship.EntityType,
+                            RelationshipTypeId = typeId,
+                            Description = "Automatically added from suggested relationship."
+                        };
+
+                        if (reverse)
+                        {
+                            SwapRelationshipEntities(newRel);
+                        }
+
+                        // Just in case, check existence before adding to avoid unique constraint issues
+                        bool exists = await repository.CountAsync<Relationship>(r => r.RelationshipTypeId == typeId &&
+                            ((r.EntityId == newRel.EntityId && r.RelatedEntityId == newRel.RelatedEntityId) ||
+                             (r.EntityId == newRel.RelatedEntityId && r.RelatedEntityId == newRel.EntityId))) > 0;
+
+                        if (!exists)
+                        {
+                            await repository.AddAsync(newRel);
+                        }
+                    }
+                }
+            }
+
             await repository.SaveChangesAsync();
 
             Guid redirectId = isReverse ? relationship.RelatedEntityId : relationship.EntityId;
@@ -222,9 +257,178 @@ namespace Rvnx.CRM.Core.Services
             }
 
             await repository.AddAsync(relationship);
+
+            if (dto.SuggestedRelationships != null && dto.SuggestedRelationships.Count > 0)
+            {
+                foreach (string payload in dto.SuggestedRelationships)
+                {
+                    string[] parts = payload.Split('_');
+                    if (parts.Length == 3 && Guid.TryParse(parts[0], out Guid sId) && Guid.TryParse(parts[1], out Guid tId) && bool.TryParse(parts[2], out bool reverse))
+                    {
+                        if (sId == Guid.Empty) sId = partialContact.Id;
+                        if (tId == Guid.Empty) tId = partialContact.Id;
+
+                        Relationship newRel = new()
+                        {
+                            EntityId = sId,
+                            RelatedEntityId = tId,
+                            EntityType = EntityTypes.Person,
+                            RelationshipTypeId = typeId,
+                            Description = "Automatically added from suggested relationship."
+                        };
+
+                        if (reverse)
+                        {
+                            SwapRelationshipEntities(newRel);
+                        }
+
+                        // Just in case, check existence before adding to avoid unique constraint issues
+                        bool exists = await repository.CountAsync<Relationship>(r => r.RelationshipTypeId == typeId &&
+                            ((r.EntityId == newRel.EntityId && r.RelatedEntityId == newRel.RelatedEntityId) ||
+                             (r.EntityId == newRel.RelatedEntityId && r.RelatedEntityId == newRel.EntityId))) > 0;
+
+                        if (!exists)
+                        {
+                            await repository.AddAsync(newRel);
+                        }
+                    }
+                }
+            }
+
             await repository.SaveChangesAsync();
 
             return RelationshipOperationResult.Ok(parentEntityId, EntityTypes.Person);
+        }
+
+        public async Task<List<SuggestedRelationshipDto>> GetSuggestedRelationshipsAsync(Guid entityId, Guid? relatedEntityId, Guid relationshipTypeId, bool isReverse, string? partialContactName)
+        {
+            List<SuggestedRelationshipDto> suggestions = [];
+
+            bool isTransitive = RelationshipTypeService.TransitiveRelationshipTypeIds.Contains(relationshipTypeId);
+            bool isFamilyAdultChild = RelationshipTypeService.FamilyAdultChildRelationshipTypeIds.Contains(relationshipTypeId);
+
+            if (!isTransitive && !isFamilyAdultChild)
+            {
+                return suggestions;
+            }
+
+            RelationshipTypeDefinition? typeDef = RelationshipTypeService.GetById(relationshipTypeId);
+            if (typeDef == null) return suggestions;
+
+            Contact? entity = await repository.GetByIdAsync<Contact>(entityId);
+            if (entity == null) return suggestions;
+            string entityName = $"{entity.FirstName} {entity.LastName}".Trim();
+
+            string relatedEntityName = partialContactName ?? string.Empty;
+            if (relatedEntityId.HasValue)
+            {
+                Contact? relatedEntity = await repository.GetByIdAsync<Contact>(relatedEntityId.Value);
+                if (relatedEntity != null) relatedEntityName = $"{relatedEntity.FirstName} {relatedEntity.LastName}".Trim();
+            }
+
+            async Task<HashSet<Guid>> GetComponentAsync(Guid startId, Guid typeIdToSearch)
+            {
+                var comp = new HashSet<Guid>();
+                var q = new Queue<Guid>();
+                q.Enqueue(startId);
+                comp.Add(startId);
+
+                int maxNodes = 50;
+
+                while (q.Count > 0 && comp.Count < maxNodes)
+                {
+                    var curr = q.Dequeue();
+                    var edges = await repository.ListAsNoTrackingAsync<Relationship>(
+                        r => r.RelationshipTypeId == typeIdToSearch && (r.EntityId == curr || r.RelatedEntityId == curr));
+
+                    foreach (var edge in edges)
+                    {
+                        var nbr = edge.EntityId == curr ? edge.RelatedEntityId : edge.EntityId;
+                        if (comp.Add(nbr))
+                        {
+                            q.Enqueue(nbr);
+                        }
+                    }
+                }
+                return comp;
+            }
+
+            async Task AddSuggestionAsync(Guid sId, Guid tId, string sName, string tName, bool reverse)
+            {
+                if (sId != Guid.Empty && tId != Guid.Empty)
+                {
+                    bool exists = await repository.CountAsync<Relationship>(r => r.RelationshipTypeId == relationshipTypeId &&
+                        ((r.EntityId == sId && r.RelatedEntityId == tId) || (r.EntityId == tId && r.RelatedEntityId == sId))) > 0;
+                    if (exists) return;
+                }
+
+                string payload = $"{sId}_{tId}_{reverse}";
+                // Avoid duplicates in suggestions (if multiple paths lead to same edge)
+                if (!suggestions.Any(s => s.Payload == payload))
+                {
+                    suggestions.Add(new SuggestedRelationshipDto
+                    {
+                        Payload = payload,
+                        SourceName = sName,
+                        TargetName = tName,
+                        RelationshipName = reverse ? typeDef.OppositeName : typeDef.Name
+                    });
+                }
+            }
+
+            if (isTransitive)
+            {
+                var compE = await GetComponentAsync(entityId, relationshipTypeId);
+                var compR = relatedEntityId.HasValue ? await GetComponentAsync(relatedEntityId.Value, relationshipTypeId) : new HashSet<Guid> { Guid.Empty };
+
+                foreach (var x in compE)
+                {
+                    if (x == entityId) continue;
+                    Contact? xContact = await repository.GetByIdAsync<Contact>(x);
+                    if (xContact != null)
+                    {
+                        string xName = $"{xContact.FirstName} {xContact.LastName}".Trim();
+                        Guid tId = relatedEntityId ?? Guid.Empty;
+                        await AddSuggestionAsync(x, tId, xName, relatedEntityName, isReverse);
+                    }
+                }
+
+                foreach (var y in compR)
+                {
+                    if (y == relatedEntityId || y == Guid.Empty) continue;
+                    Contact? yContact = await repository.GetByIdAsync<Contact>(y);
+                    if (yContact != null)
+                    {
+                        string yName = $"{yContact.FirstName} {yContact.LastName}".Trim();
+                        await AddSuggestionAsync(entityId, y, entityName, yName, isReverse);
+                    }
+                }
+            }
+            else if (isFamilyAdultChild)
+            {
+                Guid adultId = isReverse ? (relatedEntityId ?? Guid.Empty) : entityId;
+                Guid childId = isReverse ? entityId : (relatedEntityId ?? Guid.Empty);
+
+                string adultName = isReverse ? relatedEntityName : entityName;
+                string childName = isReverse ? entityName : relatedEntityName;
+
+                if (childId != Guid.Empty)
+                {
+                    var childSiblings = await GetComponentAsync(childId, RelationshipTypeIds.Sibling);
+                    foreach (var sibling in childSiblings)
+                    {
+                        if (sibling == childId) continue;
+                        Contact? sibContact = await repository.GetByIdAsync<Contact>(sibling);
+                        if (sibContact != null)
+                        {
+                            string sibName = $"{sibContact.FirstName} {sibContact.LastName}".Trim();
+                            await AddSuggestionAsync(adultId, sibling, adultName, sibName, false);
+                        }
+                    }
+                }
+            }
+
+            return suggestions;
         }
 
         public async Task<RelationshipOperationResult> PromotePartialContactAsync(Guid contactId)

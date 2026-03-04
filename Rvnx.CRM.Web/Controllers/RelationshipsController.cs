@@ -60,7 +60,7 @@ namespace Rvnx.CRM.Web.Controllers
                 Relationship relationship = viewModel.ToEntity();
                 RelationshipOperationResult result =
                     await _relationshipService.CreateRelationshipAsync(relationship,
-                        viewModel.SelectedRelationshipType);
+                        viewModel.SelectedRelationshipType, viewModel.SuggestedRelationships);
                 if (result.Success)
                 {
                     return RedirectToEntity(result.RedirectId, result.EntityType ?? string.Empty);
@@ -112,6 +112,26 @@ namespace Rvnx.CRM.Web.Controllers
             // but since it's a different action we'll pass an error in TempData and redirect.
             TempData["ErrorMessage"] = string.Join("; ", ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage));
             return RedirectToAction(nameof(Create), new { entityId, entityType });
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> GetSuggestions(Guid entityId, Guid? relatedEntityId, string relationshipType, string? partialContactName = null)
+        {
+            if (string.IsNullOrEmpty(relationshipType))
+            {
+                return Json(new List<SuggestedRelationshipDto>());
+            }
+
+            string[] parts = relationshipType.Split('_');
+            if (parts.Length != 2 || !Guid.TryParse(parts[0], out Guid typeId))
+            {
+                return Json(new List<SuggestedRelationshipDto>());
+            }
+
+            bool isReverse = parts[1] == "Rev";
+
+            List<SuggestedRelationshipDto> suggestions = await _relationshipService.GetSuggestedRelationshipsAsync(entityId, relatedEntityId, typeId, isReverse, partialContactName);
+            return Json(suggestions);
         }
 
         [HttpPost]
