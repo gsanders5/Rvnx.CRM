@@ -27,6 +27,12 @@ namespace Rvnx.CRM.Core.Services
                 SwapRelationshipEntities(relationship);
             }
 
+            if (await RelationshipDuplicateExistsAsync(relationship.EntityId, relationship.RelatedEntityId, typeId))
+            {
+                return RelationshipOperationResult.Failure(
+                    "This exact relationship already exists between these two contacts.");
+            }
+
             await repository.AddAsync(relationship);
 
             if (suggestedEntityIds != null && suggestedEntityIds.Count > 0)
@@ -99,6 +105,13 @@ namespace Rvnx.CRM.Core.Services
                 SwapRelationshipEntities(existingRelationship);
             }
 
+            if (await RelationshipDuplicateExistsAsync(
+                    existingRelationship.EntityId, existingRelationship.RelatedEntityId, typeId, excludeId: id))
+            {
+                return RelationshipOperationResult.Failure(
+                    "This exact relationship already exists between these two contacts.");
+            }
+
             await repository.UpdateAsync(existingRelationship);
             await repository.SaveChangesAsync();
 
@@ -126,6 +139,21 @@ namespace Rvnx.CRM.Core.Services
         {
             (relationship.EntityId, relationship.RelatedEntityId) =
                 (relationship.RelatedEntityId, relationship.EntityId);
+        }
+
+        /// <summary>
+        /// Returns true if a relationship of the given type already exists between the two entities
+        /// in either direction. Pass <paramref name="excludeId"/> when editing to ignore the
+        /// relationship being updated.
+        /// </summary>
+        private async Task<bool> RelationshipDuplicateExistsAsync(
+            Guid entityId, Guid relatedEntityId, Guid typeId, Guid? excludeId = null)
+        {
+            return await repository.CountAsync<Relationship>(r =>
+                (excludeId == null || r.Id != excludeId) &&
+                r.RelationshipTypeId == typeId &&
+                ((r.EntityId == entityId && r.RelatedEntityId == relatedEntityId) ||
+                 (r.EntityId == relatedEntityId && r.RelatedEntityId == entityId))) > 0;
         }
 
         public async Task<List<SelectOptionDto>> GetRelatedEntityOptionsAsync(Guid entityId, string entityType,
@@ -160,9 +188,7 @@ namespace Rvnx.CRM.Core.Services
                 c => c.Id != entityId,
                 c => new SelectOptionDto
                 {
-                    Value = c.Id.ToString(),
-                    Text = c.CompanyName,
-                    Selected = selectedId == c.Id
+                    Value = c.Id.ToString(), Text = c.CompanyName, Selected = selectedId == c.Id
                 },
                 c => c.CompanyName);
         }
@@ -175,17 +201,15 @@ namespace Rvnx.CRM.Core.Services
             return types.SelectMany(t => MapToSelectOptions(t, selectedValue)).ToList();
         }
 
-        private static IEnumerable<SelectOptionDto> MapToSelectOptions(RelationshipTypeDefinition t, string? selectedValue)
+        private static IEnumerable<SelectOptionDto> MapToSelectOptions(RelationshipTypeDefinition t,
+            string? selectedValue)
         {
             string group = t.Category;
 
             string fwdText = t.IsSymmetric ? $"is {t.Name} of" : $"is {t.Name} of ({t.OppositeName})";
             yield return new SelectOptionDto
             {
-                Value = $"{t.Id}_Fwd",
-                Text = fwdText,
-                Group = group,
-                Selected = selectedValue == $"{t.Id}_Fwd"
+                Value = $"{t.Id}_Fwd", Text = fwdText, Group = group, Selected = selectedValue == $"{t.Id}_Fwd"
             };
 
             if (!t.IsSymmetric)
@@ -193,10 +217,7 @@ namespace Rvnx.CRM.Core.Services
                 string revText = $"is {t.OppositeName} of ({t.Name})";
                 yield return new SelectOptionDto
                 {
-                    Value = $"{t.Id}_Rev",
-                    Text = revText,
-                    Group = group,
-                    Selected = selectedValue == $"{t.Id}_Rev"
+                    Value = $"{t.Id}_Rev", Text = revText, Group = group, Selected = selectedValue == $"{t.Id}_Rev"
                 };
             }
         }
