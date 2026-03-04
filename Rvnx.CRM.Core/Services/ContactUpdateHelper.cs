@@ -90,16 +90,10 @@ internal static class ContactUpdateHelper
                     await repository.UpdateAsync(offset);
                 }
             }
-            else
+            else if (offset != null && offset.IsActive)
             {
-                if (offset != null)
-                {
-                    if (offset.IsActive)
-                    {
-                        offset.IsActive = false;
-                        await repository.UpdateAsync(offset);
-                    }
-                }
+                offset.IsActive = false;
+                await repository.UpdateAsync(offset);
             }
         }
         else if (existingDate != null)
