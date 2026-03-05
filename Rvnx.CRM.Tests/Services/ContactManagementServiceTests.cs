@@ -249,6 +249,174 @@ public class ContactManagementServiceTests
         }
 
         [Fact]
+        public async Task UpdateContactAsyncWithNewBirthdayAddsDateAndOffset()
+        {
+            Guid contactId = Guid.NewGuid();
+            Contact contact = new() { Id = contactId, FirstName = "Test", LastName = "User" };
+
+            _repositoryMock.Setup(r => r.GetByIdAsync<Contact>(contactId, It.IsAny<CancellationToken>()))
+                .ReturnsAsync(contact);
+
+            ContactFormDto dto = new() { Id = contactId, FirstName = "Test", LastName = "User", Birthday = new DateTime(1990, 1, 1), RemindOnBirthday = true };
+
+            _repositoryMock.Setup(r => r.ListAsync<ContactMethod>(It.IsAny<Expression<Func<ContactMethod, bool>>>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync([]);
+
+            _repositoryMock.Setup(r => r.ListAsync<SignificantDate>(It.IsAny<Expression<Func<SignificantDate, bool>>>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync([]);
+
+            _repositoryMock.Setup(r => r.ListAsync<ReminderOffset>(It.IsAny<Expression<Func<ReminderOffset, bool>>>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync([]);
+
+            ContactOperationResult result = await _service.UpdateContactAsync(contactId, dto, null, null, null);
+
+            Assert.True(result.Success);
+            _repositoryMock.Verify(r => r.AddAsync(It.Is<SignificantDate>(d => d.ContactId == contactId && d.EventDate == new DateOnly(1990, 1, 1) && d.Title == Rvnx.CRM.Core.Constants.SignificantDateTitles.Birthday), It.IsAny<CancellationToken>()), Times.Once);
+            _repositoryMock.Verify(r => r.AddAsync(It.Is<ReminderOffset>(o => o.DaysBeforeEvent == 0 && o.IsActive == true), It.IsAny<CancellationToken>()), Times.Once);
+        }
+
+        [Fact]
+        public async Task UpdateContactAsyncWithExistingBirthdayUpdatesDate()
+        {
+            Guid contactId = Guid.NewGuid();
+            Contact contact = new() { Id = contactId, FirstName = "Test", LastName = "User" };
+            Guid dateId = Guid.NewGuid();
+
+            _repositoryMock.Setup(r => r.GetByIdAsync<Contact>(contactId, It.IsAny<CancellationToken>()))
+                .ReturnsAsync(contact);
+
+            SignificantDate existingDate = new() { Id = dateId, ContactId = contactId, EventDate = new DateOnly(1990, 1, 1), Title = Rvnx.CRM.Core.Constants.SignificantDateTitles.Birthday };
+
+            _repositoryMock.Setup(r => r.ListAsync<ContactMethod>(It.IsAny<Expression<Func<ContactMethod, bool>>>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync([]);
+
+            _repositoryMock.Setup(r => r.ListAsync<SignificantDate>(It.IsAny<Expression<Func<SignificantDate, bool>>>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync((Expression<Func<SignificantDate, bool>> predicate, CancellationToken ct) =>
+                {
+                    return new List<SignificantDate> { existingDate }.Where(predicate.Compile()).ToList();
+                });
+
+            _repositoryMock.Setup(r => r.ListAsync<ReminderOffset>(It.IsAny<Expression<Func<ReminderOffset, bool>>>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync([]);
+
+            ContactFormDto dto = new() { Id = contactId, FirstName = "Test", LastName = "User", Birthday = new DateTime(1995, 5, 5) };
+
+            ContactOperationResult result = await _service.UpdateContactAsync(contactId, dto, null, null, null);
+
+            Assert.True(result.Success);
+            Assert.Equal(new DateOnly(1995, 5, 5), existingDate.EventDate);
+            _repositoryMock.Verify(r => r.UpdateAsync(existingDate, It.IsAny<CancellationToken>()), Times.Once);
+            _repositoryMock.Verify(r => r.AddAsync(It.IsAny<SignificantDate>(), It.IsAny<CancellationToken>()), Times.Never);
+        }
+
+        [Fact]
+        public async Task UpdateContactAsyncWithRemovedBirthdayDeletesDate()
+        {
+            Guid contactId = Guid.NewGuid();
+            Contact contact = new() { Id = contactId, FirstName = "Test", LastName = "User" };
+            Guid dateId = Guid.NewGuid();
+
+            _repositoryMock.Setup(r => r.GetByIdAsync<Contact>(contactId, It.IsAny<CancellationToken>()))
+                .ReturnsAsync(contact);
+
+            SignificantDate existingDate = new() { Id = dateId, ContactId = contactId, EventDate = new DateOnly(1990, 1, 1), Title = Rvnx.CRM.Core.Constants.SignificantDateTitles.Birthday };
+
+            _repositoryMock.Setup(r => r.ListAsync<ContactMethod>(It.IsAny<Expression<Func<ContactMethod, bool>>>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync([]);
+
+            _repositoryMock.Setup(r => r.ListAsync<SignificantDate>(It.IsAny<Expression<Func<SignificantDate, bool>>>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync((Expression<Func<SignificantDate, bool>> predicate, CancellationToken ct) =>
+                {
+                    return new List<SignificantDate> { existingDate }.Where(predicate.Compile()).ToList();
+                });
+
+            ContactFormDto dto = new() { Id = contactId, FirstName = "Test", LastName = "User", Birthday = null };
+
+            ContactOperationResult result = await _service.UpdateContactAsync(contactId, dto, null, null, null);
+
+            Assert.True(result.Success);
+            _repositoryMock.Verify(r => r.DeleteAsync<SignificantDate>(dateId, It.IsAny<CancellationToken>()), Times.Once);
+            _repositoryMock.Verify(r => r.UpdateAsync(It.IsAny<SignificantDate>(), It.IsAny<CancellationToken>()), Times.Never);
+        }
+
+        [Fact]
+        public async Task UpdateContactAsyncTogglingReminderOnActivatesOffset()
+        {
+            Guid contactId = Guid.NewGuid();
+            Contact contact = new() { Id = contactId, FirstName = "Test", LastName = "User" };
+            Guid dateId = Guid.NewGuid();
+
+            _repositoryMock.Setup(r => r.GetByIdAsync<Contact>(contactId, It.IsAny<CancellationToken>()))
+                .ReturnsAsync(contact);
+
+            SignificantDate existingDate = new() { Id = dateId, ContactId = contactId, EventDate = new DateOnly(1990, 1, 1), Title = Rvnx.CRM.Core.Constants.SignificantDateTitles.Birthday };
+
+            ReminderOffset existingOffset = new() { Id = Guid.NewGuid(), SignificantDateId = dateId, DaysBeforeEvent = 0, IsActive = false };
+
+            _repositoryMock.Setup(r => r.ListAsync<ContactMethod>(It.IsAny<Expression<Func<ContactMethod, bool>>>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync([]);
+
+            _repositoryMock.Setup(r => r.ListAsync<SignificantDate>(It.IsAny<Expression<Func<SignificantDate, bool>>>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync((Expression<Func<SignificantDate, bool>> predicate, CancellationToken ct) =>
+                {
+                    return new List<SignificantDate> { existingDate }.Where(predicate.Compile()).ToList();
+                });
+
+            _repositoryMock.Setup(r => r.ListAsync<ReminderOffset>(It.IsAny<Expression<Func<ReminderOffset, bool>>>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync((Expression<Func<ReminderOffset, bool>> predicate, CancellationToken ct) =>
+                {
+                    return new List<ReminderOffset> { existingOffset }.Where(predicate.Compile()).ToList();
+                });
+
+            ContactFormDto dto = new() { Id = contactId, FirstName = "Test", LastName = "User", Birthday = new DateTime(1990, 1, 1), RemindOnBirthday = true };
+
+            ContactOperationResult result = await _service.UpdateContactAsync(contactId, dto, null, null, null);
+
+            Assert.True(result.Success);
+            Assert.True(existingOffset.IsActive);
+            _repositoryMock.Verify(r => r.UpdateAsync(existingOffset, It.IsAny<CancellationToken>()), Times.Once);
+            _repositoryMock.Verify(r => r.AddAsync(It.IsAny<ReminderOffset>(), It.IsAny<CancellationToken>()), Times.Never);
+        }
+
+        [Fact]
+        public async Task UpdateContactAsyncTogglingReminderOffDeactivatesOffset()
+        {
+            Guid contactId = Guid.NewGuid();
+            Contact contact = new() { Id = contactId, FirstName = "Test", LastName = "User" };
+            Guid dateId = Guid.NewGuid();
+
+            _repositoryMock.Setup(r => r.GetByIdAsync<Contact>(contactId, It.IsAny<CancellationToken>()))
+                .ReturnsAsync(contact);
+
+            SignificantDate existingDate = new() { Id = dateId, ContactId = contactId, EventDate = new DateOnly(1990, 1, 1), Title = Rvnx.CRM.Core.Constants.SignificantDateTitles.Birthday };
+
+            ReminderOffset existingOffset = new() { Id = Guid.NewGuid(), SignificantDateId = dateId, DaysBeforeEvent = 0, IsActive = true };
+
+            _repositoryMock.Setup(r => r.ListAsync<ContactMethod>(It.IsAny<Expression<Func<ContactMethod, bool>>>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync([]);
+
+            _repositoryMock.Setup(r => r.ListAsync<SignificantDate>(It.IsAny<Expression<Func<SignificantDate, bool>>>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync((Expression<Func<SignificantDate, bool>> predicate, CancellationToken ct) =>
+                {
+                    return new List<SignificantDate> { existingDate }.Where(predicate.Compile()).ToList();
+                });
+
+            _repositoryMock.Setup(r => r.ListAsync<ReminderOffset>(It.IsAny<Expression<Func<ReminderOffset, bool>>>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync((Expression<Func<ReminderOffset, bool>> predicate, CancellationToken ct) =>
+                {
+                    return new List<ReminderOffset> { existingOffset }.Where(predicate.Compile()).ToList();
+                });
+
+            ContactFormDto dto = new() { Id = contactId, FirstName = "Test", LastName = "User", Birthday = new DateTime(1990, 1, 1), RemindOnBirthday = false };
+
+            ContactOperationResult result = await _service.UpdateContactAsync(contactId, dto, null, null, null);
+
+            Assert.True(result.Success);
+            Assert.False(existingOffset.IsActive);
+            _repositoryMock.Verify(r => r.UpdateAsync(existingOffset, It.IsAny<CancellationToken>()), Times.Once);
+        }
+
+        [Fact]
         public async Task CreateContactAsyncUsesSingleSaveChangesAsync()
         {
             _repositoryMock.Setup(r => r.ListAsync<ReminderOffset>(It.IsAny<System.Linq.Expressions.Expression<Func<ReminderOffset, bool>>>(), It.IsAny<CancellationToken>()))
