@@ -247,7 +247,13 @@ public class ContactManagementService(IRepository repository, IFileValidationSer
         foreach (Attachment existingAttachment in existingAttachments)
         {
             existingAttachment.AttachmentType = "General";
-            await _repository.UpdateAsync(existingAttachment);
+        }
+
+        // Bolt optimization: Batch update to prevent N+1 queries.
+        // Replaced multiple UpdateAsync calls inside the loop with a single UpdateRangeAsync call.
+        if (existingAttachments.Count > 0)
+        {
+            await _repository.UpdateRangeAsync(existingAttachments);
         }
     }
 

@@ -49,3 +49,8 @@
 
 **Learning:** `DashboardService` was fetching all columns of `Contact` and `Relationship` entities using `ListAsNoTrackingAsync` just to populate the network graph (which only needs `Id`, `FullName`/`Gender`, and `EntityId`/`RelatedEntityId`). This significantly impacts memory and network performance for accounts with many contacts.
 **Action:** Use `ListProjectedAsync` to fetch only the minimum required properties for generating graph nodes and links.
+
+## 2026-06-27 - N+1 in Attachment Profile Photo Archiving
+
+**Learning:** `ArchiveExistingProfilePhotoAsync` updated attachments sequentially using `_repository.UpdateAsync` in a `foreach` loop, leading to N+1 queries when resetting profile photo flags.
+**Action:** Replace `foreach` + `UpdateAsync` with an in-memory modification loop followed by a single batched `_repository.UpdateRangeAsync` to avoid unnecessary DB roundtrips. Ensure unit tests mocking `UpdateRangeAsync` correctly track changes.
