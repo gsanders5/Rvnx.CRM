@@ -7,10 +7,12 @@ using Rvnx.CRM.Web.Controllers.Base;
 
 namespace Rvnx.CRM.Web.Controllers
 {
-    public class ContactMethodsController(IContactMethodService contactMethodService, IRepository repository) : RepositoryController(repository)
+    public class ContactMethodsController(IContactMethodService contactMethodService, IRepository repository)
+        : RepositoryController(repository)
     {
         private readonly IContactMethodService _contactMethodService = contactMethodService;
 
+        [HttpGet]
         public async Task<IActionResult> Create(Guid entityId, string entityType)
         {
             ContactMethodFormDto? dto = await _contactMethodService.GetFormForCreateAsync(entityId, entityType);
@@ -34,9 +36,11 @@ namespace Rvnx.CRM.Web.Controllers
                     return NotFound();
                 }
             }
+
             return View(contactInfoInput);
         }
 
+        [HttpGet]
         public async Task<IActionResult> Edit(Guid? id)
         {
             if (id == null)
@@ -64,6 +68,7 @@ namespace Rvnx.CRM.Web.Controllers
                 {
                     return RedirectToEntity(result.RedirectId, result.RedirectType);
                 }
+
                 if (result.ErrorMessage == "Contact method not found.")
                 {
                     return NotFound();
@@ -73,6 +78,7 @@ namespace Rvnx.CRM.Web.Controllers
             return View(contactInfoInput);
         }
 
+        [HttpGet]
         public async Task<IActionResult> Delete(Guid? id)
         {
             if (id == null)
@@ -89,7 +95,9 @@ namespace Rvnx.CRM.Web.Controllers
         public async Task<IActionResult> DeleteConfirmed(Guid id)
         {
             OperationResult result = await _contactMethodService.DeleteAsync(id);
-            return result.Success ? RedirectToEntity(result.RedirectId, result.RedirectType) : RedirectToAction("Index", "Home");
+            return result.Success
+                ? RedirectToEntity(result.RedirectId, result.RedirectType)
+                : RedirectToAction("Index", "Home");
         }
     }
 }

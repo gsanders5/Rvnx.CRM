@@ -9,12 +9,14 @@ public class LabelsController(ILabelService labelService) : AuthorizedController
 {
     private readonly ILabelService _labelService = labelService;
 
+    [HttpGet]
     public async Task<IActionResult> Index()
     {
         List<LabelDto> labels = await _labelService.GetAllAsync();
         return View(labels);
     }
 
+    [HttpGet]
     public IActionResult Create()
     {
         return View(new LabelFormDto());
@@ -37,14 +39,18 @@ public class LabelsController(ILabelService labelService) : AuthorizedController
                 ModelState.AddModelError("", error);
             }
         }
+
         return View(formDto);
     }
 
+    [HttpGet]
     public async Task<IActionResult> Edit(Guid id)
     {
         List<LabelDto> labels = await _labelService.GetAllAsync();
         LabelDto? label = labels.FirstOrDefault(l => l.Id == id);
-        return label == null ? NotFound() : View(new LabelFormDto { Id = label.Id, Name = label.Name, Color = label.Color });
+        return label == null
+            ? NotFound()
+            : View(new LabelFormDto { Id = label.Id, Name = label.Name, Color = label.Color });
     }
 
     [HttpPost]
@@ -63,6 +69,7 @@ public class LabelsController(ILabelService labelService) : AuthorizedController
             {
                 return RedirectToAction(nameof(Index));
             }
+
             if (result.IsNotFound)
             {
                 return NotFound();
@@ -73,6 +80,7 @@ public class LabelsController(ILabelService labelService) : AuthorizedController
                 ModelState.AddModelError("", error);
             }
         }
+
         return View(formDto);
     }
 

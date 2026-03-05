@@ -6,21 +6,25 @@ using Rvnx.CRM.Web.Controllers.Base;
 
 namespace Rvnx.CRM.Web.Controllers
 {
-    public class SignificantDatesController(ISignificantDateService significantDateService, IRepository repository) : RepositoryController(repository)
+    public class SignificantDatesController(ISignificantDateService significantDateService, IRepository repository)
+        : RepositoryController(repository)
     {
         private readonly ISignificantDateService _significantDateService = significantDateService;
 
+        [HttpGet]
         public async Task<IActionResult> Index(Guid contactId)
         {
             if (!await IsValidContactAsync(contactId))
             {
                 return NotFound();
             }
+
             List<SignificantDateDto> dates = await _significantDateService.GetByContactAsync(contactId);
             ViewBag.ContactId = contactId;
             return View(dates);
         }
 
+        [HttpGet]
         public async Task<IActionResult> Create(Guid contactId)
         {
             return !await IsValidContactAsync(contactId)
@@ -51,7 +55,8 @@ namespace Rvnx.CRM.Web.Controllers
                     RecurrenceType = dto.RecurrenceType,
                     CustomIntervalDays = dto.CustomIntervalDays,
                     IsActive = true,
-                    ReminderOffsets = dto.ReminderOffsetDays.Select(d => new ReminderOffsetDto { DaysBeforeEvent = d, IsActive = true }).ToList()
+                    ReminderOffsets = dto.ReminderOffsetDays
+                        .Select(d => new ReminderOffsetDto { DaysBeforeEvent = d, IsActive = true }).ToList()
                 };
 
                 OperationResult result = await _significantDateService.CreateAsync(sdDto);
@@ -75,6 +80,7 @@ namespace Rvnx.CRM.Web.Controllers
             return View(dto);
         }
 
+        [HttpGet]
         public async Task<IActionResult> Edit(Guid? id)
         {
             if (id == null)
@@ -165,6 +171,7 @@ namespace Rvnx.CRM.Web.Controllers
             return RedirectToAction(nameof(Edit), new { id = significantDateId });
         }
 
+        [HttpGet]
         public async Task<IActionResult> Delete(Guid? id)
         {
             if (id == null)
@@ -181,7 +188,9 @@ namespace Rvnx.CRM.Web.Controllers
         public async Task<IActionResult> DeleteConfirmed(Guid id, Guid contactId)
         {
             OperationResult result = await _significantDateService.DeleteAsync(id);
-            return result.Success ? RedirectToAction(nameof(Index), new { contactId }) : RedirectToAction("Index", "Home");
+            return result.Success
+                ? RedirectToAction(nameof(Index), new { contactId })
+                : RedirectToAction("Index", "Home");
         }
     }
 }

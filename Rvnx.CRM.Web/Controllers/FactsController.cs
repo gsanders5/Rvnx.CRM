@@ -11,6 +11,7 @@ namespace Rvnx.CRM.Web.Controllers
     {
         private readonly IFactService _factService = factService;
 
+        [HttpGet]
         public async Task<IActionResult> Create(Guid entityId, string entityType)
         {
             FactFormDto? dto = await _factService.GetFormForCreateAsync(entityId, entityType);
@@ -28,14 +29,17 @@ namespace Rvnx.CRM.Web.Controllers
                 {
                     return RedirectToEntity(result.RedirectId, result.RedirectType);
                 }
+
                 if (result.ErrorMessage == "Contact not found.")
                 {
                     return NotFound();
                 }
             }
+
             return View(factDto);
         }
 
+        [HttpGet]
         public async Task<IActionResult> Edit(Guid? id)
         {
             if (id == null)
@@ -63,6 +67,7 @@ namespace Rvnx.CRM.Web.Controllers
                 {
                     return RedirectToEntity(result.RedirectId, result.RedirectType);
                 }
+
                 if (result.ErrorMessage == "Fact not found.")
                 {
                     return NotFound();
@@ -72,6 +77,7 @@ namespace Rvnx.CRM.Web.Controllers
             return View(factDto);
         }
 
+        [HttpGet]
         public async Task<IActionResult> Delete(Guid? id)
         {
             if (id == null)
@@ -88,7 +94,9 @@ namespace Rvnx.CRM.Web.Controllers
         public async Task<IActionResult> DeleteConfirmed(Guid id)
         {
             OperationResult result = await _factService.DeleteAsync(id);
-            return result.Success ? RedirectToEntity(result.RedirectId, result.RedirectType) : RedirectToAction("Index", "Home");
+            return result.Success
+                ? RedirectToEntity(result.RedirectId, result.RedirectType)
+                : RedirectToAction("Index", "Home");
         }
     }
 }

@@ -7,17 +7,21 @@ using Rvnx.CRM.Web.Controllers.Base;
 
 namespace Rvnx.CRM.Web.Controllers
 {
-    public class NotesController(INoteService noteService, IRepository repository, IEntityService entityService) : RepositoryController(repository)
+    public class NotesController(INoteService noteService, IRepository repository, IEntityService entityService)
+        : RepositoryController(repository)
     {
         private readonly INoteService _noteService = noteService;
         private readonly IEntityService _entityService = entityService;
 
+        [HttpGet]
         public async Task<IActionResult> Create(Guid entityId, string entityType)
         {
             NoteFormViewModel? viewModel = await _noteService.GetFormForCreateAsync(entityId, entityType);
 
             return viewModel == null
-                ? entityType != Rvnx.CRM.Core.Constants.EntityTypes.Person ? BadRequest("Only Person entities are supported.") : NotFound()
+                ? entityType != Rvnx.CRM.Core.Constants.EntityTypes.Person
+                    ? BadRequest("Only Person entities are supported.")
+                    : NotFound()
                 : View(viewModel);
         }
 
@@ -46,11 +50,14 @@ namespace Rvnx.CRM.Web.Controllers
 
             if (viewModel.EntityId != Guid.Empty)
             {
-                viewModel.EntityName = await _entityService.GetEntityNameAsync(viewModel.EntityType, viewModel.EntityId);
+                viewModel.EntityName =
+                    await _entityService.GetEntityNameAsync(viewModel.EntityType, viewModel.EntityId);
             }
+
             return View(viewModel);
         }
 
+        [HttpGet]
         public async Task<IActionResult> Edit(Guid? id)
         {
             if (id == null)
@@ -78,6 +85,7 @@ namespace Rvnx.CRM.Web.Controllers
                 {
                     return RedirectToEntity(result.RedirectId, result.RedirectType);
                 }
+
                 if (result.ErrorMessage == "Note not found.")
                 {
                     return NotFound();
@@ -86,12 +94,14 @@ namespace Rvnx.CRM.Web.Controllers
 
             if (viewModel.EntityId != Guid.Empty)
             {
-                viewModel.EntityName = await _entityService.GetEntityNameAsync(viewModel.EntityType, viewModel.EntityId);
+                viewModel.EntityName =
+                    await _entityService.GetEntityNameAsync(viewModel.EntityType, viewModel.EntityId);
             }
 
             return View(viewModel);
         }
 
+        [HttpGet]
         public async Task<IActionResult> Delete(Guid? id)
         {
             if (id == null)
@@ -113,7 +123,8 @@ namespace Rvnx.CRM.Web.Controllers
                 EntityId = note.ContactId ?? Guid.Empty,
                 EntityType = Rvnx.CRM.Core.Constants.EntityTypes.Person,
                 CreatedDate = note.CreatedDate,
-                EntityName = await _entityService.GetEntityNameAsync(Rvnx.CRM.Core.Constants.EntityTypes.Person, note.ContactId ?? Guid.Empty)
+                EntityName = await _entityService.GetEntityNameAsync(Rvnx.CRM.Core.Constants.EntityTypes.Person,
+                    note.ContactId ?? Guid.Empty)
             };
             return View(viewModel);
         }
@@ -123,7 +134,9 @@ namespace Rvnx.CRM.Web.Controllers
         public async Task<IActionResult> DeleteConfirmed(Guid id)
         {
             OperationResult result = await _noteService.DeleteAsync(id);
-            return result.Success ? RedirectToEntity(result.RedirectId, result.RedirectType) : RedirectToAction("Index", "Home");
+            return result.Success
+                ? RedirectToEntity(result.RedirectId, result.RedirectType)
+                : RedirectToAction("Index", "Home");
         }
     }
 }

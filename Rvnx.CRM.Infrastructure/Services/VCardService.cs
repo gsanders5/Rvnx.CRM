@@ -401,12 +401,7 @@ public class VCardService : IVCardService
         {
             byte[] v4bytes = ipAddress.GetAddressBytes();
 
-            if (v4bytes[0] == 0)
-            {
-                return false;
-            }
-
-            return v4bytes[0] != 10 && (v4bytes[0] != 172 || v4bytes[1] < 16 || v4bytes[1] > 31) && (v4bytes[0] != 192 || v4bytes[1] != 168) && (v4bytes[0] != 169 || v4bytes[1] != 254) && v4bytes[0] != 127;
+            return v4bytes[0] != 0 && v4bytes[0] != 10 && (v4bytes[0] != 172 || v4bytes[1] < 16 || v4bytes[1] > 31) && (v4bytes[0] != 192 || v4bytes[1] != 168) && (v4bytes[0] != 169 || v4bytes[1] != 254) && v4bytes[0] != 127;
         }
         else if (ipAddress.AddressFamily == AddressFamily.InterNetworkV6)
         {

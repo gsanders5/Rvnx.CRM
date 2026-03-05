@@ -7,7 +7,8 @@ using Rvnx.CRM.Web.Models;
 
 namespace Rvnx.CRM.Web.Controllers
 {
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "CS8602:Dereference of a possibly null reference.", Justification = "Services injected via DI are guaranteed to be non-null.")]
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "CS8602:Dereference of a possibly null reference.",
+        Justification = "Services injected via DI are guaranteed to be non-null.")]
     [TypeFilter(typeof(RequireAdministratorFilter))]
     public class DebugOperationsController(
         IDebugDataService debugDataService,
@@ -27,9 +28,11 @@ namespace Rvnx.CRM.Web.Controllers
                 context.Result = new NotFoundResult();
                 return;
             }
+
             base.OnActionExecuting(context);
         }
 
+        [HttpGet]
         public IActionResult Index()
         {
             return View();
@@ -57,7 +60,9 @@ namespace Rvnx.CRM.Web.Controllers
         {
             int count = await _debugDataService.AddRandomRelationshipsAsync();
 
-            TempData["Message"] = count == 0 ? "Created 0 relationships (Check if contacts exist and types are defined)." : $"Created {count} relationships.";
+            TempData["Message"] = count == 0
+                ? "Created 0 relationships (Check if contacts exist and types are defined)."
+                : $"Created {count} relationships.";
 
             return RedirectToAction("Index");
         }

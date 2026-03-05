@@ -11,17 +11,20 @@ namespace Rvnx.CRM.Web.Controllers
     {
         private readonly IDashboardService _dashboardService = dashboardService;
 
+        [HttpGet]
         public async Task<IActionResult> Index()
         {
             DashboardDto data = await _dashboardService.GetDashboardDataAsync();
             return View(data);
         }
 
+        [HttpGet]
         public IActionResult Privacy()
         {
             return View();
         }
 
+        [HttpGet]
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
         public IActionResult Error()
         {

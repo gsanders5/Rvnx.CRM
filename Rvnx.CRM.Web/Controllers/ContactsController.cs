@@ -32,6 +32,7 @@ namespace Rvnx.CRM.Web.Controllers
                 new EventId(1, nameof(LogErrorImportingVcf)),
                 "Error importing VCF");
 
+        [HttpGet]
         public async Task<IActionResult> Self()
         {
             if (!_currentUserService.IsAuthenticated)
@@ -46,6 +47,7 @@ namespace Rvnx.CRM.Web.Controllers
                 : RedirectToAction(nameof(CreateSelf));
         }
 
+        [HttpGet]
         public async Task<IActionResult> CreateSelf()
         {
             if (!_currentUserService.IsAuthenticated)
@@ -122,6 +124,7 @@ namespace Rvnx.CRM.Web.Controllers
             return View("Create", contactDto);
         }
 
+        [HttpGet]
         public async Task<IActionResult> Index(bool showHidden = false)
         {
             List<ContactDto> contactDtos = await _contactReadService.GetIndexDataAsync(showHidden);
@@ -135,6 +138,7 @@ namespace Rvnx.CRM.Web.Controllers
             return View(viewModel);
         }
 
+        [HttpGet]
         public async Task<IActionResult> Details(Guid? id)
         {
             if (id == null)
@@ -146,6 +150,7 @@ namespace Rvnx.CRM.Web.Controllers
             return contactDto == null ? NotFound() : View(contactDto);
         }
 
+        [HttpGet]
         public IActionResult Create()
         {
             return View(new ContactCreateViewModel
@@ -182,6 +187,7 @@ namespace Rvnx.CRM.Web.Controllers
             return View(contactDto);
         }
 
+        [HttpGet]
         public async Task<IActionResult> Edit(Guid? id)
         {
             if (id == null)
@@ -305,6 +311,7 @@ namespace Rvnx.CRM.Web.Controllers
             return View(viewModel);
         }
 
+        [HttpGet]
         public async Task<IActionResult> Delete(Guid? id)
         {
             if (id == null)
@@ -370,6 +377,7 @@ namespace Rvnx.CRM.Web.Controllers
                 : RedirectToAction(nameof(Edit), new { id = contactId });
         }
 
+        [HttpGet]
         public IActionResult Import()
         {
             return View();
@@ -415,6 +423,7 @@ namespace Rvnx.CRM.Web.Controllers
             }
         }
 
+        [HttpGet]
         public async Task<IActionResult> Export(Guid id)
         {
             try

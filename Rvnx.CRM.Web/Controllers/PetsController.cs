@@ -12,6 +12,7 @@ namespace Rvnx.CRM.Web.Controllers
     {
         private readonly IPetService _petService = petService;
 
+        [HttpGet]
         public async Task<IActionResult> Create(Guid entityId)
         {
             PetFormDto? dto = await _petService.GetFormForCreateAsync(entityId);
@@ -29,14 +30,17 @@ namespace Rvnx.CRM.Web.Controllers
                 {
                     return RedirectToEntity(result.RedirectId, result.RedirectType);
                 }
+
                 if (result.ErrorMessage == "Contact not found.")
                 {
                     return NotFound();
                 }
             }
+
             return View(petDto);
         }
 
+        [HttpGet]
         public async Task<IActionResult> Edit(Guid id)
         {
             PetFormDto? dto = await _petService.GetFormAsync(id);
@@ -59,14 +63,17 @@ namespace Rvnx.CRM.Web.Controllers
                 {
                     return RedirectToEntity(result.RedirectId, result.RedirectType);
                 }
+
                 if (result.ErrorMessage == "Pet not found.")
                 {
                     return NotFound();
                 }
             }
+
             return View(petDto);
         }
 
+        [HttpGet]
         public async Task<IActionResult> Delete(Guid id)
         {
             Pet? pet = await _petService.GetByIdAsync(id);
@@ -78,7 +85,9 @@ namespace Rvnx.CRM.Web.Controllers
         public async Task<IActionResult> DeleteConfirmed(Guid id)
         {
             OperationResult result = await _petService.DeleteAsync(id);
-            return result.Success ? RedirectToEntity(result.RedirectId, result.RedirectType) : RedirectToAction("Index", "Contacts");
+            return result.Success
+                ? RedirectToEntity(result.RedirectId, result.RedirectType)
+                : RedirectToAction("Index", "Contacts");
         }
     }
 }

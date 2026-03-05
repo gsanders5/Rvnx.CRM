@@ -9,12 +9,16 @@ using Rvnx.CRM.Web.Controllers.Base;
 
 namespace Rvnx.CRM.Web.Controllers
 {
-    public class RelationshipsController(IRelationshipService relationshipService, IRepository repository, IEntityService entityService)
+    public class RelationshipsController(
+        IRelationshipService relationshipService,
+        IRepository repository,
+        IEntityService entityService)
         : RepositoryController(repository)
     {
         private readonly IRelationshipService _relationshipService = relationshipService;
         private readonly IEntityService _entityService = entityService;
 
+        [HttpGet]
         public async Task<IActionResult> Create(Guid entityId, string entityType)
         {
             if (entityId == Guid.Empty || string.IsNullOrEmpty(entityType))
@@ -85,7 +89,8 @@ namespace Rvnx.CRM.Web.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> CreatePartial(Guid entityId, string entityType, CreatePartialContactRelationshipDto dto)
+        public async Task<IActionResult> CreatePartial(Guid entityId, string entityType,
+            CreatePartialContactRelationshipDto dto)
         {
             if (entityId == Guid.Empty || string.IsNullOrEmpty(entityType) || entityType != EntityTypes.Person)
             {
@@ -99,23 +104,28 @@ namespace Rvnx.CRM.Web.Controllers
                     return NotFound();
                 }
 
-                RelationshipOperationResult result = await _relationshipService.CreatePartialContactRelationshipAsync(entityId, dto.SelectedRelationshipType, dto);
+                RelationshipOperationResult result =
+                    await _relationshipService.CreatePartialContactRelationshipAsync(entityId,
+                        dto.SelectedRelationshipType, dto);
                 if (result.Success)
                 {
                     return RedirectToEntity(result.RedirectId, result.EntityType ?? string.Empty);
                 }
 
-                ModelState.AddModelError(string.Empty, result.ErrorMessage ?? "Failed to create partial contact relationship.");
+                ModelState.AddModelError(string.Empty,
+                    result.ErrorMessage ?? "Failed to create partial contact relationship.");
             }
 
             // If we fail, we need to redirect back to the Create view to show errors, 
             // but since it's a different action we'll pass an error in TempData and redirect.
-            TempData["ErrorMessage"] = string.Join("; ", ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage));
+            TempData["ErrorMessage"] =
+                string.Join("; ", ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage));
             return RedirectToAction(nameof(Create), new { entityId, entityType });
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetSuggestions(Guid entityId, Guid? relatedEntityId, string relationshipType, string? partialContactName = null)
+        public async Task<IActionResult> GetSuggestions(Guid entityId, Guid? relatedEntityId, string relationshipType,
+            string? partialContactName = null)
         {
             if (string.IsNullOrEmpty(relationshipType))
             {
@@ -130,7 +140,9 @@ namespace Rvnx.CRM.Web.Controllers
 
             bool isReverse = parts[1] == "Rev";
 
-            List<SuggestedRelationshipDto> suggestions = await _relationshipService.GetSuggestedRelationshipsAsync(entityId, relatedEntityId, typeId, isReverse, partialContactName);
+            List<SuggestedRelationshipDto> suggestions =
+                await _relationshipService.GetSuggestedRelationshipsAsync(entityId, relatedEntityId, typeId, isReverse,
+                    partialContactName);
             return Json(suggestions);
         }
 
@@ -145,9 +157,12 @@ namespace Rvnx.CRM.Web.Controllers
 
             RelationshipOperationResult result = await _relationshipService.PromotePartialContactAsync(contactId);
 
-            return result.Success ? RedirectToAction("Edit", "Contacts", new { id = result.RedirectId }) : RedirectToAction("Index", "Contacts");
+            return result.Success
+                ? RedirectToAction("Edit", "Contacts", new { id = result.RedirectId })
+                : RedirectToAction("Index", "Contacts");
         }
 
+        [HttpGet]
         public async Task<IActionResult> Edit(Guid? id)
         {
             if (id == null)
@@ -240,6 +255,7 @@ namespace Rvnx.CRM.Web.Controllers
             return View(viewModel);
         }
 
+        [HttpGet]
         public async Task<IActionResult> Delete(Guid? id, string? returnUrl = null)
         {
             if (id == null)
