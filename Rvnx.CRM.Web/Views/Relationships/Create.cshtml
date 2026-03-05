@@ -531,7 +531,7 @@
                 }
             }
 
-            const entityName = @Html.Raw(Json.Serialize(Model.EntityName));
+            const entityName = @Json.Serialize(Model.EntityName);
 
             new RelationshipSelector({
                 containerId: 'type-selection-container',
