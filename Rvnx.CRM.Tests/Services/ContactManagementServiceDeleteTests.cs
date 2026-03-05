@@ -1,20 +1,9 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Linq.Expressions;
-using System.Threading;
-using System.Threading.Tasks;
-using Microsoft.EntityFrameworkCore;
 using Moq;
-using Rvnx.CRM.Core.Constants;
-using Rvnx.CRM.Core.DTOs.Contact;
-using Rvnx.CRM.Core.Enumerations;
 using Rvnx.CRM.Core.Interfaces;
 using Rvnx.CRM.Core.Models.Base;
 using Rvnx.CRM.Core.Models.Contact;
-using Rvnx.CRM.Core.Models.Dates;
 using Rvnx.CRM.Core.Services;
-using Xunit;
+using System.Linq.Expressions;
 
 namespace Rvnx.CRM.Tests.Services
 {
@@ -35,19 +24,19 @@ namespace Rvnx.CRM.Tests.Services
         public async Task DeleteContactAsyncShouldNotUpdateUsersInLoop()
         {
             // Arrange
-            var contactId = Guid.NewGuid();
-            var users = new List<Rvnx.CRM.Core.Models.User>
-            {
+            Guid contactId = Guid.NewGuid();
+            List<Core.Models.User> users =
+            [
                 new Rvnx.CRM.Core.Models.User { Id = Guid.NewGuid(), SelfContactId = contactId },
                 new Rvnx.CRM.Core.Models.User { Id = Guid.NewGuid(), SelfContactId = contactId },
                 new Rvnx.CRM.Core.Models.User { Id = Guid.NewGuid(), SelfContactId = contactId }
-            };
+            ];
 
             _repositoryMock.Setup(r => r.ListAsync(It.IsAny<Expression<Func<Rvnx.CRM.Core.Models.User, bool>>>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(users);
 
             _repositoryMock.Setup(r => r.ListAsync(It.IsAny<Expression<Func<Relationship, bool>>>(), It.IsAny<CancellationToken>()))
-                .ReturnsAsync(new List<Relationship>());
+                .ReturnsAsync([]);
 
             _repositoryMock.Setup(r => r.ListAsync<Pet>(It.IsAny<Expression<Func<Pet, bool>>>(), It.IsAny<CancellationToken>())).ReturnsAsync([]);
             _repositoryMock.Setup(r => r.ListAsync<Fact>(It.IsAny<Expression<Func<Fact, bool>>>(), It.IsAny<CancellationToken>())).ReturnsAsync([]);

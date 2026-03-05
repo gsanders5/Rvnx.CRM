@@ -33,8 +33,9 @@ public class ReminderNotificationServiceTests
     }
 
 
-    private static IConfiguration BuildEnabledConfig() =>
-        new ConfigurationBuilder()
+    private static IConfiguration BuildEnabledConfig()
+    {
+        return new ConfigurationBuilder()
             .AddInMemoryCollection(new Dictionary<string, string?>
             {
                 ["EmailNotifications:Enabled"] = "true",
@@ -44,11 +45,14 @@ public class ReminderNotificationServiceTests
                 ["EmailNotifications:SmtpSettings:Port"] = "587"
             })
             .Build();
+    }
 
-    private static IConfiguration BuildDisabledConfig() =>
-        new ConfigurationBuilder()
+    private static IConfiguration BuildDisabledConfig()
+    {
+        return new ConfigurationBuilder()
             .AddInMemoryCollection(new Dictionary<string, string?> { ["EmailNotifications:Enabled"] = "false" })
             .Build();
+    }
 
     [Fact]
     [SuppressMessage("Naming", "CA1707:Identifiers should not contain underscores",

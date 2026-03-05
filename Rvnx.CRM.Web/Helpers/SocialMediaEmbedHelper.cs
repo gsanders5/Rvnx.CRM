@@ -1,5 +1,4 @@
 using Rvnx.CRM.Core.Enumerations;
-using System;
 
 namespace Rvnx.CRM.Web.Helpers
 {
@@ -7,19 +6,22 @@ namespace Rvnx.CRM.Web.Helpers
     {
         public static string ExtractUsername(ContactMethodType type, string url)
         {
-            if (string.IsNullOrWhiteSpace(url)) return string.Empty;
+            if (string.IsNullOrWhiteSpace(url))
+            {
+                return string.Empty;
+            }
 
             try
             {
-                var uri = new Uri(url);
+                Uri uri = new(url);
                 string path = uri.AbsolutePath.Trim('/');
 
                 return type switch
                 {
                     ContactMethodType.Twitter => path,
                     ContactMethodType.Twitch => path,
-                    ContactMethodType.YouTube => path.StartsWith('@') ? path.Substring(1) : path,
-                    ContactMethodType.TikTok => path.StartsWith('@') ? path.Substring(1) : path,
+                    ContactMethodType.YouTube => path.StartsWith('@') ? path[1..] : path,
+                    ContactMethodType.TikTok => path.StartsWith('@') ? path[1..] : path,
                     _ => path
                 };
             }

@@ -188,7 +188,9 @@ namespace Rvnx.CRM.Core.Services
                 c => c.Id != entityId,
                 c => new SelectOptionDto
                 {
-                    Value = c.Id.ToString(), Text = c.CompanyName, Selected = selectedId == c.Id
+                    Value = c.Id.ToString(),
+                    Text = c.CompanyName,
+                    Selected = selectedId == c.Id
                 },
                 c => c.CompanyName);
         }

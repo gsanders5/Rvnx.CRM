@@ -406,22 +406,7 @@ public class VCardService : IVCardService
                 return false;
             }
 
-            if (v4bytes[0] == 10)
-            {
-                return false;
-            }
-
-            if (v4bytes[0] == 172 && v4bytes[1] >= 16 && v4bytes[1] <= 31)
-            {
-                return false;
-            }
-
-            if (v4bytes[0] == 192 && v4bytes[1] == 168)
-            {
-                return false;
-            }
-
-            return (v4bytes[0] != 169 || v4bytes[1] != 254) && v4bytes[0] != 127;
+            return v4bytes[0] != 10 && (v4bytes[0] != 172 || v4bytes[1] < 16 || v4bytes[1] > 31) && (v4bytes[0] != 192 || v4bytes[1] != 168) && (v4bytes[0] != 169 || v4bytes[1] != 254) && v4bytes[0] != 127;
         }
         else if (ipAddress.AddressFamily == AddressFamily.InterNetworkV6)
         {
@@ -510,16 +495,22 @@ public class VCardService : IVCardService
         // X-MAIDENNAME and X-GENDER have no standard vCard 3.0 fields and are silently
         // dropped by FolkerKinzel during v3.0 serialization. Inject them manually before
         // END:VCARD so they round-trip correctly through import/export.
-        var extensions = new System.Text.StringBuilder();
+        System.Text.StringBuilder extensions = new();
 
         if (!string.IsNullOrEmpty(contact.MaidenName))
+        {
             extensions.AppendLine(System.Globalization.CultureInfo.InvariantCulture, $"{MaidenNameKey}:{contact.MaidenName}");
+        }
 
         if (!string.IsNullOrEmpty(contact.Gender))
+        {
             extensions.AppendLine(System.Globalization.CultureInfo.InvariantCulture, $"{GenderKey}:{contact.Gender}");
+        }
 
         if (extensions.Length > 0)
+        {
             vcfString = vcfString.Replace("END:VCARD", extensions + "END:VCARD");
+        }
 
         return System.Text.Encoding.UTF8.GetBytes(vcfString);
     }
