@@ -201,5 +201,86 @@ namespace Rvnx.CRM.Tests.Services
             Assert.False(result.Success);
             Assert.Contains("Invalid file signature", result.Errors[0]);
         }
+
+        [Fact]
+        public async Task DeleteAttachmentAsyncShouldSucceedWhenValid()
+        {
+            using CRMDbContext context = GetInMemoryDbContext();
+            Repository repo = new(context);
+            Mock<IFileValidationService> fileServiceMock = new();
+            Mock<IEntityService> entityServiceMock = new();
+
+            AttachmentService service = new(repo, fileServiceMock.Object, entityServiceMock.Object);
+
+            Guid contactId = Guid.NewGuid();
+            context.Contacts.Add(new Contact { Id = contactId, FirstName = "Test", LastName = "User" });
+
+            Guid attachmentId = Guid.NewGuid();
+            context.Attachments.Add(new Attachment
+            {
+                Id = attachmentId,
+                ContactId = contactId,
+                FileName = "test.png",
+                ContentType = "image/png"
+            });
+            context.SaveChanges();
+
+            AttachmentOperationResult result = await service.DeleteAttachmentAsync(attachmentId);
+
+            Assert.True(result.Success);
+            Assert.Equal(attachmentId, result.AttachmentId);
+
+            Attachment? deletedAttachment = await context.Attachments.FindAsync(attachmentId);
+            Assert.Null(deletedAttachment);
+        }
+
+        [Fact]
+        public async Task DeleteAttachmentAsyncShouldReturnNotFoundWhenAttachmentDoesNotExist()
+        {
+            using CRMDbContext context = GetInMemoryDbContext();
+            Repository repo = new(context);
+            Mock<IFileValidationService> fileServiceMock = new();
+            Mock<IEntityService> entityServiceMock = new();
+
+            AttachmentService service = new(repo, fileServiceMock.Object, entityServiceMock.Object);
+
+            AttachmentOperationResult result = await service.DeleteAttachmentAsync(Guid.NewGuid());
+
+            Assert.False(result.Success);
+            Assert.True(result.IsNotFound);
+        }
+
+        [Fact]
+        public async Task DeleteAttachmentAsyncShouldReturnNotFoundWhenContactIsPartial()
+        {
+            using CRMDbContext context = GetInMemoryDbContext();
+            Repository repo = new(context);
+            Mock<IFileValidationService> fileServiceMock = new();
+            Mock<IEntityService> entityServiceMock = new();
+
+            AttachmentService service = new(repo, fileServiceMock.Object, entityServiceMock.Object);
+
+            Guid contactId = Guid.NewGuid();
+            context.Contacts.Add(new Contact { Id = contactId, FirstName = "Partial", IsPartial = true });
+
+            Guid attachmentId = Guid.NewGuid();
+            context.Attachments.Add(new Attachment
+            {
+                Id = attachmentId,
+                ContactId = contactId,
+                FileName = "test.png",
+                ContentType = "image/png"
+            });
+            context.SaveChanges();
+
+            AttachmentOperationResult result = await service.DeleteAttachmentAsync(attachmentId);
+
+            Assert.False(result.Success);
+            Assert.True(result.IsNotFound);
+            Assert.Contains("Cannot modify partial contact", result.Errors[0]);
+
+            Attachment? attachment = await context.Attachments.FindAsync(attachmentId);
+            Assert.NotNull(attachment);
+        }
     }
 }
