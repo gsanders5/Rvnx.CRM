@@ -66,9 +66,9 @@ public class ContactManagementServiceTests
             ContactOperationResult result = await _service.UnsetProfilePhotoAsync(contactId);
 
             Assert.True(result.Success);
-            _repositoryMock.Verify(r => r.UpdateRangeAsync(It.Is<IEnumerable<Attachment>>(list => list.Count() == 2), It.IsAny<CancellationToken>()), Times.Once);
-            _repositoryMock.Verify(r => r.UpdateAsync(It.IsAny<Attachment>(), It.IsAny<CancellationToken>()), Times.Never);
-            _repositoryMock.Verify(r => r.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
+            _repositoryMock.Verify(r => r.UpdateRangeAsync(It.Is<IEnumerable<Attachment>>(list => list.Count() == 2), It.IsAny<CancellationToken>()), Times.Once());
+            _repositoryMock.Verify(r => r.UpdateAsync(It.IsAny<Attachment>(), It.IsAny<CancellationToken>()), Times.Never());
+            _repositoryMock.Verify(r => r.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once());
         }
 
         [Fact]
