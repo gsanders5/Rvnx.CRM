@@ -38,6 +38,7 @@
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 			<PrivateAssets>all</PrivateAssets>
 		</PackageReference>
+		<PackageReference Include="MimeKit" Version="4.15.1" />
 	</ItemGroup>
 
 </Project>
