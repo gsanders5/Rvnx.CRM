@@ -244,10 +244,13 @@ public class ContactManagementService(IRepository repository, IFileValidationSer
     private async Task ArchiveExistingProfilePhotoAsync(Guid contactId)
     {
         List<Attachment> existingAttachments = await _repository.ListAsync<Attachment>(a => a.ContactId == contactId && a.AttachmentType == AttachmentTypes.ProfileImage);
-        foreach (Attachment existingAttachment in existingAttachments)
+        if (existingAttachments.Count > 0)
         {
-            existingAttachment.AttachmentType = "General";
-            await _repository.UpdateAsync(existingAttachment);
+            foreach (Attachment existingAttachment in existingAttachments)
+            {
+                existingAttachment.AttachmentType = "General";
+            }
+            await _repository.UpdateRangeAsync(existingAttachments);
         }
     }
 
