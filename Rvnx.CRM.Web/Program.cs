@@ -121,6 +121,9 @@ namespace Rvnx.CRM.Web
                 context.Response.OnStarting(() =>
                 {
                     context.Response.Headers["X-Content-Type-Options"] = "nosniff";
+                    context.Response.Headers["X-Frame-Options"] = "DENY";
+                    context.Response.Headers["X-XSS-Protection"] = "1; mode=block";
+                    context.Response.Headers["Content-Security-Policy"] = "default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'; font-src 'self' data:;";
                     return Task.CompletedTask;
                 });
                 await next();
