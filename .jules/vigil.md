@@ -32,3 +32,7 @@
 ## 2024-03-04 - [Testing EF Core Projections]
 **Learning:** Testing `ListProjectedAsync` methods that project domain entities to anonymous types or strings requires proper in-memory database setup to ensure projection translation behaves as expected. The methods `ListProjectedAsync` are critical performance optimizations used extensively to avoid full entity materialization, but they lacked coverage.
 **Action:** When adding new repository projection capabilities or similar performance optimizations, always ensure corresponding `ListProjectedAsync` variants are tested for basic projection mapping and ordering parameters.
+
+## 2026-03-05 - [Testing Domain Logic Handled by Controllers vs Services]
+**Learning:** Sometimes, domain logic (like creating a Self Contact) appears to be tested because there are tests for the related Controller endpoint (`SelfContactTests.cs` for `ContactsController`). However, if the Controller tests merely mock out the underlying service (`ISelfContactService`), the actual domain logic within the service (creating the user links, handling missing data, delegating to helpers) remains completely untested.
+**Action:** Always investigate the `Core.Services` implementations even if `Tests.Services` has a similarly named test class. Do not assume a service is tested just because the controller that consumes it is tested. Create dedicated service tests (e.g., `SelfContactServiceTests.cs`) to explicitly verify the internal logic, especially when it delegates to unmockable internal helpers like `ContactUpdateHelper`.
