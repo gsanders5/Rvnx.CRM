@@ -54,6 +54,24 @@ public class ContactManagementServiceTests
         }
 
         [Fact]
+        public async Task UnsetProfilePhotoAsyncUsesSingleUpdateRangeAsync()
+        {
+            Guid contactId = Guid.NewGuid();
+            Attachment existingAttachment1 = new() { Id = Guid.NewGuid(), ContactId = contactId, AttachmentType = AttachmentTypes.ProfileImage };
+            Attachment existingAttachment2 = new() { Id = Guid.NewGuid(), ContactId = contactId, AttachmentType = AttachmentTypes.ProfileImage };
+
+            _attachments.Add(existingAttachment1);
+            _attachments.Add(existingAttachment2);
+
+            ContactOperationResult result = await _service.UnsetProfilePhotoAsync(contactId);
+
+            Assert.True(result.Success);
+            _repositoryMock.Verify(r => r.UpdateRangeAsync(It.Is<IEnumerable<Attachment>>(list => list.Count() == 2), It.IsAny<CancellationToken>()), Times.Once());
+            _repositoryMock.Verify(r => r.UpdateAsync(It.IsAny<Attachment>(), It.IsAny<CancellationToken>()), Times.Never());
+            _repositoryMock.Verify(r => r.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once());
+        }
+
+        [Fact]
         public async Task UpdateContactWithValidImageAddsAttachment()
         {
             Guid contactId = Guid.NewGuid();

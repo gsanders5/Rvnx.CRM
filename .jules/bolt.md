@@ -50,6 +50,10 @@
 **Learning:** `DashboardService` was fetching all columns of `Contact` and `Relationship` entities using `ListAsNoTrackingAsync` just to populate the network graph (which only needs `Id`, `FullName`/`Gender`, and `EntityId`/`RelatedEntityId`). This significantly impacts memory and network performance for accounts with many contacts.
 **Action:** Use `ListProjectedAsync` to fetch only the minimum required properties for generating graph nodes and links.
 
+## 2026-06-27 - N+1 Loop Optimization in Profile Photo Archive
+
+**Learning:** `ArchiveExistingProfilePhotoAsync` in `ContactManagementService` was updating `AttachmentType` within a `foreach` loop and calling `UpdateAsync` inside the loop, causing an N+1 query problem when a contact has multiple profile photos needing archiving.
+**Action:** Move `UpdateAsync` outside the loop and use `UpdateRangeAsync` on the entire collection instead to reduce database roundtrips.
 ## 2026-06-27 - N+1 Optimization for Updating Entity Collections
 
 **Learning:** `ContactManagementService` was executing an N+1 query in `ArchiveExistingProfilePhotoAsync` by iterating through existing attachments and calling `UpdateAsync` on each iteration to set `AttachmentType` to `"General"`.
