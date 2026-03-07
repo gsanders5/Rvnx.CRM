@@ -54,3 +54,7 @@
 
 **Learning:** `ArchiveExistingProfilePhotoAsync` in `ContactManagementService` was updating `AttachmentType` within a `foreach` loop and calling `UpdateAsync` inside the loop, causing an N+1 query problem when a contact has multiple profile photos needing archiving.
 **Action:** Move `UpdateAsync` outside the loop and use `UpdateRangeAsync` on the entire collection instead to reduce database roundtrips.
+## 2026-06-27 - N+1 Optimization for Updating Entity Collections
+
+**Learning:** `ContactManagementService` was executing an N+1 query in `ArchiveExistingProfilePhotoAsync` by iterating through existing attachments and calling `UpdateAsync` on each iteration to set `AttachmentType` to `"General"`.
+**Action:** When updating a collection of entities retrieved from the database, update the properties within the loop and call `UpdateRangeAsync` outside the loop to batch the updates, reducing database roundtrips and optimizing performance.
