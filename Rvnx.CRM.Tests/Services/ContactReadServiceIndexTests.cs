@@ -1,7 +1,5 @@
 using Moq;
-using Rvnx.CRM.Core.Constants;
 using Rvnx.CRM.Core.DTOs.Contact;
-using Rvnx.CRM.Core.Enumerations;
 using Rvnx.CRM.Core.Interfaces;
 using Rvnx.CRM.Core.Models.Base;
 using Rvnx.CRM.Core.Models.Contact;
@@ -25,16 +23,16 @@ public class ContactReadServiceIndexTests
     [Fact]
     public async Task GetIndexDataAsyncCorrectlyRestitchesBulkLoadedRelatedEntities()
     {
-        var contact1Id = Guid.NewGuid();
-        var contact2Id = Guid.NewGuid();
-        var attachmentId = Guid.NewGuid();
-        var labelId = Guid.NewGuid();
+        Guid contact1Id = Guid.NewGuid();
+        Guid contact2Id = Guid.NewGuid();
+        Guid attachmentId = Guid.NewGuid();
+        Guid labelId = Guid.NewGuid();
 
-        var contacts = new List<ContactDto>
-        {
+        List<ContactDto> contacts =
+        [
             new ContactDto { Id = contact1Id, FirstName = "Alice" },
             new ContactDto { Id = contact2Id, FirstName = "Bob" }
-        };
+        ];
 
         _repositoryMock.Setup(x => x.ListProjectedAsync<Contact, ContactDto>(
             It.IsAny<Expression<Func<Contact, bool>>>(),
@@ -46,27 +44,27 @@ public class ContactReadServiceIndexTests
             It.IsAny<Expression<Func<Attachment, bool>>>(),
             It.IsAny<Expression<Func<Attachment, (Guid, Guid)>>>(),
             It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new List<(Guid, Guid)> { (contact1Id, attachmentId) });
+            .ReturnsAsync([(contact1Id, attachmentId)]);
 
         _repositoryMock.Setup(x => x.ListProjectedAsync<ContactLabel, (Guid, Guid, string, string?)>(
             It.IsAny<Expression<Func<ContactLabel, bool>>>(),
             It.IsAny<Expression<Func<ContactLabel, (Guid, Guid, string, string?)>>>(),
             It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new List<(Guid, Guid, string, string?)> { (contact2Id, labelId, "Friend", "Blue") });
+            .ReturnsAsync([(contact2Id, labelId, "Friend", "Blue")]);
 
         _repositoryMock.Setup(x => x.ListProjectedAsync<SignificantDate, (Guid, DateOnly)>(
             It.IsAny<Expression<Func<SignificantDate, bool>>>(),
             It.IsAny<Expression<Func<SignificantDate, (Guid, DateOnly)>>>(),
             It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new List<(Guid, DateOnly)> { (contact1Id, new DateOnly(1990, 5, 10)) });
+            .ReturnsAsync([(contact1Id, new DateOnly(1990, 5, 10))]);
 
-        var result = await _service.GetIndexDataAsync(false);
+        List<ContactDto> result = await _service.GetIndexDataAsync(false);
 
         Assert.NotNull(result);
         Assert.Equal(2, result.Count);
 
-        var alice = result.First(c => c.Id == contact1Id);
-        var bob = result.First(c => c.Id == contact2Id);
+        ContactDto alice = result.First(c => c.Id == contact1Id);
+        ContactDto bob = result.First(c => c.Id == contact2Id);
 
         Assert.Equal(attachmentId, alice.ProfileImageId);
         Assert.Empty(alice.Labels);
@@ -83,16 +81,16 @@ public class ContactReadServiceIndexTests
     [Fact]
     public async Task GetIndexDataAsyncGracefullyHandlesMissingOrDuplicateKeys()
     {
-        var contact1Id = Guid.NewGuid();
-        var contact2Id = Guid.NewGuid();
-        var attachment1Id = Guid.NewGuid();
-        var attachment2Id = Guid.NewGuid();
+        Guid contact1Id = Guid.NewGuid();
+        Guid contact2Id = Guid.NewGuid();
+        Guid attachment1Id = Guid.NewGuid();
+        Guid attachment2Id = Guid.NewGuid();
 
-        var contacts = new List<ContactDto>
-        {
+        List<ContactDto> contacts =
+        [
             new ContactDto { Id = contact1Id, FirstName = "Alice" },
             new ContactDto { Id = contact2Id, FirstName = "Bob" } // Bob has no attachments returned
-        };
+        ];
 
         _repositoryMock.Setup(x => x.ListProjectedAsync<Contact, ContactDto>(
             It.IsAny<Expression<Func<Contact, bool>>>(),
@@ -102,36 +100,36 @@ public class ContactReadServiceIndexTests
 
         // Alice has two profile images (a duplicate condition the system should handle gracefully by picking one)
         // Also returning an attachment for a contact ID that does NOT exist in our DTO list (e.g., an orphaned or mistmatched record)
-        var missingContactId = Guid.NewGuid();
+        Guid missingContactId = Guid.NewGuid();
         _repositoryMock.Setup(x => x.ListProjectedAsync<Attachment, (Guid, Guid)>(
             It.IsAny<Expression<Func<Attachment, bool>>>(),
             It.IsAny<Expression<Func<Attachment, (Guid, Guid)>>>(),
             It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new List<(Guid, Guid)> {
+            .ReturnsAsync([
                 (contact1Id, attachment1Id),
                 (contact1Id, attachment2Id), // Duplicate
                 (missingContactId, Guid.NewGuid()) // Key not in map
-            });
+            ]);
 
         _repositoryMock.Setup(x => x.ListProjectedAsync<ContactLabel, (Guid, Guid, string, string?)>(
             It.IsAny<Expression<Func<ContactLabel, bool>>>(),
             It.IsAny<Expression<Func<ContactLabel, (Guid, Guid, string, string?)>>>(),
             It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new List<(Guid, Guid, string, string?)>());
+            .ReturnsAsync([]);
 
         _repositoryMock.Setup(x => x.ListProjectedAsync<SignificantDate, (Guid, DateOnly)>(
             It.IsAny<Expression<Func<SignificantDate, bool>>>(),
             It.IsAny<Expression<Func<SignificantDate, (Guid, DateOnly)>>>(),
             It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new List<(Guid, DateOnly)>());
+            .ReturnsAsync([]);
 
-        var result = await _service.GetIndexDataAsync(false);
+        List<ContactDto> result = await _service.GetIndexDataAsync(false);
 
         Assert.NotNull(result);
         Assert.Equal(2, result.Count);
 
-        var alice = result.First(c => c.Id == contact1Id);
-        var bob = result.First(c => c.Id == contact2Id);
+        ContactDto alice = result.First(c => c.Id == contact1Id);
+        ContactDto bob = result.First(c => c.Id == contact2Id);
 
         // Alice should have one of the profile images (it uses GroupBy.First(), so it should be attachment1Id)
         Assert.Equal(attachment1Id, alice.ProfileImageId);

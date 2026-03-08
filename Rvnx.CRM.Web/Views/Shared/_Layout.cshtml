@@ -5,23 +5,23 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="utf-8"/>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"] - Rvnx CRM</title>
     <script type="importmap"></script>
     <!-- Font Awesome -->
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet"/>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet" />
     <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap" rel="stylesheet" />
     <!-- MDB -->
-    <link href="https://cdn.jsdelivr.net/npm/mdb-ui-kit@9.3.0/css/mdb.min.css" rel="stylesheet"/>
+    <link href="https://cdn.jsdelivr.net/npm/mdb-ui-kit@9.3.0/css/mdb.min.css" rel="stylesheet" />
     <!-- Bootstrap Icons -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <!-- DataTables CSS -->
     <link href="https://cdn.datatables.net/v/bs5/dt-2.3.7/b-3.2.6/b-colvis-3.2.6/r-3.0.8/sc-2.4.3/datatables.min.css" rel="stylesheet" integrity="sha384-nwKdXO0ejYwD095h00qsKcBWhogVC6HsJnWjWQSLhKe/vnckKhdcnxzXUZ9ZzJQe" crossorigin="anonymous">
-    <link rel="preload" href="~/logo.svg" as="image" type="image/svg+xml"/>
-    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true"/>
-    <link rel="stylesheet" href="~/Rvnx.CRM.Web.styles.css" asp-append-version="true"/>
+    <link rel="preload" href="~/logo.svg" as="image" type="image/svg+xml" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/Rvnx.CRM.Web.styles.css" asp-append-version="true" />
     <script>
         // Apply theme immediately to avoid flash
         const savedTheme = localStorage.getItem('theme') || 'light';
@@ -29,83 +29,83 @@
     </script>
 </head>
 <body>
-<a href="#main-content" class="visually-hidden-focusable position-absolute top-0 start-0 p-3 z-3 bg-primary text-white text-decoration-none rounded-bottom-end">Skip to main content</a>
-<header>
-    <nav class="navbar navbar-expand-sm navbar-toggleable-sm border-bottom box-shadow mb-3 bg-primary" data-mdb-theme="dark">
-        <div class="container-fluid">
-            <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">
-                <img src="~/logo.svg" alt="" height="30" width="73" class="d-inline-block align-text-top"/>
-            </a>
-            <button class="navbar-toggler" type="button" data-mdb-collapse-init data-mdb-toggle="collapse" data-mdb-target="#navbarSupportedContent" aria-controls="navbarSupportedContent"
-                    aria-expanded="false" aria-label="Toggle navigation">
-                <i class="fas fa-bars"></i>
-            </button>
-            <div class="collapse navbar-collapse d-sm-inline-flex justify-content-between" id="navbarSupportedContent">
-                <ul class="navbar-nav flex-grow-1">
-                    <li class="nav-item">
-                        <a class="nav-link" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" asp-area="" asp-controller="Contacts" asp-action="Index">Contacts</a>
-                    </li>
-                    <environment include="Development">
-                        @if (CurrentUserService.UserId != null && await CurrentUserService.IsAdministratorAsync(CurrentUserService.UserId.Value))
+    <a href="#main-content" class="visually-hidden-focusable position-absolute top-0 start-0 p-3 z-3 bg-primary text-white text-decoration-none rounded-bottom-end">Skip to main content</a>
+    <header>
+        <nav class="navbar navbar-expand-sm navbar-toggleable-sm border-bottom box-shadow mb-3 bg-primary" data-mdb-theme="dark">
+            <div class="container-fluid">
+                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">
+                    <img src="~/logo.svg" alt="" height="30" width="73" class="d-inline-block align-text-top" />
+                </a>
+                <button class="navbar-toggler" type="button" data-mdb-collapse-init data-mdb-toggle="collapse" data-mdb-target="#navbarSupportedContent" aria-controls="navbarSupportedContent"
+                        aria-expanded="false" aria-label="Toggle navigation">
+                    <i class="fas fa-bars"></i>
+                </button>
+                <div class="collapse navbar-collapse d-sm-inline-flex justify-content-between" id="navbarSupportedContent">
+                    <ul class="navbar-nav flex-grow-1">
+                        <li class="nav-item">
+                            <a class="nav-link" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" asp-area="" asp-controller="Contacts" asp-action="Index">Contacts</a>
+                        </li>
+                        <environment include="Development">
+                            @if (CurrentUserService.UserId != null && await CurrentUserService.IsAdministratorAsync(CurrentUserService.UserId.Value))
+                            {
+                                <li class="nav-item">
+                                    <a class="nav-link" asp-area="" asp-controller="DebugOperations" asp-action="Index">Debug</a>
+                                </li>
+                            }
+                        </environment>
+                    </ul>
+                    <ul class="navbar-nav">
+                        @if (Configuration.GetValue<bool>("Authentication:Enabled"))
                         {
-                            <li class="nav-item">
-                                <a class="nav-link" asp-area="" asp-controller="DebugOperations" asp-action="Index">Debug</a>
-                            </li>
+                            if (User.Identity?.IsAuthenticated == true)
+                            {
+                                <li class="nav-item">
+                                    <a class="nav-link" asp-area="" asp-controller="Contacts" asp-action="Self">Hello, @User.Identity.Name!</a>
+                                </li>
+                                <li class="nav-item">
+                                    <form class="form-inline" asp-area="" asp-controller="Account" asp-action="Logout" method="post">
+                                        <button type="submit" class="nav-link btn btn-link">Logout</button>
+                                    </form>
+                                </li>
+                            }
+                            else
+                            {
+                                <li class="nav-item">
+                                    <a class="nav-link" asp-area="" asp-controller="Account" asp-action="Login">Login</a>
+                                </li>
+                            }
                         }
-                    </environment>
-                </ul>
-                <ul class="navbar-nav">
-                    @if (Configuration.GetValue<bool>("Authentication:Enabled"))
-                    {
-                        if (User.Identity?.IsAuthenticated == true)
-                        {
-                            <li class="nav-item">
-                                <a class="nav-link" asp-area="" asp-controller="Contacts" asp-action="Self">Hello, @User.Identity.Name!</a>
-                            </li>
-                            <li class="nav-item">
-                                <form class="form-inline" asp-area="" asp-controller="Account" asp-action="Logout" method="post">
-                                    <button type="submit" class="nav-link btn btn-link">Logout</button>
-                                </form>
-                            </li>
-                        }
-                        else
-                        {
-                            <li class="nav-item">
-                                <a class="nav-link" asp-area="" asp-controller="Account" asp-action="Login">Login</a>
-                            </li>
-                        }
-                    }
-                    <li class="nav-item">
-                        <button class="btn btn-link nav-link" id="theme-toggle" title="Toggle theme" aria-label="Toggle theme">
-                            <i class="bi bi-moon-stars-fill" id="theme-icon"></i>
-                        </button>
-                    </li>
-                </ul>
+                        <li class="nav-item">
+                            <button class="btn btn-link nav-link" id="theme-toggle" title="Toggle theme" aria-label="Toggle theme">
+                                <i class="bi bi-moon-stars-fill" id="theme-icon"></i>
+                            </button>
+                        </li>
+                    </ul>
+                </div>
             </div>
-        </div>
-    </nav>
-</header>
-<div class="container">
-    <main id="main-content" role="main" class="pb-3" tabindex="-1">
-        @RenderBody()
-    </main>
-</div>
+        </nav>
+    </header>
+    <div class="container">
+        <main id="main-content" role="main" class="pb-3" tabindex="-1">
+            @RenderBody()
+        </main>
+    </div>
 
-@* <footer class="border-top footer text-muted">
+    @* <footer class="border-top footer text-muted">
     <div class="container">
         &copy; 2025 - Rvnx.CRM.Web
     </div>
 </footer> *@
-<script src="~/lib/jquery/dist/jquery.min.js"></script>
-<!-- MDB -->
-<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/mdb-ui-kit@9.3.0/js/mdb.umd.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.10/purify.min.js"></script>
-<script src="~/js/site.js" asp-append-version="true"></script>
-<script>
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <!-- MDB -->
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/mdb-ui-kit@9.3.0/js/mdb.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.10/purify.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    <script>
         document.addEventListener('DOMContentLoaded', () => {
             const toggleButton = document.getElementById('theme-toggle');
             const themeIcon = document.getElementById('theme-icon');
@@ -133,9 +133,9 @@
             });
         });
     </script>
-<!-- DataTables JS -->
-<script src="https://cdn.datatables.net/v/bs5/dt-2.3.7/b-3.2.6/b-colvis-3.2.6/r-3.0.8/sc-2.4.3/datatables.min.js" integrity="sha384-6eOoVFZRSk41/xcylba5o06WN5CikrMZCEII2Op2g/d+igf0esL5JAvotvzLC1q1" crossorigin="anonymous"></script>
-@await RenderSectionAsync("Scripts", required: false)
-@await Html.PartialAsync("_ConfirmModal")
+    <!-- DataTables JS -->
+    <script src="https://cdn.datatables.net/v/bs5/dt-2.3.7/b-3.2.6/b-colvis-3.2.6/r-3.0.8/sc-2.4.3/datatables.min.js" integrity="sha384-6eOoVFZRSk41/xcylba5o06WN5CikrMZCEII2Op2g/d+igf0esL5JAvotvzLC1q1" crossorigin="anonymous"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+    @await Html.PartialAsync("_ConfirmModal")
 </body>
 </html>

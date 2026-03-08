@@ -25,7 +25,9 @@ namespace Rvnx.CRM.Web
 
             builder.Services.AddHttpContextAccessor();
             builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
-            builder.Services.AddTransient<Microsoft.AspNetCore.Authentication.IClaimsTransformation, Rvnx.CRM.Web.Security.UserClaimsTransformation>();
+            builder.Services
+                .AddTransient<Microsoft.AspNetCore.Authentication.IClaimsTransformation,
+                    Rvnx.CRM.Web.Security.UserClaimsTransformation>();
             // File.TypeChecker.Web 2.0.0 does not expose AddFileTypesValidation.
             // Assuming automatic or no registration required for this version.
 
@@ -44,10 +46,10 @@ namespace Rvnx.CRM.Web
                 }
 
                 builder.Services.AddAuthentication(options =>
-                    {
-                        options.DefaultScheme = CookieAuthenticationDefaults.AuthenticationScheme;
-                        options.DefaultChallengeScheme = OpenIdConnectDefaults.AuthenticationScheme;
-                    })
+                {
+                    options.DefaultScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+                    options.DefaultChallengeScheme = OpenIdConnectDefaults.AuthenticationScheme;
+                })
                     .AddCookie(options =>
                     {
                         options.LoginPath = "/Account/Login";
@@ -112,18 +114,17 @@ namespace Rvnx.CRM.Web
             app.UseForwardedHeaders(new ForwardedHeadersOptions
             {
                 ForwardedHeaders = Microsoft.AspNetCore.HttpOverrides.ForwardedHeaders.XForwardedFor
-                     | Microsoft.AspNetCore.HttpOverrides.ForwardedHeaders.XForwardedProto
+                                   | Microsoft.AspNetCore.HttpOverrides.ForwardedHeaders.XForwardedProto
             });
 
-            // Set security headers on every response, including redirects
+
             app.Use(async (context, next) =>
             {
                 context.Response.OnStarting(() =>
                 {
                     context.Response.Headers["X-Content-Type-Options"] = "nosniff";
-                    context.Response.Headers["X-Frame-Options"] = "DENY";
+                    context.Response.Headers["X-Frame-Options"] = "SAMEORIGIN";
                     context.Response.Headers["X-XSS-Protection"] = "1; mode=block";
-                    context.Response.Headers["Content-Security-Policy"] = "default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'; font-src 'self' data:;";
                     return Task.CompletedTask;
                 });
                 await next();
@@ -161,9 +162,11 @@ namespace Rvnx.CRM.Web
                 {
                     if (context.User.Identity?.IsAuthenticated == true)
                     {
-                        IUserSynchronizationService? userSync = context.RequestServices.GetRequiredService<IUserSynchronizationService>();
+                        IUserSynchronizationService? userSync =
+                            context.RequestServices.GetRequiredService<IUserSynchronizationService>();
                         await userSync.SyncUserAsync(context.User);
                     }
+
                     await next();
                 });
             }

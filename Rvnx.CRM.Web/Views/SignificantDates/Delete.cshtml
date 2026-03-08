@@ -34,7 +34,9 @@
     <form asp-action="Delete">
         <input type="hidden" asp-for="Id"/>
         <input type="hidden" name="contactId" value="@Model.EntityId" />
-        <input type="submit" value="Delete" class="btn btn-danger"/> |
-        <a asp-action="Index" asp-route-contactId="@Model.EntityId" class="btn btn-secondary">Back</a>
+        <div class="d-grid gap-2 d-md-flex mt-4">
+            <button type="submit" class="btn btn-danger"><i class="bi bi-trash me-2"></i>Delete</button>
+            <a asp-action="Index" asp-route-contactId="@Model.EntityId" class="btn btn-secondary"><i class="bi bi-arrow-left me-2"></i>Back</a>
+        </div>
     </form>
 </div>

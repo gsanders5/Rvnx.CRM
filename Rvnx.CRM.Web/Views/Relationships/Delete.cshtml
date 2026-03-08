@@ -35,18 +35,20 @@
     <form asp-action="Delete">
         <input type="hidden" asp-for="Id"/>
         <input type="hidden" asp-for="ReturnUrl"/>
-        <input type="submit" value="Delete" class="btn btn-danger"/> |
-        @if (!string.IsNullOrEmpty(Model.ReturnUrl))
-        {
-            <a href="@Model.ReturnUrl">Cancel</a>
-        }
-        else if (Model.EntityType == EntityTypes.Person)
-        {
-            <a asp-controller="Contacts" asp-action="Details" asp-route-id="@Model.EntityId">Cancel</a>
-        }
-        else
-        {
-            <a asp-controller="Home" asp-action="Index">Cancel</a>
-        }
+        <div class="d-grid gap-2 d-md-flex mt-4">
+            <button type="submit" class="btn btn-danger"><i class="bi bi-trash me-2"></i>Delete</button>
+            @if (!string.IsNullOrEmpty(Model.ReturnUrl))
+            {
+                <a href="@Model.ReturnUrl" class="btn btn-secondary"><i class="bi bi-x-lg me-2"></i>Cancel</a>
+            }
+            else if (Model.EntityType == EntityTypes.Person)
+            {
+                <a asp-controller="Contacts" asp-action="Details" asp-route-id="@Model.EntityId" class="btn btn-secondary"><i class="bi bi-x-lg me-2"></i>Cancel</a>
+            }
+            else
+            {
+                <a asp-controller="Home" asp-action="Index" class="btn btn-secondary"><i class="bi bi-x-lg me-2"></i>Cancel</a>
+            }
+        </div>
     </form>
 </div>
