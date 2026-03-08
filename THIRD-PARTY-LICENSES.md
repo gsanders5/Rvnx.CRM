@@ -8,21 +8,26 @@ Purpose: License compliance audit
 
 | Package | Version | Project | License | License URL |
 |---|---|---|---|---|
-| Microsoft.EntityFrameworkCore.Design | 9.0.13 | Rvnx.CRM.Web | MIT | https://licenses.nuget.org/MIT |
-| Microsoft.AspNetCore.Authentication.OpenIdConnect | 8.0.0 | Rvnx.CRM.Web | MIT | https://licenses.nuget.org/MIT |
-| Microsoft.EntityFrameworkCore | 9.0.13 | Rvnx.CRM.Core | MIT | https://licenses.nuget.org/MIT |
-| FolkerKinzel.VCards | 6.0.0 | Rvnx.CRM.Infrastructure | MIT | https://github.com/FolkerKinzel/VCards/blob/master/LICENSE |
+| coverlet.collector | 8.0.0 | Rvnx.CRM.Tests | MIT | https://github.com/coverlet-coverage/coverlet/blob/master/LICENSE |
 | File.TypeChecker | 4.3.0 | Rvnx.CRM.Core | MIT | https://github.com/AJMitev/FileTypeChecker/blob/master/LICENSE |
 | File.TypeChecker.Web | 2.0.0 | Rvnx.CRM.Web | MIT | https://github.com/AJMitev/FileTypeChecker.Web/blob/master/LICENSE |
-| Microsoft.EntityFrameworkCore.Sqlite | 9.0.2 | Rvnx.CRM.Infrastructure | MIT | https://licenses.nuget.org/MIT |
-| Microsoft.EntityFrameworkCore.SqlServer | 9.0.2 | Rvnx.CRM.Infrastructure | MIT | https://licenses.nuget.org/MIT |
-| Microsoft.EntityFrameworkCore.Tools | 9.0.2 | Rvnx.CRM.Infrastructure | MIT | https://licenses.nuget.org/MIT |
-| coverlet.collector | 6.0.4 | Rvnx.CRM.Tests | MIT | https://github.com/coverlet-coverage/coverlet/blob/master/LICENSE |
-| Microsoft.EntityFrameworkCore.InMemory | 8.0.0 | Rvnx.CRM.Tests | MIT | https://licenses.nuget.org/MIT |
-| Microsoft.NET.Test.Sdk | 17.14.1 | Rvnx.CRM.Tests | MIT | https://licenses.nuget.org/MIT |
+| FolkerKinzel.VCards | 8.1.2 | Rvnx.CRM.Infrastructure | MIT | https://github.com/FolkerKinzel/VCards/blob/master/LICENSE |
+| MailKit | 4.15.0 | Rvnx.CRM.Infrastructure | MIT | https://github.com/jstedfast/MailKit/blob/master/LICENSE |
+| Microsoft.AspNetCore.Authentication.OpenIdConnect | 8.0.24 | Rvnx.CRM.Web | MIT | https://licenses.nuget.org/MIT |
+| Microsoft.AspNetCore.Mvc.Testing | 8.0.24 | Rvnx.CRM.Tests | MIT | https://licenses.nuget.org/MIT |
+| Microsoft.EntityFrameworkCore | 9.0.13 | Rvnx.CRM.Core, Rvnx.CRM.Infrastructure | MIT | https://licenses.nuget.org/MIT |
+| Microsoft.EntityFrameworkCore.Design | 9.0.13 | Rvnx.CRM.Web, Rvnx.CRM.Infrastructure | MIT | https://licenses.nuget.org/MIT |
+| Microsoft.EntityFrameworkCore.InMemory | 9.0.13 | Rvnx.CRM.Tests | MIT | https://licenses.nuget.org/MIT |
+| Microsoft.EntityFrameworkCore.Sqlite | 9.0.13 | Rvnx.CRM.Infrastructure | MIT | https://licenses.nuget.org/MIT |
+| Microsoft.EntityFrameworkCore.SqlServer | 9.0.13 | Rvnx.CRM.Infrastructure | MIT | https://licenses.nuget.org/MIT |
+| Microsoft.EntityFrameworkCore.Tools | 9.0.13 | Rvnx.CRM.Infrastructure | MIT | https://licenses.nuget.org/MIT |
+| Microsoft.Extensions.Hosting | 10.0.3 | Rvnx.CRM.ConsoleApp | MIT | https://licenses.nuget.org/MIT |
+| Microsoft.Extensions.Http | 10.0.3 | Rvnx.CRM.Infrastructure | MIT | https://licenses.nuget.org/MIT |
+| Microsoft.NET.Test.Sdk | 18.3.0 | Rvnx.CRM.Tests | MIT | https://licenses.nuget.org/MIT |
+| MimeKit | 4.15.1 | Rvnx.CRM.Infrastructure | MIT | https://github.com/jstedfast/MimeKit/blob/master/LICENSE |
 | Moq | 4.20.72 | Rvnx.CRM.Tests | BSD-3-Clause | https://github.com/moq/moq4/blob/main/License.txt |
 | xunit | 2.9.3 | Rvnx.CRM.Tests | Apache-2.0 | https://licenses.nuget.org/Apache-2.0 |
-| xunit.runner.visualstudio | 3.1.4 | Rvnx.CRM.Tests | Apache-2.0 | https://licenses.nuget.org/Apache-2.0 |
+| xunit.runner.visualstudio | 3.1.5 | Rvnx.CRM.Tests | Apache-2.0 | https://licenses.nuget.org/Apache-2.0 |
 
 ---
 
@@ -39,6 +44,9 @@ Purpose: License compliance audit
 | marked.js | Latest | https://cdn.jsdelivr.net/npm/marked/marked.min.js | MIT / BSD-3-Clause | https://github.com/markedjs/marked/blob/master/LICENSE.md |
 | DOMPurify | 3.0.10 | https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.10/purify.min.js | Apache-2.0 OR MPL-2.0 | https://github.com/cure53/DOMPurify/blob/main/LICENSE |
 | DataTables (JS) | dt-2.3.7, b-3.2.6, b-colvis-3.2.6, r-3.0.8, sc-2.4.3 | https://cdn.datatables.net/v/bs5/dt-2.3.7/b-3.2.6/b-colvis-3.2.6/r-3.0.8/sc-2.4.3/datatables.min.js | MIT | https://datatables.net/license/ |
+| Twitter Embed Widget | - | https://platform.twitter.com/widgets.js | Proprietary | https://developer.twitter.com/en/developer-terms/agreement-and-policy |
+| Twitch Embed | v1 | https://embed.twitch.tv/embed/v1.js | Proprietary | https://www.twitch.tv/p/en/legal/developer-agreement/ |
+| TikTok Embed | - | https://www.tiktok.com/embed.js | Proprietary | https://www.tiktok.com/legal/page/global/terms-of-service/en |
 
 ---
 
@@ -79,8 +87,8 @@ Purpose: License compliance audit
 
 ## Summary
 
-Total dependencies audited: 26
-Licenses identified: MIT, Apache-2.0, BSD-3-Clause, CC BY 4.0 (Icons), MPL-2.0 (Option), SIL Open Font License 1.1
+Total dependencies audited: 36
+Licenses identified: MIT, Apache-2.0, BSD-3-Clause, CC BY 4.0 (Icons), MPL-2.0 (Option), SIL Open Font License 1.1, Proprietary (Social Embeds)
 Unresolved: 0
 
 ### License compatibility notes
@@ -90,3 +98,4 @@ Unresolved: 0
 - **CC BY 4.0**: Attribution required. Applies to Font Awesome Icons.
 - **MPL-2.0**: File-level copyleft. Only relevant if choosing MPL for DOMPurify. Apache-2.0 option is available and simpler for compatibility.
 - **SIL Open Font License 1.1**: Allows font software to be used, studied, modified, and redistributed freely as long as they are not sold by themselves. Fonts can be bundled, embedded, and redistributed with software.
+- **Proprietary**: Commercial terms apply to usage of embedded player widgets from Twitter, Twitch, and TikTok. Review platform developer agreements for specific restrictions.
