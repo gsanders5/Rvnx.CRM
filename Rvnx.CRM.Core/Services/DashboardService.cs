@@ -119,15 +119,15 @@ public class DashboardService(IRepository repository, ILogger<DashboardService> 
                                                                   sd.Title == SignificantDateTitles.Birthday)
             : 0;
 
-        List<Contact> hiddenContacts =
-            await _repository.ListAsNoTrackingAsync<Contact>(x => x.IsHidden && !x.IsPartial);
+        int hiddenContactsCount =
+            await _repository.CountAsync<Contact>(x => x.IsHidden && !x.IsPartial);
 
         result.Stats = new DashboardStatsDto
         {
             TotalContacts = contacts.Count,
             ContactsWithBirthday = birthdayCount,
-            ContactsWithRelationships = contactsWithRelationships.Count(id => contacts.Any(c => c.Id == id)),
-            ContactsHidden = hiddenContacts.Count
+            ContactsWithRelationships = contactsWithRelationships.Count(id => contactDict.ContainsKey(id)),
+            ContactsHidden = hiddenContactsCount
         };
 
         return result;
