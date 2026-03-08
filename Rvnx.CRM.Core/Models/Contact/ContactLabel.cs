@@ -1,9 +1,7 @@
 using Rvnx.CRM.Core.Models.Base;
-using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Rvnx.CRM.Core.Models.Contact
 {
-    [Table("ContactLabel")]
     public class ContactLabel : BaseEntity
     {
         public Guid ContactId { get; set; }

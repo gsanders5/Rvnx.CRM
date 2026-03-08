@@ -59,6 +59,8 @@ public class CRMDbContext(DbContextOptions<CRMDbContext> options, ICurrentUserSe
             .HasForeignKey(p => p.ContactId)
             .OnDelete(DeleteBehavior.Cascade);
 
+        modelBuilder.Entity<ContactLabel>().ToTable("ContactLabel");
+
         modelBuilder.Entity<ContactLabel>()
             .HasOne(cl => cl.Contact)
             .WithMany(c => c.ContactLabels)
