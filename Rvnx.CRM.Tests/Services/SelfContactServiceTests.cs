@@ -31,13 +31,10 @@ public class SelfContactServiceTests
     [Fact]
     public async Task GetSelfContactIdAsyncWithNoUserIdReturnsNull()
     {
-        // Arrange
         _currentUserServiceMock.Setup(c => c.UserId).Returns((Guid?)null);
 
-        // Act
         Guid? result = await _service.GetSelfContactIdAsync(_principal);
 
-        // Assert
         Assert.Null(result);
         _userSynchronizationServiceMock.Verify(s => s.SyncUserAsync(_principal), Times.Once());
     }
@@ -45,7 +42,6 @@ public class SelfContactServiceTests
     [Fact]
     public async Task GetSelfContactIdAsyncWithUserReturnsSelfContactId()
     {
-        // Arrange
         Guid userId = Guid.NewGuid();
         Guid selfContactId = Guid.NewGuid();
         _currentUserServiceMock.Setup(c => c.UserId).Returns(userId);
@@ -53,30 +49,24 @@ public class SelfContactServiceTests
         Rvnx.CRM.Core.Models.User user = new() { Id = userId, SelfContactId = selfContactId };
         _repositoryMock.Setup(r => r.GetByIdAsync<Rvnx.CRM.Core.Models.User>(userId, It.IsAny<CancellationToken>())).ReturnsAsync(user);
 
-        // Act
         Guid? result = await _service.GetSelfContactIdAsync(_principal);
 
-        // Assert
         Assert.Equal(selfContactId, result);
     }
 
     [Fact]
     public async Task GetSelfContactFormAsyncWithNoUserIdReturnsNull()
     {
-        // Arrange
         _currentUserServiceMock.Setup(c => c.UserId).Returns((Guid?)null);
 
-        // Act
         ContactFormDto? result = await _service.GetSelfContactFormAsync(_principal);
 
-        // Assert
         Assert.Null(result);
     }
 
     [Fact]
     public async Task GetSelfContactFormAsyncWithUserNoNameReturnsEmailOnly()
     {
-        // Arrange
         Guid userId = Guid.NewGuid();
         _currentUserServiceMock.Setup(c => c.UserId).Returns(userId);
         _currentUserServiceMock.Setup(c => c.UserName).Returns((string?)null);
@@ -84,10 +74,8 @@ public class SelfContactServiceTests
         Rvnx.CRM.Core.Models.User user = new() { Id = userId, Email = "test@example.com" };
         _repositoryMock.Setup(r => r.GetByIdAsync<Rvnx.CRM.Core.Models.User>(userId, It.IsAny<CancellationToken>())).ReturnsAsync(user);
 
-        // Act
         ContactFormDto? result = await _service.GetSelfContactFormAsync(_principal);
 
-        // Assert
         Assert.NotNull(result);
         Assert.Equal("test@example.com", result.Email);
         Assert.Equal("", result.FirstName);
@@ -97,7 +85,6 @@ public class SelfContactServiceTests
     [Fact]
     public async Task GetSelfContactFormAsyncWithUserFirstLastNameSplitsNameCorrectly()
     {
-        // Arrange
         Guid userId = Guid.NewGuid();
         _currentUserServiceMock.Setup(c => c.UserId).Returns(userId);
         _currentUserServiceMock.Setup(c => c.UserName).Returns("John Doe Smith");
@@ -105,10 +92,8 @@ public class SelfContactServiceTests
         Rvnx.CRM.Core.Models.User user = new() { Id = userId, Email = "john@example.com" };
         _repositoryMock.Setup(r => r.GetByIdAsync<Rvnx.CRM.Core.Models.User>(userId, It.IsAny<CancellationToken>())).ReturnsAsync(user);
 
-        // Act
         ContactFormDto? result = await _service.GetSelfContactFormAsync(_principal);
 
-        // Assert
         Assert.NotNull(result);
         Assert.Equal("john@example.com", result.Email);
         Assert.Equal("John", result.FirstName);
@@ -118,14 +103,11 @@ public class SelfContactServiceTests
     [Fact]
     public async Task CreateSelfContactAsyncWithUnauthenticatedUserReturnsFailure()
     {
-        // Arrange
         _currentUserServiceMock.Setup(c => c.UserId).Returns((Guid?)null);
         ContactFormDto dto = new();
 
-        // Act
         ContactOperationResult result = await _service.CreateSelfContactAsync(_principal, dto);
 
-        // Assert
         Assert.False(result.Success);
         Assert.Contains("User not authenticated.", result.Errors);
     }
@@ -133,7 +115,6 @@ public class SelfContactServiceTests
     [Fact]
     public async Task CreateSelfContactAsyncWithNonExistentUserReturnsFailure()
     {
-        // Arrange
         Guid userId = Guid.NewGuid();
         _currentUserServiceMock.Setup(c => c.UserId).Returns(userId);
 
@@ -142,10 +123,8 @@ public class SelfContactServiceTests
 
         ContactFormDto dto = new();
 
-        // Act
         ContactOperationResult result = await _service.CreateSelfContactAsync(_principal, dto);
 
-        // Assert
         Assert.False(result.Success);
         Assert.Contains("User entity not found.", result.Errors);
     }
@@ -153,7 +132,6 @@ public class SelfContactServiceTests
     [Fact]
     public async Task CreateSelfContactAsyncWithExistingSelfContactReturnsExistingId()
     {
-        // Arrange
         Guid userId = Guid.NewGuid();
         Guid existingContactId = Guid.NewGuid();
         _currentUserServiceMock.Setup(c => c.UserId).Returns(userId);
@@ -163,10 +141,8 @@ public class SelfContactServiceTests
 
         ContactFormDto dto = new();
 
-        // Act
         ContactOperationResult result = await _service.CreateSelfContactAsync(_principal, dto);
 
-        // Assert
         Assert.True(result.Success);
         Assert.Equal(existingContactId, result.ContactId);
         _repositoryMock.Verify(r => r.AddAsync(It.IsAny<Contact>(), It.IsAny<CancellationToken>()), Times.Never());
@@ -175,7 +151,6 @@ public class SelfContactServiceTests
     [Fact]
     public async Task CreateSelfContactAsyncWithValidDtoCreatesContactAndDelegatesToHelper()
     {
-        // Arrange
         Guid userId = Guid.NewGuid();
         _currentUserServiceMock.Setup(c => c.UserId).Returns(userId);
 
@@ -196,10 +171,8 @@ public class SelfContactServiceTests
             RemindOnBirthday = true
         };
 
-        // Act
         ContactOperationResult result = await _service.CreateSelfContactAsync(_principal, dto);
 
-        // Assert
         Assert.True(result.Success);
         Assert.NotNull(result.ContactId);
 

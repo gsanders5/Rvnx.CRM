@@ -23,7 +23,6 @@ public class ContactReadServiceIndexTests
     [Fact]
     public async Task GetIndexDataAsyncCorrectlyRestitchesBulkLoadedRelatedEntities()
     {
-        // Arrange
         Guid contact1Id = Guid.NewGuid();
         Guid contact2Id = Guid.NewGuid();
         Guid attachmentId = Guid.NewGuid();
@@ -59,22 +58,18 @@ public class ContactReadServiceIndexTests
             It.IsAny<CancellationToken>()))
             .ReturnsAsync([(contact1Id, new DateOnly(1990, 5, 10))]);
 
-        // Act
         List<ContactDto> result = await _service.GetIndexDataAsync(false);
 
-        // Assert
         Assert.NotNull(result);
         Assert.Equal(2, result.Count);
 
         ContactDto alice = result.First(c => c.Id == contact1Id);
         ContactDto bob = result.First(c => c.Id == contact2Id);
 
-        // Verify Alice's mapping
         Assert.Equal(attachmentId, alice.ProfileImageId);
         Assert.Empty(alice.Labels);
         Assert.Equal(new DateTime(1990, 5, 10), alice.Birthday);
 
-        // Verify Bob's mapping
         Assert.Null(bob.ProfileImageId);
         Assert.Single(bob.Labels);
         Assert.Equal(labelId, bob.Labels.First().Id);
@@ -86,7 +81,6 @@ public class ContactReadServiceIndexTests
     [Fact]
     public async Task GetIndexDataAsyncGracefullyHandlesMissingOrDuplicateKeys()
     {
-        // Arrange
         Guid contact1Id = Guid.NewGuid();
         Guid contact2Id = Guid.NewGuid();
         Guid attachment1Id = Guid.NewGuid();
@@ -129,10 +123,8 @@ public class ContactReadServiceIndexTests
             It.IsAny<CancellationToken>()))
             .ReturnsAsync([]);
 
-        // Act
         List<ContactDto> result = await _service.GetIndexDataAsync(false);
 
-        // Assert
         Assert.NotNull(result);
         Assert.Equal(2, result.Count);
 

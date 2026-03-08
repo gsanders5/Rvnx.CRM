@@ -18,7 +18,6 @@
 (function () {
     let _triggerEl = null;   // button that opened the current modal
 
-    // Open modal on trigger click
     document.addEventListener('click', function (e) {
         const trigger = e.target.closest('[data-confirm-action]');
         if (!trigger) return;
@@ -40,18 +39,14 @@
 
         if (!modalEl || !form || !submitBtn) return;
 
-        // Populate modal content
         document.getElementById('confirmModalLabel').textContent = title;
         document.getElementById('confirmModalBody').textContent  = body;
 
-        // Update submit button appearance
         submitBtn.className = `btn ${btnClass}`;
         submitBtn.innerHTML = `<i class="bi ${btnIcon} me-1"></i> ${btnLabel}`;
 
-        // Point the form at the right endpoint
         form.action = action;
 
-        // Show modal
         mdb.Modal.getOrCreateInstance(modalEl).show();
     });
 
@@ -69,7 +64,6 @@
         const submitBtn = document.getElementById('confirmModalSubmit');
         const modalEl  = document.getElementById('confirmModal');
 
-        // Disable button and show spinner while waiting
         submitBtn.disabled = true;
         submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span> Deleting…';
 
@@ -95,7 +89,6 @@
         })
         .catch(function (err) {
             console.error('Delete failed:', err);
-            // Re-enable button so the user can retry or submit normally
             submitBtn.disabled = false;
             submitBtn.innerHTML = submitBtn.innerHTML.replace(/<span.*?<\/span>\s*/, '');
         })

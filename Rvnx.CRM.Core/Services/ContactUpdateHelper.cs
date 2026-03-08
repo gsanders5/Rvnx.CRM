@@ -68,7 +68,6 @@ internal static class ContactUpdateHelper
                 await repository.AddAsync(targetDate);
             }
 
-            // Sync ReminderOffset based on remindOnBirthday
             List<ReminderOffset> offsets = await repository.ListAsync<ReminderOffset>(o => o.SignificantDateId == targetDate.Id && o.DaysBeforeEvent == 0);
             ReminderOffset? offset = offsets.FirstOrDefault();
 
