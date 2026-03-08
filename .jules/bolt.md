@@ -58,3 +58,6 @@
 
 **Learning:** `ContactManagementService` was executing an N+1 query in `ArchiveExistingProfilePhotoAsync` by iterating through existing attachments and calling `UpdateAsync` on each iteration to set `AttachmentType` to `"General"`.
 **Action:** When updating a collection of entities retrieved from the database, update the properties within the loop and call `UpdateRangeAsync` outside the loop to batch the updates, reducing database roundtrips and optimizing performance.
+## 2024-05-18 - Avoid loading full entities just to get a count
+**Learning:** In the DashboardService, retrieving the count of hidden contacts and filtering contacts with relationships were using inefficient methods (e.g., loading all hidden contacts into a list via `ListAsNoTrackingAsync` just to call `.Count` and using `.Any(c => c.Id == id)` over a list of contacts instead of a pre-existing dictionary).
+**Action:** Always prefer `CountAsync()` on the repository or fast dictionary lookups (`ContainsKey`) over loading full entity instances or using `O(n)` list scans just to count elements or check existence.
