@@ -12,7 +12,7 @@
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
             @if (Model.IsSelfCreate)
             {
-                <input type="hidden" asp-for="IsSelfCreate" value="true" />
+                <input type="hidden" asp-for="IsSelfCreate" value="true"/>
             }
 
             <div class="form-floating mb-3">
@@ -70,7 +70,7 @@
             </div>
 
             <div class="mb-3 form-check form-switch">
-                <input asp-for="RemindOnBirthday" class="form-check-input" />
+                <input asp-for="RemindOnBirthday" class="form-check-input"/>
                 <label asp-for="RemindOnBirthday" class="form-check-label"></label>
             </div>
 
@@ -83,7 +83,7 @@
                     }
                 </select>
                 <div id="pronouns-custom" class="mt-2" style="display:none;">
-                    <input asp-for="Pronouns" class="form-control" placeholder="Enter pronouns" />
+                    <input asp-for="Pronouns" class="form-control" placeholder="Enter pronouns"/>
                     <span asp-validation-for="Pronouns" class="text-danger"></span>
                 </div>
             </div>
@@ -97,14 +97,14 @@
                     }
                 </select>
                 <div id="gender-custom" class="mt-2" style="display:none;">
-                    <input asp-for="Gender" class="form-control" placeholder="Enter gender" />
+                    <input asp-for="Gender" class="form-control" placeholder="Enter gender"/>
                     <span asp-validation-for="Gender" class="text-danger"></span>
                 </div>
             </div>
 
             <div class="mb-3">
                 <label asp-for="Religion" class="form-label">Religion</label>
-                <input asp-for="Religion" class="form-control" placeholder="Optional" />
+                <input asp-for="Religion" class="form-control" placeholder="Optional"/>
                 <span asp-validation-for="Religion" class="text-danger"></span>
             </div>
 

@@ -37,7 +37,7 @@
                     <input type="hidden" asp-for="EntityName"/>
 
                     <!-- Hidden input to store the final selection -->
-                    <input type="hidden" asp-for="SelectedRelationshipType" id="SelectedRelationshipType" />
+                    <input type="hidden" asp-for="SelectedRelationshipType" id="SelectedRelationshipType"/>
 
                     <!-- Step 1: Type Selection -->
                     <div class="mb-4">
@@ -144,9 +144,9 @@
                         <input type="hidden" name="entityType" value="@Model.EntityType"/>
 
                         <!-- Hidden input to store the final selection -->
-                        <input type="hidden" name="SelectedRelationshipType" id="SelectedRelationshipTypePartial" required />
+                        <input type="hidden" name="SelectedRelationshipType" id="SelectedRelationshipTypePartial" required/>
 
-                         <!-- Step 1: Type Selection (Partial) -->
+                        <!-- Step 1: Type Selection (Partial) -->
                         <div class="mb-4">
                             <label class="form-label fw-bold">Step 1: Choose Relationship Type</label>
 
@@ -196,11 +196,11 @@
 
                         <div class="row">
                             <div class="col-md-6 form-floating mb-3">
-                                <input id="PartialContactFirstName" name="PartialContactFirstName" type="text" class="form-control" placeholder=" " required />
+                                <input id="PartialContactFirstName" name="PartialContactFirstName" type="text" class="form-control" placeholder=" " required/>
                                 <label for="PartialContactFirstName" class="ms-2">First Name (Required)</label>
                             </div>
                             <div class="col-md-6 form-floating mb-3">
-                                <input id="PartialContactLastName" name="PartialContactLastName" type="text" class="form-control" placeholder=" " />
+                                <input id="PartialContactLastName" name="PartialContactLastName" type="text" class="form-control" placeholder=" "/>
                                 <label for="PartialContactLastName" class="ms-2">Last Name</label>
                             </div>
                         </div>
@@ -213,7 +213,7 @@
                         </div>
 
                         <div class="form-floating mb-3">
-                            <input id="Birthday" name="Birthday" type="date" class="form-control" placeholder=" " />
+                            <input id="Birthday" name="Birthday" type="date" class="form-control" placeholder=" "/>
                             <label for="Birthday">Birthday</label>
                             <div class="form-text mt-1 text-muted"><i class="bi bi-info-circle"></i> Entering a birthday will automatically add a yearly reminder for this person.</div>
                         </div>
