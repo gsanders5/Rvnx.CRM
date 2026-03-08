@@ -30,14 +30,11 @@ namespace Rvnx.CRM.Tests.Services
             Justification = "Test names follow a standard convention")]
         public async Task CreateRelationshipAsync_WithInvalidSelection_ReturnsFailure(string? invalidSelection)
         {
-            // Arrange
             Relationship relationship = new();
 
-            // Act
             RelationshipOperationResult
                 result = await _service.CreateRelationshipAsync(relationship, invalidSelection!);
 
-            // Assert
             Assert.False(result.Success);
             Assert.NotNull(result.ErrorMessage);
             _repositoryMock.Verify(r => r.AddAsync(It.IsAny<Relationship>(), It.IsAny<CancellationToken>()),
@@ -95,7 +92,6 @@ namespace Rvnx.CRM.Tests.Services
             Justification = "Test names follow a standard convention")]
         public async Task CreateRelationshipAsync_WithValidForwardSelection_SavesWithoutSwapping()
         {
-            // Arrange
             Guid typeId = Guid.NewGuid();
             string selection = $"{typeId}_Fwd";
             Guid entityId = Guid.NewGuid();
@@ -108,10 +104,8 @@ namespace Rvnx.CRM.Tests.Services
                 EntityType = EntityTypes.Person
             };
 
-            // Act
             RelationshipOperationResult result = await _service.CreateRelationshipAsync(relationship, selection);
 
-            // Assert
             Assert.True(result.Success);
             Assert.Equal(entityId, result.RedirectId);
             Assert.Equal(EntityTypes.Person, result.EntityType);
@@ -129,7 +123,6 @@ namespace Rvnx.CRM.Tests.Services
             Justification = "Test names follow a standard convention")]
         public async Task CreateRelationshipAsync_WithValidReverseSelection_SwapsEntities()
         {
-            // Arrange
             Guid typeId = Guid.NewGuid();
             string selection = $"{typeId}_Rev";
             Guid entityId = Guid.NewGuid();
@@ -142,10 +135,8 @@ namespace Rvnx.CRM.Tests.Services
                 EntityType = EntityTypes.Person
             };
 
-            // Act
             RelationshipOperationResult result = await _service.CreateRelationshipAsync(relationship, selection);
 
-            // Assert
             Assert.True(result.Success);
             Assert.Equal(entityId,
                 result.RedirectId); // The original entity stays the primary entity because Swap is called before Ok
@@ -164,7 +155,6 @@ namespace Rvnx.CRM.Tests.Services
             Justification = "Test names follow a standard convention")]
         public async Task CreatePartialContact_WithBirthday_CreatesContactDateAndRelationship()
         {
-            // Arrange
             Guid parentEntityId = Guid.NewGuid();
             Guid typeId = Guid.NewGuid();
             string selection = $"{typeId}_Fwd";
@@ -177,11 +167,9 @@ namespace Rvnx.CRM.Tests.Services
                 Description = "A new partial contact"
             };
 
-            // Act
             RelationshipOperationResult result =
                 await _service.CreatePartialContactRelationshipAsync(parentEntityId, selection, dto);
 
-            // Assert
             Assert.True(result.Success);
             Assert.Equal(parentEntityId, result.RedirectId);
 
@@ -207,17 +195,14 @@ namespace Rvnx.CRM.Tests.Services
             Justification = "Test names follow a standard convention")]
         public async Task PromotePartialContact_WhenContactIsAlreadyPromoted_ReturnsFailure()
         {
-            // Arrange
             Guid contactId = Guid.NewGuid();
             Contact fullyPromotedContact = new() { Id = contactId, IsPartial = false };
 
             _repositoryMock.Setup(r => r.GetByIdAsync<Contact>(contactId, It.IsAny<CancellationToken>()))
                 .ReturnsAsync(fullyPromotedContact);
 
-            // Act
             RelationshipOperationResult result = await _service.PromotePartialContactAsync(contactId);
 
-            // Assert
             Assert.False(result.Success);
             Assert.Equal("Contact is not a partial contact.", result.ErrorMessage);
 
@@ -229,17 +214,14 @@ namespace Rvnx.CRM.Tests.Services
             Justification = "Test names follow a standard convention")]
         public async Task PromotePartialContact_WhenContactIsPartial_SetsIsPartialFalse()
         {
-            // Arrange
             Guid contactId = Guid.NewGuid();
             Contact partialContact = new() { Id = contactId, IsPartial = true };
 
             _repositoryMock.Setup(r => r.GetByIdAsync<Contact>(contactId, It.IsAny<CancellationToken>()))
                 .ReturnsAsync(partialContact);
 
-            // Act
             RelationshipOperationResult result = await _service.PromotePartialContactAsync(contactId);
 
-            // Assert
             Assert.True(result.Success);
             Assert.Equal(contactId, result.RedirectId);
             Assert.False(partialContact.IsPartial);
@@ -253,7 +235,6 @@ namespace Rvnx.CRM.Tests.Services
             Justification = "Test names follow a standard convention")]
         public async Task DeleteRelationshipAsyncWhenFoundReturnsOk()
         {
-            // Arrange
             Guid relationshipId = Guid.NewGuid();
             Guid entityId = Guid.NewGuid();
             string entityType = EntityTypes.Person;
@@ -268,10 +249,8 @@ namespace Rvnx.CRM.Tests.Services
             _repositoryMock.Setup(r => r.GetByIdAsync<Relationship>(relationshipId, It.IsAny<CancellationToken>()))
                 .ReturnsAsync(relationship);
 
-            // Act
             OperationResult result = await _service.DeleteRelationshipAsync(relationshipId);
 
-            // Assert
             Assert.True(result.Success);
             Assert.Equal(entityId, result.RedirectId);
             Assert.Equal(entityType, result.RedirectType);
@@ -285,16 +264,13 @@ namespace Rvnx.CRM.Tests.Services
             Justification = "Test names follow a standard convention")]
         public async Task DeleteRelationshipAsyncWhenNotFoundReturnsFailure()
         {
-            // Arrange
             Guid relationshipId = Guid.NewGuid();
 
             _repositoryMock.Setup(r => r.GetByIdAsync<Relationship>(relationshipId, It.IsAny<CancellationToken>()))
                 .ReturnsAsync((Relationship?)null);
 
-            // Act
             OperationResult result = await _service.DeleteRelationshipAsync(relationshipId);
 
-            // Assert
             Assert.False(result.Success);
             Assert.Equal("Relationship not found.", result.ErrorMessage);
 

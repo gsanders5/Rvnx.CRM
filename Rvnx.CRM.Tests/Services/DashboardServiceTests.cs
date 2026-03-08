@@ -29,7 +29,6 @@ public class DashboardServiceTests
         Justification = "Test names can contain underscores for readability.")]
     public async Task GetDashboardDataAsync_ReturnsAggregatedData()
     {
-        // Arrange
         Guid contactId1 = Guid.NewGuid();
         Guid contactId2 = Guid.NewGuid();
 
@@ -59,7 +58,6 @@ public class DashboardServiceTests
                 It.IsAny<string[]>()))
             .ReturnsAsync(contacts);
 
-        // Setup significant dates
         DateTime today = DateTime.Today;
         List<SignificantDate> dates =
         [
@@ -108,10 +106,8 @@ public class DashboardServiceTests
         // Ensure logger allows logging for warning
         _loggerMock.Setup(x => x.IsEnabled(LogLevel.Warning)).Returns(true);
 
-        // Act
         DashboardDto result = await _service.GetDashboardDataAsync();
 
-        // Assert
         Assert.NotNull(result);
 
         // Check UpcomingEvents
@@ -139,7 +135,6 @@ public class DashboardServiceTests
         Justification = "Test names can contain underscores for readability.")]
     public async Task GetDashboardDataAsync_ZeroContacts_ReturnsEmptyData()
     {
-        // Arrange
         _repositoryMock.Setup(r => r.ListAsNoTrackingAsync<Contact>(
                 It.IsAny<Expression<Func<Contact, bool>>>(),
                 It.IsAny<CancellationToken>(),
@@ -158,10 +153,8 @@ public class DashboardServiceTests
                 It.IsAny<string[]>()))
             .ReturnsAsync([]);
 
-        // Act
         DashboardDto result = await _service.GetDashboardDataAsync();
 
-        // Assert
         Assert.NotNull(result);
         Assert.Empty(result.GraphNodes);
         Assert.Empty(result.GraphLinks);
@@ -179,7 +172,6 @@ public class DashboardServiceTests
         Justification = "Test names can contain underscores for readability.")]
     public async Task GetDashboardDataAsync_NoSignificantDates_ReturnsEmptyUpcomingEvents()
     {
-        // Arrange
         Guid contactId = Guid.NewGuid();
         List<Contact> contacts =
             [new Contact { Id = contactId, FirstName = "Jane", LastName = "Doe", Gender = "Female" }];
@@ -209,10 +201,8 @@ public class DashboardServiceTests
                 It.IsAny<string[]>()))
             .ReturnsAsync([]);
 
-        // Act
         DashboardDto result = await _service.GetDashboardDataAsync();
 
-        // Assert
         Assert.NotNull(result);
         Assert.Empty(result.UpcomingEvents);
         Assert.Single(result.GraphNodes);
@@ -223,7 +213,6 @@ public class DashboardServiceTests
         Justification = "Test names can contain underscores for readability.")]
     public async Task GetDashboardDataAsync_ExceedsMaxEventsToProcess_LogsWarning()
     {
-        // Arrange
         Guid contactId = Guid.NewGuid();
         List<Contact> contacts =
         [
@@ -270,10 +259,8 @@ public class DashboardServiceTests
                 It.IsAny<string[]>()))
             .ReturnsAsync([]);
 
-        // Act
         DashboardDto result = await _service.GetDashboardDataAsync();
 
-        // Assert
         Assert.NotNull(result);
         Assert.Equal(5, result.UpcomingEvents.Count); // Should still limit to MaxUpcomingEvents (5)
     }
@@ -283,7 +270,6 @@ public class DashboardServiceTests
         Justification = "Test names can contain underscores for readability.")]
     public async Task GetDashboardDataAsync_EventIsToday_ReturnsToday()
     {
-        // Arrange
         Guid contactId = Guid.NewGuid();
         List<Contact> contacts = [new Contact { Id = contactId, FirstName = "Test", LastName = "User" }];
 
@@ -317,10 +303,8 @@ public class DashboardServiceTests
                     It.IsAny<CancellationToken>(), It.IsAny<string[]>()))
             .ReturnsAsync([]);
 
-        // Act
         DashboardDto result = await _service.GetDashboardDataAsync();
 
-        // Assert
         Assert.Single(result.UpcomingEvents);
         Assert.Equal("Today", result.UpcomingEvents[0].TimeUntil);
     }
@@ -330,7 +314,6 @@ public class DashboardServiceTests
         Justification = "Test names can contain underscores for readability.")]
     public async Task GetDashboardDataAsync_EventIsTomorrow_ReturnsTomorrow()
     {
-        // Arrange
         Guid contactId = Guid.NewGuid();
         List<Contact> contacts = [new Contact { Id = contactId, FirstName = "Test", LastName = "User" }];
 
@@ -364,10 +347,8 @@ public class DashboardServiceTests
                     It.IsAny<CancellationToken>(), It.IsAny<string[]>()))
             .ReturnsAsync([]);
 
-        // Act
         DashboardDto result = await _service.GetDashboardDataAsync();
 
-        // Assert
         Assert.Single(result.UpcomingEvents);
         Assert.Equal("Tomorrow", result.UpcomingEvents[0].TimeUntil);
     }
@@ -377,7 +358,6 @@ public class DashboardServiceTests
         Justification = "Test names can contain underscores for readability.")]
     public async Task GetDashboardDataAsync_EventIsOverdue_ReturnsOverdue()
     {
-        // Arrange
         Guid contactId = Guid.NewGuid();
         List<Contact> contacts = [new Contact { Id = contactId, FirstName = "Test", LastName = "User" }];
 
@@ -413,10 +393,8 @@ public class DashboardServiceTests
                     It.IsAny<CancellationToken>(), It.IsAny<string[]>()))
             .ReturnsAsync([]);
 
-        // Act
         DashboardDto result = await _service.GetDashboardDataAsync();
 
-        // Assert
         Assert.Single(result.UpcomingEvents);
         Assert.Equal("Overdue", result.UpcomingEvents[0].TimeUntil);
     }
@@ -426,7 +404,6 @@ public class DashboardServiceTests
         Justification = "Test names can contain underscores for readability.")]
     public async Task GetDashboardDataAsync_EventIsInFiveDays_ReturnsInFiveDays()
     {
-        // Arrange
         Guid contactId = Guid.NewGuid();
         List<Contact> contacts = [new Contact { Id = contactId, FirstName = "Test", LastName = "User" }];
 
@@ -461,10 +438,8 @@ public class DashboardServiceTests
                     It.IsAny<CancellationToken>(), It.IsAny<string[]>()))
             .ReturnsAsync([]);
 
-        // Act
         DashboardDto result = await _service.GetDashboardDataAsync();
 
-        // Assert
         Assert.Single(result.UpcomingEvents);
         Assert.Equal("In 5 days", result.UpcomingEvents[0].TimeUntil);
     }
@@ -474,7 +449,6 @@ public class DashboardServiceTests
         Justification = "Test names can contain underscores for readability.")]
     public async Task GetDashboardDataAsync_EventIsInOneWeek_ReturnsInOneWeek()
     {
-        // Arrange
         Guid contactId = Guid.NewGuid();
         List<Contact> contacts = [new Contact { Id = contactId, FirstName = "Test", LastName = "User" }];
 
@@ -509,10 +483,8 @@ public class DashboardServiceTests
                     It.IsAny<CancellationToken>(), It.IsAny<string[]>()))
             .ReturnsAsync([]);
 
-        // Act
         DashboardDto result = await _service.GetDashboardDataAsync();
 
-        // Assert
         Assert.Single(result.UpcomingEvents);
         Assert.Equal("In 1 week", result.UpcomingEvents[0].TimeUntil);
     }
@@ -522,7 +494,6 @@ public class DashboardServiceTests
         Justification = "Test names can contain underscores for readability.")]
     public async Task GetDashboardDataAsync_EventIsInTwoWeeks_ReturnsInTwoWeeks()
     {
-        // Arrange
         Guid contactId = Guid.NewGuid();
         List<Contact> contacts = [new Contact { Id = contactId, FirstName = "Test", LastName = "User" }];
 
@@ -557,10 +528,8 @@ public class DashboardServiceTests
                     It.IsAny<CancellationToken>(), It.IsAny<string[]>()))
             .ReturnsAsync([]);
 
-        // Act
         DashboardDto result = await _service.GetDashboardDataAsync();
 
-        // Assert
         Assert.Single(result.UpcomingEvents);
         Assert.Equal("In 2 weeks", result.UpcomingEvents[0].TimeUntil);
     }

@@ -486,7 +486,6 @@ namespace Rvnx.CRM.Core.Services
                     HashSet<Guid> childSiblings = await GetComponentAsync(childId, RelationshipTypeIds.Sibling);
                     HashSet<Guid> siblingIds = childSiblings.Where(id => id != childId).ToHashSet();
 
-                    // Batch-load all sibling contacts in one query
                     List<Contact> sibContacts = siblingIds.Count > 0
                         ? await repository.ListAsNoTrackingAsync<Contact>(c => siblingIds.Contains(c.Id))
                         : [];

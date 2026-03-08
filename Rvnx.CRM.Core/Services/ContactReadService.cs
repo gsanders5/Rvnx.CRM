@@ -90,7 +90,6 @@ public class ContactReadService(IRepository repository) : IContactReadService
             }
         }
 
-        // Batch-load birthdays (one query for all contacts using chunked contains)
         List<(Guid ContactId, DateOnly EventDate)> birthdayDates = contactIds.Count > 0
             ? await _repository.ListProjectedByChunkedContainsAsync<SignificantDate, (Guid, DateOnly), Guid>(
                 contactIds,

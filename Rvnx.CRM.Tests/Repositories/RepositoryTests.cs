@@ -89,7 +89,6 @@ namespace Rvnx.CRM.Tests.Repositories
         [Fact]
         public async Task ListProjectedAsyncReturnsProjectedData()
         {
-            // Arrange
             using CRMDbContext context = GetInMemoryDbContext();
             Repository repo = new(context);
 
@@ -98,12 +97,10 @@ namespace Rvnx.CRM.Tests.Repositories
             await repo.AddAsync(new Contact { Id = Guid.NewGuid(), FirstName = "Bob", LastName = "Smith" });
             await repo.SaveChangesAsync();
 
-            // Act
             List<string> result = await repo.ListProjectedAsync<Contact, string>(
                 c => c.LastName == "Doe",
                 c => c.FirstName + " " + c.LastName);
 
-            // Assert
             Assert.Equal(2, result.Count);
             Assert.Contains("John Doe", result);
             Assert.Contains("Jane Doe", result);
@@ -112,7 +109,6 @@ namespace Rvnx.CRM.Tests.Repositories
         [Fact]
         public async Task ListProjectedAsyncWithOrderByOrdersDataCorrectly()
         {
-            // Arrange
             using CRMDbContext context = GetInMemoryDbContext();
             Repository repo = new(context);
 
@@ -121,7 +117,6 @@ namespace Rvnx.CRM.Tests.Repositories
             await repo.AddAsync(new Contact { Id = Guid.NewGuid(), FirstName = "Bob", LastName = "Doe" });
             await repo.SaveChangesAsync();
 
-            // Act
             List<string> resultAsc = await repo.ListProjectedAsync<Contact, string, string>(
                 c => c.LastName == "Doe",
                 c => c.FirstName,
@@ -134,7 +129,6 @@ namespace Rvnx.CRM.Tests.Repositories
                 c => c.FirstName,
                 descending: true);
 
-            // Assert
             Assert.Equal(3, resultAsc.Count);
             Assert.Equal("Alice", resultAsc[0]);
             Assert.Equal("Bob", resultAsc[1]);

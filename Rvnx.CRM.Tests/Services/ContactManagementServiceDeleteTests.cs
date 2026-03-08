@@ -23,7 +23,6 @@ namespace Rvnx.CRM.Tests.Services
         [Fact]
         public async Task DeleteContactAsyncShouldNotUpdateUsersInLoop()
         {
-            // Arrange
             Guid contactId = Guid.NewGuid();
             List<Core.Models.User> users =
             [
@@ -42,10 +41,8 @@ namespace Rvnx.CRM.Tests.Services
             _repositoryMock.Setup(r => r.ListAsync<Fact>(It.IsAny<Expression<Func<Fact, bool>>>(), It.IsAny<CancellationToken>())).ReturnsAsync([]);
             _repositoryMock.Setup(r => r.ListAsync<Note>(It.IsAny<Expression<Func<Note, bool>>>(), It.IsAny<CancellationToken>())).ReturnsAsync([]);
 
-            // Act
             await _service.DeleteContactAsync(contactId);
 
-            // Assert
             _repositoryMock.Verify(r => r.UpdateAsync(It.IsAny<Rvnx.CRM.Core.Models.User>(), It.IsAny<CancellationToken>()), Times.Never);
             _repositoryMock.Verify(r => r.UpdateRangeAsync(It.IsAny<IEnumerable<Rvnx.CRM.Core.Models.User>>(), It.IsAny<CancellationToken>()), Times.Once);
         }

@@ -26,7 +26,6 @@ namespace Rvnx.CRM.Tests.Services
             Guid labelId = Guid.NewGuid();
             Contact contact = new() { Id = contactId, FirstName = "Test", LastName = "User" };
 
-            // Populate ContactLabels for eager loading
             contact.ContactLabels.Add(new ContactLabel { ContactId = contactId, LabelId = labelId });
 
             // We use It.IsAny<string[]> because we are testing if the optimization works regardless of exact includes for now,
@@ -76,7 +75,6 @@ namespace Rvnx.CRM.Tests.Services
             Contact contact = new() { Id = contactId, FirstName = "Test", LastName = "User" };
             Label label = new() { Id = labelId, Name = "Test Label", Color = "Blue" };
 
-            // Populate ContactLabels for eager loading
             contact.ContactLabels.Add(new ContactLabel { ContactId = contactId, LabelId = labelId, Label = label });
 
             _repositoryMock.Setup(r => r.ListAsNoTrackingAsync<Contact>(

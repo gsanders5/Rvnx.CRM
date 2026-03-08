@@ -22,7 +22,6 @@ namespace Rvnx.CRM.Tests.Services
         [Fact]
         public async Task ArchiveExistingProfilePhotoAsyncShouldUseUpdateRange()
         {
-            // Arrange
             Guid contactId = Guid.NewGuid();
             List<Attachment> attachments =
             [
@@ -34,10 +33,8 @@ namespace Rvnx.CRM.Tests.Services
             _repositoryMock.Setup(r => r.ListAsync(It.IsAny<Expression<Func<Attachment, bool>>>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(attachments);
 
-            // Act
             await _service.UnsetProfilePhotoAsync(contactId);
 
-            // Assert
             _repositoryMock.Verify(r => r.UpdateAsync(It.IsAny<Attachment>(), It.IsAny<CancellationToken>()), Times.Never());
             _repositoryMock.Verify(r => r.UpdateRangeAsync(It.IsAny<IEnumerable<Attachment>>(), It.IsAny<CancellationToken>()), Times.Once());
         }
