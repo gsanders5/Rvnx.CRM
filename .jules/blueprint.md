@@ -32,3 +32,6 @@
 ## 2023-10-27 - [Infrastructure Leak in Web Layer]
 **Learning:** `DbUpdateConcurrencyException` (and `Microsoft.EntityFrameworkCore`) was leaked into the Web layer (`SignificantDatesController`). The controller was catching it just to rethrow (`throw;`), which is both redundant and violates clean architecture by making the presentation layer depend directly on the ORM.
 **Action:** When working on controllers or core domain services, explicitly check for `using Microsoft.EntityFrameworkCore;` or explicit usage of `DbUpdateConcurrencyException`. Remove these where possible, and if handling is needed, ensure the infrastructure layer (or service layer) wraps it in a domain-friendly `OperationResult` or custom exception.
+## 2024-05-27 - [Infrastructure Dependency in Web Services]
+**Learning:** Services located in the `Web` layer (like `UserClaimsTransformation` and `CurrentUserService`) were directly referencing `Microsoft.EntityFrameworkCore` to call `.FirstOrDefaultAsync()` on `IQueryable` results from the repository. This coupled the Web layer directly to the ORM.
+**Action:** Replaced direct EF Core async extensions with appropriate `IRepository` abstraction methods (e.g., `GetByIdAsync`, `ListAsNoTrackingAsync().FirstOrDefault()`) to remove the EF Core using directives and strict dependencies from the Web layer, restoring the clean boundary.

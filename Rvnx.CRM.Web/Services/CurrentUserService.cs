@@ -1,4 +1,3 @@
-using Microsoft.EntityFrameworkCore;
 using Rvnx.CRM.Core.Constants;
 using Rvnx.CRM.Core.Interfaces;
 using Rvnx.CRM.Core.Models;
@@ -38,7 +37,7 @@ public class CurrentUserService(IHttpContextAccessor httpContextAccessor, IConfi
         using IServiceScope scope = _serviceProvider.CreateScope();
         IRepository repo = scope.ServiceProvider.GetRequiredService<IRepository>();
 
-        User? user = await repo.QueryUnfiltered<User>().FirstOrDefaultAsync(u => u.Id == userId);
+        User? user = await repo.GetByIdAsync<User>(userId);
 
         return user?.IsAdministrator ?? false;
     }
