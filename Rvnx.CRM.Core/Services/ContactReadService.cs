@@ -258,10 +258,8 @@ public class ContactReadService(IRepository repository) : IContactReadService
             dto.RemindOnBirthday = bday.ReminderOffsets.Any(ro => ro.DaysBeforeEvent == 0 && ro.IsActive);
         }
 
-        // Explicitly await the task to ensure Result is not accessed prematurely or incorrectly, and handle null result from ListAsync safely
-        List<Attachment> attachments = await _repository.ListAsync<Attachment>(a =>
-            a.ContactId == id && a.AttachmentType == AttachmentTypes.ProfileImage);
-        Attachment? profileAttachment = attachments.FirstOrDefault();
+        Attachment? profileAttachment = (await _repository.ListAsync<Attachment>(a =>
+            a.ContactId == id && a.AttachmentType == AttachmentTypes.ProfileImage)).FirstOrDefault();
 
         if (profileAttachment != null)
         {
