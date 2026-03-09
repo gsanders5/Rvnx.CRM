@@ -89,9 +89,8 @@ public class LabelService(IRepository repository) : ILabelService
 
     public async Task AssignLabelAsync(Guid contactId, Guid labelId)
     {
-        List<ContactLabel> existing =
-            await _repository.ListAsync<ContactLabel>(cl => cl.ContactId == contactId && cl.LabelId == labelId) ?? [];
-        if (existing.Count == 0)
+        int existingCount = await _repository.CountAsync<ContactLabel>(cl => cl.ContactId == contactId && cl.LabelId == labelId);
+        if (existingCount == 0)
         {
             ContactLabel contactLabel = new() { Id = Guid.NewGuid(), ContactId = contactId, LabelId = labelId };
             await _repository.AddAsync(contactLabel);
