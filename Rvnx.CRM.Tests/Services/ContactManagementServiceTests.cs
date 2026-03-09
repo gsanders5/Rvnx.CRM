@@ -435,6 +435,69 @@ public class ContactManagementServiceTests
         }
 
         [Fact]
+        public async Task UpdateContactAsyncThrowsConcurrencyExceptionWhenContactExistsReturnsFailure()
+        {
+            // Arrange
+            Guid contactId = Guid.NewGuid();
+            Contact existingContact = new() { Id = contactId };
+            ContactFormDto dto = new() { FirstName = "Updated" };
+
+            _repositoryMock.Setup(r => r.GetByIdAsync<Contact>(contactId, It.IsAny<CancellationToken>()))
+                .ReturnsAsync(existingContact);
+
+            _repositoryMock.Setup(r => r.ListAsync<ContactMethod>(It.IsAny<Expression<Func<ContactMethod, bool>>>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync([]);
+
+            _repositoryMock.Setup(r => r.ListAsync<SignificantDate>(It.IsAny<Expression<Func<SignificantDate, bool>>>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync([]);
+
+            _repositoryMock.Setup(r => r.SaveChangesAsync(It.IsAny<CancellationToken>()))
+                .ThrowsAsync(new Rvnx.CRM.Core.Exceptions.EntityConcurrencyException("Concurrency conflict"));
+
+            _repositoryMock.Setup(r => r.ExistsAsync<Contact>(contactId, It.IsAny<CancellationToken>()))
+                .ReturnsAsync(true);
+
+            // Act
+            ContactOperationResult result = await _service.UpdateContactAsync(contactId, dto, null, null, null);
+
+            // Assert
+            Assert.False(result.Success);
+            Assert.False(result.IsNotFound);
+            Assert.Contains("The contact was modified by another user. Please reload and try again.", result.Errors);
+        }
+
+        [Fact]
+        public async Task UpdateContactAsyncThrowsConcurrencyExceptionWhenContactDeletedReturnsNotFound()
+        {
+            // Arrange
+            Guid contactId = Guid.NewGuid();
+            Contact existingContact = new() { Id = contactId };
+            ContactFormDto dto = new() { FirstName = "Updated" };
+
+            _repositoryMock.Setup(r => r.GetByIdAsync<Contact>(contactId, It.IsAny<CancellationToken>()))
+                .ReturnsAsync(existingContact);
+
+            _repositoryMock.Setup(r => r.ListAsync<ContactMethod>(It.IsAny<Expression<Func<ContactMethod, bool>>>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync([]);
+
+            _repositoryMock.Setup(r => r.ListAsync<SignificantDate>(It.IsAny<Expression<Func<SignificantDate, bool>>>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync([]);
+
+            _repositoryMock.Setup(r => r.SaveChangesAsync(It.IsAny<CancellationToken>()))
+                .ThrowsAsync(new Rvnx.CRM.Core.Exceptions.EntityConcurrencyException("Concurrency conflict"));
+
+            _repositoryMock.Setup(r => r.ExistsAsync<Contact>(contactId, It.IsAny<CancellationToken>()))
+                .ReturnsAsync(false);
+
+            // Act
+            ContactOperationResult result = await _service.UpdateContactAsync(contactId, dto, null, null, null);
+
+            // Assert
+            Assert.False(result.Success);
+            Assert.True(result.IsNotFound);
+        }
+
+        [Fact]
         public async Task CreateContactAsyncUsesSingleSaveChangesAsync()
         {
             _repositoryMock.Setup(r => r.ListAsync<ReminderOffset>(It.IsAny<System.Linq.Expressions.Expression<Func<ReminderOffset, bool>>>(), It.IsAny<CancellationToken>()))
