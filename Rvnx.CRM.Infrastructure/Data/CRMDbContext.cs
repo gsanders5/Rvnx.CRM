@@ -50,6 +50,12 @@ public class CRMDbContext(DbContextOptions<CRMDbContext> options, ICurrentUserSe
             .HasIndex(u => u.SelfContactId)
             .IsUnique();
 
+        modelBuilder.Entity<Relationship>().ToTable("Relationship");
+        modelBuilder.Entity<Relationship>().Ignore(r => r.Person);
+        modelBuilder.Entity<Relationship>().Ignore(r => r.RelatedPerson);
+        modelBuilder.Entity<Relationship>().Ignore(r => r.RelationshipTypeName);
+        modelBuilder.Entity<Relationship>().Ignore(r => r.RelationshipTypeOppositeName);
+        modelBuilder.Entity<Relationship>().Ignore(r => r.RelationshipTypeCategory);
         modelBuilder.Entity<Relationship>().HasIndex(e => new { e.EntityId, e.EntityType });
         modelBuilder.Entity<Relationship>().HasIndex(e => new { e.RelatedEntityId, e.EntityType });
 
@@ -152,7 +158,7 @@ public class CRMDbContext(DbContextOptions<CRMDbContext> options, ICurrentUserSe
             modelBuilder.Entity(entityType.Name).HasIndex(nameof(BaseEntity.UserId));
             modelBuilder.Entity(entityType.Name).HasIndex(nameof(BaseEntity.GroupId));
 
-            if (!typeof(IGlobalEntity).IsAssignableFrom(entityType.ClrType))
+            if (!typeof(IGlobalEntity).IsAssignableFrom(entityType.ClrType) && entityType.BaseType == null)
             {
                 MethodInfo? method = typeof(CRMDbContext)
                     .GetMethod(nameof(ConfigureGlobalFilter), BindingFlags.NonPublic | BindingFlags.Instance)
