@@ -44,7 +44,7 @@ Purpose: License compliance audit
 | marked.js | Latest | https://cdn.jsdelivr.net/npm/marked/marked.min.js | MIT / BSD-3-Clause | https://github.com/markedjs/marked/blob/master/LICENSE.md |
 | DOMPurify | 3.0.10 | https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.10/purify.min.js | Apache-2.0 OR MPL-2.0 | https://github.com/cure53/DOMPurify/blob/main/LICENSE |
 | DataTables (JS) | dt-2.3.7, b-3.2.6, b-colvis-3.2.6, r-3.0.8, sc-2.4.3 | https://cdn.datatables.net/v/bs5/dt-2.3.7/b-3.2.6/b-colvis-3.2.6/r-3.0.8/sc-2.4.3/datatables.min.js | MIT | https://datatables.net/license/ |
-| Twitter Embed Widget | - | https://platform.twitter.com/widgets.js | Proprietary | https://developer.twitter.com/en/developer-terms/agreement-and-policy |
+| Twitter Embed Widget | - | https://platform.twitter.com/widgets.js | Proprietary | https://docs.x.com/developer-terms/policy |
 | Twitch Embed | v1 | https://embed.twitch.tv/embed/v1.js | Proprietary | https://www.twitch.tv/p/en/legal/developer-agreement/ |
 | TikTok Embed | - | https://www.tiktok.com/embed.js | Proprietary | https://www.tiktok.com/legal/page/global/terms-of-service/en |
 
