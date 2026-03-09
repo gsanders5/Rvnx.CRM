@@ -18,33 +18,6 @@ public abstract class RepositoryController : AuthorizedController
         _repository = repository;
     }
 
-    protected async Task<string> GetEntityName(Guid id, string type)
-    {
-        if (type == EntityTypes.Person)
-        {
-            List<string> names = await _repository.ListProjectedAsync<Contact, string>(
-                c => c.Id == id,
-                c => c.FirstName + " " + (c.LastName ?? ""));
-            return names.FirstOrDefault()?.Trim() ?? "Unknown Person";
-        }
-        else if (type == EntityTypes.Company)
-        {
-            List<string> names = await _repository.ListProjectedAsync<Employer, string>(
-                c => c.Id == id,
-                c => c.CompanyName);
-            return names.FirstOrDefault() ?? "Unknown Company";
-        }
-        return "Unknown Entity";
-    }
-
-    protected async Task<bool> IsPartialContactAsync(Guid id)
-    {
-        List<bool> partials = await _repository.ListProjectedAsync<Contact, bool>(
-            c => c.Id == id,
-            c => c.IsPartial);
-        return partials.FirstOrDefault();
-    }
-
     /// <summary>
     /// Checks if a contact exists and is not a partial contact.
     /// Use this for validating entity references in create/edit actions.

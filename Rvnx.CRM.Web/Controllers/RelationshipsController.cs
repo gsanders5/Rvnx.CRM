@@ -35,7 +35,7 @@ namespace Rvnx.CRM.Web.Controllers
             {
                 EntityId = entityId,
                 EntityType = entityType,
-                EntityName = await GetEntityName(entityId, entityType),
+                EntityName = await _entityService.GetEntityNameAsync(entityType, entityId),
                 RelatedEntityOptions =
                     await _relationshipService.GetRelatedEntityOptionsAsync(entityId, entityType),
                 RelationshipTypeOptions = _relationshipService.GetRelationshipTypeOptions(entityType),
@@ -76,7 +76,7 @@ namespace Rvnx.CRM.Web.Controllers
                 }
             }
 
-            viewModel.EntityName = await GetEntityName(viewModel.EntityId, viewModel.EntityType);
+            viewModel.EntityName = await _entityService.GetEntityNameAsync(viewModel.EntityType, viewModel.EntityId);
             viewModel.RelatedEntityOptions = await _relationshipService.GetRelatedEntityOptionsAsync(viewModel.EntityId,
                 viewModel.EntityType, viewModel.RelatedEntityId);
             viewModel.RelationshipTypeOptions =
@@ -193,7 +193,7 @@ namespace Rvnx.CRM.Web.Controllers
                 Description = relationship.Description,
                 StartDate = relationship.StartDate,
                 EndDate = relationship.EndDate,
-                EntityName = await GetEntityName(relationship.EntityId, relationship.EntityType),
+                EntityName = await _entityService.GetEntityNameAsync(relationship.EntityType, relationship.EntityId),
                 RelatedEntityOptions =
                     await _relationshipService.GetRelatedEntityOptionsAsync(relationship.EntityId,
                         relationship.EntityType, relationship.RelatedEntityId),
@@ -201,8 +201,8 @@ namespace Rvnx.CRM.Web.Controllers
                     _relationshipService.GetRelationshipTypeOptions(relationship.EntityType, currentSelection),
                 RelationshipTypes = _relationshipService.GetRelationshipTypes(relationship.EntityType),
                 SelectedRelationshipType = currentSelection,
-                IsEntityPartial = await IsPartialContactAsync(relationship.EntityId),
-                IsRelatedEntityPartial = await IsPartialContactAsync(relationship.RelatedEntityId)
+                IsEntityPartial = await _entityService.IsPartialAsync(EntityTypes.Person, relationship.EntityId),
+                IsRelatedEntityPartial = await _entityService.IsPartialAsync(EntityTypes.Person, relationship.RelatedEntityId)
             };
 
             return View(viewModel);
@@ -244,7 +244,7 @@ namespace Rvnx.CRM.Web.Controllers
                 }
             }
 
-            viewModel.EntityName = await GetEntityName(viewModel.EntityId, viewModel.EntityType);
+            viewModel.EntityName = await _entityService.GetEntityNameAsync(viewModel.EntityType, viewModel.EntityId);
             viewModel.RelatedEntityOptions = await _relationshipService.GetRelatedEntityOptionsAsync(viewModel.EntityId,
                 viewModel.EntityType, viewModel.RelatedEntityId);
             viewModel.RelationshipTypeOptions =
