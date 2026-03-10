@@ -1,7 +1,6 @@
 using Rvnx.CRM.Core.Models.Contact;
 using Rvnx.CRM.Core.Models.Dates;
 using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Rvnx.CRM.Core.Models.Base;
 
@@ -32,14 +31,12 @@ public abstract class Person : BaseEntity
     [Display(Name = "Company")]
     public string? Company { get; set; }
 
-    [NotMapped]
     [Display(Name = "Full Name")]
     public string FullName => $"{FirstName} {LastName}".Trim();
 
     [Display(Name = "Is Hidden")]
     public bool IsHidden { get; set; } = false;
 
-    [NotMapped]
     public Guid? ProfileImageId { get; set; }
 
     // NotMapped Properties for View Compatibility
@@ -47,10 +44,8 @@ public abstract class Person : BaseEntity
 
     public virtual ICollection<SignificantDate> SignificantDates { get; set; } = [];
 
-    [NotMapped]
     public ICollection<Relationship> Relationships { get; set; } = [];
 
-    [NotMapped]
     public ICollection<Relationship> RelatedTo { get; set; } = [];
 
     public virtual ICollection<ContactMethod> ContactMethods { get; set; } = [];

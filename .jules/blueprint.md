@@ -29,9 +29,18 @@
 
 **Learning:** `DebugOperationsController` contained significant data manipulation logic (seeding, reset) directly in action methods, coupling the web layer to concrete infrastructure utilities (`FakeDataGenerator`) and orchestrating complex repository operations.
 **Action:** Extract such logic into a dedicated service (e.g., `IDebugDataService` in Core, implementation in Infrastructure) so the controller only delegates commands. This decouples the web layer from implementation details of data management.
+
 ## 2023-10-27 - [Infrastructure Leak in Web Layer]
+
 **Learning:** `DbUpdateConcurrencyException` (and `Microsoft.EntityFrameworkCore`) was leaked into the Web layer (`SignificantDatesController`). The controller was catching it just to rethrow (`throw;`), which is both redundant and violates clean architecture by making the presentation layer depend directly on the ORM.
 **Action:** When working on controllers or core domain services, explicitly check for `using Microsoft.EntityFrameworkCore;` or explicit usage of `DbUpdateConcurrencyException`. Remove these where possible, and if handling is needed, ensure the infrastructure layer (or service layer) wraps it in a domain-friendly `OperationResult` or custom exception.
+
 ## 2024-05-27 - [Infrastructure Dependency in Web Services]
+
 **Learning:** Services located in the `Web` layer (like `UserClaimsTransformation` and `CurrentUserService`) were directly referencing `Microsoft.EntityFrameworkCore` to call `.FirstOrDefaultAsync()` on `IQueryable` results from the repository. This coupled the Web layer directly to the ORM.
 **Action:** Replaced direct EF Core async extensions with appropriate `IRepository` abstraction methods (e.g., `GetByIdAsync`, `ListAsNoTrackingAsync().FirstOrDefault()`) to remove the EF Core using directives and strict dependencies from the Web layer, restoring the clean boundary.
+
+## 2024-05-28 - [EF Core Query Filters on Derived Types]
+
+**Learning:** When configuring global query filters dynamically in EF Core via reflection (e.g., `modelBuilder.Entity(type).HasQueryFilter()`), the filter must only be applied to the root entity of an inheritance hierarchy (`entityType.BaseType == null`). Applying a query filter to a derived type (like `Contact` when `Person` is the root) causes a fatal `InvalidOperationException` on model initialization.
+**Action:** Always include a check for `entityType.BaseType == null` when iterating over entities to dynamically apply EF Core global query filters to ensure compatibility with inheritance patterns.
