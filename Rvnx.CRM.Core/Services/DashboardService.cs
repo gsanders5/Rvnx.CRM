@@ -75,10 +75,12 @@ public class DashboardService(IRepository repository, ILogger<DashboardService> 
             });
         }
 
-        List<Relationship> relationships =
-            await _repository.ListAsNoTrackingAsync<Relationship>(r => r.EntityType == EntityTypes.Person);
+        // ⚡ Bolt: Fetch only required fields (EntityId, RelatedEntityId) instead of full Relationship entities to reduce memory/network overhead
+        var relationships = await _repository.ListProjectedAsync<Relationship, (Guid EntityId, Guid RelatedEntityId)>(
+            r => r.EntityType == EntityTypes.Person,
+            r => new ValueTuple<Guid, Guid>(r.EntityId, r.RelatedEntityId));
 
-        foreach (Relationship rel in relationships)
+        foreach (var rel in relationships)
         {
             result.GraphLinks.Add(new GraphLinkDto
             {
