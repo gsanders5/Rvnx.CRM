@@ -65,3 +65,7 @@
 ## 2026-06-27 - RemoveLabelAsync Optimization
 **Learning:** `RemoveLabelAsync` was fetching the existing `ContactLabel` entity via `ListAsync` and then deleting it by its `Id`, which resulted in an extra database roundtrip and unnecessary memory overhead.
 **Action:** Use EF Core's bulk delete feature (`DeleteAsync(Expression)`) to avoid fetching the entity and save a database roundtrip.
+
+## 2024-05-17 - Dashboard Attachment Map Optimization
+**Learning:** For high-performance dictionary creation where only the first item per key is needed, avoid using `GroupBy(x => x.Key).ToDictionary(..., First())`. This pattern forces the allocation of intermediate `IGrouping` structures and results in redundant list iterations.
+**Action:** Instead, pre-allocate a `Dictionary` using the source collection's capacity (if known) and populate it using a `foreach` loop with `.TryAdd(key, value)`. `TryAdd` inherently keeps the first value encountered for a key while avoiding the grouping overhead.
