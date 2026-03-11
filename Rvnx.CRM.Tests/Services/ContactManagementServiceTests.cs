@@ -521,6 +521,86 @@ public class ContactManagementServiceTests
             _repositoryMock.Verify(r => r.AddAsync(It.IsAny<ContactMethod>(), It.IsAny<CancellationToken>()), Times.Exactly(2)); // Email and Phone
             _repositoryMock.Verify(r => r.AddAsync(It.IsAny<SignificantDate>(), It.IsAny<CancellationToken>()), Times.Once); // Birthday
         }
+    }
 
+    public class CreateTests
+    {
+        private readonly Mock<IRepository> _repositoryMock;
+        private readonly Mock<IFileValidationService> _fileValidationServiceMock;
+        private readonly ContactManagementService _service;
+
+        public CreateTests()
+        {
+            _repositoryMock = new Mock<IRepository>();
+            _fileValidationServiceMock = new Mock<IFileValidationService>();
+            _service = new ContactManagementService(_repositoryMock.Object, _fileValidationServiceMock.Object);
+        }
+
+        [Fact]
+        public async Task CreateContactAsyncWithValidDtoReturnsSuccessAndAddsEntities()
+        {
+            // Arrange
+            ContactFormDto dto = new()
+            {
+                FirstName = "Jane",
+                LastName = "Doe",
+                Email = "jane.doe@example.com",
+                Phone = "+1234567890",
+                Birthday = new DateTime(1985, 5, 15),
+                RemindOnBirthday = true
+            };
+
+            _repositoryMock.Setup(r => r.AddAsync(It.IsAny<Contact>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync((Contact c, CancellationToken ct) => c);
+
+            _repositoryMock.Setup(r => r.ListAsync<ReminderOffset>(It.IsAny<System.Linq.Expressions.Expression<Func<ReminderOffset, bool>>>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync([]);
+
+            // Act
+            ContactOperationResult result = await _service.CreateContactAsync(dto);
+
+            // Assert
+            Assert.True(result.Success);
+            Assert.NotNull(result.ContactId);
+
+            _repositoryMock.Verify(r => r.AddAsync(It.Is<Contact>(c => c.FirstName == "Jane" && c.LastName == "Doe"), It.IsAny<CancellationToken>()), Times.Once);
+
+            // Verify that ContactUpdateHelper was used to add methods and dates
+            _repositoryMock.Verify(r => r.AddAsync(It.Is<ContactMethod>(cm => cm.Type == Rvnx.CRM.Core.Enumerations.ContactMethodType.Email && cm.Value == dto.Email), It.IsAny<CancellationToken>()), Times.Once);
+            _repositoryMock.Verify(r => r.AddAsync(It.Is<ContactMethod>(cm => cm.Type == Rvnx.CRM.Core.Enumerations.ContactMethodType.Phone && cm.Value == dto.Phone), It.IsAny<CancellationToken>()), Times.Once);
+            _repositoryMock.Verify(r => r.AddAsync(It.Is<SignificantDate>(sd => sd.EventDate == DateOnly.FromDateTime(dto.Birthday.Value)), It.IsAny<CancellationToken>()), Times.Once);
+            _repositoryMock.Verify(r => r.AddAsync(It.Is<ReminderOffset>(ro => ro.DaysBeforeEvent == 0 && ro.IsActive == true), It.IsAny<CancellationToken>()), Times.Once);
+
+            _repositoryMock.Verify(r => r.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
+        }
+
+        [Fact]
+        public async Task CreateContactAsyncWithMinimalDtoReturnsSuccessAndOnlyAddsContact()
+        {
+            // Arrange
+            ContactFormDto dto = new()
+            {
+                FirstName = "Minimal",
+                LastName = "Contact"
+            };
+
+            _repositoryMock.Setup(r => r.AddAsync(It.IsAny<Contact>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync((Contact c, CancellationToken ct) => c);
+
+            // Act
+            ContactOperationResult result = await _service.CreateContactAsync(dto);
+
+            // Assert
+            Assert.True(result.Success);
+            Assert.NotNull(result.ContactId);
+
+            _repositoryMock.Verify(r => r.AddAsync(It.Is<Contact>(c => c.FirstName == "Minimal" && c.LastName == "Contact"), It.IsAny<CancellationToken>()), Times.Once);
+
+            _repositoryMock.Verify(r => r.AddAsync(It.IsAny<ContactMethod>(), It.IsAny<CancellationToken>()), Times.Never);
+            _repositoryMock.Verify(r => r.AddAsync(It.IsAny<SignificantDate>(), It.IsAny<CancellationToken>()), Times.Never);
+            _repositoryMock.Verify(r => r.AddAsync(It.IsAny<ReminderOffset>(), It.IsAny<CancellationToken>()), Times.Never);
+
+            _repositoryMock.Verify(r => r.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
+        }
     }
 }
