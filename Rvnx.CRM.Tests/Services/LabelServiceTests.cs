@@ -125,15 +125,9 @@ public class LabelServiceTests
     [Fact]
     public async Task RemoveLabelAsyncRemovesContactLabelWhenExists()
     {
-        Guid id = Guid.NewGuid();
-        ContactLabel contactLabel = new() { Id = id };
-        _mockRepo.Setup(r =>
-                r.ListAsync(It.IsAny<Expression<Func<ContactLabel, bool>>>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync([contactLabel]);
-
         await _service.RemoveLabelAsync(Guid.NewGuid(), Guid.NewGuid());
 
-        _mockRepo.Verify(r => r.DeleteAsync<ContactLabel>(id, It.IsAny<CancellationToken>()), Times.Once);
+        _mockRepo.Verify(r => r.DeleteAsync(It.IsAny<Expression<Func<ContactLabel, bool>>>(), It.IsAny<CancellationToken>()), Times.Once);
         _mockRepo.Verify(r => r.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
     }
 }
