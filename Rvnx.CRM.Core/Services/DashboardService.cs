@@ -114,12 +114,11 @@ public class DashboardService(IRepository repository, ILogger<DashboardService> 
             .. relationships.Select(r => r.RelatedEntityId)
         ];
 
-        List<Guid> allContactIds = [.. contacts.Select(c => c.Id)];
-        int birthdayCount = allContactIds.Count > 0
-            ? await _repository.CountAsync<SignificantDate>(sd => sd.ContactId.HasValue &&
-                                                                  allContactIds.Contains(sd.ContactId.Value) &&
-                                                                  sd.Title == SignificantDateTitles.Birthday)
-            : 0;
+        int birthdayCount = await _repository.CountAsync<SignificantDate>(sd => sd.ContactId.HasValue &&
+                                                                                sd.Contact != null &&
+                                                                                sd.Contact.IsHidden == false &&
+                                                                                sd.Contact.IsPartial == false &&
+                                                                                sd.Title == SignificantDateTitles.Birthday);
 
         int hiddenContactsCount =
             await _repository.CountAsync<Contact>(x => x.IsHidden && !x.IsPartial);
