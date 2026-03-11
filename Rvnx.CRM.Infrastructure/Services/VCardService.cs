@@ -28,16 +28,8 @@ public class VCardService : IVCardService
 
     public async Task<IEnumerable<Contact>> ParseVCardAsync(Stream fileStream, CancellationToken cancellationToken = default)
     {
-        IReadOnlyList<VCard> vCards;
-        try
-        {
-            // v8: Use Vcf.Deserialize with Stream directly, leaveStreamOpen to not dispose the caller's stream
-            vCards = Vcf.Deserialize(fileStream, leaveStreamOpen: true);
-        }
-        catch
-        {
-            return Enumerable.Empty<Contact>();
-        }
+        // v8: Use Vcf.Deserialize with Stream directly, leaveStreamOpen to not dispose the caller's stream
+        IReadOnlyList<VCard> vCards = Vcf.Deserialize(fileStream, leaveStreamOpen: true);
 
         List<Task<Contact>> tasks = new(vCards.Count);
         foreach (VCard vc in vCards)
