@@ -22,8 +22,10 @@ namespace Rvnx.CRM.Tests.Services
         [InlineData(".docx")]
         [InlineData(".xls")]
         [InlineData(".xlsx")]
+        [InlineData(".vcf")]
         [InlineData(".JPG")] // Case insensitive
         [InlineData(".PDF")]
+        [InlineData(".VCF")]
         public void IsAllowedExtensionShouldReturnTrueForAllowedExtensions(string extension)
         {
             Assert.True(_service.IsAllowedExtension(extension));
@@ -35,6 +37,10 @@ namespace Rvnx.CRM.Tests.Services
         [InlineData(".sh")]
         [InlineData(".ppt")]
         [InlineData(".pptx")]
+        [InlineData(".zip")]
+        [InlineData(".rar")]
+        [InlineData(".7z")]
+        [InlineData(" ")]
         [InlineData("")]
         [InlineData(null)]
         public void IsAllowedExtensionShouldReturnFalseForDisallowedExtensions(string? extension)
