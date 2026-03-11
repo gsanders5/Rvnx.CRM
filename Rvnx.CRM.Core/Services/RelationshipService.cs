@@ -37,11 +37,40 @@ namespace Rvnx.CRM.Core.Services
 
             if (suggestedEntityIds != null && suggestedEntityIds.Count > 0)
             {
+                HashSet<Guid> allNodeIds = [];
+                List<(Guid sId, Guid tId, bool reverse)> parsedSuggestions = [];
+
                 foreach (string payload in suggestedEntityIds)
                 {
                     string[] parts = payload.Split('_');
                     if (parts.Length == 3 && Guid.TryParse(parts[0], out Guid sId) &&
                         Guid.TryParse(parts[1], out Guid tId) && bool.TryParse(parts[2], out bool reverse))
+                    {
+                        parsedSuggestions.Add((sId, tId, reverse));
+                        allNodeIds.Add(sId);
+                        allNodeIds.Add(tId);
+                    }
+                }
+
+                if (parsedSuggestions.Count > 0)
+                {
+                    List<Relationship> existingRels = await repository.ListAsNoTrackingAsync<Relationship>(r =>
+                        r.RelationshipTypeId == typeId &&
+                        allNodeIds.Contains(r.EntityId) &&
+                        allNodeIds.Contains(r.RelatedEntityId));
+
+                    HashSet<(Guid, Guid)> existingEdges = [];
+                    // Include the primary relationship being added in this transaction to avoid duplicates
+                    existingEdges.Add((relationship.EntityId, relationship.RelatedEntityId));
+                    existingEdges.Add((relationship.RelatedEntityId, relationship.EntityId));
+
+                    foreach (Relationship r in existingRels)
+                    {
+                        existingEdges.Add((r.EntityId, r.RelatedEntityId));
+                        existingEdges.Add((r.RelatedEntityId, r.EntityId));
+                    }
+
+                    foreach ((Guid sId, Guid tId, bool reverse) in parsedSuggestions)
                     {
                         Relationship newRel = new()
                         {
@@ -57,14 +86,11 @@ namespace Rvnx.CRM.Core.Services
                             SwapRelationshipEntities(newRel);
                         }
 
-                        // Just in case, check existence before adding to avoid unique constraint issues
-                        bool exists = await repository.CountAsync<Relationship>(r => r.RelationshipTypeId == typeId &&
-                            ((r.EntityId == newRel.EntityId && r.RelatedEntityId == newRel.RelatedEntityId) ||
-                             (r.EntityId == newRel.RelatedEntityId && r.RelatedEntityId == newRel.EntityId))) > 0;
-
-                        if (!exists)
+                        if (!existingEdges.Contains((newRel.EntityId, newRel.RelatedEntityId)))
                         {
                             await repository.AddAsync(newRel);
+                            existingEdges.Add((newRel.EntityId, newRel.RelatedEntityId));
+                            existingEdges.Add((newRel.RelatedEntityId, newRel.EntityId));
                         }
                     }
                 }
@@ -296,6 +322,9 @@ namespace Rvnx.CRM.Core.Services
 
             if (dto.SuggestedRelationships != null && dto.SuggestedRelationships.Count > 0)
             {
+                HashSet<Guid> allNodeIds = [];
+                List<(Guid sId, Guid tId, bool reverse)> parsedSuggestions = [];
+
                 foreach (string payload in dto.SuggestedRelationships)
                 {
                     string[] parts = payload.Split('_');
@@ -312,6 +341,32 @@ namespace Rvnx.CRM.Core.Services
                             tId = partialContact.Id;
                         }
 
+                        parsedSuggestions.Add((sId, tId, reverse));
+                        allNodeIds.Add(sId);
+                        allNodeIds.Add(tId);
+                    }
+                }
+
+                if (parsedSuggestions.Count > 0)
+                {
+                    List<Relationship> existingRels = await repository.ListAsNoTrackingAsync<Relationship>(r =>
+                        r.RelationshipTypeId == typeId &&
+                        allNodeIds.Contains(r.EntityId) &&
+                        allNodeIds.Contains(r.RelatedEntityId));
+
+                    HashSet<(Guid, Guid)> existingEdges = [];
+                    // Include the primary relationship being added in this transaction to avoid duplicates
+                    existingEdges.Add((relationship.EntityId, relationship.RelatedEntityId));
+                    existingEdges.Add((relationship.RelatedEntityId, relationship.EntityId));
+
+                    foreach (Relationship r in existingRels)
+                    {
+                        existingEdges.Add((r.EntityId, r.RelatedEntityId));
+                        existingEdges.Add((r.RelatedEntityId, r.EntityId));
+                    }
+
+                    foreach ((Guid sId, Guid tId, bool reverse) in parsedSuggestions)
+                    {
                         Relationship newRel = new()
                         {
                             EntityId = sId,
@@ -326,14 +381,11 @@ namespace Rvnx.CRM.Core.Services
                             SwapRelationshipEntities(newRel);
                         }
 
-                        // Just in case, check existence before adding to avoid unique constraint issues
-                        bool exists = await repository.CountAsync<Relationship>(r => r.RelationshipTypeId == typeId &&
-                            ((r.EntityId == newRel.EntityId && r.RelatedEntityId == newRel.RelatedEntityId) ||
-                             (r.EntityId == newRel.RelatedEntityId && r.RelatedEntityId == newRel.EntityId))) > 0;
-
-                        if (!exists)
+                        if (!existingEdges.Contains((newRel.EntityId, newRel.RelatedEntityId)))
                         {
                             await repository.AddAsync(newRel);
+                            existingEdges.Add((newRel.EntityId, newRel.RelatedEntityId));
+                            existingEdges.Add((newRel.RelatedEntityId, newRel.EntityId));
                         }
                     }
                 }
