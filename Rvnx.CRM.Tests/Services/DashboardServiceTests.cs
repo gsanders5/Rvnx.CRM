@@ -54,8 +54,8 @@ public class DashboardServiceTests
 
         _repositoryMock.Setup(r => r.ListAsNoTrackingAsync<Contact>(
                 It.IsAny<Expression<Func<Contact, bool>>>(),
-                It.IsAny<CancellationToken>(),
-                It.IsAny<string[]>()))
+                It.IsAny<CancellationToken>()
+                ))
             .ReturnsAsync(contacts);
 
         DateTime today = DateTime.Today;
@@ -79,8 +79,8 @@ public class DashboardServiceTests
 
         _repositoryMock.Setup(r => r.ListAsNoTrackingAsync<SignificantDate>(
                 It.IsAny<Expression<Func<SignificantDate, bool>>>(),
-                It.IsAny<CancellationToken>(),
-                It.IsAny<string[]>()))
+                It.IsAny<CancellationToken>()
+                ))
             .ReturnsAsync(dates);
 
         // Setup relationships
@@ -89,11 +89,12 @@ public class DashboardServiceTests
             new Relationship { EntityId = contactId1, RelatedEntityId = contactId2, EntityType = "Person" }
         ];
 
-        _repositoryMock.Setup(r => r.ListAsNoTrackingAsync<Relationship>(
+        _repositoryMock.Setup(r => r.ListProjectedAsync<Relationship, (Guid EntityId, Guid RelatedEntityId)>(
                 It.IsAny<Expression<Func<Relationship, bool>>>(),
-                It.IsAny<CancellationToken>(),
-                It.IsAny<string[]>()))
-            .ReturnsAsync(relationships);
+                It.IsAny<Expression<Func<Relationship, (Guid EntityId, Guid RelatedEntityId)>>>(),
+                It.IsAny<CancellationToken>()
+                ))
+            .ReturnsAsync(relationships.Select(r => (r.EntityId, r.RelatedEntityId)).ToList());
 
         // Setup attachment map
         Guid attachmentId = Guid.NewGuid();
@@ -137,20 +138,21 @@ public class DashboardServiceTests
     {
         _repositoryMock.Setup(r => r.ListAsNoTrackingAsync<Contact>(
                 It.IsAny<Expression<Func<Contact, bool>>>(),
-                It.IsAny<CancellationToken>(),
-                It.IsAny<string[]>()))
+                It.IsAny<CancellationToken>()
+                ))
             .ReturnsAsync([]);
 
         _repositoryMock.Setup(r => r.ListAsNoTrackingAsync<SignificantDate>(
                 It.IsAny<Expression<Func<SignificantDate, bool>>>(),
-                It.IsAny<CancellationToken>(),
-                It.IsAny<string[]>()))
+                It.IsAny<CancellationToken>()
+                ))
             .ReturnsAsync([]);
 
-        _repositoryMock.Setup(r => r.ListAsNoTrackingAsync<Relationship>(
+        _repositoryMock.Setup(r => r.ListProjectedAsync<Relationship, (Guid EntityId, Guid RelatedEntityId)>(
                 It.IsAny<Expression<Func<Relationship, bool>>>(),
-                It.IsAny<CancellationToken>(),
-                It.IsAny<string[]>()))
+                It.IsAny<Expression<Func<Relationship, (Guid EntityId, Guid RelatedEntityId)>>>(),
+                It.IsAny<CancellationToken>()
+                ))
             .ReturnsAsync([]);
 
         DashboardDto result = await _service.GetDashboardDataAsync();
@@ -178,8 +180,8 @@ public class DashboardServiceTests
 
         _repositoryMock.Setup(r => r.ListAsNoTrackingAsync<Contact>(
                 It.IsAny<Expression<Func<Contact, bool>>>(),
-                It.IsAny<CancellationToken>(),
-                It.IsAny<string[]>()))
+                It.IsAny<CancellationToken>()
+                ))
             .ReturnsAsync(contacts);
 
         _repositoryMock.Setup(r => r.ListProjectedAsync<Attachment, (Guid ContactId, Guid AttachmentId)>(
@@ -191,14 +193,15 @@ public class DashboardServiceTests
         // No dates returned
         _repositoryMock.Setup(r => r.ListAsNoTrackingAsync<SignificantDate>(
                 It.IsAny<Expression<Func<SignificantDate, bool>>>(),
-                It.IsAny<CancellationToken>(),
-                It.IsAny<string[]>()))
+                It.IsAny<CancellationToken>()
+                ))
             .ReturnsAsync([]);
 
-        _repositoryMock.Setup(r => r.ListAsNoTrackingAsync<Relationship>(
+        _repositoryMock.Setup(r => r.ListProjectedAsync<Relationship, (Guid EntityId, Guid RelatedEntityId)>(
                 It.IsAny<Expression<Func<Relationship, bool>>>(),
-                It.IsAny<CancellationToken>(),
-                It.IsAny<string[]>()))
+                It.IsAny<Expression<Func<Relationship, (Guid EntityId, Guid RelatedEntityId)>>>(),
+                It.IsAny<CancellationToken>()
+                ))
             .ReturnsAsync([]);
 
         DashboardDto result = await _service.GetDashboardDataAsync();
@@ -228,8 +231,8 @@ public class DashboardServiceTests
 
         _repositoryMock.Setup(r => r.ListAsNoTrackingAsync<Contact>(
                 It.IsAny<Expression<Func<Contact, bool>>>(),
-                It.IsAny<CancellationToken>(),
-                It.IsAny<string[]>()))
+                It.IsAny<CancellationToken>()
+                ))
             .ReturnsAsync(contacts);
 
         _repositoryMock.Setup(r => r.ListProjectedAsync<Attachment, (Guid ContactId, Guid AttachmentId)>(
@@ -249,14 +252,15 @@ public class DashboardServiceTests
 
         _repositoryMock.Setup(r => r.ListAsNoTrackingAsync<SignificantDate>(
                 It.IsAny<Expression<Func<SignificantDate, bool>>>(),
-                It.IsAny<CancellationToken>(),
-                It.IsAny<string[]>()))
+                It.IsAny<CancellationToken>()
+                ))
             .ReturnsAsync(dates);
 
-        _repositoryMock.Setup(r => r.ListAsNoTrackingAsync<Relationship>(
+        _repositoryMock.Setup(r => r.ListProjectedAsync<Relationship, (Guid EntityId, Guid RelatedEntityId)>(
                 It.IsAny<Expression<Func<Relationship, bool>>>(),
-                It.IsAny<CancellationToken>(),
-                It.IsAny<string[]>()))
+                It.IsAny<Expression<Func<Relationship, (Guid EntityId, Guid RelatedEntityId)>>>(),
+                It.IsAny<CancellationToken>()
+                ))
             .ReturnsAsync([]);
 
         DashboardDto result = await _service.GetDashboardDataAsync();
@@ -274,7 +278,7 @@ public class DashboardServiceTests
         List<Contact> contacts = [new Contact { Id = contactId, FirstName = "Test", LastName = "User" }];
 
         _repositoryMock.Setup(r => r.ListAsNoTrackingAsync<Contact>(It.IsAny<Expression<Func<Contact, bool>>>(),
-                It.IsAny<CancellationToken>(), It.IsAny<string[]>()))
+                It.IsAny<CancellationToken>()))
             .ReturnsAsync(contacts);
 
         _repositoryMock.Setup(r =>
@@ -295,12 +299,13 @@ public class DashboardServiceTests
         ];
         _repositoryMock.Setup(r =>
                 r.ListAsNoTrackingAsync<SignificantDate>(It.IsAny<Expression<Func<SignificantDate, bool>>>(),
-                    It.IsAny<CancellationToken>(), It.IsAny<string[]>()))
+                    It.IsAny<CancellationToken>()))
             .ReturnsAsync(dates);
 
         _repositoryMock.Setup(r =>
-                r.ListAsNoTrackingAsync<Relationship>(It.IsAny<Expression<Func<Relationship, bool>>>(),
-                    It.IsAny<CancellationToken>(), It.IsAny<string[]>()))
+                r.ListProjectedAsync<Relationship, (Guid EntityId, Guid RelatedEntityId)>(It.IsAny<Expression<Func<Relationship, bool>>>(),
+                It.IsAny<Expression<Func<Relationship, (Guid EntityId, Guid RelatedEntityId)>>>(),
+                    It.IsAny<CancellationToken>()))
             .ReturnsAsync([]);
 
         DashboardDto result = await _service.GetDashboardDataAsync();
@@ -318,7 +323,7 @@ public class DashboardServiceTests
         List<Contact> contacts = [new Contact { Id = contactId, FirstName = "Test", LastName = "User" }];
 
         _repositoryMock.Setup(r => r.ListAsNoTrackingAsync<Contact>(It.IsAny<Expression<Func<Contact, bool>>>(),
-                It.IsAny<CancellationToken>(), It.IsAny<string[]>()))
+                It.IsAny<CancellationToken>()))
             .ReturnsAsync(contacts);
 
         _repositoryMock.Setup(r =>
@@ -339,12 +344,13 @@ public class DashboardServiceTests
         ];
         _repositoryMock.Setup(r =>
                 r.ListAsNoTrackingAsync<SignificantDate>(It.IsAny<Expression<Func<SignificantDate, bool>>>(),
-                    It.IsAny<CancellationToken>(), It.IsAny<string[]>()))
+                    It.IsAny<CancellationToken>()))
             .ReturnsAsync(dates);
 
         _repositoryMock.Setup(r =>
-                r.ListAsNoTrackingAsync<Relationship>(It.IsAny<Expression<Func<Relationship, bool>>>(),
-                    It.IsAny<CancellationToken>(), It.IsAny<string[]>()))
+                r.ListProjectedAsync<Relationship, (Guid EntityId, Guid RelatedEntityId)>(It.IsAny<Expression<Func<Relationship, bool>>>(),
+                It.IsAny<Expression<Func<Relationship, (Guid EntityId, Guid RelatedEntityId)>>>(),
+                    It.IsAny<CancellationToken>()))
             .ReturnsAsync([]);
 
         DashboardDto result = await _service.GetDashboardDataAsync();
@@ -362,7 +368,7 @@ public class DashboardServiceTests
         List<Contact> contacts = [new Contact { Id = contactId, FirstName = "Test", LastName = "User" }];
 
         _repositoryMock.Setup(r => r.ListAsNoTrackingAsync<Contact>(It.IsAny<Expression<Func<Contact, bool>>>(),
-                It.IsAny<CancellationToken>(), It.IsAny<string[]>()))
+                It.IsAny<CancellationToken>()))
             .ReturnsAsync(contacts);
 
         _repositoryMock.Setup(r =>
@@ -385,12 +391,13 @@ public class DashboardServiceTests
 
         _repositoryMock.Setup(r =>
                 r.ListAsNoTrackingAsync<SignificantDate>(It.IsAny<Expression<Func<SignificantDate, bool>>>(),
-                    It.IsAny<CancellationToken>(), It.IsAny<string[]>()))
+                    It.IsAny<CancellationToken>()))
             .ReturnsAsync(dates);
 
         _repositoryMock.Setup(r =>
-                r.ListAsNoTrackingAsync<Relationship>(It.IsAny<Expression<Func<Relationship, bool>>>(),
-                    It.IsAny<CancellationToken>(), It.IsAny<string[]>()))
+                r.ListProjectedAsync<Relationship, (Guid EntityId, Guid RelatedEntityId)>(It.IsAny<Expression<Func<Relationship, bool>>>(),
+                It.IsAny<Expression<Func<Relationship, (Guid EntityId, Guid RelatedEntityId)>>>(),
+                    It.IsAny<CancellationToken>()))
             .ReturnsAsync([]);
 
         DashboardDto result = await _service.GetDashboardDataAsync();
@@ -408,7 +415,7 @@ public class DashboardServiceTests
         List<Contact> contacts = [new Contact { Id = contactId, FirstName = "Test", LastName = "User" }];
 
         _repositoryMock.Setup(r => r.ListAsNoTrackingAsync<Contact>(It.IsAny<Expression<Func<Contact, bool>>>(),
-                It.IsAny<CancellationToken>(), It.IsAny<string[]>()))
+                It.IsAny<CancellationToken>()))
             .ReturnsAsync(contacts);
 
         _repositoryMock.Setup(r =>
@@ -430,12 +437,13 @@ public class DashboardServiceTests
 
         _repositoryMock.Setup(r =>
                 r.ListAsNoTrackingAsync<SignificantDate>(It.IsAny<Expression<Func<SignificantDate, bool>>>(),
-                    It.IsAny<CancellationToken>(), It.IsAny<string[]>()))
+                    It.IsAny<CancellationToken>()))
             .ReturnsAsync(dates);
 
         _repositoryMock.Setup(r =>
-                r.ListAsNoTrackingAsync<Relationship>(It.IsAny<Expression<Func<Relationship, bool>>>(),
-                    It.IsAny<CancellationToken>(), It.IsAny<string[]>()))
+                r.ListProjectedAsync<Relationship, (Guid EntityId, Guid RelatedEntityId)>(It.IsAny<Expression<Func<Relationship, bool>>>(),
+                It.IsAny<Expression<Func<Relationship, (Guid EntityId, Guid RelatedEntityId)>>>(),
+                    It.IsAny<CancellationToken>()))
             .ReturnsAsync([]);
 
         DashboardDto result = await _service.GetDashboardDataAsync();
@@ -453,7 +461,7 @@ public class DashboardServiceTests
         List<Contact> contacts = [new Contact { Id = contactId, FirstName = "Test", LastName = "User" }];
 
         _repositoryMock.Setup(r => r.ListAsNoTrackingAsync<Contact>(It.IsAny<Expression<Func<Contact, bool>>>(),
-                It.IsAny<CancellationToken>(), It.IsAny<string[]>()))
+                It.IsAny<CancellationToken>()))
             .ReturnsAsync(contacts);
 
         _repositoryMock.Setup(r =>
@@ -475,12 +483,13 @@ public class DashboardServiceTests
 
         _repositoryMock.Setup(r =>
                 r.ListAsNoTrackingAsync<SignificantDate>(It.IsAny<Expression<Func<SignificantDate, bool>>>(),
-                    It.IsAny<CancellationToken>(), It.IsAny<string[]>()))
+                    It.IsAny<CancellationToken>()))
             .ReturnsAsync(dates);
 
         _repositoryMock.Setup(r =>
-                r.ListAsNoTrackingAsync<Relationship>(It.IsAny<Expression<Func<Relationship, bool>>>(),
-                    It.IsAny<CancellationToken>(), It.IsAny<string[]>()))
+                r.ListProjectedAsync<Relationship, (Guid EntityId, Guid RelatedEntityId)>(It.IsAny<Expression<Func<Relationship, bool>>>(),
+                It.IsAny<Expression<Func<Relationship, (Guid EntityId, Guid RelatedEntityId)>>>(),
+                    It.IsAny<CancellationToken>()))
             .ReturnsAsync([]);
 
         DashboardDto result = await _service.GetDashboardDataAsync();
@@ -498,7 +507,7 @@ public class DashboardServiceTests
         List<Contact> contacts = [new Contact { Id = contactId, FirstName = "Test", LastName = "User" }];
 
         _repositoryMock.Setup(r => r.ListAsNoTrackingAsync<Contact>(It.IsAny<Expression<Func<Contact, bool>>>(),
-                It.IsAny<CancellationToken>(), It.IsAny<string[]>()))
+                It.IsAny<CancellationToken>()))
             .ReturnsAsync(contacts);
 
         _repositoryMock.Setup(r =>
@@ -520,12 +529,13 @@ public class DashboardServiceTests
 
         _repositoryMock.Setup(r =>
                 r.ListAsNoTrackingAsync<SignificantDate>(It.IsAny<Expression<Func<SignificantDate, bool>>>(),
-                    It.IsAny<CancellationToken>(), It.IsAny<string[]>()))
+                    It.IsAny<CancellationToken>()))
             .ReturnsAsync(dates);
 
         _repositoryMock.Setup(r =>
-                r.ListAsNoTrackingAsync<Relationship>(It.IsAny<Expression<Func<Relationship, bool>>>(),
-                    It.IsAny<CancellationToken>(), It.IsAny<string[]>()))
+                r.ListProjectedAsync<Relationship, (Guid EntityId, Guid RelatedEntityId)>(It.IsAny<Expression<Func<Relationship, bool>>>(),
+                It.IsAny<Expression<Func<Relationship, (Guid EntityId, Guid RelatedEntityId)>>>(),
+                    It.IsAny<CancellationToken>()))
             .ReturnsAsync([]);
 
         DashboardDto result = await _service.GetDashboardDataAsync();
