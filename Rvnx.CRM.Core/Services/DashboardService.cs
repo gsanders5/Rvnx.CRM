@@ -44,9 +44,13 @@ public class DashboardService(IRepository repository, ILogger<DashboardService> 
                 a => new ValueTuple<Guid, Guid>(a.ContactId!.Value, a.Id))
             : [];
 
-        Dictionary<Guid, Guid> attachmentMap = profileAttachments
-            .GroupBy(a => a.ContactId)
-            .ToDictionary(g => g.Key, g => g.First().AttachmentId);
+        // ⚡ Bolt: Use Dictionary with capacity and TryAdd instead of GroupBy().ToDictionary(..., First())
+        // to avoid allocations of IGrouping structures and redundant list iterations.
+        Dictionary<Guid, Guid> attachmentMap = new(profileAttachments.Count);
+        foreach ((Guid contactId, Guid attachmentId) in profileAttachments)
+        {
+            attachmentMap.TryAdd(contactId, attachmentId);
+        }
 
         PriorityQueue<UpcomingEventDto, DateTime> topEvents = new();
 
@@ -114,12 +118,11 @@ public class DashboardService(IRepository repository, ILogger<DashboardService> 
             .. relationships.Select(r => r.RelatedEntityId)
         ];
 
-        List<Guid> allContactIds = [.. contacts.Select(c => c.Id)];
-        int birthdayCount = allContactIds.Count > 0
-            ? await _repository.CountAsync<SignificantDate>(sd => sd.ContactId.HasValue &&
-                                                                  allContactIds.Contains(sd.ContactId.Value) &&
-                                                                  sd.Title == SignificantDateTitles.Birthday)
-            : 0;
+        int birthdayCount = await _repository.CountAsync<SignificantDate>(sd => sd.ContactId.HasValue &&
+                                                                                sd.Contact != null &&
+                                                                                sd.Contact.IsHidden == false &&
+                                                                                sd.Contact.IsPartial == false &&
+                                                                                sd.Title == SignificantDateTitles.Birthday);
 
         int hiddenContactsCount =
             await _repository.CountAsync<Contact>(x => x.IsHidden && !x.IsPartial);

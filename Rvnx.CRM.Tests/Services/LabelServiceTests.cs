@@ -49,6 +49,14 @@ public class LabelServiceTests
     }
 
     [Fact]
+    public async Task CreateAsyncReturnsFailureWhenNameIsWhitespace()
+    {
+        Core.DTOs.Contact.LabelOperationResult result = await _service.CreateAsync("   ", "#000000");
+        Assert.False(result.Success);
+        Assert.Contains("Label name cannot be empty.", result.Errors);
+    }
+
+    [Fact]
     public async Task CreateAsyncReturnsFailureWhenNameExists()
     {
         List<Label> labels = [new Label { Name = "ExistingLabel" }];
@@ -57,6 +65,20 @@ public class LabelServiceTests
             .ReturnsAsync(labels);
 
         Core.DTOs.Contact.LabelOperationResult result = await _service.CreateAsync("existinglabel", "#123456");
+
+        Assert.False(result.Success);
+        Assert.Contains("already exists", result.Errors[0]);
+    }
+
+    [Fact]
+    public async Task CreateAsyncReturnsFailureWhenNameExistsWithDifferentCase()
+    {
+        List<Label> labels = [new Label { Name = "ExistingLabel" }];
+        _mockRepo.Setup(r => r.ListAsNoTrackingAsync(It.IsAny<Expression<Func<Label, bool>>>(),
+                It.IsAny<CancellationToken>(), It.IsAny<string[]>()))
+            .ReturnsAsync(labels);
+
+        Core.DTOs.Contact.LabelOperationResult result = await _service.CreateAsync("EXISTINGLABEL", "#123456");
 
         Assert.False(result.Success);
         Assert.Contains("already exists", result.Errors[0]);
@@ -77,6 +99,44 @@ public class LabelServiceTests
         Assert.NotNull(result.LabelId);
         _mockRepo.Verify(
             r => r.AddAsync(It.Is<Label>(l => l.Name == "NewLabel" && l.Color == "#000000"),
+                It.IsAny<CancellationToken>()), Times.Once);
+        _mockRepo.Verify(r => r.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task CreateAsyncCreatesLabelWhenCandidatesReturnsNull()
+    {
+        _mockRepo.Setup(r => r.ListAsNoTrackingAsync(It.IsAny<Expression<Func<Label, bool>>>(),
+                It.IsAny<CancellationToken>(), It.IsAny<string[]>()))
+            .ReturnsAsync((List<Label>?)null!);
+
+        _mockRepo.Setup(r => r.AddAsync(It.IsAny<Label>(), It.IsAny<CancellationToken>())).ReturnsAsync(new Label());
+
+        Core.DTOs.Contact.LabelOperationResult result = await _service.CreateAsync("NewLabel", "#000000");
+
+        Assert.True(result.Success);
+        Assert.NotNull(result.LabelId);
+        _mockRepo.Verify(
+            r => r.AddAsync(It.Is<Label>(l => l.Name == "NewLabel" && l.Color == "#000000"),
+                It.IsAny<CancellationToken>()), Times.Once);
+        _mockRepo.Verify(r => r.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task CreateAsyncCreatesLabelWhenColorIsNull()
+    {
+        _mockRepo.Setup(r => r.ListAsNoTrackingAsync(It.IsAny<Expression<Func<Label, bool>>>(),
+                It.IsAny<CancellationToken>(), It.IsAny<string[]>()))
+            .ReturnsAsync([]);
+
+        _mockRepo.Setup(r => r.AddAsync(It.IsAny<Label>(), It.IsAny<CancellationToken>())).ReturnsAsync(new Label());
+
+        Core.DTOs.Contact.LabelOperationResult result = await _service.CreateAsync("NewLabel", null);
+
+        Assert.True(result.Success);
+        Assert.NotNull(result.LabelId);
+        _mockRepo.Verify(
+            r => r.AddAsync(It.Is<Label>(l => l.Name == "NewLabel" && l.Color == null),
                 It.IsAny<CancellationToken>()), Times.Once);
         _mockRepo.Verify(r => r.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
     }
