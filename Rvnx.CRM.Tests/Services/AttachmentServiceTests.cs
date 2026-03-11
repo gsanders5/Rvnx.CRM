@@ -282,5 +282,163 @@ namespace Rvnx.CRM.Tests.Services
             Attachment? attachment = await context.Attachments.FindAsync(attachmentId);
             Assert.NotNull(attachment);
         }
+
+        [Fact]
+        public async Task GetAttachmentAsyncShouldSucceedWhenValid()
+        {
+            using CRMDbContext context = GetInMemoryDbContext();
+            Repository repo = new(context);
+            Mock<IFileValidationService> fileServiceMock = new();
+            Mock<IEntityService> entityServiceMock = new();
+
+            AttachmentService service = new(repo, fileServiceMock.Object, entityServiceMock.Object);
+
+            Guid contactId = Guid.NewGuid();
+            context.Contacts.Add(new Contact { Id = contactId, FirstName = "Test", LastName = "User" });
+
+            Guid attachmentId = Guid.NewGuid();
+            context.Attachments.Add(new Attachment
+            {
+                Id = attachmentId,
+                ContactId = contactId,
+                FileName = "test.png",
+                ContentType = "image/png",
+                AttachmentType = "General"
+            });
+            context.SaveChanges();
+
+            AttachmentDto? result = await service.GetAttachmentAsync(attachmentId);
+
+            Assert.NotNull(result);
+            Assert.Equal(attachmentId, result.Id);
+            Assert.Equal("test.png", result.FileName);
+            Assert.Equal("image/png", result.ContentType);
+            Assert.Equal("General", result.AttachmentType);
+            Assert.Equal(contactId, result.EntityId);
+            Assert.Equal(EntityTypes.Person, result.EntityType);
+        }
+
+        [Fact]
+        public async Task GetAttachmentAsyncShouldReturnNullWhenAttachmentDoesNotExist()
+        {
+            using CRMDbContext context = GetInMemoryDbContext();
+            Repository repo = new(context);
+            Mock<IFileValidationService> fileServiceMock = new();
+            Mock<IEntityService> entityServiceMock = new();
+
+            AttachmentService service = new(repo, fileServiceMock.Object, entityServiceMock.Object);
+
+            AttachmentDto? result = await service.GetAttachmentAsync(Guid.NewGuid());
+
+            Assert.Null(result);
+        }
+
+        [Fact]
+        public async Task GetAttachmentAsyncShouldReturnNullWhenContactIsPartial()
+        {
+            using CRMDbContext context = GetInMemoryDbContext();
+            Repository repo = new(context);
+            Mock<IFileValidationService> fileServiceMock = new();
+            Mock<IEntityService> entityServiceMock = new();
+
+            AttachmentService service = new(repo, fileServiceMock.Object, entityServiceMock.Object);
+
+            Guid contactId = Guid.NewGuid();
+            context.Contacts.Add(new Contact { Id = contactId, FirstName = "Partial", IsPartial = true });
+
+            Guid attachmentId = Guid.NewGuid();
+            context.Attachments.Add(new Attachment
+            {
+                Id = attachmentId,
+                ContactId = contactId,
+                FileName = "test.png",
+                ContentType = "image/png"
+            });
+            context.SaveChanges();
+
+            AttachmentDto? result = await service.GetAttachmentAsync(attachmentId);
+
+            Assert.Null(result);
+        }
+
+        [Fact]
+        public async Task GetAttachmentContentAsyncShouldSucceedWhenValid()
+        {
+            using CRMDbContext context = GetInMemoryDbContext();
+            Repository repo = new(context);
+            Mock<IFileValidationService> fileServiceMock = new();
+            Mock<IEntityService> entityServiceMock = new();
+
+            AttachmentService service = new(repo, fileServiceMock.Object, entityServiceMock.Object);
+
+            Guid contactId = Guid.NewGuid();
+            context.Contacts.Add(new Contact { Id = contactId, FirstName = "Test", LastName = "User" });
+
+            Guid attachmentId = Guid.NewGuid();
+            byte[] fileContent = [1, 2, 3];
+            context.Attachments.Add(new Attachment
+            {
+                Id = attachmentId,
+                ContactId = contactId,
+                FileName = "test.png",
+                ContentType = "image/png",
+                AttachmentContent = new AttachmentContent { Content = fileContent },
+                LastChangedDate = new DateTime(2023, 1, 1)
+            });
+            context.SaveChanges();
+
+            AttachmentContentDto? result = await service.GetAttachmentContentAsync(attachmentId);
+
+            Assert.NotNull(result);
+            Assert.Equal(attachmentId, result.Id);
+            Assert.Equal(fileContent, result.Content);
+            Assert.Equal("image/png", result.ContentType);
+            Assert.Equal("test.png", result.FileName);
+            // Ignore LastChangedDate as it is overwritten by the framework on SaveChanges
+        }
+
+        [Fact]
+        public async Task GetAttachmentContentAsyncShouldReturnNullWhenAttachmentDoesNotExist()
+        {
+            using CRMDbContext context = GetInMemoryDbContext();
+            Repository repo = new(context);
+            Mock<IFileValidationService> fileServiceMock = new();
+            Mock<IEntityService> entityServiceMock = new();
+
+            AttachmentService service = new(repo, fileServiceMock.Object, entityServiceMock.Object);
+
+            AttachmentContentDto? result = await service.GetAttachmentContentAsync(Guid.NewGuid());
+
+            Assert.Null(result);
+        }
+
+        [Fact]
+        public async Task GetAttachmentContentAsyncShouldReturnNullWhenContactIsPartial()
+        {
+            using CRMDbContext context = GetInMemoryDbContext();
+            Repository repo = new(context);
+            Mock<IFileValidationService> fileServiceMock = new();
+            Mock<IEntityService> entityServiceMock = new();
+
+            AttachmentService service = new(repo, fileServiceMock.Object, entityServiceMock.Object);
+
+            Guid contactId = Guid.NewGuid();
+            context.Contacts.Add(new Contact { Id = contactId, FirstName = "Partial", IsPartial = true });
+
+            Guid attachmentId = Guid.NewGuid();
+            context.Attachments.Add(new Attachment
+            {
+                Id = attachmentId,
+                ContactId = contactId,
+                FileName = "test.png",
+                ContentType = "image/png",
+                AttachmentContent = new AttachmentContent { Content = [1, 2, 3] }
+            });
+            context.SaveChanges();
+
+            AttachmentContentDto? result = await service.GetAttachmentContentAsync(attachmentId);
+
+            Assert.Null(result);
+        }
     }
 }
