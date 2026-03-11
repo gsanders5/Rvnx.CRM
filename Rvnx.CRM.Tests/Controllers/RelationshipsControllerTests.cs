@@ -112,7 +112,7 @@ public class RelationshipsControllerTests
 
             IActionResult result = await _controller.DeleteConfirmed(relId, returnUrl);
 
-            RedirectResult redirectResult = Assert.IsType<RedirectResult>(result);
+            LocalRedirectResult redirectResult = Assert.IsType<LocalRedirectResult>(result);
             Assert.Equal(returnUrl, redirectResult.Url);
         }
 

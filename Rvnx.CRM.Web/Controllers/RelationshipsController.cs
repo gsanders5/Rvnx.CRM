@@ -305,7 +305,7 @@ namespace Rvnx.CRM.Web.Controllers
             OperationResult result = await _relationshipService.DeleteRelationshipAsync(id);
             return result.Success
                 ? !string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl)
-                    ? Redirect(returnUrl)
+                    ? LocalRedirect(returnUrl)
                     : RedirectToEntity(result.RedirectId, result.RedirectType)
                 : RedirectToAction("Index", "Home");
         }

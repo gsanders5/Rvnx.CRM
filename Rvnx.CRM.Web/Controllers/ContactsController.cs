@@ -358,7 +358,7 @@ namespace Rvnx.CRM.Web.Controllers
             }
 
             return !string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl)
-                ? Redirect(returnUrl)
+                ? LocalRedirect(returnUrl)
                 : RedirectToAction(nameof(Edit), new { id = contactId });
         }
 
@@ -373,7 +373,7 @@ namespace Rvnx.CRM.Web.Controllers
             }
 
             return !string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl)
-                ? Redirect(returnUrl)
+                ? LocalRedirect(returnUrl)
                 : RedirectToAction(nameof(Edit), new { id = contactId });
         }
 
