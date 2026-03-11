@@ -100,14 +100,9 @@ public class LabelService(IRepository repository) : ILabelService
 
     public async Task RemoveLabelAsync(Guid contactId, Guid labelId)
     {
-        List<ContactLabel> existing =
-            await _repository.ListAsync<ContactLabel>(cl => cl.ContactId == contactId && cl.LabelId == labelId) ?? [];
-        ContactLabel? toRemove = existing.FirstOrDefault();
-        if (toRemove != null)
-        {
-            await _repository.DeleteAsync<ContactLabel>(toRemove.Id);
-            await _repository.SaveChangesAsync();
-        }
+        // ⚡ Bolt: Use bulk delete to avoid fetching the entity into memory and save a database roundtrip
+        await _repository.DeleteAsync<ContactLabel>(cl => cl.ContactId == contactId && cl.LabelId == labelId);
+        await _repository.SaveChangesAsync();
     }
 
     public async Task<List<LabelDto>> GetLabelsForContactAsync(Guid contactId)

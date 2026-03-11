@@ -61,3 +61,7 @@
 ## 2024-05-18 - Avoid loading full entities just to get a count
 **Learning:** In the DashboardService, retrieving the count of hidden contacts and filtering contacts with relationships were using inefficient methods (e.g., loading all hidden contacts into a list via `ListAsNoTrackingAsync` just to call `.Count` and using `.Any(c => c.Id == id)` over a list of contacts instead of a pre-existing dictionary).
 **Action:** Always prefer `CountAsync()` on the repository or fast dictionary lookups (`ContainsKey`) over loading full entity instances or using `O(n)` list scans just to count elements or check existence.
+
+## 2026-06-27 - RemoveLabelAsync Optimization
+**Learning:** `RemoveLabelAsync` was fetching the existing `ContactLabel` entity via `ListAsync` and then deleting it by its `Id`, which resulted in an extra database roundtrip and unnecessary memory overhead.
+**Action:** Use EF Core's bulk delete feature (`DeleteAsync(Expression)`) to avoid fetching the entity and save a database roundtrip.
