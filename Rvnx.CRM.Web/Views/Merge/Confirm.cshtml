@@ -1,0 +1,109 @@
+@model Rvnx.CRM.Web.Models.MergeContactViewModel
+
+@{
+    ViewData["Title"] = "Confirm Merge";
+}
+
+<div class="container">
+    <div class="row mb-4">
+        <div class="col">
+            <h2>Confirm Merge</h2>
+            <p class="lead">Please review the direction of this merge carefully.</p>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <!-- Secondary (Source) Contact -->
+        <div class="col-md-5">
+            <div class="card h-100 border-danger shadow-sm">
+                <div class="card-header bg-danger text-white">
+                    <h5 class="mb-0 text-center"><i class="bi bi-person-x me-2"></i> Secondary Contact (Will Be Deleted)</h5>
+                </div>
+                <div class="card-body text-center">
+                    @if (Model.SecondaryContact?.ProfileImageId.HasValue == true)
+                    {
+                        <img src="@Url.Action("View", "Attachments", new { id = Model.SecondaryContact.ProfileImageId })" class="img-fluid rounded-circle mb-3" style="width: 150px; height: 150px; object-fit: cover;" alt="Profile Photo" />
+                    }
+                    else
+                    {
+                        <i class="bi bi-person-circle display-1 text-muted d-block mb-3"></i>
+                    }
+                    <h3>@Model.SecondaryContact?.FullName</h3>
+                    <p class="text-muted mb-1">@Model.SecondaryContact?.JobTitle @(string.IsNullOrEmpty(Model.SecondaryContact?.JobTitle) || string.IsNullOrEmpty(Model.SecondaryContact?.Company) ? "" : "at") @Model.SecondaryContact?.Company</p>
+                    <hr />
+                    <ul class="list-unstyled text-start">
+                        <li><strong>Gender/Pronouns:</strong> @Model.SecondaryContact?.Gender @(string.IsNullOrEmpty(Model.SecondaryContact?.Pronouns) ? "" : $"({Model.SecondaryContact?.Pronouns})")</li>
+                        <li><strong>Religion:</strong> @Model.SecondaryContact?.Religion</li>
+                        <li><strong>Attachments:</strong> @(Model.SecondaryContact?.Attachments?.Count() ?? 0)</li>
+                        <li><strong>Notes:</strong> @(Model.SecondaryContact?.Notes?.Count() ?? 0)</li>
+                        <li><strong>Contact Methods:</strong> @(Model.SecondaryContact?.ContactMethods?.Count() ?? 0)</li>
+                        <li><strong>Dates:</strong> @(Model.SecondaryContact?.SignificantDates?.Count() ?? 0)</li>
+                        <li><strong>Pets:</strong> @(Model.SecondaryContact?.Pets?.Count() ?? 0)</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Arrow -->
+        <div class="col-md-2 d-flex align-items-center justify-content-center">
+            <div class="text-center">
+                <i class="bi bi-arrow-right-circle-fill text-primary d-none d-md-block" style="font-size: 4rem;"></i>
+                <i class="bi bi-arrow-down-circle-fill text-primary d-block d-md-none my-4" style="font-size: 3rem;"></i>
+                <p class="small text-muted mt-2 fw-bold text-uppercase tracking-wide">Merges Into</p>
+            </div>
+        </div>
+
+        <!-- Primary (Target) Contact -->
+        <div class="col-md-5">
+            <div class="card h-100 border-success shadow-sm">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0 text-center"><i class="bi bi-person-check me-2"></i> Primary Contact (Will Be Kept)</h5>
+                </div>
+                <div class="card-body text-center">
+                    @if (Model.PrimaryContact?.ProfileImageId.HasValue == true)
+                    {
+                        <img src="@Url.Action("View", "Attachments", new { id = Model.PrimaryContact.ProfileImageId })" class="img-fluid rounded-circle mb-3" style="width: 150px; height: 150px; object-fit: cover;" alt="Profile Photo" />
+                    }
+                    else
+                    {
+                        <i class="bi bi-person-circle display-1 text-muted d-block mb-3"></i>
+                    }
+                    <h3>@Model.PrimaryContact?.FullName</h3>
+                    <p class="text-muted mb-1">@Model.PrimaryContact?.JobTitle @(string.IsNullOrEmpty(Model.PrimaryContact?.JobTitle) || string.IsNullOrEmpty(Model.PrimaryContact?.Company) ? "" : "at") @Model.PrimaryContact?.Company</p>
+                    <hr />
+                    <ul class="list-unstyled text-start">
+                        <li><strong>Gender/Pronouns:</strong> @Model.PrimaryContact?.Gender @(string.IsNullOrEmpty(Model.PrimaryContact?.Pronouns) ? "" : $"({Model.PrimaryContact?.Pronouns})")</li>
+                        <li><strong>Religion:</strong> @Model.PrimaryContact?.Religion</li>
+                        <li><strong>Attachments:</strong> @(Model.PrimaryContact?.Attachments?.Count() ?? 0)</li>
+                        <li><strong>Notes:</strong> @(Model.PrimaryContact?.Notes?.Count() ?? 0)</li>
+                        <li><strong>Contact Methods:</strong> @(Model.PrimaryContact?.ContactMethods?.Count() ?? 0)</li>
+                        <li><strong>Dates:</strong> @(Model.PrimaryContact?.SignificantDates?.Count() ?? 0)</li>
+                        <li><strong>Pets:</strong> @(Model.PrimaryContact?.Pets?.Count() ?? 0)</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col text-center">
+            <div class="alert alert-warning d-inline-block text-start">
+                <h5 class="alert-heading"><i class="bi bi-exclamation-triangle-fill"></i> Warning: This action cannot be undone.</h5>
+                <p class="mb-0">All data from <strong>@Model.SecondaryContact?.FullName</strong> will be moved to <strong>@Model.PrimaryContact?.FullName</strong>.<br />
+                Then, the contact record for <strong>@Model.SecondaryContact?.FullName</strong> will be permanently deleted.</p>
+            </div>
+
+            <form asp-action="ExecuteMerge" method="post" class="mt-4">
+                <input type="hidden" name="primaryContactId" value="@Model.PrimaryContactId" />
+                <input type="hidden" name="secondaryContactId" value="@Model.SecondaryContactId" />
+
+                <a asp-action="Index" asp-route-primaryId="@Model.PrimaryContactId" class="btn btn-secondary btn-lg me-2">
+                    <i class="bi bi-arrow-left"></i> Go Back
+                </a>
+                <button type="submit" class="btn btn-danger btn-lg">
+                    <i class="bi bi-diagram-3-fill"></i> Confirm Merge
+                </button>
+            </form>
+        </div>
+    </div>
+</div>

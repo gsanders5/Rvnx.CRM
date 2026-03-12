@@ -28,6 +28,8 @@ public static class ServiceCollectionExtensions
 
         services.AddScoped<IContactExportService, ContactExportService>();
 
+        services.AddScoped<IMergeService, MergeService>();
+
         // Add Debug Data Service
         services.AddScoped<IDebugDataService, DebugDataService>();
 

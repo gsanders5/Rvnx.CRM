@@ -1,0 +1,51 @@
+@model Rvnx.CRM.Web.Models.MergeContactViewModel
+
+@{
+    ViewData["Title"] = "Merge Contact";
+}
+
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow-sm border">
+                <div class="card-header bg-warning text-dark">
+                    <h4 class="mb-0"><i class="bi bi-diagram-3"></i> Merge Contact</h4>
+                </div>
+                <div class="card-body">
+                    <p>Select another contact to merge into <strong>@Model.PrimaryContact?.FullName</strong>.</p>
+                    <p class="text-danger small">
+                        <strong>Warning:</strong> The contact you select below (the secondary contact) will be
+                        <strong>deleted</strong> after its data is migrated to @Model.PrimaryContact?.FullName.
+                    </p>
+
+                    <form asp-action="Confirm" method="post">
+                        <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+                        <input type="hidden" asp-for="PrimaryContactId" />
+
+                        <div class="mb-4">
+                            <label asp-for="SecondaryContactId" class="form-label">Select Contact to Merge In</label>
+                            <select asp-for="SecondaryContactId" asp-items="ViewBag.SecondaryContacts" class="form-select" required>
+                                <option value="">-- Select Contact --</option>
+                            </select>
+                            <span asp-validation-for="SecondaryContactId" class="text-danger"></span>
+                        </div>
+
+                        <div class="d-flex justify-content-between">
+                            <a asp-controller="Contacts" asp-action="Details" asp-route-id="@Model.PrimaryContactId" class="btn btn-secondary">
+                                Cancel
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                Next: Preview Merge <i class="bi bi-arrow-right"></i>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}
