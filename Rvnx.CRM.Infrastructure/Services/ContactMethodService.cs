@@ -1,5 +1,6 @@
 using Rvnx.CRM.Core.Constants;
 using Rvnx.CRM.Core.DTOs.Contact;
+using Rvnx.CRM.Core.Exceptions;
 using Rvnx.CRM.Core.Extensions;
 using Rvnx.CRM.Core.Helpers;
 using Rvnx.CRM.Core.Interfaces;
@@ -46,7 +47,7 @@ public class ContactMethodService(IRepository repository) : IContactMethodServic
 
             return OperationResult.Ok(existingContactInfo.ContactId ?? Guid.Empty, EntityTypes.Person);
         }
-        catch (Exception)
+        catch (EntityConcurrencyException)
         {
             if (!await _repository.ExistsAsync<ContactMethod>(dto.Id ?? Guid.Empty))
             {
