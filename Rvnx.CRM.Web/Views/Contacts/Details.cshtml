@@ -22,6 +22,7 @@
 <div class="d-flex flex-column flex-md-row justify-content-between align-items-center mb-4 gap-3">
     <h1 class="mb-0 text-center text-md-start">@Model.FullName</h1>
     <div class="d-flex gap-2 flex-wrap justify-content-center">
+        <a asp-controller="Merge" asp-action="Index" asp-route-primaryId="@Model.Id" class="btn btn-outline-warning"><i class="bi bi-diagram-3"></i> Merge</a>
         <a asp-action="Export" asp-route-id="@Model.Id" class="btn btn-outline-primary"><i class="fa-solid fa-file-export"></i> Export VCF</a>
         <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-primary"><i class="bi bi-pencil-square"></i> Edit</a>
         <a asp-action="Index" class="btn btn-secondary"><i class="bi bi-arrow-left"></i> Back</a>
