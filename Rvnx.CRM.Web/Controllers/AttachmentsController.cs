@@ -97,7 +97,7 @@ namespace Rvnx.CRM.Web.Controllers
             string referer = Request.Headers.Referer.ToString();
             return Uri.TryCreate(referer, UriKind.Absolute, out Uri? uri) &&
                    string.Equals(uri.Host, Request.Host.Host, StringComparison.OrdinalIgnoreCase)
-                ? Redirect(referer)
+                ? LocalRedirect(uri.PathAndQuery)
                 : RedirectToAction("Index", "Home");
         }
 

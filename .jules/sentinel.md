@@ -38,3 +38,8 @@
 **Learning:** Even though global query filters protect read operations (`_repository.ListAsync`), generic endpoints taking an `entityId` parameter and building related entity associations (like `Relationship`) must explicitly perform a point query validation (`_entityService.ExistsAsync(...)`) to confirm both the entity's existence and the current user's authorization to access it *before* returning a view model or persisting changes.
 
 **Prevention:** In generic relationship or child-entity controllers, always inject and call `_entityService.ExistsAsync(entityType, entityId)` at the start of both GET (form rendering) and POST (form submission) actions. Return `NotFound()` if validation fails to prevent object enumeration and unauthorized cross-tenant associations.
+
+## 2024-03-12 - Prevent Open Redirects via Referer Header
+**Vulnerability:** The `AttachmentsController.SafeRedirect` method used `Redirect(referer)` when returning users to their previous page after operations like upload.
+**Learning:** Even with an initial check that the `Uri.Host` matches the server host, returning a full `Redirect` with a potentially manipulatable absolute URL string is generally unsafe and can lead to test assertion mismatches or potential bypasses in specific edge cases of URI parsing.
+**Prevention:** Instead of passing the full URL string to `Redirect`, parse it with `Uri.TryCreate`, verify the host, and then explicitly use `LocalRedirect(uri.PathAndQuery)` to guarantee the redirect cannot leave the local domain.
