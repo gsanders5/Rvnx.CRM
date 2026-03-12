@@ -248,7 +248,7 @@ public class ContactManagementService(IRepository repository, IFileValidationSer
         {
             foreach (Attachment existingAttachment in existingAttachments)
             {
-                existingAttachment.AttachmentType = "General";
+                existingAttachment.AttachmentType = AttachmentTypes.General;
             }
             await _repository.UpdateRangeAsync(existingAttachments);
         }
