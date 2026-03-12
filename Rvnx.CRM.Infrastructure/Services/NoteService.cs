@@ -1,5 +1,6 @@
 using Rvnx.CRM.Core.Constants;
 using Rvnx.CRM.Core.DTOs.Base;
+using Rvnx.CRM.Core.Exceptions;
 using Rvnx.CRM.Core.Extensions;
 using Rvnx.CRM.Core.Interfaces;
 using Rvnx.CRM.Core.Models;
@@ -48,7 +49,7 @@ public class NoteService(IRepository repository, IEntityService entityService) :
 
             return OperationResult.Ok(existingNote.ContactId ?? Guid.Empty, EntityTypes.Person);
         }
-        catch (Exception)
+        catch (EntityConcurrencyException)
         {
             if (!await _repository.ExistsAsync<Note>(dto.Id ?? Guid.Empty))
             {
