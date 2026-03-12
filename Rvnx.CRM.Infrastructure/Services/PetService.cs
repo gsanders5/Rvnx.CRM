@@ -1,5 +1,6 @@
 using Rvnx.CRM.Core.Constants;
 using Rvnx.CRM.Core.DTOs.Contact;
+using Rvnx.CRM.Core.Exceptions;
 using Rvnx.CRM.Core.Extensions;
 using Rvnx.CRM.Core.Interfaces;
 using Rvnx.CRM.Core.Models;
@@ -42,7 +43,7 @@ public class PetService(IRepository repository) : IPetService
 
             return OperationResult.Ok(existingPet.ContactId, EntityTypes.Person);
         }
-        catch (Exception)
+        catch (EntityConcurrencyException)
         {
             if (!await _repository.ExistsAsync<Pet>(dto.Id ?? Guid.Empty))
             {
