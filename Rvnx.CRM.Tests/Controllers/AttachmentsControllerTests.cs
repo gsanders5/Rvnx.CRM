@@ -158,8 +158,8 @@ public class AttachmentsControllerTests
 
             IActionResult result = await controller.Upload(Guid.NewGuid(), "Person", file, null);
 
-            RedirectResult redirectResult = Assert.IsType<RedirectResult>(result);
-            Assert.Equal(safeReferer, redirectResult.Url);
+            LocalRedirectResult redirectResult = Assert.IsType<LocalRedirectResult>(result);
+            Assert.Equal("/Contacts/Details/123", redirectResult.Url);
         }
 
         [Fact]
@@ -301,7 +301,8 @@ public class AttachmentsControllerTests
 
             IActionResult result = await controller.Upload(Guid.NewGuid(), "Person", file);
 
-            Assert.IsType<RedirectResult>(result);
+            LocalRedirectResult redirectResult = Assert.IsType<LocalRedirectResult>(result);
+            Assert.Equal("/Contacts", redirectResult.Url);
         }
 
         [Fact]
