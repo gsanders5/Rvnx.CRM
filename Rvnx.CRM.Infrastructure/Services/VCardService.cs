@@ -6,6 +6,7 @@ using Rvnx.CRM.Core.Constants;
 using Rvnx.CRM.Core.Enumerations;
 using Rvnx.CRM.Core.Interfaces;
 using Rvnx.CRM.Core.Models.Base;
+using Microsoft.Extensions.Logging;
 using Rvnx.CRM.Core.Models.Contact;
 using Rvnx.CRM.Core.Models.Dates;
 using System.Net;
@@ -20,10 +21,18 @@ public class VCardService : IVCardService
     private const string GenderKey = "X-GENDER";
 
     private readonly HttpClient? _httpClient;
+    private readonly ILogger<VCardService>? _logger;
 
-    public VCardService(HttpClient? httpClient = null)
+    private static readonly Action<ILogger, Uri, Exception?> LogWarningDownloadingPhoto =
+        LoggerMessage.Define<Uri>(
+            LogLevel.Warning,
+            new EventId(1, nameof(LogWarningDownloadingPhoto)),
+            "Error downloading photo from {PhotoUri}");
+
+    public VCardService(HttpClient? httpClient = null, ILogger<VCardService>? logger = null)
     {
         _httpClient = httpClient;
+        _logger = logger;
     }
 
     public async Task<IEnumerable<Contact>> ParseVCardAsync(Stream fileStream, CancellationToken cancellationToken = default)
@@ -327,8 +336,12 @@ public class VCardService : IVCardService
                     }
                 }
             }
-            catch
+            catch (Exception ex)
             {
+                if (_logger != null)
+                {
+                    LogWarningDownloadingPhoto(_logger, photoUri, ex);
+                }
             }
         }
 
