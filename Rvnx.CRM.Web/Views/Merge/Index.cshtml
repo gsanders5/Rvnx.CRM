@@ -25,7 +25,7 @@
 
                         <div class="mb-4">
                             <label asp-for="SecondaryContactId" class="form-label">Select Contact to Merge In</label>
-                            <select asp-for="SecondaryContactId" asp-items="ViewBag.SecondaryContacts" class="form-select" required>
+                            <select asp-for="SecondaryContactId" asp-items="ViewBag.SecondaryContacts" class="selectpicker" data-live-search="true" data-width="100%" title="-- Select Contact --" required>
                                 <option value="">-- Select Contact --</option>
                             </select>
                             <span asp-validation-for="SecondaryContactId" class="text-danger"></span>

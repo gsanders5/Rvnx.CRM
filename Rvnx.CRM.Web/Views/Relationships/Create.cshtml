@@ -90,7 +90,7 @@
                     </div>
 
                     <div class="form-floating mb-3">
-                        <select asp-for="RelatedEntityId" class="form-select" asp-items="@(new SelectList(Model.RelatedEntityOptions, "Value", "Text"))">
+                        <select asp-for="RelatedEntityId" class="selectpicker" data-live-search="true" data-width="100%" title="-- Select Related Entity --" asp-items="@(new SelectList(Model.RelatedEntityOptions, "Value", "Text"))">
                             <option value="">-- Select Related Entity --</option>
                         </select>
                         <label asp-for="RelatedEntityId">Related Entity</label>

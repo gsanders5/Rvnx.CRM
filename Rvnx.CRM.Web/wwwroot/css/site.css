@@ -159,3 +159,105 @@ body {
         flex: 0 0 auto !important;
     }
 }
+/* Bootstrap Select MDB overrides */
+.bootstrap-select .dropdown-toggle {
+    height: calc(2.3rem + 2px); /* MDB default input height */
+    background-color: transparent !important;
+    border: 1px solid #bdbdbd !important;
+    border-radius: .25rem !important;
+    color: #4f4f4f !important;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: .375rem .75rem !important;
+    box-shadow: none !important;
+}
+
+.bootstrap-select .dropdown-toggle:focus {
+    outline: 0 !important;
+    border-color: #3b71ca !important;
+    box-shadow: inset 0 0 0 1px #3b71ca !important;
+}
+
+/* Dropdown menu styling to match MDB */
+.bootstrap-select .dropdown-menu {
+    border-radius: .5rem;
+    box-shadow: 0 10px 15px -3px rgba(0,0,0,.1),0 4px 6px -2px rgba(0,0,0,.05);
+    border: none;
+    padding: .5rem 0;
+    margin-top: .125rem;
+}
+
+.bootstrap-select .dropdown-item {
+    padding: .5rem 1rem;
+    font-size: .875rem;
+}
+
+.bootstrap-select .dropdown-item.active, .bootstrap-select .dropdown-item:active {
+    background-color: #e3ebf7;
+    color: #3b71ca;
+}
+
+/* For form-floating overrides */
+.form-floating .bootstrap-select .dropdown-toggle {
+    height: calc(3.5rem + 2px); /* Matches MDB form-floating input height */
+    padding-top: 1.625rem !important; /* To make room for the floating label */
+    padding-bottom: .625rem !important;
+}
+
+.form-floating > label {
+    z-index: 2;
+}
+
+.form-floating:has(.selectpicker) > label {
+    transform: scale(.8) translateY(-.5rem) translateX(.15rem);
+    color: rgba(0,0,0,.6);
+    padding: 1rem .75rem;
+    pointer-events: none;
+}
+
+.form-floating:has(.selectpicker) .dropdown-toggle:focus ~ label,
+.form-floating:has(.selectpicker.show) > label {
+    color: #3b71ca;
+}
+
+/* Support for dark mode */
+[data-mdb-theme="dark"] .bootstrap-select .dropdown-toggle {
+    color: #fbfbfb !important;
+    border-color: #fbfbfb !important;
+}
+
+[data-mdb-theme="dark"] .bootstrap-select .dropdown-menu {
+    background-color: #303030;
+}
+
+[data-mdb-theme="dark"] .bootstrap-select .dropdown-item {
+    color: #fbfbfb;
+}
+
+[data-mdb-theme="dark"] .bootstrap-select .dropdown-item:hover,
+[data-mdb-theme="dark"] .bootstrap-select .dropdown-menu li:not(.selected) a:hover {
+    background-color: #4f4f4f;
+    color: #fbfbfb;
+}
+
+[data-mdb-theme="dark"] .bootstrap-select .dropdown-item.active,
+[data-mdb-theme="dark"] .bootstrap-select .dropdown-item:active,
+[data-mdb-theme="dark"] .bootstrap-select .dropdown-menu li.selected a {
+    background-color: #3b71ca;
+    color: #fff;
+}
+
+[data-mdb-theme="dark"] .form-floating:has(.selectpicker) > label {
+    color: rgba(255,255,255,.6);
+}
+
+[data-mdb-theme="dark"] .bs-searchbox .form-control {
+    background-color: #303030;
+    color: #fbfbfb;
+    border-color: #fbfbfb;
+}
+[data-mdb-theme="dark"] .bs-searchbox .form-control:focus {
+    border-color: #3b71ca;
+    box-shadow: inset 0 0 0 1px #3b71ca;
+}

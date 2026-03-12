@@ -193,3 +193,13 @@ $(function() {
         }, 10000);
     });
 });
+
+// Initialize Bootstrap Select picker elements on document ready
+$(document).ready(function() {
+    // Map MDB to window.bootstrap since MDB uses window.mdb
+    // This allows bootstrap-select to hook into standard bootstrap JS components correctly
+    if (window.mdb && !window.bootstrap) {
+        window.bootstrap = window.mdb;
+    }
+    $('.selectpicker').selectpicker();
+});
