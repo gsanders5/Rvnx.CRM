@@ -68,12 +68,16 @@ namespace Rvnx.CRM.Tests.Services
             _repositoryMock.Verify(r => r.ExistsAsync<Relationship>(id, It.IsAny<CancellationToken>()), Times.Once);
         }
 
-        [Fact]
-        public async Task ExistsAsyncUnknownTypeReturnsFalse()
+        [Theory]
+        [InlineData("UnknownType")]
+        [InlineData(EntityTypes.Company)]
+        [InlineData(EntityTypes.Opportunity)]
+        [InlineData(EntityTypes.Attachment)]
+        public async Task ExistsAsyncUnsupportedOrUnknownTypeReturnsFalse(string entityType)
         {
             Guid id = Guid.NewGuid();
 
-            bool result = await _service.ExistsAsync("UnknownType", id);
+            bool result = await _service.ExistsAsync(entityType, id);
 
             Assert.False(result);
             Assert.Empty(_repositoryMock.Invocations);
