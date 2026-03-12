@@ -70,7 +70,7 @@ public class AttachmentService : IAttachmentService
         {
             Id = Guid.NewGuid(),
             ContactId = entityId,
-            AttachmentType = "General",
+            AttachmentType = AttachmentTypes.General,
             ContentType = safeContentType,
             FileName = fileName,
             AttachmentContent = new AttachmentContent

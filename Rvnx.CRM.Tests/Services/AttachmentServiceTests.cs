@@ -303,7 +303,7 @@ namespace Rvnx.CRM.Tests.Services
                 ContactId = contactId,
                 FileName = "test.png",
                 ContentType = "image/png",
-                AttachmentType = "General"
+                AttachmentType = AttachmentTypes.General
             });
             context.SaveChanges();
 
@@ -313,7 +313,7 @@ namespace Rvnx.CRM.Tests.Services
             Assert.Equal(attachmentId, result.Id);
             Assert.Equal("test.png", result.FileName);
             Assert.Equal("image/png", result.ContentType);
-            Assert.Equal("General", result.AttachmentType);
+            Assert.Equal(AttachmentTypes.General, result.AttachmentType);
             Assert.Equal(contactId, result.EntityId);
             Assert.Equal(EntityTypes.Person, result.EntityType);
         }
