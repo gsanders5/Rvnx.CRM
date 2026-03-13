@@ -1,0 +1,117 @@
+@model IEnumerable<Rvnx.CRM.Core.Models.ApiToken>
+
+@{
+    ViewData["Title"] = "API Tokens";
+}
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>API Tokens</h1>
+        <a asp-action="Create" class="btn btn-primary">
+            <i class="fas fa-plus"></i> Generate New Token
+        </a>
+    </div>
+
+    @if (TempData["RawToken"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <h4 class="alert-heading">Token Generated: @TempData["TokenName"]</h4>
+            <p>Make sure to copy your personal access token now. You won't be able to see it again!</p>
+            <hr>
+            <div class="input-group">
+                <input type="text" class="form-control" id="newTokenValue" value="@TempData["RawToken"]" readonly>
+                <button class="btn btn-outline-secondary" type="button" onclick="copyToken()">
+                    <i class="fas fa-copy"></i> Copy
+                </button>
+            </div>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+
+        <script>
+            function copyToken() {
+                var copyText = document.getElementById("newTokenValue");
+                copyText.select();
+                copyText.setSelectionRange(0, 99999);
+                navigator.clipboard.writeText(copyText.value);
+            }
+        </script>
+    }
+
+    <div class="card shadow-sm">
+        <div class="card-body">
+            @if (!Model.Any())
+            {
+                <p class="text-muted mb-0">You do not have any API tokens generated.</p>
+            }
+            else
+            {
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Prefix</th>
+                                <th>Status</th>
+                                <th>Expires At</th>
+                                <th>Last Used</th>
+                                <th>Created</th>
+                                <th class="text-end">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var token in Model.OrderByDescending(t => t.CreatedDate))
+                            {
+                                <tr>
+                                    <td class="fw-bold">@token.Name</td>
+                                    <td><code>@token.TokenPrefix...</code></td>
+                                    <td>
+                                        @if (token.IsActive)
+                                        {
+                                            <span class="badge bg-success rounded-pill">Active</span>
+                                        }
+                                        else if (token.RevokedAt != null)
+                                        {
+                                            <span class="badge bg-danger rounded-pill">Revoked</span>
+                                        }
+                                        else if (token.ExpiresAt < DateTime.UtcNow)
+                                        {
+                                            <span class="badge bg-warning text-dark rounded-pill">Expired</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-secondary rounded-pill">Inactive</span>
+                                        }
+                                    </td>
+                                    <td>
+                                        @(token.ExpiresAt?.ToString("g") ?? "Never")
+                                    </td>
+                                    <td>
+                                        @(token.LastUsedAt == DateTime.MinValue ? "Never" : token.LastUsedAt.ToString("g"))
+                                    </td>
+                                    <td>@token.CreatedDate.ToString("g")</td>
+                                    <td class="text-end">
+                                        @if (token.IsActive)
+                                        {
+                                            <form asp-action="Revoke" asp-route-id="@token.Id" method="post" class="d-inline"
+                                                  onsubmit="return confirm('Are you sure you want to revoke the token \'@token.Name\'? Any applications using this token will lose access immediately.');">
+                                                <button type="submit" class="btn btn-sm btn-outline-danger">
+                                                    Revoke
+                                                </button>
+                                            </form>
+                                        }
+                                        else
+                                        {
+                                            <button type="button" class="btn btn-sm btn-outline-secondary" disabled>
+                                                Revoked
+                                            </button>
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </div>
+    </div>
+</div>

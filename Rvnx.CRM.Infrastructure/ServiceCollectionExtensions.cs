@@ -48,6 +48,8 @@ public static class ServiceCollectionExtensions
 
         services.AddScoped<IReminderNotificationService, ReminderNotificationService>();
 
+        services.AddScoped<IApiTokenService, ApiTokenService>();
+
         return services;
     }
 }
