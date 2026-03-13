@@ -48,4 +48,9 @@
 
 @section Scripts {
     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    <script>
+        $(document).ready(function() {
+            $('#SecondaryContactId').select2({ width: '100%' });
+        });
+    </script>
 }
