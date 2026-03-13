@@ -70,11 +70,11 @@
                 </div>
             </div>
 
-            <div class="form-floating mb-3">
+            <div class="mb-3">
+                <label asp-for="RelatedEntityId" class="form-label">Related Entity</label>
                 <select asp-for="RelatedEntityId" class="form-select" asp-items="@(new SelectList(Model.RelatedEntityOptions, "Value", "Text"))">
                     <option value="">-- Select Related Entity --</option>
                 </select>
-                <label asp-for="RelatedEntityId">Related Entity</label>
                 <span asp-validation-for="RelatedEntityId" class="text-danger"></span>
             </div>
 
@@ -149,6 +149,10 @@
 @section Scripts {
     @{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); }
     <script>
+        $(document).ready(function() {
+            $('#RelatedEntityId').select2({ width: '100%' });
+        });
+
         document.addEventListener('DOMContentLoaded', function() {
             class RelationshipSelector {
                 constructor(config) {
@@ -194,6 +198,8 @@
 
                     if (this.relatedInput) {
                         this.relatedInput.addEventListener('change', () => this.updatePreview());
+                        // Select2 triggers a custom 'change' event when a selection is made
+                        $(this.relatedInput).on('change', () => this.updatePreview());
                     }
 
                     if (this.hiddenInput && this.hiddenInput.value) {
