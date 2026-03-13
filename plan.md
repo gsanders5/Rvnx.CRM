@@ -1,0 +1,25 @@
+# API Project Scaffold Plan
+
+- [x] Create `plan.md` (This file)
+- [x] Add `ApiToken` entity to `Rvnx.CRM.Core/Models/`
+- [x] Add `IApiTokenService` to `Rvnx.CRM.Core/Interfaces/`
+- [x] Implement `ApiTokenService` in `Rvnx.CRM.Infrastructure/Services/`
+- [x] Register `ApiTokenService` in `Rvnx.CRM.Infrastructure/ServiceCollectionExtensions.cs`
+- [x] Add `ApiToken` to `CRMDbContext` and configure its unique index on `TokenHash`
+- [x] Generate EF migration `AddApiTokens`
+- [x] Add `CREATE-API-TOKEN` command in `Rvnx.CRM.ConsoleApp/ConsoleCommands.cs`
+- [x] Add `REVOKE-API-TOKEN` command in `Rvnx.CRM.ConsoleApp/ConsoleCommands.cs`
+- [x] Update `Rvnx.CRM.ConsoleApp/TaskManager.cs` to route the new commands
+- [x] Scaffold `Rvnx.CRM.API` project
+- [x] Add project references (`Core`, `Infrastructure`) to `Rvnx.CRM.API`
+- [x] Implement `ApiTokenCurrentUserService` in `Rvnx.CRM.API`
+- [x] Implement `ApiTokenAuthenticationHandler` in `Rvnx.CRM.API`
+- [x] Configure `Rvnx.CRM.API/Program.cs` (Services, Auth, Swagger)
+- [x] Add `ContactsController` to `Rvnx.CRM.API`
+- [x] Add `NotesController` to `Rvnx.CRM.API`
+- [x] Add `AttachmentsController` to `Rvnx.CRM.API`
+- [x] Configure `appsettings.json` for `Rvnx.CRM.API`
+- [x] Add tests for `ApiTokenService`
+- [x] Add tests for `ApiTokenCurrentUserService`
+- [x] Add tests for `ApiTokenAuthenticationHandler`
+- [x] Run `dotnet build` and `dotnet test`

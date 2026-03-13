@@ -23,6 +23,7 @@
 		  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		  <PrivateAssets>all</PrivateAssets>
 		</PackageReference>
+		<PackageReference Include="FluentAssertions" Version="8.8.0" />
 		<PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="8.0.25" />
 		<PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="9.0.14" />
 		<PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.3.0" />
@@ -41,6 +42,7 @@
 		<ProjectReference Include="..\Rvnx.CRM.Infrastructure\Rvnx.CRM.Infrastructure.csproj" />
 		<ProjectReference Include="..\Rvnx.CRM.Web\Rvnx.CRM.Web.csproj" />
 		<ProjectReference Include="..\Rvnx.CRM.ConsoleApp\Rvnx.CRM.ConsoleApp.csproj" />
+		<ProjectReference Include="..\Rvnx.CRM.API\Rvnx.CRM.API.csproj" />
 	</ItemGroup>
 
 </Project>
