@@ -54,9 +54,13 @@ public class ContactReadService(IRepository repository) : IContactReadService
 
         if (profileAttachments.Count > 0)
         {
-            Dictionary<Guid, Guid> attachmentMap = profileAttachments
-                .GroupBy(a => a.ContactId) // Handle potential duplicates gracefully
-                .ToDictionary(g => g.Key, g => g.First().AttachmentId);
+            // Optimization: Use Dictionary with capacity and TryAdd instead of GroupBy().ToDictionary(..., First())
+            // to avoid allocations of IGrouping structures and redundant list iterations.
+            Dictionary<Guid, Guid> attachmentMap = new(profileAttachments.Count);
+            foreach (var a in profileAttachments)
+            {
+                attachmentMap.TryAdd(a.ContactId, a.AttachmentId);
+            }
 
             foreach (ContactDto? dto in contactDtos)
             {
@@ -102,9 +106,13 @@ public class ContactReadService(IRepository repository) : IContactReadService
 
         if (birthdayDates.Count > 0)
         {
-            Dictionary<Guid, DateOnly> birthdayMap = birthdayDates
-                .GroupBy(b => b.ContactId)
-                .ToDictionary(g => g.Key, g => g.First().EventDate);
+            // Optimization: Use Dictionary with capacity and TryAdd instead of GroupBy().ToDictionary(..., First())
+            // to avoid allocations of IGrouping structures and redundant list iterations.
+            Dictionary<Guid, DateOnly> birthdayMap = new(birthdayDates.Count);
+            foreach (var b in birthdayDates)
+            {
+                birthdayMap.TryAdd(b.ContactId, b.EventDate);
+            }
 
             foreach (ContactDto? dto in contactDtos)
             {
