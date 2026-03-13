@@ -1,0 +1,4 @@
+1. Read the current contents of `THIRD-PARTY-LICENSES.md` to see its format.
+2. View the Select2 license text using `view_text_website` on `https://github.com/select2/select2/blob/master/LICENSE.md`.
+3. Modify `THIRD-PARTY-LICENSES.md` to append the Select2 MIT license information.
+4. Submit the changes.
