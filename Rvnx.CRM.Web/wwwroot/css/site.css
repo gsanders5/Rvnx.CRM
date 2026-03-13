@@ -1,4 +1,4 @@
-﻿html {
+html {
   font-size: 16px;
 }
 
@@ -158,4 +158,51 @@ body {
         width: auto !important;
         flex: 0 0 auto !important;
     }
+}
+
+/* ==========================================================================
+   Select2 Custom Styles
+   ========================================================================== */
+
+/* Match MDB/Bootstrap form control height and border */
+.select2-container--default .select2-selection--single {
+  height: 38px;
+  border: 1px solid #bdbdbd;
+  border-radius: 4px;
+  padding: 4px 8px;
+}
+.select2-container--default .select2-selection--single .select2-selection__rendered {
+  line-height: 28px;
+  padding-left: 4px;
+  color: #212529;
+}
+.select2-container--default .select2-selection--single .select2-selection__arrow {
+  height: 36px;
+}
+/* Match focus state to MDB's primary color */
+.select2-container--default.select2-container--focus .select2-selection--single,
+.select2-container--default.select2-container--open .select2-selection--single {
+  border-color: #1266f1;
+  box-shadow: 0 0 0 0.2rem rgba(18, 102, 241, 0.25);
+  outline: 0;
+}
+/* Dark mode support */
+[data-mdb-theme="dark"] .select2-container--default .select2-selection--single {
+  background-color: #1a1a2e;
+  border-color: #555;
+  color: #fff;
+}
+[data-mdb-theme="dark"] .select2-container--default .select2-selection--single .select2-selection__rendered {
+  color: #fff;
+}
+[data-mdb-theme="dark"] .select2-dropdown {
+  background-color: #1a1a2e;
+  border-color: #555;
+  color: #fff;
+}
+[data-mdb-theme="dark"] .select2-results__option {
+  color: #fff;
+}
+[data-mdb-theme="dark"] .select2-container--default .select2-results__option--highlighted.select2-results__option--selectable {
+  background-color: #1266f1;
 }

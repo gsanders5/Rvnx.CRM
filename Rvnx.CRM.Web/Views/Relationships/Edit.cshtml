@@ -70,11 +70,11 @@
                 </div>
             </div>
 
-            <div class="form-floating mb-3">
+            <div class="mb-3">
+                <label asp-for="RelatedEntityId" class="form-label">Related Entity</label>
                 <select asp-for="RelatedEntityId" class="form-select" asp-items="@(new SelectList(Model.RelatedEntityOptions, "Value", "Text"))">
                     <option value="">-- Select Related Entity --</option>
                 </select>
-                <label asp-for="RelatedEntityId">Related Entity</label>
                 <span asp-validation-for="RelatedEntityId" class="text-danger"></span>
             </div>
 
