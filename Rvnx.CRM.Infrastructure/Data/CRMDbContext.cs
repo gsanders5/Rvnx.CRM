@@ -30,6 +30,7 @@ public class CRMDbContext(DbContextOptions<CRMDbContext> options, ICurrentUserSe
     public DbSet<UserGroup>? UserGroups { get; set; }
     public DbSet<Label>? Labels { get; set; }
     public DbSet<ContactLabel>? ContactLabels { get; set; }
+    public DbSet<ApiToken>? ApiTokens { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

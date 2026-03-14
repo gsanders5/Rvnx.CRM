@@ -116,6 +116,44 @@ internal static class ConsoleCommands
     ///
     /// email1 is the TARGET (keeps the data); email2 is the SOURCE (is deleted).
     /// </summary>
+    public static async Task<bool> RunAddApiTokenAsync(IServiceProvider services, string[] args)
+    {
+        if (args.Length < 3)
+        {
+            Console.WriteLine("Error: Please provide the user's email address and token name. Usage: ADD-API-TOKEN <email> <token-name>");
+            return false;
+        }
+
+        string email = args[1];
+        string tokenName = args[2];
+        IRepository repository = services.GetRequiredService<IRepository>();
+
+        User? user = await repository.QueryUnfiltered<User>()
+            .FirstOrDefaultAsync(u => EF.Functions.Like(u.Email, email));
+
+        if (user == null)
+        {
+            Console.WriteLine($"Error: User with email '{email}' not found.");
+            return false;
+        }
+
+        if (user.GroupId == null)
+        {
+            Console.WriteLine($"Error: User with email '{email}' does not belong to a group.");
+            return false;
+        }
+
+        IApiTokenService tokenService = services.GetRequiredService<IApiTokenService>();
+
+        // Optional expiration date could be added if needed, for now we set it to null (no expiration)
+        var result = await tokenService.CreateTokenAsync(user.Id, user.GroupId.Value, tokenName, null);
+
+        Console.WriteLine($"Successfully created API token '{tokenName}' for user '{email}'.");
+        Console.WriteLine($"Raw Token: {result.rawToken}");
+        Console.WriteLine("IMPORTANT: Save this token now. You will not be able to see it again.");
+        return true;
+    }
+
     public static async Task<bool> RunMergeUsersAsync(IServiceProvider services, string[] args)
     {
         IDebugOperationsService debugOps = services.GetRequiredService<IDebugOperationsService>();
