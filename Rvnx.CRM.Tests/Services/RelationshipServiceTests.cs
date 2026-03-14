@@ -1,8 +1,10 @@
 using Moq;
 using Rvnx.CRM.Core.Constants;
 using Rvnx.CRM.Core.DTOs.Contact;
+using Rvnx.CRM.Core.DTOs.Common;
 using Rvnx.CRM.Core.Interfaces;
 using Rvnx.CRM.Core.Models;
+using Rvnx.CRM.Core.Models.Business;
 using Rvnx.CRM.Core.Models.Contact;
 using Rvnx.CRM.Core.Models.Dates;
 using Rvnx.CRM.Core.Services;
@@ -19,6 +21,90 @@ namespace Rvnx.CRM.Tests.Services
         {
             _repositoryMock = new Mock<IRepository>();
             _service = new RelationshipService(_repositoryMock.Object);
+        }
+
+        [Fact]
+        public async Task GetRelatedEntityOptionsAsyncWhenEntityTypeIsPersonReturnsPersonOptions()
+        {
+            // Arrange
+            Guid entityId = Guid.NewGuid();
+            Guid otherContactId = Guid.NewGuid();
+
+            _repositoryMock.Setup(r => r.ListProjectedAsync<Contact, SelectOptionDto, string>(
+                    It.IsAny<System.Linq.Expressions.Expression<Func<Contact, bool>>>(),
+                    It.IsAny<System.Linq.Expressions.Expression<Func<Contact, SelectOptionDto>>>(),
+                    It.IsAny<System.Linq.Expressions.Expression<Func<Contact, string>>>(),
+                    It.IsAny<bool>(),
+                    It.IsAny<CancellationToken>()))
+                .ReturnsAsync([
+                    new SelectOptionDto { Value = otherContactId.ToString(), Text = "John Doe" }
+                ]);
+
+            // Act
+            List<SelectOptionDto> result = await _service.GetRelatedEntityOptionsAsync(entityId, EntityTypes.Person);
+
+            // Assert
+            Assert.Single(result);
+            Assert.Equal("John Doe", result[0].Text);
+            Assert.Equal(otherContactId.ToString(), result[0].Value);
+
+            _repositoryMock.Verify(r => r.ListProjectedAsync<Contact, SelectOptionDto, string>(
+                    It.IsAny<System.Linq.Expressions.Expression<Func<Contact, bool>>>(),
+                    It.IsAny<System.Linq.Expressions.Expression<Func<Contact, SelectOptionDto>>>(),
+                    It.IsAny<System.Linq.Expressions.Expression<Func<Contact, string>>>(),
+                    It.IsAny<bool>(),
+                    It.IsAny<CancellationToken>()), Times.Once);
+        }
+
+        [Fact]
+        public async Task GetRelatedEntityOptionsAsyncWhenEntityTypeIsCompanyReturnsCompanyOptions()
+        {
+            // Arrange
+            Guid entityId = Guid.NewGuid();
+            Guid companyId = Guid.NewGuid();
+
+            _repositoryMock.Setup(r => r.ListProjectedAsync<Employer, SelectOptionDto, string>(
+                    It.IsAny<System.Linq.Expressions.Expression<Func<Employer, bool>>>(),
+                    It.IsAny<System.Linq.Expressions.Expression<Func<Employer, SelectOptionDto>>>(),
+                    It.IsAny<System.Linq.Expressions.Expression<Func<Employer, string>>>(),
+                    It.IsAny<bool>(),
+                    It.IsAny<CancellationToken>()))
+                .ReturnsAsync([
+                    new SelectOptionDto { Value = companyId.ToString(), Text = "Acme Corp" }
+                ]);
+
+            // Act
+            List<SelectOptionDto> result = await _service.GetRelatedEntityOptionsAsync(entityId, EntityTypes.Company);
+
+            // Assert
+            Assert.Single(result);
+            Assert.Equal("Acme Corp", result[0].Text);
+            Assert.Equal(companyId.ToString(), result[0].Value);
+
+            _repositoryMock.Verify(r => r.ListProjectedAsync<Employer, SelectOptionDto, string>(
+                    It.IsAny<System.Linq.Expressions.Expression<Func<Employer, bool>>>(),
+                    It.IsAny<System.Linq.Expressions.Expression<Func<Employer, SelectOptionDto>>>(),
+                    It.IsAny<System.Linq.Expressions.Expression<Func<Employer, string>>>(),
+                    It.IsAny<bool>(),
+                    It.IsAny<CancellationToken>()), Times.Once);
+        }
+
+        [Theory]
+        [InlineData("UnknownType")]
+        [InlineData(EntityTypes.Opportunity)]
+        [InlineData(EntityTypes.Note)]
+        [InlineData(EntityTypes.Attachment)]
+        public async Task GetRelatedEntityOptionsAsyncWhenEntityTypeIsUnsupportedReturnsEmptyList(string entityType)
+        {
+            // Arrange
+            Guid entityId = Guid.NewGuid();
+
+            // Act
+            List<SelectOptionDto> result = await _service.GetRelatedEntityOptionsAsync(entityId, entityType);
+
+            // Assert
+            Assert.Empty(result);
+            Assert.Empty(_repositoryMock.Invocations);
         }
 
         [Theory]
