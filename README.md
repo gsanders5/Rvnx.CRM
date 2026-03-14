@@ -12,6 +12,7 @@ For technical details, architecture, and design documentation, please see [DESIG
 - **Relationships**: Polymorphic relationship system supporting **Partial Contacts** (contacts that exist primarily as names without full profiles).
 - **Import/Export**: vCard (.vcf) import and export functionality via `FolkerKinzel.VCards`.
 - **Authentication & Isolation**: Supports OpenID Connect authentication. Implements user isolation (multi-tenancy) via `ICurrentUserService` and EF Core global query filters.
+- **API Access**: RESTful API protected by Bearer token authentication.
 - **Labels**: Categorize contacts with custom labels.
 - **Attachments**: Upload and manage files related to contacts.
 - **Notes & Reminders**: Add notes and set reminders for contacts with recurring date logic.
@@ -23,6 +24,7 @@ For technical details, architecture, and design documentation, please see [DESIG
 
 - **Rvnx.CRM.Core**: Domain layer containing entities, interfaces, DTOs, and pure business logic services (e.g., `DateCalculationService`, `FileValidationService`).
 - **Rvnx.CRM.Infrastructure**: Data access layer with EF Core DbContext, migrations, and repository implementations.
+- **Rvnx.CRM.API**: ASP.NET Core RESTful API layer using API Token authentication and Swagger for documentation.
 - **Rvnx.CRM.Web**: ASP.NET Core MVC presentation layer, controllers, views, and service registration.
 - **Rvnx.CRM.ConsoleApp**: Console application for scheduled tasks and background jobs (cron / Task Scheduler).
 - **Rvnx.CRM.Tests**: Unit and integration tests (using `xUnit`, `Moq`, `Microsoft.AspNetCore.Mvc.Testing`, and `Sqlite` integration tests).
