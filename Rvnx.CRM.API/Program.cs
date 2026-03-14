@@ -7,14 +7,13 @@ using Rvnx.CRM.Infrastructure;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
-builder.Services.AddControllers();
+builder.Configuration.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true);
+builder.Configuration.AddJsonFile("appsettings.Local.json", optional: true, reloadOnChange: true);
 
-// Register CRM core and infrastructure services
+builder.Services.AddControllers();
 builder.Services.AddCoreServices();
 builder.Services.AddInfrastructure(builder.Configuration);
 
-// Add API Token Authentication
 builder.Services.AddScoped<ICurrentUserService, ApiTokenCurrentUserService>();
 builder.Services.AddHttpContextAccessor();
 
@@ -23,13 +22,10 @@ builder.Services.AddAuthentication(ApiTokenAuthenticationOptions.DefaultScheme)
 
 builder.Services.AddAuthorization();
 
-// Swagger configuration
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
     c.SwaggerDoc("v1", new OpenApiInfo { Title = "Rvnx.CRM.API", Version = "v1" });
-
-    // Define Bearer Auth
     c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
         Description = "API Token Authorization header using the Bearer scheme. Example: \"Authorization: Bearer crm_xxxxxxxxxxxxxxx\"",
@@ -38,17 +34,12 @@ builder.Services.AddSwaggerGen(c =>
         Type = SecuritySchemeType.ApiKey,
         Scheme = "Bearer"
     });
-
     c.AddSecurityRequirement(new OpenApiSecurityRequirement
     {
         {
             new OpenApiSecurityScheme
             {
-                Reference = new OpenApiReference
-                {
-                    Type = ReferenceType.SecurityScheme,
-                    Id = "Bearer"
-                }
+                Reference = new OpenApiReference { Type = ReferenceType.SecurityScheme, Id = "Bearer" }
             },
             Array.Empty<string>()
         }
@@ -57,10 +48,12 @@ builder.Services.AddSwaggerGen(c =>
 
 WebApplication app = builder.Build();
 
-builder.Configuration.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true);
-builder.Configuration.AddJsonFile("appsettings.Local.json", optional: true, reloadOnChange: true);
+app.UseForwardedHeaders(new ForwardedHeadersOptions
+{
+    ForwardedHeaders = Microsoft.AspNetCore.HttpOverrides.ForwardedHeaders.XForwardedFor
+                       | Microsoft.AspNetCore.HttpOverrides.ForwardedHeaders.XForwardedProto
+});
 
-// Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -68,10 +61,8 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-
 app.UseAuthentication();
 app.UseAuthorization();
-
 app.MapControllers();
 
 app.Run();
