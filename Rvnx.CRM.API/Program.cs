@@ -54,11 +54,8 @@ app.UseForwardedHeaders(new ForwardedHeadersOptions
                        | Microsoft.AspNetCore.HttpOverrides.ForwardedHeaders.XForwardedProto
 });
 
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "Rvnx.CRM.API v1"));
-}
+app.UseSwagger();
+app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "Rvnx.CRM.API v1"));
 
 app.UseHttpsRedirection();
 app.UseAuthentication();
