@@ -73,3 +73,7 @@
 ## 2024-05-17 - Dashboard Attachment Map Optimization
 **Learning:** For high-performance dictionary creation where only the first item per key is needed, avoid using `GroupBy(x => x.Key).ToDictionary(..., First())`. This pattern forces the allocation of intermediate `IGrouping` structures and results in redundant list iterations.
 **Action:** Instead, pre-allocate a `Dictionary` using the source collection's capacity (if known) and populate it using a `foreach` loop with `.TryAdd(key, value)`. `TryAdd` inherently keeps the first value encountered for a key while avoiding the grouping overhead.
+
+## 2026-06-27 - ContactExistsAsync Optimization
+**Learning:** `ContactExistsAsync` in `ContactReadService` was loading the entire `Contact` entity from the database via `GetByIdAsync` just to check if it exists and isn't a partial contact. This is wasteful and adds overhead.
+**Action:** Use `CountAsync` (via `IsValidContactAsync` extension) to verify existence and partial state efficiently with an `EXISTS` or `COUNT` query at the database level, preventing the allocation and tracking of entity objects in memory.

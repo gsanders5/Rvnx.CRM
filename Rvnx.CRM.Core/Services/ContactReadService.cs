@@ -285,7 +285,6 @@ public class ContactReadService(IRepository repository) : IContactReadService
 
     public async Task<bool> ContactExistsAsync(Guid id)
     {
-        Contact? c = await _repository.GetByIdAsync<Contact>(id);
-        return c != null && !c.IsPartial;
+        return await _repository.IsValidContactAsync(id);
     }
 }

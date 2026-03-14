@@ -2,6 +2,7 @@ using Moq;
 using Rvnx.CRM.Core.Interfaces;
 using Rvnx.CRM.Core.Models.Contact;
 using Rvnx.CRM.Core.Services;
+using System.Linq.Expressions;
 
 namespace Rvnx.CRM.Tests.Services;
 
@@ -21,11 +22,9 @@ public class ContactReadServiceContactExistsTests
     {
         // Arrange
         Guid contactId = Guid.NewGuid();
-        Contact contact = new()
-        { Id = contactId, IsPartial = false };
 
-        _repositoryMock.Setup(r => r.GetByIdAsync<Contact>(contactId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(contact);
+        _repositoryMock.Setup(r => r.CountAsync<Contact>(It.IsAny<Expression<Func<Contact, bool>>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(1);
 
         // Act
         bool result = await _service.ContactExistsAsync(contactId);
@@ -40,8 +39,8 @@ public class ContactReadServiceContactExistsTests
         // Arrange
         Guid contactId = Guid.NewGuid();
 
-        _repositoryMock.Setup(r => r.GetByIdAsync<Contact>(contactId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync((Contact?)null);
+        _repositoryMock.Setup(r => r.CountAsync<Contact>(It.IsAny<Expression<Func<Contact, bool>>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(0);
 
         // Act
         bool result = await _service.ContactExistsAsync(contactId);
@@ -55,11 +54,9 @@ public class ContactReadServiceContactExistsTests
     {
         // Arrange
         Guid contactId = Guid.NewGuid();
-        Contact contact = new()
-        { Id = contactId, IsPartial = true };
 
-        _repositoryMock.Setup(r => r.GetByIdAsync<Contact>(contactId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(contact);
+        _repositoryMock.Setup(r => r.CountAsync<Contact>(It.IsAny<Expression<Func<Contact, bool>>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(0);
 
         // Act
         bool result = await _service.ContactExistsAsync(contactId);
