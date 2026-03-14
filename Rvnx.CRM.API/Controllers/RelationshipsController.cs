@@ -1,16 +1,17 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Rvnx.CRM.Core.DTOs.Base;
+using Rvnx.CRM.Core.DTOs.Contact;
 using Rvnx.CRM.Core.Interfaces;
+using Rvnx.CRM.Core.Models.Contact;
 
 namespace Rvnx.CRM.API.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
 [Authorize]
-public class NotesController(INoteService noteService, IContactReadService contactReadService) : ControllerBase
+public class RelationshipsController(IRelationshipService relationshipService, IContactReadService contactReadService) : ControllerBase
 {
-    private readonly INoteService _noteService = noteService;
+    private readonly IRelationshipService _relationshipService = relationshipService;
     private readonly IContactReadService _contactReadService = contactReadService;
 
     [HttpGet("contact/{contactId}")]
@@ -18,13 +19,13 @@ public class NotesController(INoteService noteService, IContactReadService conta
     {
         var contactDetails = await _contactReadService.GetContactDetailsAsync(contactId);
         if (contactDetails == null) return NotFound();
-        return Ok(contactDetails.Notes);
+        return Ok(contactDetails.Relationships);
     }
 
     [HttpPost]
-    public async Task<IActionResult> Create([FromBody] NoteFormViewModel model)
+    public async Task<IActionResult> Create([FromBody] Relationship model, [FromQuery] string selectedRelationshipType)
     {
-        var result = await _noteService.CreateAsync(model);
+        var result = await _relationshipService.CreateRelationshipAsync(model, selectedRelationshipType);
         if (!result.Success)
         {
             return BadRequest(new { Error = result.ErrorMessage });
@@ -33,10 +34,9 @@ public class NotesController(INoteService noteService, IContactReadService conta
     }
 
     [HttpPut("{id}")]
-    public async Task<IActionResult> Update(Guid id, [FromBody] NoteFormViewModel model)
+    public async Task<IActionResult> Update(Guid id, [FromBody] Relationship model, [FromQuery] string selectedRelationshipType)
     {
-        model.Id = id;
-        var result = await _noteService.UpdateAsync(id, model);
+        var result = await _relationshipService.UpdateRelationshipAsync(id, model, selectedRelationshipType);
         if (!result.Success)
         {
             return BadRequest(new { Error = result.ErrorMessage });
@@ -47,7 +47,7 @@ public class NotesController(INoteService noteService, IContactReadService conta
     [HttpDelete("{id}")]
     public async Task<IActionResult> Delete(Guid id)
     {
-        var result = await _noteService.DeleteAsync(id);
+        var result = await _relationshipService.DeleteRelationshipAsync(id);
         if (!result.Success)
         {
             return BadRequest(new { Error = result.ErrorMessage });
