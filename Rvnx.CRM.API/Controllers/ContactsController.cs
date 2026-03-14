@@ -5,82 +5,89 @@ using Rvnx.CRM.Core.Interfaces;
 
 namespace Rvnx.CRM.API.Controllers;
 
-[Route("api/[controller]")]
 [ApiController]
+[Route("api/[controller]")]
 [Authorize]
-public class ContactsController(IContactReadService contactReadService, IContactManagementService contactManagementService) : ControllerBase
+public class ContactsController(
+    IContactReadService contactReadService,
+    IContactManagementService contactManagementService) : ControllerBase
 {
     private readonly IContactReadService _contactReadService = contactReadService;
     private readonly IContactManagementService _contactManagementService = contactManagementService;
 
     [HttpGet]
-    public async Task<IActionResult> GetContacts([FromQuery] bool includePartial = false)
+    public async Task<IActionResult> List()
     {
-        var contacts = await _contactReadService.GetIndexDataAsync(includePartial);
+        var contacts = await _contactReadService.GetIndexDataAsync(false);
         return Ok(contacts);
     }
 
     [HttpGet("{id}")]
-    public async Task<IActionResult> GetContact(Guid id)
+    public async Task<IActionResult> Get(Guid id)
     {
-        var contact = await _contactReadService.GetContactDetailsAsync(id);
+        var contact = await _contactReadService.GetContactFormAsync(id);
         if (contact == null)
         {
             return NotFound();
         }
-
         return Ok(contact);
     }
 
     [HttpPost]
-    public async Task<IActionResult> CreateContact([FromBody] ContactFormDto model)
+    public async Task<IActionResult> Create([FromBody] ContactFormDto model)
     {
-        if (!ModelState.IsValid)
-        {
-            return BadRequest(ModelState);
-        }
-
         var result = await _contactManagementService.CreateContactAsync(model);
         if (!result.Success)
         {
-            return BadRequest(result.Errors);
+            return BadRequest(new { result.Errors });
         }
-
-        return CreatedAtAction(nameof(GetContact), new { id = result.ContactId }, result.ContactId);
+        return CreatedAtAction(nameof(Get), new { id = result.ContactId }, new { Id = result.ContactId });
     }
 
     [HttpPut("{id}")]
-    public async Task<IActionResult> UpdateContact(Guid id, [FromBody] ContactFormDto model)
+    public async Task<IActionResult> Update(Guid id, [FromBody] ContactFormDto model)
     {
-        if (id != model.Id)
-        {
-            return BadRequest("ID mismatch");
-        }
-
-        if (!ModelState.IsValid)
-        {
-            return BadRequest(ModelState);
-        }
-
+        model.Id = id;
         var result = await _contactManagementService.UpdateContactAsync(id, model, null, null, null);
-
-        if (result.IsNotFound)
-        {
-            return NotFound();
-        }
-
         if (!result.Success)
         {
-            return BadRequest(result.Errors);
+            if (result.IsNotFound)
+            {
+                return NotFound();
+            }
+            return BadRequest(new { result.Errors });
         }
-
         return NoContent();
     }
 
     [HttpDelete("{id}")]
-    public async Task<IActionResult> DeleteContact(Guid id)
+    public async Task<IActionResult> Delete(Guid id)
     {
         await _contactManagementService.DeleteContactAsync(id);
+        return NoContent();
+    }
+
+    [HttpPost("{id}/photo/{attachmentId}")]
+    public async Task<IActionResult> SetPhoto(Guid id, Guid attachmentId)
+    {
+        var result = await _contactManagementService.SetAttachmentAsProfilePhotoAsync(id, attachmentId);
+        if (!result.Success)
+        {
+            if (result.IsNotFound) return NotFound();
+            return BadRequest(new { result.Errors });
+        }
+        return NoContent();
+    }
+
+    [HttpDelete("{id}/photo")]
+    public async Task<IActionResult> UnsetPhoto(Guid id)
+    {
+        var result = await _contactManagementService.UnsetProfilePhotoAsync(id);
+        if (!result.Success)
+        {
+            if (result.IsNotFound) return NotFound();
+            return BadRequest(new { result.Errors });
+        }
         return NoContent();
     }
 }

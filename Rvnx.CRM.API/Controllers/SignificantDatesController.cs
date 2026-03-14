@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Rvnx.CRM.Core.DTOs.Base;
+using Rvnx.CRM.Core.DTOs.Dates;
 using Rvnx.CRM.Core.Interfaces;
 
 namespace Rvnx.CRM.API.Controllers;
@@ -8,23 +8,21 @@ namespace Rvnx.CRM.API.Controllers;
 [ApiController]
 [Route("api/[controller]")]
 [Authorize]
-public class NotesController(INoteService noteService, IContactReadService contactReadService) : ControllerBase
+public class SignificantDatesController(ISignificantDateService significantDateService) : ControllerBase
 {
-    private readonly INoteService _noteService = noteService;
-    private readonly IContactReadService _contactReadService = contactReadService;
+    private readonly ISignificantDateService _significantDateService = significantDateService;
 
     [HttpGet("contact/{contactId}")]
     public async Task<IActionResult> ListByContact(Guid contactId)
     {
-        var contactDetails = await _contactReadService.GetContactDetailsAsync(contactId);
-        if (contactDetails == null) return NotFound();
-        return Ok(contactDetails.Notes);
+        var dates = await _significantDateService.GetByContactAsync(contactId);
+        return Ok(dates);
     }
 
     [HttpPost]
-    public async Task<IActionResult> Create([FromBody] NoteFormViewModel model)
+    public async Task<IActionResult> Create([FromBody] SignificantDateDto model)
     {
-        var result = await _noteService.CreateAsync(model);
+        var result = await _significantDateService.CreateAsync(model);
         if (!result.Success)
         {
             return BadRequest(new { Error = result.ErrorMessage });
@@ -33,10 +31,10 @@ public class NotesController(INoteService noteService, IContactReadService conta
     }
 
     [HttpPut("{id}")]
-    public async Task<IActionResult> Update(Guid id, [FromBody] NoteFormViewModel model)
+    public async Task<IActionResult> Update(Guid id, [FromBody] SignificantDateDto model)
     {
         model.Id = id;
-        var result = await _noteService.UpdateAsync(id, model);
+        var result = await _significantDateService.UpdateAsync(id, model);
         if (!result.Success)
         {
             return BadRequest(new { Error = result.ErrorMessage });
@@ -47,7 +45,7 @@ public class NotesController(INoteService noteService, IContactReadService conta
     [HttpDelete("{id}")]
     public async Task<IActionResult> Delete(Guid id)
     {
-        var result = await _noteService.DeleteAsync(id);
+        var result = await _significantDateService.DeleteAsync(id);
         if (!result.Success)
         {
             return BadRequest(new { Error = result.ErrorMessage });
