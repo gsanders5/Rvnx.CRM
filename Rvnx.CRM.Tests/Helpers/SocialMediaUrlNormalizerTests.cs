@@ -1,9 +1,9 @@
 using Rvnx.CRM.Core.Enumerations;
-using Rvnx.CRM.Web.Helpers;
+using Rvnx.CRM.Core.Helpers;
 
 namespace Rvnx.CRM.Tests.Helpers
 {
-    public class SocialMediaEmbedHelperTests
+    public class SocialMediaUrlNormalizerTests
     {
         [Theory]
         [InlineData("not a valid uri")]
@@ -13,7 +13,7 @@ namespace Rvnx.CRM.Tests.Helpers
         public void ExtractUsernameWhenInvalidUriReturnsTrimmedUsername(string invalidUri)
         {
             // Act
-            string result = SocialMediaEmbedHelper.ExtractUsername(ContactMethodType.Twitter, invalidUri);
+            string result = SocialMediaUrlNormalizer.ExtractUsername(ContactMethodType.Twitter, invalidUri);
 
             // Assert
             Assert.Equal(invalidUri.TrimStart('@'), result);
@@ -28,7 +28,7 @@ namespace Rvnx.CRM.Tests.Helpers
         public void ExtractUsernameWhenValidUriReturnsExtractedUsername(ContactMethodType type, string url, string expectedUsername)
         {
             // Act
-            string result = SocialMediaEmbedHelper.ExtractUsername(type, url);
+            string result = SocialMediaUrlNormalizer.ExtractUsername(type, url);
 
             // Assert
             Assert.Equal(expectedUsername, result);
@@ -38,7 +38,7 @@ namespace Rvnx.CRM.Tests.Helpers
         public void ExtractUsernameWhenUrlIsNullOrWhiteSpaceReturnsEmptyString()
         {
             // Act
-            string result = SocialMediaEmbedHelper.ExtractUsername(ContactMethodType.Twitter, "  ");
+            string result = SocialMediaUrlNormalizer.ExtractUsername(ContactMethodType.Twitter, "  ");
 
             // Assert
             Assert.Equal(string.Empty, result);
