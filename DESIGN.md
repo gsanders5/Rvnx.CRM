@@ -23,6 +23,12 @@
 │   ├── Services/               # Infrastructure-dependent services (e.g. UserSync, VCard)
 │   ├── ServiceCollectionExtensions.cs
 │   └── Rvnx.CRM.Infrastructure.csproj
+├── Rvnx.CRM.API/               # REST API layer
+│   ├── Authentication/         # API Token Auth handlers
+│   ├── Controllers/            # API Controllers
+│   ├── Services/               # API specific services (ApiTokenCurrentUserService)
+│   ├── Program.cs              # Composition Root and Swagger config
+│   └── Rvnx.CRM.API.csproj
 ├── Rvnx.CRM.Web/               # Presentation layer
 │   ├── Controllers/            # MVC Controllers (Orchestration logic)
 │   ├── Services/               # UI-specific services (CurrentUserService)
@@ -44,6 +50,7 @@
 
 - **Core**: Contains domain entities, interfaces, and pure logic. Depends on **Entity Framework Core** (for data annotations).
 - **Infrastructure**: Implements Core interfaces, handles data access and external integrations. Depends on **Core** and **FolkerKinzel.VCards**.
+- **API**: RESTful endpoints. Uses API token-based authentication. Depends on all other projects.
 - **Web**: Presentation layer. Orchestrates user interactions. Depends on all other projects.
 - **ConsoleApp**: Background task runner. Shares Core and Infrastructure with Web. Designed for cron / Task Scheduler.
 
@@ -141,6 +148,23 @@ private static async Task<bool> RunNewTaskAsync(IServiceProvider services)
 ```
 
 3. Schedule in cron or Task Scheduler with the task name as the argument.
+
+## API Application
+
+The `Rvnx.CRM.API` project provides RESTful endpoints to interact with the CRM system programmatically.
+
+### Architecture
+
+The API application delegates logic to the shared `Core` services via DI, just like the `Web` and `ConsoleApp` projects.
+
+### Authentication & Authorization
+
+- **API Token Authentication**: The API is protected using bearer tokens. It uses a custom `ApiTokenAuthenticationHandler` for the `"Bearer"` scheme.
+- **User Context**: It resolves the current user context using `ApiTokenCurrentUserService`, which implements `ICurrentUserService` by extracting the user ID from the validated API token.
+
+### Documentation
+
+The API uses Swagger/OpenAPI to document its endpoints and available operations.
 
 ## Core Entities
 
