@@ -84,10 +84,17 @@ public class ApiTokenCurrentUserService : ICurrentUserService
             return;
         }
 
+        if (context.Items.ContainsKey("IsResolvingApiToken"))
+        {
+            return;
+        }
+
         string rawToken = authHeader["Bearer ".Length..].Trim();
 
         try
         {
+            context.Items["IsResolvingApiToken"] = true;
+
             // Resolve using the service
             using IServiceScope scope = _serviceProvider.CreateScope();
             IApiTokenService tokenService = scope.ServiceProvider.GetRequiredService<IApiTokenService>();
@@ -111,6 +118,10 @@ public class ApiTokenCurrentUserService : ICurrentUserService
         {
             _logger.LogError(ex, "Error resolving API token.");
             _resolvedToken = null;
+        }
+        finally
+        {
+            context.Items.Remove("IsResolvingApiToken");
         }
     }
 }
