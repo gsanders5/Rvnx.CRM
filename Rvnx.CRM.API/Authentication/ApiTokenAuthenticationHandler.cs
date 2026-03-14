@@ -27,12 +27,12 @@ public class ApiTokenAuthenticationHandler : AuthenticationHandler<ApiTokenAuthe
 
     protected override Task<AuthenticateResult> HandleAuthenticateAsync()
     {
-        if (!Request.Headers.ContainsKey("Authorization"))
+        if (!Request.Headers.TryGetValue("Authorization", out Microsoft.Extensions.Primitives.StringValues value))
         {
             return Task.FromResult(AuthenticateResult.NoResult());
         }
 
-        string? authHeader = Request.Headers["Authorization"].ToString();
+        string? authHeader = value.ToString();
         if (string.IsNullOrEmpty(authHeader) || !authHeader.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
         {
             return Task.FromResult(AuthenticateResult.NoResult());
