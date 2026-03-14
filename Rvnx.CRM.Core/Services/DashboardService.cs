@@ -80,16 +80,16 @@ public class DashboardService(IRepository repository, ILogger<DashboardService> 
         }
 
         // ⚡ Bolt: Fetch only required fields (EntityId, RelatedEntityId) instead of full Relationship entities to reduce memory/network overhead
-        var relationships = await _repository.ListProjectedAsync<Relationship, (Guid EntityId, Guid RelatedEntityId)>(
+        List<(Guid EntityId, Guid RelatedEntityId)> relationships = await _repository.ListProjectedAsync<Relationship, (Guid EntityId, Guid RelatedEntityId)>(
             r => r.EntityType == EntityTypes.Person,
             r => new ValueTuple<Guid, Guid>(r.EntityId, r.RelatedEntityId));
 
-        foreach (var rel in relationships)
+        foreach ((Guid EntityId, Guid RelatedEntityId) in relationships)
         {
             result.GraphLinks.Add(new GraphLinkDto
             {
-                Source = rel.EntityId.ToString(),
-                Target = rel.RelatedEntityId.ToString(),
+                Source = EntityId.ToString(),
+                Target = RelatedEntityId.ToString(),
                 Type = "Relationship"
             });
         }
@@ -131,7 +131,7 @@ public class DashboardService(IRepository repository, ILogger<DashboardService> 
         {
             TotalContacts = contacts.Count,
             ContactsWithBirthday = birthdayCount,
-            ContactsWithRelationships = contactsWithRelationships.Count(id => contactDict.ContainsKey(id)),
+            ContactsWithRelationships = contactsWithRelationships.Count(contactDict.ContainsKey),
             ContactsHidden = hiddenContactsCount
         };
 

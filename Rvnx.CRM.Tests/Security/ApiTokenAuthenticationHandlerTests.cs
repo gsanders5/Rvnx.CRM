@@ -1,4 +1,3 @@
-using FluentAssertions;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
@@ -34,9 +33,9 @@ public class ApiTokenAuthenticationHandlerTests
     public async Task HandleAuthenticateAsyncWithoutAuthorizationHeaderReturnsNoResult()
     {
         // Arrange
-        var context = new DefaultHttpContext();
+        DefaultHttpContext context = new();
 
-        var sut = new ApiTokenAuthenticationHandler(
+        ApiTokenAuthenticationHandler sut = new(
             _optionsMock.Object,
             _loggerFactoryMock.Object,
             _encoderMock.Object,
@@ -45,22 +44,22 @@ public class ApiTokenAuthenticationHandlerTests
         await sut.InitializeAsync(new AuthenticationScheme(ApiTokenAuthenticationOptions.DefaultScheme, null, typeof(ApiTokenAuthenticationHandler)), context);
 
         // Act
-        var result = await sut.AuthenticateAsync();
+        AuthenticateResult result = await sut.AuthenticateAsync();
 
         // Assert
-        result.None.Should().BeTrue();
+        Assert.True(result.None);
     }
 
     [Fact]
     public async Task HandleAuthenticateAsyncWithInvalidTokenReturnsFail()
     {
         // Arrange
-        var context = new DefaultHttpContext();
+        DefaultHttpContext context = new();
         context.Request.Headers["Authorization"] = "Bearer invalid_token";
 
         _currentUserServiceMock.Setup(x => x.IsAuthenticated).Returns(false);
 
-        var sut = new ApiTokenAuthenticationHandler(
+        ApiTokenAuthenticationHandler sut = new(
             _optionsMock.Object,
             _loggerFactoryMock.Object,
             _encoderMock.Object,
@@ -69,27 +68,27 @@ public class ApiTokenAuthenticationHandlerTests
         await sut.InitializeAsync(new AuthenticationScheme(ApiTokenAuthenticationOptions.DefaultScheme, null, typeof(ApiTokenAuthenticationHandler)), context);
 
         // Act
-        var result = await sut.AuthenticateAsync();
+        AuthenticateResult result = await sut.AuthenticateAsync();
 
         // Assert
-        result.Succeeded.Should().BeFalse();
-        result.Failure.Should().NotBeNull();
-        result.Failure!.Message.Should().Be("Invalid or missing API token.");
+        Assert.False(result.Succeeded);
+        Assert.NotNull(result.Failure);
+        Assert.Equal("Invalid or missing API token.", result.Failure!.Message);
     }
 
     [Fact]
     public async Task HandleAuthenticateAsyncWithValidTokenReturnsSuccess()
     {
         // Arrange
-        var userId = Guid.NewGuid();
-        var context = new DefaultHttpContext();
+        Guid userId = Guid.NewGuid();
+        DefaultHttpContext context = new();
         context.Request.Headers["Authorization"] = "Bearer crm_validtoken123";
 
         _currentUserServiceMock.Setup(x => x.IsAuthenticated).Returns(true);
         _currentUserServiceMock.Setup(x => x.UserId).Returns(userId);
         _currentUserServiceMock.Setup(x => x.UserName).Returns("Test User");
 
-        var sut = new ApiTokenAuthenticationHandler(
+        ApiTokenAuthenticationHandler sut = new(
             _optionsMock.Object,
             _loggerFactoryMock.Object,
             _encoderMock.Object,
@@ -98,13 +97,13 @@ public class ApiTokenAuthenticationHandlerTests
         await sut.InitializeAsync(new AuthenticationScheme(ApiTokenAuthenticationOptions.DefaultScheme, null, typeof(ApiTokenAuthenticationHandler)), context);
 
         // Act
-        var result = await sut.AuthenticateAsync();
+        AuthenticateResult result = await sut.AuthenticateAsync();
 
         // Assert
-        result.Succeeded.Should().BeTrue();
-        result.Principal.Should().NotBeNull();
-        result.Principal!.Identity!.IsAuthenticated.Should().BeTrue();
-        result.Principal.FindFirst(ClaimTypes.NameIdentifier)!.Value.Should().Be(userId.ToString());
-        result.Principal.FindFirst(ClaimTypes.Name)!.Value.Should().Be("Test User");
+        Assert.True(result.Succeeded);
+        Assert.NotNull(result.Principal);
+        Assert.True(result.Principal!.Identity!.IsAuthenticated);
+        Assert.Equal(userId.ToString(), result.Principal.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+        Assert.Equal("Test User", result.Principal.FindFirst(ClaimTypes.Name)!.Value);
     }
 }

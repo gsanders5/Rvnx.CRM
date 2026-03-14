@@ -15,26 +15,27 @@ public class AttachmentsController(IAttachmentService attachmentService, IContac
     [HttpGet("contact/{contactId}")]
     public async Task<IActionResult> ListByContact(Guid contactId)
     {
-        var contactDetails = await _contactReadService.GetContactDetailsAsync(contactId);
-        if (contactDetails == null) return NotFound();
-        return Ok(contactDetails.Attachments);
+        Core.DTOs.Contact.ContactDetailDto? contactDetails = await _contactReadService.GetContactDetailsAsync(contactId);
+        return contactDetails == null ? NotFound() : Ok(contactDetails.Attachments);
     }
 
     [HttpPost("contact/{contactId}")]
     public async Task<IActionResult> Upload(Guid contactId, IFormFile file)
     {
-        if (file == null || file.Length == 0) return BadRequest("No file uploaded.");
+        if (file == null || file.Length == 0)
+        {
+            return BadRequest("No file uploaded.");
+        }
 
-        using var stream = new MemoryStream();
+        using MemoryStream stream = new();
         await file.CopyToAsync(stream);
-        var content = stream.ToArray();
+        byte[] content = stream.ToArray();
 
-        var result = await _attachmentService.UploadAttachmentAsync(contactId, "Person", content, file.FileName);
+        Core.DTOs.Base.AttachmentOperationResult result = await _attachmentService.UploadAttachmentAsync(contactId, "Person", content, file.FileName);
 
         if (!result.Success)
         {
-            if (result.IsNotFound) return NotFound();
-            return BadRequest(new { result.Errors });
+            return result.IsNotFound ? NotFound() : BadRequest(new { result.Errors });
         }
 
         return Ok(new { Id = result.AttachmentId });
@@ -43,24 +44,20 @@ public class AttachmentsController(IAttachmentService attachmentService, IContac
     [HttpGet("{id}/download")]
     public async Task<IActionResult> Download(Guid id)
     {
-        var attachment = await _attachmentService.GetAttachmentAsync(id);
-        if (attachment == null) return NotFound();
+        Core.DTOs.Base.AttachmentDto? attachment = await _attachmentService.GetAttachmentAsync(id);
+        if (attachment == null)
+        {
+            return NotFound();
+        }
 
-        var content = await _attachmentService.GetAttachmentContentAsync(id);
-        if (content == null) return NotFound();
-
-        return File(content.Content, content.ContentType, attachment.FileName);
+        Core.DTOs.Base.AttachmentContentDto? content = await _attachmentService.GetAttachmentContentAsync(id);
+        return content == null ? NotFound() : File(content.Content, content.ContentType, attachment.FileName);
     }
 
     [HttpDelete("{id}")]
     public async Task<IActionResult> Delete(Guid id)
     {
-        var result = await _attachmentService.DeleteAttachmentAsync(id);
-        if (!result.Success)
-        {
-            if (result.IsNotFound) return NotFound();
-            return BadRequest(new { result.Errors });
-        }
-        return NoContent();
+        Core.DTOs.Base.AttachmentOperationResult result = await _attachmentService.DeleteAttachmentAsync(id);
+        return !result.Success ? result.IsNotFound ? NotFound() : BadRequest(new { result.Errors }) : NoContent();
     }
 }

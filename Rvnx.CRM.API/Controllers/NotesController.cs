@@ -16,15 +16,14 @@ public class NotesController(INoteService noteService, IContactReadService conta
     [HttpGet("contact/{contactId}")]
     public async Task<IActionResult> ListByContact(Guid contactId)
     {
-        var contactDetails = await _contactReadService.GetContactDetailsAsync(contactId);
-        if (contactDetails == null) return NotFound();
-        return Ok(contactDetails.Notes);
+        Core.DTOs.Contact.ContactDetailDto? contactDetails = await _contactReadService.GetContactDetailsAsync(contactId);
+        return contactDetails == null ? NotFound() : Ok(contactDetails.Notes);
     }
 
     [HttpPost]
     public async Task<IActionResult> Create([FromBody] NoteFormViewModel model)
     {
-        var result = await _noteService.CreateAsync(model);
+        Core.Models.OperationResult result = await _noteService.CreateAsync(model);
         if (!result.Success)
         {
             return BadRequest(new { Error = result.ErrorMessage });
@@ -36,22 +35,14 @@ public class NotesController(INoteService noteService, IContactReadService conta
     public async Task<IActionResult> Update(Guid id, [FromBody] NoteFormViewModel model)
     {
         model.Id = id;
-        var result = await _noteService.UpdateAsync(id, model);
-        if (!result.Success)
-        {
-            return BadRequest(new { Error = result.ErrorMessage });
-        }
-        return NoContent();
+        Core.Models.OperationResult result = await _noteService.UpdateAsync(id, model);
+        return !result.Success ? BadRequest(new { Error = result.ErrorMessage }) : NoContent();
     }
 
     [HttpDelete("{id}")]
     public async Task<IActionResult> Delete(Guid id)
     {
-        var result = await _noteService.DeleteAsync(id);
-        if (!result.Success)
-        {
-            return BadRequest(new { Error = result.ErrorMessage });
-        }
-        return NoContent();
+        Core.Models.OperationResult result = await _noteService.DeleteAsync(id);
+        return !result.Success ? BadRequest(new { Error = result.ErrorMessage }) : NoContent();
     }
 }

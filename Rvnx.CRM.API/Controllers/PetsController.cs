@@ -16,15 +16,14 @@ public class PetsController(IPetService petService, IContactReadService contactR
     [HttpGet("contact/{contactId}")]
     public async Task<IActionResult> ListByContact(Guid contactId)
     {
-        var contactDetails = await _contactReadService.GetContactDetailsAsync(contactId);
-        if (contactDetails == null) return NotFound();
-        return Ok(contactDetails.Pets);
+        ContactDetailDto? contactDetails = await _contactReadService.GetContactDetailsAsync(contactId);
+        return contactDetails == null ? NotFound() : Ok(contactDetails.Pets);
     }
 
     [HttpPost]
     public async Task<IActionResult> Create([FromBody] PetFormDto model)
     {
-        var result = await _petService.CreateAsync(model);
+        Core.Models.OperationResult result = await _petService.CreateAsync(model);
         if (!result.Success)
         {
             return BadRequest(new { Error = result.ErrorMessage });
@@ -36,22 +35,14 @@ public class PetsController(IPetService petService, IContactReadService contactR
     public async Task<IActionResult> Update(Guid id, [FromBody] PetFormDto model)
     {
         model.Id = id;
-        var result = await _petService.UpdateAsync(id, model);
-        if (!result.Success)
-        {
-            return BadRequest(new { Error = result.ErrorMessage });
-        }
-        return NoContent();
+        Core.Models.OperationResult result = await _petService.UpdateAsync(id, model);
+        return !result.Success ? BadRequest(new { Error = result.ErrorMessage }) : NoContent();
     }
 
     [HttpDelete("{id}")]
     public async Task<IActionResult> Delete(Guid id)
     {
-        var result = await _petService.DeleteAsync(id);
-        if (!result.Success)
-        {
-            return BadRequest(new { Error = result.ErrorMessage });
-        }
-        return NoContent();
+        Core.Models.OperationResult result = await _petService.DeleteAsync(id);
+        return !result.Success ? BadRequest(new { Error = result.ErrorMessage }) : NoContent();
     }
 }

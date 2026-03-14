@@ -1,5 +1,4 @@
 using Microsoft.AspNetCore.Authentication;
-using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Rvnx.CRM.Core.Interfaces;
 using System.Security.Claims;
@@ -54,9 +53,9 @@ public class ApiTokenAuthenticationHandler : AuthenticationHandler<ApiTokenAuthe
             new Claim(ClaimTypes.Name, _currentUserService.UserName ?? string.Empty)
         };
 
-        ClaimsIdentity identity = new ClaimsIdentity(claims, Scheme.Name);
-        ClaimsPrincipal principal = new ClaimsPrincipal(identity);
-        AuthenticationTicket ticket = new AuthenticationTicket(principal, Scheme.Name);
+        ClaimsIdentity identity = new(claims, Scheme.Name);
+        ClaimsPrincipal principal = new(identity);
+        AuthenticationTicket ticket = new(principal, Scheme.Name);
 
         return Task.FromResult(AuthenticateResult.Success(ticket));
     }

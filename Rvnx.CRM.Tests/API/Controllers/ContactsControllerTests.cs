@@ -1,4 +1,3 @@
-using FluentAssertions;
 using Microsoft.AspNetCore.Mvc;
 using Moq;
 using Rvnx.CRM.API.Controllers;
@@ -23,105 +22,112 @@ public class ContactsControllerTests
     [Fact]
     public async Task ListShouldReturnOkWithContacts()
     {
-        var contacts = new List<ContactDto> { new ContactDto { Id = Guid.NewGuid() } };
+        List<ContactDto> contacts = [new ContactDto { Id = Guid.NewGuid() }];
         _readServiceMock.Setup(s => s.GetIndexDataAsync(false)).ReturnsAsync(contacts);
 
-        var result = await _sut.List();
+        IActionResult result = await _sut.List();
 
-        var okResult = result.Should().BeOfType<OkObjectResult>().Subject;
-        okResult.Value.Should().BeEquivalentTo(contacts);
+        OkObjectResult okResult = Assert.IsType<OkObjectResult>(result);
+        Assert.Equivalent(contacts, okResult.Value);
     }
 
     [Fact]
     public async Task GetShouldReturnOkWithContactWhenFound()
     {
-        var id = Guid.NewGuid();
-        var contact = new ContactFormDto { Id = id };
+        Guid id = Guid.NewGuid();
+        ContactFormDto contact = new()
+        { Id = id };
         _readServiceMock.Setup(s => s.GetContactFormAsync(id)).ReturnsAsync(contact);
 
-        var result = await _sut.Get(id);
+        IActionResult result = await _sut.Get(id);
 
-        var okResult = result.Should().BeOfType<OkObjectResult>().Subject;
-        okResult.Value.Should().BeEquivalentTo(contact);
+        OkObjectResult okResult = Assert.IsType<OkObjectResult>(result);
+        Assert.Equivalent(contact, okResult.Value);
     }
 
     [Fact]
     public async Task GetShouldReturnNotFoundWhenContactDoesNotExist()
     {
-        var id = Guid.NewGuid();
+        Guid id = Guid.NewGuid();
         _readServiceMock.Setup(s => s.GetContactFormAsync(id)).ReturnsAsync((ContactFormDto?)null);
 
-        var result = await _sut.Get(id);
+        IActionResult result = await _sut.Get(id);
 
-        result.Should().BeOfType<NotFoundResult>();
+        Assert.IsType<NotFoundResult>(result);
     }
 
     [Fact]
     public async Task CreateShouldReturnCreatedAtActionWhenSuccessful()
     {
-        var model = new ContactFormDto { FirstName = "Test" };
-        var id = Guid.NewGuid();
-        var operationResult = ContactOperationResult.Ok(id);
+        ContactFormDto model = new()
+        { FirstName = "Test" };
+        Guid id = Guid.NewGuid();
+        ContactOperationResult operationResult = ContactOperationResult.Ok(id);
 
         _managementServiceMock.Setup(s => s.CreateContactAsync(model)).ReturnsAsync(operationResult);
 
-        var result = await _sut.Create(model);
+        IActionResult result = await _sut.Create(model);
 
-        var createdResult = result.Should().BeOfType<CreatedAtActionResult>().Subject;
-        createdResult.ActionName.Should().Be(nameof(ContactsController.Get));
-        createdResult.RouteValues.Should().ContainKey("id").WhoseValue.Should().Be(id);
+        CreatedAtActionResult createdResult = Assert.IsType<CreatedAtActionResult>(result);
+        Assert.Equal(nameof(ContactsController.Get), createdResult.ActionName);
+        Assert.NotNull(createdResult.RouteValues);
+        Assert.True(createdResult.RouteValues.ContainsKey("id"));
+        Assert.Equal(id, createdResult.RouteValues["id"]);
     }
 
     [Fact]
     public async Task CreateShouldReturnBadRequestWhenFailed()
     {
-        var model = new ContactFormDto { FirstName = "Test" };
-        var operationResult = ContactOperationResult.Failure("Error");
+        ContactFormDto model = new()
+        { FirstName = "Test" };
+        ContactOperationResult operationResult = ContactOperationResult.Failure("Error");
 
         _managementServiceMock.Setup(s => s.CreateContactAsync(model)).ReturnsAsync(operationResult);
 
-        var result = await _sut.Create(model);
+        IActionResult result = await _sut.Create(model);
 
-        result.Should().BeOfType<BadRequestObjectResult>();
+        Assert.IsType<BadRequestObjectResult>(result);
     }
 
     [Fact]
     public async Task UpdateShouldReturnNoContentWhenSuccessful()
     {
-        var id = Guid.NewGuid();
-        var model = new ContactFormDto { Id = id, FirstName = "Test" };
-        var operationResult = ContactOperationResult.Ok(id);
+        Guid id = Guid.NewGuid();
+        ContactFormDto model = new()
+        { Id = id, FirstName = "Test" };
+        ContactOperationResult operationResult = ContactOperationResult.Ok(id);
 
         _managementServiceMock.Setup(s => s.UpdateContactAsync(id, model, null, null, null)).ReturnsAsync(operationResult);
 
-        var result = await _sut.Update(id, model);
+        IActionResult result = await _sut.Update(id, model);
 
-        result.Should().BeOfType<NoContentResult>();
+        Assert.IsType<NoContentResult>(result);
     }
 
     [Fact]
     public async Task UpdateShouldReturnNotFoundWhenContactIsNotFound()
     {
-        var id = Guid.NewGuid();
-        var model = new ContactFormDto { Id = id, FirstName = "Test" };
-        var operationResult = ContactOperationResult.NotFound();
+        Guid id = Guid.NewGuid();
+        ContactFormDto model = new()
+        { Id = id, FirstName = "Test" };
+        ContactOperationResult operationResult = ContactOperationResult.NotFound();
 
         _managementServiceMock.Setup(s => s.UpdateContactAsync(id, model, null, null, null)).ReturnsAsync(operationResult);
 
-        var result = await _sut.Update(id, model);
+        IActionResult result = await _sut.Update(id, model);
 
-        result.Should().BeOfType<NotFoundResult>();
+        Assert.IsType<NotFoundResult>(result);
     }
 
     [Fact]
     public async Task DeleteShouldReturnNoContent()
     {
-        var id = Guid.NewGuid();
+        Guid id = Guid.NewGuid();
 
         _managementServiceMock.Setup(s => s.DeleteContactAsync(id)).Returns(Task.CompletedTask);
 
-        var result = await _sut.Delete(id);
+        IActionResult result = await _sut.Delete(id);
 
-        result.Should().BeOfType<NoContentResult>();
+        Assert.IsType<NoContentResult>(result);
     }
 }

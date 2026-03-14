@@ -1,6 +1,3 @@
-using System;
-using System.Threading;
-using System.Threading.Tasks;
 using Moq;
 using Rvnx.CRM.Core.Constants;
 using Rvnx.CRM.Core.DTOs.Contact;
@@ -9,7 +6,6 @@ using Rvnx.CRM.Core.Interfaces;
 using Rvnx.CRM.Core.Models;
 using Rvnx.CRM.Core.Models.Contact;
 using Rvnx.CRM.Infrastructure.Services;
-using Xunit;
 
 namespace Rvnx.CRM.Tests.Services
 {
@@ -30,8 +26,10 @@ namespace Rvnx.CRM.Tests.Services
             // Arrange
             Guid contactMethodId = Guid.NewGuid();
             Guid contactId = Guid.NewGuid();
-            ContactMethod existingContactMethod = new ContactMethod { Id = contactMethodId, ContactId = contactId };
-            ContactMethodFormDto dto = new ContactMethodFormDto { Id = contactMethodId, EntityId = contactId, EntityType = EntityTypes.Person };
+            ContactMethod existingContactMethod = new()
+            { Id = contactMethodId, ContactId = contactId };
+            ContactMethodFormDto dto = new()
+            { Id = contactMethodId, EntityId = contactId, EntityType = EntityTypes.Person };
 
             _repositoryMock.Setup(r => r.GetByIdAsync<ContactMethod>(contactMethodId, It.IsAny<CancellationToken>()))
                 .ReturnsAsync(existingContactMethod);
@@ -55,8 +53,10 @@ namespace Rvnx.CRM.Tests.Services
             // Arrange
             Guid contactMethodId = Guid.NewGuid();
             Guid contactId = Guid.NewGuid();
-            ContactMethod existingContactMethod = new ContactMethod { Id = contactMethodId, ContactId = contactId };
-            ContactMethodFormDto dto = new ContactMethodFormDto { Id = contactMethodId, EntityId = contactId, EntityType = EntityTypes.Person };
+            ContactMethod existingContactMethod = new()
+            { Id = contactMethodId, ContactId = contactId };
+            ContactMethodFormDto dto = new()
+            { Id = contactMethodId, EntityId = contactId, EntityType = EntityTypes.Person };
 
             _repositoryMock.Setup(r => r.GetByIdAsync<ContactMethod>(contactMethodId, It.IsAny<CancellationToken>()))
                 .ReturnsAsync(existingContactMethod);

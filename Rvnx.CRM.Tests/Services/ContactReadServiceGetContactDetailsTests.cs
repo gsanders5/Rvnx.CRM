@@ -1,9 +1,7 @@
 using Moq;
 using Rvnx.CRM.Core.Constants;
 using Rvnx.CRM.Core.DTOs.Contact;
-using Rvnx.CRM.Core.Extensions;
 using Rvnx.CRM.Core.Interfaces;
-using Rvnx.CRM.Core.Models.Base;
 using Rvnx.CRM.Core.Models.Contact;
 using Rvnx.CRM.Core.Services;
 using System.Linq.Expressions;
@@ -25,28 +23,29 @@ public class ContactReadServiceGetContactDetailsTests
     public async Task GetContactDetailsAsyncReturnsContactDetailsWithRelationships()
     {
         // Arrange
-        var contactId = Guid.NewGuid();
-        var relatedId1 = Guid.NewGuid();
-        var relatedId2 = Guid.NewGuid();
+        Guid contactId = Guid.NewGuid();
+        Guid relatedId1 = Guid.NewGuid();
+        Guid relatedId2 = Guid.NewGuid();
 
-        var contact = new Contact { Id = contactId, FirstName = "Main", LastName = "User" };
-        var relatedContacts = new List<Contact>
-        {
+        Contact contact = new()
+        { Id = contactId, FirstName = "Main", LastName = "User" };
+        List<Contact> relatedContacts =
+        [
             new Contact { Id = relatedId1, FirstName = "Child" },
             new Contact { Id = relatedId2, FirstName = "Parent" }
-        };
+        ];
 
-        var allRelationships = new List<Relationship>
-        {
+        List<Relationship> allRelationships =
+        [
             new Relationship { Id = Guid.NewGuid(), EntityId = contactId, RelatedEntityId = relatedId1, EntityType = EntityTypes.Person, RelationshipTypeId = Guid.NewGuid() }, // outgoing
             new Relationship { Id = Guid.NewGuid(), EntityId = relatedId2, RelatedEntityId = contactId, EntityType = EntityTypes.Person, RelationshipTypeId = Guid.NewGuid() }  // incoming
-        };
+        ];
 
         _repositoryMock.Setup(r => r.ListAsNoTrackingAsync<Contact>(
             It.IsAny<Expression<Func<Contact, bool>>>(),
             It.IsAny<CancellationToken>(),
             It.IsAny<string[]>()))
-            .ReturnsAsync(new List<Contact> { contact });
+            .ReturnsAsync([contact]);
 
         _repositoryMock.Setup(r => r.ListAsNoTrackingAsync<Relationship>(
             It.IsAny<Expression<Func<Relationship, bool>>>(),
@@ -61,7 +60,7 @@ public class ContactReadServiceGetContactDetailsTests
             .ReturnsAsync(relatedContacts);
 
         // Act
-        var result = await _service.GetContactDetailsAsync(contactId);
+        ContactDetailDto? result = await _service.GetContactDetailsAsync(contactId);
 
         // Assert
         Assert.NotNull(result);
@@ -80,16 +79,16 @@ public class ContactReadServiceGetContactDetailsTests
     public async Task GetContactDetailsAsyncWhenContactDoesNotExistReturnsNull()
     {
         // Arrange
-        var contactId = Guid.NewGuid();
+        Guid contactId = Guid.NewGuid();
 
         _repositoryMock.Setup(r => r.ListAsNoTrackingAsync<Contact>(
             It.IsAny<Expression<Func<Contact, bool>>>(),
             It.IsAny<CancellationToken>(),
             It.IsAny<string[]>()))
-            .ReturnsAsync(new List<Contact>()); // Returns empty list
+            .ReturnsAsync([]); // Returns empty list
 
         // Act
-        var result = await _service.GetContactDetailsAsync(contactId);
+        ContactDetailDto? result = await _service.GetContactDetailsAsync(contactId);
 
         // Assert
         Assert.Null(result);

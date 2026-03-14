@@ -49,19 +49,19 @@ public class MergeService(CRMDbContext context, IRepository repository) : IMerge
             primary.Religion = MergeScalar(primary.Religion, secondary.Religion);
 
             // Move Attachments
-            var attachments = await _repository.ListAsync<Attachment>(a => a.ContactId == secondaryId);
-            foreach (var att in attachments)
+            List<Attachment> attachments = await _repository.ListAsync<Attachment>(a => a.ContactId == secondaryId);
+            foreach (Attachment att in attachments)
             {
                 att.ContactId = primaryId;
             }
 
-            var primaryProfilePhotos = await _repository.ListAsync<Attachment>(a => a.ContactId == primaryId && a.AttachmentType == "ProfileImage");
-            var secondaryProfilePhotos = await _repository.ListAsync<Attachment>(a => a.ContactId == secondaryId && a.AttachmentType == "ProfileImage");
+            List<Attachment> primaryProfilePhotos = await _repository.ListAsync<Attachment>(a => a.ContactId == primaryId && a.AttachmentType == "ProfileImage");
+            List<Attachment> secondaryProfilePhotos = await _repository.ListAsync<Attachment>(a => a.ContactId == secondaryId && a.AttachmentType == "ProfileImage");
 
             if (primaryProfilePhotos.Count > 0)
             {
                 // Downgrade secondary's profile photos to general attachments so they don't conflict
-                foreach (var photo in secondaryProfilePhotos)
+                foreach (Attachment photo in secondaryProfilePhotos)
                 {
                     photo.AttachmentType = "General";
                     photo.ContactId = primaryId;
@@ -70,25 +70,25 @@ public class MergeService(CRMDbContext context, IRepository repository) : IMerge
             else
             {
                 // Keep secondary's as ProfileImage and just move them
-                foreach (var photo in secondaryProfilePhotos)
+                foreach (Attachment photo in secondaryProfilePhotos)
                 {
                     photo.ContactId = primaryId;
                 }
             }
 
             // Move Notes
-            var notes = await _repository.ListAsync<Note>(n => n.ContactId == secondaryId);
-            foreach (var note in notes)
+            List<Note> notes = await _repository.ListAsync<Note>(n => n.ContactId == secondaryId);
+            foreach (Note note in notes)
             {
                 note.ContactId = primaryId;
             }
 
             // Move Contact Methods
-            var primaryMethods = await _repository.ListAsync<ContactMethod>(m => m.ContactId == primaryId);
-            var secondaryMethods = await _repository.ListAsync<ContactMethod>(m => m.ContactId == secondaryId);
+            List<ContactMethod> primaryMethods = await _repository.ListAsync<ContactMethod>(m => m.ContactId == primaryId);
+            List<ContactMethod> secondaryMethods = await _repository.ListAsync<ContactMethod>(m => m.ContactId == secondaryId);
 
-            var existingMethods = primaryMethods.Select(m => (m.Type, m.Value.ToLowerInvariant())).ToHashSet();
-            foreach (var method in secondaryMethods)
+            HashSet<(Core.Enumerations.ContactMethodType Type, string)> existingMethods = primaryMethods.Select(m => (m.Type, m.Value.ToLowerInvariant())).ToHashSet();
+            foreach (ContactMethod method in secondaryMethods)
             {
                 if (!existingMethods.Contains((method.Type, method.Value.ToLowerInvariant())))
                 {
@@ -102,11 +102,11 @@ public class MergeService(CRMDbContext context, IRepository repository) : IMerge
             }
 
             // Move Significant Dates
-            var primaryDates = await _repository.ListAsync<SignificantDate>(d => d.ContactId == primaryId);
-            var secondaryDates = await _repository.ListAsync<SignificantDate>(d => d.ContactId == secondaryId);
+            List<SignificantDate> primaryDates = await _repository.ListAsync<SignificantDate>(d => d.ContactId == primaryId);
+            List<SignificantDate> secondaryDates = await _repository.ListAsync<SignificantDate>(d => d.ContactId == secondaryId);
 
-            var existingDates = primaryDates.Select(d => (d.Title?.ToLowerInvariant(), d.EventDate)).ToHashSet();
-            foreach (var date in secondaryDates)
+            HashSet<(string?, DateOnly EventDate)> existingDates = primaryDates.Select(d => (d.Title?.ToLowerInvariant(), d.EventDate)).ToHashSet();
+            foreach (SignificantDate date in secondaryDates)
             {
                 if (!existingDates.Contains((date.Title?.ToLowerInvariant(), date.EventDate)))
                 {
@@ -120,18 +120,18 @@ public class MergeService(CRMDbContext context, IRepository repository) : IMerge
             }
 
             // Move Facts
-            var facts = await _repository.ListAsync<Fact>(f => f.ContactId == secondaryId);
-            foreach (var fact in facts)
+            List<Fact> facts = await _repository.ListAsync<Fact>(f => f.ContactId == secondaryId);
+            foreach (Fact fact in facts)
             {
                 fact.ContactId = primaryId;
             }
 
             // Move Relationships
-            var primaryRels = await _repository.ListAsync<Relationship>(r => r.EntityId == primaryId);
-            var secondaryRels = await _repository.ListAsync<Relationship>(r => r.EntityId == secondaryId);
+            List<Relationship> primaryRels = await _repository.ListAsync<Relationship>(r => r.EntityId == primaryId);
+            List<Relationship> secondaryRels = await _repository.ListAsync<Relationship>(r => r.EntityId == secondaryId);
 
-            var existingRels = primaryRels.Select(r => (r.RelatedEntityId, r.RelationshipTypeId)).ToHashSet();
-            foreach (var rel in secondaryRels)
+            HashSet<(Guid RelatedEntityId, Guid RelationshipTypeId)> existingRels = primaryRels.Select(r => (r.RelatedEntityId, r.RelationshipTypeId)).ToHashSet();
+            foreach (Relationship rel in secondaryRels)
             {
                 if (!existingRels.Contains((rel.RelatedEntityId, rel.RelationshipTypeId)))
                 {
@@ -145,8 +145,8 @@ public class MergeService(CRMDbContext context, IRepository repository) : IMerge
             }
 
             // Also handle relationships where secondary is the RelatedEntityId
-            var relatedToSecondary = await _repository.ListAsync<Relationship>(r => r.RelatedEntityId == secondaryId);
-            foreach (var rel in relatedToSecondary)
+            List<Relationship> relatedToSecondary = await _repository.ListAsync<Relationship>(r => r.RelatedEntityId == secondaryId);
+            foreach (Relationship rel in relatedToSecondary)
             {
                 if (rel.EntityId == primaryId)
                 {
@@ -156,10 +156,10 @@ public class MergeService(CRMDbContext context, IRepository repository) : IMerge
                 else
                 {
                     // Check if rel.EntityId is already related to Primary with the same RelationshipTypeId
-                    var checkPrimaryRel = primaryId; // Need local variable for expression
-                    var checkEntityRel = rel.EntityId;
-                    var checkTypeId = rel.RelationshipTypeId;
-                    var exists = await _repository.ListAsync<Relationship>(r => r.EntityId == checkEntityRel && r.RelatedEntityId == checkPrimaryRel && r.RelationshipTypeId == checkTypeId);
+                    Guid checkPrimaryRel = primaryId; // Need local variable for expression
+                    Guid checkEntityRel = rel.EntityId;
+                    Guid checkTypeId = rel.RelationshipTypeId;
+                    List<Relationship> exists = await _repository.ListAsync<Relationship>(r => r.EntityId == checkEntityRel && r.RelatedEntityId == checkPrimaryRel && r.RelationshipTypeId == checkTypeId);
                     if (exists.Count == 0)
                     {
                         rel.RelatedEntityId = primaryId;
@@ -172,11 +172,11 @@ public class MergeService(CRMDbContext context, IRepository repository) : IMerge
             }
 
             // Move Pets
-            var primaryPets = await _repository.ListAsync<Pet>(p => p.ContactId == primaryId);
-            var secondaryPets = await _repository.ListAsync<Pet>(p => p.ContactId == secondaryId);
+            List<Pet> primaryPets = await _repository.ListAsync<Pet>(p => p.ContactId == primaryId);
+            List<Pet> secondaryPets = await _repository.ListAsync<Pet>(p => p.ContactId == secondaryId);
 
-            var existingPets = primaryPets.Select(p => p.Name.ToLowerInvariant()).ToHashSet();
-            foreach (var pet in secondaryPets)
+            HashSet<string> existingPets = primaryPets.Select(p => p.Name.ToLowerInvariant()).ToHashSet();
+            foreach (Pet pet in secondaryPets)
             {
                 if (!existingPets.Contains(pet.Name.ToLowerInvariant()))
                 {
@@ -219,10 +219,6 @@ public class MergeService(CRMDbContext context, IRepository repository) : IMerge
 
     private static string? MergeScalar(string? primary, string? secondary)
     {
-        if (!string.IsNullOrWhiteSpace(primary))
-            return primary;
-        if (!string.IsNullOrWhiteSpace(secondary))
-            return secondary;
-        return null;
+        return !string.IsNullOrWhiteSpace(primary) ? primary : !string.IsNullOrWhiteSpace(secondary) ? secondary : null;
     }
 }

@@ -22,9 +22,9 @@ public class ApiTokenService(IRepository repository) : IApiTokenService
 
         string rawToken = $"crm_{rawTokenBase64}";
         string tokenHash = ComputeHash(rawToken);
-        string tokenPrefix = rawToken.Substring(0, 8);
+        string tokenPrefix = rawToken[..8];
 
-        ApiToken token = new ApiToken
+        ApiToken token = new()
         {
             UserId = userId,
             GroupId = groupId,
@@ -65,12 +65,7 @@ public class ApiTokenService(IRepository repository) : IApiTokenService
         ApiToken? token = await _repository.QueryUnfiltered<ApiToken>()
             .FirstOrDefaultAsync(t => t.TokenHash == tokenHash);
 
-        if (token == null || !token.IsActive)
-        {
-            return null;
-        }
-
-        return token;
+        return token == null || !token.IsActive ? null : token;
     }
 
     public async Task<IEnumerable<ApiToken>> ListTokensAsync(Guid userId)

@@ -1,7 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Rvnx.CRM.Core.Interfaces;
-using Rvnx.CRM.Core.Models;
 
 namespace Rvnx.CRM.API.Controllers;
 
@@ -15,7 +14,7 @@ public class LabelsController(ILabelService labelService) : ControllerBase
     [HttpGet]
     public async Task<IActionResult> List()
     {
-        var labels = await _labelService.GetAllAsync();
+        List<Core.DTOs.Contact.LabelDto> labels = await _labelService.GetAllAsync();
         return Ok(labels);
     }
 

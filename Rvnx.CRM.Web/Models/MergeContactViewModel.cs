@@ -1,5 +1,5 @@
-using System.ComponentModel.DataAnnotations;
 using Rvnx.CRM.Core.DTOs.Contact;
+using System.ComponentModel.DataAnnotations;
 
 namespace Rvnx.CRM.Web.Models;
 

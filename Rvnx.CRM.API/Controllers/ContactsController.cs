@@ -18,25 +18,21 @@ public class ContactsController(
     [HttpGet]
     public async Task<IActionResult> List()
     {
-        var contacts = await _contactReadService.GetIndexDataAsync(false);
+        List<ContactDto> contacts = await _contactReadService.GetIndexDataAsync(false);
         return Ok(contacts);
     }
 
     [HttpGet("{id}")]
     public async Task<IActionResult> Get(Guid id)
     {
-        var contact = await _contactReadService.GetContactFormAsync(id);
-        if (contact == null)
-        {
-            return NotFound();
-        }
-        return Ok(contact);
+        ContactFormDto? contact = await _contactReadService.GetContactFormAsync(id);
+        return contact == null ? NotFound() : Ok(contact);
     }
 
     [HttpPost]
     public async Task<IActionResult> Create([FromBody] ContactFormDto model)
     {
-        var result = await _contactManagementService.CreateContactAsync(model);
+        ContactOperationResult result = await _contactManagementService.CreateContactAsync(model);
         if (!result.Success)
         {
             return BadRequest(new { result.Errors });
@@ -48,16 +44,8 @@ public class ContactsController(
     public async Task<IActionResult> Update(Guid id, [FromBody] ContactFormDto model)
     {
         model.Id = id;
-        var result = await _contactManagementService.UpdateContactAsync(id, model, null, null, null);
-        if (!result.Success)
-        {
-            if (result.IsNotFound)
-            {
-                return NotFound();
-            }
-            return BadRequest(new { result.Errors });
-        }
-        return NoContent();
+        ContactOperationResult result = await _contactManagementService.UpdateContactAsync(id, model, null, null, null);
+        return !result.Success ? result.IsNotFound ? NotFound() : BadRequest(new { result.Errors }) : NoContent();
     }
 
     [HttpDelete("{id}")]
@@ -70,24 +58,14 @@ public class ContactsController(
     [HttpPost("{id}/photo/{attachmentId}")]
     public async Task<IActionResult> SetPhoto(Guid id, Guid attachmentId)
     {
-        var result = await _contactManagementService.SetAttachmentAsProfilePhotoAsync(id, attachmentId);
-        if (!result.Success)
-        {
-            if (result.IsNotFound) return NotFound();
-            return BadRequest(new { result.Errors });
-        }
-        return NoContent();
+        ContactOperationResult result = await _contactManagementService.SetAttachmentAsProfilePhotoAsync(id, attachmentId);
+        return !result.Success ? result.IsNotFound ? NotFound() : BadRequest(new { result.Errors }) : NoContent();
     }
 
     [HttpDelete("{id}/photo")]
     public async Task<IActionResult> UnsetPhoto(Guid id)
     {
-        var result = await _contactManagementService.UnsetProfilePhotoAsync(id);
-        if (!result.Success)
-        {
-            if (result.IsNotFound) return NotFound();
-            return BadRequest(new { result.Errors });
-        }
-        return NoContent();
+        ContactOperationResult result = await _contactManagementService.UnsetProfilePhotoAsync(id);
+        return !result.Success ? result.IsNotFound ? NotFound() : BadRequest(new { result.Errors }) : NoContent();
     }
 }

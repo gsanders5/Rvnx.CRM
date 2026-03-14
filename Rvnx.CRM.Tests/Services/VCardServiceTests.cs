@@ -1,4 +1,3 @@
-using Moq;
 using Rvnx.CRM.Core.Models.Contact;
 using Rvnx.CRM.Infrastructure.Services;
 using System.Text;

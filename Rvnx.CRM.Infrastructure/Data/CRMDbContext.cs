@@ -13,23 +13,23 @@ public class CRMDbContext(DbContextOptions<CRMDbContext> options, ICurrentUserSe
 {
     private readonly ICurrentUserService _currentUserService = currentUserService;
 
-    public DbSet<Contact> Contacts { get; set; }
-    public DbSet<Employer> Employers { get; set; }
-    public DbSet<Note> Notes { get; set; }
-    public DbSet<Attachment> Attachments { get; set; }
-    public DbSet<AttachmentContent> AttachmentContents { get; set; }
-    public DbSet<SignificantDate> SignificantDates { get; set; }
-    public DbSet<ReminderOffset> ReminderOffsets { get; set; }
-    public DbSet<ReminderLog> ReminderLogs { get; set; }
-    public DbSet<Relationship> Relationships { get; set; }
-    public DbSet<Pet> Pets { get; set; }
-    public DbSet<ContactMethod> ContactMethods { get; set; }
-    public DbSet<Fact> Facts { get; set; }
-    public DbSet<Address> Addresses { get; set; }
-    public DbSet<User> Users { get; set; }
-    public DbSet<UserGroup> UserGroups { get; set; }
-    public DbSet<Label> Labels { get; set; }
-    public DbSet<ContactLabel> ContactLabels { get; set; }
+    public DbSet<Contact>? Contacts { get; set; }
+    public DbSet<Employer>? Employers { get; set; }
+    public DbSet<Note>? Notes { get; set; }
+    public DbSet<Attachment>? Attachments { get; set; }
+    public DbSet<AttachmentContent>? AttachmentContents { get; set; }
+    public DbSet<SignificantDate>? SignificantDates { get; set; }
+    public DbSet<ReminderOffset>? ReminderOffsets { get; set; }
+    public DbSet<ReminderLog>? ReminderLogs { get; set; }
+    public DbSet<Relationship>? Relationships { get; set; }
+    public DbSet<Pet>? Pets { get; set; }
+    public DbSet<ContactMethod>? ContactMethods { get; set; }
+    public DbSet<Fact>? Facts { get; set; }
+    public DbSet<Address>? Addresses { get; set; }
+    public DbSet<User>? Users { get; set; }
+    public DbSet<UserGroup>? UserGroups { get; set; }
+    public DbSet<Label>? Labels { get; set; }
+    public DbSet<ContactLabel>? ContactLabels { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

@@ -1,6 +1,3 @@
-using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 using Rvnx.CRM.Core.Interfaces;
 using Rvnx.CRM.Core.Models;
 
@@ -87,7 +84,7 @@ public class ApiTokenCurrentUserService : ICurrentUserService
             return;
         }
 
-        string rawToken = authHeader.Substring("Bearer ".Length).Trim();
+        string rawToken = authHeader["Bearer ".Length..].Trim();
 
         try
         {

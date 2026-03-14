@@ -1,5 +1,3 @@
-using FluentAssertions;
-using Microsoft.EntityFrameworkCore;
 using Moq;
 using Rvnx.CRM.Core.Interfaces;
 using Rvnx.CRM.Core.Models;
@@ -32,21 +30,22 @@ public class ApiTokenTests
             .Callback<ApiToken, CancellationToken>((t, _) => capturedToken = t);
 
         // Act
-        var (token, rawToken) = await _sut.CreateTokenAsync(userId, groupId, name, expiresAt);
+        (ApiToken token, string rawToken) = await _sut.CreateTokenAsync(userId, groupId, name, expiresAt);
 
         // Assert
-        token.Should().NotBeNull();
-        rawToken.Should().NotBeNullOrEmpty();
-        rawToken.Should().StartWith("crm_");
+        Assert.NotNull(token);
+        Assert.NotNull(rawToken);
+        Assert.NotEmpty(rawToken);
+        Assert.StartsWith("crm_", rawToken);
 
-        capturedToken.Should().NotBeNull();
-        capturedToken!.UserId.Should().Be(userId);
-        capturedToken.GroupId.Should().Be(groupId);
-        capturedToken.Name.Should().Be(name);
-        capturedToken.TokenHash.Should().NotBe(rawToken);
-        capturedToken.TokenPrefix.Should().Be(rawToken.Substring(0, 8));
-        capturedToken.ExpiresAt.Should().Be(expiresAt);
-        capturedToken.IsActive.Should().BeTrue();
+        Assert.NotNull(capturedToken);
+        Assert.Equal(userId, capturedToken!.UserId);
+        Assert.Equal(groupId, capturedToken.GroupId);
+        Assert.Equal(name, capturedToken.Name);
+        Assert.NotEqual(rawToken, capturedToken.TokenHash);
+        Assert.Equal(rawToken[..8], capturedToken.TokenPrefix);
+        Assert.Equal(expiresAt, capturedToken.ExpiresAt);
+        Assert.True(capturedToken.IsActive);
 
         _repositoryMock.Verify(r => r.AddAsync(It.IsAny<ApiToken>(), default), Times.Once);
         _repositoryMock.Verify(r => r.SaveChangesAsync(default), Times.Once);

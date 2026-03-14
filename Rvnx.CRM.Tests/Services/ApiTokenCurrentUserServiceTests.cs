@@ -1,4 +1,3 @@
-using FluentAssertions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -6,8 +5,6 @@ using Moq;
 using Rvnx.CRM.API.Services;
 using Rvnx.CRM.Core.Interfaces;
 using Rvnx.CRM.Core.Models;
-using System.Security.Cryptography;
-using System.Text;
 
 namespace Rvnx.CRM.Tests.Services;
 
@@ -37,7 +34,7 @@ public class ApiTokenCurrentUserServiceTests
         _serviceScopeFactoryMock.Setup(x => x.CreateScope())
             .Returns(_serviceScopeMock.Object);
 
-        Mock<IServiceProvider> scopeServiceProviderMock = new Mock<IServiceProvider>();
+        Mock<IServiceProvider> scopeServiceProviderMock = new();
         scopeServiceProviderMock.Setup(x => x.GetService(typeof(IApiTokenService)))
             .Returns(_tokenServiceMock.Object);
         scopeServiceProviderMock.Setup(x => x.GetService(typeof(IRepository)))
@@ -55,7 +52,7 @@ public class ApiTokenCurrentUserServiceTests
         Guid groupId = Guid.NewGuid();
         string rawToken = "crm_validtoken123";
 
-        ApiToken token = new ApiToken
+        ApiToken token = new()
         {
             UserId = userId,
             GroupId = groupId,
@@ -64,14 +61,14 @@ public class ApiTokenCurrentUserServiceTests
             TokenPrefix = "crm_vali"
         };
 
-        DefaultHttpContext context = new DefaultHttpContext();
+        DefaultHttpContext context = new();
         context.Request.Headers["Authorization"] = $"Bearer {rawToken}";
         _httpContextAccessorMock.Setup(x => x.HttpContext).Returns(context);
 
         _tokenServiceMock.Setup(x => x.ResolveTokenAsync(rawToken))
             .ReturnsAsync(token);
 
-        ApiTokenCurrentUserService sut = new ApiTokenCurrentUserService(
+        ApiTokenCurrentUserService sut = new(
             _httpContextAccessorMock.Object,
             _serviceProviderMock.Object,
             _loggerMock.Object);
@@ -83,10 +80,10 @@ public class ApiTokenCurrentUserServiceTests
         string? resolvedUserName = sut.UserName;
 
         // Assert
-        isAuthenticated.Should().BeTrue();
-        resolvedUserId.Should().Be(userId);
-        resolvedGroupId.Should().Be(groupId);
-        resolvedUserName.Should().Be("Integration Test");
+        Assert.True(isAuthenticated);
+        Assert.Equal(userId, resolvedUserId);
+        Assert.Equal(groupId, resolvedGroupId);
+        Assert.Equal("Integration Test", resolvedUserName);
 
         _tokenServiceMock.Verify(x => x.ResolveTokenAsync(rawToken), Times.Once);
         _repositoryMock.Verify(x => x.UpdateAsync(token, default), Times.Once);
@@ -97,10 +94,10 @@ public class ApiTokenCurrentUserServiceTests
     public void PropertiesWithMissingTokenShouldNotBeAuthenticated()
     {
         // Arrange
-        DefaultHttpContext context = new DefaultHttpContext();
+        DefaultHttpContext context = new();
         _httpContextAccessorMock.Setup(x => x.HttpContext).Returns(context);
 
-        ApiTokenCurrentUserService sut = new ApiTokenCurrentUserService(
+        ApiTokenCurrentUserService sut = new(
             _httpContextAccessorMock.Object,
             _serviceProviderMock.Object,
             _loggerMock.Object);
@@ -110,8 +107,8 @@ public class ApiTokenCurrentUserServiceTests
         Guid? resolvedUserId = sut.UserId;
 
         // Assert
-        isAuthenticated.Should().BeFalse();
-        resolvedUserId.Should().BeNull();
+        Assert.False(isAuthenticated);
+        Assert.Null(resolvedUserId);
         _tokenServiceMock.Verify(x => x.ResolveTokenAsync(It.IsAny<string>()), Times.Never);
     }
 }

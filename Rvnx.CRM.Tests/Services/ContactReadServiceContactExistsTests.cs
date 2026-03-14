@@ -20,14 +20,15 @@ public class ContactReadServiceContactExistsTests
     public async Task ContactExistsAsyncWhenContactExistsAndIsFullReturnsTrue()
     {
         // Arrange
-        var contactId = Guid.NewGuid();
-        var contact = new Contact { Id = contactId, IsPartial = false };
+        Guid contactId = Guid.NewGuid();
+        Contact contact = new()
+        { Id = contactId, IsPartial = false };
 
         _repositoryMock.Setup(r => r.GetByIdAsync<Contact>(contactId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(contact);
 
         // Act
-        var result = await _service.ContactExistsAsync(contactId);
+        bool result = await _service.ContactExistsAsync(contactId);
 
         // Assert
         Assert.True(result);
@@ -37,13 +38,13 @@ public class ContactReadServiceContactExistsTests
     public async Task ContactExistsAsyncWhenContactDoesNotExistReturnsFalse()
     {
         // Arrange
-        var contactId = Guid.NewGuid();
+        Guid contactId = Guid.NewGuid();
 
         _repositoryMock.Setup(r => r.GetByIdAsync<Contact>(contactId, It.IsAny<CancellationToken>()))
             .ReturnsAsync((Contact?)null);
 
         // Act
-        var result = await _service.ContactExistsAsync(contactId);
+        bool result = await _service.ContactExistsAsync(contactId);
 
         // Assert
         Assert.False(result);
@@ -53,14 +54,15 @@ public class ContactReadServiceContactExistsTests
     public async Task ContactExistsAsyncWhenContactIsPartialReturnsFalse()
     {
         // Arrange
-        var contactId = Guid.NewGuid();
-        var contact = new Contact { Id = contactId, IsPartial = true };
+        Guid contactId = Guid.NewGuid();
+        Contact contact = new()
+        { Id = contactId, IsPartial = true };
 
         _repositoryMock.Setup(r => r.GetByIdAsync<Contact>(contactId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(contact);
 
         // Act
-        var result = await _service.ContactExistsAsync(contactId);
+        bool result = await _service.ContactExistsAsync(contactId);
 
         // Assert
         Assert.False(result);

@@ -17,15 +17,14 @@ public class ContactMethodsController(IContactMethodService contactMethodService
     [HttpGet("contact/{contactId}")]
     public async Task<IActionResult> ListByContact(Guid contactId)
     {
-        var contactDetails = await _contactReadService.GetContactDetailsAsync(contactId);
-        if (contactDetails == null) return NotFound();
-        return Ok(contactDetails.ContactMethods);
+        ContactDetailDto? contactDetails = await _contactReadService.GetContactDetailsAsync(contactId);
+        return contactDetails == null ? NotFound() : Ok(contactDetails.ContactMethods);
     }
 
     [HttpPost]
     public async Task<IActionResult> Create([FromBody] ContactMethodFormDto model)
     {
-        var result = await _contactMethodService.CreateAsync(model);
+        OperationResult result = await _contactMethodService.CreateAsync(model);
         if (!result.Success)
         {
             return BadRequest(new { Error = result.ErrorMessage });
@@ -37,22 +36,14 @@ public class ContactMethodsController(IContactMethodService contactMethodService
     public async Task<IActionResult> Update(Guid id, [FromBody] ContactMethodFormDto model)
     {
         model.Id = id;
-        var result = await _contactMethodService.UpdateAsync(id, model);
-        if (!result.Success)
-        {
-            return BadRequest(new { Error = result.ErrorMessage });
-        }
-        return NoContent();
+        OperationResult result = await _contactMethodService.UpdateAsync(id, model);
+        return !result.Success ? BadRequest(new { Error = result.ErrorMessage }) : NoContent();
     }
 
     [HttpDelete("{id}")]
     public async Task<IActionResult> Delete(Guid id)
     {
-        var result = await _contactMethodService.DeleteAsync(id);
-        if (!result.Success)
-        {
-            return BadRequest(new { Error = result.ErrorMessage });
-        }
-        return NoContent();
+        OperationResult result = await _contactMethodService.DeleteAsync(id);
+        return !result.Success ? BadRequest(new { Error = result.ErrorMessage }) : NoContent();
     }
 }
