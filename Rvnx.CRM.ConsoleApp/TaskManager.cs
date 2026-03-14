@@ -43,6 +43,7 @@ internal static class TaskManager
                 "DEMOTE-USER" => await ConsoleCommands.RunDemoteUserAsync(services, args),
                 "MERGE-USERS" => await ConsoleCommands.RunMergeUsersAsync(services, args),
                 "ADD-API-TOKEN" => await ConsoleCommands.RunAddApiTokenAsync(services, args),
+                "REVOKE-API-TOKEN" => await ConsoleCommands.RunRevokeApiTokenAsync(services, args),
                 _ => false
             };
 

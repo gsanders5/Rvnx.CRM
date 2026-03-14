@@ -154,6 +154,50 @@ internal static class ConsoleCommands
         return true;
     }
 
+    public static async Task<bool> RunRevokeApiTokenAsync(IServiceProvider services, string[] args)
+    {
+        if (args.Length < 3)
+        {
+            Console.WriteLine("Error: Please provide the user's email address and token name. Usage: REVOKE-API-TOKEN <email> <token-name>");
+            return false;
+        }
+
+        string email = args[1];
+        string tokenName = args[2];
+        IRepository repository = services.GetRequiredService<IRepository>();
+
+        User? user = await repository.QueryUnfiltered<User>()
+            .FirstOrDefaultAsync(u => EF.Functions.Like(u.Email, email));
+
+        if (user == null)
+        {
+            Console.WriteLine($"Error: User with email '{email}' not found.");
+            return false;
+        }
+
+        IApiTokenService tokenService = services.GetRequiredService<IApiTokenService>();
+        IEnumerable<ApiToken> tokens = await tokenService.ListTokensAsync(user.Id);
+
+        ApiToken? targetToken = tokens.FirstOrDefault(t => string.Equals(t.Name, tokenName, StringComparison.OrdinalIgnoreCase));
+
+        if (targetToken == null)
+        {
+            Console.WriteLine($"Error: Token with name '{tokenName}' not found for user '{email}'.");
+            return false;
+        }
+
+        bool success = await tokenService.RevokeTokenAsync(targetToken.Id, user.Id);
+
+        if (success)
+        {
+            Console.WriteLine($"Successfully revoked API token '{tokenName}' for user '{email}'.");
+            return true;
+        }
+
+        Console.WriteLine($"Error: Failed to revoke API token '{tokenName}' (it may already be revoked).");
+        return false;
+    }
+
     public static async Task<bool> RunMergeUsersAsync(IServiceProvider services, string[] args)
     {
         IDebugOperationsService debugOps = services.GetRequiredService<IDebugOperationsService>();
