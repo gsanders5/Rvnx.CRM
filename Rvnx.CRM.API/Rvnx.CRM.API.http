@@ -1,0 +1,6 @@
+@Rvnx.CRM.API_HostAddress = http://localhost:5212
+
+GET {{Rvnx.CRM.API_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

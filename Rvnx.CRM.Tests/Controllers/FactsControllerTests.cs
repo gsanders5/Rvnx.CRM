@@ -52,7 +52,7 @@ namespace Rvnx.CRM.Tests.Controllers
         public async Task CreateGetReturnsViewWithCorrectModel()
         {
             Guid entityId = Guid.NewGuid();
-            _context.Contacts.Add(new Contact { Id = entityId, FirstName = "Parent" });
+            _context.Contacts!.Add(new Contact { Id = entityId, FirstName = "Parent" });
             await _context.SaveChangesAsync();
 
             IActionResult result = await _controller.Create(entityId, EntityTypes.Person);
@@ -66,7 +66,7 @@ namespace Rvnx.CRM.Tests.Controllers
         public async Task CreatePostValidDataCreatesFact()
         {
             Guid entityId = Guid.NewGuid();
-            _context.Contacts.Add(new Contact { Id = entityId, FirstName = "Parent" });
+            _context.Contacts!.Add(new Contact { Id = entityId, FirstName = "Parent" });
             await _context.SaveChangesAsync();
 
             FactFormDto dto = new()
@@ -94,7 +94,7 @@ namespace Rvnx.CRM.Tests.Controllers
             Guid entityId = Guid.NewGuid();
             Guid factId = Guid.NewGuid();
 
-            _context.Contacts.Add(new Contact { Id = entityId, FirstName = "Test" });
+            _context.Contacts!.Add(new Contact { Id = entityId, FirstName = "Test" });
             _context.Set<Fact>().Add(new Fact
             {
                 Id = factId,
@@ -130,7 +130,7 @@ namespace Rvnx.CRM.Tests.Controllers
             Guid entityId = Guid.NewGuid();
             Guid factId = Guid.NewGuid();
 
-            _context.Contacts.Add(new Contact { Id = entityId, FirstName = "Test" });
+            _context.Contacts!.Add(new Contact { Id = entityId, FirstName = "Test" });
             _context.Set<Fact>().Add(new Fact { Id = factId, ContactId = entityId, Category = "C", Value = "V" });
             await _context.SaveChangesAsync();
 

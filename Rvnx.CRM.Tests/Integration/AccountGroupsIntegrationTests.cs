@@ -39,8 +39,8 @@ public class AccountGroupsIntegrationTests
             Contact c1 = new() { FirstName = "Group1", LastName = "Contact", GroupId = group1Id, UserId = user1Id };
             Contact c2 = new() { FirstName = "Group2", LastName = "Contact", GroupId = group2Id, UserId = user2Id };
 
-            context.Contacts.Add(c1);
-            context.Contacts.Add(c2);
+            context.Contacts!.Add(c1);
+            context.Contacts!.Add(c2);
             await context.SaveChangesAsync();
         }
 
@@ -111,7 +111,7 @@ public class AccountGroupsIntegrationTests
         using CRMDbContext context = new(options, mockUserService.Object);
         Contact contact = new() { FirstName = "New", LastName = "One" };
 
-        context.Contacts.Add(contact);
+        context.Contacts!.Add(contact);
         await context.SaveChangesAsync();
 
         Assert.Equal(groupId, contact.GroupId);

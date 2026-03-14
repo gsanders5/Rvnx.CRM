@@ -41,6 +41,7 @@
 		<ProjectReference Include="..\Rvnx.CRM.Infrastructure\Rvnx.CRM.Infrastructure.csproj" />
 		<ProjectReference Include="..\Rvnx.CRM.Web\Rvnx.CRM.Web.csproj" />
 		<ProjectReference Include="..\Rvnx.CRM.ConsoleApp\Rvnx.CRM.ConsoleApp.csproj" />
+		<ProjectReference Include="..\Rvnx.CRM.API\Rvnx.CRM.API.csproj" />
 	</ItemGroup>
 
 </Project>

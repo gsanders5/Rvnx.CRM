@@ -53,7 +53,7 @@ namespace Rvnx.CRM.Tests.Controllers
         public async Task CreateGetReturnsViewWithCorrectModel()
         {
             Guid entityId = Guid.NewGuid();
-            _context.Contacts.Add(new Contact { Id = entityId, FirstName = "Parent" });
+            _context.Contacts!.Add(new Contact { Id = entityId, FirstName = "Parent" });
             await _context.SaveChangesAsync();
 
             string entityType = EntityTypes.Person;
@@ -71,7 +71,7 @@ namespace Rvnx.CRM.Tests.Controllers
         {
             Guid entityId = Guid.NewGuid();
             string entityType = EntityTypes.Person;
-            _context.Contacts.Add(new Contact { Id = entityId, FirstName = "Parent", LastName = "Entity" });
+            _context.Contacts!.Add(new Contact { Id = entityId, FirstName = "Parent", LastName = "Entity" });
             await _context.SaveChangesAsync();
 
             ContactMethodFormDto dto = new()
@@ -100,7 +100,7 @@ namespace Rvnx.CRM.Tests.Controllers
         public async Task CreatePostInvalidDataReturnsView()
         {
             Guid entityId = Guid.NewGuid();
-            _context.Contacts.Add(new Contact { Id = entityId, FirstName = "Parent" });
+            _context.Contacts!.Add(new Contact { Id = entityId, FirstName = "Parent" });
             await _context.SaveChangesAsync();
 
             ContactMethodFormDto dto = new()
@@ -146,7 +146,7 @@ namespace Rvnx.CRM.Tests.Controllers
             Guid entityId = Guid.NewGuid();
             Guid methodId = Guid.NewGuid();
 
-            _context.Contacts.Add(new Contact { Id = entityId, FirstName = "Test", LastName = "User" });
+            _context.Contacts!.Add(new Contact { Id = entityId, FirstName = "Test", LastName = "User" });
             _context.Set<ContactMethod>().Add(new ContactMethod
             {
                 Id = methodId,
@@ -205,7 +205,7 @@ namespace Rvnx.CRM.Tests.Controllers
             Guid entityId = Guid.NewGuid();
             Guid methodId = Guid.NewGuid();
 
-            _context.Contacts.Add(new Contact { Id = entityId, FirstName = "Test", LastName = "User" });
+            _context.Contacts!.Add(new Contact { Id = entityId, FirstName = "Test", LastName = "User" });
             _context.Set<ContactMethod>().Add(new ContactMethod
             {
                 Id = methodId,

@@ -84,7 +84,7 @@ public class ReminderNotificationServiceTests
 
         // Contact has no GroupId
         Contact contact = new() { FirstName = "Jane", LastName = "Doe" };
-        context.Contacts.Add(contact);
+        context.Contacts!.Add(contact);
 
         SignificantDate sd = new()
         {
@@ -94,10 +94,10 @@ public class ReminderNotificationServiceTests
             RecurrenceType = RecurrenceType.None,
             IsActive = true
         };
-        context.SignificantDates.Add(sd);
+        context.SignificantDates!.Add(sd);
 
         ReminderOffset offset = new() { SignificantDate = sd, DaysBeforeEvent = 0, IsActive = true };
-        context.ReminderOffsets.Add(offset);
+        context.ReminderOffsets!.Add(offset);
 
         await context.SaveChangesAsync();
 
@@ -124,7 +124,7 @@ public class ReminderNotificationServiceTests
 
         // Contact belongs to a group, but no users are in that group
         Contact contact = new() { FirstName = "John", LastName = "Smith", GroupId = groupId };
-        context.Contacts.Add(contact);
+        context.Contacts!.Add(contact);
 
         SignificantDate sd = new()
         {
@@ -134,10 +134,10 @@ public class ReminderNotificationServiceTests
             RecurrenceType = RecurrenceType.None,
             IsActive = true
         };
-        context.SignificantDates.Add(sd);
+        context.SignificantDates!.Add(sd);
 
         ReminderOffset offset = new() { SignificantDate = sd, DaysBeforeEvent = 0, IsActive = true };
-        context.ReminderOffsets.Add(offset);
+        context.ReminderOffsets!.Add(offset);
 
         await context.SaveChangesAsync();
 
@@ -162,10 +162,10 @@ public class ReminderNotificationServiceTests
 
         Guid groupId = Guid.NewGuid();
         UserGroup group = new() { Id = groupId, Name = "TestGroup" };
-        context.UserGroups.Add(group);
+        context.UserGroups!.Add(group);
 
         Contact contact = new() { FirstName = "Alice", LastName = "Brown", GroupId = groupId };
-        context.Contacts.Add(contact);
+        context.Contacts!.Add(contact);
 
         // Event is in 10 days; reminder is 3 days before — so NOT due today
         SignificantDate sd = new()
@@ -176,10 +176,10 @@ public class ReminderNotificationServiceTests
             RecurrenceType = RecurrenceType.None,
             IsActive = true
         };
-        context.SignificantDates.Add(sd);
+        context.SignificantDates!.Add(sd);
 
         ReminderOffset offset = new() { SignificantDate = sd, DaysBeforeEvent = 3, IsActive = true };
-        context.ReminderOffsets.Add(offset);
+        context.ReminderOffsets!.Add(offset);
 
         await context.SaveChangesAsync();
 

@@ -41,12 +41,12 @@ public class MergeAccountsTests
 
         using CRMDbContext context = GetInMemoryDbContext(mockUserService.Object);
 
-        context.Users.Add(new User { Id = adminId, Email = "admin@example.com", IsAdministrator = true, GroupId = mockUserService.Object.GroupId, SubjectId = "admin" });
+        context.Users!.Add(new User { Id = adminId, Email = "admin@example.com", IsAdministrator = true, GroupId = mockUserService.Object.GroupId, SubjectId = "admin" });
 
         UserGroup group1 = new() { Id = group1Id, Name = "Group 1" };
         User user1 = new() { Id = user1Id, Email = "u1@example.com", Group = group1, GroupId = group1Id, SubjectId = "u1" };
         User user1b = new() { Id = Guid.NewGuid(), Email = "u1b@example.com", Group = group1, GroupId = group1Id, SubjectId = "u1b" }; // Extra member to win tie
-        context.UserGroups.Add(group1);
+        context.UserGroups!.Add(group1);
         context.Users.Add(user1);
         context.Users.Add(user1b);
 
@@ -56,7 +56,7 @@ public class MergeAccountsTests
         context.Users.Add(user2);
 
         Contact contact2 = new() { FirstName = "G2", LastName = "Contact", GroupId = group2Id, UserId = user2Id };
-        context.Contacts.Add(contact2);
+        context.Contacts!.Add(contact2);
 
         await context.SaveChangesAsync();
         Repository repository = new(context);

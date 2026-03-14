@@ -1,6 +1,3 @@
-using System;
-using System.Threading;
-using System.Threading.Tasks;
 using Moq;
 using Rvnx.CRM.Core.Constants;
 using Rvnx.CRM.Core.DTOs.Base;
@@ -10,7 +7,6 @@ using Rvnx.CRM.Core.Models;
 using Rvnx.CRM.Core.Models.Base;
 using Rvnx.CRM.Core.Models.Contact;
 using Rvnx.CRM.Infrastructure.Services;
-using Xunit;
 
 namespace Rvnx.CRM.Tests.Services
 {
@@ -33,8 +29,10 @@ namespace Rvnx.CRM.Tests.Services
             // Arrange
             Guid noteId = Guid.NewGuid();
             Guid contactId = Guid.NewGuid();
-            Note existingNote = new Note { Id = noteId, ContactId = contactId, Title = "Test Note" };
-            NoteFormViewModel dto = new NoteFormViewModel { Id = noteId, EntityId = contactId, EntityType = EntityTypes.Person, Title = "Updated Note" };
+            Note existingNote = new()
+            { Id = noteId, ContactId = contactId, Title = "Test Note" };
+            NoteFormViewModel dto = new()
+            { Id = noteId, EntityId = contactId, EntityType = EntityTypes.Person, Title = "Updated Note" };
 
             _repositoryMock.Setup(r => r.GetByIdAsync<Note>(noteId, It.IsAny<CancellationToken>()))
                 .ReturnsAsync(existingNote);
@@ -58,8 +56,10 @@ namespace Rvnx.CRM.Tests.Services
             // Arrange
             Guid noteId = Guid.NewGuid();
             Guid contactId = Guid.NewGuid();
-            Note existingNote = new Note { Id = noteId, ContactId = contactId, Title = "Test Note" };
-            NoteFormViewModel dto = new NoteFormViewModel { Id = noteId, EntityId = contactId, EntityType = EntityTypes.Person, Title = "Updated Note" };
+            Note existingNote = new()
+            { Id = noteId, ContactId = contactId, Title = "Test Note" };
+            NoteFormViewModel dto = new()
+            { Id = noteId, EntityId = contactId, EntityType = EntityTypes.Person, Title = "Updated Note" };
 
             _repositoryMock.Setup(r => r.GetByIdAsync<Note>(noteId, It.IsAny<CancellationToken>()))
                 .ReturnsAsync(existingNote);

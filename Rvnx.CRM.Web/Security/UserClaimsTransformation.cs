@@ -48,7 +48,7 @@ public class UserClaimsTransformation(IServiceProvider serviceProvider, IConfigu
         using IServiceScope scope = _serviceProvider.CreateScope();
         IRepository repo = scope.ServiceProvider.GetRequiredService<IRepository>();
 
-        var user = (await repo.ListAsNoTrackingAsync<User>(u => u.SubjectId == subjectId)).FirstOrDefault();
+        User? user = (await repo.ListAsNoTrackingAsync<User>(u => u.SubjectId == subjectId)).FirstOrDefault();
 
         if (user != null)
         {

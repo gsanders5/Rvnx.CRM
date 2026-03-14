@@ -46,7 +46,7 @@ namespace Rvnx.CRM.Tests.Controllers
         public async Task CreateWithValidDataShouldCreateDate()
         {
             Guid contactId = Guid.NewGuid();
-            _context.Contacts.Add(new Contact { Id = contactId, FirstName = "Test" });
+            _context.Contacts!.Add(new Contact { Id = contactId, FirstName = "Test" });
             await _context.SaveChangesAsync();
 
             CreateSignificantDateRequest dto = new()
@@ -72,7 +72,7 @@ namespace Rvnx.CRM.Tests.Controllers
         public async Task CreateWhenDuplicateBirthdayExistsShouldReturnValidationError()
         {
             Guid contactId = Guid.NewGuid();
-            _context.Contacts.Add(new Contact { Id = contactId, FirstName = "Test" });
+            _context.Contacts!.Add(new Contact { Id = contactId, FirstName = "Test" });
 
             _context.Set<SignificantDate>().Add(new SignificantDate
             {
@@ -107,7 +107,7 @@ namespace Rvnx.CRM.Tests.Controllers
         public async Task CreateWhenDuplicateBirthdayExistsWithDifferentCaseShouldReturnValidationError()
         {
             Guid contactId = Guid.NewGuid();
-            _context.Contacts.Add(new Contact { Id = contactId, FirstName = "Test" });
+            _context.Contacts!.Add(new Contact { Id = contactId, FirstName = "Test" });
 
             _context.Set<SignificantDate>().Add(new SignificantDate
             {
@@ -141,7 +141,7 @@ namespace Rvnx.CRM.Tests.Controllers
         public async Task EditWhenChangingToBirthdayButOneAlreadyExistsShouldReturnValidationError()
         {
             Guid contactId = Guid.NewGuid();
-            _context.Contacts.Add(new Contact { Id = contactId, FirstName = "Test" });
+            _context.Contacts!.Add(new Contact { Id = contactId, FirstName = "Test" });
 
             _context.Set<SignificantDate>().Add(new SignificantDate
             {
@@ -181,7 +181,7 @@ namespace Rvnx.CRM.Tests.Controllers
         public async Task EditWhenExistingIsBirthdayAndUpdatingShouldSucceed()
         {
             Guid contactId = Guid.NewGuid();
-            _context.Contacts.Add(new Contact { Id = contactId, FirstName = "Test" });
+            _context.Contacts!.Add(new Contact { Id = contactId, FirstName = "Test" });
 
             Guid birthdayId = Guid.NewGuid();
             _context.Set<SignificantDate>().Add(new SignificantDate

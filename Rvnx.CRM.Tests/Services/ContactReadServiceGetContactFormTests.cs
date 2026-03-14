@@ -33,7 +33,7 @@ public class ContactReadServiceGetContactFormTests
             .ReturnsAsync([]);
 
         // Act
-        var result = await _service.GetContactFormAsync(Guid.NewGuid());
+        ContactFormDto? result = await _service.GetContactFormAsync(Guid.NewGuid());
 
         // Assert
         Assert.Null(result);
@@ -43,8 +43,8 @@ public class ContactReadServiceGetContactFormTests
     public async Task GetContactFormAsyncMapsBasicFieldsCorrectly()
     {
         // Arrange
-        var contactId = Guid.NewGuid();
-        var contact = new Contact
+        Guid contactId = Guid.NewGuid();
+        Contact contact = new()
         {
             Id = contactId,
             FirstName = "Jane",
@@ -77,7 +77,7 @@ public class ContactReadServiceGetContactFormTests
             .ReturnsAsync([]);
 
         // Act
-        var result = await _service.GetContactFormAsync(contactId);
+        ContactFormDto? result = await _service.GetContactFormAsync(contactId);
 
         // Assert
         Assert.NotNull(result);
@@ -98,8 +98,8 @@ public class ContactReadServiceGetContactFormTests
     public async Task GetContactFormAsyncPrioritizesPrimaryEmailAndPhone()
     {
         // Arrange
-        var contactId = Guid.NewGuid();
-        var contact = new Contact
+        Guid contactId = Guid.NewGuid();
+        Contact contact = new()
         {
             Id = contactId,
             FirstName = "John",
@@ -130,7 +130,7 @@ public class ContactReadServiceGetContactFormTests
             .ReturnsAsync([]);
 
         // Act
-        var result = await _service.GetContactFormAsync(contactId);
+        ContactFormDto? result = await _service.GetContactFormAsync(contactId);
 
         // Assert
         Assert.NotNull(result);
@@ -142,16 +142,16 @@ public class ContactReadServiceGetContactFormTests
     public async Task GetContactFormAsyncMapsBirthdayAndReminderCorrectly()
     {
         // Arrange
-        var contactId = Guid.NewGuid();
-        var contact = new Contact
+        Guid contactId = Guid.NewGuid();
+        Contact contact = new()
         {
             Id = contactId,
             FirstName = "Birthday",
             LastName = "Person"
         };
 
-        var birthdayDate = new DateOnly(1990, 5, 15);
-        var significantDate = new SignificantDate
+        DateOnly birthdayDate = new(1990, 5, 15);
+        SignificantDate significantDate = new()
         {
             Title = SignificantDateTitles.Birthday,
             EventDate = birthdayDate
@@ -178,7 +178,7 @@ public class ContactReadServiceGetContactFormTests
             .ReturnsAsync([]);
 
         // Act
-        var result = await _service.GetContactFormAsync(contactId);
+        ContactFormDto? result = await _service.GetContactFormAsync(contactId);
 
         // Assert
         Assert.NotNull(result);
@@ -190,11 +190,11 @@ public class ContactReadServiceGetContactFormTests
     public async Task GetContactFormAsyncMapsProfileImageAndLabelsCorrectly()
     {
         // Arrange
-        var contactId = Guid.NewGuid();
-        var profileImageId = Guid.NewGuid();
-        var labelId = Guid.NewGuid();
+        Guid contactId = Guid.NewGuid();
+        Guid profileImageId = Guid.NewGuid();
+        Guid labelId = Guid.NewGuid();
 
-        var contact = new Contact
+        Contact contact = new()
         {
             Id = contactId,
             FirstName = "Image",
@@ -202,12 +202,13 @@ public class ContactReadServiceGetContactFormTests
         };
         contact.ContactLabels.Add(new ContactLabel { ContactId = contactId, LabelId = labelId });
 
-        var profileAttachment = new Attachment { Id = profileImageId, ContactId = contactId, AttachmentType = AttachmentTypes.ProfileImage };
-        var allLabels = new List<Label>
-        {
+        Attachment profileAttachment = new()
+        { Id = profileImageId, ContactId = contactId, AttachmentType = AttachmentTypes.ProfileImage };
+        List<Label> allLabels =
+        [
             new Label { Id = labelId, Name = "Friends", Color = "Red" },
             new Label { Id = Guid.NewGuid(), Name = "Work", Color = "Blue" }
-        };
+        ];
 
         _repositoryMock.Setup(r => r.ListAsNoTrackingAsync<Contact>(
             It.IsAny<Expression<Func<Contact, bool>>>(),
@@ -227,7 +228,7 @@ public class ContactReadServiceGetContactFormTests
             .ReturnsAsync(allLabels);
 
         // Act
-        var result = await _service.GetContactFormAsync(contactId);
+        ContactFormDto? result = await _service.GetContactFormAsync(contactId);
 
         // Assert
         Assert.NotNull(result);

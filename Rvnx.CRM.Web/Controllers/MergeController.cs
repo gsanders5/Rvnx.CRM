@@ -1,7 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Rvnx.CRM.Core.Interfaces;
-using Rvnx.CRM.Core.Models.Contact;
 using Rvnx.CRM.Web.Controllers.Base;
 using Rvnx.CRM.Web.Models;
 
@@ -17,19 +16,19 @@ public class MergeController(
     [HttpGet]
     public async Task<IActionResult> Index(Guid primaryId)
     {
-        var primaryContact = await _contactReadService.GetContactDetailsAsync(primaryId);
+        Core.DTOs.Contact.ContactDetailDto? primaryContact = await _contactReadService.GetContactDetailsAsync(primaryId);
         if (primaryContact == null)
         {
             return NotFound("Primary contact not found.");
         }
 
         // We need a list of other contacts to select from
-        var allContacts = await _contactReadService.GetIndexDataAsync(false);
-        var availableContacts = allContacts.Where(c => c.Id != primaryId).ToList();
+        List<Core.DTOs.Contact.ContactDto> allContacts = await _contactReadService.GetIndexDataAsync(false);
+        List<Core.DTOs.Contact.ContactDto> availableContacts = allContacts.Where(c => c.Id != primaryId).ToList();
 
         ViewBag.SecondaryContacts = new SelectList(availableContacts, "Id", "FullName");
 
-        var model = new MergeContactViewModel
+        MergeContactViewModel model = new()
         {
             PrimaryContactId = primaryId,
             PrimaryContact = primaryContact
@@ -48,8 +47,8 @@ public class MergeController(
             return RedirectToAction(nameof(Index), new { primaryId = model.PrimaryContactId });
         }
 
-        var primaryContact = await _contactReadService.GetContactDetailsAsync(model.PrimaryContactId);
-        var secondaryContact = await _contactReadService.GetContactDetailsAsync(model.SecondaryContactId);
+        Core.DTOs.Contact.ContactDetailDto? primaryContact = await _contactReadService.GetContactDetailsAsync(model.PrimaryContactId);
+        Core.DTOs.Contact.ContactDetailDto? secondaryContact = await _contactReadService.GetContactDetailsAsync(model.SecondaryContactId);
 
         if (primaryContact == null || secondaryContact == null)
         {

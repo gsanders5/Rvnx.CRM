@@ -43,7 +43,7 @@ namespace Rvnx.CRM.Tests.Services
             AttachmentService service = new(repo, fileServiceMock.Object, entityServiceMock.Object);
 
             Guid contactId = Guid.NewGuid();
-            context.Contacts.Add(new Contact { Id = contactId, FirstName = "Test", LastName = "User" });
+            context.Contacts!.Add(new Contact { Id = contactId, FirstName = "Test", LastName = "User" });
             context.SaveChanges();
 
             byte[] content = [1, 2, 3];
@@ -52,7 +52,7 @@ namespace Rvnx.CRM.Tests.Services
 
             Assert.True(result.Success);
             Assert.NotNull(result.AttachmentId);
-            Attachment? attachment = await context.Attachments.FindAsync(result.AttachmentId);
+            Attachment? attachment = await context.Attachments!.FindAsync(result.AttachmentId);
             Assert.NotNull(attachment);
             Assert.Equal("test.png", attachment.FileName);
         }
@@ -86,7 +86,7 @@ namespace Rvnx.CRM.Tests.Services
             AttachmentService service = new(repo, fileServiceMock.Object, entityServiceMock.Object);
 
             Guid contactId = Guid.NewGuid();
-            context.Contacts.Add(new Contact { Id = contactId, FirstName = "Partial", IsPartial = true });
+            context.Contacts!.Add(new Contact { Id = contactId, FirstName = "Partial", IsPartial = true });
             context.SaveChanges();
 
             AttachmentOperationResult result = await service.UploadAttachmentAsync(contactId, EntityTypes.Person, [1], "test.png");
@@ -124,7 +124,7 @@ namespace Rvnx.CRM.Tests.Services
 
             AttachmentService service = new(repo, fileServiceMock.Object, entityServiceMock.Object);
             Guid contactId = Guid.NewGuid();
-            context.Contacts.Add(new Contact { Id = contactId, FirstName = "Test", LastName = "User" });
+            context.Contacts!.Add(new Contact { Id = contactId, FirstName = "Test", LastName = "User" });
             context.SaveChanges();
 
             AttachmentOperationResult result = await service.UploadAttachmentAsync(contactId, EntityTypes.Person, [], "test.png");
@@ -146,7 +146,7 @@ namespace Rvnx.CRM.Tests.Services
 
             AttachmentService service = new(repo, fileServiceMock.Object, entityServiceMock.Object);
             Guid contactId = Guid.NewGuid();
-            context.Contacts.Add(new Contact { Id = contactId, FirstName = "Test", LastName = "User" });
+            context.Contacts!.Add(new Contact { Id = contactId, FirstName = "Test", LastName = "User" });
             context.SaveChanges();
 
             AttachmentOperationResult result = await service.UploadAttachmentAsync(contactId, EntityTypes.Person, [1, 2, 3], "test.png");
@@ -169,7 +169,7 @@ namespace Rvnx.CRM.Tests.Services
 
             AttachmentService service = new(repo, fileServiceMock.Object, entityServiceMock.Object);
             Guid contactId = Guid.NewGuid();
-            context.Contacts.Add(new Contact { Id = contactId, FirstName = "Test", LastName = "User" });
+            context.Contacts!.Add(new Contact { Id = contactId, FirstName = "Test", LastName = "User" });
             context.SaveChanges();
 
             AttachmentOperationResult result = await service.UploadAttachmentAsync(contactId, EntityTypes.Person, [1, 2, 3], "test.exe");
@@ -193,7 +193,7 @@ namespace Rvnx.CRM.Tests.Services
 
             AttachmentService service = new(repo, fileServiceMock.Object, entityServiceMock.Object);
             Guid contactId = Guid.NewGuid();
-            context.Contacts.Add(new Contact { Id = contactId, FirstName = "Test", LastName = "User" });
+            context.Contacts!.Add(new Contact { Id = contactId, FirstName = "Test", LastName = "User" });
             context.SaveChanges();
 
             AttachmentOperationResult result = await service.UploadAttachmentAsync(contactId, EntityTypes.Person, [1, 2, 3], "test.png");
@@ -213,10 +213,10 @@ namespace Rvnx.CRM.Tests.Services
             AttachmentService service = new(repo, fileServiceMock.Object, entityServiceMock.Object);
 
             Guid contactId = Guid.NewGuid();
-            context.Contacts.Add(new Contact { Id = contactId, FirstName = "Test", LastName = "User" });
+            context.Contacts!.Add(new Contact { Id = contactId, FirstName = "Test", LastName = "User" });
 
             Guid attachmentId = Guid.NewGuid();
-            context.Attachments.Add(new Attachment
+            context.Attachments!.Add(new Attachment
             {
                 Id = attachmentId,
                 ContactId = contactId,
@@ -261,10 +261,10 @@ namespace Rvnx.CRM.Tests.Services
             AttachmentService service = new(repo, fileServiceMock.Object, entityServiceMock.Object);
 
             Guid contactId = Guid.NewGuid();
-            context.Contacts.Add(new Contact { Id = contactId, FirstName = "Partial", IsPartial = true });
+            context.Contacts!.Add(new Contact { Id = contactId, FirstName = "Partial", IsPartial = true });
 
             Guid attachmentId = Guid.NewGuid();
-            context.Attachments.Add(new Attachment
+            context.Attachments!.Add(new Attachment
             {
                 Id = attachmentId,
                 ContactId = contactId,
@@ -294,10 +294,10 @@ namespace Rvnx.CRM.Tests.Services
             AttachmentService service = new(repo, fileServiceMock.Object, entityServiceMock.Object);
 
             Guid contactId = Guid.NewGuid();
-            context.Contacts.Add(new Contact { Id = contactId, FirstName = "Test", LastName = "User" });
+            context.Contacts!.Add(new Contact { Id = contactId, FirstName = "Test", LastName = "User" });
 
             Guid attachmentId = Guid.NewGuid();
-            context.Attachments.Add(new Attachment
+            context.Attachments!.Add(new Attachment
             {
                 Id = attachmentId,
                 ContactId = contactId,
@@ -344,10 +344,10 @@ namespace Rvnx.CRM.Tests.Services
             AttachmentService service = new(repo, fileServiceMock.Object, entityServiceMock.Object);
 
             Guid contactId = Guid.NewGuid();
-            context.Contacts.Add(new Contact { Id = contactId, FirstName = "Partial", IsPartial = true });
+            context.Contacts!.Add(new Contact { Id = contactId, FirstName = "Partial", IsPartial = true });
 
             Guid attachmentId = Guid.NewGuid();
-            context.Attachments.Add(new Attachment
+            context.Attachments!.Add(new Attachment
             {
                 Id = attachmentId,
                 ContactId = contactId,
@@ -372,11 +372,11 @@ namespace Rvnx.CRM.Tests.Services
             AttachmentService service = new(repo, fileServiceMock.Object, entityServiceMock.Object);
 
             Guid contactId = Guid.NewGuid();
-            context.Contacts.Add(new Contact { Id = contactId, FirstName = "Test", LastName = "User" });
+            context.Contacts!.Add(new Contact { Id = contactId, FirstName = "Test", LastName = "User" });
 
             Guid attachmentId = Guid.NewGuid();
             byte[] fileContent = [1, 2, 3];
-            context.Attachments.Add(new Attachment
+            context.Attachments!.Add(new Attachment
             {
                 Id = attachmentId,
                 ContactId = contactId,
@@ -423,10 +423,10 @@ namespace Rvnx.CRM.Tests.Services
             AttachmentService service = new(repo, fileServiceMock.Object, entityServiceMock.Object);
 
             Guid contactId = Guid.NewGuid();
-            context.Contacts.Add(new Contact { Id = contactId, FirstName = "Partial", IsPartial = true });
+            context.Contacts!.Add(new Contact { Id = contactId, FirstName = "Partial", IsPartial = true });
 
             Guid attachmentId = Guid.NewGuid();
-            context.Attachments.Add(new Attachment
+            context.Attachments!.Add(new Attachment
             {
                 Id = attachmentId,
                 ContactId = contactId,
