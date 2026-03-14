@@ -99,7 +99,7 @@ public class RelationshipsControllerTests
         public async Task DeleteConfirmedWithValidReturnUrlShouldRedirectToUrl()
         {
             Guid relId = Guid.NewGuid();
-            _context.Relationships.Add(new Core.Models.Contact.Relationship
+            _context.Relationships!.Add(new Core.Models.Contact.Relationship
             {
                 Id = relId,
                 EntityId = Guid.NewGuid(),
@@ -121,7 +121,7 @@ public class RelationshipsControllerTests
         {
             Guid relId = Guid.NewGuid();
             Guid entityId = Guid.NewGuid();
-            _context.Relationships.Add(new Core.Models.Contact.Relationship
+            _context.Relationships!.Add(new Core.Models.Contact.Relationship
             {
                 Id = relId,
                 EntityId = entityId,
@@ -186,7 +186,7 @@ public class RelationshipsControllerTests
         {
             // We need a valid relationship ID to reach the logic
             Guid relId = Guid.NewGuid();
-            _context.Relationships.Add(new Core.Models.Contact.Relationship
+            _context.Relationships!.Add(new Core.Models.Contact.Relationship
             {
                 Id = relId,
                 EntityId = Guid.NewGuid(),
@@ -247,8 +247,8 @@ public class RelationshipsControllerTests
         {
             Guid p1Id = Guid.NewGuid();
             Guid p2Id = Guid.NewGuid();
-            _context.Contacts.Add(new Contact { Id = p1Id, FirstName = "P1" });
-            _context.Contacts.Add(new Contact { Id = p2Id, FirstName = "P2" });
+            _context.Contacts!.Add(new Contact { Id = p1Id, FirstName = "P1" });
+            _context.Contacts!.Add(new Contact { Id = p2Id, FirstName = "P2" });
             await _context.SaveChangesAsync();
 
             Guid typeId = Guid.Parse("7c1f8d22-1b6a-4c28-9c1e-3f5a2b8e9d1a"); // Parent
@@ -281,8 +281,8 @@ public class RelationshipsControllerTests
         {
             Guid p1Id = Guid.NewGuid(); // User is on P1 page
             Guid p2Id = Guid.NewGuid(); // User selects P2 as related
-            _context.Contacts.Add(new Contact { Id = p1Id, FirstName = "P1" });
-            _context.Contacts.Add(new Contact { Id = p2Id, FirstName = "P2" });
+            _context.Contacts!.Add(new Contact { Id = p1Id, FirstName = "P1" });
+            _context.Contacts!.Add(new Contact { Id = p2Id, FirstName = "P2" });
             await _context.SaveChangesAsync();
 
             Guid typeId = Guid.Parse("7c1f8d22-1b6a-4c28-9c1e-3f5a2b8e9d1a"); // Parent
@@ -333,7 +333,7 @@ public class RelationshipsControllerTests
         public async Task CreateGetShouldPopulateGroupedOptions()
         {
             Guid p1Id = Guid.NewGuid();
-            _context.Contacts.Add(new Contact { Id = p1Id, FirstName = "P1" });
+            _context.Contacts!.Add(new Contact { Id = p1Id, FirstName = "P1" });
             await _context.SaveChangesAsync();
 
             IActionResult result = await _controller.Create(p1Id, EntityTypes.Person);
@@ -358,8 +358,8 @@ public class RelationshipsControllerTests
         public async Task CreatePostWhenRelationshipTypeSelectionIsEmptyShouldReturnViewWithPopulatedOptions()
         {
             Guid p1Id = Guid.NewGuid();
-            _context.Contacts.Add(new Contact { Id = p1Id, FirstName = "P1", LastName = "User" });
-            _context.Contacts.Add(new Contact { Id = Guid.NewGuid(), FirstName = "P2" });
+            _context.Contacts!.Add(new Contact { Id = p1Id, FirstName = "P1", LastName = "User" });
+            _context.Contacts!.Add(new Contact { Id = Guid.NewGuid(), FirstName = "P2" });
             await _context.SaveChangesAsync();
 
             RelationshipFormViewModel viewModel = new()
@@ -393,7 +393,7 @@ public class RelationshipsControllerTests
         public async Task CreatePartialWithValidDataCreatesRelationshipAndRedirects()
         {
             Guid p1Id = Guid.NewGuid();
-            _context.Contacts.Add(new Contact { Id = p1Id, FirstName = "P1" });
+            _context.Contacts!.Add(new Contact { Id = p1Id, FirstName = "P1" });
             await _context.SaveChangesAsync();
 
             CreatePartialContactRelationshipDto dto = new()
@@ -418,7 +418,7 @@ public class RelationshipsControllerTests
         public async Task PromoteWithValidContactIdReturnsRedirect()
         {
             Guid p1Id = Guid.NewGuid();
-            _context.Contacts.Add(new Contact { Id = p1Id, FirstName = "P1", IsPartial = true });
+            _context.Contacts!.Add(new Contact { Id = p1Id, FirstName = "P1", IsPartial = true });
             await _context.SaveChangesAsync();
 
             IActionResult result = await _controller.Promote(p1Id);
@@ -439,10 +439,10 @@ public class RelationshipsControllerTests
             Guid relId = Guid.NewGuid();
             Guid p1Id = Guid.NewGuid();
             Guid p2Id = Guid.NewGuid();
-            _context.Contacts.Add(new Contact { Id = p1Id, FirstName = "P1" });
-            _context.Contacts.Add(new Contact { Id = p2Id, FirstName = "P2" });
+            _context.Contacts!.Add(new Contact { Id = p1Id, FirstName = "P1" });
+            _context.Contacts!.Add(new Contact { Id = p2Id, FirstName = "P2" });
 
-            _context.Relationships.Add(new Relationship
+            _context.Relationships!.Add(new Relationship
             {
                 Id = relId,
                 EntityId = p1Id,

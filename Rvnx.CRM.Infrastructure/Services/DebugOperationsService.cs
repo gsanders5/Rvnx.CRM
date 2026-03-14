@@ -158,7 +158,7 @@ public class DebugOperationsService(
             }
         }
 
-        _context.UserGroups.Remove(discardedGroup);
+        _context.UserGroups!.Remove(discardedGroup);
 
         await _context.SaveChangesAsync();
 

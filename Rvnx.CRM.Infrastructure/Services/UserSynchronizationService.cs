@@ -49,7 +49,7 @@ public class UserSynchronizationService(CRMDbContext dbContext, IRepository repo
             };
             user.Group = group;
 
-            _dbContext.Users.Add(user);
+            _dbContext.Users!.Add(user);
             await _dbContext.SaveChangesAsync();
             user.UserId = user.Id;
             await _dbContext.SaveChangesAsync();

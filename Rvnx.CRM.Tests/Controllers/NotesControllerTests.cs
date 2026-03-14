@@ -77,7 +77,7 @@ public class NotesControllerTests
                 GroupId = Guid.NewGuid() // Explicitly set different group
             };
 
-            _context.Contacts.Add(otherUserContact);
+            _context.Contacts!.Add(otherUserContact);
             await _context.SaveChangesAsync();
             _context.ChangeTracker.Clear();
 
@@ -110,7 +110,7 @@ public class NotesControllerTests
                 GroupId = Guid.NewGuid() // Explicitly set different group
             };
 
-            _context.Contacts.Add(otherUserContact);
+            _context.Contacts!.Add(otherUserContact);
             await _context.SaveChangesAsync();
             _context.ChangeTracker.Clear();
 
@@ -171,7 +171,7 @@ public class NotesControllerTests
         public async Task CreatePostWithValidDataShouldCreateNote()
         {
             Guid contactId = Guid.NewGuid();
-            _context.Contacts.Add(new Contact { Id = contactId, FirstName = "Test" });
+            _context.Contacts!.Add(new Contact { Id = contactId, FirstName = "Test" });
             await _context.SaveChangesAsync();
 
             NoteFormViewModel note = new()
@@ -199,7 +199,7 @@ public class NotesControllerTests
         {
             Guid noteId = Guid.NewGuid();
             Guid contactId = Guid.NewGuid();
-            _context.Contacts.Add(new Contact { Id = contactId, FirstName = "Test" });
+            _context.Contacts!.Add(new Contact { Id = contactId, FirstName = "Test" });
             _context.Set<Note>().Add(new Note { Id = noteId, ContactId = contactId, Title = "Old", Value = "OldVal" });
             await _context.SaveChangesAsync();
             _context.ChangeTracker.Clear();
@@ -228,7 +228,7 @@ public class NotesControllerTests
         {
             Guid noteId = Guid.NewGuid();
             Guid contactId = Guid.NewGuid();
-            _context.Contacts.Add(new Contact { Id = contactId, FirstName = "Test" });
+            _context.Contacts!.Add(new Contact { Id = contactId, FirstName = "Test" });
             _context.Set<Note>().Add(new Note { Id = noteId, ContactId = contactId, Title = "Del", Value = "Val" });
             await _context.SaveChangesAsync();
 

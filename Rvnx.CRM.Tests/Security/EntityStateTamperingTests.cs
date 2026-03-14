@@ -52,8 +52,8 @@ namespace Rvnx.CRM.Tests.Security
             Guid originalContactId = Guid.NewGuid();
             Guid attackerContactId = Guid.NewGuid();
 
-            context.Contacts.Add(new Contact { Id = originalContactId, FirstName = "Original" });
-            context.Contacts.Add(new Contact { Id = attackerContactId, FirstName = "Attacker" });
+            context.Contacts!.Add(new Contact { Id = originalContactId, FirstName = "Original" });
+            context.Contacts!.Add(new Contact { Id = attackerContactId, FirstName = "Attacker" });
 
             context.Set<Note>().Add(new Note
             {
@@ -100,7 +100,7 @@ namespace Rvnx.CRM.Tests.Security
             Guid noteId = Guid.NewGuid();
             Guid contactId = Guid.NewGuid();
 
-            context.Contacts.Add(new Contact { Id = contactId, FirstName = "Test" });
+            context.Contacts!.Add(new Contact { Id = contactId, FirstName = "Test" });
 
             Note originalNote = new()
             {
@@ -163,8 +163,8 @@ namespace Rvnx.CRM.Tests.Security
             Guid originalContactId = Guid.NewGuid();
             Guid attackerContactId = Guid.NewGuid();
 
-            context.Contacts.Add(new Contact { Id = originalContactId, FirstName = "Original" });
-            context.Contacts.Add(new Contact { Id = attackerContactId, FirstName = "Attacker" });
+            context.Contacts!.Add(new Contact { Id = originalContactId, FirstName = "Original" });
+            context.Contacts!.Add(new Contact { Id = attackerContactId, FirstName = "Attacker" });
 
             context.Set<Fact>().Add(new Fact
             {
@@ -210,8 +210,8 @@ namespace Rvnx.CRM.Tests.Security
             Guid originalContactId = Guid.NewGuid();
             Guid attackerContactId = Guid.NewGuid();
 
-            context.Contacts.Add(new Contact { Id = originalContactId, FirstName = "Original" });
-            context.Contacts.Add(new Contact { Id = attackerContactId, FirstName = "Attacker" });
+            context.Contacts!.Add(new Contact { Id = originalContactId, FirstName = "Original" });
+            context.Contacts!.Add(new Contact { Id = attackerContactId, FirstName = "Attacker" });
 
             context.Set<ContactMethod>().Add(new ContactMethod
             {

@@ -57,7 +57,7 @@ public class MergeServiceTests : IDisposable
         Contact secondary = new()
         { Id = Guid.NewGuid(), FirstName = "Secondary First", LastName = "Secondary Last", MaidenName = "Sec Maiden" };
 
-        await _context.Contacts.AddRangeAsync(primary, secondary);
+        await _context.Contacts!.AddRangeAsync(primary, secondary);
         await _context.SaveChangesAsync();
 
         await _sut.MergeContactsAsync(primary.Id, secondary.Id);
@@ -77,7 +77,7 @@ public class MergeServiceTests : IDisposable
         Contact secondary = new()
         { Id = Guid.NewGuid(), FirstName = "Secondary", JobTitle = "Dev", Company = "Rvnx" };
 
-        await _context.Contacts.AddRangeAsync(primary, secondary);
+        await _context!.Contacts!.AddRangeAsync(primary, secondary);
         await _context.SaveChangesAsync();
 
         await _sut.MergeContactsAsync(primary.Id, secondary.Id);
@@ -101,7 +101,7 @@ public class MergeServiceTests : IDisposable
         Attachment att2 = new()
         { Id = Guid.NewGuid(), ContactId = secondary.Id, FileName = "sec_img.png", AttachmentType = "ProfileImage", ContentType = "image/png" };
 
-        await _context.Contacts.AddRangeAsync(primary, secondary);
+        await _context.Contacts!.AddRangeAsync(primary, secondary);
         await _context.Set<Attachment>().AddRangeAsync(att1, att2);
         await _context.SaveChangesAsync();
 
@@ -126,7 +126,7 @@ public class MergeServiceTests : IDisposable
         Attachment att2 = new()
         { Id = Guid.NewGuid(), ContactId = secondary.Id, FileName = "sec_img.png", AttachmentType = "ProfileImage", ContentType = "image/png" };
 
-        await _context.Contacts.AddRangeAsync(primary, secondary);
+        await _context.Contacts!.AddRangeAsync(primary, secondary);
         await _context.Set<Attachment>().AddRangeAsync(att1, att2);
         await _context.SaveChangesAsync();
 
@@ -152,7 +152,7 @@ public class MergeServiceTests : IDisposable
         Note note = new()
         { Id = Guid.NewGuid(), ContactId = secondary.Id, Title = "Sec Note", Value = "Test" };
 
-        await _context.Contacts.AddRangeAsync(primary, secondary);
+        await _context.Contacts!.AddRangeAsync(primary, secondary);
         await _context.Set<Note>().AddAsync(note);
         await _context.SaveChangesAsync();
 
@@ -178,7 +178,7 @@ public class MergeServiceTests : IDisposable
         ContactMethod secMethodNew = new()
         { Id = Guid.NewGuid(), ContactId = secondary.Id, Type = ContactMethodType.Phone, Value = "123456789" };
 
-        await _context.Contacts.AddRangeAsync(primary, secondary);
+        await _context.Contacts!.AddRangeAsync(primary, secondary);
         await _context.Set<ContactMethod>().AddRangeAsync(priMethod, secMethodDup, secMethodNew);
         await _context.SaveChangesAsync();
 
@@ -205,7 +205,7 @@ public class MergeServiceTests : IDisposable
         SignificantDate sDateNew = new()
         { Id = Guid.NewGuid(), ContactId = secondary.Id, Title = "Anniversary", EventDate = new DateOnly(2020, 1, 1) };
 
-        await _context.Contacts.AddRangeAsync(primary, secondary);
+        await _context.Contacts!.AddRangeAsync(primary, secondary);
         await _context.Set<SignificantDate>().AddRangeAsync(pDate, sDateDup, sDateNew);
         await _context.SaveChangesAsync();
 
@@ -232,7 +232,7 @@ public class MergeServiceTests : IDisposable
         Pet sPetNew = new()
         { Id = Guid.NewGuid(), ContactId = secondary.Id, Name = "Mittens" };
 
-        await _context.Contacts.AddRangeAsync(primary, secondary);
+        await _context.Contacts!.AddRangeAsync(primary, secondary);
         await _context.Set<Pet>().AddRangeAsync(pPet, sPetDup, sPetNew);
         await _context.SaveChangesAsync();
 
@@ -260,7 +260,7 @@ public class MergeServiceTests : IDisposable
         Relationship rel2 = new()
         { Id = Guid.NewGuid(), EntityId = secondary.Id, RelatedEntityId = other.Id, RelationshipTypeId = typeId, EntityType = "Person" };
 
-        await _context.Contacts.AddRangeAsync(primary, secondary, other);
+        await _context.Contacts!.AddRangeAsync(primary, secondary, other);
         await _context.Set<Relationship>().AddRangeAsync(rel1, rel2);
         await _context.SaveChangesAsync();
 
@@ -279,7 +279,7 @@ public class MergeServiceTests : IDisposable
         Contact secondary = new()
         { Id = Guid.NewGuid(), FirstName = "Secondary" };
 
-        await _context.Contacts.AddRangeAsync(primary, secondary);
+        await _context.Contacts!.AddRangeAsync(primary, secondary);
         await _context.SaveChangesAsync();
 
         // Cause an exception during the merge by passing the same ID (or forcing a failure another way).

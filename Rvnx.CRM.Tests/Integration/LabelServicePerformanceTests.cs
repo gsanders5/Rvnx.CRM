@@ -28,7 +28,7 @@ public class LabelServicePerformanceTests(ITestOutputHelper output) : SqliteInte
                 Color = "#000000"
             });
         }
-        await Context.Labels.AddRangeAsync(labels);
+        await Context.Labels!.AddRangeAsync(labels);
         await Context.SaveChangesAsync();
 
         Stopwatch stopwatch = Stopwatch.StartNew();

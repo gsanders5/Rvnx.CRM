@@ -44,7 +44,7 @@ namespace Rvnx.CRM.Tests.Security
             AttachmentService service = new(repo, fileServiceMock.Object, entityServiceMock.Object);
 
             Guid contactId = Guid.NewGuid();
-            context.Contacts.Add(new Contact { Id = contactId, FirstName = "Test", LastName = "User" });
+            context.Contacts!.Add(new Contact { Id = contactId, FirstName = "Test", LastName = "User" });
             context.SaveChanges();
 
             byte[] content = [1, 2, 3]; // Dummy content
@@ -56,7 +56,7 @@ namespace Rvnx.CRM.Tests.Security
 
             Assert.True(result.Success);
 
-            Attachment? attachment = await context.Attachments.FindAsync(result.AttachmentId);
+            Attachment? attachment = await context.Attachments!.FindAsync(result.AttachmentId);
             Assert.NotNull(attachment);
 
             // SECURITY CHECK: The ContentType should be "text/plain", NOT "text/html"

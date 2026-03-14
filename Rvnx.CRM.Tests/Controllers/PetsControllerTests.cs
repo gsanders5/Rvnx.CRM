@@ -44,7 +44,7 @@ namespace Rvnx.CRM.Tests.Controllers
         public async Task CreateGetWithValidContactIdShouldReturnViewWithDto()
         {
             Guid contactId = Guid.NewGuid();
-            _context.Contacts.Add(new Contact { Id = contactId, FirstName = "Test" });
+            _context.Contacts!.Add(new Contact { Id = contactId, FirstName = "Test" });
             await _context.SaveChangesAsync();
 
             IActionResult result = await _controller.Create(contactId);
@@ -59,7 +59,7 @@ namespace Rvnx.CRM.Tests.Controllers
         public async Task CreatePostWithValidDataShouldCreatePet()
         {
             Guid contactId = Guid.NewGuid();
-            _context.Contacts.Add(new Contact { Id = contactId, FirstName = "John" });
+            _context.Contacts!.Add(new Contact { Id = contactId, FirstName = "John" });
             await _context.SaveChangesAsync();
 
             PetFormDto dto = new()
@@ -91,7 +91,7 @@ namespace Rvnx.CRM.Tests.Controllers
         {
             Guid petId = Guid.NewGuid();
             Guid contactId = Guid.NewGuid();
-            _context.Contacts.Add(new Contact { Id = contactId, FirstName = "Test" });
+            _context.Contacts!.Add(new Contact { Id = contactId, FirstName = "Test" });
             _context.Set<Pet>().Add(new Pet
             {
                 Id = petId,
@@ -127,7 +127,7 @@ namespace Rvnx.CRM.Tests.Controllers
         {
             Guid petId = Guid.NewGuid();
             Guid contactId = Guid.NewGuid();
-            _context.Contacts.Add(new Contact { Id = contactId, FirstName = "Test" });
+            _context.Contacts!.Add(new Contact { Id = contactId, FirstName = "Test" });
             _context.Set<Pet>().Add(new Pet
             {
                 Id = petId,
@@ -165,7 +165,7 @@ namespace Rvnx.CRM.Tests.Controllers
         {
             Guid petId = Guid.NewGuid();
             Guid contactId = Guid.NewGuid();
-            _context.Contacts.Add(new Contact { Id = contactId, FirstName = "Test" });
+            _context.Contacts!.Add(new Contact { Id = contactId, FirstName = "Test" });
             _context.Set<Pet>().Add(new Pet
             {
                 Id = petId,
@@ -188,7 +188,7 @@ namespace Rvnx.CRM.Tests.Controllers
         {
             Guid petId = Guid.NewGuid();
             Guid contactId = Guid.NewGuid();
-            _context.Contacts.Add(new Contact { Id = contactId, FirstName = "Test" });
+            _context.Contacts!.Add(new Contact { Id = contactId, FirstName = "Test" });
             _context.Set<Pet>().Add(new Pet
             {
                 Id = petId,
@@ -211,7 +211,7 @@ namespace Rvnx.CRM.Tests.Controllers
         {
             Guid petId = Guid.NewGuid();
             Guid contactId = Guid.NewGuid();
-            _context.Contacts.Add(new Contact { Id = contactId, FirstName = "Test" });
+            _context.Contacts!.Add(new Contact { Id = contactId, FirstName = "Test" });
             _context.Set<Pet>().Add(new Pet
             {
                 Id = petId,

@@ -98,7 +98,7 @@ namespace Rvnx.CRM.Tests.Services
                 DisplayName = "Old Name",
                 Group = new Core.Models.UserGroup { Name = "Old Group" }
             };
-            context.Users.Add(existingUser);
+            context.Users!.Add(existingUser);
             await context.SaveChangesAsync();
             context.ChangeTracker.Clear(); // Clear tracker to simulate fresh request
 
