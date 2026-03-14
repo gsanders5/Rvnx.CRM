@@ -5,6 +5,9 @@ namespace Rvnx.CRM.API.Services;
 
 public class ApiTokenCurrentUserService : ICurrentUserService
 {
+    private static readonly Action<ILogger, Exception?> LogResolveTokenError =
+        LoggerMessage.Define(LogLevel.Error, new EventId(1), "Error resolving API token.");
+
     private readonly IHttpContextAccessor _httpContextAccessor;
     private readonly IServiceProvider _serviceProvider;
     private readonly ILogger<ApiTokenCurrentUserService> _logger;
@@ -116,7 +119,7 @@ public class ApiTokenCurrentUserService : ICurrentUserService
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error resolving API token.");
+            LogResolveTokenError(_logger, ex);
             _resolvedToken = null;
         }
         finally
