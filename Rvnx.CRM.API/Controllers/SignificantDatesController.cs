@@ -20,6 +20,7 @@ public class SignificantDatesController(ISignificantDateService significantDateS
     }
 
     [HttpPost]
+    [ValidateAntiForgeryToken]
     public async Task<IActionResult> Create([FromBody] SignificantDateDto model)
     {
         Core.Models.OperationResult result = await _significantDateService.CreateAsync(model);
