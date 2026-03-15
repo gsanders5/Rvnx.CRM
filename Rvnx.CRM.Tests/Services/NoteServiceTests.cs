@@ -26,7 +26,6 @@ namespace Rvnx.CRM.Tests.Services
         [Fact]
         public async Task UpdateAsyncThrowsEntityConcurrencyExceptionWhenNoteExistsRethrows()
         {
-            // Arrange
             Guid noteId = Guid.NewGuid();
             Guid contactId = Guid.NewGuid();
             Note existingNote = new()
@@ -53,7 +52,6 @@ namespace Rvnx.CRM.Tests.Services
         [Fact]
         public async Task UpdateAsyncThrowsEntityConcurrencyExceptionWhenNoteDoesNotExistReturnsFailure()
         {
-            // Arrange
             Guid noteId = Guid.NewGuid();
             Guid contactId = Guid.NewGuid();
             Note existingNote = new()
@@ -73,10 +71,8 @@ namespace Rvnx.CRM.Tests.Services
             _repositoryMock.Setup(r => r.ExistsAsync<Note>(noteId, It.IsAny<CancellationToken>()))
                 .ReturnsAsync(false);
 
-            // Act
             OperationResult result = await _service.UpdateAsync(noteId, dto);
 
-            // Assert
             Assert.False(result.Success);
             Assert.Equal("Note not found.", result.ErrorMessage);
         }

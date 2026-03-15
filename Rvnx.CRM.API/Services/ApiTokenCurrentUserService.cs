@@ -98,7 +98,6 @@ public class ApiTokenCurrentUserService : ICurrentUserService
         {
             context.Items["IsResolvingApiToken"] = true;
 
-            // Resolve using the service
             using IServiceScope scope = _serviceProvider.CreateScope();
             IApiTokenService tokenService = scope.ServiceProvider.GetRequiredService<IApiTokenService>();
 

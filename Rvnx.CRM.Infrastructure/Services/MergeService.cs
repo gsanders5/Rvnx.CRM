@@ -48,7 +48,6 @@ public class MergeService(CRMDbContext context, IRepository repository) : IMerge
             primary.Gender = MergeScalar(primary.Gender, secondary.Gender);
             primary.Religion = MergeScalar(primary.Religion, secondary.Religion);
 
-            // Move Attachments
             List<Attachment> attachments = await _repository.ListAsync<Attachment>(a => a.ContactId == secondaryId);
             foreach (Attachment att in attachments)
             {
@@ -83,7 +82,6 @@ public class MergeService(CRMDbContext context, IRepository repository) : IMerge
                 note.ContactId = primaryId;
             }
 
-            // Move Contact Methods
             List<ContactMethod> primaryMethods = await _repository.ListAsync<ContactMethod>(m => m.ContactId == primaryId);
             List<ContactMethod> secondaryMethods = await _repository.ListAsync<ContactMethod>(m => m.ContactId == secondaryId);
 
@@ -101,7 +99,6 @@ public class MergeService(CRMDbContext context, IRepository repository) : IMerge
                 }
             }
 
-            // Move Significant Dates
             List<SignificantDate> primaryDates = await _repository.ListAsync<SignificantDate>(d => d.ContactId == primaryId);
             List<SignificantDate> secondaryDates = await _repository.ListAsync<SignificantDate>(d => d.ContactId == secondaryId);
 
@@ -119,14 +116,12 @@ public class MergeService(CRMDbContext context, IRepository repository) : IMerge
                 }
             }
 
-            // Move Facts
             List<Fact> facts = await _repository.ListAsync<Fact>(f => f.ContactId == secondaryId);
             foreach (Fact fact in facts)
             {
                 fact.ContactId = primaryId;
             }
 
-            // Move Relationships
             List<Relationship> primaryRels = await _repository.ListAsync<Relationship>(r => r.EntityId == primaryId);
             List<Relationship> secondaryRels = await _repository.ListAsync<Relationship>(r => r.EntityId == secondaryId);
 
@@ -171,7 +166,6 @@ public class MergeService(CRMDbContext context, IRepository repository) : IMerge
                 }
             }
 
-            // Move Pets
             List<Pet> primaryPets = await _repository.ListAsync<Pet>(p => p.ContactId == primaryId);
             List<Pet> secondaryPets = await _repository.ListAsync<Pet>(p => p.ContactId == secondaryId);
 
@@ -191,7 +185,6 @@ public class MergeService(CRMDbContext context, IRepository repository) : IMerge
 
             await _repository.UpdateAsync(primary);
 
-            // Delete secondary contact
             await _repository.DeleteAsync<Contact>(secondaryId);
 
             await _context.SaveChangesAsync();

@@ -23,7 +23,6 @@ namespace Rvnx.CRM.Tests.Services
         [Fact]
         public async Task UpdateAsyncThrowsEntityConcurrencyExceptionWhenFactExistsRethrows()
         {
-            // Arrange
             Guid factId = Guid.NewGuid();
             Guid contactId = Guid.NewGuid();
             Fact existingFact = new()
@@ -50,7 +49,6 @@ namespace Rvnx.CRM.Tests.Services
         [Fact]
         public async Task UpdateAsyncThrowsEntityConcurrencyExceptionWhenFactDoesNotExistReturnsFailure()
         {
-            // Arrange
             Guid factId = Guid.NewGuid();
             Guid contactId = Guid.NewGuid();
             Fact existingFact = new()
@@ -70,10 +68,8 @@ namespace Rvnx.CRM.Tests.Services
             _repositoryMock.Setup(r => r.ExistsAsync<Fact>(factId, It.IsAny<CancellationToken>()))
                 .ReturnsAsync(false);
 
-            // Act
             OperationResult result = await _service.UpdateAsync(factId, dto);
 
-            // Assert
             Assert.False(result.Success);
             Assert.Equal("Fact not found.", result.ErrorMessage);
         }

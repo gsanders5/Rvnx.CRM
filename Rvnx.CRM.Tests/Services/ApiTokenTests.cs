@@ -19,7 +19,6 @@ public class ApiTokenTests
     [Fact]
     public async Task CreateTokenAsyncShouldGenerateValidTokenAndStoreHash()
     {
-        // Arrange
         Guid userId = Guid.NewGuid();
         Guid groupId = Guid.NewGuid();
         string name = "Test Token";
@@ -29,10 +28,8 @@ public class ApiTokenTests
         _repositoryMock.Setup(r => r.AddAsync(It.IsAny<ApiToken>(), default))
             .Callback<ApiToken, CancellationToken>((t, _) => capturedToken = t);
 
-        // Act
         (ApiToken token, string rawToken) = await _sut.CreateTokenAsync(userId, groupId, name, expiresAt);
 
-        // Assert
         Assert.NotNull(token);
         Assert.NotNull(rawToken);
         Assert.NotEmpty(rawToken);

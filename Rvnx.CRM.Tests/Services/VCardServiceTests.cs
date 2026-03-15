@@ -16,14 +16,11 @@ namespace Rvnx.CRM.Tests.Services
         [Fact]
         public async Task ParseVCardAsyncWhenInvalidStreamReturnsEmpty()
         {
-            // Arrange
             string invalidContent = "This is not a valid VCard content";
             using MemoryStream stream = new(Encoding.UTF8.GetBytes(invalidContent));
 
-            // Act
             IEnumerable<Contact> result = await _service.ParseVCardAsync(stream);
 
-            // Assert
             Assert.Empty(result);
         }
     }

@@ -47,7 +47,6 @@ public class ApiTokenCurrentUserServiceTests
     [Fact]
     public void PropertiesWithValidTokenShouldPopulateUserContext()
     {
-        // Arrange
         Guid userId = Guid.NewGuid();
         Guid groupId = Guid.NewGuid();
         string rawToken = "crm_validtoken123";
@@ -73,13 +72,11 @@ public class ApiTokenCurrentUserServiceTests
             _serviceProviderMock.Object,
             _loggerMock.Object);
 
-        // Act
         bool isAuthenticated = sut.IsAuthenticated;
         Guid? resolvedUserId = sut.UserId;
         Guid? resolvedGroupId = sut.GroupId;
         string? resolvedUserName = sut.UserName;
 
-        // Assert
         Assert.True(isAuthenticated);
         Assert.Equal(userId, resolvedUserId);
         Assert.Equal(groupId, resolvedGroupId);
@@ -93,7 +90,6 @@ public class ApiTokenCurrentUserServiceTests
     [Fact]
     public void PropertiesWithMissingTokenShouldNotBeAuthenticated()
     {
-        // Arrange
         DefaultHttpContext context = new();
         _httpContextAccessorMock.Setup(x => x.HttpContext).Returns(context);
 
@@ -102,11 +98,9 @@ public class ApiTokenCurrentUserServiceTests
             _serviceProviderMock.Object,
             _loggerMock.Object);
 
-        // Act
         bool isAuthenticated = sut.IsAuthenticated;
         Guid? resolvedUserId = sut.UserId;
 
-        // Assert
         Assert.False(isAuthenticated);
         Assert.Null(resolvedUserId);
         _tokenServiceMock.Verify(x => x.ResolveTokenAsync(It.IsAny<string>()), Times.Never);
