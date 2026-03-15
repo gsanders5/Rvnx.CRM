@@ -18,6 +18,82 @@
     ViewData["Title"] = "Details";
 }
 
+<style>
+    /* Attachment Gallery Styles */
+    @@media (min-width: 768px) {
+        .attachment-card .attachment-actions {
+            opacity: 0;
+            transition: opacity 0.2s ease-in-out;
+        }
+        .attachment-card:hover .attachment-actions {
+            opacity: 1;
+        }
+        .attachment-card:hover .preview-overlay {
+            opacity: 1 !important;
+        }
+    }
+
+    .attachment-card {
+        transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+    }
+
+    .attachment-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 .5rem 1rem rgba(0,0,0,.15)!important;
+    }
+
+    /* Discord-style Lightbox Overlay */
+    #discord-lightbox {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        background-color: rgba(0, 0, 0, 0.85);
+        z-index: 1050; /* Bootstrap modal z-index */
+        display: none;
+        align-items: center;
+        justify-content: center;
+        backdrop-filter: blur(5px);
+    }
+    #discord-lightbox.active {
+        display: flex;
+    }
+    #discord-lightbox-img {
+        max-width: 90vw;
+        max-height: 85vh;
+        object-fit: contain;
+        box-shadow: 0 0 20px rgba(0,0,0,0.5);
+    }
+    .lightbox-toolbar {
+        position: absolute;
+        top: 20px;
+        right: 20px;
+        display: flex;
+        gap: 15px;
+    }
+    .lightbox-toolbar a, .lightbox-toolbar button {
+        color: rgba(255, 255, 255, 0.7);
+        text-decoration: none;
+        background: transparent;
+        border: none;
+        font-size: 1.5rem;
+        cursor: pointer;
+        transition: color 0.2s;
+    }
+    .lightbox-toolbar a:hover, .lightbox-toolbar button:hover {
+        color: white;
+    }
+    .lightbox-title {
+        position: absolute;
+        bottom: 20px;
+        left: 20px;
+        color: white;
+        font-size: 1.2rem;
+        text-shadow: 1px 1px 3px rgba(0,0,0,0.8);
+    }
+</style>
+
 <div class="container">
 <div class="d-flex flex-column flex-md-row justify-content-between align-items-center mb-4 gap-3">
     <h1 class="mb-0 text-center text-md-start">@Model.FullName</h1>
@@ -510,46 +586,86 @@
 
             @if (Model.Attachments != null && Model.Attachments.Any())
             {
-                <ul class="list-group list-group-flush">
+                <div class="row masonry-grid" data-masonry='{"percentPosition": true }'>
                     @foreach (var attachment in Model.Attachments)
                     {
-                        <li class="list-group-item d-flex justify-content-between align-items-center px-0">
-                            <div class="d-flex flex-column overflow-hidden w-100 me-2">
-                                @if (!string.IsNullOrEmpty(attachment.ContentType) && attachment.ContentType.StartsWith("image/", StringComparison.OrdinalIgnoreCase))
+                        var isImage = !string.IsNullOrEmpty(attachment.ContentType) && attachment.ContentType.StartsWith("image/", StringComparison.OrdinalIgnoreCase);
+                        var ext = System.IO.Path.GetExtension(attachment.FileName)?.ToLowerInvariant() ?? "";
+                        var iconClass = "bi-file-earmark"; // default generic
+
+                        if (!isImage)
+                        {
+                            switch (ext)
+                            {
+                                case ".pdf": iconClass = "bi-filetype-pdf text-danger"; break;
+                                case ".doc":
+                                case ".docx": iconClass = "bi-filetype-docx text-primary"; break;
+                                case ".xls":
+                                case ".xlsx": iconClass = "bi-filetype-xlsx text-success"; break;
+                                case ".ppt":
+                                case ".pptx": iconClass = "bi-filetype-pptx text-warning"; break;
+                                case ".txt": iconClass = "bi-filetype-txt text-secondary"; break;
+                                case ".zip":
+                                case ".rar":
+                                case ".7z": iconClass = "bi-file-zip text-secondary"; break;
+                                case ".csv": iconClass = "bi-filetype-csv text-success"; break;
+                                case ".xml": iconClass = "bi-filetype-xml text-secondary"; break;
+                                case ".json": iconClass = "bi-filetype-json text-secondary"; break;
+                                case ".exe":
+                                case ".dll": iconClass = "bi-filetype-exe text-danger"; break;
+                            }
+                        }
+
+                        <div class="col-12 col-sm-6 col-md-4 mb-4 masonry-item">
+                            <div class="card h-100 attachment-card overflow-hidden position-relative">
+                                @if (isImage)
                                 {
-                                    <a href="@Url.Action("View", "Attachments", new { id = attachment.Id })" target="_blank" class="mb-2 d-block">
-                                        <img src="@Url.Action("View", "Attachments", new { id = attachment.Id })" class="img-fluid rounded border" alt="@attachment.FileName" loading="lazy" style="max-height: 300px; object-fit: contain;"/>
-                                    </a>
+                                    <div class="attachment-preview-container bg-dark d-flex align-items-center justify-content-center cursor-pointer" style="min-height: 150px;" data-preview-url="@Url.Action("View", "Attachments", new { id = attachment.Id })" data-filename="@attachment.FileName">
+                                        <img src="@Url.Action("View", "Attachments", new { id = attachment.Id })" class="img-fluid w-100 object-fit-cover" alt="@attachment.FileName" loading="lazy" style="max-height: 200px;"/>
+                                        <div class="position-absolute top-50 start-50 translate-middle text-white preview-overlay" style="opacity: 0; transition: opacity 0.2s; background: rgba(0,0,0,0.5); padding: 10px; border-radius: 50%;">
+                                            <i class="bi bi-zoom-in fs-3"></i>
+                                        </div>
+                                    </div>
                                 }
-                                <div class="d-flex align-items-center">
-                                    <i class="bi bi-file-earmark me-2 text-secondary"></i>
-                                    <a asp-controller="Attachments" asp-action="Download" asp-route-id="@attachment.Id" class="text-truncate" title="@attachment.FileName">
-                                        @attachment.FileName
-                                    </a>
+                                else
+                                {
+                                    <div class="attachment-preview-container bg-light d-flex align-items-center justify-content-center p-4 border-bottom" style="min-height: 150px;">
+                                        <i class="bi @iconClass" style="font-size: 4rem;"></i>
+                                    </div>
+                                }
+
+                                <div class="card-body p-2 d-flex flex-column justify-content-between">
+                                    <div class="d-flex align-items-center mb-2">
+                                        <i class="bi @(isImage ? "bi-image" : iconClass) me-2 text-secondary small"></i>
+                                        <a asp-controller="Attachments" asp-action="Download" asp-route-id="@attachment.Id" class="text-truncate text-decoration-none small text-dark flex-grow-1" title="@attachment.FileName">
+                                            @attachment.FileName
+                                        </a>
+                                    </div>
+
+                                    <div class="attachment-actions btn-group w-100">
+                                        <a asp-controller="Attachments" asp-action="Download" asp-route-id="@attachment.Id" class="btn btn-outline-secondary btn-sm" title="Download" aria-label="Download @attachment.FileName">
+                                            <i class="bi bi-download"></i>
+                                        </a>
+                                        @if (isImage)
+                                        {
+                                            <form method="post" class="d-inline flex-grow-1" action="/Attachments/@attachment.Id/SetAsProfilePhoto?returnUrl=@(Context.Request.Path + Context.Request.QueryString)">
+                                                <button type="submit" class="btn btn-outline-primary btn-sm w-100 rounded-0" title="Set as profile photo" aria-label="Set @attachment.FileName as profile photo">
+                                                    <i class="bi bi-person-circle"></i>
+                                                </button>
+                                                <input name="__RequestVerificationToken" type="hidden" value="@GetAntiXsrfRequestToken()"/>
+                                            </form>
+                                        }
+                                        <form asp-controller="Attachments" asp-action="Delete" asp-route-id="@attachment.Id" asp-route-returnUrl="@(Context.Request.Path + Context.Request.QueryString)" method="post" class="d-inline flex-grow-1" onsubmit="return confirm('Are you sure?');">
+                                            <button type="submit" class="btn btn-outline-danger btn-sm w-100 rounded-start-0" title="Delete" aria-label="Delete @attachment.FileName">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </form>
+                                    </div>
                                 </div>
                             </div>
-                            <div class="btn-group btn-group-sm ms-2 align-self-start">
-                                <a asp-controller="Attachments" asp-action="Download" asp-route-id="@attachment.Id" class="btn btn-outline-secondary" title="Download" aria-label="Download @attachment.FileName">
-                                    <i class="bi bi-download"></i>
-                                </a>
-                                @if (!string.IsNullOrEmpty(attachment.ContentType) && attachment.ContentType.StartsWith("image/", StringComparison.OrdinalIgnoreCase))
-                                {
-                                    <form method="post" class="d-inline" action="/Attachments/@attachment.Id/SetAsProfilePhoto?returnUrl=@(Context.Request.Path + Context.Request.QueryString)">
-                                        <button type="submit" class="btn btn-outline-primary" title="Set as profile photo" aria-label="Set @attachment.FileName as profile photo">
-                                            <i class="bi bi-person-circle"></i>
-                                        </button>
-                                        <input name="__RequestVerificationToken" type="hidden" value="@GetAntiXsrfRequestToken()"/>
-                                    </form>
-                                }
-                                <form asp-controller="Attachments" asp-action="Delete" asp-route-id="@attachment.Id" asp-route-returnUrl="@(Context.Request.Path + Context.Request.QueryString)" method="post" class="d-inline" onsubmit="return confirm('Are you sure?');">
-                                    <button type="submit" class="btn btn-outline-danger" title="Delete" aria-label="Delete @attachment.FileName">
-                                        <i class="bi bi-trash"></i>
-                                    </button>
-                                </form>
-                            </div>
-                        </li>
+                        </div>
                     }
-                </ul>
+                </div>
             }
             else
             {
@@ -571,6 +687,88 @@
 </div>
 </div>
 
+<!-- Discord-style Lightbox Container -->
+<div id="discord-lightbox">
+    <div class="lightbox-toolbar">
+        <a id="lightbox-open-original" href="#" target="_blank" title="Open Original">
+            <i class="bi bi-box-arrow-up-right"></i>
+        </a>
+        <button id="lightbox-close" title="Close">
+            <i class="bi bi-x-lg"></i>
+        </button>
+    </div>
+    <img id="discord-lightbox-img" src="" alt="Preview">
+    <div id="lightbox-title" class="lightbox-title"></div>
+</div>
+
 @section Scripts {
     <script src="~/js/markdown-renderer.js" asp-append-version="true"></script>
+    <!-- Masonry & ImagesLoaded for gallery layout -->
+    <script src="https://cdn.jsdelivr.net/npm/imagesloaded@5.0.0/imagesloaded.pkgd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/masonry-layout@4.2.2/dist/masonry.pkgd.min.js" integrity="sha384-GNFwBvfVxBkLMJpYMOABq3c+d3KnQxudP/mGPkzpZSTYykLBNsZEnG2D9G/X/+7D" crossorigin="anonymous" async></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // Lightbox functionality
+            const lightbox = document.getElementById('discord-lightbox');
+            const lightboxImg = document.getElementById('discord-lightbox-img');
+            const lightboxTitle = document.getElementById('lightbox-title');
+            const lightboxOpenOriginal = document.getElementById('lightbox-open-original');
+            const lightboxCloseBtn = document.getElementById('lightbox-close');
+
+            function openLightbox(url, filename) {
+                lightboxImg.src = url;
+                lightboxTitle.textContent = filename;
+                lightboxOpenOriginal.href = url;
+                lightbox.classList.add('active');
+                document.body.style.overflow = 'hidden'; // prevent background scrolling
+            }
+
+            function closeLightbox() {
+                lightbox.classList.remove('active');
+                lightboxImg.src = '';
+                document.body.style.overflow = '';
+            }
+
+            // Bind click to preview containers
+            document.querySelectorAll('.attachment-preview-container[data-preview-url]').forEach(container => {
+                container.addEventListener('click', function(e) {
+                    // Prevent opening lightbox if clicking on actions/links inside it (if any)
+                    if (e.target.closest('a') || e.target.closest('button')) return;
+
+                    const url = this.getAttribute('data-preview-url');
+                    const filename = this.getAttribute('data-filename');
+                    openLightbox(url, filename);
+                });
+            });
+
+            // Close bindings
+            lightboxCloseBtn.addEventListener('click', closeLightbox);
+
+            // Close when clicking outside image
+            lightbox.addEventListener('click', function(e) {
+                if (e.target === lightbox) {
+                    closeLightbox();
+                }
+            });
+
+            // Close on ESC key
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape' && lightbox.classList.contains('active')) {
+                    closeLightbox();
+                }
+            });
+
+            // Initialize Masonry after images load to prevent overlapping cards
+            const grid = document.querySelector('.masonry-grid');
+            if (grid && window.Masonry && window.imagesLoaded) {
+                imagesLoaded(grid, function() {
+                    new Masonry(grid, {
+                        itemSelector: '.masonry-item',
+                        percentPosition: true
+                    });
+                });
+            }
+        });
+    </script>
 }
