@@ -1,0 +1,119 @@
+@{
+    ViewData["Title"] = "Calendar";
+    var today = DateTime.Today.ToString("yyyy-MM-dd");
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>Calendar</h1>
+</div>
+
+<div class="card shadow-sm">
+    <div class="card-body">
+        <div id="calendar"></div>
+    </div>
+</div>
+
+@section Scripts {
+    <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.css" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const isDark = document.documentElement.getAttribute('data-mdb-theme') === 'dark';
+
+            const calendar = new FullCalendar.Calendar(document.getElementById('calendar'), {
+                initialView: 'dayGridMonth',
+                initialDate: '@today',
+                height: 'auto',
+                headerToolbar: {
+                    left: 'prev,next today',
+                    center: 'title',
+                    right: 'dayGridMonth,listMonth'
+                },
+                buttonText: {
+                    today: 'Today',
+                    month: 'Month',
+                    list: 'List'
+                },
+                events: '@Url.Action("Events", "Calendar")',
+                eventDisplay: 'block',
+                eventClick: function (info) {
+                    if (info.event.url) {
+                        info.jsEvent.preventDefault();
+                        window.location.href = info.event.url;
+                    }
+                },
+                eventDidMount: function (info) {
+                    info.el.title = info.event.title;
+                },
+                noEventsText: 'No upcoming events'
+            });
+
+            calendar.render();
+
+            // Re-render if user toggles dark/light mode so FullCalendar
+            // picks up any theme variable changes.
+            const observer = new MutationObserver(() => calendar.render());
+            observer.observe(document.documentElement, {
+                attributes: true,
+                attributeFilter: ['data-mdb-theme']
+            });
+        });
+    </script>
+    <style>
+        /* ── Shared ── */
+        .fc .fc-toolbar-title {
+            font-size: 1.1rem;
+            font-weight: 500;
+        }
+
+        .fc-event {
+            cursor: pointer;
+        }
+
+        /* ── Light mode ── */
+        :root {
+            --fc-border-color: rgba(0,0,0,0.12);
+            --fc-page-bg-color: #ffffff;
+            --fc-neutral-bg-color: #f8f9fa;
+            --fc-today-bg-color: rgba(13, 110, 253, 0.06);
+            --fc-button-bg-color: #ffffff;
+            --fc-button-border-color: rgba(0,0,0,0.2);
+            --fc-button-text-color: #212529;
+            --fc-button-hover-bg-color: #e9ecef;
+            --fc-button-hover-border-color: rgba(0,0,0,0.3);
+            --fc-button-active-bg-color: #dee2e6;
+            --fc-button-active-border-color: rgba(0,0,0,0.3);
+            --fc-event-text-color: #fff;
+        }
+
+        /* ── Dark mode ── */
+        [data-mdb-theme="dark"] {
+            --fc-border-color: rgba(255,255,255,0.1);
+            --fc-page-bg-color: #2d2d2d;
+            --fc-neutral-bg-color: #3a3a3a;
+            --fc-today-bg-color: rgba(99, 149, 255, 0.1);
+            --fc-button-bg-color: #3a3a3a;
+            --fc-button-border-color: rgba(255,255,255,0.2);
+            --fc-button-text-color: #e0e0e0;
+            --fc-button-hover-bg-color: #4a4a4a;
+            --fc-button-hover-border-color: rgba(255,255,255,0.3);
+            --fc-button-active-bg-color: #555555;
+            --fc-button-active-border-color: rgba(255,255,255,0.3);
+            --fc-event-text-color: #fff;
+            --fc-list-event-hover-bg-color: rgba(255,255,255,0.05);
+        }
+
+            [data-mdb-theme="dark"] .fc-col-header-cell-cushion,
+            [data-mdb-theme="dark"] .fc-daygrid-day-number {
+                color: #9db4cc;
+            }
+
+            [data-mdb-theme="dark"] .fc-day-other .fc-daygrid-day-number {
+                color: #555;
+            }
+
+            [data-mdb-theme="dark"] .fc .fc-toolbar-title {
+                color: #e0e0e0;
+            }
+    </style>
+}

@@ -1,3 +1,4 @@
+using Rvnx.CRM.Core.DTOs.Calendar;
 using Rvnx.CRM.Core.DTOs.Dates;
 using Rvnx.CRM.Core.Models;
 using Rvnx.CRM.Core.Models.Dates;
@@ -47,4 +48,10 @@ public interface ISignificantDateService
     /// <param name="id">The ID of the date.</param>
     /// <returns>The <see cref="SignificantDate"/> entity if found, otherwise null.</returns>
     Task<SignificantDate?> GetByIdAsync(Guid id);
+
+    /// <summary>
+    /// Retrieves all active significant dates across all contacts, projected
+    /// for calendar display with next-occurrence dates calculated.
+    /// </summary>
+    Task<List<CalendarEventDto>> GetCalendarEventsAsync();
 }

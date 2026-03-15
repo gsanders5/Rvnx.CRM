@@ -1,10 +1,13 @@
 using Rvnx.CRM.Core.Constants;
+using Rvnx.CRM.Core.DTOs.Calendar;
 using Rvnx.CRM.Core.DTOs.Dates;
 using Rvnx.CRM.Core.Exceptions;
 using Rvnx.CRM.Core.Extensions;
 using Rvnx.CRM.Core.Interfaces;
 using Rvnx.CRM.Core.Models;
+using Rvnx.CRM.Core.Models.Contact;
 using Rvnx.CRM.Core.Models.Dates;
+using Rvnx.CRM.Core.Services;
 
 namespace Rvnx.CRM.Infrastructure.Services;
 
@@ -19,7 +22,7 @@ public class SignificantDateService(IRepository repository) : ISignificantDateSe
             default,
             nameof(SignificantDate.ReminderOffsets)
         );
-        return dates.Select(d => d.ToDto()).ToList();
+        return [.. dates.Select(d => d.ToDto())];
     }
 
     public async Task<OperationResult> CreateAsync(SignificantDateDto dto)
@@ -191,5 +194,49 @@ public class SignificantDateService(IRepository repository) : ISignificantDateSe
                    d.Title != null &&
                    d.Title.ToLower() == SignificantDateTitles.Birthday.ToLower())) >
                0;
+    }
+
+    public async Task<List<CalendarEventDto>> GetCalendarEventsAsync()
+    {
+        List<SignificantDate> dates = await _repository.ListAsNoTrackingAsync<SignificantDate>(sd => sd.ContactId.HasValue && sd.IsActive);
+
+        if (dates.Count == 0)
+        {
+            return [];
+        }
+
+        List<Guid> contactIds = [.. dates.Select(d => d.ContactId!.Value).Distinct()];
+
+        List<(Guid Id, string FirstName, string? LastName)> contacts =
+            await _repository.ListProjectedByChunkedContainsAsync<Contact, (Guid, string, string?), Guid>(contactIds,
+                chunk => c => chunk.Contains(c.Id) && !c.IsPartial,
+                c => new ValueTuple<Guid, string, string?>(c.Id, c.FirstName, c.LastName));
+
+        Dictionary<Guid, string> contactNames = contacts.ToDictionary(c => c.Id, c => $"{c.FirstName} {c.LastName}".Trim());
+        DateOnly today = DateOnly.FromDateTime(DateTime.Today);
+        List<CalendarEventDto> events = [];
+
+        foreach (SignificantDate date in dates)
+        {
+            if (!contactNames.TryGetValue(date.ContactId!.Value, out string? contactName))
+            {
+                continue;
+            }
+
+            bool isBirthday = string.Equals(date.Title, SignificantDateTitles.Birthday, StringComparison.OrdinalIgnoreCase);
+            DateOnly nextOccurrence = DateCalculationService.GetNextOccurrence(date, today);
+            string firstName = contactName.Split(' ')[0];
+
+            events.Add(new CalendarEventDto
+            {
+                Title = $"{firstName}'s {date.Title}",
+                Start = nextOccurrence.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture),
+                Color = isBirthday ? "#e67e22" : "#3498db",
+                AllDay = true,
+                ContactId = date.ContactId!.Value
+            });
+        }
+
+        return events;
     }
 }

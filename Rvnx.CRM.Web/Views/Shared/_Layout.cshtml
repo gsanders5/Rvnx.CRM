@@ -50,6 +50,9 @@
                         <li class="nav-item">
                             <a class="nav-link" asp-area="" asp-controller="Contacts" asp-action="Index">Contacts</a>
                         </li>
+                        <li class="nav-item">
+                            <a class="nav-link" asp-area="" asp-controller="Calendar" asp-action="Index">Calendar</a>
+                        </li>
                         <environment include="Development">
                             @if (CurrentUserService.UserId != null && await CurrentUserService.IsAdministratorAsync(CurrentUserService.UserId.Value))
                             {

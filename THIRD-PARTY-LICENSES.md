@@ -1,3 +1,4 @@
+
 # Third-Party License Inventory
 Generated: 2025-05-22
 Purpose: License compliance audit
@@ -51,6 +52,7 @@ Purpose: License compliance audit
 | Twitter Embed Widget | - | https://platform.twitter.com/widgets.js | Proprietary | https://docs.x.com/developer-terms/policy |
 | Twitch Embed | v1 | https://embed.twitch.tv/embed/v1.js | Proprietary | https://www.twitch.tv/p/en/legal/developer-agreement/ |
 | TikTok Embed | - | https://www.tiktok.com/embed.js | Proprietary | https://www.tiktok.com/legal/page/global/terms-of-service/en |
+| FullCalendar | 6.1.15 | https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js | MIT | https://github.com/fullcalendar/fullcalendar/blob/main/LICENSE.txt |
 
 ---
 
