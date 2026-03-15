@@ -83,7 +83,6 @@ public class DashboardServiceTests
                 ))
             .ReturnsAsync(dates);
 
-        // Setup relationships
         List<Relationship> relationships =
         [
             new Relationship { EntityId = contactId1, RelatedEntityId = contactId2, EntityType = "Person" }
@@ -96,7 +95,6 @@ public class DashboardServiceTests
                 ))
             .ReturnsAsync(relationships.Select(r => (r.EntityId, r.RelatedEntityId)).ToList());
 
-        // Setup attachment map
         Guid attachmentId = Guid.NewGuid();
         _repositoryMock.Setup(r => r.ListProjectedAsync<Attachment, (Guid ContactId, Guid AttachmentId)>(
                 It.IsAny<Expression<Func<Attachment, bool>>>(),
@@ -111,13 +109,11 @@ public class DashboardServiceTests
 
         Assert.NotNull(result);
 
-        // Check UpcomingEvents
         Assert.Equal(2, result.UpcomingEvents.Count);
         // Queue pops earliest first.
         Assert.Equal("Alice's Birthday", result.UpcomingEvents[0].Title);
         Assert.Equal("Bob's Anniversary", result.UpcomingEvents[1].Title);
 
-        // Check GraphNodes
         Assert.Equal(2, result.GraphNodes.Count);
         Assert.Contains(result.GraphNodes,
             n => n.Id == contactId1.ToString() && n.Name == "Alice Smith" &&
@@ -125,7 +121,6 @@ public class DashboardServiceTests
         Assert.Contains(result.GraphNodes,
             n => n.Id == contactId2.ToString() && n.Name == "Bob Jones" && n.PhotoUrl == null);
 
-        // Check GraphLinks
         Assert.Single(result.GraphLinks);
         Assert.Equal(contactId1.ToString(), result.GraphLinks[0].Source);
         Assert.Equal(contactId2.ToString(), result.GraphLinks[0].Target);

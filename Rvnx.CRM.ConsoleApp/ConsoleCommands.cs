@@ -224,7 +224,6 @@ internal static class ConsoleCommands
         string email2 = args[2];
         bool confirmed = args.Length >= 4 && args[3].Equals("--confirm", StringComparison.OrdinalIgnoreCase);
 
-        // Resolve emails to user records.
         IRepository repository = services.GetRequiredService<IRepository>();
 
         User? user1 = await repository.QueryUnfiltered<User>()

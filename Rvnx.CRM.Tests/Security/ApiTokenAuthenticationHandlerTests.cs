@@ -32,7 +32,6 @@ public class ApiTokenAuthenticationHandlerTests
     [Fact]
     public async Task HandleAuthenticateAsyncWithoutAuthorizationHeaderReturnsNoResult()
     {
-        // Arrange
         DefaultHttpContext context = new();
 
         ApiTokenAuthenticationHandler sut = new(
@@ -43,17 +42,14 @@ public class ApiTokenAuthenticationHandlerTests
 
         await sut.InitializeAsync(new AuthenticationScheme(ApiTokenAuthenticationOptions.DefaultScheme, null, typeof(ApiTokenAuthenticationHandler)), context);
 
-        // Act
         AuthenticateResult result = await sut.AuthenticateAsync();
 
-        // Assert
         Assert.True(result.None);
     }
 
     [Fact]
     public async Task HandleAuthenticateAsyncWithInvalidTokenReturnsFail()
     {
-        // Arrange
         DefaultHttpContext context = new();
         context.Request.Headers["Authorization"] = "Bearer invalid_token";
 
@@ -67,10 +63,8 @@ public class ApiTokenAuthenticationHandlerTests
 
         await sut.InitializeAsync(new AuthenticationScheme(ApiTokenAuthenticationOptions.DefaultScheme, null, typeof(ApiTokenAuthenticationHandler)), context);
 
-        // Act
         AuthenticateResult result = await sut.AuthenticateAsync();
 
-        // Assert
         Assert.False(result.Succeeded);
         Assert.NotNull(result.Failure);
         Assert.Equal("Invalid or missing API token.", result.Failure!.Message);
@@ -79,7 +73,6 @@ public class ApiTokenAuthenticationHandlerTests
     [Fact]
     public async Task HandleAuthenticateAsyncWithValidTokenReturnsSuccess()
     {
-        // Arrange
         Guid userId = Guid.NewGuid();
         DefaultHttpContext context = new();
         context.Request.Headers["Authorization"] = "Bearer crm_validtoken123";
@@ -96,10 +89,8 @@ public class ApiTokenAuthenticationHandlerTests
 
         await sut.InitializeAsync(new AuthenticationScheme(ApiTokenAuthenticationOptions.DefaultScheme, null, typeof(ApiTokenAuthenticationHandler)), context);
 
-        // Act
         AuthenticateResult result = await sut.AuthenticateAsync();
 
-        // Assert
         Assert.True(result.Succeeded);
         Assert.NotNull(result.Principal);
         Assert.True(result.Principal!.Identity!.IsAuthenticated);

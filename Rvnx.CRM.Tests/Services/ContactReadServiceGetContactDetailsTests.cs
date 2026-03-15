@@ -22,7 +22,6 @@ public class ContactReadServiceGetContactDetailsTests
     [Fact]
     public async Task GetContactDetailsAsyncReturnsContactDetailsWithRelationships()
     {
-        // Arrange
         Guid contactId = Guid.NewGuid();
         Guid relatedId1 = Guid.NewGuid();
         Guid relatedId2 = Guid.NewGuid();
@@ -59,10 +58,8 @@ public class ContactReadServiceGetContactDetailsTests
             It.IsAny<CancellationToken>()))
             .ReturnsAsync(relatedContacts);
 
-        // Act
         ContactDetailDto? result = await _service.GetContactDetailsAsync(contactId);
 
-        // Assert
         Assert.NotNull(result);
         Assert.Equal(contactId, result.Id);
 
@@ -78,7 +75,6 @@ public class ContactReadServiceGetContactDetailsTests
     [Fact]
     public async Task GetContactDetailsAsyncWhenContactDoesNotExistReturnsNull()
     {
-        // Arrange
         Guid contactId = Guid.NewGuid();
 
         _repositoryMock.Setup(r => r.ListAsNoTrackingAsync<Contact>(
@@ -87,10 +83,8 @@ public class ContactReadServiceGetContactDetailsTests
             It.IsAny<string[]>()))
             .ReturnsAsync([]); // Returns empty list
 
-        // Act
         ContactDetailDto? result = await _service.GetContactDetailsAsync(contactId);
 
-        // Assert
         Assert.Null(result);
     }
 }

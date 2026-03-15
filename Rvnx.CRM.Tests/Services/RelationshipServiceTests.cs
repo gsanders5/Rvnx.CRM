@@ -26,7 +26,6 @@ namespace Rvnx.CRM.Tests.Services
         [Fact]
         public async Task GetRelatedEntityOptionsAsyncWhenEntityTypeIsPersonReturnsPersonOptions()
         {
-            // Arrange
             Guid entityId = Guid.NewGuid();
             Guid otherContactId = Guid.NewGuid();
 
@@ -40,10 +39,8 @@ namespace Rvnx.CRM.Tests.Services
                     new SelectOptionDto { Value = otherContactId.ToString(), Text = "John Doe" }
                 ]);
 
-            // Act
             List<SelectOptionDto> result = await _service.GetRelatedEntityOptionsAsync(entityId, EntityTypes.Person);
 
-            // Assert
             Assert.Single(result);
             Assert.Equal("John Doe", result[0].Text);
             Assert.Equal(otherContactId.ToString(), result[0].Value);
@@ -59,7 +56,6 @@ namespace Rvnx.CRM.Tests.Services
         [Fact]
         public async Task GetRelatedEntityOptionsAsyncWhenEntityTypeIsCompanyReturnsCompanyOptions()
         {
-            // Arrange
             Guid entityId = Guid.NewGuid();
             Guid companyId = Guid.NewGuid();
 
@@ -73,10 +69,8 @@ namespace Rvnx.CRM.Tests.Services
                     new SelectOptionDto { Value = companyId.ToString(), Text = "Acme Corp" }
                 ]);
 
-            // Act
             List<SelectOptionDto> result = await _service.GetRelatedEntityOptionsAsync(entityId, EntityTypes.Company);
 
-            // Assert
             Assert.Single(result);
             Assert.Equal("Acme Corp", result[0].Text);
             Assert.Equal(companyId.ToString(), result[0].Value);
@@ -96,13 +90,10 @@ namespace Rvnx.CRM.Tests.Services
         [InlineData(EntityTypes.Attachment)]
         public async Task GetRelatedEntityOptionsAsyncWhenEntityTypeIsUnsupportedReturnsEmptyList(string entityType)
         {
-            // Arrange
             Guid entityId = Guid.NewGuid();
 
-            // Act
             List<SelectOptionDto> result = await _service.GetRelatedEntityOptionsAsync(entityId, entityType);
 
-            // Assert
             Assert.Empty(result);
             Assert.Empty(_repositoryMock.Invocations);
         }

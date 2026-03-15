@@ -437,7 +437,6 @@ public class ContactManagementServiceTests
         [Fact]
         public async Task UpdateContactAsyncThrowsConcurrencyExceptionWhenContactExistsReturnsFailure()
         {
-            // Arrange
             Guid contactId = Guid.NewGuid();
             Contact existingContact = new() { Id = contactId };
             ContactFormDto dto = new() { FirstName = "Updated" };
@@ -457,10 +456,8 @@ public class ContactManagementServiceTests
             _repositoryMock.Setup(r => r.ExistsAsync<Contact>(contactId, It.IsAny<CancellationToken>()))
                 .ReturnsAsync(true);
 
-            // Act
             ContactOperationResult result = await _service.UpdateContactAsync(contactId, dto, null, null, null);
 
-            // Assert
             Assert.False(result.Success);
             Assert.False(result.IsNotFound);
             Assert.Contains("The contact was modified by another user. Please reload and try again.", result.Errors);
@@ -469,7 +466,6 @@ public class ContactManagementServiceTests
         [Fact]
         public async Task UpdateContactAsyncThrowsConcurrencyExceptionWhenContactDeletedReturnsNotFound()
         {
-            // Arrange
             Guid contactId = Guid.NewGuid();
             Contact existingContact = new() { Id = contactId };
             ContactFormDto dto = new() { FirstName = "Updated" };
@@ -489,10 +485,8 @@ public class ContactManagementServiceTests
             _repositoryMock.Setup(r => r.ExistsAsync<Contact>(contactId, It.IsAny<CancellationToken>()))
                 .ReturnsAsync(false);
 
-            // Act
             ContactOperationResult result = await _service.UpdateContactAsync(contactId, dto, null, null, null);
 
-            // Assert
             Assert.False(result.Success);
             Assert.True(result.IsNotFound);
         }
@@ -539,7 +533,6 @@ public class ContactManagementServiceTests
         [Fact]
         public async Task CreateContactAsyncWithValidDtoReturnsSuccessAndAddsEntities()
         {
-            // Arrange
             ContactFormDto dto = new()
             {
                 FirstName = "Jane",
@@ -556,10 +549,8 @@ public class ContactManagementServiceTests
             _repositoryMock.Setup(r => r.ListAsync<ReminderOffset>(It.IsAny<System.Linq.Expressions.Expression<Func<ReminderOffset, bool>>>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync([]);
 
-            // Act
             ContactOperationResult result = await _service.CreateContactAsync(dto);
 
-            // Assert
             Assert.True(result.Success);
             Assert.NotNull(result.ContactId);
 
@@ -577,7 +568,6 @@ public class ContactManagementServiceTests
         [Fact]
         public async Task CreateContactAsyncWithMinimalDtoReturnsSuccessAndOnlyAddsContact()
         {
-            // Arrange
             ContactFormDto dto = new()
             {
                 FirstName = "Minimal",
@@ -587,10 +577,8 @@ public class ContactManagementServiceTests
             _repositoryMock.Setup(r => r.AddAsync(It.IsAny<Contact>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync((Contact c, CancellationToken ct) => c);
 
-            // Act
             ContactOperationResult result = await _service.CreateContactAsync(dto);
 
-            // Assert
             Assert.True(result.Success);
             Assert.NotNull(result.ContactId);
 

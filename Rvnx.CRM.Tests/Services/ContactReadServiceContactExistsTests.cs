@@ -20,48 +20,39 @@ public class ContactReadServiceContactExistsTests
     [Fact]
     public async Task ContactExistsAsyncWhenContactExistsAndIsFullReturnsTrue()
     {
-        // Arrange
         Guid contactId = Guid.NewGuid();
 
         _repositoryMock.Setup(r => r.CountAsync<Contact>(It.IsAny<Expression<Func<Contact, bool>>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(1);
 
-        // Act
         bool result = await _service.ContactExistsAsync(contactId);
 
-        // Assert
         Assert.True(result);
     }
 
     [Fact]
     public async Task ContactExistsAsyncWhenContactDoesNotExistReturnsFalse()
     {
-        // Arrange
         Guid contactId = Guid.NewGuid();
 
         _repositoryMock.Setup(r => r.CountAsync<Contact>(It.IsAny<Expression<Func<Contact, bool>>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(0);
 
-        // Act
         bool result = await _service.ContactExistsAsync(contactId);
 
-        // Assert
         Assert.False(result);
     }
 
     [Fact]
     public async Task ContactExistsAsyncWhenContactIsPartialReturnsFalse()
     {
-        // Arrange
         Guid contactId = Guid.NewGuid();
 
         _repositoryMock.Setup(r => r.CountAsync<Contact>(It.IsAny<Expression<Func<Contact, bool>>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(0);
 
-        // Act
         bool result = await _service.ContactExistsAsync(contactId);
 
-        // Assert
         Assert.False(result);
     }
 }

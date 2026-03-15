@@ -23,7 +23,6 @@ namespace Rvnx.CRM.Tests.Services
         [Fact]
         public async Task UpdateAsyncThrowsEntityConcurrencyExceptionWhenContactMethodExistsRethrows()
         {
-            // Arrange
             Guid contactMethodId = Guid.NewGuid();
             Guid contactId = Guid.NewGuid();
             ContactMethod existingContactMethod = new()
@@ -50,7 +49,6 @@ namespace Rvnx.CRM.Tests.Services
         [Fact]
         public async Task UpdateAsyncThrowsEntityConcurrencyExceptionWhenContactMethodDoesNotExistReturnsFailure()
         {
-            // Arrange
             Guid contactMethodId = Guid.NewGuid();
             Guid contactId = Guid.NewGuid();
             ContactMethod existingContactMethod = new()
@@ -70,10 +68,8 @@ namespace Rvnx.CRM.Tests.Services
             _repositoryMock.Setup(r => r.ExistsAsync<ContactMethod>(contactMethodId, It.IsAny<CancellationToken>()))
                 .ReturnsAsync(false);
 
-            // Act
             OperationResult result = await _service.UpdateAsync(contactMethodId, dto);
 
-            // Assert
             Assert.False(result.Success);
             Assert.Equal("Contact method not found.", result.ErrorMessage);
         }

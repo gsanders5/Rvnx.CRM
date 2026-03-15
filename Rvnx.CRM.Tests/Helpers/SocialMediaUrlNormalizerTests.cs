@@ -12,10 +12,8 @@ namespace Rvnx.CRM.Tests.Helpers
         [InlineData("something else entirely")]
         public void ExtractUsernameWhenInvalidUriReturnsTrimmedUsername(string invalidUri)
         {
-            // Act
             string result = SocialMediaUrlNormalizer.ExtractUsername(ContactMethodType.Twitter, invalidUri);
 
-            // Assert
             Assert.Equal(invalidUri.TrimStart('@'), result);
         }
 
@@ -27,20 +25,16 @@ namespace Rvnx.CRM.Tests.Helpers
         [InlineData(ContactMethodType.Email, "https://github.com/username", "username")]
         public void ExtractUsernameWhenValidUriReturnsExtractedUsername(ContactMethodType type, string url, string expectedUsername)
         {
-            // Act
             string result = SocialMediaUrlNormalizer.ExtractUsername(type, url);
 
-            // Assert
             Assert.Equal(expectedUsername, result);
         }
 
         [Fact]
         public void ExtractUsernameWhenUrlIsNullOrWhiteSpaceReturnsEmptyString()
         {
-            // Act
             string result = SocialMediaUrlNormalizer.ExtractUsername(ContactMethodType.Twitter, "  ");
 
-            // Assert
             Assert.Equal(string.Empty, result);
         }
     }

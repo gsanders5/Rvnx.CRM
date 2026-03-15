@@ -25,24 +25,20 @@ public class ContactReadServiceGetContactFormTests
     [Fact]
     public async Task GetContactFormAsyncWhenContactDoesNotExistReturnsNull()
     {
-        // Arrange
         _repositoryMock.Setup(r => r.ListAsNoTrackingAsync<Contact>(
             It.IsAny<Expression<Func<Contact, bool>>>(),
             It.IsAny<CancellationToken>(),
             It.IsAny<string[]>()))
             .ReturnsAsync([]);
 
-        // Act
         ContactFormDto? result = await _service.GetContactFormAsync(Guid.NewGuid());
 
-        // Assert
         Assert.Null(result);
     }
 
     [Fact]
     public async Task GetContactFormAsyncMapsBasicFieldsCorrectly()
     {
-        // Arrange
         Guid contactId = Guid.NewGuid();
         Contact contact = new()
         {
@@ -76,10 +72,8 @@ public class ContactReadServiceGetContactFormTests
             It.IsAny<string[]>()))
             .ReturnsAsync([]);
 
-        // Act
         ContactFormDto? result = await _service.GetContactFormAsync(contactId);
 
-        // Assert
         Assert.NotNull(result);
         Assert.Equal(contact.Id, result.Id);
         Assert.Equal(contact.FirstName, result.FirstName);
@@ -97,7 +91,6 @@ public class ContactReadServiceGetContactFormTests
     [Fact]
     public async Task GetContactFormAsyncPrioritizesPrimaryEmailAndPhone()
     {
-        // Arrange
         Guid contactId = Guid.NewGuid();
         Contact contact = new()
         {
@@ -129,10 +122,8 @@ public class ContactReadServiceGetContactFormTests
             It.IsAny<string[]>()))
             .ReturnsAsync([]);
 
-        // Act
         ContactFormDto? result = await _service.GetContactFormAsync(contactId);
 
-        // Assert
         Assert.NotNull(result);
         Assert.Equal("primary@example.com", result.Email);
         Assert.Equal("555-9999", result.Phone);
@@ -141,7 +132,6 @@ public class ContactReadServiceGetContactFormTests
     [Fact]
     public async Task GetContactFormAsyncMapsBirthdayAndReminderCorrectly()
     {
-        // Arrange
         Guid contactId = Guid.NewGuid();
         Contact contact = new()
         {
@@ -177,10 +167,8 @@ public class ContactReadServiceGetContactFormTests
             It.IsAny<string[]>()))
             .ReturnsAsync([]);
 
-        // Act
         ContactFormDto? result = await _service.GetContactFormAsync(contactId);
 
-        // Assert
         Assert.NotNull(result);
         Assert.Equal(birthdayDate.ToDateTime(TimeOnly.MinValue), result.Birthday);
         Assert.True(result.RemindOnBirthday);
@@ -189,7 +177,6 @@ public class ContactReadServiceGetContactFormTests
     [Fact]
     public async Task GetContactFormAsyncMapsProfileImageAndLabelsCorrectly()
     {
-        // Arrange
         Guid contactId = Guid.NewGuid();
         Guid profileImageId = Guid.NewGuid();
         Guid labelId = Guid.NewGuid();
@@ -227,10 +214,8 @@ public class ContactReadServiceGetContactFormTests
             It.IsAny<string[]>()))
             .ReturnsAsync(allLabels);
 
-        // Act
         ContactFormDto? result = await _service.GetContactFormAsync(contactId);
 
-        // Assert
         Assert.NotNull(result);
         Assert.Equal(profileImageId, result.ProfileImageId);
 
