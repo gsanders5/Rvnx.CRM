@@ -45,6 +45,8 @@ Purpose: License compliance audit
 | DOMPurify | 3.0.10 | https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.10/purify.min.js | Apache-2.0 OR MPL-2.0 | https://github.com/cure53/DOMPurify/blob/main/LICENSE |
 | DataTables (JS) | dt-2.3.7, b-3.2.6, b-colvis-3.2.6, r-3.0.8, sc-2.4.3 | https://cdn.datatables.net/v/bs5/dt-2.3.7/b-3.2.6/b-colvis-3.2.6/r-3.0.8/sc-2.4.3/datatables.min.js | MIT | https://datatables.net/license/ |
 | Select2 (CSS & JS) | 4.1.0-rc.0 | https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css, https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js | MIT | https://github.com/select2/select2/blob/master/LICENSE.md |
+| Masonry | 4.2.2 | https://cdn.jsdelivr.net/npm/masonry-layout@4.2.2/dist/masonry.pkgd.min.js | MIT | https://desandro.mit-license.org/ |
+| imagesLoaded | 5.0.0 | https://cdn.jsdelivr.net/npm/imagesloaded@5.0.0/imagesloaded.pkgd.min.js | MIT | https://desandro.mit-license.org/ |
 | Twitter Embed Widget | - | https://platform.twitter.com/widgets.js | Proprietary | https://docs.x.com/developer-terms/policy |
 | Twitch Embed | v1 | https://embed.twitch.tv/embed/v1.js | Proprietary | https://www.twitch.tv/p/en/legal/developer-agreement/ |
 | TikTok Embed | - | https://www.tiktok.com/embed.js | Proprietary | https://www.tiktok.com/legal/page/global/terms-of-service/en |
