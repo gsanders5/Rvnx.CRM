@@ -4,6 +4,7 @@ using Rvnx.CRM.Core.Constants;
 using Rvnx.CRM.Core.DTOs.Contact;
 using Rvnx.CRM.Core.Interfaces;
 using Rvnx.CRM.Web.Controllers.Base;
+using Rvnx.CRM.Web.ViewModels.Contact;
 
 namespace Rvnx.CRM.Web.Controllers;
 

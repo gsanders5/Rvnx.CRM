@@ -1,4 +1,6 @@
-namespace Rvnx.CRM.Core.DTOs.Contact;
+using Rvnx.CRM.Core.DTOs.Contact;
+
+namespace Rvnx.CRM.Web.ViewModels.Contact;
 
 public class ContactIndexViewModel
 {
