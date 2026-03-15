@@ -8,73 +8,72 @@ using Rvnx.CRM.Core.Models.Base;
 using Rvnx.CRM.Core.Models.Contact;
 using Rvnx.CRM.Infrastructure.Services;
 
-namespace Rvnx.CRM.Tests.Services
+namespace Rvnx.CRM.Tests.Services;
+
+public class NoteServiceTests
 {
-    public class NoteServiceTests
+    private readonly Mock<IRepository> _repositoryMock;
+    private readonly Mock<IEntityService> _entityServiceMock;
+    private readonly NoteService _service;
+
+    public NoteServiceTests()
     {
-        private readonly Mock<IRepository> _repositoryMock;
-        private readonly Mock<IEntityService> _entityServiceMock;
-        private readonly NoteService _service;
+        _repositoryMock = new Mock<IRepository>();
+        _entityServiceMock = new Mock<IEntityService>();
+        _service = new NoteService(_repositoryMock.Object, _entityServiceMock.Object);
+    }
 
-        public NoteServiceTests()
-        {
-            _repositoryMock = new Mock<IRepository>();
-            _entityServiceMock = new Mock<IEntityService>();
-            _service = new NoteService(_repositoryMock.Object, _entityServiceMock.Object);
-        }
+    [Fact]
+    public async Task UpdateAsyncThrowsEntityConcurrencyExceptionWhenNoteExistsRethrows()
+    {
+        Guid noteId = Guid.NewGuid();
+        Guid contactId = Guid.NewGuid();
+        Note existingNote = new()
+        { Id = noteId, ContactId = contactId, Title = "Test Note" };
+        NoteFormViewModel dto = new()
+        { Id = noteId, EntityId = contactId, EntityType = EntityTypes.Person, Title = "Updated Note" };
 
-        [Fact]
-        public async Task UpdateAsyncThrowsEntityConcurrencyExceptionWhenNoteExistsRethrows()
-        {
-            Guid noteId = Guid.NewGuid();
-            Guid contactId = Guid.NewGuid();
-            Note existingNote = new()
-            { Id = noteId, ContactId = contactId, Title = "Test Note" };
-            NoteFormViewModel dto = new()
-            { Id = noteId, EntityId = contactId, EntityType = EntityTypes.Person, Title = "Updated Note" };
+        _repositoryMock.Setup(r => r.GetByIdAsync<Note>(noteId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(existingNote);
 
-            _repositoryMock.Setup(r => r.GetByIdAsync<Note>(noteId, It.IsAny<CancellationToken>()))
-                .ReturnsAsync(existingNote);
+        _repositoryMock.Setup(r => r.CountAsync(It.IsAny<System.Linq.Expressions.Expression<Func<Contact, bool>>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(1); // IsValidContactAsync
 
-            _repositoryMock.Setup(r => r.CountAsync(It.IsAny<System.Linq.Expressions.Expression<Func<Contact, bool>>>(), It.IsAny<CancellationToken>()))
-                .ReturnsAsync(1); // IsValidContactAsync
+        _repositoryMock.Setup(r => r.SaveChangesAsync(It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new EntityConcurrencyException("Concurrency conflict"));
 
-            _repositoryMock.Setup(r => r.SaveChangesAsync(It.IsAny<CancellationToken>()))
-                .ThrowsAsync(new EntityConcurrencyException("Concurrency conflict"));
+        _repositoryMock.Setup(r => r.ExistsAsync<Note>(noteId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
 
-            _repositoryMock.Setup(r => r.ExistsAsync<Note>(noteId, It.IsAny<CancellationToken>()))
-                .ReturnsAsync(true);
+        // Act & Assert
+        await Assert.ThrowsAsync<EntityConcurrencyException>(() => _service.UpdateAsync(noteId, dto));
+    }
 
-            // Act & Assert
-            await Assert.ThrowsAsync<EntityConcurrencyException>(() => _service.UpdateAsync(noteId, dto));
-        }
+    [Fact]
+    public async Task UpdateAsyncThrowsEntityConcurrencyExceptionWhenNoteDoesNotExistReturnsFailure()
+    {
+        Guid noteId = Guid.NewGuid();
+        Guid contactId = Guid.NewGuid();
+        Note existingNote = new()
+        { Id = noteId, ContactId = contactId, Title = "Test Note" };
+        NoteFormViewModel dto = new()
+        { Id = noteId, EntityId = contactId, EntityType = EntityTypes.Person, Title = "Updated Note" };
 
-        [Fact]
-        public async Task UpdateAsyncThrowsEntityConcurrencyExceptionWhenNoteDoesNotExistReturnsFailure()
-        {
-            Guid noteId = Guid.NewGuid();
-            Guid contactId = Guid.NewGuid();
-            Note existingNote = new()
-            { Id = noteId, ContactId = contactId, Title = "Test Note" };
-            NoteFormViewModel dto = new()
-            { Id = noteId, EntityId = contactId, EntityType = EntityTypes.Person, Title = "Updated Note" };
+        _repositoryMock.Setup(r => r.GetByIdAsync<Note>(noteId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(existingNote);
 
-            _repositoryMock.Setup(r => r.GetByIdAsync<Note>(noteId, It.IsAny<CancellationToken>()))
-                .ReturnsAsync(existingNote);
+        _repositoryMock.Setup(r => r.CountAsync(It.IsAny<System.Linq.Expressions.Expression<Func<Contact, bool>>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(1); // IsValidContactAsync
 
-            _repositoryMock.Setup(r => r.CountAsync(It.IsAny<System.Linq.Expressions.Expression<Func<Contact, bool>>>(), It.IsAny<CancellationToken>()))
-                .ReturnsAsync(1); // IsValidContactAsync
+        _repositoryMock.Setup(r => r.SaveChangesAsync(It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new EntityConcurrencyException("Concurrency conflict"));
 
-            _repositoryMock.Setup(r => r.SaveChangesAsync(It.IsAny<CancellationToken>()))
-                .ThrowsAsync(new EntityConcurrencyException("Concurrency conflict"));
+        _repositoryMock.Setup(r => r.ExistsAsync<Note>(noteId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(false);
 
-            _repositoryMock.Setup(r => r.ExistsAsync<Note>(noteId, It.IsAny<CancellationToken>()))
-                .ReturnsAsync(false);
+        OperationResult result = await _service.UpdateAsync(noteId, dto);
 
-            OperationResult result = await _service.UpdateAsync(noteId, dto);
-
-            Assert.False(result.Success);
-            Assert.Equal("Note not found.", result.ErrorMessage);
-        }
+        Assert.False(result.Success);
+        Assert.Equal("Note not found.", result.ErrorMessage);
     }
 }

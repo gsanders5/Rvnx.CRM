@@ -1,26 +1,25 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace Rvnx.CRM.Core.DTOs.Contact
+namespace Rvnx.CRM.Core.DTOs.Contact;
+
+public class PetFormDto
 {
-    public class PetFormDto
-    {
-        public Guid? Id { get; set; }
+    public Guid? Id { get; set; }
 
-        [Required]
-        public Guid EntityId { get; set; }
+    [Required]
+    public Guid EntityId { get; set; }
 
-        [Required]
-        [MaxLength(100)]
-        public string Name { get; set; } = string.Empty;
+    [Required]
+    [MaxLength(100)]
+    public string Name { get; set; } = string.Empty;
 
-        [MaxLength(50)]
-        public string? Species { get; set; }
+    [MaxLength(50)]
+    public string? Species { get; set; }
 
-        [MaxLength(100)]
-        public string? Breed { get; set; }
+    [MaxLength(100)]
+    public string? Breed { get; set; }
 
-        public DateTime? Birthday { get; set; }
+    public DateTime? Birthday { get; set; }
 
-        public string? Notes { get; set; }
-    }
+    public string? Notes { get; set; }
 }

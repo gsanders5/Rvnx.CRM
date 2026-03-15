@@ -7,309 +7,308 @@ using Rvnx.CRM.Core.Models.Contact;
 using Rvnx.CRM.Core.Models.Dates;
 using Rvnx.CRM.Core.Services;
 
-namespace Rvnx.CRM.Core.Extensions
+namespace Rvnx.CRM.Core.Extensions;
+
+public static class DtoMappingExtensions
 {
-    public static class DtoMappingExtensions
+    public static NoteDto ToDto(this Note entity)
     {
-        public static NoteDto ToDto(this Note entity)
+        return new NoteDto
         {
-            return new NoteDto
+            Id = entity.Id,
+            Title = entity.Title,
+            Value = entity.Value,
+            CreatedDate = entity.CreatedDate,
+            EntityId = entity.ContactId ?? Guid.Empty,
+            EntityType = EntityTypes.Person
+        };
+    }
+
+    public static SignificantDateDto ToDto(this SignificantDate entity)
+    {
+        return new SignificantDateDto
+        {
+            Id = entity.Id,
+            Title = entity.Title ?? string.Empty,
+            EventDate = entity.EventDate,
+            Description = entity.Description,
+            EntityId = entity.ContactId ?? Guid.Empty,
+            EntityType = EntityTypes.Person,
+            RecurrenceType = entity.RecurrenceType,
+            CustomIntervalDays = entity.CustomIntervalDays,
+            IsActive = entity.IsActive,
+            NextOccurrence = entity.GetNextOccurrence(),
+            ReminderOffsets = entity.ReminderOffsets?.Select(ro => new ReminderOffsetDto
             {
-                Id = entity.Id,
-                Title = entity.Title,
-                Value = entity.Value,
-                CreatedDate = entity.CreatedDate,
-                EntityId = entity.ContactId ?? Guid.Empty,
-                EntityType = EntityTypes.Person
-            };
-        }
+                Id = ro.Id,
+                DaysBeforeEvent = ro.DaysBeforeEvent,
+                IsActive = ro.IsActive,
+                ScheduledFor =
+                    Services.DateCalculationService.GetScheduledForDate(entity, ro,
+                        DateOnly.FromDateTime(DateTime.Today))
+            }).ToList() ?? []
+        };
+    }
 
-        public static SignificantDateDto ToDto(this SignificantDate entity)
+    public static RelationshipDto ToDto(this Relationship entity)
+    {
+        RelationshipTypeDefinition? def = RelationshipTypeService.GetById(entity.RelationshipTypeId);
+        string typeName = def?.GetName((entity.Person as Contact)?.Gender) ?? entity.RelationshipTypeName;
+        string oppositeName = def?.GetOppositeName((entity.RelatedPerson as Contact)?.Gender) ??
+                              entity.RelationshipTypeOppositeName;
+
+        return new RelationshipDto
         {
-            return new SignificantDateDto
-            {
-                Id = entity.Id,
-                Title = entity.Title ?? string.Empty,
-                EventDate = entity.EventDate,
-                Description = entity.Description,
-                EntityId = entity.ContactId ?? Guid.Empty,
-                EntityType = EntityTypes.Person,
-                RecurrenceType = entity.RecurrenceType,
-                CustomIntervalDays = entity.CustomIntervalDays,
-                IsActive = entity.IsActive,
-                NextOccurrence = entity.GetNextOccurrence(),
-                ReminderOffsets = entity.ReminderOffsets?.Select(ro => new ReminderOffsetDto
-                {
-                    Id = ro.Id,
-                    DaysBeforeEvent = ro.DaysBeforeEvent,
-                    IsActive = ro.IsActive,
-                    ScheduledFor =
-                        Services.DateCalculationService.GetScheduledForDate(entity, ro,
-                            DateOnly.FromDateTime(DateTime.Today))
-                }).ToList() ?? []
-            };
-        }
+            Id = entity.Id,
+            EntityId = entity.EntityId,
+            EntityType = entity.EntityType,
+            RelatedEntityId = entity.RelatedEntityId,
+            RelationshipTypeId = entity.RelationshipTypeId,
+            RelationshipTypeName = typeName,
+            RelationshipTypeOppositeName = oppositeName,
+            RelationshipTypeCategory = def?.Category ?? "Uncategorized",
+            RelatedEntityName = entity.RelatedPerson?.FullName ?? "Unknown",
+            EntityName = entity.Person?.FullName ?? "Unknown",
+            IsEntityPartial = (entity.Person as Contact)?.IsPartial == true,
+            IsRelatedEntityPartial = (entity.RelatedPerson as Contact)?.IsPartial == true,
+            Description = entity.Description,
+            StartDate = entity.StartDate,
+            EndDate = entity.EndDate
+        };
+    }
 
-        public static RelationshipDto ToDto(this Relationship entity)
+    public static AttachmentDto ToDto(this Attachment entity)
+    {
+        return new AttachmentDto
         {
-            RelationshipTypeDefinition? def = RelationshipTypeService.GetById(entity.RelationshipTypeId);
-            string typeName = def?.GetName((entity.Person as Contact)?.Gender) ?? entity.RelationshipTypeName;
-            string oppositeName = def?.GetOppositeName((entity.RelatedPerson as Contact)?.Gender) ??
-                                  entity.RelationshipTypeOppositeName;
+            Id = entity.Id,
+            FileName = entity.FileName ?? string.Empty,
+            ContentType = entity.ContentType,
+            AttachmentType = entity.AttachmentType,
+            EntityId = entity.ContactId ?? Guid.Empty,
+            EntityType = EntityTypes.Person
+        };
+    }
 
-            return new RelationshipDto
-            {
-                Id = entity.Id,
-                EntityId = entity.EntityId,
-                EntityType = entity.EntityType,
-                RelatedEntityId = entity.RelatedEntityId,
-                RelationshipTypeId = entity.RelationshipTypeId,
-                RelationshipTypeName = typeName,
-                RelationshipTypeOppositeName = oppositeName,
-                RelationshipTypeCategory = def?.Category ?? "Uncategorized",
-                RelatedEntityName = entity.RelatedPerson?.FullName ?? "Unknown",
-                EntityName = entity.Person?.FullName ?? "Unknown",
-                IsEntityPartial = (entity.Person as Contact)?.IsPartial == true,
-                IsRelatedEntityPartial = (entity.RelatedPerson as Contact)?.IsPartial == true,
-                Description = entity.Description,
-                StartDate = entity.StartDate,
-                EndDate = entity.EndDate
-            };
-        }
-
-        public static AttachmentDto ToDto(this Attachment entity)
+    public static PetDto ToDto(this Pet entity)
+    {
+        return new PetDto
         {
-            return new AttachmentDto
-            {
-                Id = entity.Id,
-                FileName = entity.FileName ?? string.Empty,
-                ContentType = entity.ContentType,
-                AttachmentType = entity.AttachmentType,
-                EntityId = entity.ContactId ?? Guid.Empty,
-                EntityType = EntityTypes.Person
-            };
-        }
+            Id = entity.Id,
+            Name = entity.Name,
+            Species = entity.Species,
+            Breed = entity.Breed,
+            Birthday = entity.Birthday,
+            Notes = entity.Notes,
+            EntityId = entity.ContactId
+        };
+    }
 
-        public static PetDto ToDto(this Pet entity)
+    public static ContactMethodDto ToDto(this ContactMethod entity)
+    {
+        return new ContactMethodDto
         {
-            return new PetDto
-            {
-                Id = entity.Id,
-                Name = entity.Name,
-                Species = entity.Species,
-                Breed = entity.Breed,
-                Birthday = entity.Birthday,
-                Notes = entity.Notes,
-                EntityId = entity.ContactId
-            };
-        }
+            Id = entity.Id,
+            Type = entity.Type,
+            Value = entity.Value,
+            Label = entity.Label,
+            EntityId = entity.ContactId ?? Guid.Empty,
+            EntityType = EntityTypes.Person,
+            CreatedDate = entity.CreatedDate
+        };
+    }
 
-        public static ContactMethodDto ToDto(this ContactMethod entity)
+    public static FactDto ToDto(this Fact entity)
+    {
+        return new FactDto
         {
-            return new ContactMethodDto
-            {
-                Id = entity.Id,
-                Type = entity.Type,
-                Value = entity.Value,
-                Label = entity.Label,
-                EntityId = entity.ContactId ?? Guid.Empty,
-                EntityType = EntityTypes.Person,
-                CreatedDate = entity.CreatedDate
-            };
-        }
+            Id = entity.Id,
+            Category = entity.Category,
+            Value = entity.Value,
+            EntityId = entity.ContactId ?? Guid.Empty,
+            EntityType = EntityTypes.Person,
+            CreatedDate = entity.CreatedDate
+        };
+    }
 
-        public static FactDto ToDto(this Fact entity)
+    public static ContactDto ToDto(this Contact entity)
+    {
+        return new ContactDto
         {
-            return new FactDto
-            {
-                Id = entity.Id,
-                Category = entity.Category,
-                Value = entity.Value,
-                EntityId = entity.ContactId ?? Guid.Empty,
-                EntityType = EntityTypes.Person,
-                CreatedDate = entity.CreatedDate
-            };
-        }
+            Id = entity.Id,
+            FirstName = entity.FirstName,
+            LastName = entity.LastName ?? string.Empty,
+            MaidenName = entity.MaidenName,
+            FullName = entity.FullName,
+            Company = entity.Company,
+            JobTitle = entity.JobTitle,
+            IsHidden = entity.IsHidden,
+            CreatedDate = entity.CreatedDate,
+            LastChangedDate = entity.LastChangedDate,
+            CreatedBy = entity.CreatedBy,
+            LastChangedBy = entity.LastChangedBy,
+            UserId = entity.UserId?.ToString(),
+            ProfileImageId = entity.ProfileImageId,
+            Pronouns = entity.Pronouns,
+            Gender = entity.Gender,
+            Religion = entity.Religion,
+            IsPartial = entity.IsPartial
+        };
+    }
 
-        public static ContactDto ToDto(this Contact entity)
+    public static ContactDetailDto ToDetailDto(this Contact entity)
+    {
+        return new ContactDetailDto
         {
-            return new ContactDto
-            {
-                Id = entity.Id,
-                FirstName = entity.FirstName,
-                LastName = entity.LastName ?? string.Empty,
-                MaidenName = entity.MaidenName,
-                FullName = entity.FullName,
-                Company = entity.Company,
-                JobTitle = entity.JobTitle,
-                IsHidden = entity.IsHidden,
-                CreatedDate = entity.CreatedDate,
-                LastChangedDate = entity.LastChangedDate,
-                CreatedBy = entity.CreatedBy,
-                LastChangedBy = entity.LastChangedBy,
-                UserId = entity.UserId?.ToString(),
-                ProfileImageId = entity.ProfileImageId,
-                Pronouns = entity.Pronouns,
-                Gender = entity.Gender,
-                Religion = entity.Religion,
-                IsPartial = entity.IsPartial
-            };
-        }
+            Id = entity.Id,
+            FirstName = entity.FirstName,
+            LastName = entity.LastName ?? string.Empty,
+            MaidenName = entity.MaidenName,
+            FullName = entity.FullName,
+            Company = entity.Company,
+            JobTitle = entity.JobTitle,
+            Nickname = entity.Nickname,
+            ProfileImageId = entity.ProfileImageId,
+            Pronouns = entity.Pronouns,
+            Gender = entity.Gender,
+            Religion = entity.Religion,
 
-        public static ContactDetailDto ToDetailDto(this Contact entity)
+            // Lists will be populated separately or via mapping if loaded
+            Notes = entity.Notes?.Select(n => n.ToDto()) ?? [],
+            SignificantDates = entity.SignificantDates?.Select(d => d.ToDto()) ?? [],
+            Relationships = entity.Relationships?.Select(r => r.ToDto()) ?? [],
+            RelatedTo = entity.RelatedTo?.Select(r => r.ToDto()) ?? [],
+            ContactMethods = entity.ContactMethods?.Select(i => i.ToDto()) ?? [],
+            Facts = entity.Facts?.Select(f => f.ToDto()) ?? [],
+            Attachments = entity.Attachments?.Select(a => a.ToDto()) ?? [],
+            // Pets to be populated by caller as they are not on Person
+        };
+    }
+
+    public static Contact ToEntity(this ContactFormDto dto)
+    {
+        return new Contact
         {
-            return new ContactDetailDto
-            {
-                Id = entity.Id,
-                FirstName = entity.FirstName,
-                LastName = entity.LastName ?? string.Empty,
-                MaidenName = entity.MaidenName,
-                FullName = entity.FullName,
-                Company = entity.Company,
-                JobTitle = entity.JobTitle,
-                Nickname = entity.Nickname,
-                ProfileImageId = entity.ProfileImageId,
-                Pronouns = entity.Pronouns,
-                Gender = entity.Gender,
-                Religion = entity.Religion,
+            Id = Guid.NewGuid(),
+            FirstName = dto.FirstName,
+            LastName = dto.LastName,
+            MaidenName = dto.MaidenName,
+            Nickname = dto.Nickname,
+            JobTitle = dto.JobTitle,
+            Company = dto.Company,
+            IsHidden = dto.IsHidden,
+            Pronouns = dto.Pronouns,
+            Gender = dto.Gender,
+            Religion = dto.Religion
+        };
+    }
 
-                // Lists will be populated separately or via mapping if loaded
-                Notes = entity.Notes?.Select(n => n.ToDto()) ?? [],
-                SignificantDates = entity.SignificantDates?.Select(d => d.ToDto()) ?? [],
-                Relationships = entity.Relationships?.Select(r => r.ToDto()) ?? [],
-                RelatedTo = entity.RelatedTo?.Select(r => r.ToDto()) ?? [],
-                ContactMethods = entity.ContactMethods?.Select(i => i.ToDto()) ?? [],
-                Facts = entity.Facts?.Select(f => f.ToDto()) ?? [],
-                Attachments = entity.Attachments?.Select(a => a.ToDto()) ?? [],
-                // Pets to be populated by caller as they are not on Person
-            };
-        }
+    public static void UpdateEntity(this Contact entity, ContactFormDto dto)
+    {
+        entity.FirstName = dto.FirstName;
+        entity.LastName = dto.LastName;
+        entity.MaidenName = dto.MaidenName;
+        entity.Nickname = dto.Nickname;
+        entity.JobTitle = dto.JobTitle;
+        entity.Company = dto.Company;
+        entity.IsHidden = dto.IsHidden;
+        entity.Pronouns = dto.Pronouns;
+        entity.Gender = dto.Gender;
+        entity.Religion = dto.Religion;
+    }
 
-        public static Contact ToEntity(this ContactFormDto dto)
+    public static Pet ToEntity(this PetFormDto dto)
+    {
+        return new Pet
         {
-            return new Contact
-            {
-                Id = Guid.NewGuid(),
-                FirstName = dto.FirstName,
-                LastName = dto.LastName,
-                MaidenName = dto.MaidenName,
-                Nickname = dto.Nickname,
-                JobTitle = dto.JobTitle,
-                Company = dto.Company,
-                IsHidden = dto.IsHidden,
-                Pronouns = dto.Pronouns,
-                Gender = dto.Gender,
-                Religion = dto.Religion
-            };
-        }
+            Id = Guid.NewGuid(),
+            Name = dto.Name,
+            Species = dto.Species,
+            Breed = dto.Breed,
+            Birthday = dto.Birthday,
+            Notes = dto.Notes,
+            ContactId = dto.EntityId
+        };
+    }
 
-        public static void UpdateEntity(this Contact entity, ContactFormDto dto)
-        {
-            entity.FirstName = dto.FirstName;
-            entity.LastName = dto.LastName;
-            entity.MaidenName = dto.MaidenName;
-            entity.Nickname = dto.Nickname;
-            entity.JobTitle = dto.JobTitle;
-            entity.Company = dto.Company;
-            entity.IsHidden = dto.IsHidden;
-            entity.Pronouns = dto.Pronouns;
-            entity.Gender = dto.Gender;
-            entity.Religion = dto.Religion;
-        }
+    public static void UpdateEntity(this Pet entity, PetFormDto dto)
+    {
+        entity.Name = dto.Name;
+        entity.Species = dto.Species;
+        entity.Breed = dto.Breed;
+        entity.Birthday = dto.Birthday;
+        entity.Notes = dto.Notes;
+    }
 
-        public static Pet ToEntity(this PetFormDto dto)
+    public static ContactMethod ToEntity(this ContactMethodFormDto dto)
+    {
+        return new ContactMethod
         {
-            return new Pet
-            {
-                Id = Guid.NewGuid(),
-                Name = dto.Name,
-                Species = dto.Species,
-                Breed = dto.Breed,
-                Birthday = dto.Birthday,
-                Notes = dto.Notes,
-                ContactId = dto.EntityId
-            };
-        }
+            Id = Guid.NewGuid(),
+            Type = dto.Type,
+            Value = dto.Value,
+            Label = dto.Label,
+            ContactId = dto.EntityId
+        };
+    }
 
-        public static void UpdateEntity(this Pet entity, PetFormDto dto)
-        {
-            entity.Name = dto.Name;
-            entity.Species = dto.Species;
-            entity.Breed = dto.Breed;
-            entity.Birthday = dto.Birthday;
-            entity.Notes = dto.Notes;
-        }
+    public static void UpdateEntity(this ContactMethod entity, ContactMethodFormDto dto)
+    {
+        entity.Type = dto.Type;
+        entity.Value = dto.Value;
+        entity.Label = dto.Label;
+    }
 
-        public static ContactMethod ToEntity(this ContactMethodFormDto dto)
-        {
-            return new ContactMethod
-            {
-                Id = Guid.NewGuid(),
-                Type = dto.Type,
-                Value = dto.Value,
-                Label = dto.Label,
-                ContactId = dto.EntityId
-            };
-        }
+    public static Note ToEntity(this NoteFormDto dto)
+    {
+        return new Note { Id = Guid.NewGuid(), Title = dto.Title, Value = dto.Value, ContactId = dto.EntityId };
+    }
 
-        public static void UpdateEntity(this ContactMethod entity, ContactMethodFormDto dto)
-        {
-            entity.Type = dto.Type;
-            entity.Value = dto.Value;
-            entity.Label = dto.Label;
-        }
+    public static void UpdateEntity(this Note entity, NoteFormDto dto)
+    {
+        entity.Title = dto.Title;
+        entity.Value = dto.Value;
+    }
 
-        public static Note ToEntity(this NoteFormDto dto)
+    public static Fact ToEntity(this FactFormDto dto)
+    {
+        return new Fact
         {
-            return new Note { Id = Guid.NewGuid(), Title = dto.Title, Value = dto.Value, ContactId = dto.EntityId };
-        }
+            Id = Guid.NewGuid(),
+            Category = dto.Category,
+            Value = dto.Value,
+            ContactId = dto.EntityId
+        };
+    }
 
-        public static void UpdateEntity(this Note entity, NoteFormDto dto)
-        {
-            entity.Title = dto.Title;
-            entity.Value = dto.Value;
-        }
+    public static void UpdateEntity(this Fact entity, FactFormDto dto)
+    {
+        entity.Category = dto.Category;
+        entity.Value = dto.Value;
+    }
 
-        public static Fact ToEntity(this FactFormDto dto)
+    public static Relationship ToEntity(this RelationshipFormDto dto)
+    {
+        return new Relationship
         {
-            return new Fact
-            {
-                Id = Guid.NewGuid(),
-                Category = dto.Category,
-                Value = dto.Value,
-                ContactId = dto.EntityId
-            };
-        }
+            Id = Guid.NewGuid(),
+            EntityId = dto.EntityId,
+            RelatedEntityId = dto.RelatedEntityId,
+            EntityType = dto.EntityType,
+            RelationshipTypeId = dto.RelationshipTypeId,
+            Description = dto.Description,
+            StartDate = dto.StartDate,
+            EndDate = dto.EndDate
+        };
+    }
 
-        public static void UpdateEntity(this Fact entity, FactFormDto dto)
-        {
-            entity.Category = dto.Category;
-            entity.Value = dto.Value;
-        }
-
-        public static Relationship ToEntity(this RelationshipFormDto dto)
-        {
-            return new Relationship
-            {
-                Id = Guid.NewGuid(),
-                EntityId = dto.EntityId,
-                RelatedEntityId = dto.RelatedEntityId,
-                EntityType = dto.EntityType,
-                RelationshipTypeId = dto.RelationshipTypeId,
-                Description = dto.Description,
-                StartDate = dto.StartDate,
-                EndDate = dto.EndDate
-            };
-        }
-
-        public static void UpdateEntity(this Relationship entity, RelationshipFormDto dto)
-        {
-            entity.EntityId = dto.EntityId;
-            entity.RelatedEntityId = dto.RelatedEntityId;
-            entity.RelationshipTypeId = dto.RelationshipTypeId;
-            entity.Description = dto.Description;
-            entity.StartDate = dto.StartDate;
-            entity.EndDate = dto.EndDate;
-        }
+    public static void UpdateEntity(this Relationship entity, RelationshipFormDto dto)
+    {
+        entity.EntityId = dto.EntityId;
+        entity.RelatedEntityId = dto.RelatedEntityId;
+        entity.RelationshipTypeId = dto.RelationshipTypeId;
+        entity.Description = dto.Description;
+        entity.StartDate = dto.StartDate;
+        entity.EndDate = dto.EndDate;
     }
 }

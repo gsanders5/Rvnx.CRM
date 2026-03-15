@@ -1,7 +1,6 @@
-namespace Rvnx.CRM.Core.DTOs.Contact
+namespace Rvnx.CRM.Core.DTOs.Contact;
+
+public class RelationshipDeleteViewModel : RelationshipDto
 {
-    public class RelationshipDeleteViewModel : RelationshipDto
-    {
-        public string? ReturnUrl { get; set; }
-    }
+    public string? ReturnUrl { get; set; }
 }

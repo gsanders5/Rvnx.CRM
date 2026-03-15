@@ -87,6 +87,12 @@ public class ApiTokenCurrentUserService : ICurrentUserService
             return;
         }
 
+        if (context.Items.TryGetValue("ResolvedApiToken", out object? preResolvedToken) && preResolvedToken is ApiToken token)
+        {
+            _resolvedToken = token;
+            return;
+        }
+
         if (context.Items.ContainsKey("IsResolvingApiToken"))
         {
             return;
@@ -102,9 +108,9 @@ public class ApiTokenCurrentUserService : ICurrentUserService
             IApiTokenService tokenService = scope.ServiceProvider.GetRequiredService<IApiTokenService>();
 
             // Note: ResolveTokenAsync is async but we are in synchronous property getters.
-            // Using GetAwaiter().GetResult() is generally frowned upon but necessary here
-            // since ICurrentUserService properties are synchronous.
-            // The AuthHandler should ideally pre-warm this or we accept the sync-over-async here.
+            // Using GetAwaiter().GetResult() is generally frowned upon.
+            // The AuthHandler should now be pre-resolving this into Context.Items["ResolvedApiToken"].
+            // This fallback remains for cases where the auth handler might be bypassed but the service is used.
             _resolvedToken = tokenService.ResolveTokenAsync(rawToken).GetAwaiter().GetResult();
 
             if (_resolvedToken != null)

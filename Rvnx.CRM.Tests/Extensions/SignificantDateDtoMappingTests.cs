@@ -3,91 +3,90 @@ using Rvnx.CRM.Core.DTOs.Dates;
 using Rvnx.CRM.Core.Extensions;
 using Rvnx.CRM.Core.Models.Dates;
 
-namespace Rvnx.CRM.Tests.Extensions
+namespace Rvnx.CRM.Tests.Extensions;
+
+public class SignificantDateDtoMappingTests
 {
-    public class SignificantDateDtoMappingTests
+    [Fact]
+    public void ToDtoShouldMapAllPropertiesWhenEntityIsFullyPopulated()
     {
-        [Fact]
-        public void ToDtoShouldMapAllPropertiesWhenEntityIsFullyPopulated()
+        SignificantDate entity = new()
         {
-            SignificantDate entity = new()
-            {
-                Id = Guid.NewGuid(),
-                Title = "Anniversary",
-                EventDate = new DateOnly(2023, 10, 27),
-                Description = "A special day",
-                ContactId = Guid.NewGuid(),
-                RecurrenceType = Core.Enumerations.RecurrenceType.Annual,
-                CustomIntervalDays = null,
-                IsActive = true
-            };
+            Id = Guid.NewGuid(),
+            Title = "Anniversary",
+            EventDate = new DateOnly(2023, 10, 27),
+            Description = "A special day",
+            ContactId = Guid.NewGuid(),
+            RecurrenceType = Core.Enumerations.RecurrenceType.Annual,
+            CustomIntervalDays = null,
+            IsActive = true
+        };
 
-            SignificantDateDto dto = entity.ToDto();
+        SignificantDateDto dto = entity.ToDto();
 
-            Assert.Equal(entity.Id, dto.Id);
-            Assert.Equal(entity.Title, dto.Title);
-            Assert.Equal(entity.EventDate, dto.EventDate);
-            Assert.Equal(entity.Description, dto.Description);
-            Assert.Equal(entity.ContactId, dto.EntityId);
-            Assert.Equal(EntityTypes.Person, dto.EntityType);
-            Assert.Equal(entity.RecurrenceType, dto.RecurrenceType);
-            Assert.Equal(entity.CustomIntervalDays, dto.CustomIntervalDays);
-            Assert.Equal(entity.IsActive, dto.IsActive);
-        }
+        Assert.Equal(entity.Id, dto.Id);
+        Assert.Equal(entity.Title, dto.Title);
+        Assert.Equal(entity.EventDate, dto.EventDate);
+        Assert.Equal(entity.Description, dto.Description);
+        Assert.Equal(entity.ContactId, dto.EntityId);
+        Assert.Equal(EntityTypes.Person, dto.EntityType);
+        Assert.Equal(entity.RecurrenceType, dto.RecurrenceType);
+        Assert.Equal(entity.CustomIntervalDays, dto.CustomIntervalDays);
+        Assert.Equal(entity.IsActive, dto.IsActive);
+    }
 
-        [Fact]
-        public void ToDtoShouldMapNullTitleToEmptyString()
+    [Fact]
+    public void ToDtoShouldMapNullTitleToEmptyString()
+    {
+        SignificantDate entity = new()
         {
-            SignificantDate entity = new()
-            {
-                Title = null,
-                EventDate = DateOnly.FromDateTime(DateTime.Now)
-            };
+            Title = null,
+            EventDate = DateOnly.FromDateTime(DateTime.Now)
+        };
 
-            SignificantDateDto dto = entity.ToDto();
+        SignificantDateDto dto = entity.ToDto();
 
-            Assert.Equal(string.Empty, dto.Title);
-        }
+        Assert.Equal(string.Empty, dto.Title);
+    }
 
-        [Fact]
-        public void ToDtoShouldMapNullContactIdToEmptyGuid()
+    [Fact]
+    public void ToDtoShouldMapNullContactIdToEmptyGuid()
+    {
+        SignificantDate entity = new()
         {
-            SignificantDate entity = new()
-            {
-                ContactId = null,
-                EventDate = DateOnly.FromDateTime(DateTime.Now)
-            };
+            ContactId = null,
+            EventDate = DateOnly.FromDateTime(DateTime.Now)
+        };
 
-            SignificantDateDto dto = entity.ToDto();
+        SignificantDateDto dto = entity.ToDto();
 
-            Assert.Equal(Guid.Empty, dto.EntityId);
-        }
+        Assert.Equal(Guid.Empty, dto.EntityId);
+    }
 
-        [Fact]
-        public void ToDtoShouldSetEntityTypeToPerson()
+    [Fact]
+    public void ToDtoShouldSetEntityTypeToPerson()
+    {
+        SignificantDate entity = new()
         {
-            SignificantDate entity = new()
-            {
-                EventDate = DateOnly.FromDateTime(DateTime.Now)
-            };
+            EventDate = DateOnly.FromDateTime(DateTime.Now)
+        };
 
-            SignificantDateDto dto = entity.ToDto();
+        SignificantDateDto dto = entity.ToDto();
 
-            Assert.Equal(EntityTypes.Person, dto.EntityType);
-        }
+        Assert.Equal(EntityTypes.Person, dto.EntityType);
+    }
 
-        [Fact]
-        public void ToDtoShouldMapNullDescriptionAsNull()
+    [Fact]
+    public void ToDtoShouldMapNullDescriptionAsNull()
+    {
+        SignificantDate entity = new()
         {
-            SignificantDate entity = new()
-            {
-                Description = null,
-                EventDate = DateOnly.FromDateTime(DateTime.Now)
-            };
+            Description = null,
+            EventDate = DateOnly.FromDateTime(DateTime.Now)
+        };
 
-            SignificantDateDto dto = entity.ToDto();
+        SignificantDateDto dto = entity.ToDto();
 
-            Assert.Null(dto.Description);
-        }
+        Assert.Null(dto.Description);
     }
 }

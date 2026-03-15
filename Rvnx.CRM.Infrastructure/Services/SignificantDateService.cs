@@ -1,6 +1,6 @@
-using Microsoft.EntityFrameworkCore;
 using Rvnx.CRM.Core.Constants;
 using Rvnx.CRM.Core.DTOs.Dates;
+using Rvnx.CRM.Core.Exceptions;
 using Rvnx.CRM.Core.Extensions;
 using Rvnx.CRM.Core.Interfaces;
 using Rvnx.CRM.Core.Models;
@@ -95,7 +95,7 @@ public class SignificantDateService(IRepository repository) : ISignificantDateSe
 
             return OperationResult.Ok(dto.EntityId, dto.EntityType);
         }
-        catch (DbUpdateConcurrencyException)
+        catch (EntityConcurrencyException)
         {
             if (!await _repository.ExistsAsync<SignificantDate>(dto.Id))
             {

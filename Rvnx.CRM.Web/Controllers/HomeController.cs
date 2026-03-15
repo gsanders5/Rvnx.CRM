@@ -5,30 +5,29 @@ using Rvnx.CRM.Web.Controllers.Base;
 using Rvnx.CRM.Web.Models;
 using System.Diagnostics;
 
-namespace Rvnx.CRM.Web.Controllers
+namespace Rvnx.CRM.Web.Controllers;
+
+public class HomeController(IDashboardService dashboardService) : AuthorizedController
 {
-    public class HomeController(IDashboardService dashboardService) : AuthorizedController
+    private readonly IDashboardService _dashboardService = dashboardService;
+
+    [HttpGet]
+    public async Task<IActionResult> Index()
     {
-        private readonly IDashboardService _dashboardService = dashboardService;
+        DashboardDto data = await _dashboardService.GetDashboardDataAsync();
+        return View(data);
+    }
 
-        [HttpGet]
-        public async Task<IActionResult> Index()
-        {
-            DashboardDto data = await _dashboardService.GetDashboardDataAsync();
-            return View(data);
-        }
+    [HttpGet]
+    public IActionResult Privacy()
+    {
+        return View();
+    }
 
-        [HttpGet]
-        public IActionResult Privacy()
-        {
-            return View();
-        }
-
-        [HttpGet]
-        [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
-        public IActionResult Error()
-        {
-            return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
-        }
+    [HttpGet]
+    [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
+    public IActionResult Error()
+    {
+        return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
     }
 }

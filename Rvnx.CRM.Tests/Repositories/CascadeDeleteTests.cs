@@ -6,50 +6,49 @@ using Rvnx.CRM.Core.Interfaces;
 using Rvnx.CRM.Core.Models.Contact;
 using Rvnx.CRM.Web.Controllers;
 
-namespace Rvnx.CRM.Tests.Repositories
+namespace Rvnx.CRM.Tests.Repositories;
+
+public class CascadeDeleteTests
 {
-    public class CascadeDeleteTests
+    [Fact]
+    public async Task DeleteContactShouldDeleteDependencies()
     {
-        [Fact]
-        public async Task DeleteContactShouldDeleteDependencies()
+        Mock<ILogger<ContactsController>> logger = new();
+        Mock<ICurrentUserService> userMock = new();
+        Mock<IContactManagementService> managementMock = new();
+
+        managementMock.Setup(m => m.DeleteContactAsync(It.IsAny<Guid>())).Returns(Task.CompletedTask);
+
+        ContactsController controller = new(logger.Object, userMock.Object, new Mock<IContactImportService>().Object, new Mock<IContactExportService>().Object, managementMock.Object, new Mock<IContactReadService>().Object, new Mock<ISelfContactService>().Object, Mock.Of<IFileValidationService>())
         {
-            Mock<ILogger<ContactsController>> logger = new();
-            Mock<ICurrentUserService> userMock = new();
-            Mock<IContactManagementService> managementMock = new();
+            ControllerContext = new ControllerContext { HttpContext = new DefaultHttpContext() }
+        };
 
-            managementMock.Setup(m => m.DeleteContactAsync(It.IsAny<Guid>())).Returns(Task.CompletedTask);
+        Guid contactId = Guid.NewGuid();
 
-            ContactsController controller = new(logger.Object, userMock.Object, new Mock<IContactImportService>().Object, new Mock<IContactExportService>().Object, managementMock.Object, new Mock<IContactReadService>().Object, new Mock<ISelfContactService>().Object, Mock.Of<IFileValidationService>())
-            {
-                ControllerContext = new ControllerContext { HttpContext = new DefaultHttpContext() }
-            };
+        await controller.DeleteConfirmed(contactId);
 
-            Guid contactId = Guid.NewGuid();
+        managementMock.Verify(m => m.DeleteContactAsync(contactId), Times.Once);
+    }
 
-            await controller.DeleteConfirmed(contactId);
+    [Fact]
+    public async Task DeleteContactShouldDeleteRelationships()
+    {
+        Mock<ILogger<ContactsController>> logger = new();
+        Mock<ICurrentUserService> userMock = new();
+        Mock<IContactManagementService> managementMock = new();
 
-            managementMock.Verify(m => m.DeleteContactAsync(contactId), Times.Once);
-        }
+        managementMock.Setup(m => m.DeleteContactAsync(It.IsAny<Guid>())).Returns(Task.CompletedTask);
 
-        [Fact]
-        public async Task DeleteContactShouldDeleteRelationships()
+        ContactsController controller = new(logger.Object, userMock.Object, new Mock<IContactImportService>().Object, new Mock<IContactExportService>().Object, managementMock.Object, new Mock<IContactReadService>().Object, new Mock<ISelfContactService>().Object, Mock.Of<IFileValidationService>())
         {
-            Mock<ILogger<ContactsController>> logger = new();
-            Mock<ICurrentUserService> userMock = new();
-            Mock<IContactManagementService> managementMock = new();
+            ControllerContext = new ControllerContext { HttpContext = new DefaultHttpContext() }
+        };
 
-            managementMock.Setup(m => m.DeleteContactAsync(It.IsAny<Guid>())).Returns(Task.CompletedTask);
+        Guid contactId = Guid.NewGuid();
 
-            ContactsController controller = new(logger.Object, userMock.Object, new Mock<IContactImportService>().Object, new Mock<IContactExportService>().Object, managementMock.Object, new Mock<IContactReadService>().Object, new Mock<ISelfContactService>().Object, Mock.Of<IFileValidationService>())
-            {
-                ControllerContext = new ControllerContext { HttpContext = new DefaultHttpContext() }
-            };
+        await controller.DeleteConfirmed(contactId);
 
-            Guid contactId = Guid.NewGuid();
-
-            await controller.DeleteConfirmed(contactId);
-
-            managementMock.Verify(m => m.DeleteContactAsync(contactId), Times.Once);
-        }
+        managementMock.Verify(m => m.DeleteContactAsync(contactId), Times.Once);
     }
 }

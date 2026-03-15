@@ -47,9 +47,17 @@ public abstract class Person : BaseEntity
 
     public virtual ICollection<SignificantDate> SignificantDates { get; set; } = [];
 
+    /// <summary>
+    /// Gets or sets the collection of relationships WHERE THIS PERSON IS THE SOURCE.
+    /// This property is [NotMapped] and MUST be populated manually by a service (e.g., ContactReadService).
+    /// </summary>
     [NotMapped]
     public ICollection<Relationship> Relationships { get; set; } = [];
 
+    /// <summary>
+    /// Gets or sets the collection of relationships WHERE THIS PERSON IS THE TARGET.
+    /// This property is [NotMapped] and MUST be populated manually by a service (e.g., ContactReadService).
+    /// </summary>
     [NotMapped]
     public ICollection<Relationship> RelatedTo { get; set; } = [];
 

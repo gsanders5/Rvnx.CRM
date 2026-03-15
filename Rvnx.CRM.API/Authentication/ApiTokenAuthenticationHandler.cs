@@ -14,28 +14,46 @@ public class ApiTokenAuthenticationOptions : AuthenticationSchemeOptions
 public class ApiTokenAuthenticationHandler : AuthenticationHandler<ApiTokenAuthenticationOptions>
 {
     private readonly ICurrentUserService _currentUserService;
+    private readonly IServiceProvider _serviceProvider;
 
     public ApiTokenAuthenticationHandler(
         IOptionsMonitor<ApiTokenAuthenticationOptions> options,
         ILoggerFactory logger,
         UrlEncoder encoder,
-        ICurrentUserService currentUserService)
+        ICurrentUserService currentUserService,
+        IServiceProvider serviceProvider)
         : base(options, logger, encoder)
     {
         _currentUserService = currentUserService;
+        _serviceProvider = serviceProvider;
     }
 
-    protected override Task<AuthenticateResult> HandleAuthenticateAsync()
+    protected override async Task<AuthenticateResult> HandleAuthenticateAsync()
     {
         if (!Request.Headers.TryGetValue("Authorization", out Microsoft.Extensions.Primitives.StringValues value))
         {
-            return Task.FromResult(AuthenticateResult.NoResult());
+            return AuthenticateResult.NoResult();
         }
 
         string? authHeader = value.ToString();
         if (string.IsNullOrEmpty(authHeader) || !authHeader.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
         {
-            return Task.FromResult(AuthenticateResult.NoResult());
+            return AuthenticateResult.NoResult();
+        }
+
+        string rawToken = authHeader["Bearer ".Length..].Trim();
+
+        // Resolve token asynchronously and store it for the CurrentUserService to pick up
+        // this avoids sync-over-async in the property getters of ICurrentUserService.
+        using (IServiceScope scope = _serviceProvider.CreateScope())
+        {
+            IApiTokenService tokenService = scope.ServiceProvider.GetRequiredService<IApiTokenService>();
+            Core.Models.ApiToken? resolvedToken = await tokenService.ResolveTokenAsync(rawToken);
+
+            if (resolvedToken != null)
+            {
+                Context.Items["ResolvedApiToken"] = resolvedToken;
+            }
         }
 
         // The token is validated implicitly by calling ICurrentUserService.IsAuthenticated
@@ -43,7 +61,7 @@ public class ApiTokenAuthenticationHandler : AuthenticationHandler<ApiTokenAuthe
 
         if (!_currentUserService.IsAuthenticated)
         {
-            return Task.FromResult(AuthenticateResult.Fail("Invalid or missing API token."));
+            return AuthenticateResult.Fail("Invalid or missing API token.");
         }
 
         // We have a valid user
@@ -57,6 +75,6 @@ public class ApiTokenAuthenticationHandler : AuthenticationHandler<ApiTokenAuthe
         ClaimsPrincipal principal = new(identity);
         AuthenticationTicket ticket = new(principal, Scheme.Name);
 
-        return Task.FromResult(AuthenticateResult.Success(ticket));
+        return AuthenticateResult.Success(ticket);
     }
 }

@@ -2,28 +2,27 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
-namespace Rvnx.CRM.Infrastructure.Migrations
+namespace Rvnx.CRM.Infrastructure.Migrations;
+
+/// <inheritdoc />
+public partial class AddMaidenName : Migration
 {
     /// <inheritdoc />
-    public partial class AddMaidenName : Migration
+    protected override void Up(MigrationBuilder migrationBuilder)
     {
-        /// <inheritdoc />
-        protected override void Up(MigrationBuilder migrationBuilder)
-        {
-            migrationBuilder.AddColumn<string>(
-                name: "MaidenName",
-                table: "Contact",
-                type: "TEXT",
-                maxLength: 100,
-                nullable: true);
-        }
+        migrationBuilder.AddColumn<string>(
+            name: "MaidenName",
+            table: "Contact",
+            type: "TEXT",
+            maxLength: 100,
+            nullable: true);
+    }
 
-        /// <inheritdoc />
-        protected override void Down(MigrationBuilder migrationBuilder)
-        {
-            migrationBuilder.DropColumn(
-                name: "MaidenName",
-                table: "Contact");
-        }
+    /// <inheritdoc />
+    protected override void Down(MigrationBuilder migrationBuilder)
+    {
+        migrationBuilder.DropColumn(
+            name: "MaidenName",
+            table: "Contact");
     }
 }

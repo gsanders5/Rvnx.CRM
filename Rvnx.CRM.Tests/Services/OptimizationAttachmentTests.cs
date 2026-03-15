@@ -4,39 +4,38 @@ using Rvnx.CRM.Core.Models.Base;
 using Rvnx.CRM.Core.Services;
 using System.Linq.Expressions;
 
-namespace Rvnx.CRM.Tests.Services
+namespace Rvnx.CRM.Tests.Services;
+
+public class OptimizationAttachmentTests
 {
-    public class OptimizationAttachmentTests
+    private readonly Mock<IRepository> _repositoryMock;
+    private readonly Mock<IFileValidationService> _fileValidationServiceMock;
+    private readonly ContactManagementService _service;
+
+    public OptimizationAttachmentTests()
     {
-        private readonly Mock<IRepository> _repositoryMock;
-        private readonly Mock<IFileValidationService> _fileValidationServiceMock;
-        private readonly ContactManagementService _service;
+        _repositoryMock = new Mock<IRepository>();
+        _fileValidationServiceMock = new Mock<IFileValidationService>();
+        _service = new ContactManagementService(_repositoryMock.Object, _fileValidationServiceMock.Object);
+    }
 
-        public OptimizationAttachmentTests()
-        {
-            _repositoryMock = new Mock<IRepository>();
-            _fileValidationServiceMock = new Mock<IFileValidationService>();
-            _service = new ContactManagementService(_repositoryMock.Object, _fileValidationServiceMock.Object);
-        }
+    [Fact]
+    public async Task ArchiveExistingProfilePhotoAsyncShouldUseUpdateRange()
+    {
+        Guid contactId = Guid.NewGuid();
+        List<Attachment> attachments =
+        [
+            new Attachment { Id = Guid.NewGuid(), ContactId = contactId, AttachmentType = "ProfileImage" },
+            new Attachment { Id = Guid.NewGuid(), ContactId = contactId, AttachmentType = "ProfileImage" },
+            new Attachment { Id = Guid.NewGuid(), ContactId = contactId, AttachmentType = "ProfileImage" }
+        ];
 
-        [Fact]
-        public async Task ArchiveExistingProfilePhotoAsyncShouldUseUpdateRange()
-        {
-            Guid contactId = Guid.NewGuid();
-            List<Attachment> attachments =
-            [
-                new Attachment { Id = Guid.NewGuid(), ContactId = contactId, AttachmentType = "ProfileImage" },
-                new Attachment { Id = Guid.NewGuid(), ContactId = contactId, AttachmentType = "ProfileImage" },
-                new Attachment { Id = Guid.NewGuid(), ContactId = contactId, AttachmentType = "ProfileImage" }
-            ];
+        _repositoryMock.Setup(r => r.ListAsync(It.IsAny<Expression<Func<Attachment, bool>>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(attachments);
 
-            _repositoryMock.Setup(r => r.ListAsync(It.IsAny<Expression<Func<Attachment, bool>>>(), It.IsAny<CancellationToken>()))
-                .ReturnsAsync(attachments);
+        await _service.UnsetProfilePhotoAsync(contactId);
 
-            await _service.UnsetProfilePhotoAsync(contactId);
-
-            _repositoryMock.Verify(r => r.UpdateAsync(It.IsAny<Attachment>(), It.IsAny<CancellationToken>()), Times.Never());
-            _repositoryMock.Verify(r => r.UpdateRangeAsync(It.IsAny<IEnumerable<Attachment>>(), It.IsAny<CancellationToken>()), Times.Once());
-        }
+        _repositoryMock.Verify(r => r.UpdateAsync(It.IsAny<Attachment>(), It.IsAny<CancellationToken>()), Times.Never());
+        _repositoryMock.Verify(r => r.UpdateRangeAsync(It.IsAny<IEnumerable<Attachment>>(), It.IsAny<CancellationToken>()), Times.Once());
     }
 }

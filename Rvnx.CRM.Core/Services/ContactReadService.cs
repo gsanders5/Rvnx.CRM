@@ -57,9 +57,9 @@ public class ContactReadService(IRepository repository) : IContactReadService
             // Optimization: Use Dictionary with capacity and TryAdd instead of GroupBy().ToDictionary(..., First())
             // to avoid allocations of IGrouping structures and redundant list iterations.
             Dictionary<Guid, Guid> attachmentMap = new(profileAttachments.Count);
-            foreach (var a in profileAttachments)
+            foreach ((Guid ContactId, Guid AttachmentId) in profileAttachments)
             {
-                attachmentMap.TryAdd(a.ContactId, a.AttachmentId);
+                attachmentMap.TryAdd(ContactId, AttachmentId);
             }
 
             foreach (ContactDto? dto in contactDtos)
@@ -109,9 +109,9 @@ public class ContactReadService(IRepository repository) : IContactReadService
             // Optimization: Use Dictionary with capacity and TryAdd instead of GroupBy().ToDictionary(..., First())
             // to avoid allocations of IGrouping structures and redundant list iterations.
             Dictionary<Guid, DateOnly> birthdayMap = new(birthdayDates.Count);
-            foreach (var b in birthdayDates)
+            foreach ((Guid ContactId, DateOnly EventDate) in birthdayDates)
             {
-                birthdayMap.TryAdd(b.ContactId, b.EventDate);
+                birthdayMap.TryAdd(ContactId, EventDate);
             }
 
             foreach (ContactDto? dto in contactDtos)
@@ -180,18 +180,28 @@ public class ContactReadService(IRepository repository) : IContactReadService
                 });
         }
 
-        foreach (Relationship rel in relationships)
+        if (relatedContacts.Count > 0)
         {
-            rel.RelatedPerson = relatedContacts.FirstOrDefault(c => c.Id == rel.RelatedEntityId);
+            Dictionary<Guid, Contact> relatedMap = relatedContacts.ToDictionary(c => c.Id);
+
+            foreach (Relationship rel in relationships)
+            {
+                if (relatedMap.TryGetValue(rel.RelatedEntityId, out Contact? related))
+                {
+                    rel.RelatedPerson = related;
+                }
+            }
+
+            foreach (Relationship rel in relatedTo)
+            {
+                if (relatedMap.TryGetValue(rel.EntityId, out Contact? person))
+                {
+                    rel.Person = person;
+                }
+            }
         }
 
         contact.Relationships = relationships;
-
-        foreach (Relationship rel in relatedTo)
-        {
-            rel.Person = relatedContacts.FirstOrDefault(c => c.Id == rel.EntityId);
-        }
-
         contact.RelatedTo = relatedTo;
 
         ContactDetailDto contactDto = contact.ToDetailDto();

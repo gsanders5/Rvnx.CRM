@@ -1,7 +1,6 @@
-namespace Rvnx.CRM.Core.DTOs.Base
+namespace Rvnx.CRM.Core.DTOs.Base;
+
+public class NoteFormViewModel : NoteFormDto
 {
-    public class NoteFormViewModel : NoteFormDto
-    {
-        public string EntityName { get; set; } = string.Empty;
-    }
+    public string EntityName { get; set; } = string.Empty;
 }

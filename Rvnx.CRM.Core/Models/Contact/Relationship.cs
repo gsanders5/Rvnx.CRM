@@ -25,9 +25,17 @@ public class Relationship : PolymorphicEntity
     [Display(Name = "End Date")]
     public DateTime? EndDate { get; set; }
 
+    /// <summary>
+    /// Gets or sets the source person. 
+    /// This property is [NotMapped] and MUST be populated manually by a service.
+    /// </summary>
     [NotMapped]
     public virtual Person? Person { get; set; }
 
+    /// <summary>
+    /// Gets or sets the related (target) person.
+    /// This property is [NotMapped] and MUST be populated manually by a service.
+    /// </summary>
     [NotMapped]
     public virtual Person? RelatedPerson { get; set; }
 

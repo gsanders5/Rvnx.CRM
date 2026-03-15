@@ -5,99 +5,98 @@ using Rvnx.CRM.Core.Models;
 using Rvnx.CRM.Core.Models.Contact;
 using Rvnx.CRM.Web.Controllers.Base;
 
-namespace Rvnx.CRM.Web.Controllers
+namespace Rvnx.CRM.Web.Controllers;
+
+public class ContactMethodsController(IContactMethodService contactMethodService, IRepository repository)
+    : RepositoryController(repository)
 {
-    public class ContactMethodsController(IContactMethodService contactMethodService, IRepository repository)
-        : RepositoryController(repository)
+    private readonly IContactMethodService _contactMethodService = contactMethodService;
+
+    [HttpGet]
+    public async Task<IActionResult> Create(Guid entityId, string entityType)
     {
-        private readonly IContactMethodService _contactMethodService = contactMethodService;
+        ContactMethodFormDto? dto = await _contactMethodService.GetFormForCreateAsync(entityId, entityType);
+        return dto == null ? NotFound() : View(dto);
+    }
 
-        [HttpGet]
-        public async Task<IActionResult> Create(Guid entityId, string entityType)
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Create(ContactMethodFormDto contactInfoInput)
+    {
+        if (ModelState.IsValid)
         {
-            ContactMethodFormDto? dto = await _contactMethodService.GetFormForCreateAsync(entityId, entityType);
-            return dto == null ? NotFound() : View(dto);
-        }
-
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(ContactMethodFormDto contactInfoInput)
-        {
-            if (ModelState.IsValid)
+            OperationResult result = await _contactMethodService.CreateAsync(contactInfoInput);
+            if (result.Success)
             {
-                OperationResult result = await _contactMethodService.CreateAsync(contactInfoInput);
-                if (result.Success)
-                {
-                    return RedirectToEntity(result.RedirectId, result.RedirectType);
-                }
-
-                if (result.ErrorMessage == "Contact not found.")
-                {
-                    return NotFound();
-                }
+                return RedirectToEntity(result.RedirectId, result.RedirectType);
             }
 
-            return View(contactInfoInput);
-        }
-
-        [HttpGet]
-        public async Task<IActionResult> Edit(Guid? id)
-        {
-            if (id == null)
+            if (result.ErrorMessage == "Contact not found.")
             {
                 return NotFound();
             }
-
-            ContactMethodFormDto? dto = await _contactMethodService.GetFormAsync(id.Value);
-            return dto == null ? NotFound() : View(dto);
         }
 
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(Guid id, ContactMethodFormDto contactInfoInput)
+        return View(contactInfoInput);
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> Edit(Guid? id)
+    {
+        if (id == null)
         {
-            if (id != contactInfoInput.Id)
+            return NotFound();
+        }
+
+        ContactMethodFormDto? dto = await _contactMethodService.GetFormAsync(id.Value);
+        return dto == null ? NotFound() : View(dto);
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Edit(Guid id, ContactMethodFormDto contactInfoInput)
+    {
+        if (id != contactInfoInput.Id)
+        {
+            return NotFound();
+        }
+
+        if (ModelState.IsValid)
+        {
+            OperationResult result = await _contactMethodService.UpdateAsync(id, contactInfoInput);
+            if (result.Success)
+            {
+                return RedirectToEntity(result.RedirectId, result.RedirectType);
+            }
+
+            if (result.ErrorMessage == "Contact method not found.")
             {
                 return NotFound();
             }
-
-            if (ModelState.IsValid)
-            {
-                OperationResult result = await _contactMethodService.UpdateAsync(id, contactInfoInput);
-                if (result.Success)
-                {
-                    return RedirectToEntity(result.RedirectId, result.RedirectType);
-                }
-
-                if (result.ErrorMessage == "Contact method not found.")
-                {
-                    return NotFound();
-                }
-            }
-
-            return View(contactInfoInput);
         }
 
-        [HttpGet]
-        public async Task<IActionResult> Delete(Guid? id)
+        return View(contactInfoInput);
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> Delete(Guid? id)
+    {
+        if (id == null)
         {
-            if (id == null)
-            {
-                return NotFound();
-            }
-
-            ContactMethod? contactInfo = await _contactMethodService.GetByIdAsync(id.Value);
-            return contactInfo == null ? NotFound() : View(contactInfo);
+            return NotFound();
         }
 
-        [HttpPost, ActionName("Delete")]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> DeleteConfirmed(Guid id)
-        {
-            OperationResult result = await _contactMethodService.DeleteAsync(id);
-            return result.Success
-                ? RedirectToEntity(result.RedirectId, result.RedirectType)
-                : RedirectToAction("Index", "Home");
-        }
+        ContactMethod? contactInfo = await _contactMethodService.GetByIdAsync(id.Value);
+        return contactInfo == null ? NotFound() : View(contactInfo);
+    }
+
+    [HttpPost, ActionName("Delete")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> DeleteConfirmed(Guid id)
+    {
+        OperationResult result = await _contactMethodService.DeleteAsync(id);
+        return result.Success
+            ? RedirectToEntity(result.RedirectId, result.RedirectType)
+            : RedirectToAction("Index", "Home");
     }
 }

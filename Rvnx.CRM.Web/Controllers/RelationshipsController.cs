@@ -7,307 +7,306 @@ using Rvnx.CRM.Core.Models;
 using Rvnx.CRM.Core.Models.Contact;
 using Rvnx.CRM.Web.Controllers.Base;
 
-namespace Rvnx.CRM.Web.Controllers
-{
-    public class RelationshipsController(
-        IRelationshipService relationshipService,
-        IRepository repository,
-        IEntityService entityService)
-        : RepositoryController(repository)
-    {
-        private readonly IRelationshipService _relationshipService = relationshipService;
-        private readonly IEntityService _entityService = entityService;
+namespace Rvnx.CRM.Web.Controllers;
 
-        [HttpGet]
-        public async Task<IActionResult> Create(Guid entityId, string entityType)
+public class RelationshipsController(
+    IRelationshipService relationshipService,
+    IRepository repository,
+    IEntityService entityService)
+    : RepositoryController(repository)
+{
+    private readonly IRelationshipService _relationshipService = relationshipService;
+    private readonly IEntityService _entityService = entityService;
+
+    [HttpGet]
+    public async Task<IActionResult> Create(Guid entityId, string entityType)
+    {
+        if (entityId == Guid.Empty || string.IsNullOrEmpty(entityType))
         {
-            if (entityId == Guid.Empty || string.IsNullOrEmpty(entityType))
+            return NotFound();
+        }
+
+        if (!await _entityService.ExistsAsync(entityType, entityId))
+        {
+            return NotFound();
+        }
+
+        RelationshipFormViewModel viewModel = new()
+        {
+            EntityId = entityId,
+            EntityType = entityType,
+            EntityName = await _entityService.GetEntityNameAsync(entityType, entityId),
+            RelatedEntityOptions =
+                await _relationshipService.GetRelatedEntityOptionsAsync(entityId, entityType),
+            RelationshipTypeOptions = _relationshipService.GetRelationshipTypeOptions(entityType),
+            RelationshipTypes = _relationshipService.GetRelationshipTypes(entityType)
+        };
+
+        return View(viewModel);
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Create(RelationshipFormViewModel viewModel)
+    {
+        if (string.IsNullOrEmpty(viewModel.SelectedRelationshipType))
+        {
+            ModelState.AddModelError("SelectedRelationshipType", "Relationship Type is required.");
+        }
+
+        if (ModelState.IsValid)
+        {
+            if (!await _entityService.ExistsAsync(viewModel.EntityType, viewModel.EntityId))
             {
                 return NotFound();
             }
 
+            Relationship relationship = viewModel.ToEntity();
+            RelationshipOperationResult result =
+                await _relationshipService.CreateRelationshipAsync(relationship,
+                    viewModel.SelectedRelationshipType, viewModel.SuggestedRelationships);
+            if (result.Success)
+            {
+                return RedirectToEntity(result.RedirectId, result.EntityType ?? string.Empty);
+            }
+            else
+            {
+                ModelState.AddModelError("SelectedRelationshipType",
+                    result.ErrorMessage ?? "Invalid Relationship Type.");
+            }
+        }
+
+        viewModel.EntityName = await _entityService.GetEntityNameAsync(viewModel.EntityType, viewModel.EntityId);
+        viewModel.RelatedEntityOptions = await _relationshipService.GetRelatedEntityOptionsAsync(viewModel.EntityId,
+            viewModel.EntityType, viewModel.RelatedEntityId);
+        viewModel.RelationshipTypeOptions =
+            _relationshipService.GetRelationshipTypeOptions(viewModel.EntityType,
+                viewModel.SelectedRelationshipType);
+        viewModel.RelationshipTypes = _relationshipService.GetRelationshipTypes(viewModel.EntityType);
+
+        return View(viewModel);
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> CreatePartial(Guid entityId, string entityType,
+        CreatePartialContactRelationshipDto dto)
+    {
+        if (entityId == Guid.Empty || string.IsNullOrEmpty(entityType) || entityType != EntityTypes.Person)
+        {
+            return NotFound();
+        }
+
+        if (ModelState.IsValid)
+        {
             if (!await _entityService.ExistsAsync(entityType, entityId))
             {
                 return NotFound();
             }
 
-            RelationshipFormViewModel viewModel = new()
+            RelationshipOperationResult result =
+                await _relationshipService.CreatePartialContactRelationshipAsync(entityId,
+                    dto.SelectedRelationshipType, dto);
+            if (result.Success)
             {
-                EntityId = entityId,
-                EntityType = entityType,
-                EntityName = await _entityService.GetEntityNameAsync(entityType, entityId),
-                RelatedEntityOptions =
-                    await _relationshipService.GetRelatedEntityOptionsAsync(entityId, entityType),
-                RelationshipTypeOptions = _relationshipService.GetRelationshipTypeOptions(entityType),
-                RelationshipTypes = _relationshipService.GetRelationshipTypes(entityType)
-            };
+                return RedirectToEntity(result.RedirectId, result.EntityType ?? string.Empty);
+            }
 
-            return View(viewModel);
+            ModelState.AddModelError(string.Empty,
+                result.ErrorMessage ?? "Failed to create partial contact relationship.");
         }
 
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(RelationshipFormViewModel viewModel)
+        // If we fail, we need to redirect back to the Create view to show errors, 
+        // but since it's a different action we'll pass an error in TempData and redirect.
+        TempData["ErrorMessage"] =
+            string.Join("; ", ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage));
+        return RedirectToAction(nameof(Create), new { entityId, entityType });
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> GetSuggestions(Guid entityId, Guid? relatedEntityId, string relationshipType,
+        string? partialContactName = null)
+    {
+        if (string.IsNullOrEmpty(relationshipType))
         {
-            if (string.IsNullOrEmpty(viewModel.SelectedRelationshipType))
+            return Json(new List<SuggestedRelationshipDto>());
+        }
+
+        string[] parts = relationshipType.Split('_');
+        if (parts.Length != 2 || !Guid.TryParse(parts[0], out Guid typeId))
+        {
+            return Json(new List<SuggestedRelationshipDto>());
+        }
+
+        bool isReverse = parts[1] == "Rev";
+
+        List<SuggestedRelationshipDto> suggestions =
+            await _relationshipService.GetSuggestedRelationshipsAsync(entityId, relatedEntityId, typeId, isReverse,
+                partialContactName);
+        return Json(suggestions);
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Promote(Guid contactId)
+    {
+        if (contactId == Guid.Empty)
+        {
+            return NotFound();
+        }
+
+        RelationshipOperationResult result = await _relationshipService.PromotePartialContactAsync(contactId);
+
+        return result.Success
+            ? RedirectToAction("Edit", "Contacts", new { id = result.RedirectId })
+            : RedirectToAction("Index", "Contacts");
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> Edit(Guid? id)
+    {
+        if (id == null)
+        {
+            return NotFound();
+        }
+
+        Relationship? relationship = await _relationshipService.GetRelationshipForEditAsync(id.Value);
+        if (relationship == null)
+        {
+            return NotFound();
+        }
+
+        if (!await _entityService.ExistsAsync(relationship.EntityType, relationship.EntityId))
+        {
+            return NotFound();
+        }
+
+        string currentSelection = $"{relationship.RelationshipTypeId}_Fwd";
+
+        RelationshipFormViewModel viewModel = new()
+        {
+            Id = relationship.Id,
+            EntityId = relationship.EntityId,
+            RelatedEntityId = relationship.RelatedEntityId,
+            EntityType = relationship.EntityType,
+            RelationshipTypeId = relationship.RelationshipTypeId,
+            Description = relationship.Description,
+            StartDate = relationship.StartDate,
+            EndDate = relationship.EndDate,
+            EntityName = await _entityService.GetEntityNameAsync(relationship.EntityType, relationship.EntityId),
+            RelatedEntityOptions =
+                await _relationshipService.GetRelatedEntityOptionsAsync(relationship.EntityId,
+                    relationship.EntityType, relationship.RelatedEntityId),
+            RelationshipTypeOptions =
+                _relationshipService.GetRelationshipTypeOptions(relationship.EntityType, currentSelection),
+            RelationshipTypes = _relationshipService.GetRelationshipTypes(relationship.EntityType),
+            SelectedRelationshipType = currentSelection,
+            IsEntityPartial = await _entityService.IsPartialAsync(EntityTypes.Person, relationship.EntityId),
+            IsRelatedEntityPartial = await _entityService.IsPartialAsync(EntityTypes.Person, relationship.RelatedEntityId)
+        };
+
+        return View(viewModel);
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Edit(Guid id, RelationshipFormViewModel viewModel)
+    {
+        if (id != viewModel.Id)
+        {
+            return NotFound();
+        }
+
+        if (string.IsNullOrEmpty(viewModel.SelectedRelationshipType))
+        {
+            ModelState.AddModelError("SelectedRelationshipType", "Relationship Type is required.");
+        }
+
+        if (ModelState.IsValid)
+        {
+            if (!await _entityService.ExistsAsync(viewModel.EntityType, viewModel.EntityId))
             {
-                ModelState.AddModelError("SelectedRelationshipType", "Relationship Type is required.");
+                return NotFound();
             }
 
-            if (ModelState.IsValid)
-            {
-                if (!await _entityService.ExistsAsync(viewModel.EntityType, viewModel.EntityId))
-                {
-                    return NotFound();
-                }
-
-                Relationship relationship = viewModel.ToEntity();
-                RelationshipOperationResult result =
-                    await _relationshipService.CreateRelationshipAsync(relationship,
-                        viewModel.SelectedRelationshipType, viewModel.SuggestedRelationships);
-                if (result.Success)
-                {
-                    return RedirectToEntity(result.RedirectId, result.EntityType ?? string.Empty);
-                }
-                else
-                {
-                    ModelState.AddModelError("SelectedRelationshipType",
-                        result.ErrorMessage ?? "Invalid Relationship Type.");
-                }
-            }
-
-            viewModel.EntityName = await _entityService.GetEntityNameAsync(viewModel.EntityType, viewModel.EntityId);
-            viewModel.RelatedEntityOptions = await _relationshipService.GetRelatedEntityOptionsAsync(viewModel.EntityId,
-                viewModel.EntityType, viewModel.RelatedEntityId);
-            viewModel.RelationshipTypeOptions =
-                _relationshipService.GetRelationshipTypeOptions(viewModel.EntityType,
+            Relationship relationship = viewModel.ToEntity();
+            RelationshipOperationResult result =
+                await _relationshipService.UpdateRelationshipAsync(id, relationship,
                     viewModel.SelectedRelationshipType);
-            viewModel.RelationshipTypes = _relationshipService.GetRelationshipTypes(viewModel.EntityType);
-
-            return View(viewModel);
+            if (result.Success)
+            {
+                return RedirectToEntity(result.RedirectId, result.EntityType ?? string.Empty);
+            }
+            else
+            {
+                ModelState.AddModelError("SelectedRelationshipType",
+                    result.ErrorMessage ?? "Invalid Relationship Type.");
+            }
         }
 
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> CreatePartial(Guid entityId, string entityType,
-            CreatePartialContactRelationshipDto dto)
+        viewModel.EntityName = await _entityService.GetEntityNameAsync(viewModel.EntityType, viewModel.EntityId);
+        viewModel.RelatedEntityOptions = await _relationshipService.GetRelatedEntityOptionsAsync(viewModel.EntityId,
+            viewModel.EntityType, viewModel.RelatedEntityId);
+        viewModel.RelationshipTypeOptions =
+            _relationshipService.GetRelationshipTypeOptions(viewModel.EntityType,
+                viewModel.SelectedRelationshipType);
+        viewModel.RelationshipTypes = _relationshipService.GetRelationshipTypes(viewModel.EntityType);
+
+        return View(viewModel);
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> Delete(Guid? id, string? returnUrl = null)
+    {
+        if (id == null)
         {
-            if (entityId == Guid.Empty || string.IsNullOrEmpty(entityType) || entityType != EntityTypes.Person)
-            {
-                return NotFound();
-            }
-
-            if (ModelState.IsValid)
-            {
-                if (!await _entityService.ExistsAsync(entityType, entityId))
-                {
-                    return NotFound();
-                }
-
-                RelationshipOperationResult result =
-                    await _relationshipService.CreatePartialContactRelationshipAsync(entityId,
-                        dto.SelectedRelationshipType, dto);
-                if (result.Success)
-                {
-                    return RedirectToEntity(result.RedirectId, result.EntityType ?? string.Empty);
-                }
-
-                ModelState.AddModelError(string.Empty,
-                    result.ErrorMessage ?? "Failed to create partial contact relationship.");
-            }
-
-            // If we fail, we need to redirect back to the Create view to show errors, 
-            // but since it's a different action we'll pass an error in TempData and redirect.
-            TempData["ErrorMessage"] =
-                string.Join("; ", ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage));
-            return RedirectToAction(nameof(Create), new { entityId, entityType });
+            return NotFound();
         }
 
-        [HttpGet]
-        public async Task<IActionResult> GetSuggestions(Guid entityId, Guid? relatedEntityId, string relationshipType,
-            string? partialContactName = null)
+        Relationship? relationship = await _relationshipService.GetRelationshipForDeleteAsync(id.Value);
+        if (relationship == null)
         {
-            if (string.IsNullOrEmpty(relationshipType))
-            {
-                return Json(new List<SuggestedRelationshipDto>());
-            }
-
-            string[] parts = relationshipType.Split('_');
-            if (parts.Length != 2 || !Guid.TryParse(parts[0], out Guid typeId))
-            {
-                return Json(new List<SuggestedRelationshipDto>());
-            }
-
-            bool isReverse = parts[1] == "Rev";
-
-            List<SuggestedRelationshipDto> suggestions =
-                await _relationshipService.GetSuggestedRelationshipsAsync(entityId, relatedEntityId, typeId, isReverse,
-                    partialContactName);
-            return Json(suggestions);
+            return NotFound();
         }
 
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Promote(Guid contactId)
+        if (!await _entityService.ExistsAsync(relationship.EntityType, relationship.EntityId))
         {
-            if (contactId == Guid.Empty)
-            {
-                return NotFound();
-            }
-
-            RelationshipOperationResult result = await _relationshipService.PromotePartialContactAsync(contactId);
-
-            return result.Success
-                ? RedirectToAction("Edit", "Contacts", new { id = result.RedirectId })
-                : RedirectToAction("Index", "Contacts");
+            return NotFound();
         }
 
-        [HttpGet]
-        public async Task<IActionResult> Edit(Guid? id)
+        RelationshipDto viewModel = relationship.ToDto();
+
+        string? safeReturnUrl = !string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl) ? returnUrl : null;
+
+        RelationshipDeleteViewModel deleteViewModel = new()
         {
-            if (id == null)
-            {
-                return NotFound();
-            }
+            Id = viewModel.Id,
+            EntityId = viewModel.EntityId,
+            EntityType = viewModel.EntityType,
+            RelatedEntityId = viewModel.RelatedEntityId,
+            RelationshipTypeId = viewModel.RelationshipTypeId,
+            RelationshipTypeName = viewModel.RelationshipTypeName,
+            RelationshipTypeOppositeName = viewModel.RelationshipTypeOppositeName,
+            RelatedEntityName = viewModel.RelatedEntityName,
+            EntityName = viewModel.EntityName,
+            Description = viewModel.Description,
+            StartDate = viewModel.StartDate,
+            EndDate = viewModel.EndDate,
+            ReturnUrl = safeReturnUrl
+        };
 
-            Relationship? relationship = await _relationshipService.GetRelationshipForEditAsync(id.Value);
-            if (relationship == null)
-            {
-                return NotFound();
-            }
+        return View(deleteViewModel);
+    }
 
-            if (!await _entityService.ExistsAsync(relationship.EntityType, relationship.EntityId))
-            {
-                return NotFound();
-            }
-
-            string currentSelection = $"{relationship.RelationshipTypeId}_Fwd";
-
-            RelationshipFormViewModel viewModel = new()
-            {
-                Id = relationship.Id,
-                EntityId = relationship.EntityId,
-                RelatedEntityId = relationship.RelatedEntityId,
-                EntityType = relationship.EntityType,
-                RelationshipTypeId = relationship.RelationshipTypeId,
-                Description = relationship.Description,
-                StartDate = relationship.StartDate,
-                EndDate = relationship.EndDate,
-                EntityName = await _entityService.GetEntityNameAsync(relationship.EntityType, relationship.EntityId),
-                RelatedEntityOptions =
-                    await _relationshipService.GetRelatedEntityOptionsAsync(relationship.EntityId,
-                        relationship.EntityType, relationship.RelatedEntityId),
-                RelationshipTypeOptions =
-                    _relationshipService.GetRelationshipTypeOptions(relationship.EntityType, currentSelection),
-                RelationshipTypes = _relationshipService.GetRelationshipTypes(relationship.EntityType),
-                SelectedRelationshipType = currentSelection,
-                IsEntityPartial = await _entityService.IsPartialAsync(EntityTypes.Person, relationship.EntityId),
-                IsRelatedEntityPartial = await _entityService.IsPartialAsync(EntityTypes.Person, relationship.RelatedEntityId)
-            };
-
-            return View(viewModel);
-        }
-
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(Guid id, RelationshipFormViewModel viewModel)
-        {
-            if (id != viewModel.Id)
-            {
-                return NotFound();
-            }
-
-            if (string.IsNullOrEmpty(viewModel.SelectedRelationshipType))
-            {
-                ModelState.AddModelError("SelectedRelationshipType", "Relationship Type is required.");
-            }
-
-            if (ModelState.IsValid)
-            {
-                if (!await _entityService.ExistsAsync(viewModel.EntityType, viewModel.EntityId))
-                {
-                    return NotFound();
-                }
-
-                Relationship relationship = viewModel.ToEntity();
-                RelationshipOperationResult result =
-                    await _relationshipService.UpdateRelationshipAsync(id, relationship,
-                        viewModel.SelectedRelationshipType);
-                if (result.Success)
-                {
-                    return RedirectToEntity(result.RedirectId, result.EntityType ?? string.Empty);
-                }
-                else
-                {
-                    ModelState.AddModelError("SelectedRelationshipType",
-                        result.ErrorMessage ?? "Invalid Relationship Type.");
-                }
-            }
-
-            viewModel.EntityName = await _entityService.GetEntityNameAsync(viewModel.EntityType, viewModel.EntityId);
-            viewModel.RelatedEntityOptions = await _relationshipService.GetRelatedEntityOptionsAsync(viewModel.EntityId,
-                viewModel.EntityType, viewModel.RelatedEntityId);
-            viewModel.RelationshipTypeOptions =
-                _relationshipService.GetRelationshipTypeOptions(viewModel.EntityType,
-                    viewModel.SelectedRelationshipType);
-            viewModel.RelationshipTypes = _relationshipService.GetRelationshipTypes(viewModel.EntityType);
-
-            return View(viewModel);
-        }
-
-        [HttpGet]
-        public async Task<IActionResult> Delete(Guid? id, string? returnUrl = null)
-        {
-            if (id == null)
-            {
-                return NotFound();
-            }
-
-            Relationship? relationship = await _relationshipService.GetRelationshipForDeleteAsync(id.Value);
-            if (relationship == null)
-            {
-                return NotFound();
-            }
-
-            if (!await _entityService.ExistsAsync(relationship.EntityType, relationship.EntityId))
-            {
-                return NotFound();
-            }
-
-            RelationshipDto viewModel = relationship.ToDto();
-
-            string? safeReturnUrl = !string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl) ? returnUrl : null;
-
-            RelationshipDeleteViewModel deleteViewModel = new()
-            {
-                Id = viewModel.Id,
-                EntityId = viewModel.EntityId,
-                EntityType = viewModel.EntityType,
-                RelatedEntityId = viewModel.RelatedEntityId,
-                RelationshipTypeId = viewModel.RelationshipTypeId,
-                RelationshipTypeName = viewModel.RelationshipTypeName,
-                RelationshipTypeOppositeName = viewModel.RelationshipTypeOppositeName,
-                RelatedEntityName = viewModel.RelatedEntityName,
-                EntityName = viewModel.EntityName,
-                Description = viewModel.Description,
-                StartDate = viewModel.StartDate,
-                EndDate = viewModel.EndDate,
-                ReturnUrl = safeReturnUrl
-            };
-
-            return View(deleteViewModel);
-        }
-
-        [HttpPost, ActionName("Delete")]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> DeleteConfirmed(Guid id, string? returnUrl = null)
-        {
-            OperationResult result = await _relationshipService.DeleteRelationshipAsync(id);
-            return result.Success
-                ? !string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl)
-                    ? LocalRedirect(returnUrl)
-                    : RedirectToEntity(result.RedirectId, result.RedirectType)
-                : RedirectToAction("Index", "Home");
-        }
+    [HttpPost, ActionName("Delete")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> DeleteConfirmed(Guid id, string? returnUrl = null)
+    {
+        OperationResult result = await _relationshipService.DeleteRelationshipAsync(id);
+        return result.Success
+            ? !string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl)
+                ? LocalRedirect(returnUrl)
+                : RedirectToEntity(result.RedirectId, result.RedirectType)
+            : RedirectToAction("Index", "Home");
     }
 }

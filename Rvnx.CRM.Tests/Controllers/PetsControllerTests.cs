@@ -9,235 +9,234 @@ using Rvnx.CRM.Infrastructure.Repositories;
 using Rvnx.CRM.Infrastructure.Services;
 using Rvnx.CRM.Web.Controllers;
 
-namespace Rvnx.CRM.Tests.Controllers
+namespace Rvnx.CRM.Tests.Controllers;
+
+public class PetsControllerTests : IDisposable
 {
-    public class PetsControllerTests : IDisposable
+    private readonly CRMDbContext _context;
+    private readonly PetsController _controller;
+
+    public PetsControllerTests()
     {
-        private readonly CRMDbContext _context;
-        private readonly PetsController _controller;
+        DbContextOptions<CRMDbContext> options = new DbContextOptionsBuilder<CRMDbContext>()
+            .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
+            .Options;
 
-        public PetsControllerTests()
-        {
-            DbContextOptions<CRMDbContext> options = new DbContextOptionsBuilder<CRMDbContext>()
-                .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
-                .Options;
+        Mock<ICurrentUserService> mockCurrentUserService = new();
+        mockCurrentUserService.Setup(s => s.UserId).Returns(Guid.Parse("c5b50a20-34b2-44b2-8b9c-aa4135f60938"));
+        mockCurrentUserService.Setup(s => s.UserName).Returns("test-user");
 
-            Mock<ICurrentUserService> mockCurrentUserService = new();
-            mockCurrentUserService.Setup(s => s.UserId).Returns(Guid.Parse("c5b50a20-34b2-44b2-8b9c-aa4135f60938"));
-            mockCurrentUserService.Setup(s => s.UserName).Returns("test-user");
-
-            _context = new CRMDbContext(options, mockCurrentUserService.Object);
-            Repository repository = new(_context);
-            IPetService petService = new PetService(repository);
-            _controller = new PetsController(petService, repository);
-        }
-
-        public void Dispose()
-        {
-            _context.Database.EnsureDeleted();
-            _context.Dispose();
-
-            GC.SuppressFinalize(this);
-        }
-
-        [Fact]
-        public async Task CreateGetWithValidContactIdShouldReturnViewWithDto()
-        {
-            Guid contactId = Guid.NewGuid();
-            _context.Contacts!.Add(new Contact { Id = contactId, FirstName = "Test" });
-            await _context.SaveChangesAsync();
-
-            IActionResult result = await _controller.Create(contactId);
-
-            ViewResult viewResult = Assert.IsType<ViewResult>(result);
-            PetFormDto? model = viewResult.Model as PetFormDto;
-            Assert.NotNull(model);
-            Assert.Equal(contactId, model.EntityId);
-        }
-
-        [Fact]
-        public async Task CreatePostWithValidDataShouldCreatePet()
-        {
-            Guid contactId = Guid.NewGuid();
-            _context.Contacts!.Add(new Contact { Id = contactId, FirstName = "John" });
-            await _context.SaveChangesAsync();
-
-            PetFormDto dto = new()
-            {
-                EntityId = contactId,
-                Name = "Buddy",
-                Species = "Dog",
-                Breed = "Golden Retriever",
-                Birthday = new DateTime(2020, 5, 15),
-                Notes = "Loves to fetch"
-            };
-
-            IActionResult result = await _controller.Create(dto);
-
-            RedirectToActionResult redirectResult = Assert.IsType<RedirectToActionResult>(result);
-            Assert.Equal("Details", redirectResult.ActionName);
-            Assert.Equal("Contacts", redirectResult.ControllerName);
-
-            Pet? created = await _context.Set<Pet>().FirstOrDefaultAsync();
-            Assert.NotNull(created);
-            Assert.Equal("Buddy", created.Name);
-            Assert.Equal("Dog", created.Species);
-            Assert.Equal("Golden Retriever", created.Breed);
-            Assert.Equal(contactId, created.ContactId);
-        }
-
-        [Fact]
-        public async Task EditGetWithValidIdShouldReturnViewWithPetData()
-        {
-            Guid petId = Guid.NewGuid();
-            Guid contactId = Guid.NewGuid();
-            _context.Contacts!.Add(new Contact { Id = contactId, FirstName = "Test" });
-            _context.Set<Pet>().Add(new Pet
-            {
-                Id = petId,
-                ContactId = contactId,
-                Name = "Whiskers",
-                Species = "Cat",
-                Breed = "Siamese"
-            });
-            await _context.SaveChangesAsync();
-
-            IActionResult result = await _controller.Edit(petId);
-
-            ViewResult viewResult = Assert.IsType<ViewResult>(result);
-            PetFormDto? model = viewResult.Model as PetFormDto;
-            Assert.NotNull(model);
-            Assert.Equal(petId, model.Id);
-            Assert.Equal("Whiskers", model.Name);
-            Assert.Equal("Cat", model.Species);
-            Assert.Equal("Siamese", model.Breed);
-            Assert.Equal(contactId, model.EntityId);
-        }
-
-        [Fact]
-        public async Task EditGetWhenPetDoesNotExistShouldReturnNotFound()
-        {
-            IActionResult result = await _controller.Edit(Guid.NewGuid());
-
-            Assert.IsType<NotFoundResult>(result);
-        }
-
-        [Fact]
-        public async Task EditPostWithValidDataShouldUpdatePet()
-        {
-            Guid petId = Guid.NewGuid();
-            Guid contactId = Guid.NewGuid();
-            _context.Contacts!.Add(new Contact { Id = contactId, FirstName = "Test" });
-            _context.Set<Pet>().Add(new Pet
-            {
-                Id = petId,
-                ContactId = contactId,
-                Name = "Old Name",
-                Species = "Dog"
-            });
-            await _context.SaveChangesAsync();
-            _context.ChangeTracker.Clear();
-
-            PetFormDto dto = new()
-            {
-                Id = petId,
-                EntityId = contactId,
-                Name = "New Name",
-                Species = "Dog",
-                Breed = "Labrador",
-                Notes = "Updated notes"
-            };
-
-            IActionResult result = await _controller.Edit(petId, dto);
-
-            RedirectToActionResult redirectResult = Assert.IsType<RedirectToActionResult>(result);
-            Assert.Equal("Details", redirectResult.ActionName);
-
-            Pet? updated = await _context.Set<Pet>().FindAsync(petId);
-            Assert.NotNull(updated);
-            Assert.Equal("New Name", updated.Name);
-            Assert.Equal("Labrador", updated.Breed);
-            Assert.Equal("Updated notes", updated.Notes);
-        }
-
-        [Fact]
-        public async Task EditPostWhenIdMismatchShouldReturnNotFound()
-        {
-            Guid petId = Guid.NewGuid();
-            Guid contactId = Guid.NewGuid();
-            _context.Contacts!.Add(new Contact { Id = contactId, FirstName = "Test" });
-            _context.Set<Pet>().Add(new Pet
-            {
-                Id = petId,
-                ContactId = contactId,
-                Name = "Existing Pet",
-                Species = "Dog"
-            });
-            await _context.SaveChangesAsync();
-            _context.ChangeTracker.Clear();
-
-            PetFormDto dto = new() { Id = Guid.NewGuid(), Name = "Test", EntityId = contactId };
-
-            IActionResult result = await _controller.Edit(petId, dto);
-
-            Assert.IsType<NotFoundResult>(result);
-        }
-
-        [Fact]
-        public async Task DeleteGetWithValidIdShouldReturnViewWithPet()
-        {
-            Guid petId = Guid.NewGuid();
-            Guid contactId = Guid.NewGuid();
-            _context.Contacts!.Add(new Contact { Id = contactId, FirstName = "Test" });
-            _context.Set<Pet>().Add(new Pet
-            {
-                Id = petId,
-                ContactId = contactId,
-                Name = "ToDelete",
-                Species = "Fish"
-            });
-            await _context.SaveChangesAsync();
-
-            IActionResult result = await _controller.Delete(petId);
-
-            ViewResult viewResult = Assert.IsType<ViewResult>(result);
-            PetDto? model = viewResult.Model as PetDto;
-            Assert.NotNull(model);
-            Assert.Equal("ToDelete", model.Name);
-        }
-
-        [Fact]
-        public async Task DeleteConfirmedWithValidIdShouldRemovePet()
-        {
-            Guid petId = Guid.NewGuid();
-            Guid contactId = Guid.NewGuid();
-            _context.Contacts!.Add(new Contact { Id = contactId, FirstName = "Test" });
-            _context.Set<Pet>().Add(new Pet
-            {
-                Id = petId,
-                ContactId = contactId,
-                Name = "ToDelete"
-            });
-            await _context.SaveChangesAsync();
-
-            IActionResult result = await _controller.DeleteConfirmed(petId);
-
-            RedirectToActionResult redirectResult = Assert.IsType<RedirectToActionResult>(result);
-            Assert.Equal("Details", redirectResult.ActionName);
-            Assert.Equal("Contacts", redirectResult.ControllerName);
-
-            Assert.Null(await _context.Set<Pet>().FindAsync(petId));
-        }
-
-        [Fact]
-        public async Task DeleteConfirmedWhenPetNotFoundShouldRedirectToContacts()
-        {
-            IActionResult result = await _controller.DeleteConfirmed(Guid.NewGuid());
-
-            RedirectToActionResult redirectResult = Assert.IsType<RedirectToActionResult>(result);
-            Assert.Equal("Index", redirectResult.ActionName);
-            Assert.Equal("Contacts", redirectResult.ControllerName);
-        }
-
+        _context = new CRMDbContext(options, mockCurrentUserService.Object);
+        Repository repository = new(_context);
+        IPetService petService = new PetService(repository);
+        _controller = new PetsController(petService, repository);
     }
+
+    public void Dispose()
+    {
+        _context.Database.EnsureDeleted();
+        _context.Dispose();
+
+        GC.SuppressFinalize(this);
+    }
+
+    [Fact]
+    public async Task CreateGetWithValidContactIdShouldReturnViewWithDto()
+    {
+        Guid contactId = Guid.NewGuid();
+        _context.Contacts!.Add(new Contact { Id = contactId, FirstName = "Test" });
+        await _context.SaveChangesAsync();
+
+        IActionResult result = await _controller.Create(contactId);
+
+        ViewResult viewResult = Assert.IsType<ViewResult>(result);
+        PetFormDto? model = viewResult.Model as PetFormDto;
+        Assert.NotNull(model);
+        Assert.Equal(contactId, model.EntityId);
+    }
+
+    [Fact]
+    public async Task CreatePostWithValidDataShouldCreatePet()
+    {
+        Guid contactId = Guid.NewGuid();
+        _context.Contacts!.Add(new Contact { Id = contactId, FirstName = "John" });
+        await _context.SaveChangesAsync();
+
+        PetFormDto dto = new()
+        {
+            EntityId = contactId,
+            Name = "Buddy",
+            Species = "Dog",
+            Breed = "Golden Retriever",
+            Birthday = new DateTime(2020, 5, 15),
+            Notes = "Loves to fetch"
+        };
+
+        IActionResult result = await _controller.Create(dto);
+
+        RedirectToActionResult redirectResult = Assert.IsType<RedirectToActionResult>(result);
+        Assert.Equal("Details", redirectResult.ActionName);
+        Assert.Equal("Contacts", redirectResult.ControllerName);
+
+        Pet? created = await _context.Set<Pet>().FirstOrDefaultAsync();
+        Assert.NotNull(created);
+        Assert.Equal("Buddy", created.Name);
+        Assert.Equal("Dog", created.Species);
+        Assert.Equal("Golden Retriever", created.Breed);
+        Assert.Equal(contactId, created.ContactId);
+    }
+
+    [Fact]
+    public async Task EditGetWithValidIdShouldReturnViewWithPetData()
+    {
+        Guid petId = Guid.NewGuid();
+        Guid contactId = Guid.NewGuid();
+        _context.Contacts!.Add(new Contact { Id = contactId, FirstName = "Test" });
+        _context.Set<Pet>().Add(new Pet
+        {
+            Id = petId,
+            ContactId = contactId,
+            Name = "Whiskers",
+            Species = "Cat",
+            Breed = "Siamese"
+        });
+        await _context.SaveChangesAsync();
+
+        IActionResult result = await _controller.Edit(petId);
+
+        ViewResult viewResult = Assert.IsType<ViewResult>(result);
+        PetFormDto? model = viewResult.Model as PetFormDto;
+        Assert.NotNull(model);
+        Assert.Equal(petId, model.Id);
+        Assert.Equal("Whiskers", model.Name);
+        Assert.Equal("Cat", model.Species);
+        Assert.Equal("Siamese", model.Breed);
+        Assert.Equal(contactId, model.EntityId);
+    }
+
+    [Fact]
+    public async Task EditGetWhenPetDoesNotExistShouldReturnNotFound()
+    {
+        IActionResult result = await _controller.Edit(Guid.NewGuid());
+
+        Assert.IsType<NotFoundResult>(result);
+    }
+
+    [Fact]
+    public async Task EditPostWithValidDataShouldUpdatePet()
+    {
+        Guid petId = Guid.NewGuid();
+        Guid contactId = Guid.NewGuid();
+        _context.Contacts!.Add(new Contact { Id = contactId, FirstName = "Test" });
+        _context.Set<Pet>().Add(new Pet
+        {
+            Id = petId,
+            ContactId = contactId,
+            Name = "Old Name",
+            Species = "Dog"
+        });
+        await _context.SaveChangesAsync();
+        _context.ChangeTracker.Clear();
+
+        PetFormDto dto = new()
+        {
+            Id = petId,
+            EntityId = contactId,
+            Name = "New Name",
+            Species = "Dog",
+            Breed = "Labrador",
+            Notes = "Updated notes"
+        };
+
+        IActionResult result = await _controller.Edit(petId, dto);
+
+        RedirectToActionResult redirectResult = Assert.IsType<RedirectToActionResult>(result);
+        Assert.Equal("Details", redirectResult.ActionName);
+
+        Pet? updated = await _context.Set<Pet>().FindAsync(petId);
+        Assert.NotNull(updated);
+        Assert.Equal("New Name", updated.Name);
+        Assert.Equal("Labrador", updated.Breed);
+        Assert.Equal("Updated notes", updated.Notes);
+    }
+
+    [Fact]
+    public async Task EditPostWhenIdMismatchShouldReturnNotFound()
+    {
+        Guid petId = Guid.NewGuid();
+        Guid contactId = Guid.NewGuid();
+        _context.Contacts!.Add(new Contact { Id = contactId, FirstName = "Test" });
+        _context.Set<Pet>().Add(new Pet
+        {
+            Id = petId,
+            ContactId = contactId,
+            Name = "Existing Pet",
+            Species = "Dog"
+        });
+        await _context.SaveChangesAsync();
+        _context.ChangeTracker.Clear();
+
+        PetFormDto dto = new() { Id = Guid.NewGuid(), Name = "Test", EntityId = contactId };
+
+        IActionResult result = await _controller.Edit(petId, dto);
+
+        Assert.IsType<NotFoundResult>(result);
+    }
+
+    [Fact]
+    public async Task DeleteGetWithValidIdShouldReturnViewWithPet()
+    {
+        Guid petId = Guid.NewGuid();
+        Guid contactId = Guid.NewGuid();
+        _context.Contacts!.Add(new Contact { Id = contactId, FirstName = "Test" });
+        _context.Set<Pet>().Add(new Pet
+        {
+            Id = petId,
+            ContactId = contactId,
+            Name = "ToDelete",
+            Species = "Fish"
+        });
+        await _context.SaveChangesAsync();
+
+        IActionResult result = await _controller.Delete(petId);
+
+        ViewResult viewResult = Assert.IsType<ViewResult>(result);
+        PetDto? model = viewResult.Model as PetDto;
+        Assert.NotNull(model);
+        Assert.Equal("ToDelete", model.Name);
+    }
+
+    [Fact]
+    public async Task DeleteConfirmedWithValidIdShouldRemovePet()
+    {
+        Guid petId = Guid.NewGuid();
+        Guid contactId = Guid.NewGuid();
+        _context.Contacts!.Add(new Contact { Id = contactId, FirstName = "Test" });
+        _context.Set<Pet>().Add(new Pet
+        {
+            Id = petId,
+            ContactId = contactId,
+            Name = "ToDelete"
+        });
+        await _context.SaveChangesAsync();
+
+        IActionResult result = await _controller.DeleteConfirmed(petId);
+
+        RedirectToActionResult redirectResult = Assert.IsType<RedirectToActionResult>(result);
+        Assert.Equal("Details", redirectResult.ActionName);
+        Assert.Equal("Contacts", redirectResult.ControllerName);
+
+        Assert.Null(await _context.Set<Pet>().FindAsync(petId));
+    }
+
+    [Fact]
+    public async Task DeleteConfirmedWhenPetNotFoundShouldRedirectToContacts()
+    {
+        IActionResult result = await _controller.DeleteConfirmed(Guid.NewGuid());
+
+        RedirectToActionResult redirectResult = Assert.IsType<RedirectToActionResult>(result);
+        Assert.Equal("Index", redirectResult.ActionName);
+        Assert.Equal("Contacts", redirectResult.ControllerName);
+    }
+
 }
