@@ -77,5 +77,5 @@ dotnet test
 This project is source available under a custom license. Non-commercial use,
 personal projects, and self-hosting are permitted free of charge. Commercial
 use by any business or legal entity requires a separate written agreement.
-See [LICENSE](LICENSE.md) and [THIRD-PARTY-LICENSES.md](THIRD-PARTY-LICENSES.md)
+See [LICENSE.md](LICENSE.md) and [THIRD-PARTY-LICENSES.md](THIRD-PARTY-LICENSES.md)
 for full details.
