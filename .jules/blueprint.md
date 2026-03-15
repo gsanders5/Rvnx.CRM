@@ -35,3 +35,7 @@
 ## 2024-05-27 - [Infrastructure Dependency in Web Services]
 **Learning:** Services located in the `Web` layer (like `UserClaimsTransformation` and `CurrentUserService`) were directly referencing `Microsoft.EntityFrameworkCore` to call `.FirstOrDefaultAsync()` on `IQueryable` results from the repository. This coupled the Web layer directly to the ORM.
 **Action:** Replaced direct EF Core async extensions with appropriate `IRepository` abstraction methods (e.g., `GetByIdAsync`, `ListAsNoTrackingAsync().FirstOrDefault()`) to remove the EF Core using directives and strict dependencies from the Web layer, restoring the clean boundary.
+## 2024-05-28 - [Extract Business Logic from View Helper to Core Service]
+
+**Learning:** String-manipulation logic (`ExtractUsername` for social media URIs) incorrectly resided in the `Web` layer (`SocialMediaEmbedHelper`) despite being a domain-level data normalization rule.
+**Action:** When finding logic that normalizes or validates strings representing domain concepts, verify it lives in `Core` (like `SocialMediaUrlNormalizer`). Move it if it's currently in a Web layer helper to centralize the rules.

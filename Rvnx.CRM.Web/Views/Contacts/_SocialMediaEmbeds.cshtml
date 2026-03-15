@@ -15,7 +15,7 @@
                 if (twitterMethod != null)
                 {
                     hasSocialMedia = true;
-                    var twitterHandle = Rvnx.CRM.Web.Helpers.SocialMediaEmbedHelper.ExtractUsername(ContactMethodType.Twitter, twitterMethod.Value);
+                    var twitterHandle = Rvnx.CRM.Core.Helpers.SocialMediaUrlNormalizer.ExtractUsername(ContactMethodType.Twitter, twitterMethod.Value);
                     <div class="mb-4">
                         <h6 class="fw-bold">Twitter (@@@twitterHandle)</h6>
                         <a class="twitter-timeline" href="@($"https://twitter.com/{twitterHandle}")" data-height="400">
@@ -29,7 +29,7 @@
                 if (twitchMethod != null)
                 {
                     hasSocialMedia = true;
-                    var twitchChannel = Rvnx.CRM.Web.Helpers.SocialMediaEmbedHelper.ExtractUsername(ContactMethodType.Twitch, twitchMethod.Value);
+                    var twitchChannel = Rvnx.CRM.Core.Helpers.SocialMediaUrlNormalizer.ExtractUsername(ContactMethodType.Twitch, twitchMethod.Value);
                     <div class="mb-4">
                         <h6 class="fw-bold">Twitch (@twitchChannel)</h6>
                         <!-- Load the Twitch embed script -->
@@ -51,7 +51,7 @@
                 if (youtubeMethod != null)
                 {
                     hasSocialMedia = true;
-                    var youtubeChannel = Rvnx.CRM.Web.Helpers.SocialMediaEmbedHelper.ExtractUsername(ContactMethodType.YouTube, youtubeMethod.Value);
+                    var youtubeChannel = Rvnx.CRM.Core.Helpers.SocialMediaUrlNormalizer.ExtractUsername(ContactMethodType.YouTube, youtubeMethod.Value);
                     <div class="mb-4">
                         <h6 class="fw-bold">YouTube (@youtubeChannel)</h6>
                         <iframe width="100%" height="400" src="https://www.youtube.com/embed?listType=user_uploads&list=@youtubeChannel" frameborder="0" allowfullscreen></iframe>
@@ -62,7 +62,7 @@
                 if (tiktokMethod != null)
                 {
                     hasSocialMedia = true;
-                    var tiktokHandle = Rvnx.CRM.Web.Helpers.SocialMediaEmbedHelper.ExtractUsername(ContactMethodType.TikTok, tiktokMethod.Value);
+                    var tiktokHandle = Rvnx.CRM.Core.Helpers.SocialMediaUrlNormalizer.ExtractUsername(ContactMethodType.TikTok, tiktokMethod.Value);
                     <div class="mb-4">
                         <h6 class="fw-bold">TikTok (@tiktokHandle)</h6>
                         <blockquote class="tiktok-embed" cite="https://www.tiktok.com/@@@tiktokHandle" data-unique-id="@tiktokHandle" data-embed-from="oembed" data-embed-type="creator" style="max-width:780px; min-width:288px;">
