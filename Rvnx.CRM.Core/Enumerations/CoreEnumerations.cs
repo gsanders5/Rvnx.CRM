@@ -1,4 +1,4 @@
-﻿namespace Rvnx.CRM.Core.Enumerations
+namespace Rvnx.CRM.Core.Enumerations
 {
     public static class CoreEnumerations
     {

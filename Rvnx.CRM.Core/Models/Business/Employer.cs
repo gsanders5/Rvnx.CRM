@@ -1,4 +1,4 @@
-﻿using Rvnx.CRM.Core.Models.Base;
+using Rvnx.CRM.Core.Models.Base;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 

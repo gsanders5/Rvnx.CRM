@@ -1,4 +1,4 @@
-﻿using Rvnx.CRM.Core.Interfaces;
+using Rvnx.CRM.Core.Interfaces;
 
 namespace Rvnx.CRM.ConsoleApp;
 

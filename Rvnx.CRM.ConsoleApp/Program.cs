@@ -1,4 +1,4 @@
-﻿using Rvnx.CRM.ConsoleApp;
+using Rvnx.CRM.ConsoleApp;
 
 try
 {
