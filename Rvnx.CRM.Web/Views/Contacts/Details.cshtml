@@ -42,8 +42,8 @@
         box-shadow: 0 .5rem 1rem rgba(0,0,0,.15)!important;
     }
 
-    /* Discord-style Lightbox Overlay */
-    #discord-lightbox {
+    /* Fullscreen Media Lightbox Overlay */
+    #media-lightbox {
         position: fixed;
         top: 0;
         left: 0;
@@ -56,10 +56,10 @@
         justify-content: center;
         backdrop-filter: blur(5px);
     }
-    #discord-lightbox.active {
+    #media-lightbox.active {
         display: flex;
     }
-    #discord-lightbox-img {
+    #media-lightbox-img {
         max-width: 90vw;
         max-height: 85vh;
         object-fit: contain;
@@ -687,8 +687,8 @@
 </div>
 </div>
 
-<!-- Discord-style Lightbox Container -->
-<div id="discord-lightbox">
+<!-- Fullscreen Media Lightbox Container -->
+<div id="media-lightbox">
     <div class="lightbox-toolbar">
         <a id="lightbox-open-original" href="#" target="_blank" title="Open Original">
             <i class="bi bi-box-arrow-up-right"></i>
@@ -697,7 +697,7 @@
             <i class="bi bi-x-lg"></i>
         </button>
     </div>
-    <img id="discord-lightbox-img" src="" alt="Preview">
+    <img id="media-lightbox-img" src="" alt="Preview">
     <div id="lightbox-title" class="lightbox-title"></div>
 </div>
 
@@ -710,8 +710,8 @@
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             // Lightbox functionality
-            const lightbox = document.getElementById('discord-lightbox');
-            const lightboxImg = document.getElementById('discord-lightbox-img');
+            const lightbox = document.getElementById('media-lightbox');
+            const lightboxImg = document.getElementById('media-lightbox-img');
             const lightboxTitle = document.getElementById('lightbox-title');
             const lightboxOpenOriginal = document.getElementById('lightbox-open-original');
             const lightboxCloseBtn = document.getElementById('lightbox-close');
