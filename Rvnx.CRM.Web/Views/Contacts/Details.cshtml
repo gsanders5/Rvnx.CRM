@@ -621,7 +621,7 @@
                                 @if (isImage)
                                 {
                                     <div class="attachment-preview-container bg-dark d-flex align-items-center justify-content-center cursor-pointer" style="height: 200px;" data-preview-url="@Url.Action("View", "Attachments", new { id = attachment.Id })" data-filename="@attachment.FileName">
-                                        <img src="@Url.Action("View", "Attachments", new { id = attachment.Id })" class="img-fluid w-100 h-100 object-fit-cover" alt="@attachment.FileName" loading="lazy" style="object-fit: cover;"/>
+                                        <img src="@Url.Action("Thumbnail", "Attachments", new { id = attachment.Id, maxWidth = 400 })" class="img-fluid w-100 h-100 object-fit-cover" alt="@attachment.FileName" loading="lazy" style="object-fit: cover;" />
                                         <div class="position-absolute top-50 start-50 translate-middle text-white preview-overlay" style="opacity: 0; transition: opacity 0.2s; background: rgba(0,0,0,0.5); padding: 10px; border-radius: 50%;">
                                             <i class="bi bi-zoom-in fs-3"></i>
                                         </div>

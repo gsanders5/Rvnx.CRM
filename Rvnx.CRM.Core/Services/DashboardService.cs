@@ -66,7 +66,7 @@ public class DashboardService(IRepository repository, ILogger<DashboardService> 
             string? photoUrl = null;
             if (attachmentMap.TryGetValue(contact.Id, out Guid attachmentId))
             {
-                photoUrl = $"/Attachments/View/{attachmentId}";
+                photoUrl = $"/Attachments/Thumbnail/{attachmentId}?maxWidth=80&maxHeight=80";
             }
 
             result.GraphNodes.Add(new GraphNodeDto

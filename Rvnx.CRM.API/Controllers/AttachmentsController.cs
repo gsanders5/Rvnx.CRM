@@ -7,10 +7,11 @@ namespace Rvnx.CRM.API.Controllers;
 [ApiController]
 [Route("api/[controller]")]
 [Authorize]
-public class AttachmentsController(IAttachmentService attachmentService, IContactReadService contactReadService) : ControllerBase
+public class AttachmentsController(IAttachmentService attachmentService, IContactReadService contactReadService, IThumbnailService thumbnailService) : ControllerBase
 {
     private readonly IAttachmentService _attachmentService = attachmentService;
     private readonly IContactReadService _contactReadService = contactReadService;
+    private readonly IThumbnailService _thumbnailService = thumbnailService;
 
     [HttpGet("contact/{contactId}")]
     public async Task<IActionResult> ListByContact(Guid contactId)
@@ -52,6 +53,31 @@ public class AttachmentsController(IAttachmentService attachmentService, IContac
 
         Core.DTOs.Base.AttachmentContentDto? content = await _attachmentService.GetAttachmentContentAsync(id);
         return content == null ? NotFound() : File(content.Content, content.ContentType, attachment.FileName);
+    }
+
+    [HttpGet("{id}/thumbnail")]
+    public async Task<IActionResult> Thumbnail(Guid id, int? maxWidth = null, int? maxHeight = null)
+    {
+        Core.DTOs.Base.AttachmentContentDto? dto = await _attachmentService.GetAttachmentContentAsync(id);
+        if (dto == null)
+        {
+            return NotFound();
+        }
+
+        byte[]? thumbnail = await _thumbnailService.GetOrCreateThumbnailAsync(id, dto.Content, dto.ContentType, maxWidth, maxHeight);
+
+        if (thumbnail != null)
+        {
+            Response.Headers.LastModified = dto.LastChangedDate.ToString("R");
+            Response.Headers.CacheControl = "public, max-age=604800";
+            return File(thumbnail, "image/jpeg");
+        }
+
+        // Thumbnail generation failed or not an image — fall back to full file
+        // Short cache so the caller retries rather than caching the failure permanently
+        Response.Headers.LastModified = dto.LastChangedDate.ToString("R");
+        Response.Headers.CacheControl = "public, max-age=3600";
+        return File(dto.Content, dto.ContentType, dto.FileName);
     }
 
     [HttpDelete("{id}")]

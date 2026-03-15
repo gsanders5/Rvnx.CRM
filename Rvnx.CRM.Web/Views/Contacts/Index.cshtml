@@ -57,7 +57,7 @@
                         <div class="d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
                             @if (item.ProfileImageId.HasValue)
                             {
-                                <img src="@Url.Action("View", "Attachments", new { id = item.ProfileImageId })" class="rounded-circle" width="40" height="40" alt="@item.FullName" style="object-fit: cover;" loading="lazy"/>
+                                    <img src="@Url.Action("Thumbnail", "Attachments", new { id = item.ProfileImageId, maxWidth = 80, maxHeight = 80 })" class="rounded-circle" width="40" height="40" alt="@item.FullName" style="object-fit: cover;" loading="lazy" />
                             }
                             else
                             {

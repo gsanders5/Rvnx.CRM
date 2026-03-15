@@ -26,6 +26,7 @@ Purpose: License compliance audit
 | Microsoft.NET.Test.Sdk | 18.3.0 | Rvnx.CRM.Tests | MIT | https://licenses.nuget.org/MIT |
 | MimeKit | 4.15.1 | Rvnx.CRM.Infrastructure | MIT | https://github.com/jstedfast/MimeKit/blob/master/LICENSE |
 | Moq | 4.20.72 | Rvnx.CRM.Tests | BSD-3-Clause | https://github.com/moq/moq4/blob/main/License.txt |
+| SixLabors.ImageSharp | 3.x | Rvnx.CRM.Infrastructure | Six Labors Split License 1.0 | https://github.com/SixLabors/ImageSharp/blob/main/LICENSE |
 | xunit | 2.9.3 | Rvnx.CRM.Tests | Apache-2.0 | https://licenses.nuget.org/Apache-2.0 |
 | xunit.runner.visualstudio | 3.1.5 | Rvnx.CRM.Tests | Apache-2.0 | https://licenses.nuget.org/Apache-2.0 |
 
@@ -90,8 +91,8 @@ Purpose: License compliance audit
 
 ## Summary
 
-Total dependencies audited: 36
-Licenses identified: MIT, Apache-2.0, BSD-3-Clause, CC BY 4.0 (Icons), MPL-2.0 (Option), SIL Open Font License 1.1, Proprietary (Social Embeds)
+Total dependencies audited: 37
+Licenses identified: MIT, Apache-2.0, BSD-3-Clause, CC BY 4.0 (Icons), MPL-2.0 (Option), Six Labors Split License 1.0, SIL Open Font License 1.1, Proprietary (Social Embeds)
 Unresolved: 0
 
 ### License compatibility notes
@@ -100,5 +101,6 @@ Unresolved: 0
 - **BSD-3-Clause**: Attribution required, no endorsement clause. Similar to MIT. (Includes the original Markdown copyright notice in `marked.js`.)
 - **CC BY 4.0**: Attribution required. Applies to Font Awesome Icons.
 - **MPL-2.0**: File-level copyleft. Only relevant if choosing MPL for DOMPurify. Apache-2.0 option is available and simpler for compatibility.
+- **Six Labors Split License 1.0**: Free for open source projects and qualifying small businesses (under $1M USD annual gross revenue). Commercial use above that threshold requires a paid license. Review https://sixlabors.com/ to confirm your usage qualifies for the free tier.
 - **SIL Open Font License 1.1**: Allows font software to be used, studied, modified, and redistributed freely as long as they are not sold by themselves. Fonts can be bundled, embedded, and redistributed with software.
 - **Proprietary**: Commercial terms apply to usage of embedded player widgets from Twitter, Twitch, and TikTok. Review platform developer agreements for specific restrictions.

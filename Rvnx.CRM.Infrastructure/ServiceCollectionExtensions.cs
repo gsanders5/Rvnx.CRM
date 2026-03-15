@@ -18,6 +18,8 @@ public static class ServiceCollectionExtensions
             options.UseSqlite(connectionString);
         });
 
+        services.AddMemoryCache();
+
         services.AddScoped<IRepository, Repository>();
 
         services.AddHttpClient<IVCardService, VCardService>();
@@ -30,15 +32,15 @@ public static class ServiceCollectionExtensions
 
         services.AddScoped<IMergeService, MergeService>();
 
-        // Add Debug Data Service
         services.AddScoped<IDebugDataService, DebugDataService>();
 
-        // Add Debug Operations Service
         services.AddScoped<IDebugOperationsService, DebugOperationsService>();
 
         services.AddScoped<IContactMethodService, ContactMethodService>();
 
         services.AddScoped<IFactService, FactService>();
+
+        services.AddScoped<IThumbnailService, ThumbnailService>();
 
         services.AddScoped<IPetService, PetService>();
 

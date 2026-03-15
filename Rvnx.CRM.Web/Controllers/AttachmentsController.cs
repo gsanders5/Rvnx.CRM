@@ -10,10 +10,12 @@ namespace Rvnx.CRM.Web.Controllers
 {
     public class AttachmentsController(
         IAttachmentService attachmentService,
-        IFileValidationService fileValidationService) : AuthorizedController
+        IFileValidationService fileValidationService,
+        IThumbnailService thumbnailService) : AuthorizedController
     {
         private readonly IAttachmentService _attachmentService = attachmentService;
         private readonly IFileValidationService _fileValidationService = fileValidationService;
+        private readonly IThumbnailService _thumbnailService = thumbnailService;
 
         private static readonly FrozenSet<string> ImageContentTypes =
             new[] { "image/jpeg", "image/png", "image/gif" }.ToFrozenSet(StringComparer.OrdinalIgnoreCase);
@@ -137,6 +139,46 @@ namespace Rvnx.CRM.Web.Controllers
             Response.Headers.LastModified = dto.LastChangedDate.ToString("R");
             Response.Headers.CacheControl = "public, max-age=31536000";
 
+            return IsImage(dto.ContentType)
+                ? File(dto.Content, dto.ContentType)
+                : File(dto.Content, dto.ContentType, dto.FileName);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> Thumbnail(Guid id, int? maxWidth = null, int? maxHeight = null)
+        {
+            AttachmentContentDto? dto = await _attachmentService.GetAttachmentContentAsync(id);
+            if (dto == null)
+            {
+                return NotFound();
+            }
+
+            if (!string.IsNullOrEmpty(Request.Headers.IfModifiedSince))
+            {
+                if (DateTime.TryParse(Request.Headers.IfModifiedSince,System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.AdjustToUniversal |
+                        System.Globalization.DateTimeStyles.AssumeUniversal, out DateTime ifModifiedSince))
+                {
+                    if (ifModifiedSince >= dto.LastChangedDate.AddTicks(-(dto.LastChangedDate.Ticks % TimeSpan.TicksPerSecond)))
+                    {
+                        return StatusCode(304);
+                    }
+                }
+            }
+
+            byte[]? thumbnail = await _thumbnailService.GetOrCreateThumbnailAsync(
+                id, dto.Content, dto.ContentType, maxWidth, maxHeight);
+
+            if (thumbnail != null)
+            {
+                Response.Headers.LastModified = dto.LastChangedDate.ToString("R");
+                Response.Headers.CacheControl = "public, max-age=604800";
+                return File(thumbnail, "image/jpeg");
+            }
+
+            // Thumbnail generation failed or not an image — fall back to full file
+            // Short cache so the browser retries rather than caching the failure permanently
+            Response.Headers.LastModified = dto.LastChangedDate.ToString("R");
+            Response.Headers.CacheControl = "public, max-age=3600";
             return IsImage(dto.ContentType)
                 ? File(dto.Content, dto.ContentType)
                 : File(dto.Content, dto.ContentType, dto.FileName);

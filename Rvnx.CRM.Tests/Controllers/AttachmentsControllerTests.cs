@@ -22,7 +22,10 @@ public class AttachmentsControllerTests
             fileValidationServiceMock.Setup(x => x.IsAllowedExtension(It.IsAny<string>())).Returns(true);
             fileValidationServiceMock.Setup(x => x.IsAllowedFileSize(It.IsAny<long>())).Returns(false);
 
-            AttachmentsController controller = new(attachmentServiceMock.Object, fileValidationServiceMock.Object);
+            AttachmentsController controller = new(
+                attachmentServiceMock.Object,
+                fileValidationServiceMock.Object,
+                new Mock<IThumbnailService>().Object);
 
             Mock<IFormFile> fileMock = new();
             fileMock.Setup(f => f.FileName).Returns("large.pdf");
@@ -55,7 +58,10 @@ public class AttachmentsControllerTests
             fileValidationMock.Setup(f => f.IsAllowedExtension(It.IsAny<string>())).Returns(true);
             fileValidationMock.Setup(f => f.IsAllowedFileSize(It.IsAny<long>())).Returns(true);
 
-            AttachmentsController controller = new(serviceMock.Object, fileValidationMock.Object)
+            AttachmentsController controller = new(
+                serviceMock.Object,
+                fileValidationMock.Object,
+                new Mock<IThumbnailService>().Object)
             {
                 ControllerContext = new ControllerContext
                 {
@@ -93,7 +99,10 @@ public class AttachmentsControllerTests
             fileValidationMock.Setup(f => f.IsAllowedExtension(It.IsAny<string>())).Returns(true);
             fileValidationMock.Setup(f => f.IsAllowedFileSize(It.IsAny<long>())).Returns(true);
 
-            AttachmentsController controller = new(serviceMock.Object, fileValidationMock.Object)
+            AttachmentsController controller = new(
+                serviceMock.Object,
+                fileValidationMock.Object,
+                new Mock<IThumbnailService>().Object)
             {
                 ControllerContext = new ControllerContext
                 {
@@ -243,7 +252,10 @@ public class AttachmentsControllerTests
             fileValidationMock.Setup(f => f.IsAllowedExtension(It.IsAny<string>())).Returns(true);
             fileValidationMock.Setup(f => f.IsAllowedFileSize(It.IsAny<long>())).Returns(true);
 
-            AttachmentsController controller = new(serviceMock.Object, fileValidationMock.Object)
+            AttachmentsController controller = new(
+                serviceMock.Object,
+                fileValidationMock.Object,
+                new Mock<IThumbnailService>().Object)
             {
                 ControllerContext = new ControllerContext
                 {
@@ -346,6 +358,20 @@ public class AttachmentsControllerTests
     public class General
     {
 
+        private static AttachmentsController GetController(Mock<IAttachmentService> serviceMock)
+        {
+            return new AttachmentsController(
+                serviceMock.Object,
+                new Mock<IFileValidationService>().Object,
+                new Mock<IThumbnailService>().Object)
+            {
+                ControllerContext = new ControllerContext
+                {
+                    HttpContext = new DefaultHttpContext()
+                }
+            };
+        }
+
         [Fact]
         public async Task ViewShouldReturnFileContentResultWhenImageExists()
         {
@@ -364,13 +390,7 @@ public class AttachmentsControllerTests
                     LastChangedDate = DateTime.UtcNow
                 });
 
-            AttachmentsController controller = new(serviceMock.Object, new Mock<IFileValidationService>().Object)
-            {
-                ControllerContext = new ControllerContext
-                {
-                    HttpContext = new DefaultHttpContext()
-                }
-            };
+            AttachmentsController controller = GetController(serviceMock);
 
             IActionResult result = await controller.View(attachmentId);
 
@@ -386,13 +406,7 @@ public class AttachmentsControllerTests
             serviceMock.Setup(s => s.GetAttachmentContentAsync(It.IsAny<Guid>()))
                 .ReturnsAsync((AttachmentContentDto?)null);
 
-            AttachmentsController controller = new(serviceMock.Object, new Mock<IFileValidationService>().Object)
-            {
-                ControllerContext = new ControllerContext
-                {
-                    HttpContext = new DefaultHttpContext()
-                }
-            };
+            AttachmentsController controller = GetController(serviceMock);
 
             IActionResult result = await controller.View(Guid.NewGuid());
 
@@ -404,7 +418,7 @@ public class AttachmentsControllerTests
         {
             Mock<IAttachmentService> serviceMock = new();
             Guid attachmentId = Guid.NewGuid();
-            DateTime lastChanged = DateTime.UtcNow.AddMinutes(-10); // Fixed time
+            DateTime lastChanged = DateTime.UtcNow.AddMinutes(-10);
 
             serviceMock.Setup(s => s.GetAttachmentContentAsync(attachmentId))
                 .ReturnsAsync(new AttachmentContentDto
@@ -416,13 +430,7 @@ public class AttachmentsControllerTests
                     LastChangedDate = lastChanged
                 });
 
-            AttachmentsController controller = new(serviceMock.Object, new Mock<IFileValidationService>().Object)
-            {
-                ControllerContext = new ControllerContext
-                {
-                    HttpContext = new DefaultHttpContext()
-                }
-            };
+            AttachmentsController controller = GetController(serviceMock);
 
             // Truncate milliseconds/ticks to match HTTP header precision
             DateTime headerDate = lastChanged.AddTicks(-(lastChanged.Ticks % TimeSpan.TicksPerSecond));
@@ -451,13 +459,7 @@ public class AttachmentsControllerTests
                     LastChangedDate = lastChanged
                 });
 
-            AttachmentsController controller = new(serviceMock.Object, new Mock<IFileValidationService>().Object)
-            {
-                ControllerContext = new ControllerContext
-                {
-                    HttpContext = new DefaultHttpContext()
-                }
-            };
+            AttachmentsController controller = GetController(serviceMock);
 
             // Header is 10 minutes in the past
             controller.Request.Headers["If-Modified-Since"] = lastChanged.AddMinutes(-10).ToString("R");
