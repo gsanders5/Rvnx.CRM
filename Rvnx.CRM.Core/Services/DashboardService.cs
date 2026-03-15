@@ -23,15 +23,27 @@ public class DashboardService(IRepository repository, ILogger<DashboardService> 
             new EventId(2, nameof(LogSignificantDateProcessingLimitReached)),
             "Significant date processing limit reached ({Limit}). Some dates may not appear in dashboard.");
 
+    internal sealed record ContactSummary(Guid Id, string FirstName, string? LastName, string? Gender, DateTime CreatedDate, DateTime LastChangedDate)
+    {
+        public string FullName => $"{FirstName} {LastName}".Trim();
+    }
+
     /// <inheritdoc />
     public async Task<DashboardDto> GetDashboardDataAsync()
     {
         DashboardDto result = new();
 
-        List<Contact> contacts =
-            await _repository.ListAsNoTrackingAsync<Contact>(x => x.IsHidden == false && x.IsPartial == false);
+        List<ContactSummary> contacts = await _repository.ListProjectedAsync<Contact, ContactSummary>(
+            x => !x.IsHidden && !x.IsPartial,
+            c => new ContactSummary(
+                c.Id,
+                c.FirstName,
+                c.LastName,
+                c.Gender,
+                c.CreatedDate,
+                c.LastChangedDate));
 
-        Dictionary<Guid, Contact> contactDict = contacts.ToDictionary(c => c.Id, c => c);
+        Dictionary<Guid, ContactSummary> contactDict = contacts.ToDictionary(c => c.Id);
 
         List<Guid> contactIds = [.. contacts.Select(c => c.Id)];
 
@@ -44,8 +56,6 @@ public class DashboardService(IRepository repository, ILogger<DashboardService> 
                 a => new ValueTuple<Guid, Guid>(a.ContactId!.Value, a.Id))
             : [];
 
-        // ⚡ Bolt: Use Dictionary with capacity and TryAdd instead of GroupBy().ToDictionary(..., First())
-        // to avoid allocations of IGrouping structures and redundant list iterations.
         Dictionary<Guid, Guid> attachmentMap = new(profileAttachments.Count);
         foreach ((Guid contactId, Guid attachmentId) in profileAttachments)
         {
@@ -53,7 +63,6 @@ public class DashboardService(IRepository repository, ILogger<DashboardService> 
         }
 
         PriorityQueue<UpcomingEventDto, DateTime> topEvents = new();
-
         await ProcessSignificantDatesAsync(topEvents, contactDict);
 
         while (topEvents.Count > 0 && result.UpcomingEvents.Count < MaxUpcomingEvents)
@@ -61,7 +70,7 @@ public class DashboardService(IRepository repository, ILogger<DashboardService> 
             result.UpcomingEvents.Add(topEvents.Dequeue());
         }
 
-        foreach (Contact contact in contacts)
+        foreach (ContactSummary contact in contacts)
         {
             string? photoUrl = null;
             if (attachmentMap.TryGetValue(contact.Id, out Guid attachmentId))
@@ -79,10 +88,10 @@ public class DashboardService(IRepository repository, ILogger<DashboardService> 
             });
         }
 
-        // ⚡ Bolt: Fetch only required fields (EntityId, RelatedEntityId) instead of full Relationship entities to reduce memory/network overhead
-        List<(Guid EntityId, Guid RelatedEntityId)> relationships = await _repository.ListProjectedAsync<Relationship, (Guid EntityId, Guid RelatedEntityId)>(
-            r => r.EntityType == EntityTypes.Person,
-            r => new ValueTuple<Guid, Guid>(r.EntityId, r.RelatedEntityId));
+        List<(Guid EntityId, Guid RelatedEntityId)> relationships =
+            await _repository.ListProjectedAsync<Relationship, (Guid EntityId, Guid RelatedEntityId)>(
+                r => r.EntityType == EntityTypes.Person,
+                r => new ValueTuple<Guid, Guid>(r.EntityId, r.RelatedEntityId));
 
         foreach ((Guid EntityId, Guid RelatedEntityId) in relationships)
         {
@@ -103,7 +112,7 @@ public class DashboardService(IRepository repository, ILogger<DashboardService> 
             .Select(c => new RecentContactDto
             {
                 Id = c.Id,
-                FullName = (c.FirstName + " " + (c.LastName ?? "")).Trim(),
+                FullName = c.FullName,
                 CreatedDate = c.CreatedDate,
                 LastChangedDate = c.LastChangedDate,
                 ProfileImageId = attachmentMap.TryGetValue(c.Id, out Guid aid) ? aid : null,
@@ -111,18 +120,18 @@ public class DashboardService(IRepository repository, ILogger<DashboardService> 
             })
             .ToList();
 
-
         HashSet<Guid> contactsWithRelationships =
         [
             .. relationships.Select(r => r.EntityId),
             .. relationships.Select(r => r.RelatedEntityId)
         ];
 
-        int birthdayCount = await _repository.CountAsync<SignificantDate>(sd => sd.ContactId.HasValue &&
-                                                                                sd.Contact != null &&
-                                                                                sd.Contact.IsHidden == false &&
-                                                                                sd.Contact.IsPartial == false &&
-                                                                                sd.Title == SignificantDateTitles.Birthday);
+        int birthdayCount = await _repository.CountAsync<SignificantDate>(sd =>
+            sd.ContactId.HasValue &&
+            sd.Contact != null &&
+            !sd.Contact.IsHidden &&
+            !sd.Contact.IsPartial &&
+            sd.Title == SignificantDateTitles.Birthday);
 
         int hiddenContactsCount =
             await _repository.CountAsync<Contact>(x => x.IsHidden && !x.IsPartial);
@@ -140,7 +149,7 @@ public class DashboardService(IRepository repository, ILogger<DashboardService> 
 
     private async Task ProcessSignificantDatesAsync(
         PriorityQueue<UpcomingEventDto, DateTime> topEvents,
-        Dictionary<Guid, Contact> contactDict)
+        Dictionary<Guid, ContactSummary> contactDict)
     {
         List<SignificantDate> importantDates =
             await _repository.ListAsNoTrackingAsync<SignificantDate>(d => d.ContactId != null && d.IsActive);
@@ -148,7 +157,7 @@ public class DashboardService(IRepository repository, ILogger<DashboardService> 
         int processedCount = 0;
         foreach (SignificantDate date in importantDates)
         {
-            if (!contactDict.TryGetValue(date.ContactId ?? Guid.Empty, out Contact? contact))
+            if (!contactDict.TryGetValue(date.ContactId ?? Guid.Empty, out ContactSummary? contact))
             {
                 continue;
             }
@@ -156,8 +165,7 @@ public class DashboardService(IRepository repository, ILogger<DashboardService> 
             DateOnly nextOcc = date.GetNextOccurrence();
             DateTime nextOccurrence = nextOcc.ToDateTime(TimeOnly.MinValue);
 
-            bool isBirthday = date.Title?.Equals(SignificantDateTitles.Birthday, StringComparison.OrdinalIgnoreCase) ==
-                              true;
+            bool isBirthday = date.Title?.Equals(SignificantDateTitles.Birthday, StringComparison.OrdinalIgnoreCase) == true;
             string desc = isBirthday
                 ? $"Turns {nextOcc.Year - date.EventDate.Year}"
                 : $"{date.Title} ({date.EventDate.ToShortDateString()})";

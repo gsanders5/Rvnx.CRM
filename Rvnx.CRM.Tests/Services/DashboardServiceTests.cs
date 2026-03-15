@@ -8,6 +8,7 @@ using Rvnx.CRM.Core.Models.Dates;
 using Rvnx.CRM.Core.Services;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
+using static Rvnx.CRM.Core.Services.DashboardService;
 
 namespace Rvnx.CRM.Tests.Services;
 
@@ -24,6 +25,67 @@ public class DashboardServiceTests
         _service = new DashboardService(_repositoryMock.Object, _loggerMock.Object);
     }
 
+    private void SetupContactSummaries(List<ContactSummary> summaries)
+    {
+        _repositoryMock
+            .Setup(r => r.ListProjectedAsync<Contact, ContactSummary>(
+                It.IsAny<Expression<Func<Contact, bool>>>(),
+                It.IsAny<Expression<Func<Contact, ContactSummary>>>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(summaries);
+    }
+
+    private void SetupSignificantDates(List<SignificantDate> dates)
+    {
+        _repositoryMock
+            .Setup(r => r.ListAsNoTrackingAsync<SignificantDate>(
+                It.IsAny<Expression<Func<SignificantDate, bool>>>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(dates);
+    }
+
+    private void SetupRelationships(List<(Guid EntityId, Guid RelatedEntityId)> relationships)
+    {
+        _repositoryMock
+            .Setup(r => r.ListProjectedAsync<Relationship, (Guid EntityId, Guid RelatedEntityId)>(
+                It.IsAny<Expression<Func<Relationship, bool>>>(),
+                It.IsAny<Expression<Func<Relationship, (Guid EntityId, Guid RelatedEntityId)>>>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(relationships);
+    }
+
+    private void SetupAttachments(List<(Guid ContactId, Guid AttachmentId)> attachments)
+    {
+        _repositoryMock
+            .Setup(r => r.ListProjectedAsync<Attachment, (Guid ContactId, Guid AttachmentId)>(
+                It.IsAny<Expression<Func<Attachment, bool>>>(),
+                It.IsAny<Expression<Func<Attachment, (Guid, Guid)>>>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(attachments);
+    }
+
+    private async Task<DashboardDto> GetResultForSingleContactEvent(DateOnly eventDate)
+    {
+        Guid contactId = Guid.NewGuid();
+        DateTime now = DateTime.UtcNow;
+
+        SetupContactSummaries([new ContactSummary(contactId, "Test", "User", null, now, now)]);
+        SetupAttachments([]);
+        SetupSignificantDates([
+            new SignificantDate
+            {
+                ContactId = contactId,
+                Title = "Event",
+                EventDate = eventDate,
+                IsActive = true
+            }
+        ]);
+        SetupRelationships([]);
+
+        return await _service.GetDashboardDataAsync();
+    }
+
+
     [Fact]
     [SuppressMessage("Naming", "CA1707:Identifiers should not contain underscores",
         Justification = "Test names can contain underscores for readability.")]
@@ -31,78 +93,36 @@ public class DashboardServiceTests
     {
         Guid contactId1 = Guid.NewGuid();
         Guid contactId2 = Guid.NewGuid();
+        DateTime now = DateTime.UtcNow;
 
-        List<Contact> contacts =
-        [
-            new Contact
-            {
-                Id = contactId1,
-                FirstName = "Alice",
-                LastName = "Smith",
-                Gender = "Female",
-                IsHidden = false
-            },
-            new Contact
-            {
-                Id = contactId2,
-                FirstName = "Bob",
-                LastName = "Jones",
-                Gender = "Male",
-                IsHidden = false
-            }
-        ];
-
-        _repositoryMock.Setup(r => r.ListAsNoTrackingAsync<Contact>(
-                It.IsAny<Expression<Func<Contact, bool>>>(),
-                It.IsAny<CancellationToken>()
-                ))
-            .ReturnsAsync(contacts);
+        SetupContactSummaries([
+            new ContactSummary(contactId1, "Alice", "Smith", "Female", now, now),
+            new ContactSummary(contactId2, "Bob",   "Jones", "Male",   now, now)
+        ]);
 
         DateTime today = DateTime.Today;
-        List<SignificantDate> dates =
-        [
+        SetupSignificantDates([
             new SignificantDate
             {
                 ContactId = contactId1,
                 Title = "Birthday",
-                EventDate = DateOnly.FromDateTime(today.AddYears(-30).AddDays(2)), // in 2 days
+                EventDate = DateOnly.FromDateTime(today.AddYears(-30).AddDays(2)),
                 IsActive = true
             },
             new SignificantDate
             {
                 ContactId = contactId2,
                 Title = "Anniversary",
-                EventDate = DateOnly.FromDateTime(today.AddYears(-5).AddDays(10)), // in 10 days
+                EventDate = DateOnly.FromDateTime(today.AddYears(-5).AddDays(10)),
                 IsActive = true
             }
-        ];
+        ]);
 
-        _repositoryMock.Setup(r => r.ListAsNoTrackingAsync<SignificantDate>(
-                It.IsAny<Expression<Func<SignificantDate, bool>>>(),
-                It.IsAny<CancellationToken>()
-                ))
-            .ReturnsAsync(dates);
-
-        List<Relationship> relationships =
-        [
-            new Relationship { EntityId = contactId1, RelatedEntityId = contactId2, EntityType = "Person" }
-        ];
-
-        _repositoryMock.Setup(r => r.ListProjectedAsync<Relationship, (Guid EntityId, Guid RelatedEntityId)>(
-                It.IsAny<Expression<Func<Relationship, bool>>>(),
-                It.IsAny<Expression<Func<Relationship, (Guid EntityId, Guid RelatedEntityId)>>>(),
-                It.IsAny<CancellationToken>()
-                ))
-            .ReturnsAsync(relationships.Select(r => (r.EntityId, r.RelatedEntityId)).ToList());
+        SetupRelationships([(contactId1, contactId2)]);
 
         Guid attachmentId = Guid.NewGuid();
-        _repositoryMock.Setup(r => r.ListProjectedAsync<Attachment, (Guid ContactId, Guid AttachmentId)>(
-                It.IsAny<Expression<Func<Attachment, bool>>>(),
-                It.IsAny<Expression<Func<Attachment, (Guid, Guid)>>>(),
-                It.IsAny<CancellationToken>()))
-            .ReturnsAsync([(contactId1, attachmentId)]);
+        SetupAttachments([(contactId1, attachmentId)]);
 
-        // Ensure logger allows logging for warning
         _loggerMock.Setup(x => x.IsEnabled(LogLevel.Warning)).Returns(true);
 
         DashboardDto result = await _service.GetDashboardDataAsync();
@@ -110,14 +130,13 @@ public class DashboardServiceTests
         Assert.NotNull(result);
 
         Assert.Equal(2, result.UpcomingEvents.Count);
-        // Queue pops earliest first.
         Assert.Equal("Alice's Birthday", result.UpcomingEvents[0].Title);
         Assert.Equal("Bob's Anniversary", result.UpcomingEvents[1].Title);
 
         Assert.Equal(2, result.GraphNodes.Count);
         Assert.Contains(result.GraphNodes,
             n => n.Id == contactId1.ToString() && n.Name == "Alice Smith" &&
-                 n.PhotoUrl == $"/Attachments/View/{attachmentId}");
+                 n.PhotoUrl == $"/Attachments/Thumbnail/{attachmentId}?maxWidth=80&maxHeight=80");
         Assert.Contains(result.GraphNodes,
             n => n.Id == contactId2.ToString() && n.Name == "Bob Jones" && n.PhotoUrl == null);
 
@@ -131,24 +150,9 @@ public class DashboardServiceTests
         Justification = "Test names can contain underscores for readability.")]
     public async Task GetDashboardDataAsync_ZeroContacts_ReturnsEmptyData()
     {
-        _repositoryMock.Setup(r => r.ListAsNoTrackingAsync<Contact>(
-                It.IsAny<Expression<Func<Contact, bool>>>(),
-                It.IsAny<CancellationToken>()
-                ))
-            .ReturnsAsync([]);
-
-        _repositoryMock.Setup(r => r.ListAsNoTrackingAsync<SignificantDate>(
-                It.IsAny<Expression<Func<SignificantDate, bool>>>(),
-                It.IsAny<CancellationToken>()
-                ))
-            .ReturnsAsync([]);
-
-        _repositoryMock.Setup(r => r.ListProjectedAsync<Relationship, (Guid EntityId, Guid RelatedEntityId)>(
-                It.IsAny<Expression<Func<Relationship, bool>>>(),
-                It.IsAny<Expression<Func<Relationship, (Guid EntityId, Guid RelatedEntityId)>>>(),
-                It.IsAny<CancellationToken>()
-                ))
-            .ReturnsAsync([]);
+        SetupContactSummaries([]);
+        SetupSignificantDates([]);
+        SetupRelationships([]);
 
         DashboardDto result = await _service.GetDashboardDataAsync();
 
@@ -157,11 +161,12 @@ public class DashboardServiceTests
         Assert.Empty(result.GraphLinks);
         Assert.Empty(result.UpcomingEvents);
 
-        // Ensure ListProjectedByChunkedContainsAsync is never called for attachments if no contacts exist
+        // Attachment fetch must be skipped entirely when there are no contacts.
         _repositoryMock.Verify(r => r.ListProjectedAsync<Attachment, (Guid ContactId, Guid AttachmentId)>(
             It.IsAny<Expression<Func<Attachment, bool>>>(),
             It.IsAny<Expression<Func<Attachment, (Guid, Guid)>>>(),
-            It.IsAny<CancellationToken>()), Times.Never);
+            It.IsAny<CancellationToken>()),
+            Times.Never);
     }
 
     [Fact]
@@ -170,34 +175,12 @@ public class DashboardServiceTests
     public async Task GetDashboardDataAsync_NoSignificantDates_ReturnsEmptyUpcomingEvents()
     {
         Guid contactId = Guid.NewGuid();
-        List<Contact> contacts =
-            [new Contact { Id = contactId, FirstName = "Jane", LastName = "Doe", Gender = "Female" }];
+        DateTime now = DateTime.UtcNow;
 
-        _repositoryMock.Setup(r => r.ListAsNoTrackingAsync<Contact>(
-                It.IsAny<Expression<Func<Contact, bool>>>(),
-                It.IsAny<CancellationToken>()
-                ))
-            .ReturnsAsync(contacts);
-
-        _repositoryMock.Setup(r => r.ListProjectedAsync<Attachment, (Guid ContactId, Guid AttachmentId)>(
-                It.IsAny<Expression<Func<Attachment, bool>>>(),
-                It.IsAny<Expression<Func<Attachment, (Guid, Guid)>>>(),
-                It.IsAny<CancellationToken>()))
-            .ReturnsAsync([]);
-
-        // No dates returned
-        _repositoryMock.Setup(r => r.ListAsNoTrackingAsync<SignificantDate>(
-                It.IsAny<Expression<Func<SignificantDate, bool>>>(),
-                It.IsAny<CancellationToken>()
-                ))
-            .ReturnsAsync([]);
-
-        _repositoryMock.Setup(r => r.ListProjectedAsync<Relationship, (Guid EntityId, Guid RelatedEntityId)>(
-                It.IsAny<Expression<Func<Relationship, bool>>>(),
-                It.IsAny<Expression<Func<Relationship, (Guid EntityId, Guid RelatedEntityId)>>>(),
-                It.IsAny<CancellationToken>()
-                ))
-            .ReturnsAsync([]);
+        SetupContactSummaries([new ContactSummary(contactId, "Jane", "Doe", "Female", now, now)]);
+        SetupAttachments([]);
+        SetupSignificantDates([]);
+        SetupRelationships([]);
 
         DashboardDto result = await _service.GetDashboardDataAsync();
 
@@ -212,56 +195,28 @@ public class DashboardServiceTests
     public async Task GetDashboardDataAsync_ExceedsMaxEventsToProcess_LogsWarning()
     {
         Guid contactId = Guid.NewGuid();
-        List<Contact> contacts =
-        [
-            new Contact
-            {
-                Id = contactId,
-                FirstName = "Max",
-                LastName = "Events",
-                Gender = "Male",
-                IsHidden = false
-            }
-        ];
+        DateTime now = DateTime.UtcNow;
 
-        _repositoryMock.Setup(r => r.ListAsNoTrackingAsync<Contact>(
-                It.IsAny<Expression<Func<Contact, bool>>>(),
-                It.IsAny<CancellationToken>()
-                ))
-            .ReturnsAsync(contacts);
+        SetupContactSummaries([new ContactSummary(contactId, "Max", "Events", "Male", now, now)]);
+        SetupAttachments([]);
 
-        _repositoryMock.Setup(r => r.ListProjectedAsync<Attachment, (Guid ContactId, Guid AttachmentId)>(
-                It.IsAny<Expression<Func<Attachment, bool>>>(),
-                It.IsAny<Expression<Func<Attachment, (Guid, Guid)>>>(),
-                It.IsAny<CancellationToken>()))
-            .ReturnsAsync([]);
-
-        // Create 501 dates to trigger the MaxEventsToProcess (500) limit logic
-        List<SignificantDate> dates = Enumerable.Range(0, 501).Select(i => new SignificantDate
+        // 501 dates exceeds MaxEventsToProcess (500) and triggers the warning log.
+        SetupSignificantDates(Enumerable.Range(0, 501).Select(i => new SignificantDate
         {
             ContactId = contactId,
             Title = $"Event {i}",
             EventDate = DateOnly.FromDateTime(DateTime.Today.AddDays(i + 1)),
             IsActive = true
-        }).ToList();
+        }).ToList());
 
-        _repositoryMock.Setup(r => r.ListAsNoTrackingAsync<SignificantDate>(
-                It.IsAny<Expression<Func<SignificantDate, bool>>>(),
-                It.IsAny<CancellationToken>()
-                ))
-            .ReturnsAsync(dates);
+        SetupRelationships([]);
 
-        _repositoryMock.Setup(r => r.ListProjectedAsync<Relationship, (Guid EntityId, Guid RelatedEntityId)>(
-                It.IsAny<Expression<Func<Relationship, bool>>>(),
-                It.IsAny<Expression<Func<Relationship, (Guid EntityId, Guid RelatedEntityId)>>>(),
-                It.IsAny<CancellationToken>()
-                ))
-            .ReturnsAsync([]);
+        _loggerMock.Setup(x => x.IsEnabled(LogLevel.Warning)).Returns(true);
 
         DashboardDto result = await _service.GetDashboardDataAsync();
 
         Assert.NotNull(result);
-        Assert.Equal(5, result.UpcomingEvents.Count); // Should still limit to MaxUpcomingEvents (5)
+        Assert.Equal(5, result.UpcomingEvents.Count);
     }
 
     [Fact]
@@ -269,41 +224,8 @@ public class DashboardServiceTests
         Justification = "Test names can contain underscores for readability.")]
     public async Task GetDashboardDataAsync_EventIsToday_ReturnsToday()
     {
-        Guid contactId = Guid.NewGuid();
-        List<Contact> contacts = [new Contact { Id = contactId, FirstName = "Test", LastName = "User" }];
-
-        _repositoryMock.Setup(r => r.ListAsNoTrackingAsync<Contact>(It.IsAny<Expression<Func<Contact, bool>>>(),
-                It.IsAny<CancellationToken>()))
-            .ReturnsAsync(contacts);
-
-        _repositoryMock.Setup(r =>
-                r.ListProjectedAsync<Attachment, (Guid ContactId, Guid AttachmentId)>(
-                    It.IsAny<Expression<Func<Attachment, bool>>>(),
-                    It.IsAny<Expression<Func<Attachment, (Guid, Guid)>>>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync([]);
-
-        List<SignificantDate> dates =
-        [
-            new SignificantDate
-            {
-                ContactId = contactId,
-                Title = "Event",
-                EventDate = DateOnly.FromDateTime(DateTime.Today),
-                IsActive = true
-            }
-        ];
-        _repositoryMock.Setup(r =>
-                r.ListAsNoTrackingAsync<SignificantDate>(It.IsAny<Expression<Func<SignificantDate, bool>>>(),
-                    It.IsAny<CancellationToken>()))
-            .ReturnsAsync(dates);
-
-        _repositoryMock.Setup(r =>
-                r.ListProjectedAsync<Relationship, (Guid EntityId, Guid RelatedEntityId)>(It.IsAny<Expression<Func<Relationship, bool>>>(),
-                It.IsAny<Expression<Func<Relationship, (Guid EntityId, Guid RelatedEntityId)>>>(),
-                    It.IsAny<CancellationToken>()))
-            .ReturnsAsync([]);
-
-        DashboardDto result = await _service.GetDashboardDataAsync();
+        DashboardDto result = await GetResultForSingleContactEvent(
+            DateOnly.FromDateTime(DateTime.Today));
 
         Assert.Single(result.UpcomingEvents);
         Assert.Equal("Today", result.UpcomingEvents[0].TimeUntil);
@@ -314,41 +236,8 @@ public class DashboardServiceTests
         Justification = "Test names can contain underscores for readability.")]
     public async Task GetDashboardDataAsync_EventIsTomorrow_ReturnsTomorrow()
     {
-        Guid contactId = Guid.NewGuid();
-        List<Contact> contacts = [new Contact { Id = contactId, FirstName = "Test", LastName = "User" }];
-
-        _repositoryMock.Setup(r => r.ListAsNoTrackingAsync<Contact>(It.IsAny<Expression<Func<Contact, bool>>>(),
-                It.IsAny<CancellationToken>()))
-            .ReturnsAsync(contacts);
-
-        _repositoryMock.Setup(r =>
-                r.ListProjectedAsync<Attachment, (Guid ContactId, Guid AttachmentId)>(
-                    It.IsAny<Expression<Func<Attachment, bool>>>(),
-                    It.IsAny<Expression<Func<Attachment, (Guid, Guid)>>>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync([]);
-
-        List<SignificantDate> dates =
-        [
-            new SignificantDate
-            {
-                ContactId = contactId,
-                Title = "Event",
-                EventDate = DateOnly.FromDateTime(DateTime.Today.AddDays(1)),
-                IsActive = true
-            }
-        ];
-        _repositoryMock.Setup(r =>
-                r.ListAsNoTrackingAsync<SignificantDate>(It.IsAny<Expression<Func<SignificantDate, bool>>>(),
-                    It.IsAny<CancellationToken>()))
-            .ReturnsAsync(dates);
-
-        _repositoryMock.Setup(r =>
-                r.ListProjectedAsync<Relationship, (Guid EntityId, Guid RelatedEntityId)>(It.IsAny<Expression<Func<Relationship, bool>>>(),
-                It.IsAny<Expression<Func<Relationship, (Guid EntityId, Guid RelatedEntityId)>>>(),
-                    It.IsAny<CancellationToken>()))
-            .ReturnsAsync([]);
-
-        DashboardDto result = await _service.GetDashboardDataAsync();
+        DashboardDto result = await GetResultForSingleContactEvent(
+            DateOnly.FromDateTime(DateTime.Today.AddDays(1)));
 
         Assert.Single(result.UpcomingEvents);
         Assert.Equal("Tomorrow", result.UpcomingEvents[0].TimeUntil);
@@ -359,43 +248,8 @@ public class DashboardServiceTests
         Justification = "Test names can contain underscores for readability.")]
     public async Task GetDashboardDataAsync_EventIsOverdue_ReturnsOverdue()
     {
-        Guid contactId = Guid.NewGuid();
-        List<Contact> contacts = [new Contact { Id = contactId, FirstName = "Test", LastName = "User" }];
-
-        _repositoryMock.Setup(r => r.ListAsNoTrackingAsync<Contact>(It.IsAny<Expression<Func<Contact, bool>>>(),
-                It.IsAny<CancellationToken>()))
-            .ReturnsAsync(contacts);
-
-        _repositoryMock.Setup(r =>
-                r.ListProjectedAsync<Attachment, (Guid ContactId, Guid AttachmentId)>(
-                    It.IsAny<Expression<Func<Attachment, bool>>>(),
-                    It.IsAny<Expression<Func<Attachment, (Guid, Guid)>>>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync([]);
-
-        // Dates are calculated using GetNextOccurrence(). For an event to be "overdue", the next occurrence must be in the past.
-        List<SignificantDate> dates =
-        [
-            new SignificantDate
-            {
-                ContactId = contactId,
-                Title = "Event",
-                EventDate = DateOnly.FromDateTime(DateTime.Today.AddDays(-1)),
-                IsActive = true
-            }
-        ];
-
-        _repositoryMock.Setup(r =>
-                r.ListAsNoTrackingAsync<SignificantDate>(It.IsAny<Expression<Func<SignificantDate, bool>>>(),
-                    It.IsAny<CancellationToken>()))
-            .ReturnsAsync(dates);
-
-        _repositoryMock.Setup(r =>
-                r.ListProjectedAsync<Relationship, (Guid EntityId, Guid RelatedEntityId)>(It.IsAny<Expression<Func<Relationship, bool>>>(),
-                It.IsAny<Expression<Func<Relationship, (Guid EntityId, Guid RelatedEntityId)>>>(),
-                    It.IsAny<CancellationToken>()))
-            .ReturnsAsync([]);
-
-        DashboardDto result = await _service.GetDashboardDataAsync();
+        DashboardDto result = await GetResultForSingleContactEvent(
+            DateOnly.FromDateTime(DateTime.Today.AddDays(-1)));
 
         Assert.Single(result.UpcomingEvents);
         Assert.Equal("Overdue", result.UpcomingEvents[0].TimeUntil);
@@ -406,42 +260,8 @@ public class DashboardServiceTests
         Justification = "Test names can contain underscores for readability.")]
     public async Task GetDashboardDataAsync_EventIsInFiveDays_ReturnsInFiveDays()
     {
-        Guid contactId = Guid.NewGuid();
-        List<Contact> contacts = [new Contact { Id = contactId, FirstName = "Test", LastName = "User" }];
-
-        _repositoryMock.Setup(r => r.ListAsNoTrackingAsync<Contact>(It.IsAny<Expression<Func<Contact, bool>>>(),
-                It.IsAny<CancellationToken>()))
-            .ReturnsAsync(contacts);
-
-        _repositoryMock.Setup(r =>
-                r.ListProjectedAsync<Attachment, (Guid ContactId, Guid AttachmentId)>(
-                    It.IsAny<Expression<Func<Attachment, bool>>>(),
-                    It.IsAny<Expression<Func<Attachment, (Guid, Guid)>>>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync([]);
-
-        List<SignificantDate> dates =
-        [
-            new SignificantDate
-            {
-                ContactId = contactId,
-                Title = "Event",
-                EventDate = DateOnly.FromDateTime(DateTime.Today.AddDays(5)),
-                IsActive = true
-            }
-        ];
-
-        _repositoryMock.Setup(r =>
-                r.ListAsNoTrackingAsync<SignificantDate>(It.IsAny<Expression<Func<SignificantDate, bool>>>(),
-                    It.IsAny<CancellationToken>()))
-            .ReturnsAsync(dates);
-
-        _repositoryMock.Setup(r =>
-                r.ListProjectedAsync<Relationship, (Guid EntityId, Guid RelatedEntityId)>(It.IsAny<Expression<Func<Relationship, bool>>>(),
-                It.IsAny<Expression<Func<Relationship, (Guid EntityId, Guid RelatedEntityId)>>>(),
-                    It.IsAny<CancellationToken>()))
-            .ReturnsAsync([]);
-
-        DashboardDto result = await _service.GetDashboardDataAsync();
+        DashboardDto result = await GetResultForSingleContactEvent(
+            DateOnly.FromDateTime(DateTime.Today.AddDays(5)));
 
         Assert.Single(result.UpcomingEvents);
         Assert.Equal("In 5 days", result.UpcomingEvents[0].TimeUntil);
@@ -452,42 +272,8 @@ public class DashboardServiceTests
         Justification = "Test names can contain underscores for readability.")]
     public async Task GetDashboardDataAsync_EventIsInOneWeek_ReturnsInOneWeek()
     {
-        Guid contactId = Guid.NewGuid();
-        List<Contact> contacts = [new Contact { Id = contactId, FirstName = "Test", LastName = "User" }];
-
-        _repositoryMock.Setup(r => r.ListAsNoTrackingAsync<Contact>(It.IsAny<Expression<Func<Contact, bool>>>(),
-                It.IsAny<CancellationToken>()))
-            .ReturnsAsync(contacts);
-
-        _repositoryMock.Setup(r =>
-                r.ListProjectedAsync<Attachment, (Guid ContactId, Guid AttachmentId)>(
-                    It.IsAny<Expression<Func<Attachment, bool>>>(),
-                    It.IsAny<Expression<Func<Attachment, (Guid, Guid)>>>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync([]);
-
-        List<SignificantDate> dates =
-        [
-            new SignificantDate
-            {
-                ContactId = contactId,
-                Title = "Event",
-                EventDate = DateOnly.FromDateTime(DateTime.Today.AddDays(7)),
-                IsActive = true
-            }
-        ];
-
-        _repositoryMock.Setup(r =>
-                r.ListAsNoTrackingAsync<SignificantDate>(It.IsAny<Expression<Func<SignificantDate, bool>>>(),
-                    It.IsAny<CancellationToken>()))
-            .ReturnsAsync(dates);
-
-        _repositoryMock.Setup(r =>
-                r.ListProjectedAsync<Relationship, (Guid EntityId, Guid RelatedEntityId)>(It.IsAny<Expression<Func<Relationship, bool>>>(),
-                It.IsAny<Expression<Func<Relationship, (Guid EntityId, Guid RelatedEntityId)>>>(),
-                    It.IsAny<CancellationToken>()))
-            .ReturnsAsync([]);
-
-        DashboardDto result = await _service.GetDashboardDataAsync();
+        DashboardDto result = await GetResultForSingleContactEvent(
+            DateOnly.FromDateTime(DateTime.Today.AddDays(7)));
 
         Assert.Single(result.UpcomingEvents);
         Assert.Equal("In 1 week", result.UpcomingEvents[0].TimeUntil);
@@ -498,42 +284,8 @@ public class DashboardServiceTests
         Justification = "Test names can contain underscores for readability.")]
     public async Task GetDashboardDataAsync_EventIsInTwoWeeks_ReturnsInTwoWeeks()
     {
-        Guid contactId = Guid.NewGuid();
-        List<Contact> contacts = [new Contact { Id = contactId, FirstName = "Test", LastName = "User" }];
-
-        _repositoryMock.Setup(r => r.ListAsNoTrackingAsync<Contact>(It.IsAny<Expression<Func<Contact, bool>>>(),
-                It.IsAny<CancellationToken>()))
-            .ReturnsAsync(contacts);
-
-        _repositoryMock.Setup(r =>
-                r.ListProjectedAsync<Attachment, (Guid ContactId, Guid AttachmentId)>(
-                    It.IsAny<Expression<Func<Attachment, bool>>>(),
-                    It.IsAny<Expression<Func<Attachment, (Guid, Guid)>>>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync([]);
-
-        List<SignificantDate> dates =
-        [
-            new SignificantDate
-            {
-                ContactId = contactId,
-                Title = "Event",
-                EventDate = DateOnly.FromDateTime(DateTime.Today.AddDays(15)),
-                IsActive = true
-            }
-        ];
-
-        _repositoryMock.Setup(r =>
-                r.ListAsNoTrackingAsync<SignificantDate>(It.IsAny<Expression<Func<SignificantDate, bool>>>(),
-                    It.IsAny<CancellationToken>()))
-            .ReturnsAsync(dates);
-
-        _repositoryMock.Setup(r =>
-                r.ListProjectedAsync<Relationship, (Guid EntityId, Guid RelatedEntityId)>(It.IsAny<Expression<Func<Relationship, bool>>>(),
-                It.IsAny<Expression<Func<Relationship, (Guid EntityId, Guid RelatedEntityId)>>>(),
-                    It.IsAny<CancellationToken>()))
-            .ReturnsAsync([]);
-
-        DashboardDto result = await _service.GetDashboardDataAsync();
+        DashboardDto result = await GetResultForSingleContactEvent(
+            DateOnly.FromDateTime(DateTime.Today.AddDays(15)));
 
         Assert.Single(result.UpcomingEvents);
         Assert.Equal("In 2 weeks", result.UpcomingEvents[0].TimeUntil);
