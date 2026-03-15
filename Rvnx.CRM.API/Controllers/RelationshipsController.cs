@@ -22,6 +22,7 @@ public class RelationshipsController(IRelationshipService relationshipService, I
     }
 
     [HttpPost]
+    [ValidateAntiForgeryToken]
     public async Task<IActionResult> Create([FromBody] Relationship model, [FromQuery] string selectedRelationshipType)
     {
         RelationshipOperationResult result = await _relationshipService.CreateRelationshipAsync(model, selectedRelationshipType);
@@ -33,6 +34,7 @@ public class RelationshipsController(IRelationshipService relationshipService, I
     }
 
     [HttpPut("{id}")]
+    [ValidateAntiForgeryToken]
     public async Task<IActionResult> Update(Guid id, [FromBody] Relationship model, [FromQuery] string selectedRelationshipType)
     {
         RelationshipOperationResult result = await _relationshipService.UpdateRelationshipAsync(id, model, selectedRelationshipType);
@@ -40,6 +42,7 @@ public class RelationshipsController(IRelationshipService relationshipService, I
     }
 
     [HttpDelete("{id}")]
+    [ValidateAntiForgeryToken]
     public async Task<IActionResult> Delete(Guid id)
     {
         Core.Models.OperationResult result = await _relationshipService.DeleteRelationshipAsync(id);
