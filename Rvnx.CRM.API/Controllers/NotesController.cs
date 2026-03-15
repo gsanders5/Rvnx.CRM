@@ -21,6 +21,7 @@ public class NotesController(INoteService noteService, IContactReadService conta
     }
 
     [HttpPost]
+    [Microsoft.AspNetCore.Mvc.ValidateAntiForgeryToken]
     public async Task<IActionResult> Create([FromBody] NoteFormViewModel model)
     {
         Core.Models.OperationResult result = await _noteService.CreateAsync(model);
