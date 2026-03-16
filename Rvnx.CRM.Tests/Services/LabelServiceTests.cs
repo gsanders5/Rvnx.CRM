@@ -190,4 +190,92 @@ public class LabelServiceTests
         _mockRepo.Verify(r => r.DeleteAsync(It.IsAny<Expression<Func<ContactLabel, bool>>>(), It.IsAny<CancellationToken>()), Times.Once);
         _mockRepo.Verify(r => r.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
     }
+
+    [Fact]
+    public async Task GetLabelsForContactAsyncReturnsMappedOrderedDtos()
+    {
+        // Arrange
+        Guid contactId = Guid.NewGuid();
+        Guid labelId1 = Guid.NewGuid();
+        Guid labelId2 = Guid.NewGuid();
+
+        List<ContactLabel> contactLabels =
+        [
+            new ContactLabel
+            {
+                ContactId = contactId,
+                LabelId = labelId1,
+                Label = new Label { Id = labelId1, Name = "Zeta", Color = "#000000" }
+            },
+            new ContactLabel
+            {
+                ContactId = contactId,
+                LabelId = labelId2,
+                Label = new Label { Id = labelId2, Name = "Alpha", Color = "#ffffff" }
+            }
+        ];
+
+        _mockRepo.Setup(r => r.ListAsNoTrackingAsync(
+                It.IsAny<Expression<Func<ContactLabel, bool>>>(),
+                It.IsAny<CancellationToken>(),
+                It.IsAny<string[]>()))
+            .ReturnsAsync(contactLabels);
+
+        // Act
+        List<Core.DTOs.Contact.LabelDto> result = await _service.GetLabelsForContactAsync(contactId);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.Equal(2, result.Count);
+
+        // Assert Ordering
+        Assert.Equal("Alpha", result[0].Name);
+        Assert.Equal(labelId2, result[0].Id);
+        Assert.Equal("#ffffff", result[0].Color);
+
+        Assert.Equal("Zeta", result[1].Name);
+        Assert.Equal(labelId1, result[1].Id);
+        Assert.Equal("#000000", result[1].Color);
+    }
+
+    [Fact]
+    public async Task GetLabelsForContactAsyncReturnsEmptyListWhenNoLabelsFound()
+    {
+        // Arrange
+        Guid contactId = Guid.NewGuid();
+
+        _mockRepo.Setup(r => r.ListAsNoTrackingAsync(
+                It.IsAny<Expression<Func<ContactLabel, bool>>>(),
+                It.IsAny<CancellationToken>(),
+                It.IsAny<string[]>()))
+            .ReturnsAsync([]);
+
+        // Act
+        List<Core.DTOs.Contact.LabelDto> result = await _service.GetLabelsForContactAsync(contactId);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.Empty(result);
+    }
+
+    [Fact]
+    public async Task GetLabelsForContactAsyncReturnsEmptyListWhenRepositoryReturnsNull()
+    {
+        // Arrange
+        Guid contactId = Guid.NewGuid();
+
+        _mockRepo.Setup(r => r.ListAsNoTrackingAsync(
+                It.IsAny<Expression<Func<ContactLabel, bool>>>(),
+                It.IsAny<CancellationToken>(),
+                It.IsAny<string[]>()))
+            .ReturnsAsync((List<ContactLabel>?)null!);
+
+        // Act
+        List<Core.DTOs.Contact.LabelDto> result = await _service.GetLabelsForContactAsync(contactId);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.Empty(result);
+    }
+
 }
