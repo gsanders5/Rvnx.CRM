@@ -31,7 +31,7 @@ public class DashboardService(IRepository repository, ILogger<DashboardService> 
     /// <inheritdoc />
     public async Task<DashboardDto> GetDashboardDataAsync()
     {
-        DashboardDto result = new();
+        DashboardDto dashboard = new();
 
         List<ContactSummary> contacts = await _repository.ListProjectedAsync<Contact, ContactSummary>(
             x => !x.IsHidden && !x.IsPartial,
@@ -65,9 +65,9 @@ public class DashboardService(IRepository repository, ILogger<DashboardService> 
         PriorityQueue<UpcomingEventDto, DateTime> topEvents = new();
         await ProcessSignificantDatesAsync(topEvents, contactDict);
 
-        while (topEvents.Count > 0 && result.UpcomingEvents.Count < MaxUpcomingEvents)
+        while (topEvents.Count > 0 && dashboard.UpcomingEvents.Count < MaxUpcomingEvents)
         {
-            result.UpcomingEvents.Add(topEvents.Dequeue());
+            dashboard.UpcomingEvents.Add(topEvents.Dequeue());
         }
 
         foreach (ContactSummary contact in contacts)
@@ -78,7 +78,7 @@ public class DashboardService(IRepository repository, ILogger<DashboardService> 
                 photoUrl = $"/Attachments/Thumbnail/{attachmentId}?maxWidth=80&maxHeight=80";
             }
 
-            result.GraphNodes.Add(new GraphNodeDto
+            dashboard.GraphNodes.Add(new GraphNodeDto
             {
                 Id = contact.Id.ToString(),
                 Name = contact.FullName,
@@ -95,7 +95,7 @@ public class DashboardService(IRepository repository, ILogger<DashboardService> 
 
         foreach ((Guid EntityId, Guid RelatedEntityId) in relationships)
         {
-            result.GraphLinks.Add(new GraphLinkDto
+            dashboard.GraphLinks.Add(new GraphLinkDto
             {
                 Source = EntityId.ToString(),
                 Target = RelatedEntityId.ToString(),
@@ -106,7 +106,7 @@ public class DashboardService(IRepository repository, ILogger<DashboardService> 
         const int MaxRecentContacts = 5;
         DateTime sevenDaysAgo = DateTime.UtcNow.AddDays(-7);
 
-        result.RecentContacts = contacts
+        dashboard.RecentContacts = contacts
             .OrderByDescending(c => c.LastChangedDate)
             .Take(MaxRecentContacts)
             .Select(c => new RecentContactDto
@@ -145,7 +145,7 @@ public class DashboardService(IRepository repository, ILogger<DashboardService> 
         int hiddenContactsCount =
             await _repository.CountAsync<Contact>(x => x.IsHidden && !x.IsPartial);
 
-        result.Stats = new DashboardStatsDto
+        dashboard.Stats = new DashboardStatsDto
         {
             TotalContacts = contacts.Count,
             ContactsWithBirthday = birthdayCount,
@@ -153,7 +153,7 @@ public class DashboardService(IRepository repository, ILogger<DashboardService> 
             ContactsHidden = hiddenContactsCount
         };
 
-        return result;
+        return dashboard;
     }
 
     private async Task ProcessSignificantDatesAsync(
