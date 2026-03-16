@@ -54,6 +54,11 @@ public class Program
                 {
                     options.LoginPath = "/Account/Login";
                     options.LogoutPath = "/Account/Logout";
+
+                    // 🛡️ Sentinel: Enforce secure cookie settings to prevent XSS and ensure transmission over HTTPS
+                    options.Cookie.HttpOnly = true;
+                    options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+                    options.Cookie.SameSite = SameSiteMode.Strict;
                 })
                 .AddOpenIdConnect(options =>
                 {

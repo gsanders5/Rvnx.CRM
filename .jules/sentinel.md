@@ -43,3 +43,7 @@
 **Vulnerability:** The `AttachmentsController.SafeRedirect` method used `Redirect(referer)` when returning users to their previous page after operations like upload.
 **Learning:** Even with an initial check that the `Uri.Host` matches the server host, returning a full `Redirect` with a potentially manipulatable absolute URL string is generally unsafe and can lead to test assertion mismatches or potential bypasses in specific edge cases of URI parsing.
 **Prevention:** Instead of passing the full URL string to `Redirect`, parse it with `Uri.TryCreate`, verify the host, and then explicitly use `LocalRedirect(uri.PathAndQuery)` to guarantee the redirect cannot leave the local domain.
+## 2024-03-16 - Add secure cookie options to Authentication setup
+**Vulnerability:** Weak default cookie settings (HttpOnly and Secure) not explicitly enforced.
+**Learning:** Default cookie settings might not enforce `SecurePolicy` and `SameSiteMode.Strict`, opening up risks to XSS attacks and cross-site requests if cookies are accessible through JavaScript or unencrypted HTTP.
+**Prevention:** Always explicitly configure `options.Cookie.HttpOnly = true`, `options.Cookie.SecurePolicy = CookieSecurePolicy.Always`, and `options.Cookie.SameSite = SameSiteMode.Strict` when adding cookie authentication to `builder.Services.AddAuthentication()`.
