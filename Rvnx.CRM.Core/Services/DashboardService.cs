@@ -120,11 +120,20 @@ public class DashboardService(IRepository repository, ILogger<DashboardService> 
             })
             .ToList();
 
-        HashSet<Guid> contactsWithRelationships =
-        [
-            .. relationships.Select(r => r.EntityId),
-            .. relationships.Select(r => r.RelatedEntityId)
-        ];
+        // Optimization: avoid multiple iterations and collection instantiations by iterating over the relationships collection once
+        int contactsWithRelationshipsCount = 0;
+        HashSet<Guid> uniqueContactsWithRelationships = new(relationships.Count * 2);
+        foreach (var r in relationships)
+        {
+            if (uniqueContactsWithRelationships.Add(r.EntityId) && contactDict.ContainsKey(r.EntityId))
+            {
+                contactsWithRelationshipsCount++;
+            }
+            if (uniqueContactsWithRelationships.Add(r.RelatedEntityId) && contactDict.ContainsKey(r.RelatedEntityId))
+            {
+                contactsWithRelationshipsCount++;
+            }
+        }
 
         int birthdayCount = await _repository.CountAsync<SignificantDate>(sd =>
             sd.ContactId.HasValue &&
@@ -140,7 +149,7 @@ public class DashboardService(IRepository repository, ILogger<DashboardService> 
         {
             TotalContacts = contacts.Count,
             ContactsWithBirthday = birthdayCount,
-            ContactsWithRelationships = contactsWithRelationships.Count(contactDict.ContainsKey),
+            ContactsWithRelationships = contactsWithRelationshipsCount,
             ContactsHidden = hiddenContactsCount
         };
 
