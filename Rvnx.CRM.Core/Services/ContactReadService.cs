@@ -80,11 +80,22 @@ public class ContactReadService(IRepository repository) : IContactReadService
                     cl.Label.Color))
             : [];
 
-        Dictionary<Guid, List<LabelDto>> labelsByContact = allContactLabels
-            .GroupBy(cl => cl.ContactId)
-            .ToDictionary(g => g.Key,
-                g => g.Select(cl => new LabelDto { Id = cl.LabelId, Name = cl.Name, Color = cl.Color })
-                    .OrderBy(l => l.Name).ToList());
+        // Optimization: Use Dictionary with capacity and foreach loop instead of GroupBy().ToDictionary(...)
+        // to avoid allocations of IGrouping structures and redundant list iterations.
+        Dictionary<Guid, List<LabelDto>> labelsByContact = new(allContactLabels.Count);
+        foreach ((Guid ContactId, Guid LabelId, string Name, string? Color) in allContactLabels)
+        {
+            if (!labelsByContact.TryGetValue(ContactId, out List<LabelDto>? labelsList))
+            {
+                labelsList = [];
+                labelsByContact.TryAdd(ContactId, labelsList);
+            }
+            labelsList.Add(new LabelDto { Id = LabelId, Name = Name, Color = Color });
+        }
+        foreach (List<LabelDto> list in labelsByContact.Values)
+        {
+            list.Sort((a, b) => string.Compare(a.Name, b.Name, StringComparison.Ordinal));
+        }
 
         foreach (ContactDto? dto in contactDtos)
         {
