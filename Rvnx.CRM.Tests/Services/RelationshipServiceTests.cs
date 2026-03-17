@@ -54,6 +54,72 @@ public class RelationshipServiceTests
     }
 
     [Fact]
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Naming", "CA1707:Identifiers should not contain underscores", Justification = "Test names follow standard convention")]
+    public void GetRelationshipTypeOptions_Symmetric_ReturnsOneOption()
+    {
+        // Arrange
+        // (No arrange needed as we are using the statically populated list of relationship types)
+
+        // Act
+        List<SelectOptionDto> result = _service.GetRelationshipTypeOptions(EntityTypes.Person);
+
+        // Assert
+        List<SelectOptionDto> spouseOptions = result.Where(x => x.Value.StartsWith(RelationshipTypeIds.Spouse.ToString(), StringComparison.Ordinal)).ToList();
+
+        Assert.Single(spouseOptions);
+        Assert.Equal($"{RelationshipTypeIds.Spouse}_Fwd", spouseOptions[0].Value);
+        Assert.Equal("is Spouse of", spouseOptions[0].Text);
+        Assert.Equal("Family", spouseOptions[0].Group);
+        Assert.False(spouseOptions[0].Selected);
+    }
+
+    [Fact]
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Naming", "CA1707:Identifiers should not contain underscores", Justification = "Test names follow standard convention")]
+    public void GetRelationshipTypeOptions_Asymmetric_ReturnsTwoOptions()
+    {
+        // Arrange
+        // (No arrange needed as we are using the statically populated list of relationship types)
+
+        // Act
+        List<SelectOptionDto> result = _service.GetRelationshipTypeOptions(EntityTypes.Person);
+
+        // Assert
+        List<SelectOptionDto> parentOptions = result.Where(x => x.Value.StartsWith(RelationshipTypeIds.Parent.ToString(), StringComparison.Ordinal)).ToList();
+
+        Assert.Equal(2, parentOptions.Count);
+
+        SelectOptionDto fwdOption = parentOptions.Single(x => x.Value.EndsWith("_Fwd", StringComparison.Ordinal));
+        Assert.Equal($"{RelationshipTypeIds.Parent}_Fwd", fwdOption.Value);
+        Assert.Equal("is Parent of (Child)", fwdOption.Text);
+        Assert.Equal("Family", fwdOption.Group);
+        Assert.False(fwdOption.Selected);
+
+        SelectOptionDto revOption = parentOptions.Single(x => x.Value.EndsWith("_Rev", StringComparison.Ordinal));
+        Assert.Equal($"{RelationshipTypeIds.Parent}_Rev", revOption.Value);
+        Assert.Equal("is Child of (Parent)", revOption.Text);
+        Assert.Equal("Family", revOption.Group);
+        Assert.False(revOption.Selected);
+    }
+
+    [Fact]
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Naming", "CA1707:Identifiers should not contain underscores", Justification = "Test names follow standard convention")]
+    public void GetRelationshipTypeOptions_WithSelectedValue_SetsSelectedFlag()
+    {
+        // Arrange
+        string selectedValue = $"{RelationshipTypeIds.Parent}_Rev";
+
+        // Act
+        List<SelectOptionDto> result = _service.GetRelationshipTypeOptions(EntityTypes.Person, selectedValue);
+
+        // Assert
+        List<SelectOptionDto> parentOptions = result.Where(x => x.Value.StartsWith(RelationshipTypeIds.Parent.ToString(), StringComparison.Ordinal)).ToList();
+
+        Assert.Equal(2, parentOptions.Count);
+        Assert.False(parentOptions.Single(x => x.Value.EndsWith("_Fwd", StringComparison.Ordinal)).Selected);
+        Assert.True(parentOptions.Single(x => x.Value.EndsWith("_Rev", StringComparison.Ordinal)).Selected);
+    }
+
+    [Fact]
     public async Task GetRelatedEntityOptionsAsyncWhenEntityTypeIsCompanyReturnsCompanyOptions()
     {
         Guid entityId = Guid.NewGuid();
