@@ -376,10 +376,10 @@
                                                                 </span>
                                                             </div>
                                                         }
-                                                        <a asp-controller="Relationships" asp-action="Edit" asp-route-id="@rel.Id" class="text-secondary me-2" title="Edit relationship">
+                                                        <a asp-controller="Relationships" asp-action="Edit" asp-route-id="@rel.Id" class="text-secondary me-2" title="Edit relationship" aria-label="Edit relationship with @rel.Name">
                                                             <i class="bi bi-pencil-square"></i>
                                                         </a>
-                                                        <a asp-controller="Relationships" asp-action="Delete" asp-route-id="@rel.Id" asp-route-returnUrl="@(Context.Request.Path + Context.Request.QueryString)" class="text-danger" title="Delete relationship">
+                                                        <a asp-controller="Relationships" asp-action="Delete" asp-route-id="@rel.Id" asp-route-returnUrl="@(Context.Request.Path + Context.Request.QueryString)" class="text-danger" title="Delete relationship" aria-label="Delete relationship with @rel.Name">
                                                             <i class="bi bi-trash"></i>
                                                         </a>
                                                     </div>
@@ -637,7 +637,7 @@
                                 <div class="card-body p-2 d-flex flex-column justify-content-between">
                                     <div class="d-flex align-items-center mb-2">
                                         <i class="bi @(isImage ? "bi-image" : iconClass) me-2 text-secondary small"></i>
-                                        <a asp-controller="Attachments" asp-action="Download" asp-route-id="@attachment.Id" class="text-truncate text-decoration-none small text-dark flex-grow-1" title="@attachment.FileName">
+                                        <a asp-controller="Attachments" asp-action="Download" asp-route-id="@attachment.Id" class="text-truncate text-decoration-none small text-dark flex-grow-1" title="@attachment.FileName" aria-label="Download @attachment.FileName">
                                             @attachment.FileName
                                         </a>
                                     </div>
@@ -690,10 +690,10 @@
 <!-- Fullscreen Media Lightbox Container -->
 <div id="media-lightbox">
     <div class="lightbox-toolbar">
-        <a id="lightbox-open-original" href="#" target="_blank" title="Open Original">
+        <a id="lightbox-open-original" href="#" target="_blank" title="Open Original" aria-label="Open original image in new tab">
             <i class="bi bi-box-arrow-up-right"></i>
         </a>
-        <button id="lightbox-close" title="Close">
+        <button id="lightbox-close" title="Close" aria-label="Close lightbox">
             <i class="bi bi-x-lg"></i>
         </button>
     </div>
