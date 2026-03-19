@@ -14,7 +14,7 @@
             <input type="hidden" asp-for="EntityType"/>
 
             <div class="form-floating mb-3">
-                <select asp-for="Type" asp-items="Html.GetEnumSelectList<Rvnx.CRM.Core.Enumerations.ContactMethodType>()" class="form-select" id="Type"></select>
+                <select asp-for="Type" asp-items="Html.GetEnumSelectList<Rvnx.CRM.Core.Enumerations.ContactMethodType>()" class="form-select" id="Type" autofocus></select>
                 <label asp-for="Type">Type</label>
                 <span asp-validation-for="Type" class="text-danger"></span>
             </div>
