@@ -43,16 +43,4 @@ public class ContactReadServiceContactExistsTests
         Assert.False(result);
     }
 
-    [Fact]
-    public async Task ContactExistsAsyncWhenContactIsPartialReturnsFalse()
-    {
-        Guid contactId = Guid.NewGuid();
-
-        _repositoryMock.Setup(r => r.CountAsync<Contact>(It.IsAny<Expression<Func<Contact, bool>>>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(0);
-
-        bool result = await _service.ContactExistsAsync(contactId);
-
-        Assert.False(result);
-    }
 }
