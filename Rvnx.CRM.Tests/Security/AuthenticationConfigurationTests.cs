@@ -1,4 +1,6 @@
+using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.Configuration;
+using Rvnx.CRM.Web;
 
 namespace Rvnx.CRM.Tests.Security;
 
@@ -24,32 +26,20 @@ public class AuthenticationConfigurationTests
     [Fact]
     public void ValidationLogicShouldThrowWhenAuthEnabledAndSecretMissing()
     {
-        Dictionary<string, string?> authSettings = new()
-        {
-            {"Authentication:Enabled", "true"},
-            {"Authentication:Authority", ""},
-            {"Authentication:ClientId", "test-id"},
-            {"Authentication:ClientSecret", "test-secret"}
-        };
-
-        IConfigurationRoot config = new ConfigurationBuilder()
-            .AddInMemoryCollection(authSettings)
-            .Build();
-
-        IConfigurationSection authConfig = config.GetSection("Authentication");
-        bool authEnabled = authConfig.GetValue<bool>("Enabled");
-
-        if (authEnabled)
-        {
-            Assert.Throws<InvalidOperationException>(() =>
+        var factory = new WebApplicationFactory<Program>()
+            .WithWebHostBuilder(builder =>
             {
-                if (string.IsNullOrWhiteSpace(authConfig["Authority"]) ||
-                    string.IsNullOrWhiteSpace(authConfig["ClientId"]) ||
-                    string.IsNullOrWhiteSpace(authConfig["ClientSecret"]))
-                {
-                    throw new InvalidOperationException("Authentication is enabled but Authority, ClientId, or ClientSecret is missing in configuration.");
-                }
+                builder.UseSetting("Authentication:Enabled", "true");
+                builder.UseSetting("Authentication:Authority", "");
+                builder.UseSetting("Authentication:ClientId", "test-id");
+                builder.UseSetting("Authentication:ClientSecret", "test-secret");
             });
-        }
+
+        var ex = Assert.Throws<InvalidOperationException>(() =>
+        {
+            factory.CreateClient();
+        });
+
+        Assert.Contains("Authentication is enabled but Authority is missing.", ex.Message);
     }
 }

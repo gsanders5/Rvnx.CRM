@@ -36,8 +36,11 @@ public class Program
 
         if (authEnabled)
         {
-            if (string.IsNullOrWhiteSpace(authConfig["Authority"]) ||
-                string.IsNullOrWhiteSpace(authConfig["ClientId"]) ||
+            if (string.IsNullOrWhiteSpace(authConfig["Authority"]))
+            {
+                throw new InvalidOperationException("Authentication is enabled but Authority is missing.");
+            }
+            if (string.IsNullOrWhiteSpace(authConfig["ClientId"]) ||
                 string.IsNullOrWhiteSpace(authConfig["ClientSecret"]))
             {
                 throw new InvalidOperationException(
@@ -125,6 +128,7 @@ public class Program
                 context.Response.Headers["X-Content-Type-Options"] = "nosniff";
                 context.Response.Headers["X-Frame-Options"] = "SAMEORIGIN";
                 context.Response.Headers["X-XSS-Protection"] = "1; mode=block";
+                context.Response.Headers["Content-Security-Policy"] = "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:;";
                 return Task.CompletedTask;
             });
             await next();
