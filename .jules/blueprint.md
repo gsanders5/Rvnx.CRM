@@ -39,3 +39,6 @@
 
 **Learning:** String-manipulation logic (`ExtractUsername` for social media URIs) incorrectly resided in the `Web` layer (`SocialMediaEmbedHelper`) despite being a domain-level data normalization rule.
 **Action:** When finding logic that normalizes or validates strings representing domain concepts, verify it lives in `Core` (like `SocialMediaUrlNormalizer`). Move it if it's currently in a Web layer helper to centralize the rules.
+## 2025-03-20 - Removed EF Core attributes from `Fact` domain model in `Core`
+**Learning:** Found an instance where an EF Core model (`Fact`) in the `Core` layer was polluted with presentation (`[Display]`) and persistence (`[Table]`, `[ForeignKey]`, `[Required]`, `[MaxLength]`) attributes, which violated the clean separation of concerns and layered architecture dependency rules.
+**Action:** When a domain entity in `Core` is decorated with infrastructure or presentation attributes, remove them from the entity and configure them using the Fluent API in the corresponding DbContext inside the `Infrastructure` layer to keep `Core` decoupled and pure.

@@ -84,13 +84,23 @@ public class CRMDbContext(DbContextOptions<CRMDbContext> options, ICurrentUserSe
             .ToTable(t => t.HasCheckConstraint("CHK_ContactMethod_Owner", "ContactId IS NOT NULL"));
 
         modelBuilder.Entity<Fact>()
+            .ToTable("Fact", t => t.HasCheckConstraint("CHK_Fact_Owner", "ContactId IS NOT NULL"));
+
+        modelBuilder.Entity<Fact>()
             .HasOne(e => e.Contact)
             .WithMany(c => c.Facts)
             .HasForeignKey(e => e.ContactId)
             .OnDelete(DeleteBehavior.Cascade);
 
         modelBuilder.Entity<Fact>()
-            .ToTable(t => t.HasCheckConstraint("CHK_Fact_Owner", "ContactId IS NOT NULL"));
+            .Property(e => e.Category)
+            .IsRequired()
+            .HasMaxLength(100);
+
+        modelBuilder.Entity<Fact>()
+            .Property(e => e.Value)
+            .IsRequired()
+            .HasMaxLength(500);
 
         modelBuilder.Entity<Address>()
             .HasOne(e => e.Contact)
