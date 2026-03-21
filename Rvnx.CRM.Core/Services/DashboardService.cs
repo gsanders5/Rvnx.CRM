@@ -123,13 +123,13 @@ public class DashboardService(IRepository repository, ILogger<DashboardService> 
         // Optimization: avoid multiple iterations and collection instantiations by iterating over the relationships collection once
         int contactsWithRelationshipsCount = 0;
         HashSet<Guid> uniqueContactsWithRelationships = new(relationships.Count * 2);
-        foreach (var r in relationships)
+        foreach (var relationship in relationships)
         {
-            if (uniqueContactsWithRelationships.Add(r.EntityId) && contactDict.ContainsKey(r.EntityId))
+            if (uniqueContactsWithRelationships.Add(relationship.EntityId) && contactDict.ContainsKey(relationship.EntityId))
             {
                 contactsWithRelationshipsCount++;
             }
-            if (uniqueContactsWithRelationships.Add(r.RelatedEntityId) && contactDict.ContainsKey(r.RelatedEntityId))
+            if (uniqueContactsWithRelationships.Add(relationship.RelatedEntityId) && contactDict.ContainsKey(relationship.RelatedEntityId))
             {
                 contactsWithRelationshipsCount++;
             }
