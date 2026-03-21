@@ -89,3 +89,8 @@ Action: When a service builds a read-only in-memory aggregate (graph nodes, rece
 ## 2026-05-24 - GroupBy Overhead when Creating Dictionary of Collections
 **Learning:** Creating a `Dictionary<K, List<V>>` using `.GroupBy(x => x.Key).ToDictionary(...)` introduces unnecessary overhead due to the instantiation of intermediate `IGrouping` structures.
 **Action:** Pre-allocate a `Dictionary` and populate it manually using a `foreach` loop. If a list doesn't exist for a key, initialize it and `.TryAdd()` it, then add the item to the list. This avoids `GroupBy` allocations entirely and provides a significant performance boost for in-memory mapping operations.
+
+## 2026-03-21 - N+1 Optimization in MergeService Duplicate Resolution
+
+**Learning:** `MergeService.cs` was executing N+1 queries during duplicate resolution by iterating through duplicates for `ContactMethod`, `SignificantDate`, `Relationship`, and `Pet` and calling `_repository.DeleteAsync(entity.Id)` inside the loop for each duplicate found.
+**Action:** Replaced single delete calls inside the loop with batch deletion. Duplicate entities are added to a `List<T>` inside the loop, and `_repository.DeleteRangeAsync(list)` is called outside the loop to execute a single bulk delete query.

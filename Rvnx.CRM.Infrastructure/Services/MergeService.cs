@@ -86,6 +86,7 @@ public class MergeService(CRMDbContext context, IRepository repository) : IMerge
             List<ContactMethod> secondaryMethods = await _repository.ListAsync<ContactMethod>(m => m.ContactId == secondaryId);
 
             HashSet<(Core.Enumerations.ContactMethodType Type, string)> existingMethods = primaryMethods.Select(m => (m.Type, m.Value.ToLowerInvariant())).ToHashSet();
+            List<ContactMethod> methodsToDelete = [];
             foreach (ContactMethod method in secondaryMethods)
             {
                 if (!existingMethods.Contains((method.Type, method.Value.ToLowerInvariant())))
@@ -95,14 +96,19 @@ public class MergeService(CRMDbContext context, IRepository repository) : IMerge
                 }
                 else
                 {
-                    await _repository.DeleteAsync<ContactMethod>(method.Id);
+                    methodsToDelete.Add(method);
                 }
+            }
+            if (methodsToDelete.Count > 0)
+            {
+                await _repository.DeleteRangeAsync(methodsToDelete);
             }
 
             List<SignificantDate> primaryDates = await _repository.ListAsync<SignificantDate>(d => d.ContactId == primaryId);
             List<SignificantDate> secondaryDates = await _repository.ListAsync<SignificantDate>(d => d.ContactId == secondaryId);
 
             HashSet<(string?, DateOnly EventDate)> existingDates = primaryDates.Select(d => (d.Title?.ToLowerInvariant(), d.EventDate)).ToHashSet();
+            List<SignificantDate> datesToDelete = [];
             foreach (SignificantDate date in secondaryDates)
             {
                 if (!existingDates.Contains((date.Title?.ToLowerInvariant(), date.EventDate)))
@@ -112,8 +118,12 @@ public class MergeService(CRMDbContext context, IRepository repository) : IMerge
                 }
                 else
                 {
-                    await _repository.DeleteAsync<SignificantDate>(date.Id);
+                    datesToDelete.Add(date);
                 }
+            }
+            if (datesToDelete.Count > 0)
+            {
+                await _repository.DeleteRangeAsync(datesToDelete);
             }
 
             List<Fact> facts = await _repository.ListAsync<Fact>(f => f.ContactId == secondaryId);
@@ -126,6 +136,7 @@ public class MergeService(CRMDbContext context, IRepository repository) : IMerge
             List<Relationship> secondaryRels = await _repository.ListAsync<Relationship>(r => r.EntityId == secondaryId);
 
             HashSet<(Guid RelatedEntityId, Guid RelationshipTypeId)> existingRels = primaryRels.Select(r => (r.RelatedEntityId, r.RelationshipTypeId)).ToHashSet();
+            List<Relationship> relsToDelete = [];
             foreach (Relationship rel in secondaryRels)
             {
                 if (!existingRels.Contains((rel.RelatedEntityId, rel.RelationshipTypeId)))
@@ -135,7 +146,7 @@ public class MergeService(CRMDbContext context, IRepository repository) : IMerge
                 }
                 else
                 {
-                    await _repository.DeleteAsync<Relationship>(rel.Id);
+                    relsToDelete.Add(rel);
                 }
             }
 
@@ -146,7 +157,7 @@ public class MergeService(CRMDbContext context, IRepository repository) : IMerge
                 if (rel.EntityId == primaryId)
                 {
                     // Primary is already related to Secondary, delete this duplicate connection
-                    await _repository.DeleteAsync<Relationship>(rel.Id);
+                    relsToDelete.Add(rel);
                 }
                 else
                 {
@@ -161,15 +172,20 @@ public class MergeService(CRMDbContext context, IRepository repository) : IMerge
                     }
                     else
                     {
-                        await _repository.DeleteAsync<Relationship>(rel.Id);
+                        relsToDelete.Add(rel);
                     }
                 }
+            }
+            if (relsToDelete.Count > 0)
+            {
+                await _repository.DeleteRangeAsync(relsToDelete);
             }
 
             List<Pet> primaryPets = await _repository.ListAsync<Pet>(p => p.ContactId == primaryId);
             List<Pet> secondaryPets = await _repository.ListAsync<Pet>(p => p.ContactId == secondaryId);
 
             HashSet<string> existingPets = primaryPets.Select(p => p.Name.ToLowerInvariant()).ToHashSet();
+            List<Pet> petsToDelete = [];
             foreach (Pet pet in secondaryPets)
             {
                 if (!existingPets.Contains(pet.Name.ToLowerInvariant()))
@@ -179,8 +195,12 @@ public class MergeService(CRMDbContext context, IRepository repository) : IMerge
                 }
                 else
                 {
-                    await _repository.DeleteAsync<Pet>(pet.Id);
+                    petsToDelete.Add(pet);
                 }
+            }
+            if (petsToDelete.Count > 0)
+            {
+                await _repository.DeleteRangeAsync(petsToDelete);
             }
 
             await _repository.UpdateAsync(primary);
