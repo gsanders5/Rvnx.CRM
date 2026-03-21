@@ -290,4 +290,58 @@ public class DashboardServiceTests
         Assert.Single(result.UpcomingEvents);
         Assert.Equal("In 2 weeks", result.UpcomingEvents[0].TimeUntil);
     }
+
+    [Fact]
+    [SuppressMessage("Naming", "CA1707:Identifiers should not contain underscores",
+        Justification = "Test names can contain underscores for readability.")]
+    public async Task GetDashboardDataAsync_CalculatesStatsAndRecentContactsCorrectly()
+    {
+        Guid contactId1 = Guid.NewGuid();
+        Guid contactId2 = Guid.NewGuid();
+        Guid contactId3 = Guid.NewGuid();
+        DateTime now = DateTime.UtcNow;
+        DateTime oldDate = now.AddDays(-10);
+
+        SetupContactSummaries([
+            new ContactSummary(contactId1, "Alice", "Smith", "Female", now, now), // New contact
+            new ContactSummary(contactId2, "Bob", "Jones", "Male", oldDate, oldDate), // Old contact
+            new ContactSummary(contactId3, "Charlie", "Brown", "Male", oldDate, now.AddDays(-1)) // Old contact, recently changed
+        ]);
+
+        SetupAttachments([]);
+        SetupSignificantDates([]);
+
+        // Alice and Bob have a relationship. Charlie has no relationships.
+        SetupRelationships([(contactId1, contactId2)]);
+
+        // Set up mock counts for birthday and hidden contacts
+        _repositoryMock
+            .Setup(r => r.CountAsync<SignificantDate>(It.IsAny<Expression<Func<SignificantDate, bool>>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(1); // 1 birthday
+        _repositoryMock
+            .Setup(r => r.CountAsync<Contact>(It.IsAny<Expression<Func<Contact, bool>>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(2); // 2 hidden contacts
+
+        DashboardDto result = await _service.GetDashboardDataAsync();
+
+        Assert.NotNull(result);
+
+        // Assert Stats
+        Assert.NotNull(result.Stats);
+        Assert.Equal(3, result.Stats.TotalContacts);
+        Assert.Equal(1, result.Stats.ContactsWithBirthday);
+        Assert.Equal(2, result.Stats.ContactsWithRelationships); // Alice and Bob
+        Assert.Equal(2, result.Stats.ContactsHidden);
+
+        // Assert RecentContacts (should be sorted by LastChangedDate descending)
+        Assert.NotNull(result.RecentContacts);
+        Assert.Equal(3, result.RecentContacts.Count);
+        Assert.Equal(contactId1, result.RecentContacts[0].Id); // Alice (LastChangedDate = now)
+        Assert.Equal(contactId3, result.RecentContacts[1].Id); // Charlie (LastChangedDate = now - 1 day)
+        Assert.Equal(contactId2, result.RecentContacts[2].Id); // Bob (LastChangedDate = now - 10 days)
+
+        Assert.True(result.RecentContacts[0].IsNew);
+        Assert.False(result.RecentContacts[1].IsNew);
+        Assert.False(result.RecentContacts[2].IsNew);
+    }
 }
