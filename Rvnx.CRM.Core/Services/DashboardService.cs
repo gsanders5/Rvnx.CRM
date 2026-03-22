@@ -63,7 +63,7 @@ public class DashboardService(IRepository repository, ILogger<DashboardService> 
         }
 
         PriorityQueue<UpcomingEventDto, DateTime> topEvents = new();
-        await ProcessSignificantDatesAsync(topEvents, contactDict);
+        await EnqueueUpcomingEventsAsync(topEvents, contactDict);
 
         while (topEvents.Count > 0 && dashboard.UpcomingEvents.Count < MaxUpcomingEvents)
         {
@@ -156,7 +156,7 @@ public class DashboardService(IRepository repository, ILogger<DashboardService> 
         return dashboard;
     }
 
-    private async Task ProcessSignificantDatesAsync(
+    private async Task EnqueueUpcomingEventsAsync(
         PriorityQueue<UpcomingEventDto, DateTime> topEvents,
         Dictionary<Guid, ContactSummary> contactDict)
     {
