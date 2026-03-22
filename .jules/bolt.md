@@ -94,3 +94,7 @@ Action: When a service builds a read-only in-memory aggregate (graph nodes, rece
 
 **Learning:** `MergeService.cs` was executing N+1 queries during duplicate resolution by iterating through duplicates for `ContactMethod`, `SignificantDate`, `Relationship`, and `Pet` and calling `_repository.DeleteAsync(entity.Id)` inside the loop for each duplicate found.
 **Action:** Replaced single delete calls inside the loop with batch deletion. Duplicate entities are added to a `List<T>` inside the loop, and `_repository.DeleteRangeAsync(list)` is called outside the loop to execute a single bulk delete query.
+
+## 2025-02-14 - HashSet Initialization Optimization
+**Learning:** In modern .NET, replacing a LINQ-heavy sequence like `.Select().Concat().ToHashSet()` with a pre-allocated `HashSet` and a single `foreach` loop eliminates multiple LINQ iterator state machine allocations, reduces collection passes, and avoids costly dynamic array resizing during insertion.
+**Action:** When gathering related entity IDs or performing similar aggregations into a HashSet, manually pre-allocate the HashSet using `.Count * X` capacity and populate it via a single loop instead of chaining LINQ collection extensions.
