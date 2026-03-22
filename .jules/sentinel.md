@@ -48,7 +48,7 @@
 **Learning:** Default cookie settings might not enforce `SecurePolicy` and `SameSiteMode.Strict`, opening up risks to XSS attacks and cross-site requests if cookies are accessible through JavaScript or unencrypted HTTP.
 **Prevention:** Always explicitly configure `options.Cookie.HttpOnly = true`, `options.Cookie.SecurePolicy = CookieSecurePolicy.Always`, and `options.Cookie.SameSite = SameSiteMode.Strict` when adding cookie authentication to `builder.Services.AddAuthentication()`.
 
-## 2024-03-20 - Replace ExecuteSqlRawAsync with ExecuteUpdateAsync
+## 2026-03-22 - Replace ExecuteSqlRawAsync with ExecuteUpdateAsync
 **Vulnerability:** Risk of SQL injection via string interpolation when constructing raw SQL queries with `ExecuteSqlRawAsync`. Although the table name was sourced from EF Core metadata, it was still flagged by the `EF1002` analyzer.
 **Learning:** EF Core 7+ introduced `ExecuteUpdateAsync`, a safer, strongly-typed alternative for bulk updates that avoids raw SQL entirely.
 **Prevention:** Always prefer `ExecuteUpdateAsync` over `ExecuteSqlRawAsync` for bulk updates in EF Core to eliminate SQL injection risks. Ensure a fallback is provided for in-memory databases used in testing.

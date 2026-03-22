@@ -157,6 +157,10 @@ public class DebugOperationsService(
     {
         if (_context.Database.IsRelational())
         {
+            // Note: ExecuteUpdateAsync bypasses SaveChangesAsync and audit field population.
+            // This is intentional — we are bulk-migrating GroupId across all tables and
+            // do not want to touch LastChangedDate/LastChangedBy.
+            // Also note: The relational path is not explicitly covered by unit tests, which rely on the InMemory fallback below.
             await _repository.QueryUnfiltered<T>()
                 .Where(e => e.GroupId == discardedGroupId)
                 .ExecuteUpdateAsync(s => s.SetProperty(e => e.GroupId, keptGroupId));
