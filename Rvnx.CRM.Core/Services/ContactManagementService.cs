@@ -54,10 +54,13 @@ public class ContactManagementService(IRepository repository, IFileValidationSer
                     chunk => r => (chunk.Contains(r.EntityId) || chunk.Contains(r.RelatedEntityId)) && r.EntityType == EntityTypes.Person,
                     asNoTracking: false);
 
-                HashSet<Guid> allInvolvedIds = allPartialRels
-                    .Select(r => r.EntityId)
-                    .Concat(allPartialRels.Select(r => r.RelatedEntityId))
-                    .ToHashSet();
+                // Optimization: avoid multiple iterations and LINQ enumerations by iterating once over the relationships
+                HashSet<Guid> allInvolvedIds = new(allPartialRels.Count * 2);
+                foreach (Relationship r in allPartialRels)
+                {
+                    allInvolvedIds.Add(r.EntityId);
+                    allInvolvedIds.Add(r.RelatedEntityId);
+                }
 
                 List<Guid> potentialFullContactIds = allInvolvedIds.Except(partialContactIds).ToList();
                 HashSet<Guid> confirmedFullContactIds = [];
