@@ -141,6 +141,33 @@ public class ContactsControllerTests
         }
 
         [Fact]
+        public async Task CreatePostWithInvalidDataShouldReturnViewWithPopulatedOptions()
+        {
+            ContactCreateViewModel dto = new()
+            {
+                FirstName = "", // Invalid: Missing required field
+                LastName = "User",
+            };
+
+            // Simulate validation error
+            _controller.ModelState.AddModelError("FirstName", "Required");
+
+            IActionResult result = await _controller.Create(dto);
+
+            ViewResult viewResult = Assert.IsType<ViewResult>(result);
+            ContactCreateViewModel model = Assert.IsAssignableFrom<ContactCreateViewModel>(viewResult.Model);
+
+            Assert.False(_controller.ModelState.IsValid);
+            Assert.False(model.IsSelfCreate);
+            Assert.NotNull(model.PronounOptions);
+            Assert.NotEmpty(model.PronounOptions);
+            Assert.NotNull(model.GenderOptions);
+            Assert.NotEmpty(model.GenderOptions);
+
+            _contactManagementServiceMock.Verify(s => s.CreateContactAsync(It.IsAny<ContactFormDto>()), Times.Never);
+        }
+
+        [Fact]
         public async Task CreatePostWithValidDataShouldCreateContactAndRelatedEntities()
         {
             ContactCreateViewModel dto = new()
@@ -172,6 +199,54 @@ public class ContactsControllerTests
             Assert.Equal("Index", redirectResult.ActionName);
 
             _contactManagementServiceMock.Verify(s => s.DeleteContactAsync(contactId), Times.Once);
+        }
+
+        [Fact]
+        public async Task EditPostWithInvalidDataShouldReturnViewWithPopulatedOptions()
+        {
+            Guid contactId = Guid.NewGuid();
+            Guid profileImageId = Guid.NewGuid();
+
+            ContactFormDto dto = new()
+            {
+                Id = contactId,
+                FirstName = "", // Invalid
+                LastName = "User"
+            };
+
+            // Simulate validation error
+            _controller.ModelState.AddModelError("FirstName", "Required");
+
+            _contactReadServiceMock.Setup(s => s.ContactExistsAsync(contactId)).ReturnsAsync(true);
+
+            ContactFormDto formConfig = new()
+            {
+                Id = contactId,
+                AllLabels = [new LabelDto { Id = Guid.NewGuid(), Name = "Friend" }],
+                AssignedLabelIds = [Guid.NewGuid()],
+                ProfileImageId = profileImageId
+            };
+
+            _contactReadServiceMock.Setup(s => s.GetContactFormAsync(contactId)).ReturnsAsync(formConfig);
+
+            IActionResult result = await _controller.Edit(contactId, dto, null);
+
+            ViewResult viewResult = Assert.IsType<ViewResult>(result);
+            ContactEditViewModel model = Assert.IsAssignableFrom<ContactEditViewModel>(viewResult.Model);
+
+            Assert.False(_controller.ModelState.IsValid);
+            Assert.Equal(contactId, model.Id);
+            Assert.NotNull(model.PronounOptions);
+            Assert.NotEmpty(model.PronounOptions);
+            Assert.NotNull(model.GenderOptions);
+            Assert.NotEmpty(model.GenderOptions);
+
+            // Ensure labels and profile image id are mapped correctly from formConfig
+            Assert.Single(model.AllLabels);
+            Assert.Single(model.AssignedLabelIds);
+            Assert.Equal(profileImageId, model.ProfileImageId);
+
+            _contactManagementServiceMock.Verify(s => s.UpdateContactAsync(It.IsAny<Guid>(), It.IsAny<ContactFormDto>(), It.IsAny<Stream>(), It.IsAny<string>(), It.IsAny<string>()), Times.Never);
         }
 
         [Fact]
