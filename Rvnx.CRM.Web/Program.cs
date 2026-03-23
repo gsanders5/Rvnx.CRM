@@ -133,7 +133,7 @@ public class Program
                 context.Response.Headers["X-Content-Type-Options"] = "nosniff";
                 context.Response.Headers["X-Frame-Options"] = "SAMEORIGIN";
                 context.Response.Headers["X-XSS-Protection"] = "1; mode=block";
-                context.Response.Headers["Content-Security-Policy"] = "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:;";
+                context.Response.Headers["Content-Security-Policy"] = "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://cdn.datatables.net; style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://fonts.googleapis.com https://cdn.jsdelivr.net https://cdn.datatables.net; font-src 'self' https://cdnjs.cloudflare.com https://fonts.gstatic.com https://cdn.jsdelivr.net; img-src 'self' data: https://cdn.datatables.net;";
                 return Task.CompletedTask;
             });
             await next();

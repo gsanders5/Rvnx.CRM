@@ -1,3 +1,38 @@
+:root {
+  /* Unique and consistent color scheme (Light Mode) */
+  --mdb-primary: #3768c5;
+  --mdb-primary-rgb: 55, 104, 197;
+  --mdb-success: #08bd92;
+  --mdb-success-rgb: 8, 189, 146;
+
+  --mdb-body-bg: #f5f6f8;
+  --mdb-body-bg-rgb: 245, 246, 248;
+  --mdb-surface-bg: #ffffff;
+  --mdb-surface-bg-rgb: 255, 255, 255;
+
+  --mdb-body-color: #1a1d20;
+  --mdb-surface-color: #1a1d20;
+  --mdb-secondary-color: #6c757d;
+  --mdb-tertiary-bg: #e2eaf7;
+  --mdb-border-color: #e0e0e0;
+}
+
+[data-mdb-theme="dark"] {
+  /* Unique and consistent color scheme (Dark Mode) matching screenshot */
+  --mdb-body-bg: #171c22;
+  --mdb-body-bg-rgb: 23, 28, 34;
+  --mdb-surface-bg: #262d37;
+  --mdb-surface-bg-rgb: 38, 45, 55;
+
+  --mdb-body-color: #feffff;
+  --mdb-surface-color: #feffff;
+  --mdb-secondary-color: #83888e;
+  --mdb-secondary-bg: #262d37;
+  --mdb-tertiary-bg: #1f252d;
+  --mdb-border-color: #3e4751;
+  --mdb-border-color-translucent: rgba(255, 255, 255, 0.1);
+}
+
 html {
   font-size: 16px;
 }
@@ -8,10 +43,6 @@ html {
   }
 }
 
-/*.btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
-  box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
-}*/
-
 html {
   position: relative;
   min-height: 100%;
@@ -19,6 +50,21 @@ html {
 
 body {
   margin-bottom: 60px;
+  background-color: var(--mdb-body-bg);
+  color: var(--mdb-body-color);
+}
+
+.navbar {
+  background-color: var(--mdb-surface-bg) !important;
+}
+
+.navbar .nav-link,
+.navbar .navbar-brand {
+  color: var(--mdb-body-color) !important;
+}
+
+.navbar .navbar-toggler {
+  color: var(--mdb-body-color);
 }
 
 /*.form-floating > .form-control-plaintext::placeholder, .form-floating > .form-control::placeholder {
