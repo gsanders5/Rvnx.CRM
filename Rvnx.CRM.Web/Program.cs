@@ -126,6 +126,18 @@ public class Program
         });
 
 
+        string csp = "default-src 'self' https:; " +
+                     "script-src 'self' 'unsafe-inline' 'unsafe-eval' https:; " +
+                     "style-src 'self' 'unsafe-inline' https:; " +
+                     "font-src 'self' https: data:; " +
+                     "img-src 'self' data: https:; " +
+                     "connect-src 'self' https:;";
+
+        if (app.Environment.IsDevelopment())
+        {
+            csp += " http://localhost:* ws://localhost:* wss://localhost:*;";
+        }
+
         app.Use(async (context, next) =>
         {
             context.Response.OnStarting(() =>
@@ -133,7 +145,7 @@ public class Program
                 context.Response.Headers["X-Content-Type-Options"] = "nosniff";
                 context.Response.Headers["X-Frame-Options"] = "SAMEORIGIN";
                 context.Response.Headers["X-XSS-Protection"] = "1; mode=block";
-                context.Response.Headers["Content-Security-Policy"] = "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://cdn.datatables.net; style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://fonts.googleapis.com https://cdn.jsdelivr.net https://cdn.datatables.net; font-src 'self' https://cdnjs.cloudflare.com https://fonts.gstatic.com https://cdn.jsdelivr.net; img-src 'self' data: https://cdn.datatables.net;";
+                context.Response.Headers["Content-Security-Policy"] = csp;
                 return Task.CompletedTask;
             });
             await next();
