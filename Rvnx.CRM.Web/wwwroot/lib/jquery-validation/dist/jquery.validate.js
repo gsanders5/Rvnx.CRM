@@ -1082,6 +1082,16 @@ $.extend( $.validator, {
 				element = this.findByName( element.name );
 			}
 
+			// Normalize jQuery objects to underlying DOM elements
+			if ( element && element.jquery ) {
+				element = element[ 0 ];
+			}
+
+			// If the target is not a DOM element (e.g., null/undefined), there is nothing to validate
+			if ( !element || element.nodeType !== 1 ) {
+				return undefined;
+			}
+
 			// Always apply ignore filter
 			return $( element ).not( this.settings.ignore )[ 0 ];
 		},
