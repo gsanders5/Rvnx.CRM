@@ -47,3 +47,8 @@
 **Vulnerability:** Weak default cookie settings (HttpOnly and Secure) not explicitly enforced.
 **Learning:** Default cookie settings might not enforce `SecurePolicy` and `SameSiteMode.Strict`, opening up risks to XSS attacks and cross-site requests if cookies are accessible through JavaScript or unencrypted HTTP.
 **Prevention:** Always explicitly configure `options.Cookie.HttpOnly = true`, `options.Cookie.SecurePolicy = CookieSecurePolicy.Always`, and `options.Cookie.SameSite = SameSiteMode.Strict` when adding cookie authentication to `builder.Services.AddAuthentication()`.
+
+## 2024-05-24 - Bulk updates bypassing `SaveChangesAsync` with `ExecuteUpdateAsync`
+**Vulnerability:** SQL Injection via `ExecuteSqlRawAsync` string concatenation.
+**Learning:** In EF Core 9.0+, `ExecuteUpdateAsync` provides a safer and parameterized way to perform bulk updates while preventing SQL injection. However, since it bypasses `SaveChangesAsync` and `CRMDbContext.UpdateAuditFields()`, explicit documentation and fallback mechanisms are required.
+**Prevention:** Use `ExecuteUpdateAsync` for bulk operations and provide an `InMemory` tracking fallback for tests. Ensure proper documentation of audit bypass.
