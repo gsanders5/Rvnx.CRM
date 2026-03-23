@@ -56,7 +56,6 @@ public class DebugOperationsService(
         }).ToList();
     }
 
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("Security", "EF1002:Risk of vulnerability to SQL injection.", Justification = "tableName is sourced from EF Core's GetTableName() metadata, not user input, and parameters are passed safely.")]
     public async Task<MergeAccountsResult> MergeAccountsAsync(Guid user1Id, Guid user2Id)
     {
         if (user1Id == user2Id)
@@ -119,32 +118,15 @@ public class DebugOperationsService(
 
         foreach (Microsoft.EntityFrameworkCore.Metadata.IEntityType? entityType in entityTypes)
         {
-            string? tableName = entityType.GetTableName();
-            if (tableName != null)
+            if (entityType.ClrType != null)
             {
-                // In-memory provider doesn't support raw SQL for updates like this.
-                // For now, if not relational, we skip optimization and assume standard tracking (which might be slower but correct).
-                // Or check if provider is relational.
-                if (_context.Database.IsRelational())
-                {
-                    await _context.Database.ExecuteSqlRawAsync($"UPDATE \"{tableName}\" SET \"GroupId\" = {{0}} WHERE \"GroupId\" = {{1}}", keptGroupId, discardedGroupId);
-                }
-                else
-                {
-                    // Fallback for InMemory (primarily for tests)
-                    // In memory, we must update entities via EF Core tracking.
-                    // This is slow but necessary for tests to pass asserting that entities moved.
-                    if (entityType.ClrType != null)
-                    {
-                        System.Reflection.MethodInfo? method = typeof(DebugOperationsService)
-                            .GetMethod(nameof(UpdateGroupIdsInMemory), System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)
-                            ?.MakeGenericMethod(entityType.ClrType);
+                System.Reflection.MethodInfo? method = typeof(DebugOperationsService)
+                    .GetMethod(nameof(UpdateGroupIdsDb), System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)
+                    ?.MakeGenericMethod(entityType.ClrType);
 
-                        if (method != null)
-                        {
-                            await (Task)method.Invoke(this, [keptGroupId, discardedGroupId])!;
-                        }
-                    }
+                if (method != null)
+                {
+                    await (Task)method.Invoke(this, [keptGroupId, discardedGroupId])!;
                 }
             }
         }
@@ -169,6 +151,22 @@ public class DebugOperationsService(
             Success = true,
             Message = $"Successfully merged users. Kept group: {keptGroup.Name} ({keptGroup.Members?.Count ?? 0} members)."
         };
+    }
+
+    private async Task UpdateGroupIdsDb<T>(Guid keptGroupId, Guid discardedGroupId) where T : BaseEntity
+    {
+        if (_context.Database.IsRelational())
+        {
+            // Intentional audit bypass: ExecuteUpdateAsync bypasses SaveChangesAsync and CRMDbContext.UpdateAuditFields() (e.g., LastChangedDate).
+            // Test coverage limitation: Tests using the InMemory provider cannot test ExecuteUpdateAsync and must rely on the fallback.
+            await _repository.QueryUnfiltered<T>()
+                .Where(e => e.GroupId == discardedGroupId)
+                .ExecuteUpdateAsync(s => s.SetProperty(e => e.GroupId, keptGroupId));
+        }
+        else
+        {
+            await UpdateGroupIdsInMemory<T>(keptGroupId, discardedGroupId);
+        }
     }
 
     private async Task UpdateGroupIdsInMemory<T>(Guid keptGroupId, Guid discardedGroupId) where T : BaseEntity
