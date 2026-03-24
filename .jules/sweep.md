@@ -21,3 +21,7 @@
 ## 2024-03-24 - Deduplication using HashSet.Add return value
 **Learning:** Checking `HashSet.Contains()` immediately before `HashSet.Add()` is redundant because `Add()` already returns a boolean indicating whether the element was successfully added (not present) or false (already present). This applies across various areas in Rvnx.CRM batch operations.
 **Action:** Use `if (set.Add(item))` directly to perform insertion and checking in a single operation, reducing verbosity and improving performance.
+
+## 2024-03-24 - Renaming vague variables
+**Learning:** In ASP.NET Core MVC, changing the variable name passed into `return View(model)` (e.g., from `data` to `dashboard`) does not change the model passed to the Razor view, making it a completely safe and localized refactor for clarity.
+**Action:** When finding vague variables like `data`, `result`, `temp`, `obj`, `flag`, or `val` passed to Views, confidently rename them to reflect their actual type or purpose to improve readability without fear of breaking the view binding.

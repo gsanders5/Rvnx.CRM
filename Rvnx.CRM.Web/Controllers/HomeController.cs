@@ -14,8 +14,8 @@ public class HomeController(IDashboardService dashboardService) : AuthorizedCont
     [HttpGet]
     public async Task<IActionResult> Index()
     {
-        DashboardDto data = await _dashboardService.GetDashboardDataAsync();
-        return View(data);
+        DashboardDto dashboard = await _dashboardService.GetDashboardDataAsync();
+        return View(dashboard);
     }
 
     [HttpGet]
