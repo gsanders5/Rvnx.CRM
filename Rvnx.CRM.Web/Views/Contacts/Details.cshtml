@@ -474,10 +474,13 @@
 
                                     @if (string.Equals(date.Title, SignificantDateTitles.Birthday, StringComparison.OrdinalIgnoreCase))
                                     {
-                                        var today = DateTime.Today;
-                                        var age = today.Year - date.EventDate.Year;
-                                        if (date.EventDate.ToDateTime(TimeOnly.MinValue).Date > today.AddYears(-age)) age--;
-                                        <span class="badge bg-secondary">@age years old</span>
+                                        @if (!date.YearUnknown)
+                                        {
+                                            var today = DateTime.Today;
+                                            var age = today.Year - date.EventDate.Year;
+                                            if (date.EventDate.ToDateTime(TimeOnly.MinValue).Date > today.AddYears(-age)) age--;
+                                            <span class="badge bg-secondary">@age years old</span>
+                                        }
                                     }
 
                                     @if (date.IsActive)

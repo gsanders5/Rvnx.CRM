@@ -285,6 +285,7 @@ public class ContactReadService(IRepository repository) : IContactReadService
         if (bday != null)
         {
             dto.RemindOnBirthday = bday.ReminderOffsets.Any(ro => ro.DaysBeforeEvent == 0 && ro.IsActive);
+            dto.BirthdayYearUnknown = bday.YearUnknown;
         }
 
         Attachment? profileAttachment = (await _repository.ListAsync<Attachment>(a =>

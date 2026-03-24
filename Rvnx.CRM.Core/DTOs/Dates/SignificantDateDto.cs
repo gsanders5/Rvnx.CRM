@@ -11,6 +11,7 @@ public class SignificantDateDto : BaseDto
     public Enumerations.RecurrenceType RecurrenceType { get; set; }
     public int? CustomIntervalDays { get; set; }
     public bool IsActive { get; set; }
+    public bool YearUnknown { get; set; }
     public DateOnly? NextOccurrence { get; set; }
 
     public List<ReminderOffsetDto> ReminderOffsets { get; set; } = [];

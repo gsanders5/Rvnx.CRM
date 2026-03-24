@@ -266,7 +266,8 @@ public class ContactReadServiceTests
             SignificantDate significantDate = new()
             {
                 Title = SignificantDateTitles.Birthday,
-                EventDate = birthdayDate
+                EventDate = birthdayDate,
+                YearUnknown = false
             };
             significantDate.ReminderOffsets.Add(new ReminderOffset { DaysBeforeEvent = 0, IsActive = true });
 
@@ -294,6 +295,52 @@ public class ContactReadServiceTests
             Assert.NotNull(result);
             Assert.Equal(birthdayDate.ToDateTime(TimeOnly.MinValue), result.Birthday);
             Assert.True(result.RemindOnBirthday);
+            Assert.False(result.BirthdayYearUnknown);
+        }
+
+        [Fact]
+        public async Task GetContactFormAsyncMapsBirthdayYearUnknownCorrectly()
+        {
+            Guid contactId = Guid.NewGuid();
+            Contact contact = new()
+            {
+                Id = contactId,
+                FirstName = "Birthday",
+                LastName = "UnknownYear"
+            };
+
+            DateOnly birthdayDate = new(DateOnly.MinValue.Year, 5, 15);
+            SignificantDate significantDate = new()
+            {
+                Title = SignificantDateTitles.Birthday,
+                EventDate = birthdayDate,
+                YearUnknown = true
+            };
+
+            contact.SignificantDates.Add(significantDate);
+
+            _repositoryMock.Setup(r => r.ListAsNoTrackingAsync<Contact>(
+                It.IsAny<Expression<Func<Contact, bool>>>(),
+                It.IsAny<CancellationToken>(),
+                It.IsAny<string[]>()))
+                .ReturnsAsync([contact]);
+
+            _repositoryMock.Setup(r => r.ListAsync<Attachment>(
+                It.IsAny<Expression<Func<Attachment, bool>>>(),
+                It.IsAny<CancellationToken>()))
+                .ReturnsAsync([]);
+
+            _repositoryMock.Setup(r => r.ListAsNoTrackingAsync<Label>(
+                It.IsAny<Expression<Func<Label, bool>>>(),
+                It.IsAny<CancellationToken>(),
+                It.IsAny<string[]>()))
+                .ReturnsAsync([]);
+
+            ContactFormDto? result = await _service.GetContactFormAsync(contactId);
+
+            Assert.NotNull(result);
+            Assert.Equal(birthdayDate.ToDateTime(TimeOnly.MinValue), result.Birthday);
+            Assert.True(result.BirthdayYearUnknown);
         }
 
         [Fact]

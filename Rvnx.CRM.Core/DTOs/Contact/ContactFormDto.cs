@@ -38,6 +38,9 @@ public class ContactFormDto
     [DataType(DataType.Date)]
     public DateTime? Birthday { get; set; }
 
+    [Display(Name = "Year Unknown")]
+    public bool BirthdayYearUnknown { get; set; }
+
     [Display(Name = "Remind on Birthday")]
     public bool RemindOnBirthday { get; set; } = true;
 

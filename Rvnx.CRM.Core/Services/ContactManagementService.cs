@@ -123,7 +123,7 @@ public class ContactManagementService(IRepository repository, IFileValidationSer
 
         await ContactUpdateHelper.UpdateOrAddContactMethodAsync(_repository, contact.Id, ContactMethodType.Email, contactDto.Email, null);
         await ContactUpdateHelper.UpdateOrAddContactMethodAsync(_repository, contact.Id, ContactMethodType.Phone, contactDto.Phone, null);
-        await ContactUpdateHelper.UpdateOrAddBirthdayAsync(_repository, contact.Id, contactDto.Birthday, null, contactDto.RemindOnBirthday);
+        await ContactUpdateHelper.UpdateOrAddBirthdayAsync(_repository, contact.Id, contactDto.Birthday, null, contactDto.RemindOnBirthday, contactDto.BirthdayYearUnknown);
 
         await _repository.SaveChangesAsync();
         return ContactOperationResult.Ok(contact.Id);
@@ -146,7 +146,7 @@ public class ContactManagementService(IRepository repository, IFileValidationSer
         await ContactUpdateHelper.UpdateOrAddContactMethodAsync(_repository, id, ContactMethodType.Phone, contactDto.Phone, existingPhone);
 
         SignificantDate? existingBday = await GetBirthdayAsync(id);
-        await ContactUpdateHelper.UpdateOrAddBirthdayAsync(_repository, id, contactDto.Birthday, existingBday, contactDto.RemindOnBirthday);
+        await ContactUpdateHelper.UpdateOrAddBirthdayAsync(_repository, id, contactDto.Birthday, existingBday, contactDto.RemindOnBirthday, contactDto.BirthdayYearUnknown);
 
         ContactOperationResult imageResult = await HandleProfileImageUpdateAsync(id, imageStream, fileName, contentType);
         if (!imageResult.Success)

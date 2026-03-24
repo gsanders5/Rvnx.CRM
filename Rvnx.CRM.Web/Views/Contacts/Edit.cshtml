@@ -62,9 +62,14 @@
             </div>
 
             <div class="form-floating mb-3">
-                <input asp-for="Birthday" class="form-control" type="date" placeholder="Birthday"/>
+                <input asp-for="Birthday" class="form-control" type="date" placeholder="Birthday" id="BirthdayField" />
                 <label asp-for="Birthday"></label>
                 <span asp-validation-for="Birthday" class="text-danger"></span>
+            </div>
+
+            <div class="mb-3 form-check form-switch">
+                <input asp-for="BirthdayYearUnknown" class="form-check-input" id="BirthdayYearUnknownField" />
+                <label asp-for="BirthdayYearUnknown" class="form-check-label"></label>
             </div>
 
             <div class="mb-3 form-check form-switch">
@@ -237,6 +242,33 @@
 
             initReveal('pronouns-select', 'pronouns-custom');
             initReveal('gender-select', 'gender-custom');
+
+            const birthdayField = document.getElementById('BirthdayField');
+            const birthdayYearUnknownField = document.getElementById('BirthdayYearUnknownField');
+
+            function toggleBirthdayYear() {
+                if (birthdayYearUnknownField.checked) {
+                    if (birthdayField.value) {
+                        const parts = birthdayField.value.split('-');
+                        if (parts.length === 3) {
+                            birthdayField.value = '0001-' + parts[1] + '-' + parts[2];
+                        }
+                    }
+                } else {
+                    if (birthdayField.value) {
+                        const parts = birthdayField.value.split('-');
+                        if (parts.length === 3 && parts[0] === '0001') {
+                            const currentYear = new Date().getFullYear();
+                            birthdayField.value = currentYear + '-' + parts[1] + '-' + parts[2];
+                        }
+                    }
+                }
+            }
+
+            if (birthdayYearUnknownField) {
+                birthdayYearUnknownField.addEventListener('change', toggleBirthdayYear);
+                toggleBirthdayYear();
+            }
         })();
     </script>
 }
