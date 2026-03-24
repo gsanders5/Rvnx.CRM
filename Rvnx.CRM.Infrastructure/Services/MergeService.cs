@@ -94,10 +94,9 @@ public class MergeService(CRMDbContext context, IRepository repository) : IMerge
             List<ContactMethod> methodsToDelete = [];
             foreach (ContactMethod method in secondaryMethods)
             {
-                if (!existingMethods.Contains((method.Type, method.Value.ToLowerInvariant())))
+                if (existingMethods.Add((method.Type, method.Value.ToLowerInvariant())))
                 {
                     method.ContactId = primaryId;
-                    existingMethods.Add((method.Type, method.Value.ToLowerInvariant()));
                 }
                 else
                 {
@@ -121,10 +120,9 @@ public class MergeService(CRMDbContext context, IRepository repository) : IMerge
             List<SignificantDate> datesToDelete = [];
             foreach (SignificantDate date in secondaryDates)
             {
-                if (!existingDates.Contains((date.Title?.ToLowerInvariant(), date.EventDate)))
+                if (existingDates.Add((date.Title?.ToLowerInvariant(), date.EventDate)))
                 {
                     date.ContactId = primaryId;
-                    existingDates.Add((date.Title?.ToLowerInvariant(), date.EventDate));
                 }
                 else
                 {
@@ -154,10 +152,9 @@ public class MergeService(CRMDbContext context, IRepository repository) : IMerge
             List<Relationship> relsToDelete = [];
             foreach (Relationship rel in secondaryRels)
             {
-                if (!existingRels.Contains((rel.RelatedEntityId, rel.RelationshipTypeId)))
+                if (existingRels.Add((rel.RelatedEntityId, rel.RelationshipTypeId)))
                 {
                     rel.EntityId = primaryId;
-                    existingRels.Add((rel.RelatedEntityId, rel.RelationshipTypeId));
                 }
                 else
                 {
@@ -186,10 +183,9 @@ public class MergeService(CRMDbContext context, IRepository repository) : IMerge
                 else
                 {
                     // Check if rel.EntityId is already related to Primary with the same RelationshipTypeId
-                    if (!existingInverseRels.Contains((rel.EntityId, rel.RelationshipTypeId)))
+                    if (existingInverseRels.Add((rel.EntityId, rel.RelationshipTypeId)))
                     {
                         rel.RelatedEntityId = primaryId;
-                        existingInverseRels.Add((rel.EntityId, rel.RelationshipTypeId));
                     }
                     else
                     {
@@ -214,10 +210,9 @@ public class MergeService(CRMDbContext context, IRepository repository) : IMerge
             List<Pet> petsToDelete = [];
             foreach (Pet pet in secondaryPets)
             {
-                if (!existingPets.Contains(pet.Name.ToLowerInvariant()))
+                if (existingPets.Add(pet.Name.ToLowerInvariant()))
                 {
                     pet.ContactId = primaryId;
-                    existingPets.Add(pet.Name.ToLowerInvariant());
                 }
                 else
                 {
