@@ -22,7 +22,11 @@ public static class ServiceCollectionExtensions
 
         services.AddScoped<IRepository, Repository>();
 
-        services.AddHttpClient<IVCardService, VCardService>();
+        // 🛡️ Sentinel: Enforce a strict timeout on HttpClient to prevent DoS attacks from hanging external image servers
+        services.AddHttpClient<IVCardService, VCardService>(client =>
+        {
+            client.Timeout = TimeSpan.FromSeconds(10);
+        });
 
         services.AddScoped<IUserSynchronizationService, UserSynchronizationService>();
 

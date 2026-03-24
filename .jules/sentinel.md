@@ -52,3 +52,7 @@
 **Vulnerability:** SQL Injection via `ExecuteSqlRawAsync` string concatenation.
 **Learning:** In EF Core 9.0+, `ExecuteUpdateAsync` provides a safer and parameterized way to perform bulk updates while preventing SQL injection. However, since it bypasses `SaveChangesAsync` and `CRMDbContext.UpdateAuditFields()`, explicit documentation and fallback mechanisms are required.
 **Prevention:** Use `ExecuteUpdateAsync` for bulk operations and provide an `InMemory` tracking fallback for tests. Ensure proper documentation of audit bypass.
+## $(date +%Y-%m-%d) - Enforce HttpClient Timeout
+**Vulnerability:** The `HttpClient` registered for `IVCardService` in `ServiceCollectionExtensions` had no explicit timeout configured.
+**Learning:** By default, `HttpClient` has a very long timeout (often 100 seconds). If an external server hangs during operations like downloading a profile photo, the application thread can block, potentially leading to a Denial of Service (DoS) condition under heavy load.
+**Prevention:** Always configure an explicit, reasonable timeout (e.g., `TimeSpan.FromSeconds(10)`) when registering `HttpClient` services in the DI container.
