@@ -112,12 +112,12 @@
     <div class="card mb-4 shadow-sm">
         @if (Model.ProfileImageId.HasValue)
         {
-            <img src="@Url.Action("View", "Attachments", new { id = Model.ProfileImageId })" class="card-img-top card-img-profile" alt="Profile Image">
+            <img src="@Url.Action("View", "Attachments", new { id = Model.ProfileImageId })" class="card-img-top card-img-profile" alt="Profile photo of @Model.FullName">
         }
         else
         {
-            <div class="card-img-top d-flex align-items-center justify-content-center bg-body-tertiary text-muted" style="height: 300px;">
-                <i class="bi bi-person-fill display-1"></i>
+            <div class="card-img-top d-flex align-items-center justify-content-center bg-body-tertiary text-muted" style="height: 300px;" role="img" aria-label="Default profile placeholder">
+                <i class="bi bi-person-fill display-1" aria-hidden="true"></i>
             </div>
         }
         <div class="card-header">
@@ -174,7 +174,7 @@
     <div class="card mb-4 border shadow-sm">
         <div class="card-header bg-transparent border-0 pt-3 px-3 d-flex justify-content-between align-items-center">
             <h5 class="card-title mb-0 fw-bold"><i class="bi bi-person-badge"></i> Contact Info</h5>
-            <a asp-controller="ContactMethods" asp-action="Create" asp-route-entityId="@Model.Id" asp-route-entityType="Person" class="btn btn-sm btn-outline-primary"><i class="bi bi-plus-lg"></i> Add</a>
+            <a asp-controller="ContactMethods" asp-action="Create" asp-route-entityId="@Model.Id" asp-route-entityType="Person" class="btn btn-sm btn-outline-primary" aria-label="Add Contact Info"><i class="bi bi-plus-lg" aria-hidden="true"></i> Add</a>
         </div>
         <div class="card-body px-3 pb-3">
             @if (Model.ContactMethods != null && Model.ContactMethods.Any())
@@ -224,7 +224,7 @@
                 <div class="text-center py-4 text-muted">
                     <i class="bi bi-person-badge display-6 d-block mb-3 opacity-25"></i>
                     <p class="mb-2">No additional info.</p>
-                    <a asp-controller="ContactMethods" asp-action="Create" asp-route-entityId="@Model.Id" asp-route-entityType="Person" class="btn btn-sm btn-primary mt-2"><i class="bi bi-plus-lg"></i> Add Info</a>
+                    <a asp-controller="ContactMethods" asp-action="Create" asp-route-entityId="@Model.Id" asp-route-entityType="Person" class="btn btn-sm btn-primary mt-2" aria-label="Add Contact Info"><i class="bi bi-plus-lg" aria-hidden="true"></i> Add Info</a>
                 </div>
             }
 
@@ -244,7 +244,7 @@
     <div class="card mb-4 border shadow-sm">
         <div class="card-header bg-transparent border-0 pt-3 px-3 d-flex justify-content-between align-items-center">
             <h5 class="card-title mb-0 fw-bold"><i class="bi bi-lightbulb"></i> Quick Facts</h5>
-            <a asp-controller="Facts" asp-action="Create" asp-route-entityId="@Model.Id" asp-route-entityType="Person" class="btn btn-sm btn-outline-primary"><i class="bi bi-plus-lg"></i> Add</a>
+            <a asp-controller="Facts" asp-action="Create" asp-route-entityId="@Model.Id" asp-route-entityType="Person" class="btn btn-sm btn-outline-primary" aria-label="Add Quick Fact"><i class="bi bi-plus-lg" aria-hidden="true"></i> Add</a>
         </div>
         <div class="card-body px-3 pb-3">
             @if (Model.Facts != null && Model.Facts.Any())
@@ -283,7 +283,7 @@
                 <div class="text-center py-4 text-muted">
                     <i class="bi bi-lightbulb display-6 d-block mb-3 opacity-25"></i>
                     <p class="mb-2">No facts added.</p>
-                    <a asp-controller="Facts" asp-action="Create" asp-route-entityId="@Model.Id" asp-route-entityType="Person" class="btn btn-sm btn-primary mt-2"><i class="bi bi-plus-lg"></i> Add Fact</a>
+                    <a asp-controller="Facts" asp-action="Create" asp-route-entityId="@Model.Id" asp-route-entityType="Person" class="btn btn-sm btn-primary mt-2" aria-label="Add Quick Fact"><i class="bi bi-plus-lg" aria-hidden="true"></i> Add Fact</a>
                 </div>
             }
         </div>
@@ -397,7 +397,7 @@
                     <div class="text-center py-4 text-muted">
                         <i class="bi bi-people display-6 d-block mb-3 opacity-25"></i>
                         <p class="mb-2">No relationships found.</p>
-                        <a asp-controller="Relationships" asp-action="Create" asp-route-entityId="@Model.Id" asp-route-entityType="Person" class="btn btn-sm btn-primary mt-2"><i class="bi bi-plus-lg"></i> Add Relationship</a>
+                        <a asp-controller="Relationships" asp-action="Create" asp-route-entityId="@Model.Id" asp-route-entityType="Person" class="btn btn-sm btn-primary mt-2" aria-label="Add Relationship"><i class="bi bi-plus-lg" aria-hidden="true"></i> Add Relationship</a>
                     </div>
                 }
             </div>
@@ -415,7 +415,7 @@
     <div class="card mb-4 border shadow-sm">
         <div class="card-header bg-transparent border-0 pt-3 px-3 d-flex justify-content-between align-items-center">
             <h5 class="card-title mb-0 fw-bold"><i class="bi bi-emoji-smile"></i> Pets</h5>
-            <a asp-controller="Pets" asp-action="Create" asp-route-entityId="@Model.Id" class="btn btn-sm btn-outline-primary"><i class="bi bi-plus-lg"></i> Add</a>
+            <a asp-controller="Pets" asp-action="Create" asp-route-entityId="@Model.Id" class="btn btn-sm btn-outline-primary" aria-label="Add Pet"><i class="bi bi-plus-lg" aria-hidden="true"></i> Add</a>
         </div>
         <div class="card-body px-3 pb-3">
             @if (Model.Pets != null && Model.Pets.Any())
@@ -445,7 +445,7 @@
                 <div class="text-center py-4 text-muted">
                     <i class="bi bi-emoji-smile display-6 d-block mb-3 opacity-25"></i>
                     <p class="mb-2">No pets.</p>
-                    <a asp-controller="Pets" asp-action="Create" asp-route-entityId="@Model.Id" class="btn btn-sm btn-primary mt-2"><i class="bi bi-plus-lg"></i> Add Pet</a>
+                    <a asp-controller="Pets" asp-action="Create" asp-route-entityId="@Model.Id" class="btn btn-sm btn-primary mt-2" aria-label="Add Pet"><i class="bi bi-plus-lg" aria-hidden="true"></i> Add Pet</a>
                 </div>
             }
         </div>
@@ -513,7 +513,7 @@
                 <div class="text-center py-4 text-muted">
                     <i class="bi bi-calendar-event display-6 d-block mb-3 opacity-25"></i>
                     <p class="mb-2">No important dates recorded.</p>
-                    <a asp-controller="SignificantDates" asp-action="Create" asp-route-contactId="@Model.Id" asp-route-entityType="Person" class="btn btn-sm btn-primary mt-2"><i class="bi bi-plus-lg"></i> Add Date</a>
+                    <a asp-controller="SignificantDates" asp-action="Create" asp-route-contactId="@Model.Id" asp-route-entityType="Person" class="btn btn-sm btn-primary mt-2" aria-label="Add Date"><i class="bi bi-plus-lg" aria-hidden="true"></i> Add Date</a>
                 </div>
             }
         </div>
@@ -524,7 +524,7 @@
     <div class="card mb-4">
         <div class="card-header d-flex justify-content-between align-items-center">
             <h5 class="card-title mb-0"><i class="bi bi-journal-text"></i> Notes</h5>
-            <a asp-controller="Notes" asp-action="Create" asp-route-entityId="@Model.Id" asp-route-entityType="Person" class="btn btn-sm btn-outline-primary"><i class="bi bi-plus-lg"></i> Add</a>
+            <a asp-controller="Notes" asp-action="Create" asp-route-entityId="@Model.Id" asp-route-entityType="Person" class="btn btn-sm btn-outline-primary" aria-label="Add Note"><i class="bi bi-plus-lg" aria-hidden="true"></i> Add</a>
         </div>
         <div class="card-body">
             @if (Model.Notes != null && Model.Notes.Any())
@@ -557,7 +557,7 @@
                 <div class="text-center py-4 text-muted">
                     <i class="bi bi-journal-text display-6 d-block mb-3 opacity-25"></i>
                     <p class="mb-2">No notes available.</p>
-                    <a asp-controller="Notes" asp-action="Create" asp-route-entityId="@Model.Id" asp-route-entityType="Person" class="btn btn-sm btn-primary mt-2"><i class="bi bi-plus-lg"></i> Add Note</a>
+                    <a asp-controller="Notes" asp-action="Create" asp-route-entityId="@Model.Id" asp-route-entityType="Person" class="btn btn-sm btn-primary mt-2" aria-label="Add Note"><i class="bi bi-plus-lg" aria-hidden="true"></i> Add Note</a>
                 </div>
             }
         </div>
@@ -567,8 +567,8 @@
     <div class="card mb-4">
         <div class="card-header d-flex justify-content-between align-items-center">
             <h5 class="card-title mb-0"><i class="bi bi-paperclip"></i> Attachments</h5>
-            <button type="button" class="btn btn-sm btn-outline-primary" data-mdb-collapse-init data-mdb-toggle="collapse" data-mdb-target="#uploadAttachmentForm" aria-expanded="false" aria-controls="uploadAttachmentForm">
-                <i class="bi bi-plus-lg"></i> Add
+            <button type="button" class="btn btn-sm btn-outline-primary" data-mdb-collapse-init data-mdb-toggle="collapse" data-mdb-target="#uploadAttachmentForm" aria-expanded="false" aria-controls="uploadAttachmentForm" aria-label="Add Attachment">
+                <i class="bi bi-plus-lg" aria-hidden="true"></i> Add
             </button>
         </div>
         <div class="card-body">
@@ -672,8 +672,8 @@
                 <div class="text-center py-4 text-muted">
                     <i class="bi bi-paperclip display-6 d-block mb-3 opacity-25"></i>
                     <p class="mb-2">No attachments.</p>
-                    <button type="button" class="btn btn-sm btn-primary mt-2" data-mdb-collapse-init data-mdb-toggle="collapse" data-mdb-target="#uploadAttachmentForm" aria-expanded="false" aria-controls="uploadAttachmentForm">
-                        <i class="bi bi-plus-lg"></i> Add Attachment
+                    <button type="button" class="btn btn-sm btn-primary mt-2" data-mdb-collapse-init data-mdb-toggle="collapse" data-mdb-target="#uploadAttachmentForm" aria-expanded="false" aria-controls="uploadAttachmentForm" aria-label="Add Attachment">
+                        <i class="bi bi-plus-lg" aria-hidden="true"></i> Add Attachment
                     </button>
                 </div>
             }
