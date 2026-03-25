@@ -30,6 +30,11 @@
                         <span asp-validation-for="EventDate" class="text-danger"></span>
                     </div>
 
+                    <div class="mb-3 form-check form-switch">
+                        <input type="checkbox" class="form-check-input" id="YearUnknownField" />
+                        <label class="form-check-label" for="YearUnknownField">Year Unknown</label>
+                    </div>
+
                     <div class="form-floating mb-4">
                         <select asp-for="RecurrenceType" class="form-select" id="RecurrenceType">
                             <option value="0">None (One-time)</option>
@@ -100,6 +105,33 @@
 
             recurrenceSelect.addEventListener('change', toggleCustomInterval);
             toggleCustomInterval(); // Initial check
+
+            var eventDateField = document.getElementById('EventDate');
+            var yearUnknownField = document.getElementById('YearUnknownField');
+
+            function toggleYearUnknown() {
+                if (yearUnknownField.checked) {
+                    if (eventDateField.value) {
+                        const parts = eventDateField.value.split('-');
+                        if (parts.length === 3) {
+                            eventDateField.value = '0001-' + parts[1] + '-' + parts[2];
+                        }
+                    }
+                } else {
+                    if (eventDateField.value) {
+                        const parts = eventDateField.value.split('-');
+                        if (parts.length === 3 && parts[0] === '0001') {
+                            const currentYear = new Date().getFullYear();
+                            eventDateField.value = currentYear + '-' + parts[1] + '-' + parts[2];
+                        }
+                    }
+                }
+            }
+
+            if (yearUnknownField) {
+                yearUnknownField.addEventListener('change', toggleYearUnknown);
+                toggleYearUnknown();
+            }
         });
     </script>
 }

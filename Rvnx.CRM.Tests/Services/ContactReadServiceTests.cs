@@ -297,6 +297,51 @@ public class ContactReadServiceTests
         }
 
         [Fact]
+        public async Task GetContactFormAsyncMapsBirthdayWithSentinelYearCorrectly()
+        {
+            Guid contactId = Guid.NewGuid();
+            Contact contact = new()
+            {
+                Id = contactId,
+                FirstName = "Birthday",
+                LastName = "UnknownYear"
+            };
+
+            DateOnly birthdayDate = new(1, 5, 15);
+            SignificantDate significantDate = new()
+            {
+                Title = SignificantDateTitles.Birthday,
+                EventDate = birthdayDate
+            };
+
+            contact.SignificantDates.Add(significantDate);
+
+            _repositoryMock.Setup(r => r.ListAsNoTrackingAsync<Contact>(
+                It.IsAny<Expression<Func<Contact, bool>>>(),
+                It.IsAny<CancellationToken>(),
+                It.IsAny<string[]>()))
+                .ReturnsAsync([contact]);
+
+            _repositoryMock.Setup(r => r.ListAsync<Attachment>(
+                It.IsAny<Expression<Func<Attachment, bool>>>(),
+                It.IsAny<CancellationToken>()))
+                .ReturnsAsync([]);
+
+            _repositoryMock.Setup(r => r.ListAsNoTrackingAsync<Label>(
+                It.IsAny<Expression<Func<Label, bool>>>(),
+                It.IsAny<CancellationToken>(),
+                It.IsAny<string[]>()))
+                .ReturnsAsync([]);
+
+            ContactFormDto? result = await _service.GetContactFormAsync(contactId);
+
+            Assert.NotNull(result);
+            Assert.Equal(1, result.Birthday?.Year);
+            Assert.Equal(5, result.Birthday?.Month);
+            Assert.Equal(15, result.Birthday?.Day);
+        }
+
+        [Fact]
         public async Task GetContactFormAsyncMapsProfileImageAndLabelsCorrectly()
         {
             Guid contactId = Guid.NewGuid();
