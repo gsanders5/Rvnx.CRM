@@ -102,3 +102,7 @@ Action: When a service builds a read-only in-memory aggregate (graph nodes, rece
 ## 2026-03-23 - Pre-fetch and O(1) Lookups for N+1 Queries
 **Learning:** Executing `_repository.ListAsync` inside a loop (e.g., inside `MergeService`) creates an N+1 query problem, severely impacting backend performance during batch operations. Replacing LINQ `.Select().ToHashSet()` with pre-sized HashSets via `foreach` additions avoids dynamic resizing and iterator overhead.
 **Action:** When avoiding N+1 query issues in Rvnx.CRM batch operations, pre-fetch the necessary records into a properly sized `HashSet` before the loop to perform O(1) in-memory lookups. Do not use LINQ `.Select().ToHashSet()` when pre-allocating the `HashSet`.
+
+## 2026-03-25 - Pre-allocated HashSet for Contact ID Tracking
+**Learning:** Replacing `.Select().ToHashSet()` with a pre-allocated `HashSet` and a `foreach` loop eliminates LINQ iterator overhead and prevents dynamic array resizing during insertion. This is particularly relevant when tracking collections of Entity IDs during batch operations.
+**Action:** When gathering related entity IDs or performing aggregations into a `HashSet`, and the exact count of items is known, manually pre-allocate the `HashSet` using the source collection's count and populate it via a single loop instead of chaining LINQ collection extensions.
