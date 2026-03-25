@@ -39,3 +39,8 @@
 
 **Learning:** String-manipulation logic (`ExtractUsername` for social media URIs) incorrectly resided in the `Web` layer (`SocialMediaEmbedHelper`) despite being a domain-level data normalization rule.
 **Action:** When finding logic that normalizes or validates strings representing domain concepts, verify it lives in `Core` (like `SocialMediaUrlNormalizer`). Move it if it's currently in a Web layer helper to centralize the rules.
+
+## 2026-03-25 - [Decouple Domain Models from Infrastructure]
+
+**Learning:** Domain models in `Core` must not have `[Table]`, `[ForeignKey]`, or `[Display]` attributes, as this couples the business layer to the ORM/Presentation. Default table pluralization can cause issues if not mapped.
+**Action:** Define these database constraints and table names explicitly in `CRMDbContext.cs` using the Fluent API (e.g. `.ToTable("Name")`).
