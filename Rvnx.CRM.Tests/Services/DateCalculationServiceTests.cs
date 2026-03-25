@@ -179,6 +179,52 @@ public class DateCalculationServiceTests
     }
 
     [Fact]
+    public void GetNextOccurrenceAnnualOccurrenceIsTodayReturnsToday()
+    {
+        SignificantDate significantDate = new()
+        {
+            EventDate = new DateOnly(2020, 5, 15),
+            RecurrenceType = RecurrenceType.Annual
+        };
+        DateOnly today = new(2023, 5, 15);
+
+        DateOnly result = DateCalculationService.GetNextOccurrence(significantDate, today);
+
+        Assert.Equal(new DateOnly(2023, 5, 15), result);
+    }
+
+    [Fact]
+    public void GetNextOccurrenceMonthlyOccurrenceIsTodayReturnsToday()
+    {
+        SignificantDate significantDate = new()
+        {
+            EventDate = new DateOnly(2023, 1, 15),
+            RecurrenceType = RecurrenceType.Monthly
+        };
+        DateOnly today = new(2023, 4, 15);
+
+        DateOnly result = DateCalculationService.GetNextOccurrence(significantDate, today);
+
+        Assert.Equal(new DateOnly(2023, 4, 15), result);
+    }
+
+    [Fact]
+    public void GetNextOccurrenceCustomOccurrenceIsTodayReturnsToday()
+    {
+        SignificantDate significantDate = new()
+        {
+            EventDate = new DateOnly(2023, 1, 1),
+            RecurrenceType = RecurrenceType.Custom,
+            CustomIntervalDays = 10
+        };
+        DateOnly today = new(2023, 1, 21); // 1st + 20 days
+
+        DateOnly result = DateCalculationService.GetNextOccurrence(significantDate, today);
+
+        Assert.Equal(new DateOnly(2023, 1, 21), result);
+    }
+
+    [Fact]
     public void GetScheduledForDateReturnsNextOccurrenceMinusDaysBeforeEvent()
     {
         SignificantDate significantDate = new()
