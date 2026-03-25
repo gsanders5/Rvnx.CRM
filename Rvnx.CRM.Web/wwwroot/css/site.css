@@ -119,9 +119,19 @@ body {
     box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
     padding: 0.25rem 0;
     min-width: 120px;
+    z-index: 1050;
 }
 
     /* Reset all nested elements */
+    .dt-button-collection .dropdown-menu {
+        position: static !important;
+        background: transparent !important;
+        border: none !important;
+        box-shadow: none !important;
+        padding: 0 !important;
+        margin: 0 !important;
+    }
+
     .dt-button-collection li,
     .dt-button-collection .dt-button,
     .dt-button-collection .dt-button a,
@@ -191,6 +201,7 @@ body {
     .table-responsive .dataTables_wrapper {
         overflow-x: auto;
     }
+
 
 /* Remove shadow from column visibility button on mobile */
 @media screen and (max-width: 767.98px) {
