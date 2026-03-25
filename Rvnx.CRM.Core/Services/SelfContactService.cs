@@ -93,7 +93,7 @@ public class SelfContactService(IRepository repository, ICurrentUserService curr
 
         await ContactUpdateHelper.UpdateOrAddContactMethodAsync(_repository, contact.Id, ContactMethodType.Email, contactDto.Email, null);
         await ContactUpdateHelper.UpdateOrAddContactMethodAsync(_repository, contact.Id, ContactMethodType.Phone, contactDto.Phone, null);
-        await ContactUpdateHelper.UpdateOrAddBirthdayAsync(_repository, contact.Id, contactDto.Birthday, null, contactDto.RemindOnBirthday, contactDto.BirthdayYearUnknown);
+        await ContactUpdateHelper.UpdateOrAddBirthdayAsync(_repository, contact.Id, contactDto.Birthday, null, contactDto.RemindOnBirthday);
 
         await _repository.SaveChangesAsync();
 

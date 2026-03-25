@@ -48,7 +48,6 @@ public class SignificantDateService(IRepository repository) : ISignificantDateSe
             Title = dto.Title,
             Description = dto.Description,
             EventDate = dto.EventDate,
-            YearUnknown = dto.YearUnknown,
             ContactId = dto.EntityId,
             RecurrenceType = dto.RecurrenceType,
             CustomIntervalDays = dto.CustomIntervalDays,
@@ -90,7 +89,6 @@ public class SignificantDateService(IRepository repository) : ISignificantDateSe
             importantDate.Title = dto.Title;
             importantDate.Description = dto.Description;
             importantDate.EventDate = dto.EventDate;
-            importantDate.YearUnknown = dto.YearUnknown;
             importantDate.RecurrenceType = dto.RecurrenceType;
             importantDate.CustomIntervalDays = dto.CustomIntervalDays;
             importantDate.IsActive = dto.IsActive;

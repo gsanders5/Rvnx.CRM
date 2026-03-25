@@ -102,30 +102,28 @@ public class ContactUpdateHelperTests
             d.EventDate == new DateOnly(1990, 5, 15) &&
             d.Title == SignificantDateTitles.Birthday &&
             d.RecurrenceType == RecurrenceType.Annual &&
-            d.IsActive == true &&
-            d.YearUnknown == false), It.IsAny<CancellationToken>()), Times.Once);
+            d.IsActive == true), It.IsAny<CancellationToken>()), Times.Once);
         _repositoryMock.Verify(r => r.UpdateAsync(It.IsAny<SignificantDate>(), It.IsAny<CancellationToken>()), Times.Never);
         _repositoryMock.Verify(r => r.DeleteAsync<SignificantDate>(It.IsAny<Guid>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]
-    public async Task UpdateOrAddBirthdayAsyncWithNewDateAndYearUnknownTrueAddsDateWithMinValueYear()
+    public async Task UpdateOrAddBirthdayAsyncWithSentinelYearAddsDateWithYearOne()
     {
         Guid contactId = Guid.NewGuid();
-        DateTime newDate = new(1990, 5, 15);
+        DateTime newDate = new(1, 5, 15);
 
         _repositoryMock.Setup(r => r.ListAsync(It.IsAny<Expression<Func<ReminderOffset, bool>>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync([]);
 
-        await ContactUpdateHelper.UpdateOrAddBirthdayAsync(_repositoryMock.Object, contactId, newDate, null, false, true);
+        await ContactUpdateHelper.UpdateOrAddBirthdayAsync(_repositoryMock.Object, contactId, newDate, null, false);
 
         _repositoryMock.Verify(r => r.AddAsync(It.Is<SignificantDate>(d =>
             d.ContactId == contactId &&
-            d.EventDate == new DateOnly(DateOnly.MinValue.Year, 5, 15) &&
+            d.EventDate == new DateOnly(1, 5, 15) &&
             d.Title == SignificantDateTitles.Birthday &&
             d.RecurrenceType == RecurrenceType.Annual &&
-            d.IsActive == true &&
-            d.YearUnknown == true), It.IsAny<CancellationToken>()), Times.Once);
+            d.IsActive == true), It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -140,23 +138,23 @@ public class ContactUpdateHelperTests
 
         await ContactUpdateHelper.UpdateOrAddBirthdayAsync(_repositoryMock.Object, contactId, newDate, existingDate, false);
 
-        _repositoryMock.Verify(r => r.UpdateAsync(It.Is<SignificantDate>(d => d.EventDate == new DateOnly(1990, 5, 15) && d.YearUnknown == false), It.IsAny<CancellationToken>()), Times.Once);
+        _repositoryMock.Verify(r => r.UpdateAsync(It.Is<SignificantDate>(d => d.EventDate == new DateOnly(1990, 5, 15)), It.IsAny<CancellationToken>()), Times.Once);
         _repositoryMock.Verify(r => r.AddAsync(It.IsAny<SignificantDate>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]
-    public async Task UpdateOrAddBirthdayAsyncWithNewDateAndExistingDateYearUnknownDifferentUpdatesDate()
+    public async Task UpdateOrAddBirthdayAsyncWithSentinelYearAndExistingDateUpdatesDateToYearOne()
     {
         Guid contactId = Guid.NewGuid();
-        DateTime newDate = new(1990, 5, 15);
-        SignificantDate existingDate = new() { Id = Guid.NewGuid(), EventDate = new DateOnly(1990, 5, 15), YearUnknown = false };
+        DateTime newDate = new(1, 5, 15);
+        SignificantDate existingDate = new() { Id = Guid.NewGuid(), EventDate = new DateOnly(1990, 5, 15) };
 
         _repositoryMock.Setup(r => r.ListAsync(It.IsAny<Expression<Func<ReminderOffset, bool>>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync([]);
 
-        await ContactUpdateHelper.UpdateOrAddBirthdayAsync(_repositoryMock.Object, contactId, newDate, existingDate, false, true);
+        await ContactUpdateHelper.UpdateOrAddBirthdayAsync(_repositoryMock.Object, contactId, newDate, existingDate, false);
 
-        _repositoryMock.Verify(r => r.UpdateAsync(It.Is<SignificantDate>(d => d.EventDate == new DateOnly(DateOnly.MinValue.Year, 5, 15) && d.YearUnknown == true), It.IsAny<CancellationToken>()), Times.Once);
+        _repositoryMock.Verify(r => r.UpdateAsync(It.Is<SignificantDate>(d => d.EventDate == new DateOnly(1, 5, 15)), It.IsAny<CancellationToken>()), Times.Once);
         _repositoryMock.Verify(r => r.AddAsync(It.IsAny<SignificantDate>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 

@@ -266,8 +266,7 @@ public class ContactReadServiceTests
             SignificantDate significantDate = new()
             {
                 Title = SignificantDateTitles.Birthday,
-                EventDate = birthdayDate,
-                YearUnknown = false
+                EventDate = birthdayDate
             };
             significantDate.ReminderOffsets.Add(new ReminderOffset { DaysBeforeEvent = 0, IsActive = true });
 
@@ -295,11 +294,10 @@ public class ContactReadServiceTests
             Assert.NotNull(result);
             Assert.Equal(birthdayDate.ToDateTime(TimeOnly.MinValue), result.Birthday);
             Assert.True(result.RemindOnBirthday);
-            Assert.False(result.BirthdayYearUnknown);
         }
 
         [Fact]
-        public async Task GetContactFormAsyncMapsBirthdayYearUnknownCorrectly()
+        public async Task GetContactFormAsyncMapsBirthdayWithSentinelYearCorrectly()
         {
             Guid contactId = Guid.NewGuid();
             Contact contact = new()
@@ -309,12 +307,11 @@ public class ContactReadServiceTests
                 LastName = "UnknownYear"
             };
 
-            DateOnly birthdayDate = new(DateOnly.MinValue.Year, 5, 15);
+            DateOnly birthdayDate = new(1, 5, 15);
             SignificantDate significantDate = new()
             {
                 Title = SignificantDateTitles.Birthday,
-                EventDate = birthdayDate,
-                YearUnknown = true
+                EventDate = birthdayDate
             };
 
             contact.SignificantDates.Add(significantDate);
@@ -339,8 +336,9 @@ public class ContactReadServiceTests
             ContactFormDto? result = await _service.GetContactFormAsync(contactId);
 
             Assert.NotNull(result);
-            Assert.Equal(birthdayDate.ToDateTime(TimeOnly.MinValue), result.Birthday);
-            Assert.True(result.BirthdayYearUnknown);
+            Assert.Equal(1, result.Birthday?.Year);
+            Assert.Equal(5, result.Birthday?.Month);
+            Assert.Equal(15, result.Birthday?.Day);
         }
 
         [Fact]

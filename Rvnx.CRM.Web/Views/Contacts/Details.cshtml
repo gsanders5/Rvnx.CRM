@@ -474,7 +474,7 @@
 
                                     @if (string.Equals(date.Title, SignificantDateTitles.Birthday, StringComparison.OrdinalIgnoreCase))
                                     {
-                                        @if (!date.YearUnknown)
+                                        @if (date.EventDate.Year != 1)
                                         {
                                             var today = DateTime.Today;
                                             var age = today.Year - date.EventDate.Year;

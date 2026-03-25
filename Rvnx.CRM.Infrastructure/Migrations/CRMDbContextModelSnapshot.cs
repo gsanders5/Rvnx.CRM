@@ -958,9 +958,6 @@ namespace Rvnx.CRM.Infrastructure.Migrations
                         .HasMaxLength(450)
                         .HasColumnType("TEXT");
 
-                    b.Property<bool>("YearUnknown")
-                        .HasColumnType("INTEGER");
-
                     b.HasKey("Id");
 
                     b.HasIndex("ContactId");

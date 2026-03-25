@@ -33,8 +33,6 @@ public class SignificantDate : BaseEntity
     [Display(Name = "Active")]
     public bool IsActive { get; set; } = true;
 
-    public bool YearUnknown { get; set; }
-
     public virtual ICollection<ReminderOffset> ReminderOffsets { get; set; } = [];
 
     public DateOnly GetNextOccurrence()

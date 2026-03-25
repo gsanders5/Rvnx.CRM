@@ -52,7 +52,6 @@ public class SignificantDatesController(ISignificantDateService significantDateS
                 Title = dto.Title,
                 Description = dto.Description,
                 EventDate = dto.EventDate,
-                YearUnknown = dto.YearUnknown,
                 RecurrenceType = dto.RecurrenceType,
                 CustomIntervalDays = dto.CustomIntervalDays,
                 IsActive = true,
@@ -105,7 +104,6 @@ public class SignificantDatesController(ISignificantDateService significantDateS
             Title = dto.Title,
             Description = dto.Description,
             EventDate = dto.EventDate,
-            YearUnknown = dto.YearUnknown,
             RecurrenceType = dto.RecurrenceType,
             CustomIntervalDays = dto.CustomIntervalDays,
             IsActive = dto.IsActive
@@ -131,7 +129,6 @@ public class SignificantDatesController(ISignificantDateService significantDateS
                 Title = dto.Title,
                 Description = dto.Description,
                 EventDate = dto.EventDate,
-                YearUnknown = dto.YearUnknown,
                 RecurrenceType = dto.RecurrenceType,
                 CustomIntervalDays = dto.CustomIntervalDays,
                 IsActive = dto.IsActive

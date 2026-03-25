@@ -38,25 +38,18 @@ internal static class ContactUpdateHelper
         }
     }
 
-    public static async Task UpdateOrAddBirthdayAsync(IRepository repository, Guid contactId, DateTime? newDate, SignificantDate? existingDate, bool remindOnBirthday, bool birthdayYearUnknown = false)
+    public static async Task UpdateOrAddBirthdayAsync(IRepository repository, Guid contactId, DateTime? newDate, SignificantDate? existingDate, bool remindOnBirthday)
     {
         if (newDate.HasValue)
         {
             DateOnly newDateOnly = DateOnly.FromDateTime(newDate.Value);
-
-            if (birthdayYearUnknown)
-            {
-                newDateOnly = new DateOnly(DateOnly.MinValue.Year, newDateOnly.Month, newDateOnly.Day);
-            }
-
             SignificantDate targetDate = existingDate!;
 
             if (existingDate != null)
             {
-                if (existingDate.EventDate != newDateOnly || existingDate.YearUnknown != birthdayYearUnknown)
+                if (existingDate.EventDate != newDateOnly)
                 {
                     existingDate.EventDate = newDateOnly;
-                    existingDate.YearUnknown = birthdayYearUnknown;
                     await repository.UpdateAsync(existingDate);
                 }
             }
@@ -68,7 +61,6 @@ internal static class ContactUpdateHelper
                     ContactId = contactId,
                     Title = SignificantDateTitles.Birthday,
                     EventDate = newDateOnly,
-                    YearUnknown = birthdayYearUnknown,
                     Description = "Birthday",
                     RecurrenceType = RecurrenceType.Annual,
                     IsActive = true

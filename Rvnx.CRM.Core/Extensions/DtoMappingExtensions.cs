@@ -31,7 +31,6 @@ public static class DtoMappingExtensions
             Id = entity.Id,
             Title = entity.Title ?? string.Empty,
             EventDate = entity.EventDate,
-            YearUnknown = entity.YearUnknown,
             Description = entity.Description,
             EntityId = entity.ContactId ?? Guid.Empty,
             EntityType = EntityTypes.Person,

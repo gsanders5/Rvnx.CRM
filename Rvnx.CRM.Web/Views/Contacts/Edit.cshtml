@@ -68,8 +68,8 @@
             </div>
 
             <div class="mb-3 form-check form-switch">
-                <input asp-for="BirthdayYearUnknown" class="form-check-input" id="BirthdayYearUnknownField" />
-                <label asp-for="BirthdayYearUnknown" class="form-check-label"></label>
+                <input type="checkbox" class="form-check-input" id="BirthdayYearUnknownField" @(Model.Birthday?.Year == 1 ? "checked" : "") />
+                <label class="form-check-label" for="BirthdayYearUnknownField">Year Unknown</label>
             </div>
 
             <div class="mb-3 form-check form-switch">
