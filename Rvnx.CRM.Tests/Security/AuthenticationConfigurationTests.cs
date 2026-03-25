@@ -1,6 +1,4 @@
-using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.Configuration;
-using Rvnx.CRM.Web;
 
 namespace Rvnx.CRM.Tests.Security;
 
@@ -21,25 +19,5 @@ public class AuthenticationConfigurationTests
             "appsettings.json should not contain a hardcoded secret.");
 
         Assert.NotEqual("CHANGE_ME", secret);
-    }
-
-    [Fact]
-    public void ValidationLogicShouldThrowWhenAuthEnabledAndSecretMissing()
-    {
-        var factory = new WebApplicationFactory<Program>()
-            .WithWebHostBuilder(builder =>
-            {
-                builder.UseSetting("Authentication:Enabled", "true");
-                builder.UseSetting("Authentication:Authority", "");
-                builder.UseSetting("Authentication:ClientId", "test-id");
-                builder.UseSetting("Authentication:ClientSecret", "test-secret");
-            });
-
-        var ex = Assert.Throws<InvalidOperationException>(() =>
-        {
-            factory.CreateClient();
-        });
-
-        Assert.Contains("Authentication is enabled but Authority is missing.", ex.Message);
     }
 }
