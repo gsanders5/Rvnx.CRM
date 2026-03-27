@@ -56,3 +56,8 @@
 **Vulnerability:** The `HttpClient` registered for `IVCardService` in `ServiceCollectionExtensions` had no explicit timeout configured.
 **Learning:** By default, `HttpClient` has a very long timeout (often 100 seconds). If an external server hangs during operations like downloading a profile photo, the application thread can block, potentially leading to a Denial of Service (DoS) condition under heavy load.
 **Prevention:** Always configure an explicit, reasonable timeout (e.g., `TimeSpan.FromSeconds(10)`) when registering `HttpClient` services in the DI container.
+
+## 2024-03-27 - Hardcoded SMTP Secrets
+**Vulnerability:** Default values like `"your-username"` and `"your-password"` in `appsettings.json` are committed to source control, which might mistakenly be deployed or modified to include real credentials and leaked.
+**Learning:** Configurations shouldn't contain hardcoded placeholder credentials; this pattern could lead to accidentally committing valid production credentials if someone updates `appsettings.json` instead of using user secrets or environment overrides.
+**Prevention:** Replace placeholder credentials with empty strings `""` in base `appsettings.json` to enforce configuration through secure mechanisms like environment variables (e.g., `EmailNotifications__SmtpSettings__Password`) or `appsettings.Local.json`.
