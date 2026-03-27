@@ -102,3 +102,6 @@ Action: When a service builds a read-only in-memory aggregate (graph nodes, rece
 ## 2026-03-23 - Pre-fetch and O(1) Lookups for N+1 Queries
 **Learning:** Executing `_repository.ListAsync` inside a loop (e.g., inside `MergeService`) creates an N+1 query problem, severely impacting backend performance during batch operations. Replacing LINQ `.Select().ToHashSet()` with pre-sized HashSets via `foreach` additions avoids dynamic resizing and iterator overhead.
 **Action:** When avoiding N+1 query issues in Rvnx.CRM batch operations, pre-fetch the necessary records into a properly sized `HashSet` before the loop to perform O(1) in-memory lookups. Do not use LINQ `.Select().ToHashSet()` when pre-allocating the `HashSet`.
+## 2024-05-14 - Optimize HashSet Insertions
+**Learning:** C# HashSet.Add returns a boolean indicating whether the element was added. Using `if (set.Add(item))` avoids a redundant `.Contains(item)` lookup, making deduplication faster.
+**Action:** When conditionally processing items based on their absence from a `HashSet`, directly evaluate the boolean return value of `set.Add(item)` instead of calling `.Contains` first.

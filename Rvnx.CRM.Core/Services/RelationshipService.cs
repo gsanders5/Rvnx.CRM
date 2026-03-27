@@ -86,10 +86,9 @@ public class RelationshipService(IRepository repository) : IRelationshipService
                         SwapRelationshipEntities(newRel);
                     }
 
-                    if (!existingEdges.Contains((newRel.EntityId, newRel.RelatedEntityId)))
+                    if (existingEdges.Add((newRel.EntityId, newRel.RelatedEntityId)))
                     {
                         await repository.AddAsync(newRel);
-                        existingEdges.Add((newRel.EntityId, newRel.RelatedEntityId));
                         existingEdges.Add((newRel.RelatedEntityId, newRel.EntityId));
                     }
                 }
@@ -381,10 +380,9 @@ public class RelationshipService(IRepository repository) : IRelationshipService
                         SwapRelationshipEntities(newRel);
                     }
 
-                    if (!existingEdges.Contains((newRel.EntityId, newRel.RelatedEntityId)))
+                    if (existingEdges.Add((newRel.EntityId, newRel.RelatedEntityId)))
                     {
                         await repository.AddAsync(newRel);
-                        existingEdges.Add((newRel.EntityId, newRel.RelatedEntityId));
                         existingEdges.Add((newRel.RelatedEntityId, newRel.EntityId));
                     }
                 }
