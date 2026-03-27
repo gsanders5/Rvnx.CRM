@@ -39,3 +39,6 @@
 
 **Learning:** String-manipulation logic (`ExtractUsername` for social media URIs) incorrectly resided in the `Web` layer (`SocialMediaEmbedHelper`) despite being a domain-level data normalization rule.
 **Action:** When finding logic that normalizes or validates strings representing domain concepts, verify it lives in `Core` (like `SocialMediaUrlNormalizer`). Move it if it's currently in a Web layer helper to centralize the rules.
+## 2025-02-12 - Remove Infrastructure Attributes from Core Domain Models
+**Learning:** EF Core domain models in `Rvnx.CRM.Core` must not be decorated with infrastructure attributes (e.g., `[Table]`, `[ForeignKey]`). When removing these, the explicit table name must be mapped in `CRMDbContext` Fluent API (e.g., `modelBuilder.Entity<T>().ToTable("Name")`) to prevent EF Core default pluralization from causing unintended database schema changes, and care must be taken to preserve existing configurations like `HasCheckConstraint` using the second overload of `ToTable`.
+**Action:** When migrating domain persistence configuration out of `Core`, always grep `CRMDbContext.cs` first to check for existing configuration logic to merge with.

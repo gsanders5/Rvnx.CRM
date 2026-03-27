@@ -90,7 +90,7 @@ public class CRMDbContext(DbContextOptions<CRMDbContext> options, ICurrentUserSe
             .OnDelete(DeleteBehavior.Cascade);
 
         modelBuilder.Entity<Fact>()
-            .ToTable(t => t.HasCheckConstraint("CHK_Fact_Owner", "ContactId IS NOT NULL"));
+            .ToTable("Fact", t => t.HasCheckConstraint("CHK_Fact_Owner", "ContactId IS NOT NULL"));
 
         modelBuilder.Entity<Address>()
             .HasOne(e => e.Contact)
@@ -99,7 +99,7 @@ public class CRMDbContext(DbContextOptions<CRMDbContext> options, ICurrentUserSe
             .OnDelete(DeleteBehavior.Cascade);
 
         modelBuilder.Entity<Address>()
-            .ToTable(t => t.HasCheckConstraint("CHK_Address_Owner", "ContactId IS NOT NULL"));
+            .ToTable("Address", t => t.HasCheckConstraint("CHK_Address_Owner", "ContactId IS NOT NULL"));
 
         modelBuilder.Entity<Note>()
             .HasOne(e => e.Contact)
