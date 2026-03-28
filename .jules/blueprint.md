@@ -39,3 +39,7 @@
 
 **Learning:** String-manipulation logic (`ExtractUsername` for social media URIs) incorrectly resided in the `Web` layer (`SocialMediaEmbedHelper`) despite being a domain-level data normalization rule.
 **Action:** When finding logic that normalizes or validates strings representing domain concepts, verify it lives in `Core` (like `SocialMediaUrlNormalizer`). Move it if it's currently in a Web layer helper to centralize the rules.
+
+## 2026-03-28 - [Extract Infrastructure Attributes from Domain Models]
+**Learning:** In Rvnx.CRM, EF Core attributes like `[Table]` and `[ForeignKey]` were incorrectly placed directly on domain models (e.g., `Fact`, `Pet`) within the `Core` layer. This violates clean architecture by tightly coupling domain definitions to infrastructure/persistence concerns.
+**Action:** Always migrate infrastructure attributes to explicit Fluent API configurations within the `Infrastructure` layer's `DbContext`. This maintains the purity of the `Core` layer and centralizes all database mappings.

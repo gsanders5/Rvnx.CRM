@@ -1,16 +1,13 @@
 using Rvnx.CRM.Core.Models.Base;
 using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Rvnx.CRM.Core.Models.Contact;
 
-[Table("Pet")]
 public class Pet : BaseEntity
 {
     [Required]
     public Guid ContactId { get; set; }
 
-    [ForeignKey(nameof(ContactId))]
     public virtual Contact Contact { get; set; } = null!;
 
     [Required]
