@@ -185,6 +185,87 @@ public class RelationshipServiceTests
     }
 
     [Fact]
+    public async Task GetRelationshipForEditAsyncWhenFoundReturnsRelationship()
+    {
+        Guid relationshipId = Guid.NewGuid();
+        Relationship relationship = new() { Id = relationshipId };
+
+        _repositoryMock.Setup(r => r.GetByIdAsync<Relationship>(relationshipId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(relationship);
+
+        Relationship? result = await _service.GetRelationshipForEditAsync(relationshipId);
+
+        Assert.NotNull(result);
+        Assert.Equal(relationshipId, result.Id);
+        _repositoryMock.Verify(r => r.GetByIdAsync<Relationship>(relationshipId, It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task GetRelationshipForEditAsyncWhenNotFoundReturnsNull()
+    {
+        Guid relationshipId = Guid.NewGuid();
+
+        _repositoryMock.Setup(r => r.GetByIdAsync<Relationship>(relationshipId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync((Relationship?)null);
+
+        Relationship? result = await _service.GetRelationshipForEditAsync(relationshipId);
+
+        Assert.Null(result);
+        _repositoryMock.Verify(r => r.GetByIdAsync<Relationship>(relationshipId, It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task GetRelationshipForDeleteAsyncWhenFoundReturnsRelationshipWithPopulatedContacts()
+    {
+        Guid relationshipId = Guid.NewGuid();
+        Guid p1Id = Guid.NewGuid();
+        Guid p2Id = Guid.NewGuid();
+
+        Relationship relationship = new()
+        {
+            Id = relationshipId,
+            EntityId = p1Id,
+            RelatedEntityId = p2Id
+        };
+
+        Contact contact1 = new() { Id = p1Id, FirstName = "John" };
+        Contact contact2 = new() { Id = p2Id, FirstName = "Jane" };
+
+        _repositoryMock.Setup(r => r.GetByIdAsync<Relationship>(relationshipId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(relationship);
+
+        _repositoryMock.Setup(r => r.ListAsync(It.IsAny<Expression<Func<Contact, bool>>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync([contact1, contact2]);
+
+        Relationship? result = await _service.GetRelationshipForDeleteAsync(relationshipId);
+
+        Assert.NotNull(result);
+        Assert.Equal(relationshipId, result.Id);
+        Assert.NotNull(result.Person);
+        Assert.Equal(p1Id, result.Person.Id);
+        Assert.NotNull(result.RelatedPerson);
+        Assert.Equal(p2Id, result.RelatedPerson.Id);
+
+        _repositoryMock.Verify(r => r.GetByIdAsync<Relationship>(relationshipId, It.IsAny<CancellationToken>()), Times.Once);
+        _repositoryMock.Verify(r => r.ListAsync(It.IsAny<Expression<Func<Contact, bool>>>(), It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task GetRelationshipForDeleteAsyncWhenNotFoundReturnsNull()
+    {
+        Guid relationshipId = Guid.NewGuid();
+
+        _repositoryMock.Setup(r => r.GetByIdAsync<Relationship>(relationshipId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync((Relationship?)null);
+
+        Relationship? result = await _service.GetRelationshipForDeleteAsync(relationshipId);
+
+        Assert.Null(result);
+        _repositoryMock.Verify(r => r.GetByIdAsync<Relationship>(relationshipId, It.IsAny<CancellationToken>()), Times.Once);
+        _repositoryMock.Verify(r => r.ListAsync(It.IsAny<Expression<Func<Contact, bool>>>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Naming", "CA1707:Identifiers should not contain underscores",
         Justification = "Test names follow a standard convention")]
     public async Task GetSuggestedRelationshipsAsync_ReturnsSuggestions()
