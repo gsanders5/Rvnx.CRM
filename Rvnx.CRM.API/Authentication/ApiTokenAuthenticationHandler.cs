@@ -64,7 +64,6 @@ public class ApiTokenAuthenticationHandler : AuthenticationHandler<ApiTokenAuthe
             return AuthenticateResult.Fail("Invalid or missing API token.");
         }
 
-        // We have a valid user
         Claim[] claims = new[]
         {
             new Claim(ClaimTypes.NameIdentifier, _currentUserService.UserId.ToString() ?? string.Empty),

@@ -326,14 +326,12 @@ public class DashboardServiceTests
 
         Assert.NotNull(result);
 
-        // Assert Stats
         Assert.NotNull(result.Stats);
         Assert.Equal(3, result.Stats.TotalContacts);
         Assert.Equal(1, result.Stats.ContactsWithBirthday);
         Assert.Equal(2, result.Stats.ContactsWithRelationships); // Alice and Bob
         Assert.Equal(2, result.Stats.ContactsHidden);
 
-        // Assert RecentContacts (should be sorted by LastChangedDate descending)
         Assert.NotNull(result.RecentContacts);
         Assert.Equal(3, result.RecentContacts.Count);
         Assert.Equal(contactId1, result.RecentContacts[0].Id); // Alice (LastChangedDate = now)

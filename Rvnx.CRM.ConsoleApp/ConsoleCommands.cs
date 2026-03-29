@@ -202,7 +202,6 @@ internal static class ConsoleCommands
     {
         IDebugOperationsService debugOps = services.GetRequiredService<IDebugOperationsService>();
 
-        // No args — just list users.
         if (args.Length < 3)
         {
             List<MergeUserDto> users = await debugOps.GetAllUsersWithGroupsAsync();

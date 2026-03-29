@@ -176,11 +176,9 @@ public class ContactManagementServiceTests
             Assert.True(result.Success);
             Assert.Equal(contactId, result.ContactId);
 
-            // Archives old
             Assert.Equal(AttachmentTypes.General, existingProfilePic.AttachmentType);
             _repositoryMock.Verify(r => r.UpdateRangeAsync(It.Is<IEnumerable<Attachment>>(list => list.Contains(existingProfilePic)), It.IsAny<CancellationToken>()), Times.Once());
 
-            // Sets new
             Assert.Equal(AttachmentTypes.ProfileImage, attachment.AttachmentType);
             _repositoryMock.Verify(r => r.UpdateAsync(attachment, It.IsAny<CancellationToken>()), Times.Once());
             _repositoryMock.Verify(r => r.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once());

@@ -42,7 +42,6 @@ public class FactServiceTests
         _repositoryMock.Setup(r => r.ExistsAsync<Fact>(factId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(true);
 
-        // Act & Assert
         await Assert.ThrowsAsync<EntityConcurrencyException>(() => _service.UpdateAsync(factId, dto));
     }
 
