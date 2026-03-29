@@ -71,7 +71,14 @@ public class ContactManagementService(IRepository repository, IFileValidationSer
                         potentialFullContactIds,
                         chunk => c => chunk.Contains(c.Id) && !c.IsPartial,
                         asNoTracking: true);
-                    confirmedFullContactIds = fullContacts.Select(c => c.Id).ToHashSet();
+
+                    // Optimization: Pre-allocate HashSet capacity and populate via foreach
+                    // to avoid LINQ iterator state machine allocations and dynamic array resizing overhead.
+                    confirmedFullContactIds = new HashSet<Guid>(fullContacts.Count);
+                    foreach (Contact c in fullContacts)
+                    {
+                        confirmedFullContactIds.Add(c.Id);
+                    }
                 }
 
                 Dictionary<Guid, List<Relationship>> relsByContactId = partialContactIds.ToDictionary(id => id, id => new List<Relationship>());
