@@ -76,6 +76,9 @@
 ## 2024-05-24 - Exhaustive `switch` pattern matching tests for missing branches
 **Learning:** In C#, helper methods using large `switch` expressions (like `SocialMediaUrlNormalizer.Normalize`) often have untested branches. If a new `ContactMethodType` enum is added but missed in the `switch`, or if default fallback logic is incorrectly mapped, it can lead to bad data without breaking existing "happy path" tests.
 **Action:** When testing methods with complex conditional logic or switch statements that rely on a default fallback, always add explicit test cases for known valid states (e.g., null properties, zero values, or valid types) that are expected to fall through to the default, rather than assuming implicit correctness or only testing with generic 'Unknown' inputs.
+## 2026-03-25 - DateCalculationService boundary tests
+**Learning:** Adding tests to an existing test class requires strict adherence to its naming conventions (e.g. no underscores if CA1707 is enforced by the project analyzer).
+**Action:** When adding new tests in Rvnx.CRM.Tests, verify the existing test name formats in the file and match them to avoid build failures due to naming rule violations.
 ## 2026-03-26 - Ensure early exit conditions are explicitly tested
 **Learning:** In `DateCalculationService.GetNextOccurrence`, the early exit logic for future dates (`if (significantDate.EventDate > fromDate) return significantDate.EventDate;`) was untested. This allowed the possibility of a regression where future events are incorrectly passed into recurrence logic and advanced unnecessarily.
 **Action:** When a method has early-exit conditional blocks at its beginning, ensure explicit test cases exist that satisfy these conditions to avoid them being refactored away and leading to subtle logic errors.
