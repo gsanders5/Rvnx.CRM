@@ -167,10 +167,19 @@ public class ContactReadService(IRepository repository) : IContactReadService
         List<Relationship> relationships = allRelationships.Where(r => r.EntityId == id).ToList();
         List<Relationship> relatedTo = allRelationships.Where(r => r.RelatedEntityId == id).ToList();
 
-        List<Guid> relatedIds = relationships.Select(r => r.RelatedEntityId)
-            .Concat(relatedTo.Select(r => r.EntityId))
-            .Distinct()
-            .ToList();
+        // Optimization: Replace LINQ Select().Concat().Distinct().ToList() with a pre-sized HashSet and foreach loops
+        // to avoid multiple intermediate enumerator allocations and dynamic array resizing.
+        HashSet<Guid> relatedIdsSet = new(relationships.Count + relatedTo.Count);
+        foreach (var r in relationships)
+        {
+            relatedIdsSet.Add(r.RelatedEntityId);
+        }
+        foreach (var r in relatedTo)
+        {
+            relatedIdsSet.Add(r.EntityId);
+        }
+
+        List<Guid> relatedIds = [.. relatedIdsSet];
 
         List<Contact> relatedContacts = [];
         if (relatedIds.Count > 0)
