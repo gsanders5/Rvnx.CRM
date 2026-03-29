@@ -39,3 +39,6 @@
 
 **Learning:** String-manipulation logic (`ExtractUsername` for social media URIs) incorrectly resided in the `Web` layer (`SocialMediaEmbedHelper`) despite being a domain-level data normalization rule.
 **Action:** When finding logic that normalizes or validates strings representing domain concepts, verify it lives in `Core` (like `SocialMediaUrlNormalizer`). Move it if it's currently in a Web layer helper to centralize the rules.
+## 2026-03-29 - [Extract Infrastructure Claims from Core Interface]
+**Learning:** The `System.Security.Claims.ClaimsPrincipal` is an ASP.NET Core infrastructure/web type that was incorrectly leaked into the `ISelfContactService` domain interface, coupling the Core layer to identity abstractions.
+**Action:** When a domain service requires user information, do not pass `ClaimsPrincipal`. Instead, orchestrate claims synchronization in the Web layer (Controllers) and pass primitive identifiers, or rely entirely on a domain abstraction like `ICurrentUserService` to retrieve the authenticated user's state.
