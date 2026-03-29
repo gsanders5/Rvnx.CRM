@@ -103,6 +103,10 @@ Action: When a service builds a read-only in-memory aggregate (graph nodes, rece
 **Learning:** Executing `_repository.ListAsync` inside a loop (e.g., inside `MergeService`) creates an N+1 query problem, severely impacting backend performance during batch operations. Replacing LINQ `.Select().ToHashSet()` with pre-sized HashSets via `foreach` additions avoids dynamic resizing and iterator overhead.
 **Action:** When avoiding N+1 query issues in Rvnx.CRM batch operations, pre-fetch the necessary records into a properly sized `HashSet` before the loop to perform O(1) in-memory lookups. Do not use LINQ `.Select().ToHashSet()` when pre-allocating the `HashSet`.
 
+## 2026-03-26 - Optimize IsPartialContactAsync to avoid full entity fetching
+**Learning:** Helper methods like `IsPartialContactAsync` in `AttachmentService.cs` frequently use `GetByIdAsync` which fetches the entire entity with all columns into memory. This creates substantial unnecessary allocation and serialization overhead when only a single property (like a boolean flag) is needed.
+**Action:** Replaced `GetByIdAsync` with `ListProjectedAsync` in read-only helper methods to fetch only the needed properties from the database (e.g., `IsPartial`). Also, ensure proper handling of empty projected lists utilizing `FirstOrDefault()` without arguments to prevent null exception.
+
 ## 2025-02-14 - HashSet LINQ Chain Optimization
 **Learning:** In modern .NET, replacing a LINQ chain like `Select().Concat().Distinct().ToList()` with a manually populated, pre-sized `HashSet` avoids multiple intermediate enumerator allocations, dynamic array resizing, and multiple iterations over the collections. Using `[.. hashSet]` for the final conversion to list is a highly optimized C# 12 feature.
 **Action:** When extracting and merging distinct IDs from multiple collections, pre-allocate a `HashSet` with the combined capacity of the source collections, populate it using `foreach` loops, and convert it to a list using a collection expression (`[.. hashSet]`).
