@@ -29,11 +29,11 @@
                                         <div class="p-3 rounded shadow-sm me-3 text-primary bg-primary bg-opacity-10 flex-shrink-0">
                                             @if (evt.Type == SignificantDateTitles.Birthday)
                                             {
-                                                <i class="bi bi-gift-fill fs-5"></i>
+                                                <i class="bi bi-gift-fill fs-5" aria-hidden="true"></i>
                                             }
                                             else
                                             {
-                                                <i class="bi bi-alarm-fill fs-5"></i>
+                                                <i class="bi bi-alarm-fill fs-5" aria-hidden="true"></i>
                                             }
                                         </div>
                                         <div>
@@ -100,7 +100,7 @@
                                             Changed @contact.LastChangedDate.ToShortDateString()
                                         </div>
                                     </div>
-                                    <i class="bi bi-chevron-right text-muted flex-shrink-0"></i>
+                                    <i class="bi bi-chevron-right text-muted flex-shrink-0" aria-hidden="true"></i>
                                 </a>
                             }
                         </div>
@@ -119,20 +119,20 @@
         <div class="card-header bg-transparent border-0 pt-4 px-4 d-flex justify-content-between align-items-center">
             <h2 class="text-primary font-weight-bold mb-0">Your Network</h2>
             <button id="fullscreen-btn" class="btn btn-outline-primary btn-sm" title="Toggle Fullscreen" aria-label="Toggle Fullscreen">
-                <i class="bi bi-arrows-fullscreen"></i>
+                <i class="bi bi-arrows-fullscreen" aria-hidden="true"></i>
             </button>
         </div>
         <div class="card-body p-0 position-relative">
             <div id="network-graph" style="width: 100%; height: 500px; background-color: var(--bs-body-bg); overflow: hidden;"></div>
             <div class="position-absolute bottom-0 end-0 mb-3 me-3 btn-group-vertical shadow-sm" style="z-index: 10;">
                 <button id="zoom-in-btn" class="btn btn-light border" title="Zoom In" aria-label="Zoom In">
-                    <i class="bi bi-plus-lg"></i>
+                    <i class="bi bi-plus-lg" aria-hidden="true"></i>
                 </button>
                 <button id="zoom-out-btn" class="btn btn-light border" title="Zoom Out" aria-label="Zoom Out">
-                    <i class="bi bi-dash-lg"></i>
+                    <i class="bi bi-dash-lg" aria-hidden="true"></i>
                 </button>
                 <button id="reset-zoom-btn" class="btn btn-light border" title="Reset View" aria-label="Reset View">
-                    <i class="bi bi-arrow-counterclockwise"></i>
+                    <i class="bi bi-arrow-counterclockwise" aria-hidden="true"></i>
                 </button>
             </div>
         </div>
@@ -144,7 +144,7 @@
             <div class="card shadow-sm border-primary border-opacity-25 text-center py-3" style="border-width: 2px;">
                 <div class="card-body py-2">
                     <div class="display-6 fw-bold text-primary">@Model.Stats.TotalContacts</div>
-                    <div class="small text-muted mt-1"><i class="bi bi-people-fill me-1"></i>Total Contacts</div>
+                    <div class="small text-muted mt-1"><i class="bi bi-people-fill me-1" aria-hidden="true"></i>Total Contacts</div>
                 </div>
             </div>
         </div>
@@ -152,7 +152,7 @@
             <div class="card shadow-sm border-success border-opacity-25 text-center py-3" style="border-width: 2px;">
                 <div class="card-body py-2">
                     <div class="display-6 fw-bold text-success">@Model.Stats.ContactsWithRelationships</div>
-                    <div class="small text-muted mt-1"><i class="bi bi-diagram-3-fill me-1"></i>In Your Network</div>
+                    <div class="small text-muted mt-1"><i class="bi bi-diagram-3-fill me-1" aria-hidden="true"></i>In Your Network</div>
                 </div>
             </div>
         </div>
@@ -160,7 +160,7 @@
             <div class="card shadow-sm border-warning border-opacity-25 text-center py-3" style="border-width: 2px;">
                 <div class="card-body py-2">
                     <div class="display-6 fw-bold text-warning">@Model.Stats.ContactsWithBirthday</div>
-                    <div class="small text-muted mt-1"><i class="bi bi-gift-fill me-1"></i>Birthdays Tracked</div>
+                    <div class="small text-muted mt-1"><i class="bi bi-gift-fill me-1" aria-hidden="true"></i>Birthdays Tracked</div>
                 </div>
             </div>
         </div>
@@ -168,7 +168,7 @@
             <div class="card shadow-sm border-secondary border-opacity-25 text-center py-3" style="border-width: 2px;">
                 <div class="card-body py-2">
                     <div class="display-6 fw-bold text-secondary">@Model.Stats.ContactsHidden</div>
-                    <div class="small text-muted mt-1"><i class="bi bi-eye-slash-fill me-1"></i>Hidden</div>
+                    <div class="small text-muted mt-1"><i class="bi bi-eye-slash-fill me-1" aria-hidden="true"></i>Hidden</div>
                 </div>
             </div>
         </div>

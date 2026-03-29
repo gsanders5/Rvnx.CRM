@@ -7,6 +7,21 @@ namespace Rvnx.CRM.Tests.Services;
 public class DateCalculationServiceTests
 {
     [Fact]
+    public void GetNextOccurrenceWhenEventDateIsInFutureReturnsEventDate()
+    {
+        SignificantDate significantDate = new()
+        {
+            EventDate = new DateOnly(2025, 5, 15),
+            RecurrenceType = RecurrenceType.Annual
+        };
+        DateOnly today = new(2023, 2, 1);
+
+        DateOnly result = DateCalculationService.GetNextOccurrence(significantDate, today);
+
+        Assert.Equal(new DateOnly(2025, 5, 15), result);
+    }
+
+    [Fact]
     public void GetNextOccurrenceAnnualSameYearWhenDateNotYetPassed()
     {
         SignificantDate significantDate = new()

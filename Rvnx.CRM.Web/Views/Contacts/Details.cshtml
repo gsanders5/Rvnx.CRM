@@ -405,7 +405,7 @@
             @if (grouped.Any())
             {
                 <div class="text-end">
-                    <a asp-controller="Relationships" asp-action="Create" asp-route-entityId="@Model.Id" asp-route-entityType="Person" class="btn btn-primary btn-sm">Add Relationship</a>
+                    <a asp-controller="Relationships" asp-action="Create" asp-route-entityId="@Model.Id" asp-route-entityType="Person" class="btn btn-primary btn-sm" aria-label="Add Relationship"><i class="bi bi-plus-lg" aria-hidden="true"></i> Add Relationship</a>
                 </div>
             }
         </div>
@@ -583,7 +583,7 @@
                         <label for="file" class="form-label small">Select File</label>
                         <input type="file" name="file" class="form-control form-control-sm" required/>
                     </div>
-                    <button type="submit" class="btn btn-primary btn-sm">Upload</button>
+                    <button type="submit" class="btn btn-primary btn-sm" aria-label="Upload Attachment"><i class="bi bi-upload" aria-hidden="true"></i> Upload</button>
                 </form>
             </div>
 
