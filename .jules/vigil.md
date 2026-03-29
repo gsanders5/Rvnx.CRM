@@ -79,3 +79,6 @@
 ## 2026-03-26 - Ensure early exit conditions are explicitly tested
 **Learning:** In `DateCalculationService.GetNextOccurrence`, the early exit logic for future dates (`if (significantDate.EventDate > fromDate) return significantDate.EventDate;`) was untested. This allowed the possibility of a regression where future events are incorrectly passed into recurrence logic and advanced unnecessarily.
 **Action:** When a method has early-exit conditional blocks at its beginning, ensure explicit test cases exist that satisfy these conditions to avoid them being refactored away and leading to subtle logic errors.
+## 2026-03-25 - [Testing Read Methods in Services]
+**Learning:** Read methods in services (like `GetRelationshipForDeleteAsync`) might seem like simple repository wrappers that don't need tests. However, they can contain hidden business logic (like populating related entities manually) that is not immediately obvious. If left untested, this business logic could easily be inadvertently removed or altered during refactoring without any tests failing.
+**Action:** Always write tests for read methods in services if they contain any logic beyond a straight repository pass-through. Even populating properties from a secondary query warrants edge-case testing.

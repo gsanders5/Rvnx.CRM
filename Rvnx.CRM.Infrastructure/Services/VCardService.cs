@@ -381,15 +381,7 @@ public class VCardService : IVCardService
         IPAddress ipv6 = ipAddress.MapToIPv6();
         byte[] bytes = ipv6.GetAddressBytes();
 
-        bool isAny = true;
-        for (int i = 0; i < bytes.Length; i++)
-        {
-            if (bytes[i] != 0)
-            {
-                isAny = false;
-            }
-        }
-        if (isAny)
+        if (bytes.All(b => b == 0))
         {
             return false;
         }
@@ -400,10 +392,7 @@ public class VCardService : IVCardService
             {
                 return false;
             }
-        }
 
-        if (ipAddress.AddressFamily == AddressFamily.InterNetwork)
-        {
             byte[] v4bytes = ipAddress.GetAddressBytes();
 
             return v4bytes[0] != 0 && v4bytes[0] != 10 && (v4bytes[0] != 172 || v4bytes[1] < 16 || v4bytes[1] > 31) && (v4bytes[0] != 192 || v4bytes[1] != 168) && (v4bytes[0] != 169 || v4bytes[1] != 254) && v4bytes[0] != 127;
