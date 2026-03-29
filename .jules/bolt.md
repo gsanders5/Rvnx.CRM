@@ -106,3 +106,10 @@ Action: When a service builds a read-only in-memory aggregate (graph nodes, rece
 ## 2026-03-25 - Pre-allocated HashSet for Contact ID Tracking
 **Learning:** Replacing `.Select().ToHashSet()` with a pre-allocated `HashSet` and a `foreach` loop eliminates LINQ iterator overhead and prevents dynamic array resizing during insertion. This is particularly relevant when tracking collections of Entity IDs during batch operations.
 **Action:** When gathering related entity IDs or performing aggregations into a `HashSet`, and the exact count of items is known, manually pre-allocate the `HashSet` using the source collection's count and populate it via a single loop instead of chaining LINQ collection extensions.
+## 2026-03-26 - Optimize IsPartialContactAsync to avoid full entity fetching
+**Learning:** Helper methods like `IsPartialContactAsync` in `AttachmentService.cs` frequently use `GetByIdAsync` which fetches the entire entity with all columns into memory. This creates substantial unnecessary allocation and serialization overhead when only a single property (like a boolean flag) is needed.
+**Action:** Replaced `GetByIdAsync` with `ListProjectedAsync` in read-only helper methods to fetch only the needed properties from the database (e.g., `IsPartial`). Also, ensure proper handling of empty projected lists utilizing `FirstOrDefault()` without arguments to prevent null exception.
+
+## 2025-02-14 - HashSet LINQ Chain Optimization
+**Learning:** In modern .NET, replacing a LINQ chain like `Select().Concat().Distinct().ToList()` with a manually populated, pre-sized `HashSet` avoids multiple intermediate enumerator allocations, dynamic array resizing, and multiple iterations over the collections. Using `[.. hashSet]` for the final conversion to list is a highly optimized C# 12 feature.
+**Action:** When extracting and merging distinct IDs from multiple collections, pre-allocate a `HashSet` with the combined capacity of the source collections, populate it using `foreach` loops, and convert it to a list using a collection expression (`[.. hashSet]`).
