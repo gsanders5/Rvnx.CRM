@@ -110,7 +110,6 @@ public class CRMDbContext(DbContextOptions<CRMDbContext> options, ICurrentUserSe
         modelBuilder.Entity<Note>()
             .ToTable(t => t.HasCheckConstraint("CHK_Note_Owner", "ContactId IS NOT NULL"));
 
-        // SignificantDate
         modelBuilder.Entity<SignificantDate>()
             .HasOne(e => e.Contact)
             .WithMany(c => c.SignificantDates)

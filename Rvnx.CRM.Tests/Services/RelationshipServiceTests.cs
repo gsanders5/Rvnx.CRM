@@ -57,13 +57,10 @@ public class RelationshipServiceTests
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Naming", "CA1707:Identifiers should not contain underscores", Justification = "Test names follow standard convention")]
     public void GetRelationshipTypeOptions_Symmetric_ReturnsOneOption()
     {
-        // Arrange
         // (No arrange needed as we are using the statically populated list of relationship types)
 
-        // Act
         List<SelectOptionDto> result = _service.GetRelationshipTypeOptions(EntityTypes.Person);
 
-        // Assert
         List<SelectOptionDto> spouseOptions = result.Where(x => x.Value.StartsWith(RelationshipTypeIds.Spouse.ToString(), StringComparison.Ordinal)).ToList();
 
         Assert.Single(spouseOptions);
@@ -77,13 +74,10 @@ public class RelationshipServiceTests
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Naming", "CA1707:Identifiers should not contain underscores", Justification = "Test names follow standard convention")]
     public void GetRelationshipTypeOptions_Asymmetric_ReturnsTwoOptions()
     {
-        // Arrange
         // (No arrange needed as we are using the statically populated list of relationship types)
 
-        // Act
         List<SelectOptionDto> result = _service.GetRelationshipTypeOptions(EntityTypes.Person);
 
-        // Assert
         List<SelectOptionDto> parentOptions = result.Where(x => x.Value.StartsWith(RelationshipTypeIds.Parent.ToString(), StringComparison.Ordinal)).ToList();
 
         Assert.Equal(2, parentOptions.Count);
@@ -105,13 +99,10 @@ public class RelationshipServiceTests
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Naming", "CA1707:Identifiers should not contain underscores", Justification = "Test names follow standard convention")]
     public void GetRelationshipTypeOptions_WithSelectedValue_SetsSelectedFlag()
     {
-        // Arrange
         string selectedValue = $"{RelationshipTypeIds.Parent}_Rev";
 
-        // Act
         List<SelectOptionDto> result = _service.GetRelationshipTypeOptions(EntityTypes.Person, selectedValue);
 
-        // Assert
         List<SelectOptionDto> parentOptions = result.Where(x => x.Value.StartsWith(RelationshipTypeIds.Parent.ToString(), StringComparison.Ordinal)).ToList();
 
         Assert.Equal(2, parentOptions.Count);

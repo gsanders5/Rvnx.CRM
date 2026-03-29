@@ -576,10 +576,8 @@ public class ContactReadServiceTests
 
             Assert.NotNull(result);
 
-            // 1. Verify that the result contains the label ID (proof that eager loading was used)
             Assert.Contains(labelId, result.AssignedLabelIds);
 
-            // 2. Verify that the separate query for ContactLabel was NEVER called
             _repositoryMock.Verify(r => r.ListAsNoTrackingAsync<ContactLabel>(
                 It.IsAny<Expression<Func<ContactLabel, bool>>>(),
                 It.IsAny<CancellationToken>(),
@@ -616,11 +614,9 @@ public class ContactReadServiceTests
 
             Assert.NotNull(result);
 
-            // 1. Verify that the result contains the label (proof that eager loading was used)
             Assert.Single(result.Labels);
             Assert.Equal("Test Label", result.Labels.First().Name);
 
-            // 2. Verify that the separate query for ContactLabel was NEVER called
             _repositoryMock.Verify(r => r.ListAsNoTrackingAsync<ContactLabel>(
                 It.IsAny<Expression<Func<ContactLabel, bool>>>(),
                 It.IsAny<CancellationToken>(),

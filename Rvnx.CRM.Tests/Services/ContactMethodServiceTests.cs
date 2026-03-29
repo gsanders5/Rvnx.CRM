@@ -42,7 +42,6 @@ public class ContactMethodServiceTests
         _repositoryMock.Setup(r => r.ExistsAsync<ContactMethod>(contactMethodId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(true);
 
-        // Act & Assert
         await Assert.ThrowsAsync<EntityConcurrencyException>(() => _service.UpdateAsync(contactMethodId, dto));
     }
 

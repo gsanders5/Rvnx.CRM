@@ -37,7 +37,6 @@ public class MergeService(CRMDbContext context, IRepository repository) : IMerge
 
         try
         {
-            // 1. Scalar fields
             primary.FirstName = MergeScalar(primary.FirstName, secondary.FirstName) ?? string.Empty;
             primary.LastName = MergeScalar(primary.LastName, secondary.LastName);
             primary.MaidenName = MergeScalar(primary.MaidenName, secondary.MaidenName);
@@ -75,7 +74,6 @@ public class MergeService(CRMDbContext context, IRepository repository) : IMerge
                 }
             }
 
-            // Move Notes
             List<Note> notes = await _repository.ListAsync<Note>(n => n.ContactId == secondaryId);
             foreach (Note note in notes)
             {

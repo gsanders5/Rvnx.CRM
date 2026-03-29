@@ -45,7 +45,6 @@ public class NoteServiceTests
         _repositoryMock.Setup(r => r.ExistsAsync<Note>(noteId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(true);
 
-        // Act & Assert
         await Assert.ThrowsAsync<EntityConcurrencyException>(() => _service.UpdateAsync(noteId, dto));
     }
 
