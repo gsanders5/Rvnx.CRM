@@ -49,6 +49,11 @@ Ensure the target container has `id="main-content"` and `tabindex="-1"` to corre
 ## 2024-03-24 - Add accessible labels to Add buttons and fix profile alt text
 **Learning:** Generic buttons like "+ Add" inside distinct UI regions (e.g., cards for "Pets" or "Facts") lack context for screen reader users when read out of context. The text is visible to sighted users via the card header, but assistive technology requires explicit labeling.
 **Action:** When adding generic action buttons like "Add", "Edit", or "Delete", always add a descriptive `aria-label` attribute (e.g., `aria-label="Add Pet"`) that includes the visible text to satisfy WCAG 2.5.3 (Label in Name), and add `aria-hidden="true"` to any accompanying purely decorative icons. Also ensure profile placeholder icons have `role="img"` and an `aria-label` if an `img` tag with `alt` text is not present.
+
+## 2026-03-26 - ARIA-hidden Icons and Labels
+**Learning:** In Rvnx.CRM.Web, when adding Bootstrap icons (`<i class="bi ..."></i>`) to UI elements for UX polish, always apply `aria-hidden="true"` to the icon to prevent screen readers from announcing redundant visual elements, ensuring the parent interactive element has a clear `aria-label` or descriptive text.
+**Action:** Always add `aria-hidden="true"` to decorative icons inside buttons and links, and verify the parent element has an `aria-label` attribute if the icon provides the only context.
+
 ## 2024-03-27 - Add aria-hidden to decorative icons
 **Learning:** Decorative Bootstrap icons (`<i class="bi ..."></i>`) used alongside text or within elements that already have an `aria-label` often lack `aria-hidden="true"` in this application's views (e.g., Dashboard). This can cause screen readers to announce redundant or confusing "icon" roles without proper context.
 **Action:** Always check newly added or existing decorative `<i>` tag icons for `aria-hidden="true"` to prevent redundant screen reader announcements, especially when the parent element provides the accessible name or when the icon is purely visual alongside text.
