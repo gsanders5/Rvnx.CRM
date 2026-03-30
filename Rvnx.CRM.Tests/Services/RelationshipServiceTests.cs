@@ -256,6 +256,178 @@ public class RelationshipServiceTests
         _repositoryMock.Verify(r => r.ListAsync(It.IsAny<Expression<Func<Contact, bool>>>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
+    [Theory]
+    [InlineData("")]
+    [InlineData(null)]
+    [InlineData("InvalidFormat")]
+    [InlineData("NotAGuid_Fwd")]
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Naming", "CA1707:Identifiers should not contain underscores",
+        Justification = "Test names follow a standard convention")]
+    public async Task UpdateRelationshipAsync_WithInvalidSelection_ReturnsFailure(string? invalidSelection)
+    {
+        Guid relationshipId = Guid.NewGuid();
+        Relationship relationship = new();
+
+        RelationshipOperationResult
+            result = await _service.UpdateRelationshipAsync(relationshipId, relationship, invalidSelection!);
+
+        Assert.False(result.Success);
+        Assert.NotNull(result.ErrorMessage);
+        _repositoryMock.Verify(r => r.UpdateAsync(It.IsAny<Relationship>(), It.IsAny<CancellationToken>()),
+            Times.Never);
+    }
+
+    [Fact]
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Naming", "CA1707:Identifiers should not contain underscores",
+        Justification = "Test names follow a standard convention")]
+    public async Task UpdateRelationshipAsync_WhenNotFound_ReturnsFailure()
+    {
+        Guid relationshipId = Guid.NewGuid();
+        Guid typeId = Guid.NewGuid();
+        string selection = $"{typeId}_Fwd";
+
+        _repositoryMock.Setup(r => r.GetByIdAsync<Relationship>(relationshipId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync((Relationship?)null);
+
+        Relationship relationship = new();
+
+        RelationshipOperationResult result = await _service.UpdateRelationshipAsync(relationshipId, relationship, selection);
+
+        Assert.False(result.Success);
+        Assert.Equal("Relationship not found.", result.ErrorMessage);
+        _repositoryMock.Verify(r => r.UpdateAsync(It.IsAny<Relationship>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Naming", "CA1707:Identifiers should not contain underscores",
+        Justification = "Test names follow a standard convention")]
+    public async Task UpdateRelationshipAsync_WithDuplicateRelationship_ReturnsFailure()
+    {
+        Guid relationshipId = Guid.NewGuid();
+        Guid typeId = Guid.NewGuid();
+        string selection = $"{typeId}_Fwd";
+        Guid entityId = Guid.NewGuid();
+        Guid relatedEntityId = Guid.NewGuid();
+
+        Relationship existingRelationship = new()
+        {
+            Id = relationshipId,
+            EntityId = Guid.NewGuid(),
+            RelatedEntityId = Guid.NewGuid()
+        };
+
+        Relationship updatedRelationship = new()
+        {
+            EntityId = entityId,
+            RelatedEntityId = relatedEntityId,
+            EntityType = EntityTypes.Person
+        };
+
+        _repositoryMock.Setup(r => r.GetByIdAsync<Relationship>(relationshipId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(existingRelationship);
+
+        _repositoryMock.Setup(r => r.CountAsync<Relationship>(It.IsAny<Expression<Func<Relationship, bool>>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(1);
+
+        RelationshipOperationResult result = await _service.UpdateRelationshipAsync(relationshipId, updatedRelationship, selection);
+
+        Assert.False(result.Success);
+        Assert.Equal("This exact relationship already exists between these two contacts.", result.ErrorMessage);
+        _repositoryMock.Verify(r => r.UpdateAsync(It.IsAny<Relationship>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Naming", "CA1707:Identifiers should not contain underscores",
+        Justification = "Test names follow a standard convention")]
+    public async Task UpdateRelationshipAsync_WithValidForwardSelection_UpdatesWithoutSwapping()
+    {
+        Guid relationshipId = Guid.NewGuid();
+        Guid typeId = Guid.NewGuid();
+        string selection = $"{typeId}_Fwd";
+        Guid entityId = Guid.NewGuid();
+        Guid relatedEntityId = Guid.NewGuid();
+
+        Relationship existingRelationship = new()
+        {
+            Id = relationshipId,
+            EntityId = Guid.NewGuid(),
+            RelatedEntityId = Guid.NewGuid(),
+            RelationshipTypeId = Guid.NewGuid()
+        };
+
+        Relationship updatedRelationship = new()
+        {
+            EntityId = entityId,
+            RelatedEntityId = relatedEntityId,
+            EntityType = EntityTypes.Person
+        };
+
+        _repositoryMock.Setup(r => r.GetByIdAsync<Relationship>(relationshipId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(existingRelationship);
+
+        _repositoryMock.Setup(r => r.CountAsync<Relationship>(It.IsAny<Expression<Func<Relationship, bool>>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(0);
+
+        RelationshipOperationResult result = await _service.UpdateRelationshipAsync(relationshipId, updatedRelationship, selection);
+
+        Assert.True(result.Success);
+        Assert.Equal(entityId, result.RedirectId);
+        Assert.Equal(EntityTypes.Person, result.EntityType);
+
+        Assert.Equal(typeId, existingRelationship.RelationshipTypeId);
+        Assert.Equal(entityId, existingRelationship.EntityId);
+        Assert.Equal(relatedEntityId, existingRelationship.RelatedEntityId);
+
+        _repositoryMock.Verify(r => r.UpdateAsync(existingRelationship, It.IsAny<CancellationToken>()), Times.Once);
+        _repositoryMock.Verify(r => r.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Naming", "CA1707:Identifiers should not contain underscores",
+        Justification = "Test names follow a standard convention")]
+    public async Task UpdateRelationshipAsync_WithValidReverseSelection_SwapsEntities()
+    {
+        Guid relationshipId = Guid.NewGuid();
+        Guid typeId = Guid.NewGuid();
+        string selection = $"{typeId}_Rev";
+        Guid entityId = Guid.NewGuid();
+        Guid relatedEntityId = Guid.NewGuid();
+
+        Relationship existingRelationship = new()
+        {
+            Id = relationshipId,
+            EntityId = Guid.NewGuid(),
+            RelatedEntityId = Guid.NewGuid(),
+            RelationshipTypeId = Guid.NewGuid()
+        };
+
+        Relationship updatedRelationship = new()
+        {
+            EntityId = entityId,
+            RelatedEntityId = relatedEntityId,
+            EntityType = EntityTypes.Person
+        };
+
+        _repositoryMock.Setup(r => r.GetByIdAsync<Relationship>(relationshipId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(existingRelationship);
+
+        _repositoryMock.Setup(r => r.CountAsync<Relationship>(It.IsAny<Expression<Func<Relationship, bool>>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(0);
+
+        RelationshipOperationResult result = await _service.UpdateRelationshipAsync(relationshipId, updatedRelationship, selection);
+
+        Assert.True(result.Success);
+        Assert.Equal(entityId, result.RedirectId);
+        Assert.Equal(EntityTypes.Person, result.EntityType);
+
+        Assert.Equal(typeId, existingRelationship.RelationshipTypeId);
+        Assert.Equal(relatedEntityId, existingRelationship.EntityId);
+        Assert.Equal(entityId, existingRelationship.RelatedEntityId);
+
+        _repositoryMock.Verify(r => r.UpdateAsync(existingRelationship, It.IsAny<CancellationToken>()), Times.Once);
+        _repositoryMock.Verify(r => r.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
+    }
+
     [Fact]
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Naming", "CA1707:Identifiers should not contain underscores",
         Justification = "Test names follow a standard convention")]

@@ -85,3 +85,6 @@
 ## 2026-03-25 - [Testing Read Methods in Services]
 **Learning:** Read methods in services (like `GetRelationshipForDeleteAsync`) might seem like simple repository wrappers that don't need tests. However, they can contain hidden business logic (like populating related entities manually) that is not immediately obvious. If left untested, this business logic could easily be inadvertently removed or altered during refactoring without any tests failing.
 **Action:** Always write tests for read methods in services if they contain any logic beyond a straight repository pass-through. Even populating properties from a secondary query warrants edge-case testing.
+## 2026-03-27 - [Testing Update Methods in Services]
+**Learning:** `UpdateRelationshipAsync` in `RelationshipService` is a complex update operation which handles data swapping (reverse relationship options), finding existing data, and duplicate checking. If left untested, an issue during data swapping could corrupt the relationship mapping, leading to incorrect parent/child structures in the UI and database.
+**Action:** Ensure both forward and reverse mapping logic of an update operation are tested, checking that `RedirectId` and specific field assignments reflect the swapped data properly. Also verify duplicate relationship logic skips the current entity.
