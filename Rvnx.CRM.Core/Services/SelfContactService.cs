@@ -3,19 +3,16 @@ using Rvnx.CRM.Core.Enumerations;
 using Rvnx.CRM.Core.Extensions;
 using Rvnx.CRM.Core.Interfaces;
 using Rvnx.CRM.Core.Models.Contact;
-using System.Security.Claims;
 
 namespace Rvnx.CRM.Core.Services;
 
-public class SelfContactService(IRepository repository, ICurrentUserService currentUserService, IUserSynchronizationService userSynchronizationService) : ISelfContactService
+public class SelfContactService(IRepository repository, ICurrentUserService currentUserService) : ISelfContactService
 {
     private readonly IRepository _repository = repository;
     private readonly ICurrentUserService _currentUserService = currentUserService;
-    private readonly IUserSynchronizationService _userSynchronizationService = userSynchronizationService;
 
-    public async Task<Guid?> GetSelfContactIdAsync(ClaimsPrincipal user)
+    public async Task<Guid?> GetSelfContactIdAsync()
     {
-        await _userSynchronizationService.SyncUserAsync(user);
         Guid? userId = _currentUserService.UserId;
         if (!userId.HasValue)
         {
@@ -26,9 +23,8 @@ public class SelfContactService(IRepository repository, ICurrentUserService curr
         return userEntity?.SelfContactId;
     }
 
-    public async Task<ContactFormDto?> GetSelfContactFormAsync(ClaimsPrincipal user)
+    public async Task<ContactFormDto?> GetSelfContactFormAsync()
     {
-        await _userSynchronizationService.SyncUserAsync(user);
         Guid? userId = _currentUserService.UserId;
         if (!userId.HasValue)
         {
@@ -64,7 +60,7 @@ public class SelfContactService(IRepository repository, ICurrentUserService curr
         return dto;
     }
 
-    public async Task<ContactOperationResult> CreateSelfContactAsync(ClaimsPrincipal user, ContactFormDto contactDto)
+    public async Task<ContactOperationResult> CreateSelfContactAsync(ContactFormDto contactDto)
     {
         Guid? userId = _currentUserService.UserId;
         if (!userId.HasValue)

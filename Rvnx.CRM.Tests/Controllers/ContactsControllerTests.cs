@@ -35,7 +35,7 @@ public class ContactsControllerTests
 
             readServiceMock.Setup(s => s.GetContactDetailsAsync(contactId)).ReturnsAsync(detailDto);
 
-            ContactsController controller = new(loggerMock.Object, userMock.Object, Mock.Of<IContactImportService>(), Mock.Of<IContactExportService>(), Mock.Of<IContactManagementService>(), readServiceMock.Object, Mock.Of<ISelfContactService>(), Mock.Of<IFileValidationService>())
+            ContactsController controller = new(loggerMock.Object, userMock.Object, Mock.Of<IContactImportService>(), Mock.Of<IContactExportService>(), Mock.Of<IContactManagementService>(), readServiceMock.Object, Mock.Of<ISelfContactService>(), syncMock.Object, Mock.Of<IFileValidationService>())
             {
                 ControllerContext = new ControllerContext { HttpContext = new DefaultHttpContext() }
             };
@@ -66,7 +66,7 @@ public class ContactsControllerTests
 
             readServiceMock.Setup(s => s.GetIndexDataAsync(It.IsAny<bool>())).ReturnsAsync(contactDtos);
 
-            ContactsController controller = new(loggerMock.Object, userMock.Object, Mock.Of<IContactImportService>(), Mock.Of<IContactExportService>(), Mock.Of<IContactManagementService>(), readServiceMock.Object, Mock.Of<ISelfContactService>(), Mock.Of<IFileValidationService>())
+            ContactsController controller = new(loggerMock.Object, userMock.Object, Mock.Of<IContactImportService>(), Mock.Of<IContactExportService>(), Mock.Of<IContactManagementService>(), readServiceMock.Object, Mock.Of<ISelfContactService>(), syncMock.Object, Mock.Of<IFileValidationService>())
             {
                 ControllerContext = new ControllerContext { HttpContext = new DefaultHttpContext() }
             };
@@ -109,6 +109,7 @@ public class ContactsControllerTests
                 _contactManagementServiceMock.Object,
                 _contactReadServiceMock.Object,
                 _selfContactServiceMock.Object,
+                _syncMock.Object,
                 _fileValidationServiceMock.Object)
             {
                 ControllerContext = new ControllerContext { HttpContext = new DefaultHttpContext() }
