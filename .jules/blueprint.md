@@ -39,3 +39,6 @@
 
 **Learning:** String-manipulation logic (`ExtractUsername` for social media URIs) incorrectly resided in the `Web` layer (`SocialMediaEmbedHelper`) despite being a domain-level data normalization rule.
 **Action:** When finding logic that normalizes or validates strings representing domain concepts, verify it lives in `Core` (like `SocialMediaUrlNormalizer`). Move it if it's currently in a Web layer helper to centralize the rules.
+## $(date +%Y-%m-%d) - Stop leaking ClaimsPrincipal to Core Domain Services
+**Learning:** `ISelfContactService` in the Core layer was taking `ClaimsPrincipal` as an argument and using `IUserSynchronizationService` to sync the user. This leaked ASP.NET Core identity types into the domain and duplicated work, as `IUserSynchronizationService` is already orchestrated by the Web layer middleware and `OpenIdConnectEvents`.
+**Action:** When a Core service needs to resolve the current user's identity, rely strictly on `ICurrentUserService.UserId`. If an explicit synchronization action is required (e.g. before an operation), orchestrate that synchronization (`IUserSynchronizationService.SyncUserAsync`) in the Web layer (e.g. Controller or Middleware) before calling the Core service.

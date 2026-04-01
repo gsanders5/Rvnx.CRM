@@ -16,7 +16,8 @@ public class ContactsController(
     IContactManagementService contactManagementService,
     IContactReadService contactReadService,
     ISelfContactService selfContactService,
-    IFileValidationService fileValidationService) : AuthorizedController
+    IFileValidationService fileValidationService,
+    IUserSynchronizationService userSynchronizationService) : AuthorizedController
 {
     private readonly ILogger<ContactsController> _logger = logger;
     private readonly ICurrentUserService _currentUserService = currentUserService;
@@ -26,6 +27,7 @@ public class ContactsController(
     private readonly IContactReadService _contactReadService = contactReadService;
     private readonly ISelfContactService _selfContactService = selfContactService;
     private readonly IFileValidationService _fileValidationService = fileValidationService;
+    private readonly IUserSynchronizationService _userSynchronizationService = userSynchronizationService;
 
     private static readonly Action<ILogger, Exception?> LogErrorImportingVcf =
         LoggerMessage.Define(
@@ -41,7 +43,8 @@ public class ContactsController(
             return RedirectToAction("Index", "Home");
         }
 
-        Guid? selfContactId = await _selfContactService.GetSelfContactIdAsync(HttpContext.User);
+        await _userSynchronizationService.SyncUserAsync(HttpContext.User);
+        Guid? selfContactId = await _selfContactService.GetSelfContactIdAsync();
 
         return selfContactId.HasValue
             ? RedirectToAction(nameof(Details), new { id = selfContactId })
@@ -56,14 +59,15 @@ public class ContactsController(
             return RedirectToAction("Index", "Home");
         }
 
-        Guid? selfContactId = await _selfContactService.GetSelfContactIdAsync(HttpContext.User);
+        await _userSynchronizationService.SyncUserAsync(HttpContext.User);
+        Guid? selfContactId = await _selfContactService.GetSelfContactIdAsync();
 
         if (selfContactId.HasValue)
         {
             return RedirectToAction(nameof(Details), new { id = selfContactId });
         }
 
-        ContactFormDto? dto = await _selfContactService.GetSelfContactFormAsync(HttpContext.User);
+        ContactFormDto? dto = await _selfContactService.GetSelfContactFormAsync();
         if (dto == null)
         {
             return RedirectToAction("Index");
@@ -107,7 +111,7 @@ public class ContactsController(
         if (ModelState.IsValid)
         {
             ContactOperationResult result =
-                await _selfContactService.CreateSelfContactAsync(HttpContext.User, contactDto);
+                await _selfContactService.CreateSelfContactAsync(contactDto);
             if (result.Success && result.ContactId.HasValue)
             {
                 return RedirectToAction(nameof(Details), new { id = result.ContactId.Value });
