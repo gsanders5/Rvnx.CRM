@@ -117,3 +117,6 @@ Action: When a service builds a read-only in-memory aggregate (graph nodes, rece
 ## 2026-06-25 - Avoid full entity fetch for Attachment ID
 **Learning:** `GetContactFormAsync` in `ContactReadService.cs` was using `ListAsync<Attachment>` to retrieve a profile image attachment just to get its `Id`. This caused EF Core to load the entire `Attachment` entity into memory (including large string fields like `ContentType` and `FileName` and potentially navigation properties) just to extract a single `Guid`.
 **Action:** When only an entity's ID is required, always use a projection method like `ListProjectedAsync<T, Guid>(predicate, e => e.Id)` to limit the database query to fetching only the necessary column, preventing unnecessary data transfer and memory allocation.
+## 2026-06-15 - Optimize GetLabelsForContactAsync by using ListProjectedAsync
+**Learning:** `GetLabelsForContactAsync` was fetching full `ContactLabel` entities including joined `Label` entities into memory only to map a few properties into DTOs, creating unnecessary memory allocation and serialization overhead.
+**Action:** Replaced `ListAsNoTrackingAsync` + in-memory LINQ projection with `ListProjectedAsync` to project the DTOs directly from the database query.
