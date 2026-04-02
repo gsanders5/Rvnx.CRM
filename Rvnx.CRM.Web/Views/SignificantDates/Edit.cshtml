@@ -14,7 +14,7 @@
 
             <div class="card border-0 shadow-sm rounded-3">
                 <div class="card-header bg-body-tertiary border-bottom p-3 rounded-top-3">
-                    <h4 class="mb-0"><i class="bi bi-pencil-square me-2 text-primary"></i>Edit Important Date</h4>
+                    <h4 class="mb-0"><i class="bi bi-pencil-square me-2 text-primary" aria-hidden="true"></i>Edit Important Date</h4>
                 </div>
 
                 <div class="card-body p-4">
@@ -65,8 +65,8 @@
                     </div>
 
                     <div class="d-grid gap-2 d-md-flex mt-4">
-                        <button type="submit" class="btn btn-primary btn-lg"><i class="bi bi-save me-2"></i>Save</button>
-                        <a asp-action="Index" asp-route-contactId="@Model.EntityId" class="btn btn-secondary btn-lg"><i class="bi bi-x-lg me-2"></i>Cancel</a>
+                        <button type="submit" class="btn btn-primary btn-lg"><i class="bi bi-save me-2" aria-hidden="true"></i>Save</button>
+                        <a asp-action="Index" asp-route-contactId="@Model.EntityId" class="btn btn-secondary btn-lg"><i class="bi bi-x-lg me-2" aria-hidden="true"></i>Cancel</a>
                     </div>
                 </div>
             </div>
