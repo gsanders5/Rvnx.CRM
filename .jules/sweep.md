@@ -31,3 +31,7 @@
 ## 2024-05-17 - Prefer Target-Typed new()
 **Learning:** The repository prefers modern C# features like target-typed `new()` over verbose `var` declarations for object instantiation, specifically within unit tests. This maintains consistency with C# 12 features used elsewhere.
 **Action:** When creating new objects or refactoring existing `var` assignments where the type is explicitly known on the right side, replace it with the target-typed `new()` syntax on the left side.
+
+## 2024-05-23 - C# Tuple Deconstruction Code Review Error
+**Learning:** The code review tool flagged tuple deconstruction (`foreach ((Guid id, Guid relatedId) in list)`) as a compilation error when iterating over a `List<(Guid, Guid)>`. This was a hallucination, as `dotnet build` and `dotnet test` passed without issue.
+**Action:** Always trust successful `dotnet build` and `dotnet test` results over the reviewer claims of basic C# compilation failures.
