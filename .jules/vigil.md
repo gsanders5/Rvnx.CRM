@@ -94,3 +94,9 @@
 ## 2024-03-29 - [Testing Update Relationship Branching Logic]
 **Learning:** `RelationshipService.UpdateRelationshipAsync` contains critical, branching business logic (validating inputs, checking for duplicates, and conditionally swapping entities if a 'Reverse' relationship type is selected). Previous tests only covered the creation flow. Leaving the update flow untested creates a major risk that duplicate checks or entity swapping logic could be broken during refactoring without detection.
 **Action:** When adding or discovering complex update operations involving swappable or bi-directional data, always explicitly add tests for the update paths, verifying both mapping directions (forward and reverse) and confirming that validation (like duplicate checking) functions correctly.
+## 2026-04-02 - Added happy path tests for UpdateAsync in ContactMethodService
+**Learning:** Found that  lacked a happy path test that ensures the repository update and save changes methods are properly called on a valid entity. Testing through the mocked repository via Moq provides good boundaries and guarantees that the correct interactions occur without brittle over-mocking.
+**Action:** Always ensure that both happy and failure paths (like ConcurrencyExceptions) are thoroughly verified.
+## 2024-04-02 - Added happy path tests for UpdateAsync in ContactMethodService
+**Learning:** Found that `ContactMethodService.UpdateAsync` lacked a happy path test that ensures the repository update and save changes methods are properly called on a valid entity. Testing through the mocked repository via Moq provides good boundaries and guarantees that the correct interactions occur without brittle over-mocking.
+**Action:** Always ensure that both happy and failure paths (like ConcurrencyExceptions) are thoroughly verified.

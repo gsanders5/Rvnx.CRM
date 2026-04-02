@@ -1,7 +1,9 @@
 using Moq;
 using Rvnx.CRM.Core.Constants;
 using Rvnx.CRM.Core.DTOs.Contact;
+using Rvnx.CRM.Core.Enumerations;
 using Rvnx.CRM.Core.Exceptions;
+using Rvnx.CRM.Core.Extensions;
 using Rvnx.CRM.Core.Interfaces;
 using Rvnx.CRM.Core.Models;
 using Rvnx.CRM.Core.Models.Contact;
@@ -46,6 +48,30 @@ public class ContactMethodServiceTests
     }
 
     [Fact]
+    public async Task UpdateAsyncReturnsOkWhenValidAndUpdatesMethod()
+    {
+        Guid contactMethodId = Guid.NewGuid();
+        Guid contactId = Guid.NewGuid();
+        ContactMethod existingContactMethod = new()
+        { Id = contactMethodId, ContactId = contactId, Type = ContactMethodType.Email, Value = "old@example.com" };
+        ContactMethodFormDto dto = new()
+        { Id = contactMethodId, EntityId = contactId, EntityType = EntityTypes.Person, Type = ContactMethodType.Email, Value = "new@example.com" };
+
+        _repositoryMock.Setup(r => r.GetByIdAsync<ContactMethod>(contactMethodId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(existingContactMethod);
+
+        _repositoryMock.Setup(r => r.CountAsync(It.IsAny<System.Linq.Expressions.Expression<Func<Contact, bool>>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(1);
+
+        OperationResult result = await _service.UpdateAsync(contactMethodId, dto);
+
+        Assert.True(result.Success);
+        Assert.Equal(contactId, result.RedirectId);
+        _repositoryMock.Verify(r => r.UpdateAsync(It.Is<ContactMethod>(cm => cm.Value == "new@example.com"), It.IsAny<CancellationToken>()), Times.Once);
+        _repositoryMock.Verify(r => r.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
     public async Task UpdateAsyncThrowsEntityConcurrencyExceptionWhenContactMethodDoesNotExistReturnsFailure()
     {
         Guid contactMethodId = Guid.NewGuid();
@@ -71,5 +97,147 @@ public class ContactMethodServiceTests
 
         Assert.False(result.Success);
         Assert.Equal("Contact method not found.", result.ErrorMessage);
+    }
+
+    [Fact]
+    public async Task DeleteAsyncWhenFoundReturnsOkAndDeletes()
+    {
+        Guid contactMethodId = Guid.NewGuid();
+        Guid contactId = Guid.NewGuid();
+        ContactMethod contactMethod = new() { Id = contactMethodId, ContactId = contactId };
+
+        _repositoryMock.Setup(r => r.GetByIdAsync<ContactMethod>(contactMethodId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(contactMethod);
+
+        OperationResult result = await _service.DeleteAsync(contactMethodId);
+
+        Assert.True(result.Success);
+        Assert.Equal(contactId, result.RedirectId);
+        Assert.Equal(EntityTypes.Person, result.RedirectType);
+
+        _repositoryMock.Verify(r => r.DeleteAsync<ContactMethod>(contactMethodId, It.IsAny<CancellationToken>()), Times.Once);
+        _repositoryMock.Verify(r => r.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task DeleteAsyncWhenNotFoundReturnsFailureAndDoesNotDelete()
+    {
+        Guid contactMethodId = Guid.NewGuid();
+
+        _repositoryMock.Setup(r => r.GetByIdAsync<ContactMethod>(contactMethodId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync((ContactMethod?)null);
+
+        OperationResult result = await _service.DeleteAsync(contactMethodId);
+
+        Assert.False(result.Success);
+        Assert.Equal("Contact method not found.", result.ErrorMessage);
+
+        _repositoryMock.Verify(r => r.DeleteAsync<ContactMethod>(It.IsAny<Guid>(), It.IsAny<CancellationToken>()), Times.Never);
+        _repositoryMock.Verify(r => r.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task GetFormAsyncWhenContactMethodNotFoundReturnsNull()
+    {
+        Guid contactMethodId = Guid.NewGuid();
+
+        _repositoryMock.Setup(r => r.GetByIdAsync<ContactMethod>(contactMethodId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync((ContactMethod?)null);
+
+        ContactMethodFormDto? result = await _service.GetFormAsync(contactMethodId);
+
+        Assert.Null(result);
+    }
+
+    [Fact]
+    public async Task GetFormAsyncWhenContactIsInvalidReturnsNull()
+    {
+        Guid contactMethodId = Guid.NewGuid();
+        Guid contactId = Guid.NewGuid();
+        ContactMethod contactMethod = new() { Id = contactMethodId, ContactId = contactId };
+
+        _repositoryMock.Setup(r => r.GetByIdAsync<ContactMethod>(contactMethodId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(contactMethod);
+        _repositoryMock.Setup(r => r.CountAsync(It.IsAny<System.Linq.Expressions.Expression<Func<Contact, bool>>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(0);
+
+        ContactMethodFormDto? result = await _service.GetFormAsync(contactMethodId);
+
+        Assert.Null(result);
+    }
+
+    [Fact]
+    public async Task GetFormAsyncWhenContactIsValidReturnsDto()
+    {
+        Guid contactMethodId = Guid.NewGuid();
+        Guid contactId = Guid.NewGuid();
+        ContactMethod contactMethod = new()
+        {
+            Id = contactMethodId,
+            ContactId = contactId,
+            Type = ContactMethodType.Email,
+            Value = "test@example.com",
+            Label = ContactMethodLabels.Primary
+        };
+
+        _repositoryMock.Setup(r => r.GetByIdAsync<ContactMethod>(contactMethodId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(contactMethod);
+        _repositoryMock.Setup(r => r.CountAsync(It.IsAny<System.Linq.Expressions.Expression<Func<Contact, bool>>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(1);
+
+        ContactMethodFormDto? result = await _service.GetFormAsync(contactMethodId);
+
+        Assert.NotNull(result);
+        Assert.Equal(contactMethodId, result.Id);
+        Assert.Equal(contactId, result.EntityId);
+        Assert.Equal(EntityTypes.Person, result.EntityType);
+        Assert.Equal(ContactMethodType.Email, result.Type);
+        Assert.Equal("test@example.com", result.Value);
+        Assert.Equal(ContactMethodLabels.Primary, result.Label);
+    }
+
+    [Fact]
+    public async Task CreateAsyncReturnsOkWhenValidContact()
+    {
+        Guid contactId = Guid.NewGuid();
+        ContactMethodFormDto dto = new()
+        {
+            EntityId = contactId,
+            EntityType = EntityTypes.Person,
+            Type = ContactMethodType.Email,
+            Value = "new@example.com"
+        };
+
+        _repositoryMock.Setup(r => r.CountAsync(It.IsAny<System.Linq.Expressions.Expression<Func<Contact, bool>>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(1);
+
+        OperationResult result = await _service.CreateAsync(dto);
+
+        Assert.True(result.Success);
+        Assert.Equal(contactId, result.RedirectId);
+        _repositoryMock.Verify(r => r.AddAsync(It.Is<ContactMethod>(cm => cm.Value == "new@example.com"), It.IsAny<CancellationToken>()), Times.Once);
+        _repositoryMock.Verify(r => r.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task CreateAsyncReturnsFailureWhenInvalidContact()
+    {
+        Guid contactId = Guid.NewGuid();
+        ContactMethodFormDto dto = new()
+        {
+            EntityId = contactId,
+            EntityType = EntityTypes.Person,
+            Type = ContactMethodType.Email,
+            Value = "new@example.com"
+        };
+
+        _repositoryMock.Setup(r => r.CountAsync(It.IsAny<System.Linq.Expressions.Expression<Func<Contact, bool>>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(0);
+
+        OperationResult result = await _service.CreateAsync(dto);
+
+        Assert.False(result.Success);
+        Assert.Equal("Contact not found.", result.ErrorMessage);
+        _repositoryMock.Verify(r => r.AddAsync(It.IsAny<ContactMethod>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 }
