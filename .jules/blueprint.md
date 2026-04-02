@@ -39,3 +39,8 @@
 
 **Learning:** String-manipulation logic (`ExtractUsername` for social media URIs) incorrectly resided in the `Web` layer (`SocialMediaEmbedHelper`) despite being a domain-level data normalization rule.
 **Action:** When finding logic that normalizes or validates strings representing domain concepts, verify it lives in `Core` (like `SocialMediaUrlNormalizer`). Move it if it's currently in a Web layer helper to centralize the rules.
+
+## 2024-05-29 - [Middleware vs. Explicit Invocation]
+
+**Learning:** `IUserSynchronizationService.SyncUserAsync` is automatically invoked globally via middleware in `Program.cs` and `UserClaimsTransformation` for every authenticated request. Explicitly calling this method in individual controllers or domain services (like `SelfContactService`) is redundant, leaks cross-cutting concerns, and couples domain logic to identity transformation logic.
+**Action:** Remove explicit calls to `SyncUserAsync` from controllers and domain services. Rely on the pipeline to ensure the user is synchronized before business logic executes. Ensure that dependencies injected solely for this purpose are completely removed from constructors to avoid dead dependencies.
