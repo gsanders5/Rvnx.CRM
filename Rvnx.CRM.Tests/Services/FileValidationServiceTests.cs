@@ -132,6 +132,26 @@ namespace Rvnx.CRM.Tests.Services
         {
             Assert.False(_service.IsValidImageSignature(null!, ".png"));
         }
+
+        [Theory]
+        [InlineData(".jpg", "image/jpeg")]
+        [InlineData(".png", "image/png")]
+        [InlineData(".pdf", "application/pdf")]
+        [InlineData(".txt", "text/plain")]
+        [InlineData(".docx", "application/vnd.openxmlformats-officedocument.wordprocessingml.document")]
+        public void GetMimeTypeShouldReturnCorrectMimeTypeForKnownExtensions(string extension, string expectedMimeType)
+        {
+            Assert.Equal(expectedMimeType, _service.GetMimeType(extension));
+        }
+
+        [Theory]
+        [InlineData(".unknown")]
+        [InlineData("")]
+        [InlineData(null)]
+        public void GetMimeTypeShouldReturnDefaultMimeTypeForUnknownOrNullExtensions(string? extension)
+        {
+            Assert.Equal("application/octet-stream", _service.GetMimeType(extension!));
+        }
     }
 }
 namespace Rvnx.CRM.Tests.Services
