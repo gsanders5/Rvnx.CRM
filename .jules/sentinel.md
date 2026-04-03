@@ -56,3 +56,7 @@
 **Vulnerability:** The `HttpClient` registered for `IVCardService` in `ServiceCollectionExtensions` had no explicit timeout configured.
 **Learning:** By default, `HttpClient` has a very long timeout (often 100 seconds). If an external server hangs during operations like downloading a profile photo, the application thread can block, potentially leading to a Denial of Service (DoS) condition under heavy load.
 **Prevention:** Always configure an explicit, reasonable timeout (e.g., `TimeSpan.FromSeconds(10)`) when registering `HttpClient` services in the DI container.
+## 2024-04-03 - [AutoValidateAntiforgeryToken]
+**Vulnerability:** Missing CSRF protection on forms where developers forget to add `[ValidateAntiForgeryToken]` manually.
+**Learning:** Hardcoding `[ValidateAntiForgeryToken]` on every POST action is error-prone. A central base controller simplifies this.
+**Prevention:** Apply `[AutoValidateAntiforgeryToken]` globally or on base controllers like `AuthorizedController` to enforce CSRF validation automatically on all unsafe HTTP methods.
