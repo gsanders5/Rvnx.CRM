@@ -41,7 +41,7 @@ public class ContactsController(
             return RedirectToAction("Index", "Home");
         }
 
-        Guid? selfContactId = await _selfContactService.GetSelfContactIdAsync(HttpContext.User);
+        Guid? selfContactId = await _selfContactService.GetSelfContactIdAsync();
 
         return selfContactId.HasValue
             ? RedirectToAction(nameof(Details), new { id = selfContactId })
@@ -56,14 +56,14 @@ public class ContactsController(
             return RedirectToAction("Index", "Home");
         }
 
-        Guid? selfContactId = await _selfContactService.GetSelfContactIdAsync(HttpContext.User);
+        Guid? selfContactId = await _selfContactService.GetSelfContactIdAsync();
 
         if (selfContactId.HasValue)
         {
             return RedirectToAction(nameof(Details), new { id = selfContactId });
         }
 
-        ContactFormDto? dto = await _selfContactService.GetSelfContactFormAsync(HttpContext.User);
+        ContactFormDto? dto = await _selfContactService.GetSelfContactFormAsync();
         if (dto == null)
         {
             return RedirectToAction("Index");
@@ -107,7 +107,7 @@ public class ContactsController(
         if (ModelState.IsValid)
         {
             ContactOperationResult result =
-                await _selfContactService.CreateSelfContactAsync(HttpContext.User, contactDto);
+                await _selfContactService.CreateSelfContactAsync(contactDto);
             if (result.Success && result.ContactId.HasValue)
             {
                 return RedirectToAction(nameof(Details), new { id = result.ContactId.Value });
