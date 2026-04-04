@@ -100,3 +100,6 @@
 ## 2024-04-02 - Added happy path tests for UpdateAsync in ContactMethodService
 **Learning:** Found that `ContactMethodService.UpdateAsync` lacked a happy path test that ensures the repository update and save changes methods are properly called on a valid entity. Testing through the mocked repository via Moq provides good boundaries and guarantees that the correct interactions occur without brittle over-mocking.
 **Action:** Always ensure that both happy and failure paths (like ConcurrencyExceptions) are thoroughly verified.
+## 2025-04-04 - Missing Edge Case Tests in LabelService
+**Learning:** Found that `DeleteAsync` had no coverage for the "not found" boundary condition, and `AssignLabelAsync` was missing tests preventing duplicate label assignment, despite checking `CountAsync`. Additionally, noticed that tests mocking `AssignLabelAsync` incorrectly mocked `ListAsync` when the implementation relies on `CountAsync`.
+**Action:** Always verify both early-exit conditionals (e.g. `if (label == null)`) and existence checks (e.g. `CountAsync == 0`) have explicitly tested branches. Double-check that mocked repository methods exactly match the concrete implementation's method calls to ensure realistic test scenarios.
