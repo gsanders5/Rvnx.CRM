@@ -21,7 +21,6 @@ public class AttachmentsController(
         new[] { "image/jpeg", "image/png", "image/gif" }.ToFrozenSet(StringComparer.OrdinalIgnoreCase);
 
     [HttpPost]
-    [ValidateAntiForgeryToken]
     public async Task<IActionResult> Upload(Guid entityId, string entityType, [ForbidExecutables] IFormFile file,
         string? returnUrl = null)
     {
@@ -60,7 +59,6 @@ public class AttachmentsController(
     }
 
     [HttpPost]
-    [ValidateAntiForgeryToken]
     public async Task<IActionResult> Delete(Guid id, string? returnUrl = null)
     {
         AttachmentOperationResult result = await _attachmentService.DeleteAttachmentAsync(id);
@@ -72,7 +70,6 @@ public class AttachmentsController(
     }
 
     [HttpPost("Attachments/{id}/SetAsProfilePhoto")]
-    [ValidateAntiForgeryToken]
     public async Task<IActionResult> SetAsProfilePhoto(Guid id,
         [FromServices] IContactManagementService contactManagementService, string? returnUrl = null)
     {

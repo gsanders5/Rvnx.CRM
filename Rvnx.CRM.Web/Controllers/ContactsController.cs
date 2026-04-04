@@ -93,7 +93,6 @@ public class ContactsController(
     }
 
     [HttpPost]
-    [ValidateAntiForgeryToken]
     public async Task<IActionResult> CreateSelf(ContactCreateViewModel contactDto)
     {
         if (!_currentUserService.IsAuthenticated)
@@ -163,7 +162,6 @@ public class ContactsController(
     }
 
     [HttpPost]
-    [ValidateAntiForgeryToken]
     public async Task<IActionResult> Create(ContactCreateViewModel contactDto)
     {
         NormalizeContactForm(contactDto);
@@ -229,7 +227,6 @@ public class ContactsController(
     }
 
     [HttpPost]
-    [ValidateAntiForgeryToken]
     public async Task<IActionResult> Edit(Guid id, ContactFormDto contactDto, [AllowImages] IFormFile? profileImage)
     {
         if (id != contactDto.Id)
@@ -325,7 +322,6 @@ public class ContactsController(
     }
 
     [HttpPost, ActionName("Delete")]
-    [ValidateAntiForgeryToken]
     public async Task<IActionResult> DeleteConfirmed(Guid id)
     {
         await _contactManagementService.DeleteContactAsync(id);
@@ -333,7 +329,6 @@ public class ContactsController(
     }
 
     [HttpPost]
-    [ValidateAntiForgeryToken]
     public async Task<IActionResult> UnsetPhoto(Guid id)
     {
         if (!await _contactReadService.ContactExistsAsync(id))
@@ -349,7 +344,6 @@ public class ContactsController(
     }
 
     [HttpPost]
-    [ValidateAntiForgeryToken]
     public async Task<IActionResult> AssignLabel(Guid contactId, Guid labelId,
         [FromServices] ILabelService labelService, string? returnUrl = null)
     {
@@ -364,7 +358,6 @@ public class ContactsController(
     }
 
     [HttpPost]
-    [ValidateAntiForgeryToken]
     public async Task<IActionResult> RemoveLabel(Guid contactId, Guid labelId,
         [FromServices] ILabelService labelService, string? returnUrl = null)
     {
@@ -385,7 +378,6 @@ public class ContactsController(
     }
 
     [HttpPost]
-    [ValidateAntiForgeryToken]
     public async Task<IActionResult> Import(IFormFile file)
     {
         if (file == null || file.Length == 0)

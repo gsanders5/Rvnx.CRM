@@ -10,16 +10,16 @@ namespace Rvnx.CRM.Tests.Controllers;
 public class AccountControllerTests
 {
     [Fact]
-    public void LogoutShouldHaveHttpPostAndValidateAntiForgeryTokenAttributes()
+    public void LogoutShouldHaveHttpPostAndControllerShouldHaveAutoValidateAntiforgeryTokenAttributes()
     {
         MethodInfo? methodInfo = typeof(AccountController).GetMethod("Logout");
         Assert.NotNull(methodInfo);
 
         object? httpPostAttribute = methodInfo!.GetCustomAttributes(typeof(HttpPostAttribute), false).FirstOrDefault();
-        object? validateAntiForgeryTokenAttribute = methodInfo!.GetCustomAttributes(typeof(ValidateAntiForgeryTokenAttribute), false).FirstOrDefault();
+        object? autoValidateAntiforgeryTokenAttribute = typeof(AccountController).GetCustomAttributes(typeof(AutoValidateAntiforgeryTokenAttribute), false).FirstOrDefault();
 
         Assert.NotNull(httpPostAttribute);
-        Assert.NotNull(validateAntiForgeryTokenAttribute);
+        Assert.NotNull(autoValidateAntiforgeryTokenAttribute);
     }
 
     [Fact]

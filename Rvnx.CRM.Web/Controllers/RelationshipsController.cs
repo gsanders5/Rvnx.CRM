@@ -46,7 +46,6 @@ public class RelationshipsController(
     }
 
     [HttpPost]
-    [ValidateAntiForgeryToken]
     public async Task<IActionResult> Create(RelationshipFormViewModel viewModel)
     {
         if (string.IsNullOrEmpty(viewModel.SelectedRelationshipType))
@@ -88,7 +87,6 @@ public class RelationshipsController(
     }
 
     [HttpPost]
-    [ValidateAntiForgeryToken]
     public async Task<IActionResult> CreatePartial(Guid entityId, string entityType,
         CreatePartialContactRelationshipDto dto)
     {
@@ -147,7 +145,6 @@ public class RelationshipsController(
     }
 
     [HttpPost]
-    [ValidateAntiForgeryToken]
     public async Task<IActionResult> Promote(Guid contactId)
     {
         if (contactId == Guid.Empty)
@@ -209,7 +206,6 @@ public class RelationshipsController(
     }
 
     [HttpPost]
-    [ValidateAntiForgeryToken]
     public async Task<IActionResult> Edit(Guid id, RelationshipFormViewModel viewModel)
     {
         if (id != viewModel.Id)
@@ -299,7 +295,6 @@ public class RelationshipsController(
     }
 
     [HttpPost, ActionName("Delete")]
-    [ValidateAntiForgeryToken]
     public async Task<IActionResult> DeleteConfirmed(Guid id, string? returnUrl = null)
     {
         OperationResult result = await _relationshipService.DeleteRelationshipAsync(id);

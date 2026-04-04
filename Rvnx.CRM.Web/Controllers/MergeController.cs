@@ -38,7 +38,6 @@ public class MergeController(
     }
 
     [HttpPost]
-    [ValidateAntiForgeryToken]
     public async Task<IActionResult> Confirm(MergeContactViewModel model)
     {
         if (model.PrimaryContactId == model.SecondaryContactId)
@@ -62,7 +61,6 @@ public class MergeController(
     }
 
     [HttpPost]
-    [ValidateAntiForgeryToken]
     public async Task<IActionResult> ExecuteMerge(Guid primaryContactId, Guid secondaryContactId)
     {
         if (primaryContactId == secondaryContactId)

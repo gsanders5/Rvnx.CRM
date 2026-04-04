@@ -19,7 +19,6 @@ public class FactsController(IFactService factService, IRepository repository) :
     }
 
     [HttpPost]
-    [ValidateAntiForgeryToken]
     public async Task<IActionResult> Create(FactFormDto factDto)
     {
         if (ModelState.IsValid)
@@ -52,7 +51,6 @@ public class FactsController(IFactService factService, IRepository repository) :
     }
 
     [HttpPost]
-    [ValidateAntiForgeryToken]
     public async Task<IActionResult> Edit(Guid id, FactFormDto factDto)
     {
         if (id != factDto.Id)
@@ -90,7 +88,6 @@ public class FactsController(IFactService factService, IRepository repository) :
     }
 
     [HttpPost, ActionName("Delete")]
-    [ValidateAntiForgeryToken]
     public async Task<IActionResult> DeleteConfirmed(Guid id)
     {
         OperationResult result = await _factService.DeleteAsync(id);

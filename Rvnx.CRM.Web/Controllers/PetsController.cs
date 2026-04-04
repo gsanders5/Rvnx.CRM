@@ -20,7 +20,6 @@ public class PetsController(IPetService petService, IRepository repository) : Re
     }
 
     [HttpPost]
-    [ValidateAntiForgeryToken]
     public async Task<IActionResult> Create(PetFormDto petDto)
     {
         if (ModelState.IsValid)
@@ -48,7 +47,6 @@ public class PetsController(IPetService petService, IRepository repository) : Re
     }
 
     [HttpPost]
-    [ValidateAntiForgeryToken]
     public async Task<IActionResult> Edit(Guid id, PetFormDto petDto)
     {
         if (id != petDto.Id)
@@ -81,7 +79,6 @@ public class PetsController(IPetService petService, IRepository repository) : Re
     }
 
     [HttpPost, ActionName("Delete")]
-    [ValidateAntiForgeryToken]
     public async Task<IActionResult> DeleteConfirmed(Guid id)
     {
         OperationResult result = await _petService.DeleteAsync(id);

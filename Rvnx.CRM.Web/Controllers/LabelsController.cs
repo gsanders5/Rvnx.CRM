@@ -23,7 +23,6 @@ public class LabelsController(ILabelService labelService) : AuthorizedController
     }
 
     [HttpPost]
-    [ValidateAntiForgeryToken]
     public async Task<IActionResult> Create(LabelFormDto formDto)
     {
         if (ModelState.IsValid)
@@ -54,7 +53,6 @@ public class LabelsController(ILabelService labelService) : AuthorizedController
     }
 
     [HttpPost]
-    [ValidateAntiForgeryToken]
     public async Task<IActionResult> Edit(Guid id, LabelFormDto formDto)
     {
         if (id != formDto.Id)
@@ -85,7 +83,6 @@ public class LabelsController(ILabelService labelService) : AuthorizedController
     }
 
     [HttpPost, ActionName("Delete")]
-    [ValidateAntiForgeryToken]
     public async Task<IActionResult> DeleteConfirmed(Guid id)
     {
         await _labelService.DeleteAsync(id);
