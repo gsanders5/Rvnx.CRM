@@ -170,11 +170,11 @@ public class ContactReadService(IRepository repository) : IContactReadService
         // Optimization: Replace LINQ Select().Concat().Distinct().ToList() with a pre-sized HashSet and foreach loops
         // to avoid multiple intermediate enumerator allocations and dynamic array resizing.
         HashSet<Guid> relatedIdsSet = new(relationships.Count + relatedTo.Count);
-        foreach (var r in relationships)
+        foreach (Relationship r in relationships)
         {
             relatedIdsSet.Add(r.RelatedEntityId);
         }
-        foreach (var r in relatedTo)
+        foreach (Relationship r in relatedTo)
         {
             relatedIdsSet.Add(r.EntityId);
         }
