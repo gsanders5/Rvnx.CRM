@@ -6,7 +6,6 @@ using Rvnx.CRM.Core.Models.Contact;
 using Rvnx.CRM.Core.Models.Dates;
 using Rvnx.CRM.Core.Services;
 using System.Linq.Expressions;
-using System.Security.Claims;
 
 namespace Rvnx.CRM.Tests.Services;
 
