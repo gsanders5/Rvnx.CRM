@@ -24,6 +24,100 @@ public class RelationshipServiceTests
     }
 
     [Fact]
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Naming", "CA1707:Identifiers should not contain underscores", Justification = "Test names follow a standard convention")]
+    public async Task UpdateRelationshipAsync_WithValidForwardSelection_SavesWithoutSwapping()
+    {
+        Guid relationshipId = Guid.NewGuid();
+        Guid entityId = Guid.NewGuid();
+        Guid relatedEntityId = Guid.NewGuid();
+        Guid typeId = Guid.NewGuid();
+        string selection = $"{typeId}_Fwd";
+
+        Relationship existingRelationship = new()
+        {
+            Id = relationshipId,
+            EntityId = Guid.NewGuid(), // Old
+            RelatedEntityId = Guid.NewGuid(), // Old
+            EntityType = EntityTypes.Company
+        };
+
+        Relationship updatedRelationship = new()
+        {
+            EntityId = entityId,
+            RelatedEntityId = relatedEntityId,
+            EntityType = EntityTypes.Person,
+            Description = "Updated description"
+        };
+
+        _repositoryMock.Setup(r => r.GetByIdAsync<Relationship>(relationshipId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(existingRelationship);
+
+        _repositoryMock.Setup(r => r.CountAsync(It.IsAny<Expression<Func<Relationship, bool>>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(0); // No duplicate exists
+
+        RelationshipOperationResult result = await _service.UpdateRelationshipAsync(relationshipId, updatedRelationship, selection);
+
+        Assert.True(result.Success);
+        Assert.Equal(entityId, result.RedirectId);
+        Assert.Equal(EntityTypes.Person, result.EntityType);
+
+        Assert.Equal(typeId, existingRelationship.RelationshipTypeId);
+        Assert.Equal(entityId, existingRelationship.EntityId); // Not Swapped
+        Assert.Equal(relatedEntityId, existingRelationship.RelatedEntityId); // Not Swapped
+        Assert.Equal("Updated description", existingRelationship.Description);
+
+        _repositoryMock.Verify(r => r.UpdateAsync(existingRelationship, It.IsAny<CancellationToken>()), Times.Once);
+        _repositoryMock.Verify(r => r.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Naming", "CA1707:Identifiers should not contain underscores", Justification = "Test names follow a standard convention")]
+    public async Task UpdateRelationshipAsync_WithValidReverseSelection_SwapsEntities()
+    {
+        Guid relationshipId = Guid.NewGuid();
+        Guid entityId = Guid.NewGuid();
+        Guid relatedEntityId = Guid.NewGuid();
+        Guid typeId = Guid.NewGuid();
+        string selection = $"{typeId}_Rev";
+
+        Relationship existingRelationship = new()
+        {
+            Id = relationshipId,
+            EntityId = Guid.NewGuid(), // Old
+            RelatedEntityId = Guid.NewGuid(), // Old
+            EntityType = EntityTypes.Company
+        };
+
+        Relationship updatedRelationship = new()
+        {
+            EntityId = entityId,
+            RelatedEntityId = relatedEntityId,
+            EntityType = EntityTypes.Person,
+            Description = "Updated description"
+        };
+
+        _repositoryMock.Setup(r => r.GetByIdAsync<Relationship>(relationshipId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(existingRelationship);
+
+        _repositoryMock.Setup(r => r.CountAsync(It.IsAny<Expression<Func<Relationship, bool>>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(0); // No duplicate exists
+
+        RelationshipOperationResult result = await _service.UpdateRelationshipAsync(relationshipId, updatedRelationship, selection);
+
+        Assert.True(result.Success);
+        Assert.Equal(entityId, result.RedirectId); // After swap, RelatedEntityId becomes EntityId, then we return existingRelationship.RelatedEntityId which is entityId
+        Assert.Equal(EntityTypes.Person, result.EntityType);
+
+        Assert.Equal(typeId, existingRelationship.RelationshipTypeId);
+        Assert.Equal(relatedEntityId, existingRelationship.EntityId); // Swapped
+        Assert.Equal(entityId, existingRelationship.RelatedEntityId); // Swapped
+        Assert.Equal("Updated description", existingRelationship.Description);
+
+        _repositoryMock.Verify(r => r.UpdateAsync(existingRelationship, It.IsAny<CancellationToken>()), Times.Once);
+        _repositoryMock.Verify(r => r.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
     public async Task GetRelatedEntityOptionsAsyncWhenEntityTypeIsPersonReturnsPersonOptions()
     {
         Guid entityId = Guid.NewGuid();
