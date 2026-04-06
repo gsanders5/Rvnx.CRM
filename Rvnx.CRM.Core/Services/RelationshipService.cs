@@ -462,15 +462,11 @@ public class RelationshipService(IRepository repository) : IRelationshipService
             return comp;
         }
 
-        async Task AddSuggestionAsync(Guid sId, Guid tId, string sName, string tName, bool reverse)
+        void AddSuggestion(Guid sId, Guid tId, string sName, string tName, bool reverse, HashSet<(Guid, Guid)> existingEdges)
         {
             if (sId != Guid.Empty && tId != Guid.Empty)
             {
-                bool exists = await repository.CountAsync<Relationship>(r =>
-                    r.RelationshipTypeId == relationshipTypeId &&
-                    ((r.EntityId == sId && r.RelatedEntityId == tId) ||
-                     (r.EntityId == tId && r.RelatedEntityId == sId))) > 0;
-                if (exists)
+                if (existingEdges.Contains((sId, tId)) || existingEdges.Contains((tId, sId)))
                 {
                     return;
                 }
@@ -507,13 +503,20 @@ public class RelationshipService(IRepository repository) : IRelationshipService
                 : [];
             Dictionary<Guid, Contact> contactMap = batchContacts.ToDictionary(c => c.Id);
 
+            Guid tIdQuery = relatedEntityId ?? Guid.Empty;
+            List<Relationship> existingRels = await repository.ListAsNoTrackingAsync<Relationship>(r =>
+                r.RelationshipTypeId == relationshipTypeId &&
+                (r.EntityId == entityId || r.RelatedEntityId == entityId ||
+                 r.EntityId == tIdQuery || r.RelatedEntityId == tIdQuery));
+            HashSet<(Guid, Guid)> existingEdges = existingRels.Select(r => (r.EntityId, r.RelatedEntityId)).ToHashSet();
+
             foreach (Guid x in compEIds)
             {
                 if (contactMap.TryGetValue(x, out Contact? xContact))
                 {
                     string xName = $"{xContact.FirstName} {xContact.LastName}".Trim();
                     Guid tId = relatedEntityId ?? Guid.Empty;
-                    await AddSuggestionAsync(x, tId, xName, relatedEntityName, isReverse);
+                    AddSuggestion(x, tId, xName, relatedEntityName, isReverse, existingEdges);
                 }
             }
 
@@ -522,7 +525,7 @@ public class RelationshipService(IRepository repository) : IRelationshipService
                 if (contactMap.TryGetValue(y, out Contact? yContact))
                 {
                     string yName = $"{yContact.FirstName} {yContact.LastName}".Trim();
-                    await AddSuggestionAsync(entityId, y, entityName, yName, isReverse);
+                    AddSuggestion(entityId, y, entityName, yName, isReverse, existingEdges);
                 }
             }
         }
@@ -542,10 +545,15 @@ public class RelationshipService(IRepository repository) : IRelationshipService
                     ? await repository.ListAsNoTrackingAsync<Contact>(c => siblingIds.Contains(c.Id))
                     : [];
 
+                List<Relationship> existingRels = await repository.ListAsNoTrackingAsync<Relationship>(r =>
+                    r.RelationshipTypeId == relationshipTypeId &&
+                    (r.EntityId == adultId || r.RelatedEntityId == adultId));
+                HashSet<(Guid, Guid)> existingEdges = existingRels.Select(r => (r.EntityId, r.RelatedEntityId)).ToHashSet();
+
                 foreach (Contact sibContact in sibContacts)
                 {
                     string sibName = $"{sibContact.FirstName} {sibContact.LastName}".Trim();
-                    await AddSuggestionAsync(adultId, sibContact.Id, adultName, sibName, false);
+                    AddSuggestion(adultId, sibContact.Id, adultName, sibName, false, existingEdges);
                 }
             }
         }
