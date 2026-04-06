@@ -7,18 +7,18 @@
 <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
     <h2 class="mb-0">Labels</h2>
     <a asp-action="Create" class="btn btn-primary">
-        <i class="bi bi-plus-lg me-1"></i> Create Label
+        <i class="bi bi-plus-lg me-1" aria-hidden="true"></i> Create Label
     </a>
 </div>
 
 @if (!Model.Any())
 {
     <div class="text-center py-5 my-5">
-        <i class="bi bi-tags display-1 text-muted opacity-25 mb-3"></i>
+        <i class="bi bi-tags display-1 text-muted opacity-25 mb-3" aria-hidden="true"></i>
         <h3 class="h4 text-secondary mt-3">No Labels Found</h3>
         <p class="text-muted mb-4">Create your first label to organize contacts.</p>
         <a asp-action="Create" class="btn btn-primary btn-lg px-4">
-            <i class="bi bi-plus-lg me-2"></i>Create Label
+            <i class="bi bi-plus-lg me-2" aria-hidden="true"></i>Create Label
         </a>
     </div>
 }
@@ -46,11 +46,11 @@ else
                                 <td class="text-end">
                                     <div class="btn-group btn-group-sm">
                                         <a asp-action="Edit" asp-route-id="@label.Id" class="btn btn-outline-secondary" title="Edit" aria-label="Edit @label.Name">
-                                            <i class="bi bi-pencil-square"></i>
+                                            <i class="bi bi-pencil-square" aria-hidden="true"></i>
                                         </a>
                                         <form asp-action="Delete" asp-route-id="@label.Id" method="post" class="d-inline" onsubmit="return confirm('Are you sure you want to delete this label?');">
                                             <button type="submit" class="btn btn-outline-danger" title="Delete" aria-label="Delete @label.Name">
-                                                <i class="bi bi-trash"></i>
+                                                <i class="bi bi-trash" aria-hidden="true"></i>
                                             </button>
                                         </form>
                                     </div>

@@ -16,7 +16,7 @@
             <a asp-action="Index" asp-route-showHidden="True" class="btn btn-outline-secondary">View Hidden</a>
         }
         <a asp-action="Import" class="btn btn-outline-primary"><i class="fa-solid fa-file-import"></i> Import VCF</a>
-        <a asp-action="Create" class="btn btn-primary"><i class="bi bi-plus-lg"></i> Create New</a>
+        <a asp-action="Create" class="btn btn-primary"><i class="bi bi-plus-lg" aria-hidden="true"></i> Create New</a>
     </div>
 </div>
 
@@ -74,7 +74,7 @@
                         @if (item.IsHidden)
                         {
                             <span class="badge bg-secondary ms-2" title="Hidden">
-                                <i class="bi bi-eye-slash"></i>
+                                <i class="bi bi-eye-slash" aria-hidden="true"></i>
                             </span>
                         }
                         @if (item.Labels != null && item.Labels.Any())
@@ -102,10 +102,10 @@
                     <td>
                         <div class="btn-group btn-group-sm">
                             <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-outline-secondary" title="Edit" aria-label="Edit @item.FullName">
-                                <i class="bi bi-pencil-square"></i>
+                                <i class="bi bi-pencil-square" aria-hidden="true"></i>
                             </a>
                             <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-outline-info" title="Details" aria-label="Details for @item.FullName">
-                                <i class="bi bi-info-circle"></i>
+                                <i class="bi bi-info-circle" aria-hidden="true"></i>
                             </a>
                             <button type="button"
                                     class="btn btn-outline-danger btn-sm"
@@ -117,7 +117,7 @@
                                     data-confirm-btn-label="Delete"
                                     data-confirm-btn-icon="bi-trash"
                                     data-confirm-table="#contacts-table">
-                                <i class="bi bi-trash"></i>
+                                <i class="bi bi-trash" aria-hidden="true"></i>
                             </button>
                         </div>
                     </td>
@@ -130,7 +130,7 @@
 else
 {
     <div class="text-center py-5 my-5">
-        <i class="bi bi-person-rolodex display-1 text-muted opacity-25 mb-3"></i>
+        <i class="bi bi-person-rolodex display-1 text-muted opacity-25 mb-3" aria-hidden="true"></i>
         <h3 class="h4 text-secondary mt-3">No contacts found</h3>
         <p class="text-muted mb-4">
             @(Context.Request.Query["showHidden"] == "True"
@@ -138,7 +138,7 @@ else
                 : "Get started by adding your first contact to the system.")
         </p>
         <a asp-action="Create" class="btn btn-primary btn-lg px-4">
-            <i class="bi bi-plus-lg me-2"></i>Create Contact
+            <i class="bi bi-plus-lg me-2" aria-hidden="true"></i>Create Contact
         </a>
     </div>
 }
@@ -162,7 +162,7 @@ else
                         buttons: [
                             {
                                 extend: 'colvis',
-                                text: '<i class="bi bi-layout-three-columns"></i>',
+                                text: '<i class="bi bi-layout-three-columns" aria-hidden="true"></i>',
                                 titleAttr: 'Choose columns'
                             }
                         ]
