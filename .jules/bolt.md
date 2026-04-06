@@ -113,3 +113,7 @@ Action: When a service builds a read-only in-memory aggregate (graph nodes, rece
 ## 2025-02-14 - HashSet LINQ Chain Optimization
 **Learning:** In modern .NET, replacing a LINQ chain like `Select().Concat().Distinct().ToList()` with a manually populated, pre-sized `HashSet` avoids multiple intermediate enumerator allocations, dynamic array resizing, and multiple iterations over the collections. Using `[.. hashSet]` for the final conversion to list is a highly optimized C# 12 feature.
 **Action:** When extracting and merging distinct IDs from multiple collections, pre-allocate a `HashSet` with the combined capacity of the source collections, populate it using `foreach` loops, and convert it to a list using a collection expression (`[.. hashSet]`).
+
+## 2026-06-25 - Avoid full entity fetch for Attachment ID
+**Learning:** `GetContactFormAsync` in `ContactReadService.cs` was using `ListAsync<Attachment>` to retrieve a profile image attachment just to get its `Id`. This caused EF Core to load the entire `Attachment` entity into memory (including large string fields like `ContentType` and `FileName` and potentially navigation properties) just to extract a single `Guid`.
+**Action:** When only an entity's ID is required, always use a projection method like `ListProjectedAsync<T, Guid>(predicate, e => e.Id)` to limit the database query to fetching only the necessary column, preventing unnecessary data transfer and memory allocation.

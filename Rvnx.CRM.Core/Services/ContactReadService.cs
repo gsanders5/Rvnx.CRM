@@ -296,12 +296,15 @@ public class ContactReadService(IRepository repository) : IContactReadService
             dto.RemindOnBirthday = bday.ReminderOffsets.Any(ro => ro.DaysBeforeEvent == 0 && ro.IsActive);
         }
 
-        Attachment? profileAttachment = (await _repository.ListAsync<Attachment>(a =>
-            a.ContactId == id && a.AttachmentType == AttachmentTypes.ProfileImage)).FirstOrDefault();
+        // Optimization: Use ListProjectedAsync to fetch only the Id of the ProfileImage attachment.
+        // This avoids loading the entire Attachment entity (including ContentType and FileName) into memory.
+        Guid profileImageId = (await _repository.ListProjectedAsync<Attachment, Guid>(
+            a => a.ContactId == id && a.AttachmentType == AttachmentTypes.ProfileImage,
+            a => a.Id))?.FirstOrDefault() ?? Guid.Empty;
 
-        if (profileAttachment != null)
+        if (profileImageId != Guid.Empty)
         {
-            dto.ProfileImageId = profileAttachment.Id;
+            dto.ProfileImageId = profileImageId;
         }
 
         List<Label> allLabels = await _repository.ListAsNoTrackingAsync<Label>(l => true) ?? [];
