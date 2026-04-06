@@ -25,3 +25,6 @@
 ## 2024-03-24 - Renaming vague variables
 **Learning:** In ASP.NET Core MVC, changing the variable name passed into `return View(model)` (e.g., from `data` to `dashboard`) does not change the model passed to the Razor view, making it a completely safe and localized refactor for clarity.
 **Action:** When finding vague variables like `data`, `result`, `temp`, `obj`, `flag`, or `val` passed to Views, confidently rename them to reflect their actual type or purpose to improve readability without fear of breaking the view binding.
+## 2026-03-09 - Deconstruct tuples in foreach loops
+**Learning:** Using explicit tuple types in a `foreach` loop (e.g. `foreach ((Guid EntityId, Guid RelatedEntityId) relationship in relationships)`) is verbose and less readable than using tuple deconstruction.
+**Action:** Use tuple deconstruction with `var` (e.g. `foreach (var (entityId, relatedEntityId) in relationships)`) when iterating over collections of tuples to improve clarity and reduce noise.
