@@ -43,7 +43,6 @@ public class ContactsController(
             return RedirectToAction("Index", "Home");
         }
 
-        await _userSynchronizationService.SyncUserAsync(HttpContext.User);
         Guid? selfContactId = await _selfContactService.GetSelfContactIdAsync();
 
         return selfContactId.HasValue
@@ -59,7 +58,6 @@ public class ContactsController(
             return RedirectToAction("Index", "Home");
         }
 
-        await _userSynchronizationService.SyncUserAsync(HttpContext.User);
         Guid? selfContactId = await _selfContactService.GetSelfContactIdAsync();
 
         if (selfContactId.HasValue)
@@ -67,27 +65,27 @@ public class ContactsController(
             return RedirectToAction(nameof(Details), new { id = selfContactId });
         }
 
-        ContactFormDto? dto = await _selfContactService.GetSelfContactFormAsync();
-        if (dto == null)
+        ContactFormDto? formDto = await _selfContactService.GetSelfContactFormAsync();
+        if (formDto == null)
         {
-            return RedirectToAction("Index");
+            return RedirectToAction("Index", "Home");
         }
 
         ContactCreateViewModel viewModel = new()
         {
-            FirstName = dto.FirstName,
-            LastName = dto.LastName,
-            Nickname = dto.Nickname,
-            Email = dto.Email,
-            Phone = dto.Phone,
-            JobTitle = dto.JobTitle,
-            Company = dto.Company,
-            Birthday = dto.Birthday,
-            RemindOnBirthday = dto.RemindOnBirthday,
-            IsHidden = dto.IsHidden,
-            Pronouns = dto.Pronouns,
-            Gender = dto.Gender,
-            Religion = dto.Religion,
+            FirstName = formDto.FirstName,
+            LastName = formDto.LastName,
+            Nickname = formDto.Nickname,
+            Email = formDto.Email,
+            Phone = formDto.Phone,
+            JobTitle = formDto.JobTitle,
+            Company = formDto.Company,
+            Birthday = formDto.Birthday,
+            RemindOnBirthday = formDto.RemindOnBirthday,
+            IsHidden = formDto.IsHidden,
+            Pronouns = formDto.Pronouns,
+            Gender = formDto.Gender,
+            Religion = formDto.Religion,
             IsSelfCreate = true,
             PronounOptions = PersonalAttributeOptions.Pronouns,
             GenderOptions = PersonalAttributeOptions.Gender
