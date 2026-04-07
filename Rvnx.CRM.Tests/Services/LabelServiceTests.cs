@@ -213,16 +213,55 @@ public class LabelServiceTests
     }
 
     [Fact]
+    public async Task DeleteAsyncReturnsEarlyWhenLabelNotFound()
+    {
+        _mockRepo.Setup(r => r.GetByIdAsync<Label>(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((Label?)null);
+
+        await _service.DeleteAsync(Guid.NewGuid());
+
+        _mockRepo.Verify(r => r.DeleteAsync<Label>(It.IsAny<Guid>(), It.IsAny<CancellationToken>()), Times.Never);
+        _mockRepo.Verify(r => r.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task DeleteAsyncDeletesLabelWhenFound()
+    {
+        Guid id = Guid.NewGuid();
+        Label label = new() { Id = id, Name = "Test" };
+        _mockRepo.Setup(r => r.GetByIdAsync<Label>(id, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(label);
+
+        await _service.DeleteAsync(id);
+
+        _mockRepo.Verify(r => r.DeleteAsync<Label>(id, It.IsAny<CancellationToken>()), Times.Once);
+        _mockRepo.Verify(r => r.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
     public async Task AssignLabelAsyncAddsContactLabelWhenNotExists()
     {
         _mockRepo.Setup(r =>
-                r.ListAsync(It.IsAny<Expression<Func<ContactLabel, bool>>>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync([]);
+                r.CountAsync(It.IsAny<Expression<Func<ContactLabel, bool>>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(0);
 
         await _service.AssignLabelAsync(Guid.NewGuid(), Guid.NewGuid());
 
         _mockRepo.Verify(r => r.AddAsync(It.IsAny<ContactLabel>(), It.IsAny<CancellationToken>()), Times.Once);
         _mockRepo.Verify(r => r.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task AssignLabelAsyncDoesNotAddContactLabelWhenAlreadyExists()
+    {
+        _mockRepo.Setup(r =>
+                r.CountAsync(It.IsAny<Expression<Func<ContactLabel, bool>>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(1);
+
+        await _service.AssignLabelAsync(Guid.NewGuid(), Guid.NewGuid());
+
+        _mockRepo.Verify(r => r.AddAsync(It.IsAny<ContactLabel>(), It.IsAny<CancellationToken>()), Times.Never);
+        _mockRepo.Verify(r => r.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]
