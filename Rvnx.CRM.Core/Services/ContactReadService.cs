@@ -57,9 +57,9 @@ public class ContactReadService(IRepository repository) : IContactReadService
             // Optimization: Use Dictionary with capacity and TryAdd instead of GroupBy().ToDictionary(..., First())
             // to avoid allocations of IGrouping structures and redundant list iterations.
             Dictionary<Guid, Guid> attachmentMap = new(profileAttachments.Count);
-            foreach ((Guid ContactId, Guid AttachmentId) in profileAttachments)
+            foreach (var (contactId, attachmentId) in profileAttachments)
             {
-                attachmentMap.TryAdd(ContactId, AttachmentId);
+                attachmentMap.TryAdd(contactId, attachmentId);
             }
 
             foreach (ContactDto? dto in contactDtos)
@@ -83,14 +83,14 @@ public class ContactReadService(IRepository repository) : IContactReadService
         // Optimization: Use Dictionary with capacity and foreach loop instead of GroupBy().ToDictionary(...)
         // to avoid allocations of IGrouping structures and redundant list iterations.
         Dictionary<Guid, List<LabelDto>> labelsByContact = new(allContactLabels.Count);
-        foreach ((Guid ContactId, Guid LabelId, string Name, string? Color) in allContactLabels)
+        foreach (var (contactId, labelId, name, color) in allContactLabels)
         {
-            if (!labelsByContact.TryGetValue(ContactId, out List<LabelDto>? labelsList))
+            if (!labelsByContact.TryGetValue(contactId, out List<LabelDto>? labelsList))
             {
                 labelsList = [];
-                labelsByContact.TryAdd(ContactId, labelsList);
+                labelsByContact.TryAdd(contactId, labelsList);
             }
-            labelsList.Add(new LabelDto { Id = LabelId, Name = Name, Color = Color });
+            labelsList.Add(new LabelDto { Id = labelId, Name = name, Color = color });
         }
         foreach (List<LabelDto> list in labelsByContact.Values)
         {
@@ -120,9 +120,9 @@ public class ContactReadService(IRepository repository) : IContactReadService
             // Optimization: Use Dictionary with capacity and TryAdd instead of GroupBy().ToDictionary(..., First())
             // to avoid allocations of IGrouping structures and redundant list iterations.
             Dictionary<Guid, DateOnly> birthdayMap = new(birthdayDates.Count);
-            foreach ((Guid ContactId, DateOnly EventDate) in birthdayDates)
+            foreach (var (contactId, eventDate) in birthdayDates)
             {
-                birthdayMap.TryAdd(ContactId, EventDate);
+                birthdayMap.TryAdd(contactId, eventDate);
             }
 
             foreach (ContactDto? dto in contactDtos)

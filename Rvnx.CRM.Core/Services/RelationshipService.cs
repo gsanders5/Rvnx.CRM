@@ -70,7 +70,7 @@ public class RelationshipService(IRepository repository) : IRelationshipService
                     existingEdges.Add((r.RelatedEntityId, r.EntityId));
                 }
 
-                foreach ((Guid sId, Guid tId, bool reverse) in parsedSuggestions)
+                foreach (var (sId, tId, reverse) in parsedSuggestions)
                 {
                     Relationship newRel = new()
                     {
@@ -365,7 +365,7 @@ public class RelationshipService(IRepository repository) : IRelationshipService
                     existingEdges.Add((r.RelatedEntityId, r.EntityId));
                 }
 
-                foreach ((Guid sId, Guid tId, bool reverse) in parsedSuggestions)
+                foreach (var (sId, tId, reverse) in parsedSuggestions)
                 {
                     Relationship newRel = new()
                     {

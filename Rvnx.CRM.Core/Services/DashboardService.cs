@@ -57,7 +57,7 @@ public class DashboardService(IRepository repository, ILogger<DashboardService> 
             : [];
 
         Dictionary<Guid, Guid> attachmentMap = new(profileAttachments.Count);
-        foreach ((Guid contactId, Guid attachmentId) in profileAttachments)
+        foreach (var (contactId, attachmentId) in profileAttachments)
         {
             attachmentMap.TryAdd(contactId, attachmentId);
         }
