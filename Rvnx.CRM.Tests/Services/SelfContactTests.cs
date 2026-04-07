@@ -22,10 +22,7 @@ public class SelfContactTests
         userMock.Setup(u => u.UserName).Returns("Test User");
         userMock.Setup(u => u.IsAuthenticated).Returns(true);
 
-        Mock<IUserSynchronizationService> syncMock = new();
-        syncMock.Setup(s => s.SyncUserAsync(It.IsAny<System.Security.Claims.ClaimsPrincipal>())).Returns(Task.CompletedTask);
-
-        ContactsController controller = new(loggerMock.Object, userMock.Object, syncMock.Object, new Mock<IContactImportService>().Object, new Mock<IContactExportService>().Object, new Mock<IContactManagementService>().Object, new Mock<IContactReadService>().Object, selfContactServiceMock.Object, Mock.Of<IFileValidationService>())
+        ContactsController controller = new(loggerMock.Object, userMock.Object, new Mock<IContactImportService>().Object, new Mock<IContactExportService>().Object, new Mock<IContactManagementService>().Object, new Mock<IContactReadService>().Object, selfContactServiceMock.Object, Mock.Of<IFileValidationService>())
         {
             ControllerContext = new ControllerContext
             {
