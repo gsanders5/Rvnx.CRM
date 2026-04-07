@@ -28,3 +28,6 @@
 ## 2026-03-09 - Deconstruct tuples in foreach loops
 **Learning:** Using explicit tuple types in a `foreach` loop (e.g. `foreach ((Guid EntityId, Guid RelatedEntityId) relationship in relationships)`) is verbose and less readable than using tuple deconstruction.
 **Action:** Use tuple deconstruction with `var` (e.g. `foreach (var (entityId, relatedEntityId) in relationships)`) when iterating over collections of tuples to improve clarity and reduce noise.
+## 2024-05-17 - Prefer Target-Typed new()
+**Learning:** The repository prefers modern C# features like target-typed `new()` over verbose `var` declarations for object instantiation, specifically within unit tests. This maintains consistency with C# 12 features used elsewhere.
+**Action:** When creating new objects or refactoring existing `var` assignments where the type is explicitly known on the right side, replace it with the target-typed `new()` syntax on the left side.
