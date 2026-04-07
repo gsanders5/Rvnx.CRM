@@ -45,3 +45,6 @@
 ## 2025-03-03 - Core Domain Logic Independence
 **Learning:** Sometimes `ClaimsPrincipal` leaks into the `Core` logic. Domain logic shouldn't care about HttpContext or web identities. Keep domain interfaces clean and rely on mapping to primitives or ICurrentUserService in the Web/Controllers layer instead.
 **Action:** When working on services in `Rvnx.CRM.Core/Interfaces`, never introduce properties/parameters of type `ClaimsPrincipal`. Extract necessary IDs/Strings in the controller layer or use `ICurrentUserService`.
+## 2024-06-05 - [Duplicate User Synchronization Call]
+**Learning:** `IUserSynchronizationService.SyncUserAsync` is correctly invoked globally via authentication middleware in `Program.cs` for every authenticated request. Redundant calls to this service from within individual controller actions (e.g., `ContactsController.CreateSelf`) are unnecessary and unnecessarily couple the controller to the synchronization service.
+**Action:** When auditing controllers for coupling, identify and remove explicit invocations of `IUserSynchronizationService` to rely entirely on the global middleware.
