@@ -213,28 +213,24 @@ public class LabelServiceTests
     }
 
     [Fact]
-    public async Task DeleteAsyncReturnsEarlyWhenLabelNotFound()
+    public async Task DeleteAsyncDeletesLabelWhenNotFound()
     {
-        _mockRepo.Setup(r => r.GetByIdAsync<Label>(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync((Label?)null);
-
+        // ⚡ Bolt: bulk delete doesn't fetch first — it always issues a DELETE WHERE predicate.
+        // No rows are affected if the label doesn't exist, but no exception is thrown either.
         await _service.DeleteAsync(Guid.NewGuid());
 
-        _mockRepo.Verify(r => r.DeleteAsync<Label>(It.IsAny<Guid>(), It.IsAny<CancellationToken>()), Times.Never);
-        _mockRepo.Verify(r => r.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
+        _mockRepo.Verify(r => r.DeleteAsync<Label>(It.IsAny<Expression<Func<Label, bool>>>(), It.IsAny<CancellationToken>()), Times.Once);
+        _mockRepo.Verify(r => r.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
     public async Task DeleteAsyncDeletesLabelWhenFound()
     {
         Guid id = Guid.NewGuid();
-        Label label = new() { Id = id, Name = "Test" };
-        _mockRepo.Setup(r => r.GetByIdAsync<Label>(id, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(label);
 
         await _service.DeleteAsync(id);
 
-        _mockRepo.Verify(r => r.DeleteAsync<Label>(id, It.IsAny<CancellationToken>()), Times.Once);
+        _mockRepo.Verify(r => r.DeleteAsync<Label>(It.IsAny<Expression<Func<Label, bool>>>(), It.IsAny<CancellationToken>()), Times.Once);
         _mockRepo.Verify(r => r.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
     }
 
