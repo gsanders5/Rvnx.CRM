@@ -57,6 +57,3 @@ Ensure the target container has `id="main-content"` and `tabindex="-1"` to corre
 ## 2024-03-27 - Add aria-hidden to decorative icons
 **Learning:** Decorative Bootstrap icons (`<i class="bi ..."></i>`) used alongside text or within elements that already have an `aria-label` often lack `aria-hidden="true"` in this application's views (e.g., Dashboard). This can cause screen readers to announce redundant or confusing "icon" roles without proper context.
 **Action:** Always check newly added or existing decorative `<i>` tag icons for `aria-hidden="true"` to prevent redundant screen reader announcements, especially when the parent element provides the accessible name or when the icon is purely visual alongside text.
-## 2026-03-30 - aria-hidden on purely visual icons
-**Learning:** FontAwesome icons (like `<i class="fas fa-bars"></i>`) are used alongside Bootstrap icons for UI polish. These also need `aria-hidden="true"` when they are purely visual or within elements that already have an accessible name (`aria-label`).
-**Action:** When adding or updating icons, remember to check both Bootstrap (`bi`) and FontAwesome (`fas`, `fa-solid`) icons to ensure `aria-hidden="true"` is applied appropriately to avoid redundant screen reader announcements.

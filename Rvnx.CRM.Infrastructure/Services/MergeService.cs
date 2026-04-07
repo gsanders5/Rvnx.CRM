@@ -1,5 +1,4 @@
 using Microsoft.EntityFrameworkCore;
-using Rvnx.CRM.Core.Constants;
 using Rvnx.CRM.Core.Interfaces;
 using Rvnx.CRM.Core.Models.Base;
 using Rvnx.CRM.Core.Models.Contact;
@@ -54,15 +53,15 @@ public class MergeService(CRMDbContext context, IRepository repository) : IMerge
                 att.ContactId = primaryId;
             }
 
-            List<Attachment> primaryProfilePhotos = await _repository.ListAsync<Attachment>(a => a.ContactId == primaryId && a.AttachmentType == AttachmentTypes.ProfileImage);
-            List<Attachment> secondaryProfilePhotos = await _repository.ListAsync<Attachment>(a => a.ContactId == secondaryId && a.AttachmentType == AttachmentTypes.ProfileImage);
+            List<Attachment> primaryProfilePhotos = await _repository.ListAsync<Attachment>(a => a.ContactId == primaryId && a.AttachmentType == "ProfileImage");
+            List<Attachment> secondaryProfilePhotos = await _repository.ListAsync<Attachment>(a => a.ContactId == secondaryId && a.AttachmentType == "ProfileImage");
 
             if (primaryProfilePhotos.Count > 0)
             {
                 // Downgrade secondary's profile photos to general attachments so they don't conflict
                 foreach (Attachment photo in secondaryProfilePhotos)
                 {
-                    photo.AttachmentType = AttachmentTypes.General;
+                    photo.AttachmentType = "General";
                     photo.ContactId = primaryId;
                 }
             }

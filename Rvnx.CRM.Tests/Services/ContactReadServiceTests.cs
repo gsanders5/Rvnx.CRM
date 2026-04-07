@@ -370,11 +370,10 @@ public class ContactReadServiceTests
                 It.IsAny<string[]>()))
                 .ReturnsAsync([contact]);
 
-            _repositoryMock.Setup(r => r.ListProjectedAsync<Attachment, Guid>(
+            _repositoryMock.Setup(r => r.ListAsync<Attachment>(
                 It.IsAny<Expression<Func<Attachment, bool>>>(),
-                It.IsAny<Expression<Func<Attachment, Guid>>>(),
                 It.IsAny<CancellationToken>()))
-                .ReturnsAsync([profileAttachment.Id]);
+                .ReturnsAsync([profileAttachment]);
 
             _repositoryMock.Setup(r => r.ListAsNoTrackingAsync<Label>(
                 It.IsAny<Expression<Func<Label, bool>>>(),
