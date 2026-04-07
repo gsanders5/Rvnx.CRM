@@ -242,27 +242,19 @@ public class LabelServiceTests
         Guid labelId1 = Guid.NewGuid();
         Guid labelId2 = Guid.NewGuid();
 
-        List<ContactLabel> contactLabels =
+        List<Core.DTOs.Contact.LabelDto> labelDtos =
         [
-            new ContactLabel
-            {
-                ContactId = contactId,
-                LabelId = labelId1,
-                Label = new Label { Id = labelId1, Name = "Zeta", Color = "#000000" }
-            },
-            new ContactLabel
-            {
-                ContactId = contactId,
-                LabelId = labelId2,
-                Label = new Label { Id = labelId2, Name = "Alpha", Color = "#ffffff" }
-            }
+            new Core.DTOs.Contact.LabelDto { Id = labelId2, Name = "Alpha", Color = "#ffffff" },
+            new Core.DTOs.Contact.LabelDto { Id = labelId1, Name = "Zeta", Color = "#000000" }
         ];
 
-        _mockRepo.Setup(r => r.ListAsNoTrackingAsync(
+        _mockRepo.Setup(r => r.ListProjectedAsync<ContactLabel, Core.DTOs.Contact.LabelDto, string>(
                 It.IsAny<Expression<Func<ContactLabel, bool>>>(),
-                It.IsAny<CancellationToken>(),
-                It.IsAny<string[]>()))
-            .ReturnsAsync(contactLabels);
+                It.IsAny<Expression<Func<ContactLabel, Core.DTOs.Contact.LabelDto>>>(),
+                It.IsAny<Expression<Func<ContactLabel, string>>>(),
+                It.IsAny<bool>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(labelDtos);
 
         // Act
         List<Core.DTOs.Contact.LabelDto> result = await _service.GetLabelsForContactAsync(contactId);
@@ -287,10 +279,12 @@ public class LabelServiceTests
         // Arrange
         Guid contactId = Guid.NewGuid();
 
-        _mockRepo.Setup(r => r.ListAsNoTrackingAsync(
+        _mockRepo.Setup(r => r.ListProjectedAsync<ContactLabel, Core.DTOs.Contact.LabelDto, string>(
                 It.IsAny<Expression<Func<ContactLabel, bool>>>(),
-                It.IsAny<CancellationToken>(),
-                It.IsAny<string[]>()))
+                It.IsAny<Expression<Func<ContactLabel, Core.DTOs.Contact.LabelDto>>>(),
+                It.IsAny<Expression<Func<ContactLabel, string>>>(),
+                It.IsAny<bool>(),
+                It.IsAny<CancellationToken>()))
             .ReturnsAsync([]);
 
         // Act
@@ -307,11 +301,13 @@ public class LabelServiceTests
         // Arrange
         Guid contactId = Guid.NewGuid();
 
-        _mockRepo.Setup(r => r.ListAsNoTrackingAsync(
+        _mockRepo.Setup(r => r.ListProjectedAsync<ContactLabel, Core.DTOs.Contact.LabelDto, string>(
                 It.IsAny<Expression<Func<ContactLabel, bool>>>(),
-                It.IsAny<CancellationToken>(),
-                It.IsAny<string[]>()))
-            .ReturnsAsync((List<ContactLabel>?)null!);
+                It.IsAny<Expression<Func<ContactLabel, Core.DTOs.Contact.LabelDto>>>(),
+                It.IsAny<Expression<Func<ContactLabel, string>>>(),
+                It.IsAny<bool>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync((List<Core.DTOs.Contact.LabelDto>?)null!);
 
         // Act
         List<Core.DTOs.Contact.LabelDto> result = await _service.GetLabelsForContactAsync(contactId);

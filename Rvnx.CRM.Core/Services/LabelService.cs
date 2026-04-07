@@ -104,13 +104,13 @@ public class LabelService(IRepository repository) : ILabelService
 
     public async Task<List<LabelDto>> GetLabelsForContactAsync(Guid contactId)
     {
-        List<ContactLabel> contactLabels =
-            await _repository.ListAsNoTrackingAsync<ContactLabel>(cl => cl.ContactId == contactId, default,
-                nameof(ContactLabel.Label)) ?? [];
-        return
-        [
-            .. contactLabels.Select(cl => cl.Label).OrderBy(l => l.Name)
-                .Select(l => new LabelDto { Id = l.Id, Name = l.Name, Color = l.Color })
-        ];
+        // ⚡ Bolt Optimization: Use ListProjectedAsync to fetch only the required Label properties
+        // instead of loading full ContactLabel and joined Label entities into memory.
+        return await _repository.ListProjectedAsync<ContactLabel, LabelDto, string>(
+            cl => cl.ContactId == contactId,
+            cl => new LabelDto { Id = cl.Label.Id, Name = cl.Label.Name, Color = cl.Label.Color },
+            orderBy: cl => cl.Label.Name,
+            descending: false
+        ) ?? [];
     }
 }
