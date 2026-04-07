@@ -119,21 +119,9 @@ public class AttachmentsController(
             return NotFound();
         }
 
-        if (!string.IsNullOrEmpty(Request.Headers.IfModifiedSince))
+        if (IsNotModified(dto.LastChangedDate))
         {
-            if (DateTime.TryParse(Request.Headers.IfModifiedSince,
-                    System.Globalization.CultureInfo.InvariantCulture,
-                    System.Globalization.DateTimeStyles.AdjustToUniversal |
-                    System.Globalization.DateTimeStyles.AssumeUniversal,
-                    out DateTime ifModifiedSince))
-            {
-                // Truncate milliseconds as HTTP headers don't support them
-                if (ifModifiedSince >=
-                    dto.LastChangedDate.AddTicks(-(dto.LastChangedDate.Ticks % TimeSpan.TicksPerSecond)))
-                {
-                    return StatusCode(304);
-                }
-            }
+            return StatusCode(304);
         }
 
         Response.Headers.LastModified = dto.LastChangedDate.ToString("R");
@@ -153,16 +141,9 @@ public class AttachmentsController(
             return NotFound();
         }
 
-        if (!string.IsNullOrEmpty(Request.Headers.IfModifiedSince))
+        if (IsNotModified(dto.LastChangedDate))
         {
-            if (DateTime.TryParse(Request.Headers.IfModifiedSince, System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.AdjustToUniversal |
-                    System.Globalization.DateTimeStyles.AssumeUniversal, out DateTime ifModifiedSince))
-            {
-                if (ifModifiedSince >= dto.LastChangedDate.AddTicks(-(dto.LastChangedDate.Ticks % TimeSpan.TicksPerSecond)))
-                {
-                    return StatusCode(304);
-                }
-            }
+            return StatusCode(304);
         }
 
         byte[]? thumbnail = await _thumbnailService.GetOrCreateThumbnailAsync(
@@ -182,6 +163,26 @@ public class AttachmentsController(
         return IsImage(dto.ContentType)
             ? File(dto.Content, dto.ContentType)
             : File(dto.Content, dto.ContentType, dto.FileName);
+    }
+
+    private bool IsNotModified(DateTime lastChangedDate)
+    {
+        if (string.IsNullOrEmpty(Request.Headers.IfModifiedSince))
+        {
+            return false;
+        }
+
+        if (DateTime.TryParse(Request.Headers.IfModifiedSince,
+                System.Globalization.CultureInfo.InvariantCulture,
+                System.Globalization.DateTimeStyles.AdjustToUniversal |
+                System.Globalization.DateTimeStyles.AssumeUniversal,
+                out DateTime ifModifiedSince))
+        {
+            // Truncate milliseconds as HTTP headers don't support them
+            return ifModifiedSince >= lastChangedDate.AddTicks(-(lastChangedDate.Ticks % TimeSpan.TicksPerSecond));
+        }
+
+        return false;
     }
 
     private static bool IsImage(string contentType)

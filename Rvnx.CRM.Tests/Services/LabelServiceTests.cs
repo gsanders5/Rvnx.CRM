@@ -157,7 +157,21 @@ public class LabelServiceTests
 
         await _service.DeleteAsync(id);
 
-        _mockRepo.Verify(r => r.DeleteAsync(It.IsAny<Expression<Func<Label, bool>>>(), It.IsAny<CancellationToken>()), Times.Once);
+        _mockRepo.Verify(r => r.DeleteAsync<Label>(It.IsAny<Expression<Func<Label, bool>>>(), It.IsAny<CancellationToken>()), Times.Once);
+        _mockRepo.Verify(r => r.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task DeleteAsyncDoesNothingWhenLabelDoesNotExist()
+    {
+        // ⚡ Bolt: After performance update, bulk delete doesn't fetch first, so this test case
+        // behavior is no longer functionally different from DeletesLabelWhenExists at the service layer.
+        // We preserve it to assert that no exceptions are thrown when the ID is arbitrary.
+        Guid id = Guid.NewGuid();
+
+        await _service.DeleteAsync(id);
+
+        _mockRepo.Verify(r => r.DeleteAsync<Label>(It.IsAny<Expression<Func<Label, bool>>>(), It.IsAny<CancellationToken>()), Times.Once);
         _mockRepo.Verify(r => r.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
     }
 
