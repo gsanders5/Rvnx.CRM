@@ -1,0 +1,19 @@
+--- Rvnx.CRM.Tests/Services/LabelServiceTests.cs
++++ Rvnx.CRM.Tests/Services/LabelServiceTests.cs
+@@ -159,7 +159,7 @@
+
+         await _service.DeleteAsync(id);
+
+-        _mockRepo.Verify(r => r.DeleteAsync<Label>(id, It.IsAny<CancellationToken>()), Times.Once);
++        _mockRepo.Verify(r => r.DeleteAsync(It.IsAny<Expression<Func<Label, bool>>>(), It.IsAny<CancellationToken>()), Times.Once);
+         _mockRepo.Verify(r => r.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
+     }
+
+@@ -171,7 +171,7 @@
+
+         await _service.DeleteAsync(id);
+
+-        _mockRepo.Verify(r => r.DeleteAsync<Label>(It.IsAny<Guid>(), It.IsAny<CancellationToken>()), Times.Never);
++        _mockRepo.Verify(r => r.DeleteAsync(It.IsAny<Expression<Func<Label, bool>>>(), It.IsAny<CancellationToken>()), Times.Never);
+         _mockRepo.Verify(r => r.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
+     }

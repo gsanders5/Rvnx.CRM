@@ -167,12 +167,12 @@ public class LabelServiceTests
     public async Task DeleteAsyncDoesNothingWhenLabelDoesNotExist()
     {
         Guid id = Guid.NewGuid();
-        _mockRepo.Setup(r => r.CountAsync(It.IsAny<Expression<Func<Label, bool>>>(), It.IsAny<CancellationToken>())).ReturnsAsync(0);
+        _mockRepo.Setup(r => r.GetByIdAsync<Label>(id, It.IsAny<CancellationToken>())).ReturnsAsync((Label?)null);
 
         await _service.DeleteAsync(id);
 
-        _mockRepo.Verify(r => r.DeleteAsync(It.IsAny<Expression<Func<Label, bool>>>(), It.IsAny<CancellationToken>()), Times.Once);
-        _mockRepo.Verify(r => r.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
+        _mockRepo.Verify(r => r.DeleteAsync(It.IsAny<Expression<Func<Label, bool>>>(), It.IsAny<CancellationToken>()), Times.Never);
+        _mockRepo.Verify(r => r.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]
