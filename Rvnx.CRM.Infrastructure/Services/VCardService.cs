@@ -43,14 +43,14 @@ public class VCardService : IVCardService
         List<Task<Contact>> tasks = new(vCards.Count);
         foreach (VCard vc in vCards)
         {
-            tasks.Add(MapVCardToContactAsync(vc, cancellationToken));
+            tasks.Add(ProcessVCardAsync(vc, cancellationToken));
         }
 
         Contact[] contacts = await Task.WhenAll(tasks);
         return contacts;
     }
 
-    private async Task<Contact> MapVCardToContactAsync(VCard vc, CancellationToken cancellationToken)
+    private async Task<Contact> ProcessVCardAsync(VCard vc, CancellationToken cancellationToken)
     {
         Contact contact = new()
         {

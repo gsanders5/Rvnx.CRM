@@ -25,7 +25,7 @@ public class SelfContactTests
         Mock<IUserSynchronizationService> syncMock = new();
         syncMock.Setup(s => s.SyncUserAsync(It.IsAny<System.Security.Claims.ClaimsPrincipal>())).Returns(Task.CompletedTask);
 
-        ContactsController controller = new(loggerMock.Object, userMock.Object, syncMock.Object, new Mock<IContactImportService>().Object, new Mock<IContactExportService>().Object, new Mock<IContactManagementService>().Object, new Mock<IContactReadService>().Object, selfContactServiceMock.Object, Mock.Of<IFileValidationService>())
+        ContactsController controller = new(loggerMock.Object, userMock.Object, new Mock<IContactImportService>().Object, new Mock<IContactExportService>().Object, new Mock<IContactManagementService>().Object, new Mock<IContactReadService>().Object, selfContactServiceMock.Object, Mock.Of<IFileValidationService>())
         {
             ControllerContext = new ControllerContext
             {
@@ -40,10 +40,10 @@ public class SelfContactTests
     public async Task CreateSelfGetShouldPreFillData()
     {
         Mock<ISelfContactService> selfContactMock = new();
-        selfContactMock.Setup(s => s.GetSelfContactIdAsync()).ReturnsAsync((Guid?)null);
+        selfContactMock.Setup(s => s.GetSelfContactIdAsync(It.IsAny<ClaimsPrincipal>())).ReturnsAsync((Guid?)null);
 
         ContactFormDto formDto = new() { FirstName = "Test", LastName = "User", Email = "test@example.com" };
-        selfContactMock.Setup(s => s.GetSelfContactFormAsync()).ReturnsAsync(formDto);
+        selfContactMock.Setup(s => s.GetSelfContactFormAsync(It.IsAny<ClaimsPrincipal>())).ReturnsAsync(formDto);
 
         ContactsController controller = CreateController(selfContactMock);
 
@@ -61,7 +61,7 @@ public class SelfContactTests
     {
         Guid selfContactId = Guid.NewGuid();
         Mock<ISelfContactService> selfContactMock = new();
-        selfContactMock.Setup(s => s.GetSelfContactIdAsync()).ReturnsAsync(selfContactId);
+        selfContactMock.Setup(s => s.GetSelfContactIdAsync(It.IsAny<ClaimsPrincipal>())).ReturnsAsync(selfContactId);
 
         ContactsController controller = CreateController(selfContactMock);
 
@@ -76,7 +76,7 @@ public class SelfContactTests
     public async Task SelfShouldRedirectToCreateSelfWhenSelfContactDoesNotExist()
     {
         Mock<ISelfContactService> selfContactMock = new();
-        selfContactMock.Setup(s => s.GetSelfContactIdAsync()).ReturnsAsync((Guid?)null);
+        selfContactMock.Setup(s => s.GetSelfContactIdAsync(It.IsAny<ClaimsPrincipal>())).ReturnsAsync((Guid?)null);
 
         ContactsController controller = CreateController(selfContactMock);
 
@@ -92,7 +92,7 @@ public class SelfContactTests
         Guid newContactId = Guid.NewGuid();
         Mock<ISelfContactService> selfContactMock = new();
 
-        selfContactMock.Setup(s => s.CreateSelfContactAsync(It.IsAny<ContactFormDto>()))
+        selfContactMock.Setup(s => s.CreateSelfContactAsync(It.IsAny<ClaimsPrincipal>(), It.IsAny<ContactFormDto>()))
             .ReturnsAsync(ContactOperationResult.Ok(newContactId));
 
         ContactsController controller = CreateController(selfContactMock);

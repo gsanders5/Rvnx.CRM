@@ -118,7 +118,7 @@
                     <div class="d-flex align-items-center mb-2">
                         <img src="@Url.Action("View", "Attachments", new { id = Model.ProfileImageId })" class="rounded me-2" alt="Current Profile" style="width: 50px; height: 50px; object-fit: cover;"/>
                         <button type="submit" asp-action="UnsetPhoto" asp-route-id="@Model.Id" class="btn btn-sm btn-outline-danger" onclick="return confirm('Are you sure you want to remove the profile photo?');">
-                            <i class="bi bi-x-circle" aria-hidden="true"></i> Unset Photo
+                            <i class="bi bi-x-circle"></i> Unset Photo
                         </button>
                     </div>
                 }
@@ -135,15 +135,15 @@
             </div>
 
             <div class="d-grid gap-2 d-md-flex justify-content-md-start mt-4">
-                <button type="submit" class="btn btn-primary"><i class="bi bi-save me-2" aria-hidden="true"></i>Save</button>
-                <a asp-action="Details" asp-route-id="@Model.Id" class="btn btn-secondary"><i class="bi bi-arrow-left me-2" aria-hidden="true"></i>Back to Contact</a>
+                <button type="submit" class="btn btn-primary"><i class="bi bi-save me-2"></i>Save</button>
+                <a asp-action="Details" asp-route-id="@Model.Id" class="btn btn-secondary"><i class="bi bi-arrow-left me-2"></i>Back to Contact</a>
             </div>
         </form>
     </div>
     <div class="col-md-6">
         <div class="card shadow-sm mb-4">
             <div class="card-body">
-                <h5 class="card-title text-primary"><i class="bi bi-tags" aria-hidden="true"></i> Manage Labels</h5>
+                <h5 class="card-title text-primary"><i class="bi bi-tags"></i> Manage Labels</h5>
                 <hr/>
                 <h6 class="mb-3">Assigned Labels</h6>
                 @if (Model.AssignedLabelIds != null && Model.AllLabels != null)
@@ -186,7 +186,7 @@
                                     <option value="@label.Id">@label.Name</option>
                                 }
                             </select>
-                            <button type="submit" class="btn btn-sm btn-outline-primary"><i class="bi bi-plus" aria-hidden="true"></i> Add</button>
+                            <button type="submit" class="btn btn-sm btn-outline-primary"><i class="bi bi-plus"></i> Add</button>
                         </form>
                     }
                     else if (!Model.AllLabels.Any())
@@ -199,7 +199,7 @@
                     }
 
                     <div class="mt-4 pt-3 border-top">
-                        <a asp-controller="Labels" asp-action="Index" class="small text-decoration-none"><i class="bi bi-gear me-1" aria-hidden="true"></i>Manage all labels</a>
+                        <a asp-controller="Labels" asp-action="Index" class="small text-decoration-none"><i class="bi bi-gear me-1"></i>Manage all labels</a>
                     </div>
                 }
             </div>
