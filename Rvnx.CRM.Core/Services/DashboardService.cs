@@ -93,12 +93,12 @@ public class DashboardService(IRepository repository, ILogger<DashboardService> 
                 r => r.EntityType == EntityTypes.Person,
                 r => new ValueTuple<Guid, Guid>(r.EntityId, r.RelatedEntityId));
 
-        foreach ((Guid EntityId, Guid RelatedEntityId) in relationships)
+        foreach (var (entityId, relatedEntityId) in relationships)
         {
             dashboard.GraphLinks.Add(new GraphLinkDto
             {
-                Source = EntityId.ToString(),
-                Target = RelatedEntityId.ToString(),
+                Source = entityId.ToString(),
+                Target = relatedEntityId.ToString(),
                 Type = "Relationship"
             });
         }
@@ -124,13 +124,12 @@ public class DashboardService(IRepository repository, ILogger<DashboardService> 
         int contactsWithRelationshipsCount = 0;
         HashSet<Guid> uniqueContactsWithRelationships = new(relationships.Count * 2);
         foreach ((Guid entityId, Guid relatedEntityId) in relationships)
-        foreach (var relationship in relationships)
         {
-            if (uniqueContactsWithRelationships.Add(relationship.EntityId) && contactDict.ContainsKey(relationship.EntityId))
+            if (uniqueContactsWithRelationships.Add(entityId) && contactDict.ContainsKey(entityId))
             {
                 contactsWithRelationshipsCount++;
             }
-            if (uniqueContactsWithRelationships.Add(relationship.RelatedEntityId) && contactDict.ContainsKey(relationship.RelatedEntityId))
+            if (uniqueContactsWithRelationships.Add(relatedEntityId) && contactDict.ContainsKey(relatedEntityId))
             {
                 contactsWithRelationshipsCount++;
             }

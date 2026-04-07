@@ -45,7 +45,7 @@ public class VCardServiceTests
         [Fact]
         public void ExportVCardShouldIncludeFullName()
         {
-            var contact = new Contact
+            Contact contact = new()
             {
                 FirstName = "John",
                 LastName = "Doe"
@@ -60,7 +60,7 @@ public class VCardServiceTests
         [Fact]
         public void ExportVCardShouldIncludeEmail()
         {
-            var contact = new Contact
+            Contact contact = new()
             {
                 FirstName = "John",
                 ContactMethods = [
@@ -77,7 +77,7 @@ public class VCardServiceTests
         [Fact]
         public void ExportVCardShouldIncludePhone()
         {
-            var contact = new Contact
+            Contact contact = new()
             {
                 FirstName = "John",
                 ContactMethods = [
@@ -94,7 +94,7 @@ public class VCardServiceTests
         [Fact]
         public void ExportVCardShouldIncludeBirthday()
         {
-            var contact = new Contact
+            Contact contact = new()
             {
                 FirstName = "John",
                 SignificantDates = [
@@ -112,7 +112,7 @@ public class VCardServiceTests
         [Fact]
         public void ExportVCardShouldIncludeMaidenName()
         {
-            var contact = new Contact
+            Contact contact = new()
             {
                 FirstName = "Jane",
                 MaidenName = "Smith"
@@ -127,7 +127,7 @@ public class VCardServiceTests
         [Fact]
         public void ExportVCardShouldIncludeGender()
         {
-            var contact = new Contact
+            Contact contact = new()
             {
                 FirstName = "Jane",
                 Gender = "Female"
@@ -142,7 +142,7 @@ public class VCardServiceTests
         [Fact]
         public void ExportVCardShouldReturnValidUtf8Bytes()
         {
-            var contact = new Contact
+            Contact contact = new()
             {
                 FirstName = "Minimal"
             };

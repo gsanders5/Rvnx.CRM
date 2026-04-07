@@ -79,12 +79,9 @@ public class LabelService(IRepository repository) : ILabelService
 
     public async Task DeleteAsync(Guid id)
     {
-        Label? label = await _repository.GetByIdAsync<Label>(id);
-        if (label != null)
-        {
-            await _repository.DeleteAsync<Label>(id);
-            await _repository.SaveChangesAsync();
-        }
+        // ⚡ Bolt: Use bulk delete to avoid fetching the entity into memory and save a database roundtrip
+        await _repository.DeleteAsync<Label>(l => l.Id == id);
+        await _repository.SaveChangesAsync();
     }
 
     public async Task AssignLabelAsync(Guid contactId, Guid labelId)

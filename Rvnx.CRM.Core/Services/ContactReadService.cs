@@ -170,11 +170,11 @@ public class ContactReadService(IRepository repository) : IContactReadService
         // Optimization: Replace LINQ Select().Concat().Distinct().ToList() with a pre-sized HashSet and foreach loops
         // to avoid multiple intermediate enumerator allocations and dynamic array resizing.
         HashSet<Guid> relatedIdsSet = new(relationships.Count + relatedTo.Count);
-        foreach (var r in relationships)
+        foreach (Relationship r in relationships)
         {
             relatedIdsSet.Add(r.RelatedEntityId);
         }
-        foreach (var r in relatedTo)
+        foreach (Relationship r in relatedTo)
         {
             relatedIdsSet.Add(r.EntityId);
         }
@@ -296,12 +296,15 @@ public class ContactReadService(IRepository repository) : IContactReadService
             dto.RemindOnBirthday = bday.ReminderOffsets.Any(ro => ro.DaysBeforeEvent == 0 && ro.IsActive);
         }
 
-        Attachment? profileAttachment = (await _repository.ListAsync<Attachment>(a =>
-            a.ContactId == id && a.AttachmentType == AttachmentTypes.ProfileImage)).FirstOrDefault();
+        // Optimization: Use ListProjectedAsync to fetch only the Id of the ProfileImage attachment.
+        // This avoids loading the entire Attachment entity (including ContentType and FileName) into memory.
+        Guid profileImageId = (await _repository.ListProjectedAsync<Attachment, Guid>(
+            a => a.ContactId == id && a.AttachmentType == AttachmentTypes.ProfileImage,
+            a => a.Id))?.FirstOrDefault() ?? Guid.Empty;
 
-        if (profileAttachment != null)
+        if (profileImageId != Guid.Empty)
         {
-            dto.ProfileImageId = profileAttachment.Id;
+            dto.ProfileImageId = profileImageId;
         }
 
         List<Label> allLabels = await _repository.ListAsNoTrackingAsync<Label>(l => true) ?? [];

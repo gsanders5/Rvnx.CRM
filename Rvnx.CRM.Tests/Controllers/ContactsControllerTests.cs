@@ -35,7 +35,7 @@ public class ContactsControllerTests
 
             readServiceMock.Setup(s => s.GetContactDetailsAsync(contactId)).ReturnsAsync(detailDto);
 
-            ContactsController controller = new(loggerMock.Object, userMock.Object, Mock.Of<IContactImportService>(), Mock.Of<IContactExportService>(), Mock.Of<IContactManagementService>(), readServiceMock.Object, Mock.Of<ISelfContactService>(), Mock.Of<IFileValidationService>())
+            ContactsController controller = new(loggerMock.Object, userMock.Object, Mock.Of<IUserSynchronizationService>(), Mock.Of<IContactImportService>(), Mock.Of<IContactExportService>(), Mock.Of<IContactManagementService>(), readServiceMock.Object, Mock.Of<ISelfContactService>(), Mock.Of<IFileValidationService>())
             {
                 ControllerContext = new ControllerContext { HttpContext = new DefaultHttpContext() }
             };
@@ -66,7 +66,7 @@ public class ContactsControllerTests
 
             readServiceMock.Setup(s => s.GetIndexDataAsync(It.IsAny<bool>())).ReturnsAsync(contactDtos);
 
-            ContactsController controller = new(loggerMock.Object, userMock.Object, Mock.Of<IContactImportService>(), Mock.Of<IContactExportService>(), Mock.Of<IContactManagementService>(), readServiceMock.Object, Mock.Of<ISelfContactService>(), Mock.Of<IFileValidationService>())
+            ContactsController controller = new(loggerMock.Object, userMock.Object, Mock.Of<IUserSynchronizationService>(), Mock.Of<IContactImportService>(), Mock.Of<IContactExportService>(), Mock.Of<IContactManagementService>(), readServiceMock.Object, Mock.Of<ISelfContactService>(), Mock.Of<IFileValidationService>())
             {
                 ControllerContext = new ControllerContext { HttpContext = new DefaultHttpContext() }
             };
@@ -104,6 +104,7 @@ public class ContactsControllerTests
             _controller = new ContactsController(
                 _loggerMock.Object,
                 _userMock.Object,
+                _syncMock.Object,
                 _contactImportServiceMock.Object,
                 _contactExportServiceMock.Object,
                 _contactManagementServiceMock.Object,
