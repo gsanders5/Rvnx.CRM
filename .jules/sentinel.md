@@ -56,3 +56,7 @@
 **Vulnerability:** The `HttpClient` registered for `IVCardService` in `ServiceCollectionExtensions` had no explicit timeout configured.
 **Learning:** By default, `HttpClient` has a very long timeout (often 100 seconds). If an external server hangs during operations like downloading a profile photo, the application thread can block, potentially leading to a Denial of Service (DoS) condition under heavy load.
 **Prevention:** Always configure an explicit, reasonable timeout (e.g., `TimeSpan.FromSeconds(10)`) when registering `HttpClient` services in the DI container.
+## 2025-02-23 - Open Redirect Defense in Depth
+**Vulnerability:** AccountController relied solely on `Url.IsLocalUrl()` to prevent Open Redirects during login.
+**Learning:** While `Url.IsLocalUrl()` is standard and generally safe, it only checks if a URL is relative (not absolute). It does not verify if the relative path actually exists or is a safe place to redirect a user within the application, leaving potential room for obscure bypasses or unwanted internal routing if other vulnerabilities exist.
+**Prevention:** Implement defense-in-depth by augmenting `Url.IsLocalUrl()` with an explicit `IsUrlInSafelist()` check that verifies the relative path against a known-good list of allowed application routes (e.g., `/`, `/Home`, `/Contacts`). Default to the application root if validation fails.

@@ -72,4 +72,54 @@ public class AccountControllerTests
         Assert.Equal(OpenIdConnectDefaults.AuthenticationScheme, challengeResult.AuthenticationSchemes[0]);
         Assert.Equal(localUrl, challengeResult.Properties!.RedirectUri);
     }
+
+    [Theory]
+    [InlineData("/SafePathButNotAllowed")]
+    [InlineData("/Evil/Path")]
+    [InlineData("/Account123")]
+    [InlineData("/HomeIsWhereTheHeartIs")]
+    public void LoginShouldDefaultToRootWhenLocalUrlNotInSafelist(string invalidSafelistUrl)
+    {
+        AccountController controller = new();
+
+        Mock<IUrlHelper> urlHelperMock = new();
+        urlHelperMock.Setup(x => x.IsLocalUrl(It.IsAny<string>()))
+            .Returns((string url) => !string.IsNullOrEmpty(url) && url.StartsWith('/'));
+
+        controller.Url = urlHelperMock.Object;
+
+        IActionResult result = controller.Login(invalidSafelistUrl);
+
+        ChallengeResult challengeResult = Assert.IsType<ChallengeResult>(result);
+        Assert.Equal(OpenIdConnectDefaults.AuthenticationScheme, challengeResult.AuthenticationSchemes[0]);
+        Assert.Equal("/", challengeResult.Properties!.RedirectUri);
+    }
+
+    [Theory]
+    [InlineData("/")]
+    [InlineData("/Home")]
+    [InlineData("/Home/Index")]
+    [InlineData("/Home?query=123")]
+    [InlineData("/Account")]
+    [InlineData("/Account/Login")]
+    [InlineData("/Contacts")]
+    [InlineData("/Contacts/Edit/123")]
+    [InlineData("/Facts")]
+    [InlineData("/Facts/View")]
+    public void LoginShouldUseReturnUrlWhenLocalUrlInSafelist(string validSafelistUrl)
+    {
+        AccountController controller = new();
+
+        Mock<IUrlHelper> urlHelperMock = new();
+        urlHelperMock.Setup(x => x.IsLocalUrl(It.IsAny<string>()))
+            .Returns((string url) => !string.IsNullOrEmpty(url) && url.StartsWith('/'));
+
+        controller.Url = urlHelperMock.Object;
+
+        IActionResult result = controller.Login(validSafelistUrl);
+
+        ChallengeResult challengeResult = Assert.IsType<ChallengeResult>(result);
+        Assert.Equal(OpenIdConnectDefaults.AuthenticationScheme, challengeResult.AuthenticationSchemes[0]);
+        Assert.Equal(validSafelistUrl, challengeResult.Properties!.RedirectUri);
+    }
 }
