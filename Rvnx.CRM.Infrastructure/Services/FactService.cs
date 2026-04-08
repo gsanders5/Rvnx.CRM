@@ -55,13 +55,21 @@ public class FactService(IRepository repository) : IFactService
 
     public async Task<OperationResult> DeleteAsync(Guid id)
     {
-        Fact? fact = await _repository.GetByIdAsync<Fact>(id);
-        if (fact != null)
+        // ⚡ Bolt Optimization: Use ListProjectedAsync to fetch only the ContactId
+        // instead of loading the entire Fact entity into memory via GetByIdAsync.
+        List<Guid?> contactIds = await _repository.ListProjectedAsync<Fact, Guid?>(
+            f => f.Id == id,
+            f => f.ContactId);
+
+        if (contactIds.Count > 0)
         {
-            Guid entityId = fact.ContactId ?? Guid.Empty;
+            Guid entityId = contactIds.FirstOrDefault() ?? Guid.Empty;
             string entityType = EntityTypes.Person;
-            await _repository.DeleteAsync<Fact>(id);
+
+            // ⚡ Bolt: Use bulk delete to avoid fetching the entity into memory and save a database roundtrip
+            await _repository.DeleteAsync<Fact>(f => f.Id == id);
             await _repository.SaveChangesAsync();
+
             return OperationResult.Ok(entityId, entityType);
         }
         return OperationResult.Failure("Fact not found.");
