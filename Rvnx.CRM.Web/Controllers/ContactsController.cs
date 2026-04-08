@@ -200,28 +200,7 @@ public class ContactsController(
             return NotFound();
         }
 
-        ContactEditViewModel viewModel = new()
-        {
-            Id = dto.Id,
-            FirstName = dto.FirstName,
-            LastName = dto.LastName,
-            Nickname = dto.Nickname,
-            Email = dto.Email,
-            Phone = dto.Phone,
-            JobTitle = dto.JobTitle,
-            Company = dto.Company,
-            Birthday = dto.Birthday,
-            RemindOnBirthday = dto.RemindOnBirthday,
-            IsHidden = dto.IsHidden,
-            Pronouns = dto.Pronouns,
-            Gender = dto.Gender,
-            Religion = dto.Religion,
-            ProfileImageId = dto.ProfileImageId,
-            PronounOptions = PersonalAttributeOptions.Pronouns,
-            GenderOptions = PersonalAttributeOptions.Gender,
-            AllLabels = dto.AllLabels,
-            AssignedLabelIds = dto.AssignedLabelIds
-        };
+        ContactEditViewModel viewModel = MapToEditViewModel(dto, dto.ProfileImageId);
 
         return View(viewModel);
     }
@@ -283,28 +262,7 @@ public class ContactsController(
             contactDto.AssignedLabelIds = formConfig.AssignedLabelIds;
         }
 
-        ContactEditViewModel viewModel = new()
-        {
-            Id = contactDto.Id,
-            FirstName = contactDto.FirstName,
-            LastName = contactDto.LastName,
-            Nickname = contactDto.Nickname,
-            Email = contactDto.Email,
-            Phone = contactDto.Phone,
-            JobTitle = contactDto.JobTitle,
-            Company = contactDto.Company,
-            Birthday = contactDto.Birthday,
-            RemindOnBirthday = contactDto.RemindOnBirthday,
-            IsHidden = contactDto.IsHidden,
-            Pronouns = contactDto.Pronouns,
-            Gender = contactDto.Gender,
-            Religion = contactDto.Religion,
-            ProfileImageId = formConfig?.ProfileImageId,
-            PronounOptions = PersonalAttributeOptions.Pronouns,
-            GenderOptions = PersonalAttributeOptions.Gender,
-            AllLabels = contactDto.AllLabels,
-            AssignedLabelIds = contactDto.AssignedLabelIds
-        };
+        ContactEditViewModel viewModel = MapToEditViewModel(contactDto, formConfig?.ProfileImageId);
 
         return View(viewModel);
     }
@@ -435,5 +393,31 @@ public class ContactsController(
         dto.Pronouns = dto.Pronouns == PersonalAttributeOptions.Unspecified ? null : dto.Pronouns;
         dto.Gender = dto.Gender == PersonalAttributeOptions.Unspecified ? null : dto.Gender;
         dto.Religion = string.IsNullOrWhiteSpace(dto.Religion) ? null : dto.Religion;
+    }
+
+    private static ContactEditViewModel MapToEditViewModel(ContactFormDto dto, Guid? profileImageId)
+    {
+        return new ContactEditViewModel
+        {
+            Id = dto.Id,
+            FirstName = dto.FirstName,
+            LastName = dto.LastName,
+            Nickname = dto.Nickname,
+            Email = dto.Email,
+            Phone = dto.Phone,
+            JobTitle = dto.JobTitle,
+            Company = dto.Company,
+            Birthday = dto.Birthday,
+            RemindOnBirthday = dto.RemindOnBirthday,
+            IsHidden = dto.IsHidden,
+            Pronouns = dto.Pronouns,
+            Gender = dto.Gender,
+            Religion = dto.Religion,
+            ProfileImageId = profileImageId,
+            PronounOptions = PersonalAttributeOptions.Pronouns,
+            GenderOptions = PersonalAttributeOptions.Gender,
+            AllLabels = dto.AllLabels,
+            AssignedLabelIds = dto.AssignedLabelIds
+        };
     }
 }
