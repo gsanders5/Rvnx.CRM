@@ -142,6 +142,22 @@ public class LabelServiceTests
     }
 
     [Fact]
+    public async Task UpdateAsyncReturnsFailureWhenNameEmpty()
+    {
+        Core.DTOs.Contact.LabelOperationResult result = await _service.UpdateAsync(Guid.NewGuid(), "", "#000000");
+        Assert.False(result.Success);
+        Assert.Contains("Label name cannot be empty.", result.Errors);
+    }
+
+    [Fact]
+    public async Task UpdateAsyncReturnsFailureWhenNameIsWhitespace()
+    {
+        Core.DTOs.Contact.LabelOperationResult result = await _service.UpdateAsync(Guid.NewGuid(), "   ", "#000000");
+        Assert.False(result.Success);
+        Assert.Contains("Label name cannot be empty.", result.Errors);
+    }
+
+    [Fact]
     public async Task UpdateAsyncReturnsNotFoundWhenDoesNotExist()
     {
         _mockRepo.Setup(r => r.GetByIdAsync<Label>(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
