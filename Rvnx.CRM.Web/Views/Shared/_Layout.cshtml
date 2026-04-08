@@ -10,17 +10,17 @@
     <title>@ViewData["Title"] - Rvnx CRM</title>
     <script type="importmap"></script>
     <!-- Font Awesome -->
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet" integrity="sha384-3B6NwesSXE7YJlcLI9RpRqGf2p/EgVH8BgoKTaUrmKNDkHPStTQ3EyoYjCGXaOTS" crossorigin="anonymous" />
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap" rel="stylesheet" />
     <!-- MDB -->
-    <link href="https://cdn.jsdelivr.net/npm/mdb-ui-kit@9.3.0/css/mdb.min.css" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/mdb-ui-kit@9.3.0/css/mdb.min.css" rel="stylesheet" integrity="sha384-GpFoyPQNL9Cd/Zc0GujAdo/6oVI34lnXg+7E8+rIhRo1kgxbujqXU1TlKwdc79mI" crossorigin="anonymous" />
     <!-- Bootstrap Icons -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <!-- DataTables CSS -->
     <link href="https://cdn.datatables.net/v/bs5/dt-2.3.7/b-3.2.6/b-colvis-3.2.6/r-3.0.8/sc-2.4.3/datatables.min.css" rel="stylesheet" integrity="sha384-nwKdXO0ejYwD095h00qsKcBWhogVC6HsJnWjWQSLhKe/vnckKhdcnxzXUZ9ZzJQe" crossorigin="anonymous">
     <!-- Select2 CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" integrity="sha384-OXVF05DQEe311p6ohU11NwlnX08FzMCsyoXzGOaL+83dKAb3qS17yZJxESl8YrJQ" crossorigin="anonymous" />
     <link rel="preload" href="~/logo.svg" as="image" type="image/svg+xml" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/Rvnx.CRM.Web.styles.css" asp-append-version="true" />
@@ -104,11 +104,11 @@
         &copy; 2025 - Rvnx.CRM.Web
     </div>
 </footer> *@
-    <script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js" integrity="sha384-1H217gwSVyLSIfaLxHbE7dRb3v4mYCKbpQvzx0cegeju1MVsGrX5xXxAvs/HgeFs" crossorigin="anonymous"></script>
     <!-- MDB -->
-    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/mdb-ui-kit@9.3.0/js/mdb.umd.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.10/purify.min.js"></script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/mdb-ui-kit@9.3.0/js/mdb.umd.min.js" integrity="sha384-wm149nUGAcjSR+VI0SefSbxQhUP3rVwkj4hZieXuXH8w6nibLuWruYYHb8tukbXT" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked@18.0.0/lib/marked.umd.min.js" integrity="sha384-0O19Nsv60FBctDE/IjBtjlSEis4wwUj0Lw1fOc4dfgV/sG2e6M/yMdr7S3egyQ0Y" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.10/purify.min.js" integrity="sha384-TTNm92HjcHEfjmPmYtFfh24/RLLyFwn7A5XcNX3lw/iCSv0eHXxPI9H9wth3vFOd" crossorigin="anonymous"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
     <script>
         document.addEventListener('DOMContentLoaded', () => {
@@ -141,7 +141,7 @@
     <!-- DataTables JS -->
     <script src="https://cdn.datatables.net/v/bs5/dt-2.3.7/b-3.2.6/b-colvis-3.2.6/r-3.0.8/sc-2.4.3/datatables.min.js" integrity="sha384-6eOoVFZRSk41/xcylba5o06WN5CikrMZCEII2Op2g/d+igf0esL5JAvotvzLC1q1" crossorigin="anonymous"></script>
     <!-- Select2 JS -->
-    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js" integrity="sha384-d3UHjPdzJkZuk5H3qKYMLRyWLAQBJbby2yr2Q58hXXtAGF8RSNO9jpLDlKKPv5v3" crossorigin="anonymous"></script>
     @await RenderSectionAsync("Scripts", required: false)
     @await Html.PartialAsync("_ConfirmModal")
 </body>
