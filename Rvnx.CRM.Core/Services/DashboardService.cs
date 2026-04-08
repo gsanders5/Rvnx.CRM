@@ -93,7 +93,7 @@ public class DashboardService(IRepository repository, ILogger<DashboardService> 
                 r => r.EntityType == EntityTypes.Person,
                 r => new ValueTuple<Guid, Guid>(r.EntityId, r.RelatedEntityId));
 
-        foreach (var (entityId, relatedEntityId) in relationships)
+        foreach ((Guid entityId, Guid relatedEntityId) in relationships)
         {
             dashboard.GraphLinks.Add(new GraphLinkDto
             {
