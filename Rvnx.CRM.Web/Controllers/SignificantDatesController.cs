@@ -40,7 +40,6 @@ public class SignificantDatesController(ISignificantDateService significantDateS
     }
 
     [HttpPost]
-    [ValidateAntiForgeryToken]
     public async Task<IActionResult> Create(Rvnx.CRM.Core.DTOs.Dates.CreateSignificantDateRequest dto)
     {
         if (ModelState.IsValid)
@@ -111,7 +110,6 @@ public class SignificantDatesController(ISignificantDateService significantDateS
     }
 
     [HttpPost]
-    [ValidateAntiForgeryToken]
     public async Task<IActionResult> Edit(Guid id, Rvnx.CRM.Core.DTOs.Dates.UpdateSignificantDateRequest dto)
     {
         if (id != dto.Id)
@@ -156,7 +154,6 @@ public class SignificantDatesController(ISignificantDateService significantDateS
     }
 
     [HttpPost]
-    [ValidateAntiForgeryToken]
     public async Task<IActionResult> AddOffset(Guid significantDateId, int daysBeforeEvent, Guid contactId)
     {
         await _significantDateService.AddReminderOffsetAsync(significantDateId, daysBeforeEvent);
@@ -164,7 +161,6 @@ public class SignificantDatesController(ISignificantDateService significantDateS
     }
 
     [HttpPost]
-    [ValidateAntiForgeryToken]
     public async Task<IActionResult> DeleteOffset(Guid offsetId, Guid significantDateId, Guid contactId)
     {
         await _significantDateService.DeleteReminderOffsetAsync(offsetId);
@@ -184,7 +180,6 @@ public class SignificantDatesController(ISignificantDateService significantDateS
     }
 
     [HttpPost, ActionName("Delete")]
-    [ValidateAntiForgeryToken]
     public async Task<IActionResult> DeleteConfirmed(Guid id, Guid contactId)
     {
         OperationResult result = await _significantDateService.DeleteAsync(id);

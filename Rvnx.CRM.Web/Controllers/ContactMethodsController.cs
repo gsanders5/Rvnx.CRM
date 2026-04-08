@@ -20,7 +20,6 @@ public class ContactMethodsController(IContactMethodService contactMethodService
     }
 
     [HttpPost]
-    [ValidateAntiForgeryToken]
     public async Task<IActionResult> Create(ContactMethodFormDto contactInfoInput)
     {
         if (ModelState.IsValid)
@@ -53,7 +52,6 @@ public class ContactMethodsController(IContactMethodService contactMethodService
     }
 
     [HttpPost]
-    [ValidateAntiForgeryToken]
     public async Task<IActionResult> Edit(Guid id, ContactMethodFormDto contactInfoInput)
     {
         if (id != contactInfoInput.Id)
@@ -91,7 +89,6 @@ public class ContactMethodsController(IContactMethodService contactMethodService
     }
 
     [HttpPost, ActionName("Delete")]
-    [ValidateAntiForgeryToken]
     public async Task<IActionResult> DeleteConfirmed(Guid id)
     {
         OperationResult result = await _contactMethodService.DeleteAsync(id);

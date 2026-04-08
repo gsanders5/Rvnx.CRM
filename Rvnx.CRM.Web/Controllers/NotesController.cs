@@ -26,7 +26,6 @@ public class NotesController(INoteService noteService, IRepository repository, I
     }
 
     [HttpPost]
-    [ValidateAntiForgeryToken]
     public async Task<IActionResult> Create(NoteFormViewModel viewModel)
     {
         if (ModelState.IsValid)
@@ -70,7 +69,6 @@ public class NotesController(INoteService noteService, IRepository repository, I
     }
 
     [HttpPost]
-    [ValidateAntiForgeryToken]
     public async Task<IActionResult> Edit(Guid id, NoteFormViewModel viewModel)
     {
         if (id != viewModel.Id)
@@ -130,7 +128,6 @@ public class NotesController(INoteService noteService, IRepository repository, I
     }
 
     [HttpPost, ActionName("Delete")]
-    [ValidateAntiForgeryToken]
     public async Task<IActionResult> DeleteConfirmed(Guid id)
     {
         OperationResult result = await _noteService.DeleteAsync(id);

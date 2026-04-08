@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace Rvnx.CRM.Web.Controllers;
 
 [AllowAnonymous]
+[AutoValidateAntiforgeryToken] // 🛡️ Sentinel: Global CSRF protection since this doesn't inherit from AuthorizedController
 public class AccountController : Controller
 {
     [HttpGet]
@@ -45,7 +46,6 @@ public class AccountController : Controller
     }
 
     [HttpPost]
-    [ValidateAntiForgeryToken]
     public IActionResult Logout()
     {
         return SignOut(

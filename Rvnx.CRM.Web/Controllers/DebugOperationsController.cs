@@ -39,7 +39,6 @@ public class DebugOperationsController(
     }
 
     [HttpPost]
-    [ValidateAntiForgeryToken]
     public async Task<IActionResult> SeedTestData()
     {
         await _debugDataService.SeedTestDataAsync(10);
@@ -47,7 +46,6 @@ public class DebugOperationsController(
     }
 
     [HttpPost]
-    [ValidateAntiForgeryToken]
     public async Task<IActionResult> ResetDatabase()
     {
         await _debugDataService.ResetDatabaseAsync();
@@ -55,7 +53,6 @@ public class DebugOperationsController(
     }
 
     [HttpPost]
-    [ValidateAntiForgeryToken]
     public async Task<IActionResult> AddRandomRelationships()
     {
         int count = await _debugDataService.AddRandomRelationshipsAsync();
@@ -76,7 +73,6 @@ public class DebugOperationsController(
     }
 
     [HttpPost]
-    [ValidateAntiForgeryToken]
     public async Task<IActionResult> MergeAccounts(Guid user1Id, Guid user2Id, string confirmation)
     {
         if (confirmation != "MERGE")
