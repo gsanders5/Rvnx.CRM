@@ -60,7 +60,9 @@ public class Program
 
                     // 🛡️ Sentinel: Enforce secure cookie settings to prevent XSS and ensure transmission over HTTPS
                     options.Cookie.HttpOnly = true;
-                    options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+                    options.Cookie.SecurePolicy = builder.Environment.IsDevelopment()
+                        ? CookieSecurePolicy.SameAsRequest
+                        : CookieSecurePolicy.Always;
                     options.Cookie.SameSite = SameSiteMode.Strict;
                 })
                 .AddOpenIdConnect(options =>
@@ -126,17 +128,16 @@ public class Program
         });
 
 
+        string connectSrc = app.Environment.IsDevelopment()
+            ? "connect-src 'self' https: http://localhost:* ws://localhost:* wss://localhost:*;"
+            : "connect-src 'self' https:;";
+
         string csp = "default-src 'self' https:; " +
                      "script-src 'self' 'unsafe-inline' 'unsafe-eval' https:; " +
                      "style-src 'self' 'unsafe-inline' https:; " +
                      "font-src 'self' https: data:; " +
                      "img-src 'self' data: https:; " +
-                     "connect-src 'self' https:;";
-
-        if (app.Environment.IsDevelopment())
-        {
-            csp += " http://localhost:* ws://localhost:* wss://localhost:*;";
-        }
+                     connectSrc;
 
         app.Use(async (context, next) =>
         {
