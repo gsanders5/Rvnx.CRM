@@ -120,3 +120,7 @@ Action: When a service builds a read-only in-memory aggregate (graph nodes, rece
 ## 2026-06-15 - Optimize GetLabelsForContactAsync by using ListProjectedAsync
 **Learning:** `GetLabelsForContactAsync` was fetching full `ContactLabel` entities including joined `Label` entities into memory only to map a few properties into DTOs, creating unnecessary memory allocation and serialization overhead.
 **Action:** Replaced `ListAsNoTrackingAsync` + in-memory LINQ projection with `ListProjectedAsync` to project the DTOs directly from the database query.
+
+## 2026-04-08 - Avoid full entity fetch for Fact deletion
+**Learning:** `FactService.DeleteAsync` was loading the entire `Fact` entity into memory via `GetByIdAsync` just to get its `ContactId` and check if it existed before deleting it. This caused EF Core to load unnecessary fields and track an entity that was about to be deleted.
+**Action:** Replace `GetByIdAsync` with `ListProjectedAsync` to fetch only the required `ContactId` (to return in the `OperationResult`), and then use the bulk delete feature (`DeleteAsync(Expression)`) to avoid fetching and deleting the entity in two roundtrips.
