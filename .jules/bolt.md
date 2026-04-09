@@ -124,3 +124,7 @@ Action: When a service builds a read-only in-memory aggregate (graph nodes, rece
 ## 2026-04-08 - Avoid full entity fetch for Fact deletion
 **Learning:** `FactService.DeleteAsync` was loading the entire `Fact` entity into memory via `GetByIdAsync` just to get its `ContactId` and check if it existed before deleting it. This caused EF Core to load unnecessary fields and track an entity that was about to be deleted.
 **Action:** Replace `GetByIdAsync` with `ListProjectedAsync` to fetch only the required `ContactId` (to return in the `OperationResult`), and then use the bulk delete feature (`DeleteAsync(Expression)`) to avoid fetching and deleting the entity in two roundtrips.
+
+## 2026-11-09 - Optimize Bulk Insertions with AddRangeAsync
+**Learning:** Iterative `AddAsync` calls within loops (e.g., inside data seeding services like `DebugDataService`) incur significant database and entity tracking overhead, creating multiple roundtrips when a batch could be submitted at once.
+**Action:** When performing bulk insertions, aggregate entities into a collection in-memory and perform a single `AddRangeAsync` call outside the loop to optimize database insertion performance.

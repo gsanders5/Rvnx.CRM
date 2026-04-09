@@ -33,31 +33,31 @@ public class DebugDataService(IRepository repository) : IDebugDataService
             await _repository.AddAsync(contact);
             await _repository.SaveChangesAsync();
 
-            if (addresses != null)
+            if (addresses != null && addresses.Count > 0)
             {
                 foreach (Address? addr in addresses)
                 {
                     addr.ContactId = contact.Id;
-                    await _repository.AddAsync(addr);
                 }
+                await _repository.AddRangeAsync(addresses);
             }
 
-            if (infos != null)
+            if (infos != null && infos.Count > 0)
             {
                 foreach (ContactMethod? info in infos)
                 {
                     info.ContactId = contact.Id;
-                    await _repository.AddAsync(info);
                 }
+                await _repository.AddRangeAsync(infos);
             }
 
-            if (dates != null)
+            if (dates != null && dates.Count > 0)
             {
                 foreach (SignificantDate? date in dates)
                 {
                     date.ContactId = contact.Id;
-                    await _repository.AddAsync(date);
                 }
+                await _repository.AddRangeAsync(dates);
             }
         }
 
@@ -106,7 +106,7 @@ public class DebugDataService(IRepository repository) : IDebugDataService
 
         Random random = new();
         int relationshipsToCreate = Math.Min(contacts.Count * 2, maxRelationships);
-        int createdCount = 0;
+        List<Relationship> relationshipsToAdd = [];
 
         for (int i = 0; i < relationshipsToCreate; i++)
         {
@@ -123,7 +123,8 @@ public class DebugDataService(IRepository repository) : IDebugDataService
             List<Relationship> existing = await _repository.ListAsNoTrackingAsync<Relationship>(r =>
                 r.EntityId == c1.Id && r.RelatedEntityId == c2.Id && r.RelationshipTypeId == type.Id);
 
-            if (existing.Count > 0)
+            // Also check the ones we are about to add
+            if (existing.Count > 0 || relationshipsToAdd.Any(r => r.EntityId == c1.Id && r.RelatedEntityId == c2.Id && r.RelationshipTypeId == type.Id))
             {
                 continue;
             }
@@ -138,11 +139,15 @@ public class DebugDataService(IRepository repository) : IDebugDataService
                 Description = "Randomly generated"
             };
 
-            await _repository.AddAsync(rel);
-            createdCount++;
+            relationshipsToAdd.Add(rel);
+        }
+
+        if (relationshipsToAdd.Count > 0)
+        {
+            await _repository.AddRangeAsync(relationshipsToAdd);
         }
 
         await _repository.SaveChangesAsync();
-        return createdCount;
+        return relationshipsToAdd.Count;
     }
 }
