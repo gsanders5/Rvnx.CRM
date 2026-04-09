@@ -48,6 +48,8 @@ public static class ServiceCollectionExtensions
 
         services.AddScoped<IPetService, PetService>();
 
+        services.AddScoped<IActivityService, ActivityService>();
+
         services.AddScoped<INoteService, NoteService>();
 
         services.AddScoped<ISignificantDateService, SignificantDateService>();

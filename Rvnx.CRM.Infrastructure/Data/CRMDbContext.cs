@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Rvnx.CRM.Core.Interfaces;
 using Rvnx.CRM.Core.Models;
+using Rvnx.CRM.Core.Models.Activity;
 using Rvnx.CRM.Core.Models.Base;
 using Rvnx.CRM.Core.Models.Business;
 using Rvnx.CRM.Core.Models.Contact;
@@ -32,6 +33,8 @@ public class CRMDbContext(DbContextOptions<CRMDbContext> options, ICurrentUserSe
     public DbSet<Label>? Labels { get; set; }
     public DbSet<ContactLabel>? ContactLabels { get; set; }
     public DbSet<ContactFavorite>? ContactFavorites { get; set; }
+    public DbSet<Activity>? Activities { get; set; }
+    public DbSet<ActivityContact>? ActivityContacts { get; set; }
     public DbSet<ApiToken>? ApiTokens { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -95,6 +98,22 @@ public class CRMDbContext(DbContextOptions<CRMDbContext> options, ICurrentUserSe
         // A user can only favorite a given contact once; UserId+ContactId must be unique per group
         modelBuilder.Entity<ContactFavorite>()
             .HasIndex(cf => new { cf.UserId, cf.ContactId })
+            .IsUnique();
+
+        modelBuilder.Entity<ActivityContact>()
+            .HasOne(ac => ac.Activity)
+            .WithMany(a => a.ActivityContacts)
+            .HasForeignKey(ac => ac.ActivityId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<ActivityContact>()
+            .HasOne(ac => ac.Contact)
+            .WithMany(c => c.ActivityContacts)
+            .HasForeignKey(ac => ac.ContactId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<ActivityContact>()
+            .HasIndex(ac => new { ac.ActivityId, ac.ContactId })
             .IsUnique();
 
         modelBuilder.Entity<ContactMethod>()

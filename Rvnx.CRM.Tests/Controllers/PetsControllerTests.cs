@@ -31,7 +31,7 @@ public class PetsControllerTests : IDisposable
         IPetService petService = new PetService(repository);
 
         Mock<IContactReadService> mockContactReadService = new();
-        mockContactReadService.Setup(s => s.GetIndexDataAsync(false))
+        mockContactReadService.Setup(s => s.GetContactNamesAsync())
             .ReturnsAsync([]);
 
         _controller = new PetsController(petService, repository, mockContactReadService.Object);

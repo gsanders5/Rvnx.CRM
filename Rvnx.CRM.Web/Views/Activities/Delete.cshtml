@@ -1,0 +1,38 @@
+@model Rvnx.CRM.Core.DTOs.Contact.ActivityDto
+
+@{
+    ViewData["Title"] = "Delete Activity";
+}
+
+<h1>Delete Activity</h1>
+
+<h3>Are you sure you want to delete this activity?</h3>
+<div>
+    <dl class="row">
+        <dt class="col-sm-2">Title</dt>
+        <dd class="col-sm-10">@Model.Title</dd>
+
+        <dt class="col-sm-2">Date</dt>
+        <dd class="col-sm-10">@Model.ActivityDate.ToShortDateString()</dd>
+
+        @if (!string.IsNullOrEmpty(Model.ActivityType))
+        {
+            <dt class="col-sm-2">Type</dt>
+            <dd class="col-sm-10">@Model.ActivityType</dd>
+        }
+
+        @if (!string.IsNullOrEmpty(Model.Location))
+        {
+            <dt class="col-sm-2">Location</dt>
+            <dd class="col-sm-10">@Model.Location</dd>
+        }
+    </dl>
+
+    <form asp-action="Delete">
+        <input type="hidden" asp-for="Id"/>
+        <div class="d-grid gap-2 d-md-flex mt-4">
+            <button type="submit" class="btn btn-danger"><i class="bi bi-trash me-2"></i>Delete</button>
+            <a asp-controller="Contacts" asp-action="Details" asp-route-id="@Model.EntityId" class="btn btn-secondary"><i class="bi bi-x-lg me-2"></i>Cancel</a>
+        </div>
+    </form>
+</div>

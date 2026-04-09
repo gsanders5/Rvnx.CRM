@@ -1,0 +1,83 @@
+@model Rvnx.CRM.Core.DTOs.Contact.ActivityFormDto
+
+@{
+    ViewData["Title"] = "Add Activity";
+}
+
+<h1>Add Activity</h1>
+
+<div class="row">
+    <div class="col-12">
+        <form asp-action="Create">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <input type="hidden" asp-for="EntityId"/>
+
+            <div class="form-floating mb-3">
+                <input asp-for="Title" class="form-control" id="Title" placeholder=" " required autofocus/>
+                <label asp-for="Title">Title <span class="text-danger">*</span></label>
+                <span asp-validation-for="Title" class="text-danger"></span>
+            </div>
+
+            <div class="form-floating mb-3">
+                <input asp-for="ActivityDate" class="form-control" type="date" id="ActivityDate" placeholder=" " required/>
+                <label asp-for="ActivityDate">Date <span class="text-danger">*</span></label>
+                <span asp-validation-for="ActivityDate" class="text-danger"></span>
+            </div>
+
+            <div class="form-floating mb-3">
+                <input asp-for="ActivityType" class="form-control" id="ActivityType" placeholder=" " list="activityTypes"/>
+                <label asp-for="ActivityType">Type</label>
+                <span asp-validation-for="ActivityType" class="text-danger"></span>
+                <datalist id="activityTypes">
+                    @foreach (var type in Rvnx.CRM.Core.Constants.ActivityTypeSuggestions.All)
+                    {
+                        <option value="@type"/>
+                    }
+                </datalist>
+            </div>
+
+            <div class="form-floating mb-3">
+                <input asp-for="Location" class="form-control" id="Location" placeholder=" "/>
+                <label asp-for="Location">Location</label>
+                <span asp-validation-for="Location" class="text-danger"></span>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="Description">Description</label>
+                <textarea asp-for="Description" id="Description" placeholder="Notes about this activity..."></textarea>
+                <span asp-validation-for="Description" class="text-danger"></span>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Contacts</label>
+                <select name="ContactIds" id="ContactIds" class="form-select" multiple>
+                    @foreach (var item in (MultiSelectList)ViewBag.ContactsList)
+                    {
+                        <option value="@item.Value" selected="@item.Selected">@item.Text</option>
+                    }
+                </select>
+            </div>
+
+            <div class="d-grid gap-2 d-md-flex mt-4">
+                <button type="submit" class="btn btn-primary"><i class="bi bi-plus-lg me-2"></i>Add Activity</button>
+                <a asp-controller="Contacts" asp-action="Details" asp-route-id="@Model.EntityId" class="btn btn-secondary"><i class="bi bi-arrow-left me-2"></i>Back to Contact</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    @{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); }
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            new EasyMDE({
+                element: document.getElementById('Description'),
+                spellChecker: true,
+                autoDownloadFontAwesome: false,
+                toolbar: ['bold', 'italic', 'strikethrough', '|', 'heading', 'heading-1', 'heading-2', 'heading-3', '|', 'code', 'quote', 'unordered-list', 'ordered-list', '|', 'link', 'image', 'table', '|', 'preview', 'side-by-side', 'fullscreen', '|', 'guide'],
+                minHeight: '200px'
+            });
+            $('#ContactIds').select2({ width: '100%', placeholder: 'Select contacts...' });
+        });
+    </script>
+}

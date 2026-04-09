@@ -1,3 +1,4 @@
+using Rvnx.CRM.Core.Models.Activity;
 using Rvnx.CRM.Core.Models.Base;
 using Rvnx.CRM.Core.Models.Business;
 using System.ComponentModel.DataAnnotations;
@@ -26,4 +27,6 @@ public class Contact : Person
     public virtual ICollection<Employer> Employers { get; set; } = [];
 
     public virtual ICollection<ContactLabel> ContactLabels { get; set; } = [];
+
+    public virtual ICollection<ActivityContact> ActivityContacts { get; set; } = [];
 }

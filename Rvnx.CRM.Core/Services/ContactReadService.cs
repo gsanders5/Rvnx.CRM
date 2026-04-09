@@ -3,6 +3,7 @@ using Rvnx.CRM.Core.DTOs.Contact;
 using Rvnx.CRM.Core.Enumerations;
 using Rvnx.CRM.Core.Extensions;
 using Rvnx.CRM.Core.Interfaces;
+using Rvnx.CRM.Core.Models.Activity;
 using Rvnx.CRM.Core.Models.Base;
 using Rvnx.CRM.Core.Models.Contact;
 using Rvnx.CRM.Core.Models.Dates;
@@ -164,7 +165,8 @@ public class ContactReadService(IRepository repository, IFavoriteService favorit
             nameof(Contact.Facts),
             nameof(Contact.Addresses),
             nameof(Contact.Attachments),
-            nameof(Contact.ContactLabels) + "." + nameof(ContactLabel.Label));
+            nameof(Contact.ContactLabels) + "." + nameof(ContactLabel.Label),
+            nameof(Contact.ActivityContacts) + "." + nameof(ActivityContact.Activity));
 
         Contact? contact = contacts.FirstOrDefault();
         if (contact == null)
@@ -260,6 +262,68 @@ public class ContactReadService(IRepository repository, IFavoriteService favorit
         contactDto.Labels = contact.ContactLabels.Select(cl => cl.Label).OrderBy(l => l.Name)
             .Select(l => new LabelDto { Id = l.Id, Name = l.Name, Color = l.Color }).ToList();
 
+        List<ActivityDto> activityDtos = contact.ActivityContacts.Select(ac =>
+        {
+            ActivityDto activityDto = ac.Activity.ToDto();
+            activityDto.EntityId = contact.Id;
+            return activityDto;
+        }).ToList();
+
+        List<Guid> activityIds = activityDtos.Select(a => a.Id).ToList();
+
+        if (activityIds.Count > 0)
+        {
+            List<(Guid ActivityId, Guid ContactId)> allParticipants =
+                await _repository.ListProjectedByChunkedContainsAsync<ActivityContact, (Guid, Guid), Guid>(
+                    activityIds,
+                    chunk => ac => chunk.Contains(ac.ActivityId),
+                    ac => new ValueTuple<Guid, Guid>(ac.ActivityId, ac.ContactId));
+
+            HashSet<Guid> otherContactIds = [.. allParticipants
+                .Select(p => p.ContactId)
+                .Where(cid => cid != id)];
+
+            Dictionary<Guid, string> contactNameMap = [];
+            if (otherContactIds.Count > 0)
+            {
+                List<(Guid Id, string Name)> names =
+                    await _repository.ListProjectedByChunkedContainsAsync<Contact, (Guid, string), Guid>(
+                        [.. otherContactIds],
+                        chunk => c => chunk.Contains(c.Id),
+                        c => new ValueTuple<Guid, string>(c.Id, (c.FirstName + " " + (c.LastName ?? "")).Trim()));
+
+                foreach ((Guid cId, string name) in names)
+                {
+                    contactNameMap.TryAdd(cId, name);
+                }
+            }
+
+            Dictionary<Guid, List<Guid>> participantsByActivity = [];
+            foreach ((Guid activityId, Guid contactId) in allParticipants)
+            {
+                if (!participantsByActivity.TryGetValue(activityId, out List<Guid>? list))
+                {
+                    list = [];
+                    participantsByActivity[activityId] = list;
+                }
+                list.Add(contactId);
+            }
+
+            foreach (ActivityDto actDto in activityDtos)
+            {
+                if (participantsByActivity.TryGetValue(actDto.Id, out List<Guid>? pIds))
+                {
+                    actDto.ContactIds = pIds;
+                    actDto.ContactNames = pIds
+                        .Where(pid => pid != id && contactNameMap.ContainsKey(pid))
+                        .Select(pid => contactNameMap[pid])
+                        .ToList();
+                }
+            }
+        }
+
+        contactDto.Activities = activityDtos;
+
         return contactDto;
     }
 
@@ -337,5 +401,12 @@ public class ContactReadService(IRepository repository, IFavoriteService favorit
     public async Task<bool> ContactExistsAsync(Guid id)
     {
         return await _repository.IsValidContactAsync(id);
+    }
+
+    public async Task<List<(Guid Id, string FullName)>> GetContactNamesAsync()
+    {
+        return await _repository.ListProjectedAsync<Contact, (Guid, string)>(
+            c => !c.IsHidden && !c.IsPartial,
+            c => new ValueTuple<Guid, string>(c.Id, (c.FirstName + " " + (c.LastName ?? "")).Trim()));
     }
 }

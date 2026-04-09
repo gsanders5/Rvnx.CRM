@@ -32,4 +32,9 @@ public interface IContactReadService
     /// <param name="id">The unique identifier of the contact.</param>
     /// <returns>True if the contact exists and is a full contact; otherwise, false.</returns>
     Task<bool> ContactExistsAsync(Guid id);
+
+    /// <summary>
+    /// Retrieves a lightweight list of contact Id and FullName pairs for use in select lists.
+    /// </summary>
+    Task<List<(Guid Id, string FullName)>> GetContactNamesAsync();
 }

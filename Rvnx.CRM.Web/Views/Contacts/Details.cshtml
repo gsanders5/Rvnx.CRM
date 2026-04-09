@@ -566,6 +566,76 @@
         </div>
     </div>
 
+    <!-- Activities -->
+    <div class="card mb-4 border shadow-sm">
+        <div class="card-header bg-transparent border-0 pt-3 px-3 d-flex justify-content-between align-items-center">
+            <h5 class="card-title mb-0 fw-bold"><i class="bi bi-calendar-check"></i> Activities</h5>
+            <a asp-controller="Activities" asp-action="Create" asp-route-entityId="@Model.Id" class="btn btn-sm btn-outline-primary" aria-label="Add Activity">
+                <i class="bi bi-plus-lg" aria-hidden="true"></i> Add
+            </a>
+        </div>
+        <div class="card-body px-3 pb-3">
+            @if (Model.Activities != null && Model.Activities.Any())
+            {
+                @foreach (var activity in Model.Activities.OrderByDescending(a => a.ActivityDate))
+                {
+                    <div class="card mb-2">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <h6 class="card-subtitle mb-1">
+                                        @activity.Title
+                                        @if (!string.IsNullOrEmpty(activity.ActivityType))
+                                        {
+                                            <span class="badge rounded-pill bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 ms-1">@activity.ActivityType</span>
+                                        }
+                                    </h6>
+                                    <small class="text-muted">
+                                        <i class="bi bi-calendar3"></i> @activity.ActivityDate.ToShortDateString()
+                                        @if (!string.IsNullOrEmpty(activity.Location))
+                                        {
+                                            <span class="ms-2"><i class="bi bi-geo-alt"></i> @activity.Location</span>
+                                        }
+                                    </small>
+                                    @if (activity.ContactNames.Any())
+                                    {
+                                        <div class="small text-muted mt-1">
+                                            <i class="bi bi-people"></i>
+                                            with @string.Join(", ", activity.ContactNames)
+                                        </div>
+                                    }
+                                </div>
+                                <div class="btn-group btn-group-sm align-self-start">
+                                    <a asp-controller="Activities" asp-action="Edit" asp-route-id="@activity.Id" class="btn btn-outline-secondary" title="Edit" aria-label="Edit @activity.Title">
+                                        <i class="bi bi-pencil-square"></i>
+                                    </a>
+                                    <a asp-controller="Activities" asp-action="Delete" asp-route-id="@activity.Id" class="btn btn-outline-danger" title="Delete" aria-label="Delete @activity.Title">
+                                        <i class="bi bi-trash"></i>
+                                    </a>
+                                </div>
+                            </div>
+                            @if (!string.IsNullOrEmpty(activity.Description))
+                            {
+                                <div class="d-none note-source">@activity.Description</div>
+                                <div class="note-render card-text mt-2"></div>
+                            }
+                        </div>
+                    </div>
+                }
+            }
+            else
+            {
+                <div class="text-center py-4 text-muted">
+                    <i class="bi bi-calendar-check display-6 d-block mb-3 opacity-25"></i>
+                    <p class="mb-2">No activities recorded.</p>
+                    <a asp-controller="Activities" asp-action="Create" asp-route-entityId="@Model.Id" class="btn btn-sm btn-primary mt-2" aria-label="Add Activity">
+                        <i class="bi bi-plus-lg" aria-hidden="true"></i> Add Activity
+                    </a>
+                </div>
+            }
+        </div>
+    </div>
+
     <!-- Attachments -->
     <div class="card mb-4">
         <div class="card-header d-flex justify-content-between align-items-center">

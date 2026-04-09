@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using Rvnx.CRM.Core.Constants;
 using Rvnx.CRM.Core.Extensions;
 using Rvnx.CRM.Core.Interfaces;
@@ -30,5 +31,15 @@ public abstract class RepositoryController : AuthorizedController
         return id == Guid.Empty || string.IsNullOrEmpty(type)
             ? RedirectToAction("Index", "Home")
             : type == EntityTypes.Person ? RedirectToAction("Details", "Contacts", new { id }) : RedirectToAction("Index", "Home");
+    }
+
+    protected async Task PopulateContactsSelectList(IContactReadService contactReadService, List<Guid> selectedIds)
+    {
+        List<(Guid Id, string FullName)> contacts = await contactReadService.GetContactNamesAsync();
+        ViewBag.ContactsList = new MultiSelectList(
+            contacts.OrderBy(c => c.FullName).Select(c => new { c.Id, c.FullName }),
+            "Id",
+            "FullName",
+            selectedIds);
     }
 }
