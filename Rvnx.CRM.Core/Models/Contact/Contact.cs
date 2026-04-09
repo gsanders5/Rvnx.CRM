@@ -19,7 +19,7 @@ public class Contact : Person
     [MaxLength(100)]
     public string? Religion { get; set; }
 
-    public virtual ICollection<Pet> Pets { get; set; } = [];
+    public virtual ICollection<PetContact> PetContacts { get; set; } = [];
 
     [Display(Name = "Employers")]
     [InverseProperty(nameof(Employer.Employee))]

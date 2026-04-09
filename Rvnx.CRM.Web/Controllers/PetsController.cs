@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using Rvnx.CRM.Core.DTOs.Contact;
 using Rvnx.CRM.Core.Extensions;
 using Rvnx.CRM.Core.Interfaces;
@@ -8,15 +9,22 @@ using Rvnx.CRM.Web.Controllers.Base;
 
 namespace Rvnx.CRM.Web.Controllers;
 
-public class PetsController(IPetService petService, IRepository repository) : RepositoryController(repository)
+public class PetsController(IPetService petService, IRepository repository, IContactReadService contactReadService) : RepositoryController(repository)
 {
     private readonly IPetService _petService = petService;
+    private readonly IContactReadService _contactReadService = contactReadService;
 
     [HttpGet]
     public async Task<IActionResult> Create(Guid entityId)
     {
         PetFormDto? dto = await _petService.GetFormForCreateAsync(entityId);
-        return dto == null ? NotFound() : View(dto);
+        if (dto == null)
+        {
+            return NotFound();
+        }
+
+        await PopulateContactsSelectList(dto.ContactIds);
+        return View(dto);
     }
 
     [HttpPost]
@@ -36,6 +44,7 @@ public class PetsController(IPetService petService, IRepository repository) : Re
             }
         }
 
+        await PopulateContactsSelectList(petDto.ContactIds);
         return View(petDto);
     }
 
@@ -43,7 +52,13 @@ public class PetsController(IPetService petService, IRepository repository) : Re
     public async Task<IActionResult> Edit(Guid id)
     {
         PetFormDto? dto = await _petService.GetFormAsync(id);
-        return dto == null ? NotFound() : View(dto);
+        if (dto == null)
+        {
+            return NotFound();
+        }
+
+        await PopulateContactsSelectList(dto.ContactIds);
+        return View(dto);
     }
 
     [HttpPost]
@@ -68,6 +83,7 @@ public class PetsController(IPetService petService, IRepository repository) : Re
             }
         }
 
+        await PopulateContactsSelectList(petDto.ContactIds);
         return View(petDto);
     }
 
@@ -85,5 +101,15 @@ public class PetsController(IPetService petService, IRepository repository) : Re
         return result.Success
             ? RedirectToEntity(result.RedirectId, result.RedirectType)
             : RedirectToAction("Index", "Contacts");
+    }
+
+    private async Task PopulateContactsSelectList(List<Guid> selectedIds)
+    {
+        List<ContactDto> contacts = await _contactReadService.GetIndexDataAsync(false);
+        ViewBag.ContactsList = new MultiSelectList(
+            contacts.OrderBy(c => c.FullName).Select(c => new { c.Id, c.FullName }),
+            "Id",
+            "FullName",
+            selectedIds);
     }
 }

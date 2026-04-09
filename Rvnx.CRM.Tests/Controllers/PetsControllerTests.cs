@@ -29,7 +29,12 @@ public class PetsControllerTests : IDisposable
         _context = new CRMDbContext(options, mockCurrentUserService.Object);
         Repository repository = new(_context);
         IPetService petService = new PetService(repository);
-        _controller = new PetsController(petService, repository);
+
+        Mock<IContactReadService> mockContactReadService = new();
+        mockContactReadService.Setup(s => s.GetIndexDataAsync(false))
+            .ReturnsAsync([]);
+
+        _controller = new PetsController(petService, repository, mockContactReadService.Object);
     }
 
     public void Dispose()
@@ -53,10 +58,11 @@ public class PetsControllerTests : IDisposable
         PetFormDto? model = viewResult.Model as PetFormDto;
         Assert.NotNull(model);
         Assert.Equal(contactId, model.EntityId);
+        Assert.Contains(contactId, model.ContactIds);
     }
 
     [Fact]
-    public async Task CreatePostWithValidDataShouldCreatePet()
+    public async Task CreatePostWithValidDataShouldCreatePetAndPetContact()
     {
         Guid contactId = Guid.NewGuid();
         _context.Contacts!.Add(new Contact { Id = contactId, FirstName = "John" });
@@ -65,6 +71,7 @@ public class PetsControllerTests : IDisposable
         PetFormDto dto = new()
         {
             EntityId = contactId,
+            ContactIds = [contactId],
             Name = "Buddy",
             Species = "Dog",
             Breed = "Golden Retriever",
@@ -83,7 +90,11 @@ public class PetsControllerTests : IDisposable
         Assert.Equal("Buddy", created.Name);
         Assert.Equal("Dog", created.Species);
         Assert.Equal("Golden Retriever", created.Breed);
-        Assert.Equal(contactId, created.ContactId);
+
+        PetContact? petContact = await _context.Set<PetContact>().FirstOrDefaultAsync();
+        Assert.NotNull(petContact);
+        Assert.Equal(created.Id, petContact.PetId);
+        Assert.Equal(contactId, petContact.ContactId);
     }
 
     [Fact]
@@ -95,11 +106,11 @@ public class PetsControllerTests : IDisposable
         _context.Set<Pet>().Add(new Pet
         {
             Id = petId,
-            ContactId = contactId,
             Name = "Whiskers",
             Species = "Cat",
             Breed = "Siamese"
         });
+        _context.Set<PetContact>().Add(new PetContact { PetId = petId, ContactId = contactId });
         await _context.SaveChangesAsync();
 
         IActionResult result = await _controller.Edit(petId);
@@ -112,6 +123,7 @@ public class PetsControllerTests : IDisposable
         Assert.Equal("Cat", model.Species);
         Assert.Equal("Siamese", model.Breed);
         Assert.Equal(contactId, model.EntityId);
+        Assert.Contains(contactId, model.ContactIds);
     }
 
     [Fact]
@@ -131,10 +143,10 @@ public class PetsControllerTests : IDisposable
         _context.Set<Pet>().Add(new Pet
         {
             Id = petId,
-            ContactId = contactId,
             Name = "Old Name",
             Species = "Dog"
         });
+        _context.Set<PetContact>().Add(new PetContact { PetId = petId, ContactId = contactId });
         await _context.SaveChangesAsync();
         _context.ChangeTracker.Clear();
 
@@ -142,6 +154,7 @@ public class PetsControllerTests : IDisposable
         {
             Id = petId,
             EntityId = contactId,
+            ContactIds = [contactId],
             Name = "New Name",
             Species = "Dog",
             Breed = "Labrador",
@@ -169,10 +182,10 @@ public class PetsControllerTests : IDisposable
         _context.Set<Pet>().Add(new Pet
         {
             Id = petId,
-            ContactId = contactId,
             Name = "Existing Pet",
             Species = "Dog"
         });
+        _context.Set<PetContact>().Add(new PetContact { PetId = petId, ContactId = contactId });
         await _context.SaveChangesAsync();
         _context.ChangeTracker.Clear();
 
@@ -192,10 +205,10 @@ public class PetsControllerTests : IDisposable
         _context.Set<Pet>().Add(new Pet
         {
             Id = petId,
-            ContactId = contactId,
             Name = "ToDelete",
             Species = "Fish"
         });
+        _context.Set<PetContact>().Add(new PetContact { PetId = petId, ContactId = contactId });
         await _context.SaveChangesAsync();
 
         IActionResult result = await _controller.Delete(petId);
@@ -215,9 +228,9 @@ public class PetsControllerTests : IDisposable
         _context.Set<Pet>().Add(new Pet
         {
             Id = petId,
-            ContactId = contactId,
             Name = "ToDelete"
         });
+        _context.Set<PetContact>().Add(new PetContact { PetId = petId, ContactId = contactId });
         await _context.SaveChangesAsync();
 
         IActionResult result = await _controller.DeleteConfirmed(petId);

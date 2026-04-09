@@ -92,6 +92,7 @@ public static class DtoMappingExtensions
 
     public static PetDto ToDto(this Pet entity)
     {
+        List<Guid> contactIds = entity.PetContacts?.Select(pc => pc.ContactId).ToList() ?? [];
         return new PetDto
         {
             Id = entity.Id,
@@ -100,7 +101,8 @@ public static class DtoMappingExtensions
             Breed = entity.Breed,
             Birthday = entity.Birthday,
             Notes = entity.Notes,
-            EntityId = entity.ContactId
+            ContactIds = contactIds,
+            EntityId = contactIds.FirstOrDefault()
         };
     }
 
@@ -226,8 +228,7 @@ public static class DtoMappingExtensions
             Species = dto.Species,
             Breed = dto.Breed,
             Birthday = dto.Birthday,
-            Notes = dto.Notes,
-            ContactId = dto.EntityId
+            Notes = dto.Notes
         };
     }
 

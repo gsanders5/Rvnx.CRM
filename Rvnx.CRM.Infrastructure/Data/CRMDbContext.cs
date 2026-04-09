@@ -23,6 +23,7 @@ public class CRMDbContext(DbContextOptions<CRMDbContext> options, ICurrentUserSe
     public DbSet<ReminderLog>? ReminderLogs { get; set; }
     public DbSet<Relationship>? Relationships { get; set; }
     public DbSet<Pet>? Pets { get; set; }
+    public DbSet<PetContact>? PetContacts { get; set; }
     public DbSet<ContactMethod>? ContactMethods { get; set; }
     public DbSet<Fact>? Facts { get; set; }
     public DbSet<Address>? Addresses { get; set; }
@@ -54,11 +55,21 @@ public class CRMDbContext(DbContextOptions<CRMDbContext> options, ICurrentUserSe
         modelBuilder.Entity<Relationship>().HasIndex(e => new { e.EntityId, e.EntityType });
         modelBuilder.Entity<Relationship>().HasIndex(e => new { e.RelatedEntityId, e.EntityType });
 
-        modelBuilder.Entity<Pet>()
-            .HasOne(p => p.Contact)
-            .WithMany(c => c.Pets)
-            .HasForeignKey(p => p.ContactId)
+        modelBuilder.Entity<PetContact>()
+            .HasOne(pc => pc.Pet)
+            .WithMany(p => p.PetContacts)
+            .HasForeignKey(pc => pc.PetId)
             .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<PetContact>()
+            .HasOne(pc => pc.Contact)
+            .WithMany(c => c.PetContacts)
+            .HasForeignKey(pc => pc.ContactId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<PetContact>()
+            .HasIndex(pc => new { pc.PetId, pc.ContactId })
+            .IsUnique();
 
         modelBuilder.Entity<ContactLabel>()
             .HasOne(cl => cl.Contact)

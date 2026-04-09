@@ -9,6 +9,8 @@ public class PetDtoMappingTests
     [Fact]
     public void ToDtoShouldMapPropertiesCorrectly()
     {
+        Guid contactId1 = Guid.NewGuid();
+        Guid contactId2 = Guid.NewGuid();
         Pet entity = new()
         {
             Id = Guid.NewGuid(),
@@ -17,7 +19,11 @@ public class PetDtoMappingTests
             Breed = "Golden Retriever",
             Birthday = new DateTime(2020, 1, 1),
             Notes = "Loves tennis balls",
-            ContactId = Guid.NewGuid()
+            PetContacts =
+            [
+                new PetContact { ContactId = contactId1 },
+                new PetContact { ContactId = contactId2 }
+            ]
         };
 
         PetDto dto = entity.ToDto();
@@ -28,10 +34,26 @@ public class PetDtoMappingTests
         Assert.Equal(entity.Breed, dto.Breed);
         Assert.Equal(entity.Birthday, dto.Birthday);
         Assert.Equal(entity.Notes, dto.Notes);
-        Assert.Equal(entity.ContactId, dto.EntityId);
+        Assert.Equal(contactId1, dto.EntityId);
+        Assert.Equal(2, dto.ContactIds.Count);
+        Assert.Contains(contactId1, dto.ContactIds);
+        Assert.Contains(contactId2, dto.ContactIds);
+    }
 
-        // ToDto does not set EntityType, so it should be empty/null as initialized in DTO
-        Assert.True(string.IsNullOrEmpty(dto.EntityType));
+    [Fact]
+    public void ToDtoWhenNoPetContactsShouldReturnEmptyContactIds()
+    {
+        Pet entity = new()
+        {
+            Id = Guid.NewGuid(),
+            Name = "Buddy",
+            PetContacts = []
+        };
+
+        PetDto dto = entity.ToDto();
+
+        Assert.Empty(dto.ContactIds);
+        Assert.Equal(Guid.Empty, dto.EntityId);
     }
 
     [Fact]
@@ -44,7 +66,8 @@ public class PetDtoMappingTests
             Breed = "Siamese",
             Birthday = new DateTime(2019, 5, 15),
             Notes = "Hates water",
-            EntityId = Guid.NewGuid()
+            EntityId = Guid.NewGuid(),
+            ContactIds = [Guid.NewGuid(), Guid.NewGuid()]
         };
 
         Pet entity = dto.ToEntity();
@@ -55,13 +78,11 @@ public class PetDtoMappingTests
         Assert.Equal(dto.Breed, entity.Breed);
         Assert.Equal(dto.Birthday, entity.Birthday);
         Assert.Equal(dto.Notes, entity.Notes);
-        Assert.Equal(dto.EntityId, entity.ContactId);
     }
 
     [Fact]
     public void UpdateEntityShouldUpdatePropertiesCorrectly()
     {
-        Guid initialContactId = Guid.NewGuid();
         Pet entity = new()
         {
             Id = Guid.NewGuid(),
@@ -69,8 +90,7 @@ public class PetDtoMappingTests
             Species = "Old Species",
             Breed = "Old Breed",
             Birthday = DateTime.MinValue,
-            Notes = "Old Notes",
-            ContactId = initialContactId
+            Notes = "Old Notes"
         };
 
         PetFormDto dto = new()
@@ -80,7 +100,6 @@ public class PetDtoMappingTests
             Breed = "New Breed",
             Birthday = DateTime.UtcNow,
             Notes = "New Notes",
-            // EntityId in DTO might be different but should be ignored by UpdateEntity
             EntityId = Guid.NewGuid()
         };
 
@@ -91,7 +110,5 @@ public class PetDtoMappingTests
         Assert.Equal(dto.Breed, entity.Breed);
         Assert.Equal(dto.Birthday, entity.Birthday);
         Assert.Equal(dto.Notes, entity.Notes);
-
-        Assert.Equal(initialContactId, entity.ContactId);
     }
 }

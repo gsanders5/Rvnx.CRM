@@ -8,12 +8,6 @@ namespace Rvnx.CRM.Core.Models.Contact;
 public class Pet : BaseEntity
 {
     [Required]
-    public Guid ContactId { get; set; }
-
-    [ForeignKey(nameof(ContactId))]
-    public virtual Contact Contact { get; set; } = null!;
-
-    [Required]
     [MaxLength(100)]
     [Display(Name = "Name")]
     public string Name { get; set; } = string.Empty;
@@ -31,4 +25,6 @@ public class Pet : BaseEntity
 
     [Display(Name = "Notes")]
     public string? Notes { get; set; }
+
+    public virtual ICollection<PetContact> PetContacts { get; set; } = [];
 }

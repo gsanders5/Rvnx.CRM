@@ -19,29 +19,74 @@ public class PetService(IRepository repository) : IPetService
             return OperationResult.Failure("Contact not found.");
         }
 
+        // Ensure EntityId is always included in ContactIds
+        List<Guid> contactIds = dto.ContactIds.Count > 0 ? dto.ContactIds : [dto.EntityId];
+        if (!contactIds.Contains(dto.EntityId))
+        {
+            contactIds.Add(dto.EntityId);
+        }
+
         Pet pet = dto.ToEntity();
         await _repository.AddAsync(pet);
+
+        List<PetContact> petContacts = contactIds.Select(contactId => new PetContact
+        {
+            PetId = pet.Id,
+            ContactId = contactId
+        }).ToList();
+        await _repository.AddRangeAsync(petContacts);
+
         await _repository.SaveChangesAsync();
 
-        return OperationResult.Ok(pet.ContactId, EntityTypes.Person);
+        return OperationResult.Ok(dto.EntityId, EntityTypes.Person);
     }
 
     public async Task<OperationResult> UpdateAsync(Guid id, PetFormDto dto)
     {
         try
         {
-            Pet? existingPet = await _repository.GetByIdAsync<Pet>(id);
-            if (existingPet == null || !await _repository.IsValidContactAsync(existingPet.ContactId))
+            Pet? existingPet = await _repository.GetByIdWithIncludesAsync<Pet>(id, nameof(Pet.PetContacts));
+            if (existingPet == null)
             {
                 return OperationResult.Failure("Pet not found.");
             }
 
             existingPet.UpdateEntity(dto);
-
             await _repository.UpdateAsync(existingPet);
+
+            // Sync PetContact records
+            List<Guid> contactIds = dto.ContactIds.Count > 0 ? dto.ContactIds : [dto.EntityId];
+            if (!contactIds.Contains(dto.EntityId))
+            {
+                contactIds.Add(dto.EntityId);
+            }
+
+            HashSet<Guid> desiredContactIds = [.. contactIds];
+            HashSet<Guid> existingContactIds = [.. existingPet.PetContacts.Select(pc => pc.ContactId)];
+
+            // Remove PetContacts no longer needed
+            List<PetContact> toRemove = existingPet.PetContacts
+                .Where(pc => !desiredContactIds.Contains(pc.ContactId))
+                .ToList();
+            if (toRemove.Count > 0)
+            {
+                await _repository.DeleteRangeAsync(toRemove);
+            }
+
+            // Add new PetContacts
+            List<Guid> toAdd = contactIds.Where(cid => !existingContactIds.Contains(cid)).ToList();
+            if (toAdd.Count > 0)
+            {
+                await _repository.AddRangeAsync(toAdd.Select(contactId => new PetContact
+                {
+                    PetId = id,
+                    ContactId = contactId
+                }));
+            }
+
             await _repository.SaveChangesAsync();
 
-            return OperationResult.Ok(existingPet.ContactId, EntityTypes.Person);
+            return OperationResult.Ok(dto.EntityId, EntityTypes.Person);
         }
         catch (EntityConcurrencyException)
         {
@@ -55,10 +100,10 @@ public class PetService(IRepository repository) : IPetService
 
     public async Task<OperationResult> DeleteAsync(Guid id)
     {
-        Pet? pet = await _repository.GetByIdAsync<Pet>(id);
+        Pet? pet = await _repository.GetByIdWithIncludesAsync<Pet>(id, nameof(Pet.PetContacts));
         if (pet != null)
         {
-            Guid entityId = pet.ContactId;
+            Guid entityId = pet.PetContacts.Select(pc => pc.ContactId).FirstOrDefault();
             string entityType = EntityTypes.Person;
             await _repository.DeleteAsync<Pet>(id);
             await _repository.SaveChangesAsync();
@@ -69,30 +114,37 @@ public class PetService(IRepository repository) : IPetService
 
     public async Task<PetFormDto?> GetFormAsync(Guid id)
     {
-        Pet? pet = await _repository.GetByIdAsync<Pet>(id);
+        Pet? pet = await _repository.GetByIdWithIncludesAsync<Pet>(id, nameof(Pet.PetContacts));
+        if (pet == null)
+        {
+            return null;
+        }
 
-        return pet == null || !await _repository.IsValidContactAsync(pet.ContactId)
-            ? null
-            : new PetFormDto
-            {
-                Id = pet.Id,
-                EntityId = pet.ContactId,
-                Name = pet.Name,
-                Species = pet.Species,
-                Breed = pet.Breed,
-                Birthday = pet.Birthday,
-                Notes = pet.Notes
-            };
+        List<Guid> contactIds = pet.PetContacts.Select(pc => pc.ContactId).ToList();
+        Guid entityId = contactIds.FirstOrDefault();
+
+        return new PetFormDto
+        {
+            Id = pet.Id,
+            EntityId = entityId,
+            ContactIds = contactIds,
+            Name = pet.Name,
+            Species = pet.Species,
+            Breed = pet.Breed,
+            Birthday = pet.Birthday,
+            Notes = pet.Notes
+        };
     }
 
     public async Task<PetFormDto?> GetFormForCreateAsync(Guid entityId)
     {
-        return !await _repository.IsValidContactAsync(entityId) ? null : new PetFormDto { EntityId = entityId };
+        return !await _repository.IsValidContactAsync(entityId)
+            ? null
+            : new PetFormDto { EntityId = entityId, ContactIds = [entityId] };
     }
 
     public async Task<Pet?> GetByIdAsync(Guid id)
     {
-        Pet? pet = await _repository.GetByIdAsync<Pet>(id);
-        return pet == null || !await _repository.IsValidContactAsync(pet.ContactId) ? null : pet;
+        return await _repository.GetByIdWithIncludesAsync<Pet>(id, nameof(Pet.PetContacts));
     }
 }

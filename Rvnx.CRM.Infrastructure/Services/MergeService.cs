@@ -85,7 +85,7 @@ public class MergeService(CRMDbContext context, IRepository repository) : IMerge
             List<ContactMethod> secondaryMethods = await _repository.ListAsync<ContactMethod>(m => m.ContactId == secondaryId);
 
             HashSet<(Core.Enumerations.ContactMethodType Type, string)> existingMethods = new(primaryMethods.Count);
-            foreach (var m in primaryMethods)
+            foreach (ContactMethod m in primaryMethods)
             {
                 existingMethods.Add((m.Type, m.Value.ToLowerInvariant()));
             }
@@ -111,7 +111,7 @@ public class MergeService(CRMDbContext context, IRepository repository) : IMerge
             List<SignificantDate> secondaryDates = await _repository.ListAsync<SignificantDate>(d => d.ContactId == secondaryId);
 
             HashSet<(string?, DateOnly EventDate)> existingDates = new(primaryDates.Count);
-            foreach (var d in primaryDates)
+            foreach (SignificantDate d in primaryDates)
             {
                 existingDates.Add((d.Title?.ToLowerInvariant(), d.EventDate));
             }
@@ -143,7 +143,7 @@ public class MergeService(CRMDbContext context, IRepository repository) : IMerge
             List<Relationship> secondaryRels = await _repository.ListAsync<Relationship>(r => r.EntityId == secondaryId);
 
             HashSet<(Guid RelatedEntityId, Guid RelationshipTypeId)> existingRels = new(primaryRels.Count);
-            foreach (var r in primaryRels)
+            foreach (Relationship r in primaryRels)
             {
                 existingRels.Add((r.RelatedEntityId, r.RelationshipTypeId));
             }
@@ -167,7 +167,7 @@ public class MergeService(CRMDbContext context, IRepository repository) : IMerge
             // Pre-fetch all relationships pointing to primary to avoid N+1 queries
             List<Relationship> relatedToPrimary = await _repository.ListAsync<Relationship>(r => r.RelatedEntityId == primaryId);
             HashSet<(Guid EntityId, Guid RelationshipTypeId)> existingInverseRels = new(relatedToPrimary.Count);
-            foreach (var r in relatedToPrimary)
+            foreach (Relationship r in relatedToPrimary)
             {
                 existingInverseRels.Add((r.EntityId, r.RelationshipTypeId));
             }
@@ -197,30 +197,49 @@ public class MergeService(CRMDbContext context, IRepository repository) : IMerge
                 await _repository.DeleteRangeAsync(relsToDelete);
             }
 
-            List<Pet> primaryPets = await _repository.ListAsync<Pet>(p => p.ContactId == primaryId);
-            List<Pet> secondaryPets = await _repository.ListAsync<Pet>(p => p.ContactId == secondaryId);
+            List<PetContact> primaryPetContacts = await _repository.ListAsync<PetContact>(
+                pc => pc.ContactId == primaryId, default, nameof(PetContact.Pet));
+            List<PetContact> secondaryPetContacts = await _repository.ListAsync<PetContact>(
+                pc => pc.ContactId == secondaryId, default, nameof(PetContact.Pet));
 
-            HashSet<string> existingPets = new(primaryPets.Count);
-            foreach (var p in primaryPets)
+            HashSet<string> existingPetNames = new(primaryPetContacts.Count);
+            HashSet<Guid> primaryPetIds = new(primaryPetContacts.Count);
+            foreach (PetContact pc in primaryPetContacts)
             {
-                existingPets.Add(p.Name.ToLowerInvariant());
+                existingPetNames.Add(pc.Pet.Name.ToLowerInvariant());
+                primaryPetIds.Add(pc.PetId);
             }
 
-            List<Pet> petsToDelete = [];
-            foreach (Pet pet in secondaryPets)
+            List<PetContact> petContactsToDelete = [];
+            List<Pet> orphanPetsToDelete = [];
+            foreach (PetContact pc in secondaryPetContacts)
             {
-                if (existingPets.Add(pet.Name.ToLowerInvariant()))
+                if (existingPetNames.Add(pc.Pet.Name.ToLowerInvariant()))
                 {
-                    pet.ContactId = primaryId;
+                    // Unique pet — link to primary contact
+                    if (!primaryPetIds.Contains(pc.PetId))
+                    {
+                        await _repository.AddAsync(new PetContact
+                        {
+                            PetId = pc.PetId,
+                            ContactId = primaryId
+                        });
+                    }
                 }
                 else
                 {
-                    petsToDelete.Add(pet);
+                    // Duplicate pet name — mark for cleanup
+                    orphanPetsToDelete.Add(pc.Pet);
                 }
+                petContactsToDelete.Add(pc);
             }
-            if (petsToDelete.Count > 0)
+            if (petContactsToDelete.Count > 0)
             {
-                await _repository.DeleteRangeAsync(petsToDelete);
+                await _repository.DeleteRangeAsync(petContactsToDelete);
+            }
+            if (orphanPetsToDelete.Count > 0)
+            {
+                await _repository.DeleteRangeAsync(orphanPetsToDelete);
             }
 
             await _repository.UpdateAsync(primary);

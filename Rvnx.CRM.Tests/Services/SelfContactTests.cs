@@ -6,7 +6,6 @@ using Rvnx.CRM.Core.DTOs.Contact;
 using Rvnx.CRM.Core.Interfaces;
 using Rvnx.CRM.Core.Models.Contact;
 using Rvnx.CRM.Web.Controllers;
-using System.Security.Claims;
 
 namespace Rvnx.CRM.Tests.Services;
 

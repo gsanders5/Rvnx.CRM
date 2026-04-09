@@ -226,22 +226,29 @@ public class MergeServiceTests : IDisposable
         { Id = Guid.NewGuid(), FirstName = "Secondary" };
 
         Pet pPet = new()
-        { Id = Guid.NewGuid(), ContactId = primary.Id, Name = "Fido" };
+        { Id = Guid.NewGuid(), Name = "Fido" };
         Pet sPetDup = new()
-        { Id = Guid.NewGuid(), ContactId = secondary.Id, Name = "FIDO" };
+        { Id = Guid.NewGuid(), Name = "FIDO" };
         Pet sPetNew = new()
-        { Id = Guid.NewGuid(), ContactId = secondary.Id, Name = "Mittens" };
+        { Id = Guid.NewGuid(), Name = "Mittens" };
 
         await _context.Contacts!.AddRangeAsync(primary, secondary);
         await _context.Set<Pet>().AddRangeAsync(pPet, sPetDup, sPetNew);
+        await _context.Set<PetContact>().AddRangeAsync(
+            new PetContact { PetId = pPet.Id, ContactId = primary.Id },
+            new PetContact { PetId = sPetDup.Id, ContactId = secondary.Id },
+            new PetContact { PetId = sPetNew.Id, ContactId = secondary.Id });
         await _context.SaveChangesAsync();
 
         await _sut.MergeContactsAsync(primary.Id, secondary.Id);
 
-        List<Pet> pets = await _context.Set<Pet>().Where(p => p.ContactId == primary.Id).ToListAsync();
-        Assert.Equal(2, pets.Count);
-        Assert.Contains(pets, p => p.Name == "Fido");
-        Assert.Contains(pets, p => p.Name == "Mittens");
+        List<PetContact> petContacts = await _context.Set<PetContact>()
+            .Where(pc => pc.ContactId == primary.Id)
+            .Include(pc => pc.Pet)
+            .ToListAsync();
+        Assert.Equal(2, petContacts.Count);
+        Assert.Contains(petContacts, pc => pc.Pet.Name == "Fido");
+        Assert.Contains(petContacts, pc => pc.Pet.Name == "Mittens");
     }
 
     [Fact]
@@ -298,6 +305,7 @@ public class MergeServiceTests : IDisposable
         mockRepo.Setup(r => r.ListAsync(It.IsAny<System.Linq.Expressions.Expression<Func<Fact, bool>>>(), It.IsAny<CancellationToken>())).ReturnsAsync([]);
         mockRepo.Setup(r => r.ListAsync(It.IsAny<System.Linq.Expressions.Expression<Func<Relationship, bool>>>(), It.IsAny<CancellationToken>())).ReturnsAsync([]);
         mockRepo.Setup(r => r.ListAsync(It.IsAny<System.Linq.Expressions.Expression<Func<Pet, bool>>>(), It.IsAny<CancellationToken>())).ReturnsAsync([]);
+        mockRepo.Setup(r => r.ListAsync(It.IsAny<System.Linq.Expressions.Expression<Func<PetContact, bool>>>(), It.IsAny<CancellationToken>(), It.IsAny<string[]>())).ReturnsAsync([]);
 
         mockRepo.Setup(r => r.UpdateAsync(It.IsAny<Contact>(), It.IsAny<CancellationToken>())).ThrowsAsync(new InvalidOperationException("Forced failure"));
 

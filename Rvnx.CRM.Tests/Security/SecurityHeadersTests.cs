@@ -38,7 +38,7 @@ public class SecurityHeadersTests : IClassFixture<WebApplicationFactory<Program>
 
         IEnumerable<string> values = response.Headers.GetValues("X-Frame-Options");
         string firstValue = values.First();
-        Assert.True(firstValue == "DENY" || firstValue == "SAMEORIGIN", "X-Frame-Options should be DENY or SAMEORIGIN");
+        Assert.True(firstValue is "DENY" or "SAMEORIGIN", "X-Frame-Options should be DENY or SAMEORIGIN");
     }
 
     [Fact]

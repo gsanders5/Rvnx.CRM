@@ -143,7 +143,7 @@ public class ContactReadService(IRepository repository) : IContactReadService
         List<Contact> contacts = await _repository.ListAsNoTrackingAsync<Contact>(c => c.Id == id && !c.IsPartial,
             default,
             nameof(Contact.Employers),
-            nameof(Contact.Pets),
+            nameof(Contact.PetContacts) + "." + nameof(PetContact.Pet),
             nameof(Contact.Notes),
             nameof(Contact.SignificantDates),
             nameof(Contact.SignificantDates) + "." + nameof(SignificantDate.ReminderOffsets),
@@ -225,7 +225,12 @@ public class ContactReadService(IRepository repository) : IContactReadService
         contact.RelatedTo = relatedTo;
 
         ContactDetailDto contactDto = contact.ToDetailDto();
-        contactDto.Pets = contact.Pets.Select(p => p.ToDto()).ToList();
+        contactDto.Pets = contact.PetContacts.Select(pc =>
+        {
+            PetDto petDto = pc.Pet.ToDto();
+            petDto.EntityId = contact.Id;
+            return petDto;
+        }).ToList();
 
         Attachment? profileAttachment = contact.Attachments
             .FirstOrDefault(a => a.AttachmentType == AttachmentTypes.ProfileImage);

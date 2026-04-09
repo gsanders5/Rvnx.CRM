@@ -11,4 +11,5 @@ public class PetDto : BaseDto
     public string? Notes { get; set; }
     public Guid EntityId { get; set; }
     public string EntityType { get; set; } = string.Empty;
+    public List<Guid> ContactIds { get; set; } = [];
 }
