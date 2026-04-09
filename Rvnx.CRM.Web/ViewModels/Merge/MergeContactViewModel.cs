@@ -1,7 +1,7 @@
 using Rvnx.CRM.Core.DTOs.Contact;
 using System.ComponentModel.DataAnnotations;
 
-namespace Rvnx.CRM.Web.Models;
+namespace Rvnx.CRM.Web.ViewModels.Merge;
 
 public class MergeContactViewModel
 {
