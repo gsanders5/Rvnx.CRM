@@ -263,3 +263,118 @@ body {
 [data-mdb-theme="dark"] .select2-container--default .select2-results__option--highlighted.select2-results__option--selectable {
   background-color: #1266f1;
 }
+
+/* ==========================================================================
+   EasyMDE Custom Styles
+   ========================================================================== */
+
+/* Light mode - default styles */
+.EasyMDEContainer .editor-toolbar {
+  flex-wrap: wrap;
+  padding: 6px 4px !important;
+}
+
+.EasyMDEContainer .editor-toolbar button {
+  color: var(--mdb-body-color, #212529);
+  padding: 4px 6px !important;
+  height: 28px !important;
+  min-width: 28px !important;
+  width: auto;
+  margin: 2px !important;
+}
+
+.EasyMDEContainer .editor-toolbar button i {
+  font-size: 12px;
+}
+
+.EasyMDEContainer .editor-toolbar button:hover {
+  background-color: var(--mdb-tertiary-bg, #f8f9fa);
+  color: var(--mdb-body-color, #212529);
+}
+
+.EasyMDEContainer .CodeMirror {
+  background-color: var(--mdb-surface-bg, #ffffff);
+  color: var(--mdb-body-color, #212529);
+  border-color: var(--mdb-border-color, #bdbdbd);
+}
+
+.EasyMDEContainer .editor-preview {
+  background-color: var(--mdb-surface-bg, #ffffff);
+  color: var(--mdb-body-color, #212529);
+}
+
+.EasyMDEContainer .editor-statusbar {
+  background-color: var(--mdb-tertiary-bg, #f8f9fa);
+  border-color: var(--mdb-border-color, #bdbdbd);
+  color: var(--mdb-secondary-color, #6c757d);
+}
+
+/* Dark mode */
+[data-mdb-theme="dark"] .EasyMDEContainer .editor-toolbar {
+  background-color: var(--mdb-tertiary-bg, #1f252d);
+  border-color: var(--mdb-border-color, #3e4751);
+}
+
+[data-mdb-theme="dark"] .EasyMDEContainer .editor-toolbar button {
+  color: var(--mdb-body-color, #feffff);
+  padding: 4px 6px !important;
+  height: 28px !important;
+  min-width: 28px !important;
+  width: auto;
+  margin: 2px !important;
+}
+
+[data-mdb-theme="dark"] .EasyMDEContainer .editor-toolbar button:hover {
+  background-color: var(--mdb-secondary-bg, #3e4751);
+  color: var(--mdb-body-color, #feffff);
+}
+
+[data-mdb-theme="dark"] .EasyMDEContainer .editor-toolbar .separator {
+  opacity: 0;
+  width: 0;
+  margin: 0 !important;
+}
+
+[data-mdb-theme="dark"] .EasyMDEContainer .editor-toolbar button.active {
+  background-color: var(--mdb-primary, #3768c5);
+  color: #ffffff;
+}
+
+[data-mdb-theme="dark"] .EasyMDEContainer .editor-toolbar i {
+  color: var(--mdb-body-color, #feffff);
+}
+
+[data-mdb-theme="dark"] .EasyMDEContainer .CodeMirror {
+  background-color: var(--mdb-surface-bg, #262d37);
+  color: var(--mdb-body-color, #feffff);
+  border-color: var(--mdb-border-color, #3e4751);
+}
+
+[data-mdb-theme="dark"] .EasyMDEContainer .CodeMirror-gutters {
+  background-color: var(--mdb-tertiary-bg, #1f252d);
+  border-color: var(--mdb-border-color, #3e4751);
+}
+
+[data-mdb-theme="dark"] .EasyMDEContainer .CodeMirror-linenumber {
+  color: var(--mdb-secondary-color, #83888e);
+}
+
+[data-mdb-theme="dark"] .EasyMDEContainer .CodeMirror-cursor {
+  border-left-color: var(--mdb-primary, #3768c5);
+}
+
+[data-mdb-theme="dark"] .EasyMDEContainer .editor-preview {
+  background-color: var(--mdb-surface-bg, #262d37);
+  color: var(--mdb-body-color, #feffff);
+  border-color: var(--mdb-border-color, #3e4751);
+}
+
+[data-mdb-theme="dark"] .EasyMDEContainer .editor-statusbar {
+  background-color: var(--mdb-tertiary-bg, #1f252d);
+  border-color: var(--mdb-border-color, #3e4751);
+  color: var(--mdb-secondary-color, #83888e);
+}
+
+[data-mdb-theme="dark"] .EasyMDEContainer .CodeMirror-placeholder {
+  color: var(--mdb-secondary-color, #83888e);
+}

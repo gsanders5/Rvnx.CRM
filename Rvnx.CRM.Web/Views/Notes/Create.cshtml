@@ -7,7 +7,7 @@
 <h1>Add Note for @Model.EntityName</h1>
 
 <div class="row">
-    <div class="col-md-6">
+    <div class="col-12">
         <form asp-action="Create">
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
             <input type="hidden" asp-for="EntityId"/>
@@ -20,9 +20,9 @@
                 <span asp-validation-for="Title" class="text-danger"></span>
             </div>
 
-            <div class="form-floating mb-3">
-                <textarea asp-for="Value" class="form-control" style="height: 100px" id="Value" placeholder=" "></textarea>
+            <div class="mb-3">
                 <label asp-for="Value">Value</label>
+                <textarea asp-for="Value" id="Value" placeholder="Enter note content..."></textarea>
                 <span asp-validation-for="Value" class="text-danger"></span>
             </div>
 
@@ -36,4 +36,15 @@
 
 @section Scripts {
     @{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); }
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const easyMDE = new EasyMDE({
+                element: document.getElementById('Value'),
+                spellChecker: true,
+                autoDownloadFontAwesome: false,
+                toolbar: ['bold', 'italic', 'strikethrough', '|', 'heading', 'heading-1', 'heading-2', 'heading-3', '|', 'code', 'quote', 'unordered-list', 'ordered-list', '|', 'link', 'image', 'table', '|', 'preview', 'side-by-side', 'fullscreen', '|', 'guide'],
+                minHeight: '300px'
+            });
+        });
+    </script>
 }

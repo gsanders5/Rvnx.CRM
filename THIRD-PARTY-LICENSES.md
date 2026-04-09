@@ -1,6 +1,6 @@
 
 # Third-Party License Inventory
-Generated: 2025-05-22
+Generated: 2026-04-09
 Purpose: License compliance audit
 
 ---
@@ -53,6 +53,8 @@ Purpose: License compliance audit
 | Twitch Embed | v1 | https://embed.twitch.tv/embed/v1.js | Proprietary | https://www.twitch.tv/p/en/legal/developer-agreement/ |
 | TikTok Embed | - | https://www.tiktok.com/embed.js | Proprietary | https://www.tiktok.com/legal/page/global/terms-of-service/en |
 | FullCalendar | 6.1.15 | https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js | MIT | https://github.com/fullcalendar/fullcalendar/blob/main/LICENSE.txt |
+| EasyMDE (CSS) | 2.20.0 | https://cdn.jsdelivr.net/npm/easymde@2.20.0/dist/easymde.min.css | MIT | https://github.com/Ionaru/easy-markdown-editor/blob/master/LICENSE |
+| EasyMDE (JS) | 2.20.0 | https://cdn.jsdelivr.net/npm/easymde@2.20.0/dist/easymde.min.js | MIT | https://github.com/Ionaru/easy-markdown-editor/blob/master/LICENSE |
 
 ---
 
@@ -93,7 +95,7 @@ Purpose: License compliance audit
 
 ## Summary
 
-Total dependencies audited: 37
+Total dependencies audited: 39
 Licenses identified: MIT, Apache-2.0, BSD-3-Clause, CC BY 4.0 (Icons), MPL-2.0 (Option), Six Labors Split License 1.0, SIL Open Font License 1.1, Proprietary (Social Embeds)
 Unresolved: 0
 
