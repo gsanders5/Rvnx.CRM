@@ -66,7 +66,7 @@ public class RelationshipServiceTests
         Assert.Single(spouseOptions);
         Assert.Equal($"{RelationshipTypeIds.Spouse}_Fwd", spouseOptions[0].Value);
         Assert.Equal("is Spouse of", spouseOptions[0].Text);
-        Assert.Equal("Family", spouseOptions[0].Group);
+        Assert.Equal("Romantic", spouseOptions[0].Group);
         Assert.False(spouseOptions[0].Selected);
     }
 

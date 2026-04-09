@@ -346,7 +346,7 @@ public class RelationshipsControllerTests
 
             Guid spouseId = Guid.Parse("b2e9a5c8-7f4d-4a1b-8c6e-5f9d3a0e2b4c");
             Assert.Contains(options,
-                o => o.Value == $"{spouseId}_Fwd" && o.Text == "is Spouse of" && o.Group == "Family");
+                o => o.Value == $"{spouseId}_Fwd" && o.Text == "is Spouse of" && o.Group == "Romantic");
 
             // Father (Parent/Child is defined as Parent/Child in service, not Father/Child explicitly with that ID, but checking logic)
             Guid parentId = Guid.Parse("7c1f8d22-1b6a-4c28-9c1e-3f5a2b8e9d1a");

@@ -56,10 +56,10 @@ public static class RelationshipTypeService
 
     private static readonly Lazy<List<RelationshipTypeDefinition>> _types = new(() =>
     [
-        new(RelationshipTypeIds.Spouse, "Spouse", "Spouse", "Family", EntityTypes.Person,
+        new(RelationshipTypeIds.Spouse, "Spouse", "Spouse", "Romantic", EntityTypes.Person,
             NameMale: "Husband", NameFemale: "Wife", OppositeNameMale: "Husband", OppositeNameFemale: "Wife"),
 
-        new(RelationshipTypeIds.ExSpouse, "Ex-Spouse", "Ex-Spouse", "Family", EntityTypes.Person,
+        new(RelationshipTypeIds.ExSpouse, "Ex-Spouse", "Ex-Spouse", "Romantic", EntityTypes.Person,
             NameMale: "Ex-Husband", NameFemale: "Ex-Wife", OppositeNameMale: "Ex-Husband", OppositeNameFemale: "Ex-Wife"),
 
         new(RelationshipTypeIds.Parent, "Parent", "Child", "Family", EntityTypes.Person,
