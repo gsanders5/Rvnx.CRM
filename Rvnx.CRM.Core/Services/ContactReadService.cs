@@ -9,9 +9,10 @@ using Rvnx.CRM.Core.Models.Dates;
 
 namespace Rvnx.CRM.Core.Services;
 
-public class ContactReadService(IRepository repository) : IContactReadService
+public class ContactReadService(IRepository repository, IFavoriteService favoriteService) : IContactReadService
 {
     private readonly IRepository _repository = repository;
+    private readonly IFavoriteService _favoriteService = favoriteService;
 
     public async Task<List<ContactDto>> GetIndexDataAsync(bool showHidden)
     {
@@ -130,6 +131,18 @@ public class ContactReadService(IRepository repository) : IContactReadService
                 if (dto != null && birthdayMap.TryGetValue(dto.Id, out DateOnly bday))
                 {
                     dto.Birthday = bday.ToDateTime(TimeOnly.MinValue);
+                }
+            }
+        }
+
+        HashSet<Guid> favoriteIds = await _favoriteService.GetFavoriteContactIdsAsync();
+        if (favoriteIds.Count > 0)
+        {
+            foreach (ContactDto? dto in contactDtos)
+            {
+                if (dto != null)
+                {
+                    dto.IsFavorite = favoriteIds.Contains(dto.Id);
                 }
             }
         }

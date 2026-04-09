@@ -20,6 +20,8 @@
     </div>
 </div>
 
+@Html.AntiForgeryToken()
+
 @if (Model.SuccessMessage != null)
 {
     <div class="alert alert-success alert-dismissible fade show" role="alert">
@@ -67,7 +69,7 @@
                             }
                         </div>
                     </td>
-                    <td>
+                    <td data-order="@(item.IsFavorite ? "0" : "1") @item.FullName">
                         <a asp-action="Details" asp-route-id="@item.Id" class="fw-bold text-decoration-none">
                             @item.FullName
                         </a>
@@ -101,6 +103,14 @@
                     </td>
                     <td>
                         <div class="btn-group btn-group-sm">
+                            <button type="button"
+                                    class="btn btn-sm @(item.IsFavorite ? "btn-warning" : "btn-outline-secondary") btn-favorite"
+                                    title="@(item.IsFavorite ? "Remove from favorites" : "Add to favorites")"
+                                    aria-label="@(item.IsFavorite ? "Remove" : "Add") @item.FullName @(item.IsFavorite ? "from" : "to") favorites"
+                                    data-contact-id="@item.Id"
+                                    data-contact-name="@item.FullName">
+                                <i class="bi @(item.IsFavorite ? "bi-star-fill" : "bi-star")"></i>
+                            </button>
                             <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-outline-secondary" title="Edit" aria-label="Edit @item.FullName">
                                 <i class="bi bi-pencil-square"></i>
                             </a>
@@ -145,8 +155,40 @@ else
 
 @section Scripts {
     <script>
+        var table;
+
         $(document).ready(function () {
-            var table = $('#contacts-table').DataTable({
+            var antiForgeryToken = $('input[name="__RequestVerificationToken"]').val();
+
+            $(document).on('click', '.btn-favorite', function () {
+                var btn = $(this);
+                var contactId = btn.data('contact-id');
+                var contactName = btn.data('contact-name');
+
+                $.ajax({
+                    url: '/Favorites/Toggle',
+                    type: 'POST',
+                    data: { contactId: contactId, __RequestVerificationToken: antiForgeryToken },
+                    success: function (result) {
+                        var isFavorite = result.isFavorite;
+
+                        btn.toggleClass('btn-warning', isFavorite);
+                        btn.toggleClass('btn-outline-secondary', !isFavorite);
+                        btn.find('i').toggleClass('bi-star-fill', isFavorite);
+                        btn.find('i').toggleClass('bi-star', !isFavorite);
+                        btn.attr('title', isFavorite ? 'Remove from favorites' : 'Add to favorites');
+                        btn.attr('aria-label', (isFavorite ? 'Remove ' : 'Add ') + contactName + (isFavorite ? ' from favorites' : ' to favorites'));
+
+                        var row = btn.closest('tr');
+                        var nameCell = row.find('td:eq(1)');
+                        nameCell.attr('data-order', (isFavorite ? '0 ' : '1 ') + contactName);
+
+                        table.row(row).invalidate('dom').draw(false);
+                    }
+                });
+            });
+
+            table = $('#contacts-table').DataTable({
                 paging: true,
                 pageLength: 25,
                 order: [[1, 'asc']],
@@ -173,7 +215,7 @@ else
                     { visible: false, targets: 'default-hidden' },
                     { searchable: false, targets: 'default-hidden' }, // off by default; toggled in event below
                     { width: '60px', targets: 'col-photo' },
-                    { width: '120px', targets: 'col-actions' }
+                    { width: '155px', targets: 'col-actions' }
                 ],
                 language: {
                     search: ''

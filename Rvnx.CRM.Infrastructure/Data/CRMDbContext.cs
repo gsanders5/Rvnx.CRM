@@ -31,6 +31,7 @@ public class CRMDbContext(DbContextOptions<CRMDbContext> options, ICurrentUserSe
     public DbSet<UserGroup>? UserGroups { get; set; }
     public DbSet<Label>? Labels { get; set; }
     public DbSet<ContactLabel>? ContactLabels { get; set; }
+    public DbSet<ContactFavorite>? ContactFavorites { get; set; }
     public DbSet<ApiToken>? ApiTokens { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -84,6 +85,17 @@ public class CRMDbContext(DbContextOptions<CRMDbContext> options, ICurrentUserSe
             .OnDelete(DeleteBehavior.Cascade);
 
         modelBuilder.Entity<ContactLabel>().HasIndex(cl => new { cl.ContactId, cl.LabelId }).IsUnique();
+
+        modelBuilder.Entity<ContactFavorite>()
+            .HasOne(cf => cf.Contact)
+            .WithMany()
+            .HasForeignKey(cf => cf.ContactId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        // A user can only favorite a given contact once; UserId+ContactId must be unique per group
+        modelBuilder.Entity<ContactFavorite>()
+            .HasIndex(cf => new { cf.UserId, cf.ContactId })
+            .IsUnique();
 
         modelBuilder.Entity<ContactMethod>()
             .HasOne(e => e.Contact)

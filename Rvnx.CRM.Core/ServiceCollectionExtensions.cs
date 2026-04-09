@@ -26,6 +26,8 @@ public static class ServiceCollectionExtensions
 
         services.AddScoped<IAttachmentService, AttachmentService>();
 
+        services.AddScoped<IFavoriteService, FavoriteService>();
+
         return services;
     }
 }

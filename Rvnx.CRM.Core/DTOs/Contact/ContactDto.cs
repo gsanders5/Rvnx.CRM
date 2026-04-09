@@ -21,5 +21,7 @@ public class ContactDto : BaseDto
 
     public bool IsPartial { get; set; }
 
+    public bool IsFavorite { get; set; }
+
     public IEnumerable<LabelDto> Labels { get; set; } = [];
 }

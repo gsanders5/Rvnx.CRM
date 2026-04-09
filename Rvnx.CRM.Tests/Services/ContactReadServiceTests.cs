@@ -16,12 +16,15 @@ public class ContactReadServiceTests
     public class ContactReadServiceContactExistsTests
     {
         private readonly Mock<IRepository> _repositoryMock;
+        private readonly Mock<IFavoriteService> _favoriteServiceMock;
         private readonly ContactReadService _service;
 
         public ContactReadServiceContactExistsTests()
         {
             _repositoryMock = new Mock<IRepository>();
-            _service = new ContactReadService(_repositoryMock.Object);
+            _favoriteServiceMock = new Mock<IFavoriteService>();
+            _favoriteServiceMock.Setup(f => f.GetFavoriteContactIdsAsync()).ReturnsAsync([]);
+            _service = new ContactReadService(_repositoryMock.Object, _favoriteServiceMock.Object);
         }
 
         [Fact]
@@ -55,12 +58,15 @@ public class ContactReadServiceTests
     public class ContactReadServiceGetContactDetailsTests
     {
         private readonly Mock<IRepository> _repositoryMock;
+        private readonly Mock<IFavoriteService> _favoriteServiceMock;
         private readonly ContactReadService _service;
 
         public ContactReadServiceGetContactDetailsTests()
         {
             _repositoryMock = new Mock<IRepository>();
-            _service = new ContactReadService(_repositoryMock.Object);
+            _favoriteServiceMock = new Mock<IFavoriteService>();
+            _favoriteServiceMock.Setup(f => f.GetFavoriteContactIdsAsync()).ReturnsAsync([]);
+            _service = new ContactReadService(_repositoryMock.Object, _favoriteServiceMock.Object);
         }
 
         [Fact]
@@ -136,12 +142,15 @@ public class ContactReadServiceTests
     public class ContactReadServiceGetContactFormTests
     {
         private readonly Mock<IRepository> _repositoryMock;
+        private readonly Mock<IFavoriteService> _favoriteServiceMock;
         private readonly ContactReadService _service;
 
         public ContactReadServiceGetContactFormTests()
         {
             _repositoryMock = new Mock<IRepository>();
-            _service = new ContactReadService(_repositoryMock.Object);
+            _favoriteServiceMock = new Mock<IFavoriteService>();
+            _favoriteServiceMock.Setup(f => f.GetFavoriteContactIdsAsync()).ReturnsAsync([]);
+            _service = new ContactReadService(_repositoryMock.Object, _favoriteServiceMock.Object);
         }
 
         [Fact]
@@ -399,12 +408,15 @@ public class ContactReadServiceTests
     public class ContactReadServiceIndexTests
     {
         private readonly Mock<IRepository> _repositoryMock;
+        private readonly Mock<IFavoriteService> _favoriteServiceMock;
         private readonly ContactReadService _service;
 
         public ContactReadServiceIndexTests()
         {
             _repositoryMock = new Mock<IRepository>();
-            _service = new ContactReadService(_repositoryMock.Object);
+            _favoriteServiceMock = new Mock<IFavoriteService>();
+            _favoriteServiceMock.Setup(f => f.GetFavoriteContactIdsAsync()).ReturnsAsync([]);
+            _service = new ContactReadService(_repositoryMock.Object, _favoriteServiceMock.Object);
         }
 
         [Fact]
@@ -531,12 +543,15 @@ public class ContactReadServiceTests
     public class ContactReadServiceLabelOptimizationTests
     {
         private readonly Mock<IRepository> _repositoryMock;
+        private readonly Mock<IFavoriteService> _favoriteServiceMock;
         private readonly ContactReadService _service;
 
         public ContactReadServiceLabelOptimizationTests()
         {
             _repositoryMock = new Mock<IRepository>();
-            _service = new ContactReadService(_repositoryMock.Object);
+            _favoriteServiceMock = new Mock<IFavoriteService>();
+            _favoriteServiceMock.Setup(f => f.GetFavoriteContactIdsAsync()).ReturnsAsync([]);
+            _service = new ContactReadService(_repositoryMock.Object, _favoriteServiceMock.Object);
         }
 
         [Fact]
