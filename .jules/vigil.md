@@ -103,3 +103,7 @@
 ## 2025-04-04 - Missing Edge Case Tests in LabelService
 **Learning:** Found that `DeleteAsync` had no coverage for the "not found" boundary condition, and `AssignLabelAsync` was missing tests preventing duplicate label assignment, despite checking `CountAsync`. Additionally, noticed that tests mocking `AssignLabelAsync` incorrectly mocked `ListAsync` when the implementation relies on `CountAsync`.
 **Action:** Always verify both early-exit conditionals (e.g. `if (label == null)`) and existence checks (e.g. `CountAsync == 0`) have explicitly tested branches. Double-check that mocked repository methods exactly match the concrete implementation's method calls to ensure realistic test scenarios.
+
+## 2026-04-08 - Added happy path tests for NoteService
+**Learning:** Found that `NoteService` had a test class (`NoteServiceTests`) that only covered two highly specific concurrency exception paths for `UpdateAsync`. The core happy paths for `CreateAsync`, `UpdateAsync`, and `DeleteAsync` were entirely untested, as were validation failure paths (e.g., trying to create a note for a Company, or deleting a non-existent note). The existence of a test class with passing tests gave a false sense of security.
+**Action:** When inspecting a class for test coverage, do not assume it is well-tested just because a test file exists and passes. Always verify that the fundamental happy paths and primary business logic (e.g., core CRUD operations) are actually covered, not just obscure edge cases.
