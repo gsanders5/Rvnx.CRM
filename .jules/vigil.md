@@ -107,3 +107,7 @@
 ## 2026-04-08 - Added happy path tests for NoteService
 **Learning:** Found that `NoteService` had a test class (`NoteServiceTests`) that only covered two highly specific concurrency exception paths for `UpdateAsync`. The core happy paths for `CreateAsync`, `UpdateAsync`, and `DeleteAsync` were entirely untested, as were validation failure paths (e.g., trying to create a note for a Company, or deleting a non-existent note). The existence of a test class with passing tests gave a false sense of security.
 **Action:** When inspecting a class for test coverage, do not assume it is well-tested just because a test file exists and passes. Always verify that the fundamental happy paths and primary business logic (e.g., core CRUD operations) are actually covered, not just obscure edge cases.
+
+## 2026-04-09 - Added missing test coverage for an entire service (FavoriteService)
+**Learning:** Discovered that the entire `FavoriteService` lacked test coverage, leaving both `ToggleFavoriteAsync` and `GetFavoriteContactIdsAsync` untested. This is a critical omission, as the logic handles user-specific data filtering and adding/removing favorite relationships. If untested, changes to how user IDs are retrieved or how data is queried could silently break user-specific functionality across the app.
+**Action:** When discovering a service with zero test coverage, prioritize adding tests for it. Ensure all paths are covered, especially those depending on contextual data like current user ID, checking both valid usage and edge cases like an unauthenticated user state.
