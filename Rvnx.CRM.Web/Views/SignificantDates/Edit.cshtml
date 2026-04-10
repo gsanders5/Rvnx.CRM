@@ -36,14 +36,14 @@
                         <label class="form-check-label" for="YearUnknownField">Year Unknown</label>
                     </div>
 
-                    <div class="form-floating mb-4">
+                    <div class="mb-4">
+                        <label asp-for="RecurrenceType" class="form-label">Recurrence Type</label>
                         <select asp-for="RecurrenceType" class="form-select" id="RecurrenceType">
                             <option value="0">None (One-time)</option>
                             <option value="1">Annual</option>
                             <option value="2">Monthly</option>
                             <option value="3">Custom Interval</option>
                         </select>
-                        <label asp-for="RecurrenceType">Recurrence Type</label>
                     </div>
 
                     <div class="form-floating mb-4" id="customIntervalDiv" style="display: none;">
@@ -117,18 +117,20 @@
     @{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); }
     <script>
         document.addEventListener('DOMContentLoaded', function () {
-            var recurrenceSelect = document.getElementById('RecurrenceType');
+            var $recurrenceSelect = $('#RecurrenceType');
             var customIntervalDiv = document.getElementById('customIntervalDiv');
 
+            $recurrenceSelect.select2({ width: '100%' });
+
             function toggleCustomInterval() {
-                if (recurrenceSelect.value === '3') { // 3 is Custom
+                if ($recurrenceSelect.val() === '3') { // 3 is Custom
                     customIntervalDiv.style.display = 'block';
                 } else {
                     customIntervalDiv.style.display = 'none';
                 }
             }
 
-            recurrenceSelect.addEventListener('change', toggleCustomInterval);
+            $recurrenceSelect.on('change', toggleCustomInterval);
             toggleCustomInterval(); // Initial check
 
             var eventDateField = document.getElementById('EventDate');
