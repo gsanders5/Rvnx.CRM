@@ -68,7 +68,7 @@ public class FakeDataGenerator
             {
                 Id = Guid.NewGuid(),
                 ContactId = contact.Id,
-                Street = $"{_random.Next(100, 9999)} {Streets[_random.Next(Streets.Length)]}",
+                Line1 = $"{_random.Next(100, 9999)} {Streets[_random.Next(Streets.Length)]}",
                 City = Cities[cityIndex],
                 State = States[cityIndex],
                 Zip = _random.Next(10000, 99999).ToString(CultureInfo.InvariantCulture),

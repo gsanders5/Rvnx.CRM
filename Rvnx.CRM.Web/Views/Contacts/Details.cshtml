@@ -243,7 +243,11 @@
                                 <div>
                                     <div class="fw-bold">@address.AddressType</div>
                                     <div class="text-break">
-                                        @address.Street<br/>
+                                        @address.Line1<br/>
+                                        @if (!string.IsNullOrWhiteSpace(address.Line2))
+                                        {
+                                            @address.Line2<br/>
+                                        }
                                         @if (!string.IsNullOrWhiteSpace(address.City) || !string.IsNullOrWhiteSpace(address.State) || !string.IsNullOrWhiteSpace(address.Zip))
                                         {
                                             var cityStateZip = string.Join(", ",

@@ -5,7 +5,8 @@ namespace Rvnx.CRM.Core.DTOs.Contact;
 
 public class AddressDto : BaseDto
 {
-    public string Street { get; set; } = string.Empty;
+    public string Line1 { get; set; } = string.Empty;
+    public string? Line2 { get; set; }
     public string City { get; set; } = string.Empty;
     public string State { get; set; } = string.Empty;
     public string Zip { get; set; } = string.Empty;
@@ -14,6 +15,6 @@ public class AddressDto : BaseDto
     public Guid EntityId { get; set; }
 
     public string FormattedAddress =>
-        string.Join(", ", new[] { Street, City, State, Zip, Country }
+        string.Join(", ", new[] { Line1, Line2, City, State, Zip, Country }
             .Where(s => !string.IsNullOrWhiteSpace(s)));
 }

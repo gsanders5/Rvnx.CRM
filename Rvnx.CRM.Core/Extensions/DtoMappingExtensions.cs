@@ -362,7 +362,8 @@ public static class DtoMappingExtensions
         return new AddressDto
         {
             Id = entity.Id,
-            Street = entity.Street,
+            Line1 = entity.Line1,
+            Line2 = entity.Line2,
             City = entity.City,
             State = entity.State,
             Zip = entity.Zip,
@@ -381,7 +382,8 @@ public static class DtoMappingExtensions
         return new Address
         {
             Id = Guid.NewGuid(),
-            Street = dto.Street,
+            Line1 = dto.Line1,
+            Line2 = dto.Line2,
             City = dto.City,
             State = dto.State,
             Zip = dto.Zip,
@@ -393,7 +395,8 @@ public static class DtoMappingExtensions
 
     public static void UpdateEntity(this Address entity, AddressFormDto dto)
     {
-        entity.Street = dto.Street;
+        entity.Line1 = dto.Line1;
+        entity.Line2 = dto.Line2;
         entity.City = dto.City;
         entity.State = dto.State;
         entity.Zip = dto.Zip;

@@ -14,8 +14,12 @@ public class Address : BaseEntity
 
     [Required]
     [MaxLength(200)]
-    [Display(Name = "Street Address")]
-    public string Street { get; set; } = string.Empty;
+    [Display(Name = "Address Line 1")]
+    public string Line1 { get; set; } = string.Empty;
+
+    [MaxLength(200)]
+    [Display(Name = "Address Line 2")]
+    public string? Line2 { get; set; }
 
     [MaxLength(100)]
     public string City { get; set; } = string.Empty;

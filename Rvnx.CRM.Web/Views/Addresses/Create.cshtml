@@ -25,9 +25,15 @@
             </div>
 
             <div class="form-floating mb-3">
-                <input asp-for="Street" class="form-control" id="Street" placeholder=" " autofocus/>
-                <label asp-for="Street">Street Address <span class="text-danger">*</span></label>
-                <span asp-validation-for="Street" class="text-danger"></span>
+                <input asp-for="Line1" class="form-control" id="Line1" placeholder=" " autofocus/>
+                <label asp-for="Line1">Address Line 1 <span class="text-danger">*</span></label>
+                <span asp-validation-for="Line1" class="text-danger"></span>
+            </div>
+
+            <div class="form-floating mb-3">
+                <input asp-for="Line2" class="form-control" id="Line2" placeholder=" "/>
+                <label asp-for="Line2">Address Line 2</label>
+                <span asp-validation-for="Line2" class="text-danger"></span>
             </div>
 
             <div class="form-floating mb-3">
