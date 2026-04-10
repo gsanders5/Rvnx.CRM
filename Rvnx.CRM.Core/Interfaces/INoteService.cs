@@ -6,6 +6,8 @@ namespace Rvnx.CRM.Core.Interfaces;
 
 public interface INoteService
 {
+    Task<List<NoteDto>> GetByContactAsync(Guid contactId);
+
     /// <summary>
     /// Creates a new note for an entity.
     /// </summary>

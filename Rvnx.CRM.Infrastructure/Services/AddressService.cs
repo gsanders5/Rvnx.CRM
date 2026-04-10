@@ -12,6 +12,14 @@ public class AddressService(IRepository repository) : IAddressService
 {
     private readonly IRepository _repository = repository;
 
+    public async Task<List<AddressDto>> GetByContactAsync(Guid contactId)
+    {
+        List<Address> addresses = await _repository.ListAsync<Address>(
+            a => a.ContactId == contactId
+        );
+        return [.. addresses.Select(a => a.ToDto())];
+    }
+
     public async Task<OperationResult> CreateAsync(AddressFormDto dto)
     {
         if (!await _repository.IsValidContactAsync(dto.EntityId))

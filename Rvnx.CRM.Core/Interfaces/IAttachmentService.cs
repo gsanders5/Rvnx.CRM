@@ -4,6 +4,8 @@ namespace Rvnx.CRM.Core.Interfaces;
 
 public interface IAttachmentService
 {
+    Task<List<AttachmentDto>> GetByContactAsync(Guid contactId);
+
     /// <summary>
     /// Uploads a new attachment for a specific entity.
     /// Determines MIME type safely based on file extension and validates content.

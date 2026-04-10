@@ -6,6 +6,8 @@ namespace Rvnx.CRM.Core.Interfaces;
 
 public interface IPetService
 {
+    Task<List<PetDto>> GetByContactAsync(Guid contactId);
+
     /// <summary>
     /// Creates a new pet entry for a contact.
     /// </summary>

@@ -9,16 +9,15 @@ namespace Rvnx.CRM.API.Controllers;
 [ApiController]
 [Route("api/[controller]")]
 [Authorize]
-public class ContactMethodsController(IContactMethodService contactMethodService, IContactReadService contactReadService) : ControllerBase
+public class ContactMethodsController(IContactMethodService contactMethodService) : ControllerBase
 {
     private readonly IContactMethodService _contactMethodService = contactMethodService;
-    private readonly IContactReadService _contactReadService = contactReadService;
 
     [HttpGet("contact/{contactId}")]
     public async Task<IActionResult> ListByContact(Guid contactId)
     {
-        ContactDetailDto? contactDetails = await _contactReadService.GetContactDetailsAsync(contactId);
-        return contactDetails == null ? NotFound() : Ok(contactDetails.ContactMethods);
+        List<ContactMethodDto> methods = await _contactMethodService.GetByContactAsync(contactId);
+        return Ok(methods);
     }
 
     [HttpPost]

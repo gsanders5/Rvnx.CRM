@@ -7,17 +7,16 @@ namespace Rvnx.CRM.API.Controllers;
 [ApiController]
 [Route("api/[controller]")]
 [Authorize]
-public class AttachmentsController(IAttachmentService attachmentService, IContactReadService contactReadService, IThumbnailService thumbnailService) : ControllerBase
+public class AttachmentsController(IAttachmentService attachmentService, IThumbnailService thumbnailService) : ControllerBase
 {
     private readonly IAttachmentService _attachmentService = attachmentService;
-    private readonly IContactReadService _contactReadService = contactReadService;
     private readonly IThumbnailService _thumbnailService = thumbnailService;
 
     [HttpGet("contact/{contactId}")]
     public async Task<IActionResult> ListByContact(Guid contactId)
     {
-        Core.DTOs.Contact.ContactDetailDto? contactDetails = await _contactReadService.GetContactDetailsAsync(contactId);
-        return contactDetails == null ? NotFound() : Ok(contactDetails.Attachments);
+        List<Core.DTOs.Base.AttachmentDto> attachments = await _attachmentService.GetByContactAsync(contactId);
+        return Ok(attachments);
     }
 
     [HttpPost("contact/{contactId}")]

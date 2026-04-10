@@ -12,11 +12,15 @@ For technical details, architecture, and design documentation, please see [DESIG
 - **Relationships**: Polymorphic relationship system supporting **Partial Contacts** (contacts that exist primarily as names without full profiles).
 - **Import/Export**: vCard (.vcf) import and export functionality via `FolkerKinzel.VCards`.
 - **Authentication & Isolation**: Supports OpenID Connect authentication. Implements user isolation (multi-tenancy) via `ICurrentUserService` and EF Core global query filters.
-- **API Access**: RESTful API protected by Bearer token authentication.
+- **API Access**: RESTful API protected by Bearer token authentication. Covers contacts, activities, addresses, tasks, favorites, labels, calendar events, and more.
 - **Labels**: Categorize contacts with custom labels.
 - **Attachments**: Upload and manage files related to contacts.
-- **Notes & Reminders**: Add notes and set reminders for contacts with recurring date logic.
-- **Significant Dates**: Track birthdays and other important dates with calendar-aware recurrence.
+- **Notes & Quick Facts**: Add notes and quick facts with Markdown editing (EasyMDE).
+- **Activities**: Log activities (meetings, calls, etc.) linked to one or more contacts.
+- **Addresses**: Manage contact addresses with Line 1/Line 2, city, state, zip, country, and address type.
+- **Tasks / Follow-ups**: Per-contact to-do items with due dates, completion toggling, and calendar integration.
+- **Favorites**: Mark contacts as favorites for quick access.
+- **Significant Dates & Calendar**: Track birthdays and other important dates with calendar-aware recurrence. Calendar view combines significant dates (current and next year) with incomplete tasks.
 - **Self Contact**: Manage your own profile as a contact within the system.
 - **Scheduled Tasks**: Console application for background jobs via cron / Task Scheduler.
 

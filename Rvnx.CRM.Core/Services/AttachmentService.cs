@@ -1,5 +1,6 @@
 using Rvnx.CRM.Core.Constants;
 using Rvnx.CRM.Core.DTOs.Base;
+using Rvnx.CRM.Core.Extensions;
 using Rvnx.CRM.Core.Interfaces;
 using Rvnx.CRM.Core.Models.Base;
 using Rvnx.CRM.Core.Models.Contact;
@@ -17,6 +18,14 @@ public class AttachmentService : IAttachmentService
         _repository = repository;
         _fileValidationService = fileValidationService;
         _entityService = entityService;
+    }
+
+    public async Task<List<AttachmentDto>> GetByContactAsync(Guid contactId)
+    {
+        List<Attachment> attachments = await _repository.ListAsync<Attachment>(
+            a => a.ContactId == contactId
+        );
+        return [.. attachments.Select(a => a.ToDto())];
     }
 
     /// <inheritdoc />

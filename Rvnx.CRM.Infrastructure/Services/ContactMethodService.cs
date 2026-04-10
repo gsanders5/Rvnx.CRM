@@ -13,6 +13,14 @@ public class ContactMethodService(IRepository repository) : IContactMethodServic
 {
     private readonly IRepository _repository = repository;
 
+    public async Task<List<ContactMethodDto>> GetByContactAsync(Guid contactId)
+    {
+        List<ContactMethod> methods = await _repository.ListAsync<ContactMethod>(
+            cm => cm.ContactId == contactId
+        );
+        return [.. methods.Select(cm => cm.ToDto())];
+    }
+
     public async Task<OperationResult> CreateAsync(ContactMethodFormDto dto)
     {
         if (!await _repository.IsValidContactAsync(dto.EntityId))

@@ -13,6 +13,16 @@ public class ActivityService(IRepository repository, ISelfContactService selfCon
     private readonly IRepository _repository = repository;
     private readonly ISelfContactService _selfContactService = selfContactService;
 
+    public async Task<List<ActivityDto>> GetByContactAsync(Guid contactId)
+    {
+        List<ActivityContact> activityContacts = await _repository.ListAsync<ActivityContact>(
+            ac => ac.ContactId == contactId,
+            default,
+            nameof(ActivityContact.Activity)
+        );
+        return [.. activityContacts.Select(ac => ac.Activity.ToDto())];
+    }
+
     public async Task<OperationResult> CreateAsync(ActivityFormDto dto)
     {
         if (!await _repository.IsValidContactAsync(dto.EntityId))

@@ -9,7 +9,8 @@
 │   ├── Interfaces/             # Service and Repository interfaces
 │   ├── Models/                 # Domain entities (organized by feature)
 │   │   ├── Base/               # Base classes (BaseEntity, Person)
-│   │   ├── Contact/            # Contact-related entities (Contact, ContactMethod, Relationship)
+│   │   ├── Contact/            # Contact-related entities (Contact, ContactMethod, Relationship, Address, ContactTask, Pet)
+│   │   ├── Activity/           # Activity entity
 │   │   ├── Dates/              # SignificantDate, Reminder
 │   │   └── Business/           # Employer, Attachment, Note
 │   ├── Services/               # Pure domain logic services (e.g. FileValidation, DateCalculation)
@@ -162,6 +163,26 @@ The API application delegates logic to the shared `Core` services via DI, just l
 - **API Token Authentication**: The API is protected using bearer tokens. It uses a custom `ApiTokenAuthenticationHandler` for the `"Bearer"` scheme.
 - **User Context**: It resolves the current user context using `ApiTokenCurrentUserService`, which implements `ICurrentUserService` by extracting the user ID from the validated API token.
 
+### Endpoints
+
+| Controller | Endpoints |
+|---|---|
+| Contacts | List, Get, Create, Update, Delete, SetPhoto, UnsetPhoto |
+| Activities | ListByContact, Create, Update, Delete |
+| Addresses | ListByContact, Create, Update, Delete |
+| Attachments | ListByContact, Upload, Download, Thumbnail, Delete |
+| Calendar | Events (significant dates + tasks, fetched concurrently) |
+| ContactMethods | ListByContact, Create, Update, Delete |
+| ContactTasks | ListByContact, Create, Update, Delete, ToggleComplete |
+| Facts | ListByContact, Create, Update, Delete |
+| Favorites | List, Toggle |
+| Labels | List, Create, Update, Delete, Associate, Disassociate |
+| Merge | Merge |
+| Notes | ListByContact, Create, Update, Delete |
+| Pets | ListByContact, Create, Update, Delete |
+| Relationships | ListByContact, Create, Update, Delete |
+| SignificantDates | ListByContact, Create, Update, Delete |
+
 ### Documentation
 
 The API uses Swagger/OpenAPI to document its endpoints and available operations.
@@ -209,6 +230,9 @@ Concrete entity inheriting `Person`.
 - **Pets**: Managed via `Pet` entity with `ContactId` FK.
 - **Employers**: Managed via `Employer` entity with `EmployeeId` FK.
 - **Labels**: Managed via `ContactLabel` join entity.
+- **Addresses**: Managed via `Address` entity with `ContactId` FK. Supports Line1, Line2, City, State, Zip, Country, AddressType.
+- **ContactTasks**: Managed via `ContactTask` entity with `ContactId` FK. Supports Title, Description (Markdown), DueDate, IsCompleted, CompletedDate.
+- **Activities**: Managed via `Activity` entity. Supports many-to-many contact association, Title, Description (Markdown), ActivityDate, ActivityType, Location.
 
 ### Relationship
 
@@ -228,7 +252,7 @@ Attachments are split into two tables to optimize performance (loading metadata 
 ## Service Layer
 
 - **Core Services**: Pure logic implementations and domain orchestrations.
-  - `DateCalculationService`: Handles recurrence logic (e.g., birthdays, reminders), explicitly handling leap years and calendar vs. timespan frequency.
+  - `DateCalculationService`: Handles recurrence logic (e.g., birthdays, reminders), explicitly handling leap years and calendar vs. timespan frequency. Provides `GetNextOccurrence` and `GetCurrentYearOccurrence` for calendar event generation.
   - `FileValidationService`: Validates file signatures (magic numbers) and extensions for uploads.
   - `ContactManagementService`: Handles CUD operations for contacts, including cascading deletes and orphan cleanup for partial contacts.
   - `RelationshipService`: Manages creation, direction parsing, and promotion of partial contacts.
@@ -236,6 +260,14 @@ Attachments are split into two tables to optimize performance (loading metadata 
 - **Infrastructure Services**: Implementations requiring external dependencies or DB access.
   - `UserSynchronizationService`: Syncs OIDC user claims to the local `User` table.
   - `VCardService`: Uses `FolkerKinzel.VCards` to parse and generate VCF files.
+  - `ContactTaskService`: CRUD for per-contact tasks/follow-ups with completion toggling and calendar event generation.
+  - `ActivityService`: CRUD for activities with multi-contact association.
+  - `AddressService`: CRUD for contact addresses.
+  - `FavoriteService`: Toggle and query favorite contacts.
+  - `SignificantDateService`: Manages significant dates and generates calendar events for both current-year and next-year occurrences.
+
+- **Constants**:
+  - `CalendarColors`: Centralized color constants for calendar event types (Birthday, SignificantDate, Task).
 
 ## Database Configuration
 

@@ -13,6 +13,14 @@ public class ContactTaskService(IRepository repository) : IContactTaskService
 {
     private readonly IRepository _repository = repository;
 
+    public async Task<List<ContactTaskDto>> GetByContactAsync(Guid contactId)
+    {
+        List<ContactTask> tasks = await _repository.ListAsync<ContactTask>(
+            t => t.ContactId == contactId
+        );
+        return [.. tasks.Select(t => t.ToDto())];
+    }
+
     public async Task<OperationResult> CreateAsync(ContactTaskFormDto dto)
     {
         if (!await _repository.IsValidContactAsync(dto.EntityId))

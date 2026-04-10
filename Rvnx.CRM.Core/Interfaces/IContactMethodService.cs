@@ -6,6 +6,8 @@ namespace Rvnx.CRM.Core.Interfaces;
 
 public interface IContactMethodService
 {
+    Task<List<ContactMethodDto>> GetByContactAsync(Guid contactId);
+
     /// <summary>
     /// Creates a new contact method (e.g., email, phone) for a contact.
     /// </summary>

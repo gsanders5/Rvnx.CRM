@@ -13,6 +13,14 @@ public class NoteService(IRepository repository, IEntityService entityService) :
     private readonly IRepository _repository = repository;
     private readonly IEntityService _entityService = entityService;
 
+    public async Task<List<NoteDto>> GetByContactAsync(Guid contactId)
+    {
+        List<Note> notes = await _repository.ListAsync<Note>(
+            n => n.ContactId == contactId
+        );
+        return [.. notes.Select(n => n.ToDto())];
+    }
+
     public async Task<OperationResult> CreateAsync(NoteFormViewModel dto)
     {
         if (dto.EntityType != EntityTypes.Person)

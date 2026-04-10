@@ -8,16 +8,15 @@ namespace Rvnx.CRM.API.Controllers;
 [ApiController]
 [Route("api/[controller]")]
 [Authorize]
-public class FactsController(IFactService factService, IContactReadService contactReadService) : ControllerBase
+public class FactsController(IFactService factService) : ControllerBase
 {
     private readonly IFactService _factService = factService;
-    private readonly IContactReadService _contactReadService = contactReadService;
 
     [HttpGet("contact/{contactId}")]
     public async Task<IActionResult> ListByContact(Guid contactId)
     {
-        ContactDetailDto? contactDetails = await _contactReadService.GetContactDetailsAsync(contactId);
-        return contactDetails == null ? NotFound() : Ok(contactDetails.Facts);
+        List<FactDto> facts = await _factService.GetByContactAsync(contactId);
+        return Ok(facts);
     }
 
     [HttpPost]

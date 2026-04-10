@@ -6,6 +6,7 @@ namespace Rvnx.CRM.Core.Interfaces;
 
 public interface IAddressService
 {
+    Task<List<AddressDto>> GetByContactAsync(Guid contactId);
     Task<OperationResult> CreateAsync(AddressFormDto dto);
     Task<OperationResult> UpdateAsync(Guid id, AddressFormDto dto);
     Task<OperationResult> DeleteAsync(Guid id);

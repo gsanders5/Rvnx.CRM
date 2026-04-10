@@ -12,6 +12,14 @@ public class FactService(IRepository repository) : IFactService
 {
     private readonly IRepository _repository = repository;
 
+    public async Task<List<FactDto>> GetByContactAsync(Guid contactId)
+    {
+        List<Fact> facts = await _repository.ListAsync<Fact>(
+            f => f.ContactId == contactId
+        );
+        return [.. facts.Select(f => f.ToDto())];
+    }
+
     public async Task<OperationResult> CreateAsync(FactFormDto dto)
     {
         if (!await _repository.IsValidContactAsync(dto.EntityId))

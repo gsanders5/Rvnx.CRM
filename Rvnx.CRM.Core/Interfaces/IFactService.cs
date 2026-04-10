@@ -6,6 +6,8 @@ namespace Rvnx.CRM.Core.Interfaces;
 
 public interface IFactService
 {
+    Task<List<FactDto>> GetByContactAsync(Guid contactId);
+
     /// <summary>
     /// Creates a new fact (generic key-value pair) for a contact.
     /// </summary>

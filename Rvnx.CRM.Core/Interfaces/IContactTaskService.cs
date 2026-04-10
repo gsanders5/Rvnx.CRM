@@ -7,6 +7,7 @@ namespace Rvnx.CRM.Core.Interfaces;
 
 public interface IContactTaskService
 {
+    Task<List<ContactTaskDto>> GetByContactAsync(Guid contactId);
     Task<OperationResult> CreateAsync(ContactTaskFormDto dto);
     Task<OperationResult> UpdateAsync(Guid id, ContactTaskFormDto dto);
     Task<OperationResult> DeleteAsync(Guid id);

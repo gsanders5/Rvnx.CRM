@@ -12,6 +12,16 @@ public class PetService(IRepository repository) : IPetService
 {
     private readonly IRepository _repository = repository;
 
+    public async Task<List<PetDto>> GetByContactAsync(Guid contactId)
+    {
+        List<PetContact> petContacts = await _repository.ListAsync<PetContact>(
+            pc => pc.ContactId == contactId,
+            default,
+            nameof(PetContact.Pet)
+        );
+        return [.. petContacts.Select(pc => pc.Pet.ToDto())];
+    }
+
     public async Task<OperationResult> CreateAsync(PetFormDto dto)
     {
         if (!await _repository.IsValidContactAsync(dto.EntityId))
