@@ -184,6 +184,7 @@ public static class DtoMappingExtensions
             ContactMethods = entity.ContactMethods?.Select(i => i.ToDto()) ?? [],
             Facts = entity.Facts?.Select(f => f.ToDto()) ?? [],
             Attachments = entity.Attachments?.Select(a => a.ToDto()) ?? [],
+            Addresses = entity.Addresses?.Select(a => a.ToDto()) ?? [],
             // Pets to be populated by caller as they are not on Person
         };
     }
@@ -354,5 +355,49 @@ public static class DtoMappingExtensions
         entity.ActivityDate = dto.ActivityDate;
         entity.ActivityType = dto.ActivityType;
         entity.Location = dto.Location;
+    }
+
+    public static AddressDto ToDto(this Address entity)
+    {
+        return new AddressDto
+        {
+            Id = entity.Id,
+            Street = entity.Street,
+            City = entity.City,
+            State = entity.State,
+            Zip = entity.Zip,
+            Country = entity.Country,
+            AddressType = entity.AddressType,
+            EntityId = entity.ContactId ?? Guid.Empty,
+            CreatedDate = entity.CreatedDate,
+            CreatedBy = entity.CreatedBy,
+            LastChangedDate = entity.LastChangedDate,
+            LastChangedBy = entity.LastChangedBy
+        };
+    }
+
+    public static Address ToEntity(this AddressFormDto dto)
+    {
+        return new Address
+        {
+            Id = Guid.NewGuid(),
+            Street = dto.Street,
+            City = dto.City,
+            State = dto.State,
+            Zip = dto.Zip,
+            Country = dto.Country,
+            AddressType = dto.AddressType,
+            ContactId = dto.EntityId
+        };
+    }
+
+    public static void UpdateEntity(this Address entity, AddressFormDto dto)
+    {
+        entity.Street = dto.Street;
+        entity.City = dto.City;
+        entity.State = dto.State;
+        entity.Zip = dto.Zip;
+        entity.Country = dto.Country;
+        entity.AddressType = dto.AddressType;
     }
 }

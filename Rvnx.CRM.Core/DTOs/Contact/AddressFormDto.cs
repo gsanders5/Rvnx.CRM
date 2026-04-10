@@ -1,16 +1,13 @@
-using Rvnx.CRM.Core.Models.Base;
+using Rvnx.CRM.Core.Constants;
 using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
 
-namespace Rvnx.CRM.Core.Models.Contact;
+namespace Rvnx.CRM.Core.DTOs.Contact;
 
-[Table("Address")]
-public class Address : BaseEntity
+public class AddressFormDto
 {
-    public Guid? ContactId { get; set; }
+    public Guid? Id { get; set; }
 
-    [ForeignKey(nameof(ContactId))]
-    public virtual Contact? Contact { get; set; }
+    public Guid EntityId { get; set; }
 
     [Required]
     [MaxLength(200)]
@@ -18,20 +15,23 @@ public class Address : BaseEntity
     public string Street { get; set; } = string.Empty;
 
     [MaxLength(100)]
+    [Display(Name = "City")]
     public string City { get; set; } = string.Empty;
 
     [MaxLength(100)]
+    [Display(Name = "State / Province")]
     public string State { get; set; } = string.Empty;
 
     [MaxLength(20)]
-    [Display(Name = "Zip Code")]
+    [Display(Name = "Zip / Postal Code")]
     public string Zip { get; set; } = string.Empty;
 
     [MaxLength(100)]
+    [Display(Name = "Country")]
     public string Country { get; set; } = string.Empty;
 
     [Required]
     [MaxLength(50)]
     [Display(Name = "Address Type")]
-    public string AddressType { get; set; } = Constants.AddressTypes.Home;
+    public string AddressType { get; set; } = AddressTypes.Home;
 }

@@ -17,5 +17,6 @@ public class ContactDetailDto : ContactDto
     public IEnumerable<ContactMethodDto> ContactMethods { get; set; } = [];
     public IEnumerable<FactDto> Facts { get; set; } = [];
     public IEnumerable<AttachmentDto> Attachments { get; set; } = [];
+    public IEnumerable<AddressDto> Addresses { get; set; } = [];
     public IEnumerable<ActivityDto> Activities { get; set; } = [];
 }

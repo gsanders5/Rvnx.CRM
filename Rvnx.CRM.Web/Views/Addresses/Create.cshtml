@@ -1,0 +1,77 @@
+@model Rvnx.CRM.Core.DTOs.Contact.AddressFormDto
+
+@{
+    ViewData["Title"] = "Add Address";
+}
+
+<h1>Add Address</h1>
+
+<div class="row">
+    <div class="col-md-6">
+        <form asp-action="Create">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <input type="hidden" asp-for="EntityId"/>
+
+            <div class="mb-3">
+                <label asp-for="AddressType" class="form-label">Address Type <span class="text-danger">*</span></label>
+                <select asp-for="AddressType" id="AddressType" class="form-select">
+                    <option value="">Select or type a custom type...</option>
+                    @foreach (var type in Rvnx.CRM.Core.Constants.AddressTypes.All)
+                    {
+                        <option value="@type" selected="@(Model.AddressType == type)">@type</option>
+                    }
+                </select>
+                <span asp-validation-for="AddressType" class="text-danger"></span>
+            </div>
+
+            <div class="form-floating mb-3">
+                <input asp-for="Street" class="form-control" id="Street" placeholder=" " autofocus/>
+                <label asp-for="Street">Street Address <span class="text-danger">*</span></label>
+                <span asp-validation-for="Street" class="text-danger"></span>
+            </div>
+
+            <div class="form-floating mb-3">
+                <input asp-for="City" class="form-control" id="City" placeholder=" "/>
+                <label asp-for="City">City</label>
+                <span asp-validation-for="City" class="text-danger"></span>
+            </div>
+
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <div class="form-floating">
+                        <input asp-for="State" class="form-control" id="State" placeholder=" "/>
+                        <label asp-for="State">State / Province</label>
+                        <span asp-validation-for="State" class="text-danger"></span>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-floating">
+                        <input asp-for="Zip" class="form-control" id="Zip" placeholder=" "/>
+                        <label asp-for="Zip">Zip / Postal Code</label>
+                        <span asp-validation-for="Zip" class="text-danger"></span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-floating mb-3">
+                <input asp-for="Country" class="form-control" id="Country" placeholder=" "/>
+                <label asp-for="Country">Country</label>
+                <span asp-validation-for="Country" class="text-danger"></span>
+            </div>
+
+            <div class="d-grid gap-2 d-md-flex mt-4">
+                <button type="submit" class="btn btn-primary"><i class="bi bi-plus-lg me-2"></i>Add</button>
+                <a asp-controller="Contacts" asp-action="Details" asp-route-id="@Model.EntityId" class="btn btn-secondary"><i class="bi bi-arrow-left me-2"></i>Back to Contact</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    @{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); }
+    <script>
+        $(function () {
+            $('#AddressType').select2({ width: '100%', tags: true, placeholder: 'Select or type a custom type...', allowClear: true });
+        });
+    </script>
+}
