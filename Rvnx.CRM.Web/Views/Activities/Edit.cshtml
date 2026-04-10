@@ -25,16 +25,20 @@
                 <span asp-validation-for="ActivityDate" class="text-danger"></span>
             </div>
 
-            <div class="form-floating mb-3">
-                <input asp-for="ActivityType" class="form-control" id="ActivityType" placeholder=" " list="activityTypes"/>
-                <label asp-for="ActivityType">Type</label>
-                <span asp-validation-for="ActivityType" class="text-danger"></span>
-                <datalist id="activityTypes">
+            <div class="mb-3">
+                <label asp-for="ActivityType" class="form-label">Type</label>
+                <select asp-for="ActivityType" id="ActivityType" class="form-select">
+                    <option value="">Select or type a custom type...</option>
                     @foreach (var type in Rvnx.CRM.Core.Constants.ActivityTypeSuggestions.All)
                     {
-                        <option value="@type"/>
+                        <option value="@type" selected="@(Model.ActivityType == type)">@type</option>
                     }
-                </datalist>
+                    @if (!string.IsNullOrEmpty(Model.ActivityType) && !Rvnx.CRM.Core.Constants.ActivityTypeSuggestions.All.Contains(Model.ActivityType))
+                    {
+                        <option value="@Model.ActivityType" selected>@Model.ActivityType</option>
+                    }
+                </select>
+                <span asp-validation-for="ActivityType" class="text-danger"></span>
             </div>
 
             <div class="form-floating mb-3">
@@ -78,6 +82,7 @@
                 toolbar: ['bold', 'italic', 'strikethrough', '|', 'heading', 'heading-1', 'heading-2', 'heading-3', '|', 'code', 'quote', 'unordered-list', 'ordered-list', '|', 'link', 'image', 'table', '|', 'preview', 'side-by-side', 'fullscreen', '|', 'guide'],
                 minHeight: '200px'
             });
+            $('#ActivityType').select2({ width: '100%', tags: true, placeholder: 'Select or type a custom type...', allowClear: true });
             $('#ContactIds').select2({ width: '100%', placeholder: 'Select contacts...' });
         });
     </script>

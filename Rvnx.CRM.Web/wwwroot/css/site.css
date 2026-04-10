@@ -245,16 +245,26 @@ body {
 }
 /* Dark mode support */
 [data-mdb-theme="dark"] .select2-container--default .select2-selection--single {
-  background-color: #1a1a2e;
-  border-color: #555;
+  background-color: var(--mdb-surface-bg);
+  border-color: var(--mdb-border-color);
   color: #fff;
 }
 [data-mdb-theme="dark"] .select2-container--default .select2-selection--single .select2-selection__rendered {
   color: #fff;
 }
+[data-mdb-theme="dark"] .select2-container--default.select2-container--focus .select2-selection--single,
+[data-mdb-theme="dark"] .select2-container--default.select2-container--open .select2-selection--single {
+  border-color: #1266f1;
+  box-shadow: 0 0 0 0.2rem rgba(18, 102, 241, 0.25);
+}
 [data-mdb-theme="dark"] .select2-dropdown {
-  background-color: #1a1a2e;
-  border-color: #555;
+  background-color: var(--mdb-surface-bg);
+  border-color: var(--mdb-border-color);
+  color: #fff;
+}
+[data-mdb-theme="dark"] .select2-search--dropdown .select2-search__field {
+  background-color: var(--mdb-tertiary-bg);
+  border-color: var(--mdb-border-color);
   color: #fff;
 }
 [data-mdb-theme="dark"] .select2-results__option {
