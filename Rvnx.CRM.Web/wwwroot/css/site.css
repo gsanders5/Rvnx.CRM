@@ -263,6 +263,34 @@ body {
 [data-mdb-theme="dark"] .select2-container--default .select2-results__option--highlighted.select2-results__option--selectable {
   background-color: #1266f1;
 }
+/* Multi-select dark mode */
+[data-mdb-theme="dark"] .select2-container--default .select2-selection--multiple {
+  background-color: var(--mdb-surface-bg);
+  border-color: var(--mdb-border-color);
+  color: #fff;
+}
+[data-mdb-theme="dark"] .select2-container--default .select2-selection--multiple .select2-selection__choice {
+  background-color: var(--mdb-tertiary-bg);
+  border-color: var(--mdb-border-color);
+  color: #fff;
+}
+[data-mdb-theme="dark"] .select2-container--default .select2-selection--multiple .select2-selection__choice__remove {
+  color: var(--mdb-secondary-color);
+  border-right-color: var(--mdb-border-color);
+}
+[data-mdb-theme="dark"] .select2-container--default .select2-selection--multiple .select2-selection__choice__remove:hover {
+  color: #fff;
+  background-color: rgba(255, 255, 255, 0.1);
+}
+[data-mdb-theme="dark"] .select2-container--default .select2-search--inline .select2-search__field {
+  color: #fff;
+}
+[data-mdb-theme="dark"] .select2-container--default.select2-container--focus .select2-selection--multiple,
+[data-mdb-theme="dark"] .select2-container--default.select2-container--open .select2-selection--multiple {
+  border-color: #1266f1;
+  box-shadow: 0 0 0 0.2rem rgba(18, 102, 241, 0.25);
+  outline: 0;
+}
 
 /* ==========================================================================
    EasyMDE Custom Styles

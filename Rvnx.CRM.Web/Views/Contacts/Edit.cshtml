@@ -134,9 +134,12 @@
                 <div class="form-text">Hidden contacts are excluded from the main list by default.</div>
             </div>
 
-            <div class="d-grid gap-2 d-md-flex justify-content-md-start mt-4">
-                <button type="submit" class="btn btn-primary"><i class="bi bi-save me-2"></i>Save</button>
-                <a asp-action="Details" asp-route-id="@Model.Id" class="btn btn-secondary"><i class="bi bi-arrow-left me-2"></i>Back to Contact</a>
+            <div class="d-flex justify-content-between align-items-center mt-4">
+                <div class="d-grid gap-2 d-md-flex">
+                    <button type="submit" class="btn btn-primary"><i class="bi bi-save me-2"></i>Save</button>
+                    <a asp-action="Details" asp-route-id="@Model.Id" class="btn btn-secondary"><i class="bi bi-arrow-left me-2"></i>Back to Contact</a>
+                </div>
+                <a asp-action="Delete" asp-route-id="@Model.Id" class="btn btn-outline-danger"><i class="bi bi-trash me-2"></i>Delete</a>
             </div>
         </form>
     </div>

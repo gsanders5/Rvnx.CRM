@@ -406,7 +406,10 @@ public class ContactReadService(IRepository repository, IFavoriteService favorit
     public async Task<List<(Guid Id, string FullName)>> GetContactNamesAsync()
     {
         return await _repository.ListProjectedAsync<Contact, (Guid, string)>(
-            c => !c.IsHidden && !c.IsPartial,
-            c => new ValueTuple<Guid, string>(c.Id, (c.FirstName + " " + (c.LastName ?? "")).Trim()));
+            c => !c.IsHidden,
+            c => new ValueTuple<Guid, string>(c.Id,
+                c.IsPartial
+                    ? (c.FirstName + " " + (c.LastName ?? "")).Trim() + " (partial contact)"
+                    : (c.FirstName + " " + (c.LastName ?? "")).Trim()));
     }
 }
