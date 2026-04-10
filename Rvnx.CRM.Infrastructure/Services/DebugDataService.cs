@@ -15,6 +15,10 @@ public class DebugDataService(IRepository repository) : IDebugDataService
     {
         List<Contact> contacts = FakeDataGenerator.GenerateContacts(count);
 
+        List<Address> allAddresses = [];
+        List<ContactMethod> allInfos = [];
+        List<SignificantDate> allDates = [];
+
         foreach (Contact contact in contacts)
         {
             if (contact.Id == Guid.Empty)
@@ -30,35 +34,49 @@ public class DebugDataService(IRepository repository) : IDebugDataService
             contact.ContactMethods = [];
             contact.SignificantDates = [];
 
-            await _repository.AddAsync(contact);
-            await _repository.SaveChangesAsync();
-
             if (addresses != null && addresses.Count > 0)
             {
-                foreach (Address? addr in addresses)
+                foreach (Address addr in addresses)
                 {
                     addr.ContactId = contact.Id;
+                    allAddresses.Add(addr);
                 }
-                await _repository.AddRangeAsync(addresses);
             }
 
             if (infos != null && infos.Count > 0)
             {
-                foreach (ContactMethod? info in infos)
+                foreach (ContactMethod info in infos)
                 {
                     info.ContactId = contact.Id;
+                    allInfos.Add(info);
                 }
-                await _repository.AddRangeAsync(infos);
             }
 
             if (dates != null && dates.Count > 0)
             {
-                foreach (SignificantDate? date in dates)
+                foreach (SignificantDate date in dates)
                 {
                     date.ContactId = contact.Id;
+                    allDates.Add(date);
                 }
-                await _repository.AddRangeAsync(dates);
             }
+        }
+
+        await _repository.AddRangeAsync(contacts);
+
+        if (allAddresses.Count > 0)
+        {
+            await _repository.AddRangeAsync(allAddresses);
+        }
+
+        if (allInfos.Count > 0)
+        {
+            await _repository.AddRangeAsync(allInfos);
+        }
+
+        if (allDates.Count > 0)
+        {
+            await _repository.AddRangeAsync(allDates);
         }
 
         await _repository.SaveChangesAsync();
