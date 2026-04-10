@@ -226,17 +226,31 @@ public class SignificantDateService(IRepository repository) : ISignificantDateSe
             bool isBirthday = string.Equals(date.Title, SignificantDateTitles.Birthday, StringComparison.OrdinalIgnoreCase);
             DateOnly nextOccurrence = DateCalculationService.GetNextOccurrence(date, today);
             string firstName = contactName.Split(' ')[0];
+            string color = isBirthday ? CalendarColors.Birthday : CalendarColors.SignificantDate;
+            string title = $"{firstName}'s {date.Title}";
+            Guid contactId = date.ContactId!.Value;
 
-            events.Add(new CalendarEventDto
+            events.Add(CreateEvent(title, nextOccurrence, color, contactId));
+
+            DateOnly? currentYearOccurrence = DateCalculationService.GetCurrentYearOccurrence(date, today, nextOccurrence);
+            if (currentYearOccurrence.HasValue)
             {
-                Title = $"{firstName}'s {date.Title}",
-                Start = nextOccurrence.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture),
-                Color = isBirthday ? "#e67e22" : "#3498db",
-                AllDay = true,
-                ContactId = date.ContactId!.Value
-            });
+                events.Add(CreateEvent(title, currentYearOccurrence.Value, color, contactId));
+            }
         }
 
         return events;
+    }
+
+    private static CalendarEventDto CreateEvent(string title, DateOnly date, string color, Guid contactId)
+    {
+        return new()
+        {
+            Title = title,
+            Start = date.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture),
+            Color = color,
+            AllDay = true,
+            ContactId = contactId
+        };
     }
 }

@@ -185,6 +185,7 @@ public static class DtoMappingExtensions
             Facts = entity.Facts?.Select(f => f.ToDto()) ?? [],
             Attachments = entity.Attachments?.Select(a => a.ToDto()) ?? [],
             Addresses = entity.Addresses?.Select(a => a.ToDto()) ?? [],
+            ContactTasks = entity.ContactTasks?.Select(t => t.ToDto()) ?? [],
             // Pets to be populated by caller as they are not on Person
         };
     }
@@ -402,5 +403,44 @@ public static class DtoMappingExtensions
         entity.Zip = dto.Zip;
         entity.Country = dto.Country;
         entity.AddressType = dto.AddressType;
+    }
+
+    public static ContactTaskDto ToDto(this ContactTask entity)
+    {
+        return new ContactTaskDto
+        {
+            Id = entity.Id,
+            Title = entity.Title,
+            Description = entity.Description,
+            DueDate = entity.DueDate,
+            IsCompleted = entity.IsCompleted,
+            CompletedDate = entity.CompletedDate,
+            EntityId = entity.ContactId ?? Guid.Empty,
+            CreatedDate = entity.CreatedDate,
+            CreatedBy = entity.CreatedBy,
+            LastChangedDate = entity.LastChangedDate,
+            LastChangedBy = entity.LastChangedBy
+        };
+    }
+
+    public static ContactTask ToEntity(this ContactTaskFormDto dto)
+    {
+        return new ContactTask
+        {
+            Id = Guid.NewGuid(),
+            Title = dto.Title,
+            Description = dto.Description,
+            DueDate = dto.DueDate,
+            IsCompleted = dto.IsCompleted,
+            ContactId = dto.EntityId
+        };
+    }
+
+    public static void UpdateEntity(this ContactTask entity, ContactTaskFormDto dto)
+    {
+        entity.Title = dto.Title;
+        entity.Description = dto.Description;
+        entity.DueDate = dto.DueDate;
+        entity.IsCompleted = dto.IsCompleted;
     }
 }

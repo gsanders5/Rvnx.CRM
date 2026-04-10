@@ -18,9 +18,9 @@
                 <label asp-for="Category">Category</label>
                 <span asp-validation-for="Category" class="text-danger"></span>
             </div>
-            <div class="form-floating mb-3">
-                <textarea asp-for="Value" class="form-control" style="height: 100px" id="Value" placeholder=" "></textarea>
-                <label asp-for="Value">Value</label>
+            <div class="mb-3">
+                <label asp-for="Value" class="form-label">Value</label>
+                <textarea asp-for="Value" id="Value" placeholder="Enter value..."></textarea>
                 <span asp-validation-for="Value" class="text-danger"></span>
             </div>
             <div class="d-grid gap-2 d-md-flex mt-4">
@@ -33,4 +33,6 @@
 
 @section Scripts {
     @{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); }
+    @{ ViewData["EasyMDEElementId"] = "Value"; ViewData["EasyMDEMinHeight"] = "150px"; }
+    @{ await Html.RenderPartialAsync("_EasyMDEScripts"); }
 }

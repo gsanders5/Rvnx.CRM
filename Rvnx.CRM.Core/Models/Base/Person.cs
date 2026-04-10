@@ -68,4 +68,6 @@ public abstract class Person : BaseEntity
     public virtual ICollection<Address> Addresses { get; set; } = [];
 
     public virtual ICollection<Attachment> Attachments { get; set; } = [];
+
+    public virtual ICollection<ContactTask> ContactTasks { get; set; } = [];
 }

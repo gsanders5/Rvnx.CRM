@@ -72,6 +72,19 @@ public static class DateCalculationService
         return significantDate.EventDate;
     }
 
+    public static DateOnly? GetCurrentYearOccurrence(Rvnx.CRM.Core.Models.Dates.SignificantDate significantDate, DateOnly today, DateOnly nextOccurrence)
+    {
+        if (significantDate.RecurrenceType != Enumerations.RecurrenceType.Annual)
+        {
+            return null;
+        }
+
+        int month = significantDate.EventDate.Month;
+        int day = Math.Min(significantDate.EventDate.Day, DateTime.DaysInMonth(today.Year, month));
+        DateOnly thisYear = new(today.Year, month, day);
+        return thisYear != nextOccurrence ? thisYear : null;
+    }
+
     public static DateOnly GetScheduledForDate(Rvnx.CRM.Core.Models.Dates.SignificantDate significantDate, Rvnx.CRM.Core.Models.Dates.ReminderOffset offset, DateOnly fromDate)
     {
         DateOnly nextOccurrence = GetNextOccurrence(significantDate, fromDate);

@@ -36,15 +36,6 @@
 
 @section Scripts {
     @{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); }
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const easyMDE = new EasyMDE({
-                element: document.getElementById('Value'),
-                spellChecker: true,
-                autoDownloadFontAwesome: false,
-                toolbar: ['bold', 'italic', 'strikethrough', '|', 'heading', 'heading-1', 'heading-2', 'heading-3', '|', 'code', 'quote', 'unordered-list', 'ordered-list', '|', 'link', 'image', 'table', '|', 'preview', 'side-by-side', 'fullscreen', '|', 'guide'],
-                minHeight: '300px'
-            });
-        });
-    </script>
+    @{ ViewData["EasyMDEElementId"] = "Value"; ViewData["EasyMDEMinHeight"] = "300px"; }
+    @{ await Html.RenderPartialAsync("_EasyMDEScripts"); }
 }

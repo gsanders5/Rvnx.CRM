@@ -1,4 +1,3 @@
-using Rvnx.CRM.Core.Constants;
 using Rvnx.CRM.Core.DTOs.Base;
 
 namespace Rvnx.CRM.Core.DTOs.Contact;

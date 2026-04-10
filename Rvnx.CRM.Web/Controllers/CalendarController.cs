@@ -5,9 +5,10 @@ using Rvnx.CRM.Web.Controllers.Base;
 
 namespace Rvnx.CRM.Web.Controllers;
 
-public class CalendarController(ISignificantDateService significantDateService) : AuthorizedController
+public class CalendarController(ISignificantDateService significantDateService, IContactTaskService contactTaskService) : AuthorizedController
 {
     private readonly ISignificantDateService _significantDateService = significantDateService;
+    private readonly IContactTaskService _contactTaskService = contactTaskService;
 
     [HttpGet]
     public IActionResult Index()
@@ -18,7 +19,10 @@ public class CalendarController(ISignificantDateService significantDateService) 
     [HttpGet]
     public async Task<IActionResult> Events()
     {
-        List<CalendarEventDto> events = await _significantDateService.GetCalendarEventsAsync();
+        Task<List<CalendarEventDto>> dateTask = _significantDateService.GetCalendarEventsAsync();
+        Task<List<CalendarEventDto>> taskTask = _contactTaskService.GetCalendarEventsAsync();
+        await Task.WhenAll(dateTask, taskTask);
+        List<CalendarEventDto> events = [.. dateTask.Result, .. taskTask.Result];
         foreach (CalendarEventDto evt in events)
         {
             evt.Url = Url.Action("Details", "Contacts", new { id = evt.ContactId });

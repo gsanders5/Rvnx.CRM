@@ -690,6 +690,76 @@
         </div>
     </div>
 
+    <!-- Tasks / Follow-ups -->
+    <div class="card mb-4 border shadow-sm">
+        <div class="card-header bg-transparent border-0 pt-3 px-3 d-flex justify-content-between align-items-center">
+            <h5 class="card-title mb-0 fw-bold"><i class="bi bi-check2-square"></i> Tasks / Follow-ups</h5>
+            <a asp-controller="ContactTasks" asp-action="Create" asp-route-entityId="@Model.Id" class="btn btn-sm btn-outline-primary" aria-label="Add Task">
+                <i class="bi bi-plus-lg" aria-hidden="true"></i> Add
+            </a>
+        </div>
+        <div class="card-body px-3 pb-3">
+            @if (Model.ContactTasks != null && Model.ContactTasks.Any())
+            {
+                var today = DateOnly.FromDateTime(DateTime.Today);
+                var incomplete = Model.ContactTasks.Where(t => !t.IsCompleted).OrderBy(t => t.DueDate);
+                var completed = Model.ContactTasks.Where(t => t.IsCompleted).OrderByDescending(t => t.CompletedDate);
+
+                <ul class="list-group list-group-flush">
+                    @foreach (var task in incomplete.Concat(completed))
+                    {
+                        bool isOverdue = !task.IsCompleted && task.DueDate < today;
+                        <li class="list-group-item d-flex justify-content-between align-items-start px-0">
+                            <div class="d-flex align-items-start gap-2">
+                                <form asp-controller="ContactTasks" asp-action="ToggleComplete" asp-route-id="@task.Id" method="post" class="mt-1">
+                                    <button type="submit" class="btn btn-sm p-0 border-0" title="@(task.IsCompleted ? "Mark incomplete" : "Mark complete")">
+                                        <i class="bi @(task.IsCompleted ? "bi-check-circle-fill text-success" : "bi-circle text-muted") fs-5"></i>
+                                    </button>
+                                </form>
+                                <div>
+                                    <div class="@(task.IsCompleted ? "text-decoration-line-through text-muted" : "")">
+                                        @task.Title
+                                    </div>
+                                    <small class="@(isOverdue ? "text-danger" : "text-muted")">
+                                        <i class="bi bi-calendar3"></i> @task.DueDate.ToString("MMM d, yyyy")
+                                        @if (isOverdue)
+                                        {
+                                            <span class="badge bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25 ms-1">Overdue</span>
+                                        }
+                                    </small>
+                                    @if (task.IsCompleted && task.CompletedDate.HasValue)
+                                    {
+                                        <small class="text-muted d-block">
+                                            Completed @task.CompletedDate.Value.ToString("MMM d, yyyy")
+                                        </small>
+                                    }
+                                </div>
+                            </div>
+                            <div class="btn-group btn-group-sm">
+                                <a asp-controller="ContactTasks" asp-action="Edit" asp-route-id="@task.Id" class="btn btn-outline-secondary" title="Edit" aria-label="Edit @task.Title">
+                                    <i class="bi bi-pencil-square"></i>
+                                </a>
+                                <a asp-controller="ContactTasks" asp-action="Delete" asp-route-id="@task.Id" class="btn btn-outline-danger" title="Delete" aria-label="Delete @task.Title">
+                                    <i class="bi bi-trash"></i>
+                                </a>
+                            </div>
+                        </li>
+                    }
+                </ul>
+            }
+            else
+            {
+                <div class="text-center py-4 text-muted">
+                    <i class="bi bi-check2-square display-6 d-block mb-3 opacity-25"></i>
+                    <p class="mb-2">No tasks.</p>
+                    <a asp-controller="ContactTasks" asp-action="Create" asp-route-entityId="@Model.Id" class="btn btn-sm btn-primary mt-2" aria-label="Add Task">
+                        <i class="bi bi-plus-lg" aria-hidden="true"></i> Add Task
+                    </a>
+                </div>
+            }
+        </div>
+    </div>
+
     <!-- Attachments -->
     <div class="card mb-4">
         <div class="card-header d-flex justify-content-between align-items-center">

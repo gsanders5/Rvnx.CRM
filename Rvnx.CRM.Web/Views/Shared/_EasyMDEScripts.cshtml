@@ -1,0 +1,15 @@
+@{
+    var elementId = ViewData["EasyMDEElementId"] as string ?? "Description";
+    var minHeight = ViewData["EasyMDEMinHeight"] as string ?? "200px";
+}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        new EasyMDE({
+            element: document.getElementById('@elementId'),
+            spellChecker: true,
+            autoDownloadFontAwesome: false,
+            toolbar: ['bold', 'italic', 'strikethrough', '|', 'heading', 'heading-1', 'heading-2', 'heading-3', '|', 'code', 'quote', 'unordered-list', 'ordered-list', '|', 'link', 'image', 'table', '|', 'preview', 'side-by-side', 'fullscreen', '|', 'guide'],
+            minHeight: '@minHeight'
+        });
+    });
+</script>

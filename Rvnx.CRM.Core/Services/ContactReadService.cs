@@ -166,7 +166,8 @@ public class ContactReadService(IRepository repository, IFavoriteService favorit
             nameof(Contact.Addresses),
             nameof(Contact.Attachments),
             nameof(Contact.ContactLabels) + "." + nameof(ContactLabel.Label),
-            nameof(Contact.ActivityContacts) + "." + nameof(ActivityContact.Activity));
+            nameof(Contact.ActivityContacts) + "." + nameof(ActivityContact.Activity),
+            nameof(Contact.ContactTasks));
 
         Contact? contact = contacts.FirstOrDefault();
         if (contact == null)

@@ -52,6 +52,8 @@ public static class ServiceCollectionExtensions
 
         services.AddScoped<IAddressService, AddressService>();
 
+        services.AddScoped<IContactTaskService, ContactTaskService>();
+
         services.AddScoped<INoteService, NoteService>();
 
         services.AddScoped<ISignificantDateService, SignificantDateService>();

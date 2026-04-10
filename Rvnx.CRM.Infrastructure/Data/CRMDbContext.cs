@@ -35,6 +35,7 @@ public class CRMDbContext(DbContextOptions<CRMDbContext> options, ICurrentUserSe
     public DbSet<ContactFavorite>? ContactFavorites { get; set; }
     public DbSet<Activity>? Activities { get; set; }
     public DbSet<ActivityContact>? ActivityContacts { get; set; }
+    public DbSet<ContactTask>? ContactTasks { get; set; }
     public DbSet<ApiToken>? ApiTokens { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -142,6 +143,15 @@ public class CRMDbContext(DbContextOptions<CRMDbContext> options, ICurrentUserSe
 
         modelBuilder.Entity<Address>()
             .ToTable(t => t.HasCheckConstraint("CHK_Address_Owner", "ContactId IS NOT NULL"));
+
+        modelBuilder.Entity<ContactTask>()
+            .HasOne(e => e.Contact)
+            .WithMany(c => c.ContactTasks)
+            .HasForeignKey(e => e.ContactId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<ContactTask>()
+            .ToTable(t => t.HasCheckConstraint("CHK_ContactTask_Owner", "ContactId IS NOT NULL"));
 
         modelBuilder.Entity<Note>()
             .HasOne(e => e.Contact)

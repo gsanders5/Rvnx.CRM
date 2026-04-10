@@ -1,0 +1,44 @@
+@model Rvnx.CRM.Core.DTOs.Contact.ContactTaskFormDto
+
+@{
+    ViewData["Title"] = "Add Task";
+}
+
+<h1>Add Task</h1>
+
+<div class="row">
+    <div class="col-12">
+        <form asp-action="Create">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <input type="hidden" asp-for="EntityId"/>
+
+            <div class="form-floating mb-3">
+                <input asp-for="Title" class="form-control" id="Title" placeholder=" " autofocus/>
+                <label asp-for="Title">Title <span class="text-danger">*</span></label>
+                <span asp-validation-for="Title" class="text-danger"></span>
+            </div>
+
+            <div class="form-floating mb-3">
+                <input asp-for="DueDate" class="form-control" type="date" id="DueDate" placeholder=" " required/>
+                <label asp-for="DueDate">Due Date <span class="text-danger">*</span></label>
+                <span asp-validation-for="DueDate" class="text-danger"></span>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="Description" class="form-label">Description</label>
+                <textarea asp-for="Description" id="Description" placeholder="Notes about this task..."></textarea>
+                <span asp-validation-for="Description" class="text-danger"></span>
+            </div>
+
+            <div class="d-grid gap-2 d-md-flex mt-4">
+                <button type="submit" class="btn btn-primary"><i class="bi bi-plus-lg me-2"></i>Add Task</button>
+                <a asp-controller="Contacts" asp-action="Details" asp-route-id="@Model.EntityId" class="btn btn-secondary"><i class="bi bi-arrow-left me-2"></i>Back to Contact</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    @{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); }
+    @{ await Html.RenderPartialAsync("_EasyMDEScripts"); }
+}

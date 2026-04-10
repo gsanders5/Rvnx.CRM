@@ -1,40 +1,39 @@
-﻿using Microsoft.EntityFrameworkCore.Migrations;
+using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
-namespace Rvnx.CRM.Infrastructure.Migrations
+namespace Rvnx.CRM.Infrastructure.Migrations;
+
+/// <inheritdoc />
+public partial class AddAddressLine2 : Migration
 {
     /// <inheritdoc />
-    public partial class AddAddressLine2 : Migration
+    protected override void Up(MigrationBuilder migrationBuilder)
     {
-        /// <inheritdoc />
-        protected override void Up(MigrationBuilder migrationBuilder)
-        {
-            migrationBuilder.RenameColumn(
-                name: "Street",
-                table: "Address",
-                newName: "Line1");
+        migrationBuilder.RenameColumn(
+            name: "Street",
+            table: "Address",
+            newName: "Line1");
 
-            migrationBuilder.AddColumn<string>(
-                name: "Line2",
-                table: "Address",
-                type: "TEXT",
-                maxLength: 200,
-                nullable: false,
-                defaultValue: "");
-        }
+        migrationBuilder.AddColumn<string>(
+            name: "Line2",
+            table: "Address",
+            type: "TEXT",
+            maxLength: 200,
+            nullable: false,
+            defaultValue: "");
+    }
 
-        /// <inheritdoc />
-        protected override void Down(MigrationBuilder migrationBuilder)
-        {
-            migrationBuilder.DropColumn(
-                name: "Line2",
-                table: "Address");
+    /// <inheritdoc />
+    protected override void Down(MigrationBuilder migrationBuilder)
+    {
+        migrationBuilder.DropColumn(
+            name: "Line2",
+            table: "Address");
 
-            migrationBuilder.RenameColumn(
-                name: "Line1",
-                table: "Address",
-                newName: "Street");
-        }
+        migrationBuilder.RenameColumn(
+            name: "Line1",
+            table: "Address",
+            newName: "Street");
     }
 }

@@ -72,23 +72,20 @@ public class AddressService(IRepository repository) : IAddressService
     public async Task<AddressFormDto?> GetFormAsync(Guid id)
     {
         Address? address = await _repository.GetByIdAsync<Address>(id);
-        if (address == null || !await _repository.IsValidContactAsync(address.ContactId ?? Guid.Empty))
-        {
-            return null;
-        }
-
-        return new AddressFormDto
-        {
-            Id = address.Id,
-            EntityId = address.ContactId ?? Guid.Empty,
-            Line1 = address.Line1,
-            Line2 = address.Line2,
-            City = address.City,
-            State = address.State,
-            Zip = address.Zip,
-            Country = address.Country,
-            AddressType = address.AddressType
-        };
+        return address == null || !await _repository.IsValidContactAsync(address.ContactId ?? Guid.Empty)
+            ? null
+            : new AddressFormDto
+            {
+                Id = address.Id,
+                EntityId = address.ContactId ?? Guid.Empty,
+                Line1 = address.Line1,
+                Line2 = address.Line2,
+                City = address.City,
+                State = address.State,
+                Zip = address.Zip,
+                Country = address.Country,
+                AddressType = address.AddressType
+            };
     }
 
     public async Task<AddressFormDto?> GetFormForCreateAsync(Guid entityId)
