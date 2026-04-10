@@ -109,13 +109,13 @@
                                     aria-label="@(item.IsFavorite ? "Remove" : "Add") @item.FullName @(item.IsFavorite ? "from" : "to") favorites"
                                     data-contact-id="@item.Id"
                                     data-contact-name="@item.FullName">
-                                <i class="bi @(item.IsFavorite ? "bi-star-fill" : "bi-star")"></i>
+                                <i class="bi @(item.IsFavorite ? "bi-star-fill" : "bi-star")" aria-hidden="true"></i>
                             </button>
                             <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-outline-secondary" title="Edit" aria-label="Edit @item.FullName">
-                                <i class="bi bi-pencil-square"></i>
+                                <i class="bi bi-pencil-square" aria-hidden="true"></i>
                             </a>
                             <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-outline-info" title="Details" aria-label="Details for @item.FullName">
-                                <i class="bi bi-info-circle"></i>
+                                <i class="bi bi-info-circle" aria-hidden="true"></i>
                             </a>
                             <button type="button"
                                     class="btn btn-outline-danger btn-sm"
@@ -127,7 +127,7 @@
                                     data-confirm-btn-label="Delete"
                                     data-confirm-btn-icon="bi-trash"
                                     data-confirm-table="#contacts-table">
-                                <i class="bi bi-trash"></i>
+                                <i class="bi bi-trash" aria-hidden="true"></i>
                             </button>
                         </div>
                     </td>
