@@ -1,5 +1,7 @@
+using System.Text.Json;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Rvnx.CRM.API.Helpers;
 using Rvnx.CRM.Core.DTOs.Contact;
 using Rvnx.CRM.Core.Interfaces;
 using Rvnx.CRM.Core.Models;
@@ -36,6 +38,27 @@ public class ContactMethodsController(IContactMethodService contactMethodService
     {
         model.Id = id;
         OperationResult result = await _contactMethodService.UpdateAsync(id, model);
+        return !result.Success ? BadRequest(new { Error = result.ErrorMessage }) : NoContent();
+    }
+
+    [HttpPatch("{id}")]
+    public async Task<IActionResult> Patch(Guid id, [FromBody] JsonElement patch)
+    {
+        ContactMethodFormDto? existing = await _contactMethodService.GetFormAsync(id);
+        if (existing == null)
+        {
+            return NotFound();
+        }
+
+        JsonMergePatchHelper.ApplyPatch(existing, patch);
+
+        List<string> errors = JsonMergePatchHelper.Validate(existing);
+        if (errors.Count > 0)
+        {
+            return BadRequest(new { Errors = errors });
+        }
+
+        OperationResult result = await _contactMethodService.UpdateAsync(id, existing);
         return !result.Success ? BadRequest(new { Error = result.ErrorMessage }) : NoContent();
     }
 

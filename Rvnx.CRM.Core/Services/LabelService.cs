@@ -18,6 +18,17 @@ public class LabelService(IRepository repository) : ILabelService
         );
     }
 
+    public async Task<LabelDto?> GetByIdAsync(Guid id)
+    {
+        Label? label = await _repository.GetByIdAsync<Label>(id);
+        if (label == null)
+        {
+            return null;
+        }
+
+        return new LabelDto { Id = label.Id, Name = label.Name, Color = label.Color };
+    }
+
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "CA1862:Prefer using 'string.Equals(string, StringComparison)' to perform a case-insensitive comparison", Justification = "EF Core SQLite translation requires parameterless .ToLower() for case-insensitive comparisons.")]
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Globalization", "CA1304:Specify CultureInfo", Justification = "EF Core SQLite translation requires parameterless .ToLower() for case-insensitive comparisons.")]
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Globalization", "CA1311:Specify a culture or use an invariant version", Justification = "EF Core SQLite translation requires parameterless .ToLower() for case-insensitive comparisons.")]

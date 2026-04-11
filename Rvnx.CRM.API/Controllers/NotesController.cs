@@ -1,5 +1,7 @@
+using System.Text.Json;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Rvnx.CRM.API.Helpers;
 using Rvnx.CRM.Core.DTOs.Base;
 using Rvnx.CRM.Core.Interfaces;
 
@@ -35,6 +37,27 @@ public class NotesController(INoteService noteService) : ControllerBase
     {
         model.Id = id;
         Core.Models.OperationResult result = await _noteService.UpdateAsync(id, model);
+        return !result.Success ? BadRequest(new { Error = result.ErrorMessage }) : NoContent();
+    }
+
+    [HttpPatch("{id}")]
+    public async Task<IActionResult> Patch(Guid id, [FromBody] JsonElement patch)
+    {
+        NoteFormViewModel? existing = await _noteService.GetFormAsync(id);
+        if (existing == null)
+        {
+            return NotFound();
+        }
+
+        JsonMergePatchHelper.ApplyPatch(existing, patch);
+
+        List<string> errors = JsonMergePatchHelper.Validate(existing);
+        if (errors.Count > 0)
+        {
+            return BadRequest(new { Errors = errors });
+        }
+
+        Core.Models.OperationResult result = await _noteService.UpdateAsync(id, existing);
         return !result.Success ? BadRequest(new { Error = result.ErrorMessage }) : NoContent();
     }
 

@@ -1,5 +1,7 @@
+using System.Text.Json;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Rvnx.CRM.API.Helpers;
 using Rvnx.CRM.Core.DTOs.Contact;
 using Rvnx.CRM.Core.Interfaces;
 
@@ -35,6 +37,27 @@ public class ContactTasksController(IContactTaskService contactTaskService) : Co
     {
         model.Id = id;
         Core.Models.OperationResult result = await _contactTaskService.UpdateAsync(id, model);
+        return !result.Success ? BadRequest(new { Error = result.ErrorMessage }) : NoContent();
+    }
+
+    [HttpPatch("{id}")]
+    public async Task<IActionResult> Patch(Guid id, [FromBody] JsonElement patch)
+    {
+        ContactTaskFormDto? existing = await _contactTaskService.GetFormAsync(id);
+        if (existing == null)
+        {
+            return NotFound();
+        }
+
+        JsonMergePatchHelper.ApplyPatch(existing, patch);
+
+        List<string> errors = JsonMergePatchHelper.Validate(existing);
+        if (errors.Count > 0)
+        {
+            return BadRequest(new { Errors = errors });
+        }
+
+        Core.Models.OperationResult result = await _contactTaskService.UpdateAsync(id, existing);
         return !result.Success ? BadRequest(new { Error = result.ErrorMessage }) : NoContent();
     }
 

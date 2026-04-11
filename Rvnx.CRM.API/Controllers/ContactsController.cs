@@ -1,5 +1,7 @@
+using System.Text.Json;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Rvnx.CRM.API.Helpers;
 using Rvnx.CRM.Core.DTOs.Contact;
 using Rvnx.CRM.Core.Interfaces;
 
@@ -59,6 +61,27 @@ public class ContactsController(
     public async Task<IActionResult> SetPhoto(Guid id, Guid attachmentId)
     {
         ContactOperationResult result = await _contactManagementService.SetAttachmentAsProfilePhotoAsync(id, attachmentId);
+        return !result.Success ? result.IsNotFound ? NotFound() : BadRequest(new { result.Errors }) : NoContent();
+    }
+
+    [HttpPatch("{id}")]
+    public async Task<IActionResult> Patch(Guid id, [FromBody] JsonElement patch)
+    {
+        ContactFormDto? existing = await _contactReadService.GetContactFormAsync(id);
+        if (existing == null)
+        {
+            return NotFound();
+        }
+
+        JsonMergePatchHelper.ApplyPatch(existing, patch);
+
+        List<string> errors = JsonMergePatchHelper.Validate(existing);
+        if (errors.Count > 0)
+        {
+            return BadRequest(new { Errors = errors });
+        }
+
+        ContactOperationResult result = await _contactManagementService.UpdateContactAsync(id, existing, null, null, null);
         return !result.Success ? result.IsNotFound ? NotFound() : BadRequest(new { result.Errors }) : NoContent();
     }
 

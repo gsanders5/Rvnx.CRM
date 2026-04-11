@@ -1,5 +1,7 @@
+using System.Text.Json;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Rvnx.CRM.API.Helpers;
 using Rvnx.CRM.Core.DTOs.Contact;
 using Rvnx.CRM.Core.Interfaces;
 
@@ -34,6 +36,28 @@ public class LabelsController(ILabelService labelService) : ControllerBase
     public async Task<IActionResult> Update(Guid id, [FromBody] LabelFormDto model)
     {
         LabelOperationResult result = await _labelService.UpdateAsync(id, model.Name, model.Color);
+        return !result.Success ? result.IsNotFound ? NotFound() : BadRequest(new { result.Errors }) : NoContent();
+    }
+
+    [HttpPatch("{id}")]
+    public async Task<IActionResult> Patch(Guid id, [FromBody] JsonElement patch)
+    {
+        LabelDto? label = await _labelService.GetByIdAsync(id);
+        if (label == null)
+        {
+            return NotFound();
+        }
+
+        LabelFormDto existing = new() { Id = id, Name = label.Name, Color = label.Color };
+        JsonMergePatchHelper.ApplyPatch(existing, patch);
+
+        List<string> errors = JsonMergePatchHelper.Validate(existing);
+        if (errors.Count > 0)
+        {
+            return BadRequest(new { Errors = errors });
+        }
+
+        LabelOperationResult result = await _labelService.UpdateAsync(id, existing.Name, existing.Color);
         return !result.Success ? result.IsNotFound ? NotFound() : BadRequest(new { result.Errors }) : NoContent();
     }
 

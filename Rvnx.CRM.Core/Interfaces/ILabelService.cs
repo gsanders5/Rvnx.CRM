@@ -11,6 +11,13 @@ public interface ILabelService
     Task<List<LabelDto>> GetAllAsync();
 
     /// <summary>
+    /// Retrieves a single label by its ID.
+    /// </summary>
+    /// <param name="id">The label ID.</param>
+    /// <returns>A <see cref="LabelDto"/> if found, otherwise null.</returns>
+    Task<LabelDto?> GetByIdAsync(Guid id);
+
+    /// <summary>
     /// Creates a new label.
     /// </summary>
     /// <param name="name">The name of the label (required).</param>
