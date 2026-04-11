@@ -240,6 +240,77 @@ public class DateCalculationServiceTests
     }
 
     [Fact]
+    public void GetCurrentYearOccurrenceNotAnnualReturnsNull()
+    {
+        SignificantDate significantDate = new()
+        {
+            EventDate = new DateOnly(2020, 5, 15),
+            RecurrenceType = RecurrenceType.Monthly
+        };
+        DateOnly today = new(2023, 5, 1);
+        DateOnly nextOccurrence = new(2023, 5, 15);
+
+        DateOnly? result = DateCalculationService.GetCurrentYearOccurrence(significantDate, today, nextOccurrence);
+
+        Assert.Null(result);
+    }
+
+    [Fact]
+    public void GetCurrentYearOccurrenceIsNextOccurrenceReturnsNull()
+    {
+        SignificantDate significantDate = new()
+        {
+            EventDate = new DateOnly(2020, 5, 15),
+            RecurrenceType = RecurrenceType.Annual
+        };
+        DateOnly today = new(2023, 5, 1);
+        // Next occurrence is May 15, which matches the current year's occurrence
+        DateOnly nextOccurrence = new(2023, 5, 15);
+
+        DateOnly? result = DateCalculationService.GetCurrentYearOccurrence(significantDate, today, nextOccurrence);
+
+        Assert.Null(result);
+    }
+
+    [Fact]
+    public void GetCurrentYearOccurrenceIsNotNextOccurrenceReturnsThisYear()
+    {
+        SignificantDate significantDate = new()
+        {
+            EventDate = new DateOnly(2020, 5, 15),
+            RecurrenceType = RecurrenceType.Annual
+        };
+        // Today is June 1st, so the May 15th occurrence this year has already passed.
+        DateOnly today = new(2023, 6, 1);
+        // The *next* occurrence is now in 2024.
+        DateOnly nextOccurrence = new(2024, 5, 15);
+
+        DateOnly? result = DateCalculationService.GetCurrentYearOccurrence(significantDate, today, nextOccurrence);
+
+        Assert.NotNull(result);
+        Assert.Equal(new DateOnly(2023, 5, 15), result);
+    }
+
+    [Fact]
+    public void GetCurrentYearOccurrenceFeb29NonLeapYearReturnsFeb28()
+    {
+        SignificantDate significantDate = new()
+        {
+            EventDate = new DateOnly(2020, 2, 29),
+            RecurrenceType = RecurrenceType.Annual
+        };
+        // 2023 is not a leap year. Event has passed.
+        DateOnly today = new(2023, 3, 1);
+        // Next occurrence is in 2024.
+        DateOnly nextOccurrence = new(2024, 2, 29);
+
+        DateOnly? result = DateCalculationService.GetCurrentYearOccurrence(significantDate, today, nextOccurrence);
+
+        Assert.NotNull(result);
+        Assert.Equal(new DateOnly(2023, 2, 28), result);
+    }
+
+    [Fact]
     public void GetScheduledForDateReturnsNextOccurrenceMinusDaysBeforeEvent()
     {
         SignificantDate significantDate = new()
