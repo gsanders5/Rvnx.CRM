@@ -639,4 +639,107 @@ public class ContactReadServiceTests
                 It.IsAny<string[]>()), Times.Never);
         }
     }
+
+    public class ContactReadServiceGetContactNamesTests
+    {
+        private readonly Mock<IRepository> _repositoryMock;
+        private readonly Mock<IFavoriteService> _favoriteServiceMock;
+        private readonly ContactReadService _service;
+
+        public ContactReadServiceGetContactNamesTests()
+        {
+            _repositoryMock = new Mock<IRepository>();
+            _favoriteServiceMock = new Mock<IFavoriteService>();
+            _service = new ContactReadService(_repositoryMock.Object, _favoriteServiceMock.Object);
+        }
+
+        [Fact]
+        public async Task GetContactNamesAsyncFiltersOutHiddenContacts()
+        {
+            // Arrange
+            Expression<Func<Contact, bool>>? capturedFilter = null;
+
+            _repositoryMock.Setup(r => r.ListProjectedAsync(
+                    It.IsAny<Expression<Func<Contact, bool>>>(),
+                    It.IsAny<Expression<Func<Contact, (Guid, string)>>>(),
+                    It.IsAny<CancellationToken>()))
+                .Callback<Expression<Func<Contact, bool>>, Expression<Func<Contact, (Guid, string)>>, CancellationToken>(
+                    (filter, _, _) => capturedFilter = filter)
+                .ReturnsAsync([]);
+
+            // Act
+            await _service.GetContactNamesAsync();
+
+            // Assert
+            Assert.NotNull(capturedFilter);
+            Func<Contact, bool> compiledFilter = capturedFilter.Compile();
+
+            Contact hiddenContact = new() { IsHidden = true };
+            Contact visibleContact = new() { IsHidden = false };
+
+            Assert.False(compiledFilter(hiddenContact));
+            Assert.True(compiledFilter(visibleContact));
+        }
+
+        [Fact]
+        public async Task GetContactNamesAsyncFormatsFullNamesCorrectly()
+        {
+            // Arrange
+            Expression<Func<Contact, (Guid, string)>>? capturedSelector = null;
+
+            _repositoryMock.Setup(r => r.ListProjectedAsync(
+                    It.IsAny<Expression<Func<Contact, bool>>>(),
+                    It.IsAny<Expression<Func<Contact, (Guid, string)>>>(),
+                    It.IsAny<CancellationToken>()))
+                .Callback<Expression<Func<Contact, bool>>, Expression<Func<Contact, (Guid, string)>>, CancellationToken>(
+                    (_, selector, _) => capturedSelector = selector)
+                .ReturnsAsync([]);
+
+            // Act
+            await _service.GetContactNamesAsync();
+
+            // Assert
+            Assert.NotNull(capturedSelector);
+            Func<Contact, (Guid, string)> compiledSelector = capturedSelector.Compile();
+
+            Guid contact1Id = Guid.NewGuid();
+            Contact normalContact = new()
+            {
+                Id = contact1Id,
+                FirstName = "John",
+                LastName = "Doe",
+                IsPartial = false
+            };
+
+            Guid contact2Id = Guid.NewGuid();
+            Contact partialContact = new()
+            {
+                Id = contact2Id,
+                FirstName = "Jane",
+                LastName = "Smith",
+                IsPartial = true
+            };
+
+            Guid contact3Id = Guid.NewGuid();
+            Contact noLastNameContact = new()
+            {
+                Id = contact3Id,
+                FirstName = "Prince",
+                LastName = null,
+                IsPartial = false
+            };
+
+            var result1 = compiledSelector(normalContact);
+            Assert.Equal(contact1Id, result1.Item1);
+            Assert.Equal("John Doe", result1.Item2);
+
+            var result2 = compiledSelector(partialContact);
+            Assert.Equal(contact2Id, result2.Item1);
+            Assert.Equal("Jane Smith (partial contact)", result2.Item2);
+
+            var result3 = compiledSelector(noLastNameContact);
+            Assert.Equal(contact3Id, result3.Item1);
+            Assert.Equal("Prince", result3.Item2);
+        }
+    }
 }
