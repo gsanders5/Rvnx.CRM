@@ -8,6 +8,7 @@ namespace Rvnx.CRM.Infrastructure.Migrations;
 public partial class AddActivities : Migration
 {
     /// <inheritdoc />
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Performance", "CA1861:Avoid constant arrays as arguments", Justification = "EF Core Migrations generated code creates arrays for columns")]
     protected override void Up(MigrationBuilder migrationBuilder)
     {
         migrationBuilder.CreateTable(
@@ -76,9 +77,9 @@ public partial class AddActivities : Migration
         migrationBuilder.CreateIndex(
             name: "IX_ActivityContact_ActivityId_ContactId",
             table: "ActivityContact",
-#pragma warning disable CA1861
+
             columns: new[] { "ActivityId", "ContactId" },
-#pragma warning restore CA1861
+
             unique: true);
 
         migrationBuilder.CreateIndex(
