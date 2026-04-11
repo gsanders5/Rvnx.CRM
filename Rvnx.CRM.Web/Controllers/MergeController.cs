@@ -2,7 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Rvnx.CRM.Core.Interfaces;
 using Rvnx.CRM.Web.Controllers.Base;
-using Rvnx.CRM.Web.Models;
+using Rvnx.CRM.Web.ViewModels.Merge;
 
 namespace Rvnx.CRM.Web.Controllers;
 

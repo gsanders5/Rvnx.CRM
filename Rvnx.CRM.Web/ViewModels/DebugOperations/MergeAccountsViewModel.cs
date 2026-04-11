@@ -1,7 +1,7 @@
 
 using Rvnx.CRM.Core.Interfaces;
 
-namespace Rvnx.CRM.Web.Models;
+namespace Rvnx.CRM.Web.ViewModels.DebugOperations;
 
 public class MergeAccountsViewModel
 {
