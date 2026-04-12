@@ -4,6 +4,10 @@ using Rvnx.CRM.Core.Interfaces;
 
 namespace Rvnx.CRM.API.Controllers;
 
+/// <summary>
+/// Manages file attachments for contacts. Supports upload (multipart/form-data),
+/// download, and thumbnail generation for images.
+/// </summary>
 [ApiController]
 [Route("api/[controller]")]
 [Authorize]
@@ -12,6 +16,10 @@ public class AttachmentsController(IAttachmentService attachmentService, IThumbn
     private readonly IAttachmentService _attachmentService = attachmentService;
     private readonly IThumbnailService _thumbnailService = thumbnailService;
 
+    /// <summary>
+    /// List all attachments for a specific contact.
+    /// </summary>
+    /// <param name="contactId">The contact GUID.</param>
     [HttpGet("contact/{contactId}")]
     public async Task<IActionResult> ListByContact(Guid contactId)
     {
@@ -19,6 +27,12 @@ public class AttachmentsController(IAttachmentService attachmentService, IThumbn
         return Ok(attachments);
     }
 
+    /// <summary>
+    /// Upload a file attachment to a contact. Use multipart/form-data with a "file" field.
+    /// </summary>
+    /// <param name="contactId">The contact GUID.</param>
+    /// <param name="file">The file to upload.</param>
+    /// <returns>The new attachment's ID.</returns>
     [HttpPost("contact/{contactId}")]
     public async Task<IActionResult> Upload(Guid contactId, IFormFile file)
     {
@@ -41,6 +55,10 @@ public class AttachmentsController(IAttachmentService attachmentService, IThumbn
         return Ok(new { Id = result.AttachmentId });
     }
 
+    /// <summary>
+    /// Download an attachment's file content. Returns the binary file with its original Content-Type.
+    /// </summary>
+    /// <param name="id">The attachment GUID.</param>
     [HttpGet("{id}/download")]
     public async Task<IActionResult> Download(Guid id)
     {
@@ -54,6 +72,13 @@ public class AttachmentsController(IAttachmentService attachmentService, IThumbn
         return content == null ? NotFound() : File(content.Content, content.ContentType, attachment.FileName);
     }
 
+    /// <summary>
+    /// Get a JPEG thumbnail of an image attachment. Falls back to the full file if
+    /// thumbnail generation fails. Optional maxWidth and maxHeight parameters control size.
+    /// </summary>
+    /// <param name="id">The attachment GUID.</param>
+    /// <param name="maxWidth">Maximum thumbnail width in pixels.</param>
+    /// <param name="maxHeight">Maximum thumbnail height in pixels.</param>
     [HttpGet("{id}/thumbnail")]
     public async Task<IActionResult> Thumbnail(Guid id, int? maxWidth = null, int? maxHeight = null)
     {
@@ -79,6 +104,10 @@ public class AttachmentsController(IAttachmentService attachmentService, IThumbn
         return File(dto.Content, dto.ContentType, dto.FileName);
     }
 
+    /// <summary>
+    /// Delete an attachment.
+    /// </summary>
+    /// <param name="id">The attachment GUID.</param>
     [HttpDelete("{id}")]
     public async Task<IActionResult> Delete(Guid id)
     {

@@ -7,6 +7,10 @@ using Rvnx.CRM.Core.Interfaces;
 
 namespace Rvnx.CRM.API.Controllers;
 
+/// <summary>
+/// Manages activities (events, meetings, interactions). Activities have a many-to-many relationship
+/// with contacts via the contactIds field.
+/// </summary>
 [ApiController]
 [Route("api/[controller]")]
 [Authorize]
@@ -14,6 +18,10 @@ public class ActivitiesController(IActivityService activityService) : Controller
 {
     private readonly IActivityService _activityService = activityService;
 
+    /// <summary>
+    /// List all activities associated with a specific contact.
+    /// </summary>
+    /// <param name="contactId">The contact GUID.</param>
     [HttpGet("contact/{contactId}")]
     public async Task<IActionResult> ListByContact(Guid contactId)
     {
@@ -21,6 +29,12 @@ public class ActivitiesController(IActivityService activityService) : Controller
         return Ok(activities);
     }
 
+    /// <summary>
+    /// Create a new activity. Required fields: title, activityDate, entityId.
+    /// The contactIds array links the activity to one or more contacts.
+    /// </summary>
+    /// <param name="model">The activity data.</param>
+    /// <returns>The new activity's ID.</returns>
     [HttpPost]
     public async Task<IActionResult> Create([FromBody] ActivityFormDto model)
     {
@@ -32,6 +46,12 @@ public class ActivitiesController(IActivityService activityService) : Controller
         return Ok(new { Id = result.RedirectId });
     }
 
+    /// <summary>
+    /// Full update of an activity. All fields are replaced.
+    /// Use PATCH for partial updates.
+    /// </summary>
+    /// <param name="id">The activity GUID.</param>
+    /// <param name="model">The complete activity data.</param>
     [HttpPut("{id}")]
     public async Task<IActionResult> Update(Guid id, [FromBody] ActivityFormDto model)
     {
@@ -40,6 +60,12 @@ public class ActivitiesController(IActivityService activityService) : Controller
         return !result.Success ? BadRequest(new { Error = result.ErrorMessage }) : NoContent();
     }
 
+    /// <summary>
+    /// Partial update of an activity using JSON Merge Patch (RFC 7396).
+    /// Only include the fields you want to change.
+    /// </summary>
+    /// <param name="id">The activity GUID.</param>
+    /// <param name="patch">A JSON object containing only the fields to update.</param>
     [HttpPatch("{id}")]
     public async Task<IActionResult> Patch(Guid id, [FromBody] JsonElement patch)
     {
@@ -61,6 +87,10 @@ public class ActivitiesController(IActivityService activityService) : Controller
         return !result.Success ? BadRequest(new { Error = result.ErrorMessage }) : NoContent();
     }
 
+    /// <summary>
+    /// Delete an activity.
+    /// </summary>
+    /// <param name="id">The activity GUID.</param>
     [HttpDelete("{id}")]
     public async Task<IActionResult> Delete(Guid id)
     {

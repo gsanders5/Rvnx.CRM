@@ -5,6 +5,9 @@ using Rvnx.CRM.Core.Interfaces;
 
 namespace Rvnx.CRM.API.Controllers;
 
+/// <summary>
+/// Read-only calendar view that aggregates significant dates and tasks into a unified event list.
+/// </summary>
 [ApiController]
 [Route("api/[controller]")]
 [Authorize]
@@ -13,6 +16,9 @@ public class CalendarController(ISignificantDateService significantDateService, 
     private readonly ISignificantDateService _significantDateService = significantDateService;
     private readonly IContactTaskService _contactTaskService = contactTaskService;
 
+    /// <summary>
+    /// Get all calendar events (significant dates and tasks combined) across all contacts.
+    /// </summary>
     [HttpGet("events")]
     public async Task<IActionResult> Events()
     {

@@ -25,7 +25,14 @@ builder.Services.AddAuthorization();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
-    c.SwaggerDoc("v1", new OpenApiInfo { Title = "Rvnx.CRM.API", Version = "v1" });
+    c.SwaggerDoc("v1", new OpenApiInfo
+    {
+        Title = "Rvnx.CRM.API",
+        Version = "v1",
+        Description = "Personal CRM API. All endpoints require Bearer token authentication. All IDs are GUIDs. "
+                    + "Child resources (notes, facts, addresses, contact methods, significant dates) require entityId (parent contact GUID) "
+                    + "and entityType (\"Person\") in their request bodies."
+    });
     c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
         Description = "API Token Authorization header using the Bearer scheme. Example: \"Authorization: Bearer crm_xxxxxxxxxxxxxxx\"",
@@ -41,6 +48,9 @@ builder.Services.AddSwaggerGen(c =>
             new List<string>()
         }
     });
+
+    string xmlFilename = $"{System.Reflection.Assembly.GetExecutingAssembly().GetName().Name}.xml";
+    c.IncludeXmlComments(Path.Combine(AppContext.BaseDirectory, xmlFilename));
 });
 
 WebApplication app = builder.Build();

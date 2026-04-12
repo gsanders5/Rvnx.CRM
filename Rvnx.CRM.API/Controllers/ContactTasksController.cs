@@ -7,6 +7,9 @@ using Rvnx.CRM.Core.Interfaces;
 
 namespace Rvnx.CRM.API.Controllers;
 
+/// <summary>
+/// Manages to-do tasks associated with contacts. Tasks have a due date and completion status.
+/// </summary>
 [ApiController]
 [Route("api/[controller]")]
 [Authorize]
@@ -14,6 +17,10 @@ public class ContactTasksController(IContactTaskService contactTaskService) : Co
 {
     private readonly IContactTaskService _contactTaskService = contactTaskService;
 
+    /// <summary>
+    /// List all tasks for a specific contact.
+    /// </summary>
+    /// <param name="contactId">The contact GUID.</param>
     [HttpGet("contact/{contactId}")]
     public async Task<IActionResult> ListByContact(Guid contactId)
     {
@@ -21,6 +28,11 @@ public class ContactTasksController(IContactTaskService contactTaskService) : Co
         return Ok(tasks);
     }
 
+    /// <summary>
+    /// Create a new task. Required fields: title, dueDate, entityId.
+    /// </summary>
+    /// <param name="model">The task data.</param>
+    /// <returns>The new task's ID.</returns>
     [HttpPost]
     public async Task<IActionResult> Create([FromBody] ContactTaskFormDto model)
     {
@@ -32,6 +44,12 @@ public class ContactTasksController(IContactTaskService contactTaskService) : Co
         return Ok(new { Id = result.RedirectId });
     }
 
+    /// <summary>
+    /// Full update of a task. All fields are replaced.
+    /// Use PATCH for partial updates.
+    /// </summary>
+    /// <param name="id">The task GUID.</param>
+    /// <param name="model">The complete task data.</param>
     [HttpPut("{id}")]
     public async Task<IActionResult> Update(Guid id, [FromBody] ContactTaskFormDto model)
     {
@@ -40,6 +58,12 @@ public class ContactTasksController(IContactTaskService contactTaskService) : Co
         return !result.Success ? BadRequest(new { Error = result.ErrorMessage }) : NoContent();
     }
 
+    /// <summary>
+    /// Partial update of a task using JSON Merge Patch (RFC 7396).
+    /// Only include the fields you want to change.
+    /// </summary>
+    /// <param name="id">The task GUID.</param>
+    /// <param name="patch">A JSON object containing only the fields to update.</param>
     [HttpPatch("{id}")]
     public async Task<IActionResult> Patch(Guid id, [FromBody] JsonElement patch)
     {
@@ -61,6 +85,10 @@ public class ContactTasksController(IContactTaskService contactTaskService) : Co
         return !result.Success ? BadRequest(new { Error = result.ErrorMessage }) : NoContent();
     }
 
+    /// <summary>
+    /// Delete a task.
+    /// </summary>
+    /// <param name="id">The task GUID.</param>
     [HttpDelete("{id}")]
     public async Task<IActionResult> Delete(Guid id)
     {
@@ -68,6 +96,10 @@ public class ContactTasksController(IContactTaskService contactTaskService) : Co
         return !result.Success ? BadRequest(new { Error = result.ErrorMessage }) : NoContent();
     }
 
+    /// <summary>
+    /// Toggle a task's completion status. If completed, marks it incomplete; if incomplete, marks it completed.
+    /// </summary>
+    /// <param name="id">The task GUID.</param>
     [HttpPost("{id}/toggle")]
     public async Task<IActionResult> ToggleComplete(Guid id)
     {
