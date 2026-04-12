@@ -57,7 +57,7 @@ public class DashboardService(IRepository repository, ILogger<DashboardService> 
             : [];
 
         Dictionary<Guid, Guid> attachmentMap = new(profileAttachments.Count);
-        foreach ((Guid contactId, Guid attachmentId) in profileAttachments)
+        foreach (var (contactId, attachmentId) in profileAttachments)
         {
             attachmentMap.TryAdd(contactId, attachmentId);
         }
@@ -93,7 +93,7 @@ public class DashboardService(IRepository repository, ILogger<DashboardService> 
                 r => r.EntityType == EntityTypes.Person,
                 r => new ValueTuple<Guid, Guid>(r.EntityId, r.RelatedEntityId));
 
-        foreach ((Guid entityId, Guid relatedEntityId) in relationships)
+        foreach (var (entityId, relatedEntityId) in relationships)
         {
             dashboard.GraphLinks.Add(new GraphLinkDto
             {
@@ -123,7 +123,7 @@ public class DashboardService(IRepository repository, ILogger<DashboardService> 
         // Optimization: avoid multiple iterations and collection instantiations by iterating over the relationships collection once
         int contactsWithRelationshipsCount = 0;
         HashSet<Guid> uniqueContactsWithRelationships = new(relationships.Count * 2);
-        foreach ((Guid entityId, Guid relatedEntityId) in relationships)
+        foreach (var (entityId, relatedEntityId) in relationships)
         {
             if (uniqueContactsWithRelationships.Add(entityId) && contactDict.ContainsKey(entityId))
             {

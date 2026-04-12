@@ -59,7 +59,7 @@ public class ContactReadService(IRepository repository, IFavoriteService favorit
             // Optimization: Use Dictionary with capacity and TryAdd instead of GroupBy().ToDictionary(..., First())
             // to avoid allocations of IGrouping structures and redundant list iterations.
             Dictionary<Guid, Guid> attachmentMap = new(profileAttachments.Count);
-            foreach ((Guid ContactId, Guid AttachmentId) in profileAttachments)
+            foreach (var (ContactId, AttachmentId) in profileAttachments)
             {
                 attachmentMap.TryAdd(ContactId, AttachmentId);
             }
@@ -85,7 +85,7 @@ public class ContactReadService(IRepository repository, IFavoriteService favorit
         // Optimization: Use Dictionary with capacity and foreach loop instead of GroupBy().ToDictionary(...)
         // to avoid allocations of IGrouping structures and redundant list iterations.
         Dictionary<Guid, List<LabelDto>> labelsByContact = new(allContactLabels.Count);
-        foreach ((Guid ContactId, Guid LabelId, string Name, string? Color) in allContactLabels)
+        foreach (var (ContactId, LabelId, Name, Color) in allContactLabels)
         {
             if (!labelsByContact.TryGetValue(ContactId, out List<LabelDto>? labelsList))
             {
@@ -122,7 +122,7 @@ public class ContactReadService(IRepository repository, IFavoriteService favorit
             // Optimization: Use Dictionary with capacity and TryAdd instead of GroupBy().ToDictionary(..., First())
             // to avoid allocations of IGrouping structures and redundant list iterations.
             Dictionary<Guid, DateOnly> birthdayMap = new(birthdayDates.Count);
-            foreach ((Guid ContactId, DateOnly EventDate) in birthdayDates)
+            foreach (var (ContactId, EventDate) in birthdayDates)
             {
                 birthdayMap.TryAdd(ContactId, EventDate);
             }
@@ -293,14 +293,14 @@ public class ContactReadService(IRepository repository, IFavoriteService favorit
                         chunk => c => chunk.Contains(c.Id),
                         c => new ValueTuple<Guid, string>(c.Id, (c.FirstName + " " + (c.LastName ?? "")).Trim()));
 
-                foreach ((Guid cId, string name) in names)
+                foreach (var (cId, name) in names)
                 {
                     contactNameMap.TryAdd(cId, name);
                 }
             }
 
             Dictionary<Guid, List<Guid>> participantsByActivity = [];
-            foreach ((Guid activityId, Guid contactId) in allParticipants)
+            foreach (var (activityId, contactId) in allParticipants)
             {
                 if (!participantsByActivity.TryGetValue(activityId, out List<Guid>? list))
                 {
