@@ -69,12 +69,15 @@ public class NoteService(IRepository repository, IEntityService entityService) :
 
     public async Task<OperationResult> DeleteAsync(Guid id)
     {
-        Note? note = await _repository.GetByIdAsync<Note>(id);
-        if (note != null)
+        List<Guid?> contactIds = await _repository.ListProjectedAsync<Note, Guid?>(
+            n => n.Id == id,
+            n => n.ContactId);
+
+        if (contactIds.Count > 0)
         {
-            Guid entityId = note.ContactId ?? Guid.Empty;
+            Guid entityId = contactIds.FirstOrDefault() ?? Guid.Empty;
             string entityType = EntityTypes.Person;
-            await _repository.DeleteAsync<Note>(id);
+            await _repository.DeleteAsync<Note>(n => n.Id == id);
             await _repository.SaveChangesAsync();
             return OperationResult.Ok(entityId, entityType);
         }

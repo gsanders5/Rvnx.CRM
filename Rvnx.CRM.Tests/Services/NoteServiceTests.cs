@@ -143,12 +143,14 @@ public class NoteServiceTests
         // Arrange
         Guid noteId = Guid.NewGuid();
         Guid contactId = Guid.NewGuid();
-        Note existingNote = new() { Id = noteId, ContactId = contactId };
 
-        _repositoryMock.Setup(r => r.GetByIdAsync<Note>(noteId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(existingNote);
+        _repositoryMock.Setup(r => r.ListProjectedAsync<Note, Guid?>(
+                It.IsAny<System.Linq.Expressions.Expression<Func<Note, bool>>>(),
+                It.IsAny<System.Linq.Expressions.Expression<Func<Note, Guid?>>>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync([contactId]);
 
-        _repositoryMock.Setup(r => r.DeleteAsync<Note>(noteId, It.IsAny<CancellationToken>()))
+        _repositoryMock.Setup(r => r.DeleteAsync<Note>(It.IsAny<System.Linq.Expressions.Expression<Func<Note, bool>>>(), It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
 
         _repositoryMock.Setup(r => r.SaveChangesAsync(It.IsAny<CancellationToken>()))
@@ -161,7 +163,7 @@ public class NoteServiceTests
         Assert.True(result.Success);
         Assert.Equal(contactId, result.RedirectId);
         Assert.Equal(EntityTypes.Person, result.RedirectType);
-        _repositoryMock.Verify(r => r.DeleteAsync<Note>(noteId, It.IsAny<CancellationToken>()), Times.Once);
+        _repositoryMock.Verify(r => r.DeleteAsync<Note>(It.IsAny<System.Linq.Expressions.Expression<Func<Note, bool>>>(), It.IsAny<CancellationToken>()), Times.Once);
         _repositoryMock.Verify(r => r.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
     }
 
@@ -171,8 +173,11 @@ public class NoteServiceTests
         // Arrange
         Guid noteId = Guid.NewGuid();
 
-        _repositoryMock.Setup(r => r.GetByIdAsync<Note>(noteId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync((Note?)null);
+        _repositoryMock.Setup(r => r.ListProjectedAsync<Note, Guid?>(
+                It.IsAny<System.Linq.Expressions.Expression<Func<Note, bool>>>(),
+                It.IsAny<System.Linq.Expressions.Expression<Func<Note, Guid?>>>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync([]);
 
         // Act
         OperationResult result = await _service.DeleteAsync(noteId);
@@ -180,7 +185,7 @@ public class NoteServiceTests
         // Assert
         Assert.False(result.Success);
         Assert.Equal("Note not found.", result.ErrorMessage);
-        _repositoryMock.Verify(r => r.DeleteAsync<Note>(It.IsAny<Guid>(), It.IsAny<CancellationToken>()), Times.Never);
+        _repositoryMock.Verify(r => r.DeleteAsync<Note>(It.IsAny<System.Linq.Expressions.Expression<Func<Note, bool>>>(), It.IsAny<CancellationToken>()), Times.Never);
         _repositoryMock.Verify(r => r.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
     }
 
