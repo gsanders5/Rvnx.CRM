@@ -8,6 +8,7 @@ namespace Rvnx.CRM.Infrastructure.Migrations;
 public partial class PetMultipleOwners : Migration
 {
     /// <inheritdoc />
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Performance", "CA1861:Avoid constant arrays as arguments", Justification = "EF Core Migrations generated code creates arrays for columns")]
     protected override void Up(MigrationBuilder migrationBuilder)
     {
         // 1. Create the PetContact join table first (before dropping ContactId)
@@ -55,9 +56,9 @@ public partial class PetMultipleOwners : Migration
         migrationBuilder.CreateIndex(
             name: "IX_PetContact_PetId_ContactId",
             table: "PetContact",
-#pragma warning disable CA1861
+
             columns: new[] { "PetId", "ContactId" },
-#pragma warning restore CA1861
+
             unique: true);
 
         migrationBuilder.CreateIndex(
