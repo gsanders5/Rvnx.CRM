@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Mvc.Filters;
 using Rvnx.CRM.Core.Interfaces;
 using Rvnx.CRM.Web.Controllers.Base;
 using Rvnx.CRM.Web.Filters;
-using Rvnx.CRM.Web.Models;
+using Rvnx.CRM.Web.ViewModels.DebugOperations;
 
 namespace Rvnx.CRM.Web.Controllers;
 

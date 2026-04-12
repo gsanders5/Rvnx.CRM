@@ -48,3 +48,6 @@
 ## 2024-06-05 - [Duplicate User Synchronization Call]
 **Learning:** `IUserSynchronizationService.SyncUserAsync` is correctly invoked globally via authentication middleware in `Program.cs` for every authenticated request. Redundant calls to this service from within individual controller actions (e.g., `ContactsController.CreateSelf`) are unnecessary and unnecessarily couple the controller to the synchronization service.
 **Action:** When auditing controllers for coupling, identify and remove explicit invocations of `IUserSynchronizationService` to rely entirely on the global middleware.
+## 2026-04-12 - [Feature Specific View Models]
+**Learning:** In Rvnx.CRM.Web, ViewModels shouldn't be placed directly in the generic `Models/` folder if they are feature-specific. Instead, they should be grouped into feature-specific subdirectories under `ViewModels/` (e.g., `ViewModels/DebugOperations`, `ViewModels/Merge`) to improve code modularity and separation of concerns.
+**Action:** Always place newly created ViewModels in a feature-specific subdirectory within `ViewModels/` rather than leaving them at the root or within a generic models folder.
