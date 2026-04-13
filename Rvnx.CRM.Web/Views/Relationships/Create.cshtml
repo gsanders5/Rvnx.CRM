@@ -9,7 +9,7 @@
 
 @if (TempData["ErrorMessage"] != null)
 {
-    <div class="alert alert-danger">
+    <div class="crm-alert crm-alert-danger">
         @TempData["ErrorMessage"]
     </div>
 }
@@ -44,10 +44,10 @@
                         <label class="form-label fw-bold">Step 1: Choose Relationship Type</label>
 
                         <!-- Summary (Initially Hidden) -->
-                        <div id="type-selection-summary" class="card mb-2 bg-body-tertiary border-0" style="display: none;">
-                            <div class="card-body p-2 d-flex justify-content-between align-items-center">
-                                <span class="fw-bold text-primary" id="selected-type-text"></span>
-                                <button type="button" class="btn btn-sm btn-link text-decoration-none" id="change-type-btn" aria-label="Change relationship type">
+                        <div id="type-selection-summary" class="crm-card mb-2" style="display: none;">
+                            <div class="crm-card-body p-2 d-flex justify-content-between align-items-center">
+                                <span class="fw-bold" style="color: var(--crm-brand);" id="selected-type-text"></span>
+                                <button type="button" class="crm-btn-tertiary btn-sm" id="change-type-btn" aria-label="Change relationship type">
                                     <i class="bi bi-pencil me-1"></i> Change
                                 </button>
                             </div>
@@ -62,7 +62,7 @@
                                     @foreach (var type in group)
                                     {
                                         <button type="button"
-                                                class="btn btn-outline-secondary relationship-type-btn"
+                                                class="crm-btn-secondary relationship-type-btn"
                                                 data-id="@type.Id"
                                                 data-is-symmetric="@type.IsSymmetric.ToString().ToLower()"
                                                 data-name="@type.Name"
@@ -84,8 +84,8 @@
                     <div class="mb-4" id="role-selection-container" style="display: none;">
                         <label class="form-label fw-bold">Step 2: @Model.EntityName is the...</label>
                         <div class="btn-group w-100" role="group">
-                            <button type="button" class="btn btn-outline-primary role-btn" data-role="Fwd" id="role-fwd-btn">Parent</button>
-                            <button type="button" class="btn btn-outline-primary role-btn" data-role="Rev" id="role-rev-btn">Child</button>
+                            <button type="button" class="crm-btn-secondary role-btn" data-role="Fwd" id="role-fwd-btn">Parent</button>
+                            <button type="button" class="crm-btn-secondary role-btn" data-role="Rev" id="role-rev-btn">Child</button>
                         </div>
                     </div>
 
@@ -97,7 +97,7 @@
                         <span asp-validation-for="RelatedEntityId" class="text-danger"></span>
                     </div>
 
-                    <div class="alert alert-info" id="relationshipPreview" style="display: none;">
+                    <div class="crm-alert crm-alert-info" id="relationshipPreview" style="display: none;">
                         <!-- Preview text will be injected here -->
                     </div>
 
@@ -123,14 +123,14 @@
                     </div>
 
                     <div class="d-grid gap-2 d-md-flex mt-4">
-                        <button type="submit" class="btn btn-primary"><i class="bi bi-save me-2"></i>Save Relationship</button>
+                        <button type="submit" class="crm-btn-primary"><i class="bi bi-save"></i> Save Relationship</button>
                         @if (Model.EntityType == EntityTypes.Person)
                         {
-                            <a asp-controller="Contacts" asp-action="Details" asp-route-id="@Model.EntityId" class="btn btn-secondary"><i class="bi bi-x-lg me-2"></i>Cancel</a>
+                            <a asp-controller="Contacts" asp-action="Details" asp-route-id="@Model.EntityId" class="crm-btn-tertiary"><i class="bi bi-x-lg"></i> Cancel</a>
                         }
                         else
                         {
-                            <a asp-controller="Home" asp-action="Index" class="btn btn-secondary"><i class="bi bi-x-lg me-2"></i>Cancel</a>
+                            <a asp-controller="Home" asp-action="Index" class="crm-btn-tertiary"><i class="bi bi-x-lg"></i> Cancel</a>
                         }
                     </div>
                 </form>
@@ -151,10 +151,10 @@
                             <label class="form-label fw-bold">Step 1: Choose Relationship Type</label>
 
                             <!-- Summary (Initially Hidden) -->
-                            <div id="type-selection-summary-partial" class="card mb-2 bg-body-tertiary border-0" style="display: none;">
-                                <div class="card-body p-2 d-flex justify-content-between align-items-center">
-                                    <span class="fw-bold text-primary" id="selected-type-text-partial"></span>
-                                    <button type="button" class="btn btn-sm btn-link text-decoration-none" id="change-type-btn-partial" aria-label="Change partial relationship type">
+                            <div id="type-selection-summary-partial" class="crm-card mb-2" style="display: none;">
+                                <div class="crm-card-body p-2 d-flex justify-content-between align-items-center">
+                                    <span class="fw-bold" style="color: var(--crm-brand);" id="selected-type-text-partial"></span>
+                                    <button type="button" class="crm-btn-tertiary btn-sm" id="change-type-btn-partial" aria-label="Change partial relationship type">
                                         <i class="bi bi-pencil me-1"></i> Change
                                     </button>
                                 </div>
@@ -169,7 +169,7 @@
                                         @foreach (var type in group)
                                         {
                                             <button type="button"
-                                                    class="btn btn-outline-secondary relationship-type-btn-partial"
+                                                    class="crm-btn-secondary relationship-type-btn-partial"
                                                     data-id="@type.Id"
                                                     data-is-symmetric="@type.IsSymmetric.ToString().ToLower()"
                                                     data-name="@type.Name"
@@ -189,8 +189,8 @@
                         <div class="mb-4" id="role-selection-container-partial" style="display: none;">
                             <label class="form-label fw-bold">Step 2: @Model.EntityName is the...</label>
                             <div class="btn-group w-100" role="group">
-                                <button type="button" class="btn btn-outline-primary role-btn-partial" data-role="Fwd" id="role-fwd-btn-partial">Parent</button>
-                                <button type="button" class="btn btn-outline-primary role-btn-partial" data-role="Rev" id="role-rev-btn-partial">Child</button>
+                                <button type="button" class="crm-btn-secondary role-btn-partial" data-role="Fwd" id="role-fwd-btn-partial">Parent</button>
+                                <button type="button" class="crm-btn-secondary role-btn-partial" data-role="Rev" id="role-rev-btn-partial">Child</button>
                             </div>
                         </div>
 
@@ -205,7 +205,7 @@
                             </div>
                         </div>
 
-                        <div class="alert alert-info" id="relationshipPreviewPartial" style="display: none;">
+                        <div class="crm-alert crm-alert-info" id="relationshipPreviewPartial" style="display: none;">
                             <!-- Preview text will be injected here -->
                         </div>
 
@@ -224,8 +224,8 @@
                         </div>
 
                         <div class="d-grid gap-2 d-md-flex mt-4">
-                            <button type="submit" class="btn btn-primary"><i class="bi bi-save me-2"></i>Save Partial Contact</button>
-                            <a asp-controller="Contacts" asp-action="Details" asp-route-id="@Model.EntityId" class="btn btn-secondary"><i class="bi bi-x-lg me-2"></i>Cancel</a>
+                            <button type="submit" class="crm-btn-primary"><i class="bi bi-save"></i> Save Partial Contact</button>
+                            <a asp-controller="Contacts" asp-action="Details" asp-route-id="@Model.EntityId" class="crm-btn-tertiary"><i class="bi bi-x-lg"></i> Cancel</a>
                         </div>
                     </form>
                 </div>
@@ -322,11 +322,8 @@
                     this.state.oppositeName = btn.dataset.oppositeName;
                     this.state.role = null; // Reset role on type change
 
-                    this.container.querySelectorAll('button').forEach(b => b.classList.remove('active', 'btn-secondary'));
-                    this.container.querySelectorAll('button').forEach(b => b.classList.add('btn-outline-secondary'));
-
-                    btn.classList.remove('btn-outline-secondary');
-                    btn.classList.add('active', 'btn-secondary');
+                    this.container.querySelectorAll('button').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
 
                     const typeLabel = this.state.isSymmetric ? this.state.name : `${this.state.name} / ${this.state.oppositeName}`;
                     this.summaryText.textContent = typeLabel;
@@ -346,10 +343,8 @@
                         this.fwdBtn.textContent = this.state.name;
                         this.revBtn.textContent = this.state.oppositeName;
 
-                        this.fwdBtn.classList.remove('active', 'btn-primary');
-                        this.fwdBtn.classList.add('btn-outline-primary');
-                        this.revBtn.classList.remove('active', 'btn-primary');
-                        this.revBtn.classList.add('btn-outline-primary');
+                        this.fwdBtn.classList.remove('active');
+                        this.revBtn.classList.remove('active');
 
                         this.hiddenInput.value = ''; // Clear selection until role picked
                         this.preview.style.display = 'none';
@@ -367,15 +362,11 @@
                     this.state.role = role;
 
                     if (role === 'Fwd') {
-                        this.fwdBtn.classList.add('active', 'btn-primary');
-                        this.fwdBtn.classList.remove('btn-outline-primary');
-                        this.revBtn.classList.remove('active', 'btn-primary');
-                        this.revBtn.classList.add('btn-outline-primary');
+                        this.fwdBtn.classList.add('active');
+                        this.revBtn.classList.remove('active');
                     } else {
-                        this.revBtn.classList.add('active', 'btn-primary');
-                        this.revBtn.classList.remove('btn-outline-primary');
-                        this.fwdBtn.classList.remove('active', 'btn-primary');
-                        this.fwdBtn.classList.add('btn-outline-primary');
+                        this.revBtn.classList.add('active');
+                        this.fwdBtn.classList.remove('active');
                     }
 
                     this.updateHiddenInput();

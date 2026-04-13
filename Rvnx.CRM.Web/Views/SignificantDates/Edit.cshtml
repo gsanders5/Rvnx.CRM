@@ -12,12 +12,12 @@
             <input type="hidden" asp-for="EntityId"/>
             <input type="hidden" asp-for="EntityType"/>
 
-            <div class="card border-0 shadow-sm rounded-3">
-                <div class="card-header bg-body-tertiary border-bottom p-3 rounded-top-3">
-                    <h4 class="mb-0"><i class="bi bi-pencil-square me-2 text-primary"></i>Edit Important Date</h4>
+            <div class="crm-form-card">
+                <div class="crm-form-card-header">
+                    <h4><i class="bi bi-pencil-square" aria-hidden="true"></i> Edit Important Date</h4>
                 </div>
 
-                <div class="card-body p-4">
+                <div class="crm-form-card-body">
 
                     <div class="form-floating mb-3">
                         <input asp-for="Title" class="form-control form-control-lg" id="Title" placeholder=" "/>
@@ -65,15 +65,15 @@
                     </div>
 
                     <div class="d-grid gap-2 d-md-flex mt-4">
-                        <button type="submit" class="btn btn-primary btn-lg"><i class="bi bi-save me-2"></i>Save</button>
-                        <a asp-action="Index" asp-route-contactId="@Model.EntityId" class="btn btn-secondary btn-lg"><i class="bi bi-x-lg me-2"></i>Cancel</a>
+                        <button type="submit" class="crm-btn-primary"><i class="bi bi-save"></i> Save</button>
+                        <a asp-action="Index" asp-route-contactId="@Model.EntityId" class="crm-btn-tertiary"><i class="bi bi-x-lg"></i> Cancel</a>
                     </div>
                 </div>
             </div>
         </form>
 
-        <div class="card mt-4 shadow-sm border-0">
-            <div class="card-body">
+        <div class="crm-card mt-4">
+            <div class="crm-card-body">
                 <h5>Reminder Offsets</h5>
                 <p class="text-muted small">Manage when you are notified before the event.</p>
 
@@ -82,7 +82,7 @@
                     <input type="hidden" name="contactId" value="@Model.EntityId"/>
                     <div class="input-group">
                         <input type="number" name="daysBeforeEvent" class="form-control" placeholder="Days before" required min="0"/>
-                        <button type="submit" class="btn btn-outline-success">Add</button>
+                        <button type="submit" class="crm-btn-secondary">Add</button>
                     </div>
                 </form>
 
@@ -100,8 +100,8 @@
                                     <input type="hidden" name="offsetId" value="@offset.Id"/>
                                     <input type="hidden" name="significantDateId" value="@Model.Id"/>
                                     <input type="hidden" name="contactId" value="@Model.EntityId"/>
-                                    <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete offset" aria-label="Delete reminder offset">
-                                        <i class="bi bi-x" aria-hidden="true"></i>
+                                    <button type="submit" class="crm-icon-btn icon-danger" title="Delete offset" aria-label="Delete reminder offset">
+                                        <i class="bi bi-x-lg" aria-hidden="true"></i>
                                     </button>
                                 </form>
                             </li>

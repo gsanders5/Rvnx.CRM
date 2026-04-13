@@ -11,12 +11,12 @@
             <input type="hidden" asp-for="EntityId"/>
             <input type="hidden" asp-for="EntityType"/>
 
-            <div class="card border-0 shadow-sm rounded-3">
-                <div class="card-header bg-body-tertiary border-bottom p-3 rounded-top-3">
-                    <h4 class="mb-0"><i class="bi bi-calendar-heart me-2 text-primary"></i>Create Important Date</h4>
+            <div class="crm-form-card">
+                <div class="crm-form-card-header">
+                    <h4><i class="bi bi-calendar-heart" aria-hidden="true"></i> Create Important Date</h4>
                 </div>
 
-                <div class="card-body p-4">
+                <div class="crm-form-card-body">
 
                     <div class="form-floating mb-3">
                         <input asp-for="Title" class="form-control form-control-lg" id="Title" placeholder=" " autofocus/>
@@ -79,8 +79,8 @@
                     </div>
 
                     <div class="d-grid gap-2 d-md-flex mt-4">
-                        <button type="submit" class="btn btn-primary btn-lg"><i class="bi bi-plus-lg me-2"></i>Create</button>
-                        <a asp-action="Index" asp-route-contactId="@Model.EntityId" class="btn btn-secondary btn-lg"><i class="bi bi-x-lg me-2"></i>Cancel</a>
+                        <button type="submit" class="crm-btn-primary"><i class="bi bi-plus-lg"></i> Create</button>
+                        <a asp-action="Index" asp-route-contactId="@Model.EntityId" class="crm-btn-tertiary"><i class="bi bi-x-lg"></i> Cancel</a>
                     </div>
                 </div>
             </div>

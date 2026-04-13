@@ -2,11 +2,11 @@
 @using Rvnx.CRM.Core.Enumerations
 @model ContactDetailDto
 
-<div class="card mb-4 border shadow-sm">
-    <div class="card-header bg-transparent border-0 pt-3 px-3 d-flex justify-content-between align-items-center">
-        <h5 class="card-title mb-0 fw-bold"><i class="bi bi-share"></i> Social Media</h5>
+<div class="crm-card">
+    <div class="crm-card-header">
+        <h5 class="card-title mb-0"><i class="bi bi-share" aria-hidden="true"></i> Social Media</h5>
     </div>
-    <div class="card-body px-3 pb-3">
+    <div class="crm-card-body">
         @{
             var hasSocialMedia = false;
             if (Model.ContactMethods != null && Model.ContactMethods.Any())
@@ -17,7 +17,7 @@
                     hasSocialMedia = true;
                     var twitterHandle = Rvnx.CRM.Core.Helpers.SocialMediaUrlNormalizer.ExtractUsername(ContactMethodType.Twitter, twitterMethod.Value);
                     <div class="mb-4">
-                        <h6 class="fw-bold">Twitter (@@@twitterHandle)</h6>
+                        <h6 class="fw-semibold" style="font-size: 0.875rem;">Twitter (@@@twitterHandle)</h6>
                         <a class="twitter-timeline" href="@($"https://twitter.com/{twitterHandle}")" data-height="400">
                             Tweets by @@@twitterHandle
                         </a>
@@ -31,8 +31,7 @@
                     hasSocialMedia = true;
                     var twitchChannel = Rvnx.CRM.Core.Helpers.SocialMediaUrlNormalizer.ExtractUsername(ContactMethodType.Twitch, twitchMethod.Value);
                     <div class="mb-4">
-                        <h6 class="fw-bold">Twitch (@twitchChannel)</h6>
-                        <!-- Load the Twitch embed script -->
+                        <h6 class="fw-semibold" style="font-size: 0.875rem;">Twitch (@twitchChannel)</h6>
                         <script src="https://embed.twitch.tv/embed/v1.js"></script>
                         <div id="twitch-embed-@twitchChannel" style="width: 100%; height: 400px; min-height: 400px;"></div>
                         <script type="text/javascript">
@@ -53,8 +52,8 @@
                     hasSocialMedia = true;
                     var youtubeChannel = Rvnx.CRM.Core.Helpers.SocialMediaUrlNormalizer.ExtractUsername(ContactMethodType.YouTube, youtubeMethod.Value);
                     <div class="mb-4">
-                        <h6 class="fw-bold">YouTube (@youtubeChannel)</h6>
-                        <iframe width="100%" height="400" src="https://www.youtube.com/embed?listType=user_uploads&list=@youtubeChannel" frameborder="0" allowfullscreen></iframe>
+                        <h6 class="fw-semibold" style="font-size: 0.875rem;">YouTube (@youtubeChannel)</h6>
+                        <iframe width="100%" height="400" src="https://www.youtube.com/embed?listType=user_uploads&list=@youtubeChannel" frameborder="0" allowfullscreen style="border-radius: var(--crm-radius-sm);"></iframe>
                     </div>
                 }
 
@@ -64,7 +63,7 @@
                     hasSocialMedia = true;
                     var tiktokHandle = Rvnx.CRM.Core.Helpers.SocialMediaUrlNormalizer.ExtractUsername(ContactMethodType.TikTok, tiktokMethod.Value);
                     <div class="mb-4">
-                        <h6 class="fw-bold">TikTok (@tiktokHandle)</h6>
+                        <h6 class="fw-semibold" style="font-size: 0.875rem;">TikTok (@tiktokHandle)</h6>
                         <blockquote class="tiktok-embed" cite="https://www.tiktok.com/@@@tiktokHandle" data-unique-id="@tiktokHandle" data-embed-from="oembed" data-embed-type="creator" style="max-width:780px; min-width:288px;">
                             <section>
                                 <a target="_blank" href="https://www.tiktok.com/@@@tiktokHandle?refer=creator_embed">@@@tiktokHandle</a>
@@ -77,9 +76,9 @@
 
             if (!hasSocialMedia)
             {
-                <div class="text-center py-4 text-muted">
-                    <i class="bi bi-share display-6 d-block mb-3 opacity-25"></i>
-                    <p class="mb-2">No Linked Social Media</p>
+                <div class="crm-empty py-2">
+                    <i class="bi bi-share" aria-hidden="true"></i>
+                    <span>No linked social media accounts.</span>
                 </div>
             }
         }

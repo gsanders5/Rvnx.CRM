@@ -9,21 +9,21 @@
 
     @if (TempData["Message"] != null)
     {
-        <div class="alert alert-success">
+        <div class="crm-alert crm-alert-success">
             @TempData["Message"]
         </div>
     }
 
     @if (TempData["Error"] != null)
     {
-        <div class="alert alert-danger">
+        <div class="crm-alert crm-alert-danger">
             @TempData["Error"]
         </div>
     }
 
-    <div class="card">
-        <div class="card-body">
-            <p class="card-text">
+    <div class="crm-card">
+        <div class="crm-card-body">
+            <p>
                 Select two users to merge. All data from the smaller group (or the second user if tied) will be moved to the larger group.
                 The empty group will be deleted. <strong>This action is irreversible.</strong>
             </p>
@@ -56,8 +56,8 @@
                     <input type="text" id="confirmation" name="confirmation" class="form-control" placeholder="Type 'MERGE' to confirm" required />
                 </div>
 
-                <button type="submit" class="btn btn-danger" data-mdb-ripple-init>Merge Accounts</button>
-                <a asp-action="Index" class="btn btn-secondary" data-mdb-ripple-init>Back to Debug Operations</a>
+                <button type="submit" class="crm-btn-danger" data-mdb-ripple-init>Merge Accounts</button>
+                <a asp-action="Index" class="crm-btn-tertiary" data-mdb-ripple-init>Back to Debug Operations</a>
             </form>
         </div>
     </div>

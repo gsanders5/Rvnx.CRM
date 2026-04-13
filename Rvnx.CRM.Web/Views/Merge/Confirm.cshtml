@@ -15,11 +15,11 @@
     <div class="row mb-4">
         <!-- Secondary (Source) Contact -->
         <div class="col-md-5">
-            <div class="card h-100 border-danger shadow-sm">
-                <div class="card-header bg-danger text-white">
-                    <h5 class="mb-0 text-center"><i class="bi bi-person-x me-2"></i> Secondary Contact (Will Be Deleted)</h5>
+            <div class="crm-card h-100" style="border-color: var(--crm-danger);">
+                <div class="crm-card-header text-center" style="background-color: rgba(239, 71, 111, 0.08); color: var(--crm-danger);">
+                    <h5 class="mb-0"><i class="bi bi-person-x me-2"></i> Secondary Contact (Will Be Deleted)</h5>
                 </div>
-                <div class="card-body text-center">
+                <div class="crm-card-body text-center">
                     @if (Model.SecondaryContact?.ProfileImageId.HasValue == true)
                     {
                         <img src="@Url.Action("View", "Attachments", new { id = Model.SecondaryContact.ProfileImageId })" class="img-fluid rounded-circle mb-3" style="width: 150px; height: 150px; object-fit: cover;" alt="Profile Photo" />
@@ -47,19 +47,19 @@
         <!-- Arrow -->
         <div class="col-md-2 d-flex align-items-center justify-content-center">
             <div class="text-center">
-                <i class="bi bi-arrow-right-circle-fill text-primary d-none d-md-block" style="font-size: 4rem;"></i>
-                <i class="bi bi-arrow-down-circle-fill text-primary d-block d-md-none my-4" style="font-size: 3rem;"></i>
+                <i class="bi bi-arrow-right-circle-fill d-none d-md-block" style="font-size: 4rem; color: var(--crm-brand);"></i>
+                <i class="bi bi-arrow-down-circle-fill d-block d-md-none my-4" style="font-size: 3rem; color: var(--crm-brand);"></i>
                 <p class="small text-muted mt-2 fw-bold text-uppercase tracking-wide">Merges Into</p>
             </div>
         </div>
 
         <!-- Primary (Target) Contact -->
         <div class="col-md-5">
-            <div class="card h-100 border-success shadow-sm">
-                <div class="card-header bg-success text-white">
-                    <h5 class="mb-0 text-center"><i class="bi bi-person-check me-2"></i> Primary Contact (Will Be Kept)</h5>
+            <div class="crm-card h-100" style="border-color: var(--crm-success);">
+                <div class="crm-card-header text-center" style="background-color: rgba(45, 198, 83, 0.08); color: var(--crm-success);">
+                    <h5 class="mb-0"><i class="bi bi-person-check me-2"></i> Primary Contact (Will Be Kept)</h5>
                 </div>
-                <div class="card-body text-center">
+                <div class="crm-card-body text-center">
                     @if (Model.PrimaryContact?.ProfileImageId.HasValue == true)
                     {
                         <img src="@Url.Action("View", "Attachments", new { id = Model.PrimaryContact.ProfileImageId })" class="img-fluid rounded-circle mb-3" style="width: 150px; height: 150px; object-fit: cover;" alt="Profile Photo" />
@@ -87,8 +87,8 @@
 
     <div class="row">
         <div class="col text-center">
-            <div class="alert alert-warning d-inline-block text-start">
-                <h5 class="alert-heading"><i class="bi bi-exclamation-triangle-fill"></i> Warning: This action cannot be undone.</h5>
+            <div class="crm-alert crm-alert-warning d-inline-block text-start">
+                <h5><i class="bi bi-exclamation-triangle-fill"></i> Warning: This action cannot be undone.</h5>
                 <p class="mb-0">All data from <strong>@Model.SecondaryContact?.FullName</strong> will be moved to <strong>@Model.PrimaryContact?.FullName</strong>.<br />
                 Then, the contact record for <strong>@Model.SecondaryContact?.FullName</strong> will be permanently deleted.</p>
             </div>
@@ -97,10 +97,10 @@
                 <input type="hidden" name="primaryContactId" value="@Model.PrimaryContactId" />
                 <input type="hidden" name="secondaryContactId" value="@Model.SecondaryContactId" />
 
-                <a asp-action="Index" asp-route-primaryId="@Model.PrimaryContactId" class="btn btn-secondary btn-lg me-2">
+                <a asp-action="Index" asp-route-primaryId="@Model.PrimaryContactId" class="crm-btn-tertiary me-2">
                     <i class="bi bi-arrow-left"></i> Go Back
                 </a>
-                <button type="submit" class="btn btn-danger btn-lg">
+                <button type="submit" class="crm-btn-danger">
                     <i class="bi bi-diagram-3-fill"></i> Confirm Merge
                 </button>
             </form>

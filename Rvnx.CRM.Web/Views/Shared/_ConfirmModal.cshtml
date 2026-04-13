@@ -12,14 +12,14 @@
                 Are you sure?
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-mdb-ripple-init data-mdb-dismiss="modal">
+                <button type="button" class="crm-btn-tertiary" data-mdb-ripple-init data-mdb-dismiss="modal">
                     Cancel
                 </button>
                 @* The form action is set by JS before the modal opens *@
                 <form id="confirmModalForm" method="post" class="d-inline">
                     @Html.AntiForgeryToken()
-                    <button type="submit" id="confirmModalSubmit" class="btn btn-danger" data-mdb-ripple-init>
-                        <i class="bi bi-trash me-1"></i> Delete
+                    <button type="submit" id="confirmModalSubmit" class="crm-btn-danger" data-mdb-ripple-init>
+                        <i class="bi bi-trash"></i> Delete
                     </button>
                 </form>
             </div>

@@ -7,8 +7,8 @@
     <h1>Calendar</h1>
 </div>
 
-<div class="card shadow-sm">
-    <div class="card-body">
+<div class="crm-card">
+    <div class="crm-card-body">
         <div id="calendar"></div>
     </div>
 </div>
@@ -88,32 +88,32 @@
 
         /* ── Dark mode ── */
         [data-mdb-theme="dark"] {
-            --fc-border-color: rgba(255,255,255,0.1);
-            --fc-page-bg-color: #2d2d2d;
-            --fc-neutral-bg-color: #3a3a3a;
-            --fc-today-bg-color: rgba(99, 149, 255, 0.1);
-            --fc-button-bg-color: #3a3a3a;
-            --fc-button-border-color: rgba(255,255,255,0.2);
-            --fc-button-text-color: #e0e0e0;
-            --fc-button-hover-bg-color: #4a4a4a;
-            --fc-button-hover-border-color: rgba(255,255,255,0.3);
-            --fc-button-active-bg-color: #555555;
-            --fc-button-active-border-color: rgba(255,255,255,0.3);
+            --fc-border-color: var(--crm-border-subtle);
+            --fc-page-bg-color: var(--crm-surface-elevated);
+            --fc-neutral-bg-color: var(--crm-surface-secondary);
+            --fc-today-bg-color: rgba(90, 123, 255, 0.1);
+            --fc-button-bg-color: var(--crm-surface-secondary);
+            --fc-button-border-color: var(--crm-border);
+            --fc-button-text-color: var(--crm-text-primary);
+            --fc-button-hover-bg-color: rgba(255,255,255,0.08);
+            --fc-button-hover-border-color: var(--crm-border);
+            --fc-button-active-bg-color: rgba(255,255,255,0.12);
+            --fc-button-active-border-color: var(--crm-border);
             --fc-event-text-color: #fff;
             --fc-list-event-hover-bg-color: rgba(255,255,255,0.05);
         }
 
             [data-mdb-theme="dark"] .fc-col-header-cell-cushion,
             [data-mdb-theme="dark"] .fc-daygrid-day-number {
-                color: #9db4cc;
+                color: var(--crm-text-secondary);
             }
 
             [data-mdb-theme="dark"] .fc-day-other .fc-daygrid-day-number {
-                color: #555;
+                color: var(--crm-text-tertiary);
             }
 
             [data-mdb-theme="dark"] .fc .fc-toolbar-title {
-                color: #e0e0e0;
+                color: var(--crm-text-primary);
             }
     </style>
 }

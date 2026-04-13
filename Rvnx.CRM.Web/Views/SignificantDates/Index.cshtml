@@ -7,26 +7,26 @@
 
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h2><i class="bi bi-calendar-event me-2"></i>Significant Dates</h2>
-    <a asp-action="Create" asp-route-contactId="@contactId" class="btn btn-primary">
-        <i class="bi bi-plus-circle me-1"></i> Add New Date
+    <a asp-action="Create" asp-route-contactId="@contactId" class="crm-btn-primary btn-sm">
+        <i class="bi bi-plus-circle"></i> Add New Date
     </a>
 </div>
 
 @if (!Model.Any())
 {
     <div class="text-center py-5 my-5">
-        <i class="bi bi-calendar-event display-1 text-muted opacity-25 mb-3"></i>
-        <h3 class="h4 text-secondary mt-3">No Significant Dates</h3>
-        <p class="text-muted mb-4">No significant dates found for this contact.</p>
-        <a asp-action="Create" asp-route-contactId="@contactId" class="btn btn-primary btn-lg px-4">
-            <i class="bi bi-plus-lg me-2"></i>Add New Date
+        <i class="bi bi-calendar-event display-1 opacity-25 mb-3" style="color: var(--crm-text-tertiary);"></i>
+        <h3 class="h4 mt-3" style="color: var(--crm-text-secondary);">No Significant Dates</h3>
+        <p class="mb-4" style="color: var(--crm-text-tertiary);">No significant dates found for this contact.</p>
+        <a asp-action="Create" asp-route-contactId="@contactId" class="crm-btn-primary">
+            <i class="bi bi-plus-lg"></i> Add New Date
         </a>
     </div>
 }
 else
 {
-    <div class="card shadow-sm border-0">
-        <div class="card-body p-0">
+    <div class="crm-card" style="margin-bottom: 0;">
+        <div class="crm-card-body p-0">
             <div class="table-responsive">
                 <table class="table table-hover mb-0">
                     <thead>
@@ -72,7 +72,7 @@ else
                                     }
                                     @if (activeOffsets.Any())
                                     {
-                                        <span class="badge bg-info">@activeOffsets.Count active</span>
+                                        <span class="crm-badge crm-badge-info">@activeOffsets.Count active</span>
                                     }
                                     else
                                     {
@@ -82,19 +82,19 @@ else
                                 <td class="align-middle">
                                     @if (item.IsActive)
                                     {
-                                        <span class="badge bg-success">Active</span>
+                                        <span class="crm-badge crm-badge-success">Active</span>
                                     }
                                     else
                                     {
-                                        <span class="badge bg-secondary">Inactive</span>
+                                        <span class="crm-badge crm-badge-muted">Inactive</span>
                                     }
                                 </td>
                                 <td class="align-middle text-end">
-                                    <div class="btn-group btn-group-sm">
-                                        <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-outline-secondary" title="Edit" aria-label="Edit @item.Title">
+                                    <div class="crm-icon-actions">
+                                        <a asp-action="Edit" asp-route-id="@item.Id" class="crm-icon-btn icon-edit" title="Edit" aria-label="Edit @item.Title">
                                             <i class="bi bi-pencil-square"></i>
                                         </a>
-                                        <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-outline-danger" title="Delete" aria-label="Delete @item.Title">
+                                        <a asp-action="Delete" asp-route-id="@item.Id" class="crm-icon-btn icon-danger" title="Delete" aria-label="Delete @item.Title">
                                             <i class="bi bi-trash"></i>
                                         </a>
                                     </div>
@@ -109,7 +109,7 @@ else
 }
 
 <div class="mt-4">
-    <a asp-controller="Contacts" asp-action="Details" asp-route-id="@contactId" class="btn btn-secondary">
-        <i class="bi bi-arrow-left me-1"></i> Back to Contact
+    <a asp-controller="Contacts" asp-action="Details" asp-route-id="@contactId" class="crm-btn-tertiary">
+        <i class="bi bi-arrow-left"></i> Back to Contact
     </a>
 </div>

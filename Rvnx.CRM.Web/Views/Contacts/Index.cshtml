@@ -9,14 +9,14 @@
     <div class="d-flex flex-wrap gap-2 mt-3 mt-md-0">
         @if (Context.Request.Query["showHidden"] == "True")
         {
-            <a asp-action="Index" asp-route-showHidden="False" class="btn btn-outline-secondary">Hide Hidden</a>
+            <a asp-action="Index" asp-route-showHidden="False" class="crm-btn-tertiary btn-sm">Hide Hidden</a>
         }
         else
         {
-            <a asp-action="Index" asp-route-showHidden="True" class="btn btn-outline-secondary">View Hidden</a>
+            <a asp-action="Index" asp-route-showHidden="True" class="crm-btn-tertiary btn-sm">View Hidden</a>
         }
-        <a asp-action="Import" class="btn btn-outline-primary"><i class="fa-solid fa-file-import"></i> Import VCF</a>
-        <a asp-action="Create" class="btn btn-primary"><i class="bi bi-plus-lg"></i> Create New</a>
+        <a asp-action="Import" class="crm-btn-secondary btn-sm"><i class="fa-solid fa-file-import"></i> Import VCF</a>
+        <a asp-action="Create" class="crm-btn-primary btn-sm"><i class="bi bi-plus-lg"></i> Create New</a>
     </div>
 </div>
 
@@ -24,7 +24,7 @@
 
 @if (Model.SuccessMessage != null)
 {
-    <div class="alert alert-success alert-dismissible fade show" role="alert">
+    <div class="alert alert-dismissible fade show" role="alert" style="background-color: rgba(45, 198, 83, 0.1); color: var(--crm-success); border: 1px solid rgba(45, 198, 83, 0.2); border-radius: var(--crm-radius-sm);">
         @Model.SuccessMessage
         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
     </div>
@@ -59,23 +59,23 @@
                         <div class="d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
                             @if (item.ProfileImageId.HasValue)
                             {
-                                    <img src="@Url.Action("Thumbnail", "Attachments", new { id = item.ProfileImageId, maxWidth = 80, maxHeight = 80 })" class="rounded-circle" width="40" height="40" alt="@item.FullName" style="object-fit: cover;" loading="lazy" />
+                                <img src="@Url.Action("Thumbnail", "Attachments", new { id = item.ProfileImageId, maxWidth = 80, maxHeight = 80 })" class="crm-avatar" width="40" height="40" alt="@item.FullName" loading="lazy" />
                             }
                             else
                             {
-                                <div class="rounded-circle bg-secondary text-white d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                <div class="crm-avatar-placeholder">
                                     <i class="bi bi-person-fill" aria-hidden="true"></i>
                                 </div>
                             }
                         </div>
                     </td>
                     <td data-order="@(item.IsFavorite ? "0" : "1") @item.FullName">
-                        <a asp-action="Details" asp-route-id="@item.Id" class="fw-bold text-decoration-none">
+                        <a asp-action="Details" asp-route-id="@item.Id" class="fw-semibold text-decoration-none" style="color: var(--crm-text-primary);">
                             @item.FullName
                         </a>
                         @if (item.IsHidden)
                         {
-                            <span class="badge bg-secondary ms-2" title="Hidden">
+                            <span class="crm-badge crm-badge-muted ms-2" title="Hidden">
                                 <i class="bi bi-eye-slash" aria-hidden="true"></i>
                             </span>
                         }
@@ -102,23 +102,25 @@
                         @(item.Birthday.HasValue ? item.Birthday.Value.ToShortDateString() : "—")
                     </td>
                     <td>
-                        <div class="btn-group btn-group-sm">
+                        <div class="crm-icon-actions">
                             <button type="button"
-                                    class="btn btn-sm @(item.IsFavorite ? "btn-warning" : "btn-outline-secondary") btn-favorite"
+                                    class="crm-icon-btn btn-favorite"
+                                    style="color: @(item.IsFavorite ? "var(--crm-warning)" : "var(--crm-text-tertiary)");"
                                     title="@(item.IsFavorite ? "Remove from favorites" : "Add to favorites")"
                                     aria-label="@(item.IsFavorite ? "Remove" : "Add") @item.FullName @(item.IsFavorite ? "from" : "to") favorites"
                                     data-contact-id="@item.Id"
-                                    data-contact-name="@item.FullName">
+                                    data-contact-name="@item.FullName"
+                                    data-is-favorite="@item.IsFavorite.ToString().ToLower()">
                                 <i class="bi @(item.IsFavorite ? "bi-star-fill" : "bi-star")" aria-hidden="true"></i>
                             </button>
-                            <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-outline-secondary" title="Edit" aria-label="Edit @item.FullName">
+                            <a asp-action="Edit" asp-route-id="@item.Id" class="crm-icon-btn icon-edit" title="Edit" aria-label="Edit @item.FullName">
                                 <i class="bi bi-pencil-square" aria-hidden="true"></i>
                             </a>
-                            <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-outline-info" title="Details" aria-label="Details for @item.FullName">
+                            <a asp-action="Details" asp-route-id="@item.Id" class="crm-icon-btn" style="color: var(--crm-info);" title="Details" aria-label="Details for @item.FullName">
                                 <i class="bi bi-info-circle" aria-hidden="true"></i>
                             </a>
                             <button type="button"
-                                    class="btn btn-outline-danger btn-sm"
+                                    class="crm-icon-btn icon-danger"
                                     title="Delete"
                                     aria-label="Delete @item.FullName"
                                     data-confirm-action="@Url.Action("Delete", new { id = item.Id })"
@@ -140,14 +142,14 @@
 else
 {
     <div class="text-center py-5 my-5">
-        <i class="bi bi-person-rolodex display-1 text-muted opacity-25 mb-3"></i>
-        <h3 class="h4 text-secondary mt-3">No contacts found</h3>
-        <p class="text-muted mb-4">
+        <i class="bi bi-person-rolodex display-1 opacity-25 mb-3" style="color: var(--crm-text-tertiary);"></i>
+        <h3 class="h4 mt-3" style="color: var(--crm-text-secondary);">No contacts found</h3>
+        <p class="mb-4" style="color: var(--crm-text-tertiary);">
             @(Context.Request.Query["showHidden"] == "True"
                 ? "There are no hidden contacts at the moment."
                 : "Get started by adding your first contact to the system.")
         </p>
-        <a asp-action="Create" class="btn btn-primary btn-lg px-4">
+        <a asp-action="Create" class="crm-btn-primary" style="padding: 0.5rem 1.25rem;">
             <i class="bi bi-plus-lg me-2"></i>Create Contact
         </a>
     </div>
@@ -172,8 +174,8 @@ else
                     success: function (result) {
                         var isFavorite = result.isFavorite;
 
-                        btn.toggleClass('btn-warning', isFavorite);
-                        btn.toggleClass('btn-outline-secondary', !isFavorite);
+                        btn.css('color', isFavorite ? 'var(--crm-warning)' : 'var(--crm-text-tertiary)');
+                        btn.data('is-favorite', isFavorite);
                         btn.find('i').toggleClass('bi-star-fill', isFavorite);
                         btn.find('i').toggleClass('bi-star', !isFavorite);
                         btn.attr('title', isFavorite ? 'Remove from favorites' : 'Add to favorites');
@@ -213,7 +215,7 @@ else
                 columnDefs: [
                     { orderable: false, targets: 'no-sort' },
                     { visible: false, targets: 'default-hidden' },
-                    { searchable: false, targets: 'default-hidden' }, // off by default; toggled in event below
+                    { searchable: false, targets: 'default-hidden' },
                     { width: '60px', targets: 'col-photo' },
                     { width: '155px', targets: 'col-actions' }
                 ],
@@ -225,11 +227,6 @@ else
                 }
             });
 
-            // When a column is shown/hidden via the chooser, sync its searchable flag
-            // so searching only applies to columns the user can actually see.
-            // Note: table.on() auto-appends the .dt namespace, so do NOT add it here.
-            // rows().invalidate() is required to rebuild DataTables' internal search cache
-            // for the newly visible column — flipping bSearchable alone is not enough.
             table.on('column-visibility', function (e, settings, colIdx, state) {
                 settings.aoColumns[colIdx].bSearchable = state;
                 table.rows().invalidate('data').draw(false);

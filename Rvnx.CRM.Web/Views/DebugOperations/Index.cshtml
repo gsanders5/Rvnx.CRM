@@ -7,29 +7,27 @@
 
     @if (TempData["Message"] != null)
     {
-        <div class="alert alert-info alert-dismissible fade show" role="alert">
+        <div class="crm-alert crm-alert-info" role="alert">
             @TempData["Message"]
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
     }
 
-    <div class="card mb-4">
-        <div class="card-header">
-            Database Operations
+    <div class="crm-card mb-4">
+        <div class="crm-card-header">
+            <h5 class="mb-0">Database Operations</h5>
         </div>
-        <div class="card-body">
-            <h5 class="card-title">Seed Data</h5>
-            <p class="card-text">Populate the database with sample data.</p>
+        <div class="crm-card-body">
+            <p>Populate the database with sample data.</p>
 
             <div class="d-flex gap-2">
                 <form asp-action="SeedTestData" method="post">
-                    <button type="submit" class="btn btn-primary">
+                    <button type="submit" class="crm-btn-primary">
                         <i class="bi bi-database-add"></i> Add Test Contacts
                     </button>
                 </form>
 
                 <form asp-action="AddRandomRelationships" method="post">
-                    <button type="submit" class="btn btn-success">
+                    <button type="submit" class="crm-btn-secondary">
                         <i class="bi bi-people-fill"></i> Add Random Relationships
                     </button>
                 </form>
@@ -37,28 +35,26 @@
         </div>
     </div>
 
-    <div class="card mb-4">
-        <div class="card-header">
-            Account Management
+    <div class="crm-card mb-4">
+        <div class="crm-card-header">
+            <h5 class="mb-0">Account Management</h5>
         </div>
-        <div class="card-body">
-            <h5 class="card-title">Merge Accounts</h5>
-            <p class="card-text">Combine two user accounts into a single shared group.</p>
-            <a asp-action="MergeAccounts" class="btn btn-warning">
+        <div class="crm-card-body">
+            <p>Combine two user accounts into a single shared group.</p>
+            <a asp-action="MergeAccounts" class="crm-btn-secondary">
                 <i class="bi bi-person-fill-gear"></i> Merge Accounts (Admin Only)
             </a>
         </div>
     </div>
 
-    <div class="card border-danger">
-        <div class="card-header bg-danger text-white">
-            Danger Zone
+    <div class="crm-card" style="border-color: rgba(239, 71, 111, 0.3);">
+        <div class="crm-card-header" style="background-color: rgba(239, 71, 111, 0.08); color: var(--crm-danger);">
+            <h5 class="mb-0">Danger Zone</h5>
         </div>
-        <div class="card-body">
-            <h5 class="card-title">Reset Database</h5>
-            <p class="card-text text-danger">Warning: This will delete all data!</p>
+        <div class="crm-card-body">
+            <p style="color: var(--crm-danger);">Warning: This will delete all data!</p>
             <form asp-action="ResetDatabase" method="post">
-                <button type="submit" class="btn btn-danger" onclick="return confirm('Are you sure you want to delete everything?');">
+                <button type="submit" class="crm-btn-danger" onclick="return confirm('Are you sure you want to delete everything?');">
                     <i class="bi bi-trash"></i> Reset Database
                 </button>
             </form>

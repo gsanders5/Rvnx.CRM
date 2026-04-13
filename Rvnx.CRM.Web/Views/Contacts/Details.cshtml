@@ -18,273 +18,210 @@
     ViewData["Title"] = "Details";
 }
 
-<style>
-    /* Attachment Gallery Styles */
-    @@media (min-width: 768px) {
-        .attachment-card .attachment-actions {
-            opacity: 0;
-            transition: opacity 0.2s ease-in-out;
-        }
-        .attachment-card:hover .attachment-actions {
-            opacity: 1;
-        }
-        .attachment-card:hover .preview-overlay {
-            opacity: 1 !important;
-        }
-    }
-
-    .attachment-card {
-        transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
-    }
-
-    .attachment-card:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 .5rem 1rem rgba(0,0,0,.15)!important;
-    }
-
-    /* Fullscreen Media Lightbox Overlay */
-    #media-lightbox {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100vw;
-        height: 100vh;
-        background-color: rgba(0, 0, 0, 0.85);
-        z-index: 1050; /* Bootstrap modal z-index */
-        display: none;
-        align-items: center;
-        justify-content: center;
-        backdrop-filter: blur(5px);
-    }
-    #media-lightbox.active {
-        display: flex;
-    }
-    #media-lightbox-img {
-        max-width: 90vw;
-        max-height: 85vh;
-        object-fit: contain;
-        box-shadow: 0 0 20px rgba(0,0,0,0.5);
-    }
-    .lightbox-toolbar {
-        position: absolute;
-        top: 20px;
-        right: 20px;
-        display: flex;
-        gap: 15px;
-    }
-    .lightbox-toolbar a, .lightbox-toolbar button {
-        color: rgba(255, 255, 255, 0.7);
-        text-decoration: none;
-        background: transparent;
-        border: none;
-        font-size: 1.5rem;
-        cursor: pointer;
-        transition: color 0.2s;
-    }
-    .lightbox-toolbar a:hover, .lightbox-toolbar button:hover {
-        color: white;
-    }
-    .lightbox-title {
-        position: absolute;
-        bottom: 20px;
-        left: 20px;
-        color: white;
-        font-size: 1.2rem;
-        text-shadow: 1px 1px 3px rgba(0,0,0,0.8);
-    }
-</style>
-
 <div class="container">
-<div class="d-flex flex-column flex-md-row justify-content-between align-items-center mb-4 gap-3">
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-center mb-4 gap-3 crm-action-bar">
     <h1 class="mb-0 text-center text-md-start">@Model.FullName</h1>
-    <div class="d-flex gap-2 flex-wrap justify-content-center">
-        <a asp-controller="Merge" asp-action="Index" asp-route-primaryId="@Model.Id" class="btn btn-outline-warning"><i class="bi bi-diagram-3"></i> Merge</a>
-        <a asp-action="Export" asp-route-id="@Model.Id" class="btn btn-outline-primary"><i class="fa-solid fa-file-export"></i> Export VCF</a>
-        <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-primary"><i class="bi bi-pencil-square"></i> Edit</a>
-        <a asp-action="Index" class="btn btn-secondary"><i class="bi bi-arrow-left"></i> Back</a>
+
+    @* Desktop action buttons *@
+    <div class="d-none d-md-flex gap-2 flex-wrap justify-content-center crm-action-bar-full">
+        <a asp-controller="Merge" asp-action="Index" asp-route-primaryId="@Model.Id" class="crm-btn-secondary btn-sm"><i class="bi bi-diagram-3"></i> Merge</a>
+        <a asp-action="Export" asp-route-id="@Model.Id" class="crm-btn-secondary btn-sm"><i class="fa-solid fa-file-export"></i> Export VCF</a>
+        <a asp-action="Edit" asp-route-id="@Model.Id" class="crm-btn-primary btn-sm"><i class="bi bi-pencil-square"></i> Edit</a>
+        <a asp-action="Index" class="crm-btn-tertiary btn-sm"><i class="bi bi-arrow-left"></i> Back</a>
+    </div>
+
+    @* Mobile action dropdown *@
+    <div class="d-flex d-md-none gap-2 crm-action-bar-mobile">
+        <a asp-action="Edit" asp-route-id="@Model.Id" class="crm-btn-primary btn-sm"><i class="bi bi-pencil-square"></i> Edit</a>
+        <div class="dropdown">
+            <button class="crm-btn-secondary btn-sm dropdown-toggle" type="button" data-mdb-dropdown-init data-mdb-toggle="dropdown" aria-expanded="false">
+                <i class="bi bi-three-dots-vertical"></i> Actions
+            </button>
+            <ul class="dropdown-menu dropdown-menu-end">
+                <li><a class="dropdown-item" asp-controller="Merge" asp-action="Index" asp-route-primaryId="@Model.Id"><i class="bi bi-diagram-3 me-2"></i>Merge</a></li>
+                <li><a class="dropdown-item" asp-action="Export" asp-route-id="@Model.Id"><i class="fa-solid fa-file-export me-2"></i>Export VCF</a></li>
+                <li><hr class="dropdown-divider"></li>
+                <li><a class="dropdown-item" asp-action="Index"><i class="bi bi-arrow-left me-2"></i>Back to Contacts</a></li>
+            </ul>
+        </div>
     </div>
 </div>
 
 <div class="row">
-<!-- Main Info -->
+<!-- Left Column -->
 <div class="col-md-4">
     <!-- Profile Card -->
-    <div class="card mb-4 shadow-sm">
+    <div class="crm-card">
         @if (Model.ProfileImageId.HasValue)
         {
-            <img src="@Url.Action("View", "Attachments", new { id = Model.ProfileImageId })" class="card-img-top card-img-profile" alt="Profile photo of @Model.FullName">
+            <img src="@Url.Action("View", "Attachments", new { id = Model.ProfileImageId })" class="crm-profile-image w-100" alt="Profile photo of @Model.FullName" style="border-radius: var(--crm-radius-md) var(--crm-radius-md) 0 0;">
         }
         else
         {
-            <div class="card-img-top d-flex align-items-center justify-content-center bg-body-tertiary text-muted" style="height: 300px;" role="img" aria-label="Default profile placeholder">
+            <div class="crm-profile-placeholder" role="img" aria-label="Default profile placeholder">
                 <i class="bi bi-person-fill display-1" aria-hidden="true"></i>
             </div>
         }
-        <div class="card-header">
-            <h5 class="card-title mb-0"><i class="bi bi-person-lines-fill"></i> Primary Info</h5>
+        <div class="crm-card-header">
+            <h5 class="card-title mb-0"><i class="bi bi-person-lines-fill" aria-hidden="true"></i> <span class="crm-section-label">Primary Info</span></h5>
         </div>
-        <div class="card-body">
-            <dl class="row mb-0">
+        <div class="crm-card-body">
+            <dl class="row mb-0" style="font-size: 0.875rem; line-height: 1.5;">
                 @if (!string.IsNullOrEmpty(Model.MaidenName))
                 {
-                    <dt class="col-sm-4">Maiden Name</dt>
+                    <dt class="col-sm-4" style="color: var(--crm-text-secondary);">Maiden Name</dt>
                     <dd class="col-sm-8">@Model.MaidenName</dd>
                 }
 
                 @if (!string.IsNullOrEmpty(Model.Nickname))
                 {
-                    <dt class="col-sm-4">Nickname</dt>
+                    <dt class="col-sm-4" style="color: var(--crm-text-secondary);">Nickname</dt>
                     <dd class="col-sm-8">@Model.Nickname</dd>
                 }
 
                 @if (!string.IsNullOrEmpty(Model.Company))
                 {
-                    <dt class="col-sm-4">Company</dt>
+                    <dt class="col-sm-4" style="color: var(--crm-text-secondary);">Company</dt>
                     <dd class="col-sm-8">@Model.Company</dd>
                 }
 
                 @if (!string.IsNullOrEmpty(Model.JobTitle))
                 {
-                    <dt class="col-sm-4">Job Title</dt>
+                    <dt class="col-sm-4" style="color: var(--crm-text-secondary);">Job Title</dt>
                     <dd class="col-sm-8">@Model.JobTitle</dd>
                 }
 
                 @if (!string.IsNullOrEmpty(Model.Pronouns))
                 {
-                    <dt class="col-sm-4">Pronouns</dt>
+                    <dt class="col-sm-4" style="color: var(--crm-text-secondary);">Pronouns</dt>
                     <dd class="col-sm-8">@Model.Pronouns</dd>
                 }
 
                 @if (!string.IsNullOrEmpty(Model.Gender))
                 {
-                    <dt class="col-sm-4">Gender</dt>
+                    <dt class="col-sm-4" style="color: var(--crm-text-secondary);">Gender</dt>
                     <dd class="col-sm-8">@Model.Gender</dd>
                 }
 
                 @if (!string.IsNullOrEmpty(Model.Religion))
                 {
-                    <dt class="col-sm-4">Religion</dt>
+                    <dt class="col-sm-4" style="color: var(--crm-text-secondary);">Religion</dt>
                     <dd class="col-sm-8">@Model.Religion</dd>
                 }
             </dl>
         </div>
     </div>
 
-    <!-- Additional Contact Info -->
-    <div class="card mb-4 border shadow-sm">
-        <div class="card-header bg-transparent border-0 pt-3 px-3 d-flex justify-content-between align-items-center">
-            <h5 class="card-title mb-0 fw-bold"><i class="bi bi-person-badge"></i> Contact Info</h5>
-            <a asp-controller="ContactMethods" asp-action="Create" asp-route-entityId="@Model.Id" asp-route-entityType="Person" class="btn btn-sm btn-outline-primary" aria-label="Add Contact Info"><i class="bi bi-plus-lg" aria-hidden="true"></i> Add</a>
+    <!-- Contact Info -->
+    <div class="crm-card">
+        <div class="crm-card-header">
+            <h5 class="card-title mb-0"><i class="bi bi-person-badge" aria-hidden="true"></i> Contact Info</h5>
+            <a asp-controller="ContactMethods" asp-action="Create" asp-route-entityId="@Model.Id" asp-route-entityType="Person" class="crm-btn-secondary btn-sm" aria-label="Add Contact Info"><i class="bi bi-plus-lg" aria-hidden="true"></i> Add</a>
         </div>
-        <div class="card-body px-3 pb-3">
+        <div class="crm-card-body">
             @if (Model.ContactMethods != null && Model.ContactMethods.Any())
             {
-                <ul class="list-group list-group-flush">
-                    @foreach (var info in Model.ContactMethods)
-                    {
-                        <li class="list-group-item d-flex justify-content-between align-items-center px-0">
-                            <div>
-                                <div class="fw-bold">@info.Type @(string.IsNullOrEmpty(info.Label) ? "" : $"({info.Label})")</div>
-                                <div class="text-break">
-                                    @if (info.Type == ContactMethodType.Email)
-                                    {
-                                        <a href="mailto:@info.Value">@info.Value</a>
-                                    }
-                                    else if (info.Type == ContactMethodType.Phone)
-                                    {
-                                        <a href="tel:@info.Value">@info.Value</a>
-                                    }
-                                    else if (info.Type == ContactMethodType.Website || info.Value.StartsWith("http"))
-                                    {
-                                        <a href="@info.Value" target="_blank">@info.Value</a>
-                                    }
-                                    else
-                                    {
-                                        @info.Value
-                                    }
-                                </div>
+                @foreach (var info in Model.ContactMethods)
+                {
+                    <div class="crm-list-item d-flex justify-content-between align-items-center">
+                        <div>
+                            <div class="fw-semibold" style="font-size: 0.875rem;">@info.Type @(string.IsNullOrEmpty(info.Label) ? "" : $"({info.Label})")</div>
+                            <div class="text-break" style="font-size: 0.875rem;">
+                                @if (info.Type == ContactMethodType.Email)
+                                {
+                                    <a href="mailto:@info.Value" style="color: var(--crm-brand);">@info.Value</a>
+                                }
+                                else if (info.Type == ContactMethodType.Phone)
+                                {
+                                    <a href="tel:@info.Value" style="color: var(--crm-brand);">@info.Value</a>
+                                }
+                                else if (info.Type == ContactMethodType.Website || info.Value.StartsWith("http"))
+                                {
+                                    <a href="@info.Value" target="_blank" style="color: var(--crm-brand);">@info.Value</a>
+                                }
+                                else
+                                {
+                                    @info.Value
+                                }
                             </div>
-                            <div class="btn-group btn-group-sm">
-                                <button type="button" class="btn btn-outline-secondary btn-copy" data-clipboard-text="@info.Value" title="Copy to clipboard" aria-label="Copy @info.Value to clipboard">
-                                    <i class="bi bi-clipboard"></i>
-                                </button>
-                                <a asp-controller="ContactMethods" asp-action="Edit" asp-route-id="@info.Id" class="btn btn-outline-secondary" title="Edit" aria-label="Edit @info.Type @info.Value">
-                                    <i class="bi bi-pencil-square"></i>
-                                </a>
-                                <a asp-controller="ContactMethods" asp-action="Delete" asp-route-id="@info.Id" class="btn btn-outline-danger" title="Delete" aria-label="Delete @info.Type @info.Value">
-                                    <i class="bi bi-trash"></i>
-                                </a>
-                            </div>
-                        </li>
-                    }
-                </ul>
+                        </div>
+                        <div class="crm-icon-actions">
+                            <button type="button" class="crm-icon-btn icon-copy btn-copy" data-clipboard-text="@info.Value" title="Copy to clipboard" aria-label="Copy @info.Value to clipboard">
+                                <i class="bi bi-clipboard"></i>
+                            </button>
+                            <a asp-controller="ContactMethods" asp-action="Edit" asp-route-id="@info.Id" class="crm-icon-btn icon-edit" title="Edit" aria-label="Edit @info.Type @info.Value">
+                                <i class="bi bi-pencil-square"></i>
+                            </a>
+                            <a asp-controller="ContactMethods" asp-action="Delete" asp-route-id="@info.Id" class="crm-icon-btn icon-danger" title="Delete" aria-label="Delete @info.Type @info.Value">
+                                <i class="bi bi-trash"></i>
+                            </a>
+                        </div>
+                    </div>
+                }
             }
             else
             {
-                <div class="text-center py-4 text-muted">
-                    <i class="bi bi-person-badge display-6 d-block mb-3 opacity-25"></i>
-                    <p class="mb-2">No additional info.</p>
-                    <a asp-controller="ContactMethods" asp-action="Create" asp-route-entityId="@Model.Id" asp-route-entityType="Person" class="btn btn-sm btn-primary mt-2" aria-label="Add Contact Info"><i class="bi bi-plus-lg" aria-hidden="true"></i> Add Info</a>
+                <div class="crm-empty py-2">
+                    <i class="bi bi-person-badge" aria-hidden="true"></i>
+                    <span>Add emails, phone numbers, or websites.</span>
                 </div>
             }
 
             <!-- Addresses -->
-            <div class="mt-3 pt-3 border-top">
+            <div class="mt-3 pt-3" style="border-top: 1px solid var(--crm-border-subtle);">
                 <div class="d-flex justify-content-between align-items-center mb-2">
-                    <h6 class="fw-bold mb-0"><i class="bi bi-geo-alt"></i> Addresses</h6>
-                    <a asp-controller="Addresses" asp-action="Create" asp-route-entityId="@Model.Id" class="btn btn-sm btn-outline-primary" aria-label="Add Address"><i class="bi bi-plus-lg" aria-hidden="true"></i></a>
+                    <h6 class="crm-section-label mb-0"><i class="bi bi-geo-alt me-1" aria-hidden="true"></i> ADDRESSES</h6>
+                    <a asp-controller="Addresses" asp-action="Create" asp-route-entityId="@Model.Id" class="crm-btn-secondary btn-sm" style="padding: 0.125rem 0.5rem;" aria-label="Add Address"><i class="bi bi-plus-lg" aria-hidden="true"></i></a>
                 </div>
                 @if (Model.Addresses != null && Model.Addresses.Any())
                 {
-                    <ul class="list-group list-group-flush">
-                        @foreach (var address in Model.Addresses)
-                        {
-                            <li class="list-group-item d-flex justify-content-between align-items-start px-0">
-                                <div>
-                                    <div class="fw-bold">@address.AddressType</div>
-                                    <div class="text-break">
-                                        @address.Line1<br/>
-                                        @if (!string.IsNullOrWhiteSpace(address.Line2))
+                    @foreach (var address in Model.Addresses)
+                    {
+                        <div class="crm-list-item d-flex justify-content-between align-items-start">
+                            <div>
+                                <div class="fw-semibold" style="font-size: 0.875rem;">@address.AddressType</div>
+                                <div class="text-break" style="font-size: 0.875rem; color: var(--crm-text-secondary);">
+                                    @address.Line1<br/>
+                                    @if (!string.IsNullOrWhiteSpace(address.Line2))
+                                    {
+                                        @address.Line2<br/>
+                                    }
+                                    @if (!string.IsNullOrWhiteSpace(address.City) || !string.IsNullOrWhiteSpace(address.State) || !string.IsNullOrWhiteSpace(address.Zip))
+                                    {
+                                        var cityStateZip = string.Join(", ",
+                                            new[] { address.City, address.State }.Where(s => !string.IsNullOrWhiteSpace(s)));
+                                        if (!string.IsNullOrWhiteSpace(address.Zip))
                                         {
-                                            @address.Line2<br/>
+                                            cityStateZip = string.IsNullOrEmpty(cityStateZip) ? address.Zip : $"{cityStateZip} {address.Zip}";
                                         }
-                                        @if (!string.IsNullOrWhiteSpace(address.City) || !string.IsNullOrWhiteSpace(address.State) || !string.IsNullOrWhiteSpace(address.Zip))
-                                        {
-                                            var cityStateZip = string.Join(", ",
-                                                new[] { address.City, address.State }.Where(s => !string.IsNullOrWhiteSpace(s)));
-                                            if (!string.IsNullOrWhiteSpace(address.Zip))
-                                            {
-                                                cityStateZip = string.IsNullOrEmpty(cityStateZip) ? address.Zip : $"{cityStateZip} {address.Zip}";
-                                            }
-                                            @cityStateZip<br/>
-                                        }
-                                        @if (!string.IsNullOrWhiteSpace(address.Country))
-                                        {
-                                            @address.Country
-                                        }
-                                    </div>
+                                        @cityStateZip<br/>
+                                    }
+                                    @if (!string.IsNullOrWhiteSpace(address.Country))
+                                    {
+                                        @address.Country
+                                    }
                                 </div>
-                                <div class="btn-group btn-group-sm">
-                                    <a asp-controller="Addresses" asp-action="Edit" asp-route-id="@address.Id" class="btn btn-outline-secondary" title="Edit" aria-label="Edit @address.AddressType address">
-                                        <i class="bi bi-pencil-square"></i>
-                                    </a>
-                                    <a asp-controller="Addresses" asp-action="Delete" asp-route-id="@address.Id" class="btn btn-outline-danger" title="Delete" aria-label="Delete @address.AddressType address">
-                                        <i class="bi bi-trash"></i>
-                                    </a>
-                                </div>
-                            </li>
-                        }
-                    </ul>
+                            </div>
+                            <div class="crm-icon-actions">
+                                <a asp-controller="Addresses" asp-action="Edit" asp-route-id="@address.Id" class="crm-icon-btn icon-edit" title="Edit" aria-label="Edit @address.AddressType address">
+                                    <i class="bi bi-pencil-square"></i>
+                                </a>
+                                <a asp-controller="Addresses" asp-action="Delete" asp-route-id="@address.Id" class="crm-icon-btn icon-danger" title="Delete" aria-label="Delete @address.AddressType address">
+                                    <i class="bi bi-trash"></i>
+                                </a>
+                            </div>
+                        </div>
+                    }
                 }
                 else
                 {
-                    <p class="text-muted small mb-0">No addresses.</p>
+                    <p class="crm-meta mb-0">No addresses on file.</p>
                 }
             </div>
 
             @if (Model.Labels != null && Model.Labels.Any())
             {
-                <div class="mt-3 pt-3 border-top d-flex gap-1 flex-wrap">
+                <div class="mt-3 pt-3 d-flex gap-1 flex-wrap" style="border-top: 1px solid var(--crm-border-subtle);">
                     @foreach (var label in Model.Labels)
                     {
                         @await Html.PartialAsync("_LabelBadge", label)
@@ -295,60 +232,59 @@
     </div>
 
     <!-- Quick Facts -->
-    <div class="card mb-4 border shadow-sm">
-        <div class="card-header bg-transparent border-0 pt-3 px-3 d-flex justify-content-between align-items-center">
-            <h5 class="card-title mb-0 fw-bold"><i class="bi bi-lightbulb"></i> Quick Facts</h5>
-            <a asp-controller="Facts" asp-action="Create" asp-route-entityId="@Model.Id" asp-route-entityType="Person" class="btn btn-sm btn-outline-primary" aria-label="Add Quick Fact"><i class="bi bi-plus-lg" aria-hidden="true"></i> Add</a>
+    <div class="crm-card">
+        <div class="crm-card-header">
+            <h5 class="card-title mb-0"><i class="bi bi-lightbulb" aria-hidden="true"></i> Quick Facts</h5>
+            <a asp-controller="Facts" asp-action="Create" asp-route-entityId="@Model.Id" asp-route-entityType="Person" class="crm-btn-secondary btn-sm" aria-label="Add Quick Fact"><i class="bi bi-plus-lg" aria-hidden="true"></i> Add</a>
         </div>
-        <div class="card-body px-3 pb-3">
+        <div class="crm-card-body">
             @if (Model.Facts != null && Model.Facts.Any())
             {
                 var groups = Model.Facts.GroupBy(f => f.Category).OrderBy(g => g.Key);
 
                 foreach (var group in groups)
                 {
-                    <h6 class="text-primary small fw-bold mt-2 mb-1 border-bottom pb-1">@group.Key</h6>
-                    <ul class="list-group list-group-flush mb-2">
-                        @foreach (var fact in group)
-                        {
-                            <li class="list-group-item d-flex justify-content-between align-items-center px-0 py-1 border-0 bg-transparent">
+                    <div class="crm-fact-category">@group.Key</div>
+                    @foreach (var fact in group)
+                    {
+                        <div class="crm-list-item d-flex justify-content-between align-items-center py-1">
+                            <div>
                                 <div class="d-none note-source">@fact.Value</div>
-                                <div class="note-render"></div>
-                                <div class="btn-group btn-group-sm">
-                                    <button type="button" class="btn btn-outline-secondary btn-copy" data-clipboard-text="@fact.Value" title="Copy to clipboard" aria-label="Copy fact to clipboard">
-                                        <i class="bi bi-clipboard"></i>
+                                <div class="note-render" style="font-size: 0.875rem;"></div>
+                            </div>
+                            <div class="crm-icon-actions">
+                                <button type="button" class="crm-icon-btn icon-copy btn-copy" data-clipboard-text="@fact.Value" title="Copy to clipboard" aria-label="Copy fact to clipboard">
+                                    <i class="bi bi-clipboard"></i>
+                                </button>
+                                <a asp-controller="Facts" asp-action="Edit" asp-route-id="@fact.Id" class="crm-icon-btn icon-edit" title="Edit fact" aria-label="Edit fact">
+                                    <i class="bi bi-pencil-square"></i>
+                                </a>
+                                <form asp-controller="Facts" asp-action="Delete" asp-route-id="@fact.Id" method="post" class="d-inline" onsubmit="return confirm('Are you sure you want to delete this fact?');">
+                                    <button type="submit" class="crm-icon-btn icon-danger" title="Delete fact" aria-label="Delete fact">
+                                        <i class="bi bi-trash"></i>
                                     </button>
-                                    <a asp-controller="Facts" asp-action="Edit" asp-route-id="@fact.Id" class="btn btn-outline-secondary" title="Edit fact" aria-label="Edit fact">
-                                        <i class="bi bi-pencil-square"></i>
-                                    </a>
-                                    <form asp-controller="Facts" asp-action="Delete" asp-route-id="@fact.Id" method="post" class="d-inline" onsubmit="return confirm('Are you sure you want to delete this fact?');">
-                                        <button type="submit" class="btn btn-outline-danger" title="Delete fact" aria-label="Delete fact">
-                                            <i class="bi bi-trash"></i>
-                                        </button>
-                                    </form>
-                                </div>
-                            </li>
-                        }
-                    </ul>
+                                </form>
+                            </div>
+                        </div>
+                    }
                 }
             }
             else
             {
-                <div class="text-center py-4 text-muted">
-                    <i class="bi bi-lightbulb display-6 d-block mb-3 opacity-25"></i>
-                    <p class="mb-2">No facts added.</p>
-                    <a asp-controller="Facts" asp-action="Create" asp-route-entityId="@Model.Id" asp-route-entityType="Person" class="btn btn-sm btn-primary mt-2" aria-label="Add Quick Fact"><i class="bi bi-plus-lg" aria-hidden="true"></i> Add Fact</a>
+                <div class="crm-empty py-2">
+                    <i class="bi bi-lightbulb" aria-hidden="true"></i>
+                    <span>Store memorable details and key info.</span>
                 </div>
             }
         </div>
     </div>
 
     <!-- Relationships -->
-    <div class="card mb-4 border shadow-sm">
-        <div class="card-header bg-transparent border-0 pt-3 px-3">
-            <h5 class="card-title mb-0 fw-bold"><i class="bi bi-people"></i> Relationships</h5>
+    <div class="crm-card">
+        <div class="crm-card-header">
+            <h5 class="card-title mb-0"><i class="bi bi-people" aria-hidden="true"></i> Relationships</h5>
         </div>
-        <div class="card-body px-3 pb-3">
+        <div class="crm-card-body">
             @{
                 var categoryOrder = new[] { "Romantic", "Family", "Professional", "Social" };
                 var alwaysExpanded = new HashSet<string> { "Romantic" };
@@ -385,121 +321,108 @@
                     .ToList();
             }
 
-            <div class="d-grid gap-2 mb-3">
-                @if (grouped.Any())
-                {
-                    var accordionId = "relAccordion";
-                    <div class="accordion accordion-flush" id="@accordionId">
-                        @foreach (var group in grouped)
-                        {
-                            var collapseId = $"relCollapse_{group.Key.Replace(" ", "")}";
-                            var count = group.Count();
-                            var expanded = alwaysExpanded.Contains(group.Key);
-                            <div class="accordion-item border rounded p-1 mb-2">
-                                <h2 class="accordion-header">
-                                    <button class="accordion-button @(expanded ? "" : "collapsed") fw-semibold py-2 bg-body text-body" type="button"
-                                            data-mdb-collapse-init data-mdb-toggle="collapse" data-mdb-target="#@collapseId"
-                                            aria-expanded="@(expanded ? "true" : "false")" aria-controls="@collapseId">
-                                        @group.Key
-                                        <span class="badge bg-secondary ms-2 fw-normal">@count</span>
-                                    </button>
-                                </h2>
-                                <div id="@collapseId" class="accordion-collapse collapse @(expanded ? "show" : "")">
-                                    <div class="accordion-body px-0 pt-0 pb-2">
-                                        <div class="d-grid gap-2 px-3 pt-2">
-                                            @foreach (var rel in group)
-                                            {
-                                                <div class="d-flex justify-content-between align-items-center p-3 rounded border hover-shadow" style="background-color: var(--bs-tertiary-bg);">
-                                                    <div class="d-flex align-items-center">
-                                                        @if (rel.IsPartial)
-                                                        {
-                                                            <span class="fw-bold text-muted me-2">@rel.Name</span>
-                                                        }
-                                                        else
-                                                        {
-                                                            <a asp-action="Details" asp-route-id="@rel.LinkId" class="text-decoration-none fw-bold text-body me-2">@rel.Name</a>
-                                                        }
-                                                        <span class="badge rounded-pill bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25">@rel.Badge</span>
-                                                    </div>
-                                                    <div class="d-flex align-items-center">
-                                                        @if (rel.IsPartial)
-                                                        {
-                                                            <div class="d-inline me-2" title="Partial Contact">
-                                                                <span class="badge bg-secondary opacity-50">
-                                                                    <i class="bi bi-person-fill-exclamation text-white"></i>
-                                                                </span>
-                                                            </div>
-                                                        }
-                                                        <a asp-controller="Relationships" asp-action="Edit" asp-route-id="@rel.Id" class="text-secondary me-2" title="Edit relationship" aria-label="Edit relationship with @rel.Name">
-                                                            <i class="bi bi-pencil-square"></i>
-                                                        </a>
-                                                        <a asp-controller="Relationships" asp-action="Delete" asp-route-id="@rel.Id" asp-route-returnUrl="@(Context.Request.Path + Context.Request.QueryString)" class="text-danger" title="Delete relationship" aria-label="Delete relationship with @rel.Name">
-                                                            <i class="bi bi-trash"></i>
-                                                        </a>
-                                                    </div>
-                                                </div>
-                                            }
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        }
-                    </div>
-                }
-                else
-                {
-                    <div class="text-center py-4 text-muted">
-                        <i class="bi bi-people display-6 d-block mb-3 opacity-25"></i>
-                        <p class="mb-2">No relationships found.</p>
-                        <a asp-controller="Relationships" asp-action="Create" asp-route-entityId="@Model.Id" asp-route-entityType="Person" class="btn btn-sm btn-primary mt-2" aria-label="Add Relationship"><i class="bi bi-plus-lg" aria-hidden="true"></i> Add Relationship</a>
-                    </div>
-                }
-            </div>
-
             @if (grouped.Any())
             {
-                <div class="text-end">
-                    <a asp-controller="Relationships" asp-action="Create" asp-route-entityId="@Model.Id" asp-route-entityType="Person" class="btn btn-primary btn-sm" aria-label="Add Relationship"><i class="bi bi-plus-lg" aria-hidden="true"></i> Add Relationship</a>
+                var accordionId = "relAccordion";
+                <div class="accordion accordion-flush" id="@accordionId">
+                    @foreach (var group in grouped)
+                    {
+                        var collapseId = $"relCollapse_{group.Key.Replace(" ", "")}";
+                        var count = group.Count();
+                        var expanded = alwaysExpanded.Contains(group.Key);
+                        <div class="accordion-item border rounded mb-2" style="border-color: var(--crm-border-subtle) !important;">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button @(expanded ? "" : "collapsed") fw-semibold py-2" type="button"
+                                        style="background: var(--crm-surface-elevated); color: var(--crm-text-primary);"
+                                        data-mdb-collapse-init data-mdb-toggle="collapse" data-mdb-target="#@collapseId"
+                                        aria-expanded="@(expanded ? "true" : "false")" aria-controls="@collapseId">
+                                    @group.Key
+                                    <span class="crm-badge crm-badge-muted ms-2">@count</span>
+                                </button>
+                            </h2>
+                            <div id="@collapseId" class="accordion-collapse collapse @(expanded ? "show" : "")">
+                                <div class="accordion-body px-2 pt-0 pb-2">
+                                    @foreach (var rel in group)
+                                    {
+                                        <div class="crm-relationship-row">
+                                            <div class="d-flex align-items-center">
+                                                @if (rel.IsPartial)
+                                                {
+                                                    <span class="fw-semibold me-2" style="color: var(--crm-text-tertiary);">@rel.Name</span>
+                                                }
+                                                else
+                                                {
+                                                    <a asp-action="Details" asp-route-id="@rel.LinkId" class="text-decoration-none fw-semibold me-2" style="color: var(--crm-text-primary);">@rel.Name</a>
+                                                }
+                                                <span class="crm-role-badge">@rel.Badge</span>
+                                            </div>
+                                            <div class="crm-icon-actions">
+                                                @if (rel.IsPartial)
+                                                {
+                                                    <span class="crm-badge crm-badge-muted me-1" title="Partial Contact">
+                                                        <i class="bi bi-person-fill-exclamation"></i>
+                                                    </span>
+                                                }
+                                                <a asp-controller="Relationships" asp-action="Edit" asp-route-id="@rel.Id" class="crm-icon-btn icon-edit" title="Edit relationship" aria-label="Edit relationship with @rel.Name">
+                                                    <i class="bi bi-pencil-square"></i>
+                                                </a>
+                                                <a asp-controller="Relationships" asp-action="Delete" asp-route-id="@rel.Id" asp-route-returnUrl="@(Context.Request.Path + Context.Request.QueryString)" class="crm-icon-btn icon-danger" title="Delete relationship" aria-label="Delete relationship with @rel.Name">
+                                                    <i class="bi bi-trash"></i>
+                                                </a>
+                                            </div>
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+                <div class="text-end mt-2">
+                    <a asp-controller="Relationships" asp-action="Create" asp-route-entityId="@Model.Id" asp-route-entityType="Person" class="crm-btn-secondary btn-sm" aria-label="Add Relationship"><i class="bi bi-plus-lg" aria-hidden="true"></i> Add Relationship</a>
+                </div>
+            }
+            else
+            {
+                <div class="crm-empty py-2">
+                    <i class="bi bi-people" aria-hidden="true"></i>
+                    <span>Map connections to family, friends, and colleagues.</span>
                 </div>
             }
         </div>
     </div>
 
     <!-- Pets -->
-    <div class="card mb-4 border shadow-sm">
-        <div class="card-header bg-transparent border-0 pt-3 px-3 d-flex justify-content-between align-items-center">
-            <h5 class="card-title mb-0 fw-bold"><i class="bi bi-emoji-smile"></i> Pets</h5>
-            <a asp-controller="Pets" asp-action="Create" asp-route-entityId="@Model.Id" class="btn btn-sm btn-outline-primary" aria-label="Add Pet"><i class="bi bi-plus-lg" aria-hidden="true"></i> Add</a>
+    <div class="crm-card">
+        <div class="crm-card-header">
+            <h5 class="card-title mb-0"><i class="bi bi-emoji-smile" aria-hidden="true"></i> Pets</h5>
+            <a asp-controller="Pets" asp-action="Create" asp-route-entityId="@Model.Id" class="crm-btn-secondary btn-sm" aria-label="Add Pet"><i class="bi bi-plus-lg" aria-hidden="true"></i> Add</a>
         </div>
-        <div class="card-body px-3 pb-3">
+        <div class="crm-card-body">
             @if (Model.Pets != null && Model.Pets.Any())
             {
-                <ul class="list-group list-group-flush">
-                    @foreach (var pet in Model.Pets)
-                    {
-                        <li class="list-group-item d-flex justify-content-between align-items-center px-0">
-                            <div>
-                                <div class="fw-bold">@pet.Name</div>
-                                <small class="text-muted">@pet.Species @(string.IsNullOrEmpty(pet.Breed) ? "" : $"({pet.Breed})")</small>
-                            </div>
-                            <div class="btn-group btn-group-sm">
-                                <a asp-controller="Pets" asp-action="Edit" asp-route-id="@pet.Id" class="btn btn-outline-secondary" title="Edit" aria-label="Edit @pet.Name">
-                                    <i class="bi bi-pencil-square"></i>
-                                </a>
-                                <a asp-controller="Pets" asp-action="Delete" asp-route-id="@pet.Id" class="btn btn-outline-danger" title="Delete" aria-label="Delete @pet.Name">
-                                    <i class="bi bi-trash"></i>
-                                </a>
-                            </div>
-                        </li>
-                    }
-                </ul>
+                @foreach (var pet in Model.Pets)
+                {
+                    <div class="crm-list-item d-flex justify-content-between align-items-center">
+                        <div>
+                            <div class="fw-semibold" style="font-size: 0.875rem;">@pet.Name</div>
+                            <small class="crm-meta">@pet.Species @(string.IsNullOrEmpty(pet.Breed) ? "" : $"({pet.Breed})")</small>
+                        </div>
+                        <div class="crm-icon-actions">
+                            <a asp-controller="Pets" asp-action="Edit" asp-route-id="@pet.Id" class="crm-icon-btn icon-edit" title="Edit" aria-label="Edit @pet.Name">
+                                <i class="bi bi-pencil-square"></i>
+                            </a>
+                            <a asp-controller="Pets" asp-action="Delete" asp-route-id="@pet.Id" class="crm-icon-btn icon-danger" title="Delete" aria-label="Delete @pet.Name">
+                                <i class="bi bi-trash"></i>
+                            </a>
+                        </div>
+                    </div>
+                }
             }
             else
             {
-                <div class="text-center py-4 text-muted">
-                    <i class="bi bi-emoji-smile display-6 d-block mb-3 opacity-25"></i>
-                    <p class="mb-2">No pets.</p>
-                    <a asp-controller="Pets" asp-action="Create" asp-route-entityId="@Model.Id" class="btn btn-sm btn-primary mt-2" aria-label="Add Pet"><i class="bi bi-plus-lg" aria-hidden="true"></i> Add Pet</a>
+                <div class="crm-empty py-2">
+                    <i class="bi bi-emoji-smile" aria-hidden="true"></i>
+                    <span>Track their furry (or scaly) companions.</span>
                 </div>
             }
         </div>
@@ -509,275 +432,256 @@
 <!-- Right Column -->
 <div class="col-md-8">
     <!-- Important Dates -->
-    <div class="card mb-4">
-        <div class="card-header d-flex justify-content-between align-items-center">
-            <h5 class="card-title mb-0"><i class="bi bi-calendar-event"></i> Important Dates</h5>
-            <a asp-controller="SignificantDates" asp-action="Index" asp-route-contactId="@Model.Id" class="btn btn-sm btn-outline-primary"><i class="bi bi-gear"></i> Manage Dates</a>
+    <div class="crm-card">
+        <div class="crm-card-header">
+            <h5 class="card-title mb-0"><i class="bi bi-calendar-event" aria-hidden="true"></i> Important Dates</h5>
+            <a asp-controller="SignificantDates" asp-action="Index" asp-route-contactId="@Model.Id" class="crm-btn-secondary btn-sm"><i class="bi bi-gear" aria-hidden="true"></i> Manage Dates</a>
         </div>
-        <div class="card-body">
+        <div class="crm-card-body">
             @if (Model.SignificantDates != null && Model.SignificantDates.Any())
             {
-                <ul class="list-group">
-                    @foreach (var date in Model.SignificantDates.OrderBy(d => d.EventDate))
-                    {
-                        <li class="list-group-item">
-                            <div class="d-flex w-100 justify-content-between align-items-center">
-                                <h6 class="mb-1 me-2">@date.Title</h6>
-                                <div class="d-flex flex-wrap gap-1 align-items-center justify-content-end">
-                                    <span class="badge bg-info text-dark">@(date.EventDate.Year == 1 ? date.EventDate.ToString("M/d") : date.EventDate.ToShortDateString())</span>
+                @foreach (var date in Model.SignificantDates.OrderBy(d => d.EventDate))
+                {
+                    <div class="crm-list-item d-flex w-100 justify-content-between align-items-center">
+                        <h6 class="mb-0 me-2 fw-semibold" style="font-size: 0.875rem;">@date.Title</h6>
+                        <div class="d-flex flex-wrap gap-1 align-items-center justify-content-end">
+                            <span class="crm-date-badge crm-date-badge-date">@(date.EventDate.Year == 1 ? date.EventDate.ToString("M/d") : date.EventDate.ToShortDateString())</span>
 
-                                    @if (string.Equals(date.Title, SignificantDateTitles.Birthday, StringComparison.OrdinalIgnoreCase))
-                                    {
-                                        @if (date.EventDate.Year != 1)
-                                        {
-                                            var today = DateTime.Today;
-                                            var age = today.Year - date.EventDate.Year;
-                                            if (date.EventDate.ToDateTime(TimeOnly.MinValue).Date > today.AddYears(-age)) age--;
-                                            <span class="badge bg-secondary">@age years old</span>
-                                        }
-                                    }
-
-                                    @if (date.IsActive)
-                                    {
-                                        <span class="badge bg-success text-dark">Active</span>
-                                    }
-
-                                    @if (date.ReminderOffsets != null && date.ReminderOffsets.Any(r => r.IsActive))
-                                    {
-                                        <span class="badge bg-warning text-dark"><i class="bi bi-bell-fill"></i> Reminders</span>
-                                    }
-
-                                    <div class="btn-group btn-group-sm">
-                                        <a asp-controller="SignificantDates" asp-action="Edit" asp-route-id="@date.Id" class="btn btn-outline-secondary" title="Edit" aria-label="Edit @date.Title">
-                                            <i class="bi bi-pencil-square"></i>
-                                        </a>
-                                        <a asp-controller="SignificantDates" asp-action="Delete" asp-route-id="@date.Id" class="btn btn-outline-danger" title="Delete" aria-label="Delete @date.Title">
-                                            <i class="bi bi-trash"></i>
-                                        </a>
-                                    </div>
-                                </div>
-                            </div>
-                            @if (!string.IsNullOrEmpty(date.Description) && date.Description != date.Title)
+                            @if (string.Equals(date.Title, SignificantDateTitles.Birthday, StringComparison.OrdinalIgnoreCase))
                             {
-                                <p class="mb-1 text-muted small">@date.Description</p>
+                                @if (date.EventDate.Year != 1)
+                                {
+                                    var today = DateTime.Today;
+                                    var age = today.Year - date.EventDate.Year;
+                                    if (date.EventDate.ToDateTime(TimeOnly.MinValue).Date > today.AddYears(-age)) age--;
+                                    <span class="crm-date-badge crm-date-badge-age">@age years old</span>
+                                }
                             }
-                        </li>
+
+                            @if (date.IsActive)
+                            {
+                                <span class="crm-date-badge crm-date-badge-active">Active</span>
+                            }
+
+                            @if (date.ReminderOffsets != null && date.ReminderOffsets.Any(r => r.IsActive))
+                            {
+                                <span class="crm-date-badge crm-date-badge-reminder"><i class="bi bi-bell-fill me-1"></i>Reminders</span>
+                            }
+
+                            <div class="crm-icon-actions ms-1">
+                                <a asp-controller="SignificantDates" asp-action="Edit" asp-route-id="@date.Id" class="crm-icon-btn icon-edit" title="Edit" aria-label="Edit @date.Title">
+                                    <i class="bi bi-pencil-square"></i>
+                                </a>
+                                <a asp-controller="SignificantDates" asp-action="Delete" asp-route-id="@date.Id" class="crm-icon-btn icon-danger" title="Delete" aria-label="Delete @date.Title">
+                                    <i class="bi bi-trash"></i>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    @if (!string.IsNullOrEmpty(date.Description) && date.Description != date.Title)
+                    {
+                        <p class="mb-1 crm-meta" style="margin-left: 0.75rem;">@date.Description</p>
                     }
-                </ul>
+                }
             }
             else
             {
-                <div class="text-center py-4 text-muted">
-                    <i class="bi bi-calendar-event display-6 d-block mb-3 opacity-25"></i>
-                    <p class="mb-2">No important dates recorded.</p>
-                    <a asp-controller="SignificantDates" asp-action="Create" asp-route-contactId="@Model.Id" asp-route-entityType="Person" class="btn btn-sm btn-primary mt-2" aria-label="Add Date"><i class="bi bi-plus-lg" aria-hidden="true"></i> Add Date</a>
+                <div class="crm-empty py-2">
+                    <i class="bi bi-calendar-event" aria-hidden="true"></i>
+                    <span>Record birthdays, anniversaries, and milestones.</span>
                 </div>
             }
         </div>
     </div>
 
-
     <!-- Notes -->
-    <div class="card mb-4">
-        <div class="card-header d-flex justify-content-between align-items-center">
-            <h5 class="card-title mb-0"><i class="bi bi-journal-text"></i> Notes</h5>
-            <a asp-controller="Notes" asp-action="Create" asp-route-entityId="@Model.Id" asp-route-entityType="Person" class="btn btn-sm btn-outline-primary" aria-label="Add Note"><i class="bi bi-plus-lg" aria-hidden="true"></i> Add</a>
+    <div class="crm-card">
+        <div class="crm-card-header">
+            <h5 class="card-title mb-0"><i class="bi bi-journal-text" aria-hidden="true"></i> Notes</h5>
+            <a asp-controller="Notes" asp-action="Create" asp-route-entityId="@Model.Id" asp-route-entityType="Person" class="crm-btn-secondary btn-sm" aria-label="Add Note"><i class="bi bi-plus-lg" aria-hidden="true"></i> Add</a>
         </div>
-        <div class="card-body">
+        <div class="crm-card-body">
             @if (Model.Notes != null && Model.Notes.Any())
             {
                 @foreach (var note in Model.Notes.OrderByDescending(n => n.CreatedDate))
                 {
-                    <div class="card mb-2">
-                        <div class="card-body">
-                            <div class="d-flex justify-content-between">
-                                <h6 class="card-subtitle mb-2 text-muted">
-                                    @note.Title <small>@note.CreatedDate.ToShortDateString()</small>
-                                </h6>
-                                <div class="btn-group btn-group-sm">
-                                    <a asp-controller="Notes" asp-action="Edit" asp-route-id="@note.Id" class="btn btn-outline-secondary" title="Edit" aria-label="Edit @note.Title">
-                                        <i class="bi bi-pencil-square"></i>
-                                    </a>
-                                    <a asp-controller="Notes" asp-action="Delete" asp-route-id="@note.Id" class="btn btn-outline-danger" title="Delete" aria-label="Delete @note.Title">
-                                        <i class="bi bi-trash"></i>
-                                    </a>
-                                </div>
+                    <div class="mb-2 p-3" style="background: var(--crm-surface-secondary); border-radius: var(--crm-radius-sm); border: 1px solid var(--crm-border-subtle);">
+                        <div class="d-flex justify-content-between">
+                            <h6 class="mb-2" style="font-size: 0.875rem; color: var(--crm-text-secondary);">
+                                @note.Title <span class="crm-meta">@note.CreatedDate.ToShortDateString()</span>
+                            </h6>
+                            <div class="crm-icon-actions">
+                                <a asp-controller="Notes" asp-action="Edit" asp-route-id="@note.Id" class="crm-icon-btn icon-edit" title="Edit" aria-label="Edit @note.Title">
+                                    <i class="bi bi-pencil-square"></i>
+                                </a>
+                                <a asp-controller="Notes" asp-action="Delete" asp-route-id="@note.Id" class="crm-icon-btn icon-danger" title="Delete" aria-label="Delete @note.Title">
+                                    <i class="bi bi-trash"></i>
+                                </a>
                             </div>
-                            <div class="d-none note-source">@note.Value</div>
-                            <div class="note-render card-text"></div>
                         </div>
+                        <div class="d-none note-source">@note.Value</div>
+                        <div class="note-render" style="font-size: 0.875rem;"></div>
                     </div>
                 }
             }
             else
             {
-                <div class="text-center py-4 text-muted">
-                    <i class="bi bi-journal-text display-6 d-block mb-3 opacity-25"></i>
-                    <p class="mb-2">No notes available.</p>
-                    <a asp-controller="Notes" asp-action="Create" asp-route-entityId="@Model.Id" asp-route-entityType="Person" class="btn btn-sm btn-primary mt-2" aria-label="Add Note"><i class="bi bi-plus-lg" aria-hidden="true"></i> Add Note</a>
+                <div class="crm-empty py-2">
+                    <i class="bi bi-journal-text" aria-hidden="true"></i>
+                    <span>Capture thoughts or conversation highlights.</span>
                 </div>
             }
         </div>
     </div>
 
     <!-- Activities -->
-    <div class="card mb-4 border shadow-sm">
-        <div class="card-header bg-transparent border-0 pt-3 px-3 d-flex justify-content-between align-items-center">
-            <h5 class="card-title mb-0 fw-bold"><i class="bi bi-calendar-check"></i> Activities</h5>
-            <a asp-controller="Activities" asp-action="Create" asp-route-entityId="@Model.Id" class="btn btn-sm btn-outline-primary" aria-label="Add Activity">
+    <div class="crm-card">
+        <div class="crm-card-header">
+            <h5 class="card-title mb-0"><i class="bi bi-calendar-check" aria-hidden="true"></i> Activities</h5>
+            <a asp-controller="Activities" asp-action="Create" asp-route-entityId="@Model.Id" class="crm-btn-secondary btn-sm" aria-label="Add Activity">
                 <i class="bi bi-plus-lg" aria-hidden="true"></i> Add
             </a>
         </div>
-        <div class="card-body px-3 pb-3">
+        <div class="crm-card-body">
             @if (Model.Activities != null && Model.Activities.Any())
             {
                 @foreach (var activity in Model.Activities.OrderByDescending(a => a.ActivityDate))
                 {
-                    <div class="card mb-2">
-                        <div class="card-body">
-                            <div class="d-flex justify-content-between">
-                                <div>
-                                    <h6 class="card-subtitle mb-1">
-                                        @activity.Title
-                                        @if (!string.IsNullOrEmpty(activity.ActivityType))
-                                        {
-                                            <span class="badge rounded-pill bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 ms-1">@activity.ActivityType</span>
-                                        }
-                                    </h6>
-                                    <small class="text-muted">
-                                        <i class="bi bi-calendar3"></i> @activity.ActivityDate.ToShortDateString()
-                                        @if (!string.IsNullOrEmpty(activity.Location))
-                                        {
-                                            <span class="ms-2"><i class="bi bi-geo-alt"></i> @activity.Location</span>
-                                        }
-                                    </small>
-                                    @if (activity.ContactNames.Any())
+                    <div class="mb-2 p-3" style="background: var(--crm-surface-secondary); border-radius: var(--crm-radius-sm); border: 1px solid var(--crm-border-subtle);">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <h6 class="mb-1" style="font-size: 0.875rem;">
+                                    @activity.Title
+                                    @if (!string.IsNullOrEmpty(activity.ActivityType))
                                     {
-                                        <div class="small text-muted mt-1">
-                                            <i class="bi bi-people"></i>
-                                            with @string.Join(", ", activity.ContactNames)
-                                        </div>
+                                        <span class="crm-role-badge ms-1">@activity.ActivityType</span>
+                                    }
+                                </h6>
+                                <div class="crm-meta">
+                                    <i class="bi bi-calendar3"></i> @activity.ActivityDate.ToShortDateString()
+                                    @if (!string.IsNullOrEmpty(activity.Location))
+                                    {
+                                        <span class="ms-2"><i class="bi bi-geo-alt"></i> @activity.Location</span>
                                     }
                                 </div>
-                                <div class="btn-group btn-group-sm align-self-start">
-                                    <a asp-controller="Activities" asp-action="Edit" asp-route-id="@activity.Id" class="btn btn-outline-secondary" title="Edit" aria-label="Edit @activity.Title">
-                                        <i class="bi bi-pencil-square"></i>
-                                    </a>
-                                    <a asp-controller="Activities" asp-action="Delete" asp-route-id="@activity.Id" class="btn btn-outline-danger" title="Delete" aria-label="Delete @activity.Title">
-                                        <i class="bi bi-trash"></i>
-                                    </a>
-                                </div>
+                                @if (activity.ContactNames.Any())
+                                {
+                                    <div class="crm-meta mt-1">
+                                        <i class="bi bi-people"></i>
+                                        with @string.Join(", ", activity.ContactNames)
+                                    </div>
+                                }
                             </div>
-                            @if (!string.IsNullOrEmpty(activity.Description))
-                            {
-                                <div class="d-none note-source">@activity.Description</div>
-                                <div class="note-render card-text mt-2"></div>
-                            }
+                            <div class="crm-icon-actions align-self-start">
+                                <a asp-controller="Activities" asp-action="Edit" asp-route-id="@activity.Id" class="crm-icon-btn icon-edit" title="Edit" aria-label="Edit @activity.Title">
+                                    <i class="bi bi-pencil-square"></i>
+                                </a>
+                                <a asp-controller="Activities" asp-action="Delete" asp-route-id="@activity.Id" class="crm-icon-btn icon-danger" title="Delete" aria-label="Delete @activity.Title">
+                                    <i class="bi bi-trash"></i>
+                                </a>
+                            </div>
                         </div>
+                        @if (!string.IsNullOrEmpty(activity.Description))
+                        {
+                            <div class="d-none note-source">@activity.Description</div>
+                            <div class="note-render mt-2" style="font-size: 0.875rem;"></div>
+                        }
                     </div>
                 }
             }
             else
             {
-                <div class="text-center py-4 text-muted">
-                    <i class="bi bi-calendar-check display-6 d-block mb-3 opacity-25"></i>
-                    <p class="mb-2">No activities recorded.</p>
-                    <a asp-controller="Activities" asp-action="Create" asp-route-entityId="@Model.Id" class="btn btn-sm btn-primary mt-2" aria-label="Add Activity">
-                        <i class="bi bi-plus-lg" aria-hidden="true"></i> Add Activity
-                    </a>
+                <div class="crm-empty py-2">
+                    <i class="bi bi-calendar-check" aria-hidden="true"></i>
+                    <span>Log meetings, calls, and shared experiences.</span>
                 </div>
             }
         </div>
     </div>
 
     <!-- Tasks / Follow-ups -->
-    <div class="card mb-4 border shadow-sm">
-        <div class="card-header bg-transparent border-0 pt-3 px-3 d-flex justify-content-between align-items-center">
-            <h5 class="card-title mb-0 fw-bold"><i class="bi bi-check2-square"></i> Tasks / Follow-ups</h5>
-            <a asp-controller="ContactTasks" asp-action="Create" asp-route-entityId="@Model.Id" class="btn btn-sm btn-outline-primary" aria-label="Add Task">
+    <div class="crm-card">
+        <div class="crm-card-header">
+            <h5 class="card-title mb-0"><i class="bi bi-check2-square" aria-hidden="true"></i> Tasks / Follow-ups</h5>
+            <a asp-controller="ContactTasks" asp-action="Create" asp-route-entityId="@Model.Id" class="crm-btn-secondary btn-sm" aria-label="Add Task">
                 <i class="bi bi-plus-lg" aria-hidden="true"></i> Add
             </a>
         </div>
-        <div class="card-body px-3 pb-3">
+        <div class="crm-card-body">
             @if (Model.ContactTasks != null && Model.ContactTasks.Any())
             {
                 var today = DateOnly.FromDateTime(DateTime.Today);
                 var incomplete = Model.ContactTasks.Where(t => !t.IsCompleted).OrderBy(t => t.DueDate);
                 var completed = Model.ContactTasks.Where(t => t.IsCompleted).OrderByDescending(t => t.CompletedDate);
 
-                <ul class="list-group list-group-flush">
-                    @foreach (var task in incomplete.Concat(completed))
-                    {
-                        bool isOverdue = !task.IsCompleted && task.DueDate < today;
-                        <li class="list-group-item d-flex justify-content-between align-items-start px-0">
-                            <div class="d-flex align-items-start gap-2">
-                                <form asp-controller="ContactTasks" asp-action="ToggleComplete" asp-route-id="@task.Id" method="post" class="mt-1">
-                                    <button type="submit" class="btn btn-sm p-0 border-0" title="@(task.IsCompleted ? "Mark incomplete" : "Mark complete")">
-                                        <i class="bi @(task.IsCompleted ? "bi-check-circle-fill text-success" : "bi-circle text-muted") fs-5"></i>
-                                    </button>
-                                </form>
-                                <div>
-                                    <div class="@(task.IsCompleted ? "text-decoration-line-through text-muted" : "")">
-                                        @task.Title
-                                    </div>
-                                    <small class="@(isOverdue ? "text-danger" : "text-muted")">
-                                        <i class="bi bi-calendar3"></i> @task.DueDate.ToString("MMM d, yyyy")
-                                        @if (isOverdue)
-                                        {
-                                            <span class="badge bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25 ms-1">Overdue</span>
-                                        }
-                                    </small>
-                                    @if (task.IsCompleted && task.CompletedDate.HasValue)
+                @foreach (var task in incomplete.Concat(completed))
+                {
+                    bool isOverdue = !task.IsCompleted && task.DueDate < today;
+                    <div class="crm-list-item d-flex justify-content-between align-items-start">
+                        <div class="d-flex align-items-start gap-2">
+                            <form asp-controller="ContactTasks" asp-action="ToggleComplete" asp-route-id="@task.Id" method="post" class="mt-1">
+                                <button type="submit" class="btn btn-sm p-0 border-0" title="@(task.IsCompleted ? "Mark incomplete" : "Mark complete")">
+                                    <i class="bi @(task.IsCompleted ? "bi-check-circle-fill" : "bi-circle") fs-5" style="color: @(task.IsCompleted ? "var(--crm-success)" : "var(--crm-text-tertiary)");"></i>
+                                </button>
+                            </form>
+                            <div>
+                                <div class="@(task.IsCompleted ? "text-decoration-line-through" : "")" style="font-size: 0.875rem; color: @(task.IsCompleted ? "var(--crm-text-tertiary)" : "var(--crm-text-primary)");">
+                                    @task.Title
+                                </div>
+                                <div class="crm-meta" style="@(isOverdue ? "color: var(--crm-danger);" : "")">
+                                    <i class="bi bi-calendar3"></i> @task.DueDate.ToString("MMM d, yyyy")
+                                    @if (isOverdue)
                                     {
-                                        <small class="text-muted d-block">
-                                            Completed @task.CompletedDate.Value.ToString("MMM d, yyyy")
-                                        </small>
+                                        <span class="crm-badge crm-badge-danger ms-1">Overdue</span>
                                     }
                                 </div>
+                                @if (task.IsCompleted && task.CompletedDate.HasValue)
+                                {
+                                    <div class="crm-meta">
+                                        Completed @task.CompletedDate.Value.ToString("MMM d, yyyy")
+                                    </div>
+                                }
                             </div>
-                            <div class="btn-group btn-group-sm">
-                                <a asp-controller="ContactTasks" asp-action="Edit" asp-route-id="@task.Id" class="btn btn-outline-secondary" title="Edit" aria-label="Edit @task.Title">
-                                    <i class="bi bi-pencil-square"></i>
-                                </a>
-                                <a asp-controller="ContactTasks" asp-action="Delete" asp-route-id="@task.Id" class="btn btn-outline-danger" title="Delete" aria-label="Delete @task.Title">
-                                    <i class="bi bi-trash"></i>
-                                </a>
-                            </div>
-                        </li>
-                    }
-                </ul>
+                        </div>
+                        <div class="crm-icon-actions">
+                            <a asp-controller="ContactTasks" asp-action="Edit" asp-route-id="@task.Id" class="crm-icon-btn icon-edit" title="Edit" aria-label="Edit @task.Title">
+                                <i class="bi bi-pencil-square"></i>
+                            </a>
+                            <a asp-controller="ContactTasks" asp-action="Delete" asp-route-id="@task.Id" class="crm-icon-btn icon-danger" title="Delete" aria-label="Delete @task.Title">
+                                <i class="bi bi-trash"></i>
+                            </a>
+                        </div>
+                    </div>
+                }
             }
             else
             {
-                <div class="text-center py-4 text-muted">
-                    <i class="bi bi-check2-square display-6 d-block mb-3 opacity-25"></i>
-                    <p class="mb-2">No tasks.</p>
-                    <a asp-controller="ContactTasks" asp-action="Create" asp-route-entityId="@Model.Id" class="btn btn-sm btn-primary mt-2" aria-label="Add Task">
-                        <i class="bi bi-plus-lg" aria-hidden="true"></i> Add Task
-                    </a>
+                <div class="crm-empty py-2">
+                    <i class="bi bi-check2-square" aria-hidden="true"></i>
+                    <span>Plan follow-ups and reminders for this contact.</span>
                 </div>
             }
         </div>
     </div>
 
     <!-- Attachments -->
-    <div class="card mb-4">
-        <div class="card-header d-flex justify-content-between align-items-center">
-            <h5 class="card-title mb-0"><i class="bi bi-paperclip"></i> Attachments</h5>
-            <button type="button" class="btn btn-sm btn-outline-primary" data-mdb-collapse-init data-mdb-toggle="collapse" data-mdb-target="#uploadAttachmentForm" aria-expanded="false" aria-controls="uploadAttachmentForm" aria-label="Add Attachment">
+    <div class="crm-card">
+        <div class="crm-card-header">
+            <h5 class="card-title mb-0"><i class="bi bi-paperclip" aria-hidden="true"></i> Attachments</h5>
+            <button type="button" class="crm-btn-secondary btn-sm" data-mdb-collapse-init data-mdb-toggle="collapse" data-mdb-target="#uploadAttachmentForm" aria-expanded="false" aria-controls="uploadAttachmentForm" aria-label="Add Attachment">
                 <i class="bi bi-plus-lg" aria-hidden="true"></i> Add
             </button>
         </div>
-        <div class="card-body">
-            <div class="collapse mb-3" id="uploadAttachmentForm">
-                <form asp-controller="Attachments" asp-action="Upload" asp-route-returnUrl="@(Context.Request.Path + Context.Request.QueryString)" method="post" enctype="multipart/form-data" class="border p-3 rounded bg-body-tertiary">
+        <div class="crm-card-body">
+            <div class="collapse mb-3" id="uploadAttachmentForm" style="transition: height var(--crm-transition-expand) ease;">
+                <form asp-controller="Attachments" asp-action="Upload" asp-route-returnUrl="@(Context.Request.Path + Context.Request.QueryString)" method="post" enctype="multipart/form-data" class="p-3" style="background: var(--crm-surface-secondary); border-radius: var(--crm-radius-sm); border: 1px solid var(--crm-border-subtle);">
                     <input type="hidden" name="entityId" value="@Model.Id"/>
                     <input type="hidden" name="entityType" value="Person"/>
                     <div class="mb-2">
-                        <label for="file" class="form-label small">Select File</label>
+                        <label for="file" class="form-label crm-meta">Select File</label>
                         <input type="file" name="file" class="form-control form-control-sm" required/>
                     </div>
-                    <button type="submit" class="btn btn-primary btn-sm" aria-label="Upload Attachment"><i class="bi bi-upload" aria-hidden="true"></i> Upload</button>
+                    <button type="submit" class="crm-btn-primary btn-sm" aria-label="Upload Attachment"><i class="bi bi-upload" aria-hidden="true"></i> Upload</button>
                 </form>
             </div>
 
@@ -788,72 +692,82 @@
                     {
                         var isImage = !string.IsNullOrEmpty(attachment.ContentType) && attachment.ContentType.StartsWith("image/", StringComparison.OrdinalIgnoreCase);
                         var ext = System.IO.Path.GetExtension(attachment.FileName)?.ToLowerInvariant() ?? "";
-                        var iconClass = "bi-file-earmark"; // default generic
+                        var iconClass = "bi-file-earmark";
 
                         if (!isImage)
                         {
                             switch (ext)
                             {
-                                case ".pdf": iconClass = "bi-filetype-pdf text-danger"; break;
+                                case ".pdf": iconClass = "bi-filetype-pdf"; break;
                                 case ".doc":
-                                case ".docx": iconClass = "bi-filetype-docx text-primary"; break;
+                                case ".docx": iconClass = "bi-filetype-docx"; break;
                                 case ".xls":
-                                case ".xlsx": iconClass = "bi-filetype-xlsx text-success"; break;
+                                case ".xlsx": iconClass = "bi-filetype-xlsx"; break;
                                 case ".ppt":
-                                case ".pptx": iconClass = "bi-filetype-pptx text-warning"; break;
-                                case ".txt": iconClass = "bi-filetype-txt text-secondary"; break;
+                                case ".pptx": iconClass = "bi-filetype-pptx"; break;
+                                case ".txt": iconClass = "bi-filetype-txt"; break;
                                 case ".zip":
                                 case ".rar":
-                                case ".7z": iconClass = "bi-file-zip text-secondary"; break;
-                                case ".csv": iconClass = "bi-filetype-csv text-success"; break;
-                                case ".xml": iconClass = "bi-filetype-xml text-secondary"; break;
-                                case ".json": iconClass = "bi-filetype-json text-secondary"; break;
+                                case ".7z": iconClass = "bi-file-zip"; break;
+                                case ".csv": iconClass = "bi-filetype-csv"; break;
+                                case ".xml": iconClass = "bi-filetype-xml"; break;
+                                case ".json": iconClass = "bi-filetype-json"; break;
                                 case ".exe":
-                                case ".dll": iconClass = "bi-filetype-exe text-danger"; break;
+                                case ".dll": iconClass = "bi-filetype-exe"; break;
                             }
                         }
 
-                        <div class="col-12 col-sm-6 col-md-4 mb-4 masonry-item">
-                            <div class="card h-100 attachment-card overflow-hidden position-relative">
+                        var iconColor = ext switch
+                        {
+                            ".pdf" => "var(--crm-danger)",
+                            ".doc" or ".docx" => "var(--crm-brand)",
+                            ".xls" or ".xlsx" or ".csv" => "var(--crm-success)",
+                            ".ppt" or ".pptx" => "var(--crm-warning)",
+                            ".exe" or ".dll" => "var(--crm-danger)",
+                            _ => "var(--crm-text-tertiary)"
+                        };
+
+                        <div class="col-12 col-sm-6 col-md-4 mb-3 masonry-item">
+                            <div class="attachment-card overflow-hidden position-relative" style="background: var(--crm-surface-elevated); border: 1px solid var(--crm-border-subtle);">
                                 @if (isImage)
                                 {
-                                    <div class="attachment-preview-container bg-dark d-flex align-items-center justify-content-center cursor-pointer" style="height: 200px;" data-preview-url="@Url.Action("View", "Attachments", new { id = attachment.Id })" data-filename="@attachment.FileName">
-                                        <img src="@Url.Action("Thumbnail", "Attachments", new { id = attachment.Id, maxWidth = 400 })" class="img-fluid w-100 h-100 object-fit-cover" alt="@attachment.FileName" loading="lazy" style="object-fit: cover;" />
-                                        <div class="position-absolute top-50 start-50 translate-middle text-white preview-overlay" style="opacity: 0; transition: opacity 0.2s; background: rgba(0,0,0,0.5); padding: 10px; border-radius: 50%;">
+                                    <div class="attachment-preview-container d-flex align-items-center justify-content-center cursor-pointer" style="height: 200px; background: var(--crm-surface-primary);" data-preview-url="@Url.Action("View", "Attachments", new { id = attachment.Id })" data-filename="@attachment.FileName">
+                                        <img src="@Url.Action("Thumbnail", "Attachments", new { id = attachment.Id, maxWidth = 400 })" class="img-fluid w-100 h-100" alt="@attachment.FileName" loading="lazy" style="object-fit: cover;" />
+                                        <div class="position-absolute top-50 start-50 translate-middle text-white preview-overlay" style="opacity: 0; transition: opacity var(--crm-transition-fast); background: rgba(0,0,0,0.5); padding: 10px; border-radius: 50%;">
                                             <i class="bi bi-zoom-in fs-3"></i>
                                         </div>
                                     </div>
                                 }
                                 else
                                 {
-                                    <div class="attachment-preview-container bg-light d-flex align-items-center justify-content-center p-4 border-bottom" style="height: 200px;">
-                                        <i class="bi @iconClass" style="font-size: 4rem;"></i>
+                                    <div class="d-flex align-items-center justify-content-center p-4" style="height: 200px; background: var(--crm-surface-secondary); border-bottom: 1px solid var(--crm-border-subtle);">
+                                        <i class="bi @iconClass" style="font-size: 4rem; color: @iconColor;"></i>
                                     </div>
                                 }
 
-                                <div class="card-body p-2 d-flex flex-column justify-content-between">
+                                <div class="p-2 d-flex flex-column justify-content-between">
                                     <div class="d-flex align-items-center mb-2">
-                                        <i class="bi @(isImage ? "bi-image" : iconClass) me-2 text-secondary small"></i>
-                                        <a asp-controller="Attachments" asp-action="Download" asp-route-id="@attachment.Id" class="text-truncate text-decoration-none small text-dark flex-grow-1" title="@attachment.FileName" aria-label="Download @attachment.FileName">
+                                        <i class="bi @(isImage ? "bi-image" : iconClass) me-2" style="font-size: 0.875rem; color: var(--crm-text-tertiary);"></i>
+                                        <a asp-controller="Attachments" asp-action="Download" asp-route-id="@attachment.Id" class="text-truncate text-decoration-none flex-grow-1" style="font-size: 0.875rem; color: var(--crm-text-primary);" title="@attachment.FileName" aria-label="Download @attachment.FileName">
                                             @attachment.FileName
                                         </a>
                                     </div>
 
                                     <div class="attachment-actions btn-group w-100">
-                                        <a asp-controller="Attachments" asp-action="Download" asp-route-id="@attachment.Id" class="btn btn-outline-secondary btn-sm" title="Download" aria-label="Download @attachment.FileName">
+                                        <a asp-controller="Attachments" asp-action="Download" asp-route-id="@attachment.Id" class="crm-btn-secondary btn-sm" style="flex: 1; justify-content: center; border-radius: var(--crm-radius-sm) 0 0 var(--crm-radius-sm);" title="Download" aria-label="Download @attachment.FileName">
                                             <i class="bi bi-download"></i>
                                         </a>
                                         @if (isImage)
                                         {
                                             <form method="post" class="d-inline flex-grow-1" action="/Attachments/@attachment.Id/SetAsProfilePhoto?returnUrl=@(Context.Request.Path + Context.Request.QueryString)">
-                                                <button type="submit" class="btn btn-outline-primary btn-sm w-100 rounded-0" title="Set as profile photo" aria-label="Set @attachment.FileName as profile photo">
+                                                <button type="submit" class="crm-btn-secondary btn-sm w-100" style="border-radius: 0;" title="Set as profile photo" aria-label="Set @attachment.FileName as profile photo">
                                                     <i class="bi bi-person-circle"></i>
                                                 </button>
                                                 <input name="__RequestVerificationToken" type="hidden" value="@GetAntiXsrfRequestToken()"/>
                                             </form>
                                         }
                                         <form asp-controller="Attachments" asp-action="Delete" asp-route-id="@attachment.Id" asp-route-returnUrl="@(Context.Request.Path + Context.Request.QueryString)" method="post" class="d-inline flex-grow-1" onsubmit="return confirm('Are you sure?');">
-                                            <button type="submit" class="btn btn-outline-danger btn-sm w-100 rounded-start-0" title="Delete" aria-label="Delete @attachment.FileName">
+                                            <button type="submit" class="crm-btn-danger btn-sm w-100" style="border-radius: 0 var(--crm-radius-sm) var(--crm-radius-sm) 0;" title="Delete" aria-label="Delete @attachment.FileName">
                                                 <i class="bi bi-trash"></i>
                                             </button>
                                         </form>
@@ -866,12 +780,9 @@
             }
             else
             {
-                <div class="text-center py-4 text-muted">
-                    <i class="bi bi-paperclip display-6 d-block mb-3 opacity-25"></i>
-                    <p class="mb-2">No attachments.</p>
-                    <button type="button" class="btn btn-sm btn-primary mt-2" data-mdb-collapse-init data-mdb-toggle="collapse" data-mdb-target="#uploadAttachmentForm" aria-expanded="false" aria-controls="uploadAttachmentForm" aria-label="Add Attachment">
-                        <i class="bi bi-plus-lg" aria-hidden="true"></i> Add Attachment
-                    </button>
+                <div class="crm-empty py-2">
+                    <i class="bi bi-paperclip" aria-hidden="true"></i>
+                    <span>Attach photos, documents, or files.</span>
                 </div>
             }
         </div>
@@ -918,7 +829,7 @@
                 lightboxTitle.textContent = filename;
                 lightboxOpenOriginal.href = url;
                 lightbox.classList.add('active');
-                document.body.style.overflow = 'hidden'; // prevent background scrolling
+                document.body.style.overflow = 'hidden';
             }
 
             function closeLightbox() {
@@ -927,36 +838,30 @@
                 document.body.style.overflow = '';
             }
 
-            // Bind click to preview containers
             document.querySelectorAll('.attachment-preview-container[data-preview-url]').forEach(container => {
                 container.addEventListener('click', function(e) {
-                    // Prevent opening lightbox if clicking on actions/links inside it (if any)
                     if (e.target.closest('a') || e.target.closest('button')) return;
-
                     const url = this.getAttribute('data-preview-url');
                     const filename = this.getAttribute('data-filename');
                     openLightbox(url, filename);
                 });
             });
 
-            // Close bindings
             lightboxCloseBtn.addEventListener('click', closeLightbox);
 
-            // Close when clicking outside image
             lightbox.addEventListener('click', function(e) {
                 if (e.target === lightbox) {
                     closeLightbox();
                 }
             });
 
-            // Close on ESC key
             document.addEventListener('keydown', function(e) {
                 if (e.key === 'Escape' && lightbox.classList.contains('active')) {
                     closeLightbox();
                 }
             });
 
-            // Initialize Masonry after images load to prevent overlapping cards
+            // Initialize Masonry after images load
             const grid = document.querySelector('.masonry-grid');
             if (grid && window.Masonry && window.imagesLoaded) {
                 imagesLoaded(grid, function() {

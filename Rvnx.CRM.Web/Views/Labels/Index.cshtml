@@ -6,26 +6,23 @@
 
 <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
     <h2 class="mb-0">Labels</h2>
-    <a asp-action="Create" class="btn btn-primary">
-        <i class="bi bi-plus-lg me-1"></i> Create Label
+    <a asp-action="Create" class="crm-btn-primary">
+        <i class="bi bi-plus-lg"></i> Create Label
     </a>
 </div>
 
 @if (!Model.Any())
 {
     <div class="text-center py-5 my-5">
-        <i class="bi bi-tags display-1 text-muted opacity-25 mb-3"></i>
-        <h3 class="h4 text-secondary mt-3">No Labels Found</h3>
-        <p class="text-muted mb-4">Create your first label to organize contacts.</p>
-        <a asp-action="Create" class="btn btn-primary btn-lg px-4">
-            <i class="bi bi-plus-lg me-2"></i>Create Label
-        </a>
+        <i class="bi bi-tags display-1 opacity-25 mb-3" style="color: var(--crm-text-tertiary);"></i>
+        <h3 class="h4 mt-3" style="color: var(--crm-text-secondary);">No Labels Found</h3>
+        <p class="mb-4" style="color: var(--crm-text-tertiary);">Create your first label to organize contacts.</p>
     </div>
 }
 else
 {
-    <div class="card shadow-sm">
-        <div class="card-body p-0">
+    <div class="crm-card" style="margin-bottom: 0;">
+        <div class="crm-card-body p-0">
             <div class="table-responsive">
                 <table class="table table-hover align-middle mb-0">
                     <thead class="">
@@ -44,12 +41,12 @@ else
                                     </h5>
                                 </td>
                                 <td class="text-end">
-                                    <div class="btn-group btn-group-sm">
-                                        <a asp-action="Edit" asp-route-id="@label.Id" class="btn btn-outline-secondary" title="Edit" aria-label="Edit @label.Name">
+                                    <div class="crm-icon-actions">
+                                        <a asp-action="Edit" asp-route-id="@label.Id" class="crm-icon-btn icon-edit" title="Edit" aria-label="Edit @label.Name">
                                             <i class="bi bi-pencil-square"></i>
                                         </a>
                                         <form asp-action="Delete" asp-route-id="@label.Id" method="post" class="d-inline" onsubmit="return confirm('Are you sure you want to delete this label?');">
-                                            <button type="submit" class="btn btn-outline-danger" title="Delete" aria-label="Delete @label.Name">
+                                            <button type="submit" class="crm-icon-btn icon-danger" title="Delete" aria-label="Delete @label.Name">
                                                 <i class="bi bi-trash"></i>
                                             </button>
                                         </form>

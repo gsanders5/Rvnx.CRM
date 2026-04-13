@@ -34,8 +34,8 @@
     <form asp-action="Delete">
         <input type="hidden" asp-for="Id"/>
         <div class="d-grid gap-2 d-md-flex mt-4">
-            <button type="submit" class="btn btn-danger"><i class="bi bi-trash me-2"></i>Delete</button>
-            <a asp-controller="Contacts" asp-action="Details" asp-route-id="@Model.EntityId" class="btn btn-secondary"><i class="bi bi-x-lg me-2"></i>Cancel</a>
+            <button type="submit" class="crm-btn-danger"><i class="bi bi-trash"></i>Delete</button>
+            <a asp-controller="Contacts" asp-action="Details" asp-route-id="@Model.EntityId" class="crm-btn-tertiary"><i class="bi bi-x-lg"></i>Cancel</a>
         </div>
     </form>
 </div>
