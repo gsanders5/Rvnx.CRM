@@ -152,9 +152,14 @@
                             <a asp-controller="ContactMethods" asp-action="Edit" asp-route-id="@info.Id" class="crm-icon-btn icon-edit" title="Edit" aria-label="Edit @info.Type @info.Value">
                                 <i class="bi bi-pencil-square"></i>
                             </a>
-                            <a asp-controller="ContactMethods" asp-action="Delete" asp-route-id="@info.Id" class="crm-icon-btn icon-danger" title="Delete" aria-label="Delete @info.Type @info.Value">
+                            <button type="button" class="crm-icon-btn icon-danger"
+                                    data-confirm-action="@Url.Action("Delete", "ContactMethods", new { id = info.Id })"
+                                    data-confirm-title="Delete Contact Method"
+                                    data-confirm-body="Are you sure you want to delete @info.Type (@info.Value)?"
+                                    data-confirm-reload
+                                    title="Delete" aria-label="Delete @info.Type @info.Value">
                                 <i class="bi bi-trash"></i>
-                            </a>
+                            </button>
                         </div>
                     </div>
                 }
@@ -206,9 +211,14 @@
                                 <a asp-controller="Addresses" asp-action="Edit" asp-route-id="@address.Id" class="crm-icon-btn icon-edit" title="Edit" aria-label="Edit @address.AddressType address">
                                     <i class="bi bi-pencil-square"></i>
                                 </a>
-                                <a asp-controller="Addresses" asp-action="Delete" asp-route-id="@address.Id" class="crm-icon-btn icon-danger" title="Delete" aria-label="Delete @address.AddressType address">
+                                <button type="button" class="crm-icon-btn icon-danger"
+                                        data-confirm-action="@Url.Action("Delete", "Addresses", new { id = address.Id })"
+                                        data-confirm-title="Delete Address"
+                                        data-confirm-body="Are you sure you want to delete this @address.AddressType address?"
+                                        data-confirm-reload
+                                        title="Delete" aria-label="Delete @address.AddressType address">
                                     <i class="bi bi-trash"></i>
-                                </a>
+                                </button>
                             </div>
                         </div>
                     }
@@ -259,11 +269,14 @@
                                 <a asp-controller="Facts" asp-action="Edit" asp-route-id="@fact.Id" class="crm-icon-btn icon-edit" title="Edit fact" aria-label="Edit fact">
                                     <i class="bi bi-pencil-square"></i>
                                 </a>
-                                <form asp-controller="Facts" asp-action="Delete" asp-route-id="@fact.Id" method="post" class="d-inline" onsubmit="return confirm('Are you sure you want to delete this fact?');">
-                                    <button type="submit" class="crm-icon-btn icon-danger" title="Delete fact" aria-label="Delete fact">
-                                        <i class="bi bi-trash"></i>
-                                    </button>
-                                </form>
+                                <button type="button" class="crm-icon-btn icon-danger"
+                                        data-confirm-action="@Url.Action("Delete", "Facts", new { id = fact.Id })"
+                                        data-confirm-title="Delete Fact"
+                                        data-confirm-body="Are you sure you want to delete this fact?"
+                                        data-confirm-reload
+                                        title="Delete fact" aria-label="Delete fact">
+                                    <i class="bi bi-trash"></i>
+                                </button>
                             </div>
                         </div>
                     }
@@ -366,9 +379,14 @@
                                                 <a asp-controller="Relationships" asp-action="Edit" asp-route-id="@rel.Id" class="crm-icon-btn icon-edit" title="Edit relationship" aria-label="Edit relationship with @rel.Name">
                                                     <i class="bi bi-pencil-square"></i>
                                                 </a>
-                                                <a asp-controller="Relationships" asp-action="Delete" asp-route-id="@rel.Id" asp-route-returnUrl="@(Context.Request.Path + Context.Request.QueryString)" class="crm-icon-btn icon-danger" title="Delete relationship" aria-label="Delete relationship with @rel.Name">
+                                                <button type="button" class="crm-icon-btn icon-danger"
+                                                        data-confirm-action="@Url.Action("Delete", "Relationships", new { id = rel.Id })"
+                                                        data-confirm-title="Delete Relationship"
+                                                        data-confirm-body="Are you sure you want to delete the relationship with @rel.Name?"
+                                                        data-confirm-reload
+                                                        title="Delete relationship" aria-label="Delete relationship with @rel.Name">
                                                     <i class="bi bi-trash"></i>
-                                                </a>
+                                                </button>
                                             </div>
                                         </div>
                                     }
@@ -411,9 +429,14 @@
                             <a asp-controller="Pets" asp-action="Edit" asp-route-id="@pet.Id" class="crm-icon-btn icon-edit" title="Edit" aria-label="Edit @pet.Name">
                                 <i class="bi bi-pencil-square"></i>
                             </a>
-                            <a asp-controller="Pets" asp-action="Delete" asp-route-id="@pet.Id" class="crm-icon-btn icon-danger" title="Delete" aria-label="Delete @pet.Name">
+                            <button type="button" class="crm-icon-btn icon-danger"
+                                    data-confirm-action="@Url.Action("Delete", "Pets", new { id = pet.Id })"
+                                    data-confirm-title="Delete Pet"
+                                    data-confirm-body="Are you sure you want to delete @pet.Name?"
+                                    data-confirm-reload
+                                    title="Delete" aria-label="Delete @pet.Name">
                                 <i class="bi bi-trash"></i>
-                            </a>
+                            </button>
                         </div>
                     </div>
                 }
@@ -472,9 +495,14 @@
                                 <a asp-controller="SignificantDates" asp-action="Edit" asp-route-id="@date.Id" class="crm-icon-btn icon-edit" title="Edit" aria-label="Edit @date.Title">
                                     <i class="bi bi-pencil-square"></i>
                                 </a>
-                                <a asp-controller="SignificantDates" asp-action="Delete" asp-route-id="@date.Id" class="crm-icon-btn icon-danger" title="Delete" aria-label="Delete @date.Title">
+                                <button type="button" class="crm-icon-btn icon-danger"
+                                        data-confirm-action="@Url.Action("Delete", "SignificantDates", new { id = date.Id })"
+                                        data-confirm-title="Delete Important Date"
+                                        data-confirm-body="Are you sure you want to delete @(date.Title)?"
+                                        data-confirm-reload
+                                        title="Delete" aria-label="Delete @date.Title">
                                     <i class="bi bi-trash"></i>
-                                </a>
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -514,9 +542,14 @@
                                 <a asp-controller="Notes" asp-action="Edit" asp-route-id="@note.Id" class="crm-icon-btn icon-edit" title="Edit" aria-label="Edit @note.Title">
                                     <i class="bi bi-pencil-square"></i>
                                 </a>
-                                <a asp-controller="Notes" asp-action="Delete" asp-route-id="@note.Id" class="crm-icon-btn icon-danger" title="Delete" aria-label="Delete @note.Title">
+                                <button type="button" class="crm-icon-btn icon-danger"
+                                        data-confirm-action="@Url.Action("Delete", "Notes", new { id = note.Id })"
+                                        data-confirm-title="Delete Note"
+                                        data-confirm-body="Are you sure you want to delete &quot;@note.Title&quot;?"
+                                        data-confirm-reload
+                                        title="Delete" aria-label="Delete @note.Title">
                                     <i class="bi bi-trash"></i>
-                                </a>
+                                </button>
                             </div>
                         </div>
                         <div class="d-none note-source">@note.Value</div>
@@ -576,9 +609,14 @@
                                 <a asp-controller="Activities" asp-action="Edit" asp-route-id="@activity.Id" class="crm-icon-btn icon-edit" title="Edit" aria-label="Edit @activity.Title">
                                     <i class="bi bi-pencil-square"></i>
                                 </a>
-                                <a asp-controller="Activities" asp-action="Delete" asp-route-id="@activity.Id" class="crm-icon-btn icon-danger" title="Delete" aria-label="Delete @activity.Title">
+                                <button type="button" class="crm-icon-btn icon-danger"
+                                        data-confirm-action="@Url.Action("Delete", "Activities", new { id = activity.Id })"
+                                        data-confirm-title="Delete Activity"
+                                        data-confirm-body="Are you sure you want to delete &quot;@activity.Title&quot;?"
+                                        data-confirm-reload
+                                        title="Delete" aria-label="Delete @activity.Title">
                                     <i class="bi bi-trash"></i>
-                                </a>
+                                </button>
                             </div>
                         </div>
                         @if (!string.IsNullOrEmpty(activity.Description))
@@ -647,9 +685,14 @@
                             <a asp-controller="ContactTasks" asp-action="Edit" asp-route-id="@task.Id" class="crm-icon-btn icon-edit" title="Edit" aria-label="Edit @task.Title">
                                 <i class="bi bi-pencil-square"></i>
                             </a>
-                            <a asp-controller="ContactTasks" asp-action="Delete" asp-route-id="@task.Id" class="crm-icon-btn icon-danger" title="Delete" aria-label="Delete @task.Title">
+                            <button type="button" class="crm-icon-btn icon-danger"
+                                    data-confirm-action="@Url.Action("Delete", "ContactTasks", new { id = task.Id })"
+                                    data-confirm-title="Delete Task"
+                                    data-confirm-body="Are you sure you want to delete &quot;@task.Title&quot;?"
+                                    data-confirm-reload
+                                    title="Delete" aria-label="Delete @task.Title">
                                 <i class="bi bi-trash"></i>
-                            </a>
+                            </button>
                         </div>
                     </div>
                 }
@@ -766,11 +809,14 @@
                                                 <input name="__RequestVerificationToken" type="hidden" value="@GetAntiXsrfRequestToken()"/>
                                             </form>
                                         }
-                                        <form asp-controller="Attachments" asp-action="Delete" asp-route-id="@attachment.Id" asp-route-returnUrl="@(Context.Request.Path + Context.Request.QueryString)" method="post" class="d-inline flex-grow-1" onsubmit="return confirm('Are you sure?');">
-                                            <button type="submit" class="crm-btn-danger btn-sm w-100" style="border-radius: 0 var(--crm-radius-sm) var(--crm-radius-sm) 0;" title="Delete" aria-label="Delete @attachment.FileName">
-                                                <i class="bi bi-trash"></i>
-                                            </button>
-                                        </form>
+                                        <button type="button" class="crm-btn-danger btn-sm flex-grow-1" style="border-radius: 0 var(--crm-radius-sm) var(--crm-radius-sm) 0;"
+                                                data-confirm-action="@Url.Action("Delete", "Attachments", new { id = attachment.Id, returnUrl = Context.Request.Path + Context.Request.QueryString })"
+                                                data-confirm-title="Delete Attachment"
+                                                data-confirm-body="Are you sure you want to delete @attachment.FileName?"
+                                                data-confirm-reload
+                                                title="Delete" aria-label="Delete @attachment.FileName">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
                                     </div>
                                 </div>
                             </div>

@@ -9,14 +9,16 @@
 //   data-confirm-title         (optional) — modal heading  (default: "Confirm")
 //   data-confirm-body          (optional) — modal body text (default: "Are you sure?")
 //   data-confirm-btn-label     (optional) — submit button label (default: "Delete")
-//   data-confirm-btn-class     (optional) — submit button CSS class (default: "btn-danger")
 //   data-confirm-btn-icon      (optional) — Bootstrap icon class (default: "bi-trash")
-//   data-confirm-table         (optional) — CSS selector for a DataTable; when set, the
-//                                           POST is sent via fetch and the containing <tr>
-//                                           is removed from the table without a page reload.
+//
+// After-action modes (pick one; without any of these the form submits normally):
+//   data-confirm-table         — CSS selector for a DataTable; removes the <tr> via AJAX
+//   data-confirm-reload        — if present, POSTs via AJAX then reloads the page
+//   data-confirm-remove        — CSS selector resolved from the trigger (closest); removes
+//                                the matched element from the DOM after a successful AJAX POST
 // ---------------------------------------------------------------------------
 (function () {
-    let _triggerEl = null;   // button that opened the current modal
+    let _triggerEl = null;
 
     document.addEventListener('click', function (e) {
         const trigger = e.target.closest('[data-confirm-action]');
@@ -30,7 +32,6 @@
         const title    = trigger.dataset.confirmTitle    || 'Confirm';
         const body     = trigger.dataset.confirmBody     || 'Are you sure?';
         const btnLabel = trigger.dataset.confirmBtnLabel || 'Delete';
-        const btnClass = trigger.dataset.confirmBtnClass || 'btn-danger';
         const btnIcon  = trigger.dataset.confirmBtnIcon  || 'bi-trash';
 
         const modalEl  = document.getElementById('confirmModal');
@@ -42,55 +43,67 @@
         document.getElementById('confirmModalLabel').textContent = title;
         document.getElementById('confirmModalBody').textContent  = body;
 
-        submitBtn.className = `btn ${btnClass}`;
-        submitBtn.innerHTML = `<i class="bi ${btnIcon} me-1"></i> ${btnLabel}`;
+        submitBtn.className = 'crm-btn-danger';
+        submitBtn.innerHTML = `<i class="bi ${btnIcon}"></i> ${btnLabel}`;
 
         form.action = action;
 
         mdb.Modal.getOrCreateInstance(modalEl).show();
     });
 
-    // Handle AJAX submission when data-confirm-table is present on the trigger
     document.addEventListener('submit', function (e) {
         if (e.target.id !== 'confirmModalForm') return;
         if (!_triggerEl) return;
 
-        const tableSelector = _triggerEl.dataset.confirmTable;
-        if (!tableSelector) return;   // no table — fall through to normal form submit
+        const tableSelector  = _triggerEl.dataset.confirmTable;
+        const shouldReload   = _triggerEl.hasAttribute('data-confirm-reload');
+        const removeSelector = _triggerEl.dataset.confirmRemove;
+
+        // If none of the AJAX modes are set, let the form submit normally
+        if (!tableSelector && !shouldReload && !removeSelector) return;
 
         e.preventDefault();
 
-        const form     = e.target;
+        const form      = e.target;
         const submitBtn = document.getElementById('confirmModalSubmit');
-        const modalEl  = document.getElementById('confirmModal');
+        const modalEl   = document.getElementById('confirmModal');
 
         submitBtn.disabled = true;
-        submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span> Deleting…';
-
-        const formData = new FormData(form);
+        submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span> Deleting\u2026';
 
         fetch(form.action, {
             method: 'POST',
-            body: formData,
+            body: new FormData(form),
             headers: { 'X-Requested-With': 'XMLHttpRequest' }
         })
         .then(function (response) {
             if (!response.ok) throw new Error('Server returned ' + response.status);
 
-            // Remove the row from DataTable without resetting to page 1
-            const tableEl = document.querySelector(tableSelector);
-            if (tableEl && typeof $.fn !== 'undefined' && $.fn.dataTable && $.fn.dataTable.isDataTable(tableEl)) {
-                const dt  = $(tableEl).DataTable();
-                const row = $(_triggerEl).closest('tr');
-                dt.row(row).remove().draw(false);
+            if (tableSelector) {
+                var tableEl = document.querySelector(tableSelector);
+                if (tableEl && $.fn.dataTable && $.fn.dataTable.isDataTable(tableEl)) {
+                    var dt  = $(tableEl).DataTable();
+                    var row = $(_triggerEl).closest('tr');
+                    dt.row(row).remove().draw(false);
+                }
+                mdb.Modal.getOrCreateInstance(modalEl).hide();
+            } else if (removeSelector) {
+                var target = _triggerEl.closest(removeSelector);
+                if (target) {
+                    target.style.transition = 'opacity 200ms ease';
+                    target.style.opacity = '0';
+                    setTimeout(function () { target.remove(); }, 200);
+                }
+                mdb.Modal.getOrCreateInstance(modalEl).hide();
+            } else if (shouldReload) {
+                window.location.reload();
             }
-
-            mdb.Modal.getOrCreateInstance(modalEl).hide();
         })
         .catch(function (err) {
             console.error('Delete failed:', err);
             submitBtn.disabled = false;
-            submitBtn.innerHTML = submitBtn.innerHTML.replace(/<span.*?<\/span>\s*/, '');
+            submitBtn.className = 'crm-btn-danger';
+            submitBtn.innerHTML = '<i class="bi bi-trash"></i> Delete';
         })
         .finally(function () {
             _triggerEl = null;

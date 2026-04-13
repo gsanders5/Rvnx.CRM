@@ -94,9 +94,14 @@ else
                                         <a asp-action="Edit" asp-route-id="@item.Id" class="crm-icon-btn icon-edit" title="Edit" aria-label="Edit @item.Title">
                                             <i class="bi bi-pencil-square"></i>
                                         </a>
-                                        <a asp-action="Delete" asp-route-id="@item.Id" class="crm-icon-btn icon-danger" title="Delete" aria-label="Delete @item.Title">
+                                        <button type="button" class="crm-icon-btn icon-danger"
+                                                data-confirm-action="@Url.Action("Delete", "SignificantDates", new { id = item.Id, contactId = ViewBag.ContactId })"
+                                                data-confirm-title="Delete Important Date"
+                                                data-confirm-body="Are you sure you want to delete &quot;@item.Title&quot;?"
+                                                data-confirm-remove="tr"
+                                                title="Delete" aria-label="Delete @item.Title">
                                             <i class="bi bi-trash"></i>
-                                        </a>
+                                        </button>
                                     </div>
                                 </td>
                             </tr>

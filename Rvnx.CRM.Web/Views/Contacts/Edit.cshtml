@@ -149,7 +149,12 @@
                     <button type="submit" class="crm-btn-primary"><i class="bi bi-save"></i> Save</button>
                     <a asp-action="Details" asp-route-id="@Model.Id" class="crm-btn-tertiary"><i class="bi bi-arrow-left"></i> Back to Contact</a>
                 </div>
-                <a asp-action="Delete" asp-route-id="@Model.Id" class="crm-btn-danger"><i class="bi bi-trash"></i> Delete</a>
+                <button type="button" class="crm-btn-danger"
+                        data-confirm-action="@Url.Action("Delete", "Contacts", new { id = Model.Id })"
+                        data-confirm-title="Delete Contact"
+                        data-confirm-body="Are you sure you want to delete this contact? This cannot be undone.">
+                    <i class="bi bi-trash"></i> Delete
+                </button>
             </div>
         </form>
     </div>

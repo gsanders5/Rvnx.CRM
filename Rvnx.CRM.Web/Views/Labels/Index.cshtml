@@ -6,9 +6,9 @@
 
 <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
     <h2 class="mb-0">Labels</h2>
-    <a asp-action="Create" class="crm-btn-primary">
+    <button type="button" class="crm-btn-primary" id="btn-create-label">
         <i class="bi bi-plus-lg"></i> Create Label
-    </a>
+    </button>
 </div>
 
 @if (!Model.Any())
@@ -25,7 +25,7 @@ else
         <div class="crm-card-body p-0">
             <div class="table-responsive">
                 <table class="table table-hover align-middle mb-0">
-                    <thead class="">
+                    <thead>
                         <tr>
                             <th>Label</th>
                             <th class="text-end" style="width: 200px;">Actions</th>
@@ -42,14 +42,21 @@ else
                                 </td>
                                 <td class="text-end">
                                     <div class="crm-icon-actions">
-                                        <a asp-action="Edit" asp-route-id="@label.Id" class="crm-icon-btn icon-edit" title="Edit" aria-label="Edit @label.Name">
+                                        <button type="button" class="crm-icon-btn icon-edit btn-edit-label"
+                                                data-id="@label.Id"
+                                                data-name="@label.Name"
+                                                data-color="@(label.Color ?? "#e9ecef")"
+                                                title="Edit" aria-label="Edit @label.Name">
                                             <i class="bi bi-pencil-square"></i>
-                                        </a>
-                                        <form asp-action="Delete" asp-route-id="@label.Id" method="post" class="d-inline" onsubmit="return confirm('Are you sure you want to delete this label?');">
-                                            <button type="submit" class="crm-icon-btn icon-danger" title="Delete" aria-label="Delete @label.Name">
-                                                <i class="bi bi-trash"></i>
-                                            </button>
-                                        </form>
+                                        </button>
+                                        <button type="button" class="crm-icon-btn icon-danger"
+                                                data-confirm-action="@Url.Action("Delete", "Labels", new { id = label.Id })"
+                                                data-confirm-title="Delete Label"
+                                                data-confirm-body="Are you sure you want to delete the &quot;@label.Name&quot; label? It will be removed from all contacts."
+                                                data-confirm-remove="tr"
+                                                title="Delete" aria-label="Delete @label.Name">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
                                     </div>
                                 </td>
                             </tr>
@@ -59,4 +66,91 @@ else
             </div>
         </div>
     </div>
+}
+
+<div class="modal fade" id="labelModal" tabindex="-1" aria-labelledby="labelModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <form id="labelForm" method="post">
+                @Html.AntiForgeryToken()
+                <div class="modal-header">
+                    <h5 class="modal-title" id="labelModalLabel">Create Label</h5>
+                    <button type="button" class="btn-close" data-mdb-ripple-init data-mdb-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" name="Id" id="labelFormId" />
+
+                    <div class="form-floating mb-3">
+                        <input type="text" name="Name" id="labelFormName" class="form-control" placeholder="Name" required autofocus />
+                        <label for="labelFormName">Name <span style="color: var(--crm-danger);">*</span></label>
+                    </div>
+
+                    <div>
+                        <label class="form-label d-block" style="color: var(--crm-text-secondary); font-size: 0.8125rem;">Badge Color</label>
+                        <div class="d-flex align-items-center gap-3">
+                            <input type="color" name="Color" id="labelFormColor" class="form-control form-control-color border-0 p-0" style="width: 4rem; height: 3rem; cursor: pointer;" value="#4CAF50" title="Choose badge color" />
+                            <small style="color: var(--crm-text-tertiary);">Select a background color. Text color adjusts automatically.</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="crm-btn-tertiary" data-mdb-ripple-init data-mdb-dismiss="modal">Cancel</button>
+                    <button type="submit" class="crm-btn-primary" id="labelFormSubmit">
+                        <i class="bi bi-check-lg"></i> <span id="labelFormSubmitText">Create Label</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            var modalEl = document.getElementById('labelModal');
+            var form = document.getElementById('labelForm');
+            var titleEl = document.getElementById('labelModalLabel');
+            var idInput = document.getElementById('labelFormId');
+            var nameInput = document.getElementById('labelFormName');
+            var colorInput = document.getElementById('labelFormColor');
+            var submitText = document.getElementById('labelFormSubmitText');
+
+            function openModal(mode, data) {
+                if (mode === 'create') {
+                    titleEl.textContent = 'Create Label';
+                    submitText.textContent = 'Create Label';
+                    form.action = '@Url.Action("Create", "Labels")';
+                    idInput.value = '00000000-0000-0000-0000-000000000000';
+                    nameInput.value = '';
+                    colorInput.value = '#4CAF50';
+                } else {
+                    titleEl.textContent = 'Edit Label';
+                    submitText.textContent = 'Save Changes';
+                    form.action = '@Url.Action("Edit", "Labels", new { id = "__ID__" })'.replace('__ID__', data.id);
+                    idInput.value = data.id;
+                    nameInput.value = data.name;
+                    colorInput.value = data.color;
+                }
+                mdb.Modal.getOrCreateInstance(modalEl).show();
+            }
+
+            document.getElementById('btn-create-label').addEventListener('click', function () {
+                openModal('create');
+            });
+
+            document.addEventListener('click', function (e) {
+                var btn = e.target.closest('.btn-edit-label');
+                if (!btn) return;
+                openModal('edit', {
+                    id: btn.dataset.id,
+                    name: btn.dataset.name,
+                    color: btn.dataset.color
+                });
+            });
+
+            modalEl.addEventListener('shown.mdb.modal', function () {
+                nameInput.focus();
+            });
+        });
+    </script>
 }
