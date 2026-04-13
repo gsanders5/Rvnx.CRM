@@ -1,3 +1,5 @@
+using Rvnx.CRM.Core.DTOs.DebugOperations;
+
 namespace Rvnx.CRM.Core.Interfaces;
 
 public interface IDebugOperationsService
@@ -15,19 +17,4 @@ public interface IDebugOperationsService
     /// </summary>
     /// <returns>A list of <see cref="MergeUserDto"/>.</returns>
     Task<List<MergeUserDto>> GetAllUsersWithGroupsAsync();
-}
-
-public class MergeAccountsResult
-{
-    public bool Success { get; set; }
-    public string? Message { get; set; }
-    public string? Error { get; set; }
-}
-
-public class MergeUserDto
-{
-    public Guid Id { get; set; }
-    public string Name { get; set; } = string.Empty;
-    public string GroupName { get; set; } = string.Empty;
-    public int GroupMemberCount { get; set; }
 }
