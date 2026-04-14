@@ -103,10 +103,13 @@ public class ContactMethodServiceTests
     {
         Guid contactMethodId = Guid.NewGuid();
         Guid contactId = Guid.NewGuid();
-        ContactMethod contactMethod = new() { Id = contactMethodId, ContactId = contactId };
+        List<Guid?> contactIds = [contactId];
 
-        _repositoryMock.Setup(r => r.GetByIdAsync<ContactMethod>(contactMethodId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(contactMethod);
+        _repositoryMock.Setup(r => r.ListProjectedAsync<ContactMethod, Guid?>(
+            It.IsAny<System.Linq.Expressions.Expression<Func<ContactMethod, bool>>>(),
+            It.IsAny<System.Linq.Expressions.Expression<Func<ContactMethod, Guid?>>>(),
+            It.IsAny<CancellationToken>()))
+            .ReturnsAsync(contactIds);
 
         OperationResult result = await _service.DeleteAsync(contactMethodId);
 
@@ -114,7 +117,7 @@ public class ContactMethodServiceTests
         Assert.Equal(contactId, result.RedirectId);
         Assert.Equal(EntityTypes.Person, result.RedirectType);
 
-        _repositoryMock.Verify(r => r.DeleteAsync<ContactMethod>(contactMethodId, It.IsAny<CancellationToken>()), Times.Once);
+        _repositoryMock.Verify(r => r.DeleteAsync(It.IsAny<System.Linq.Expressions.Expression<Func<ContactMethod, bool>>>(), It.IsAny<CancellationToken>()), Times.Once);
         _repositoryMock.Verify(r => r.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
     }
 
@@ -123,15 +126,18 @@ public class ContactMethodServiceTests
     {
         Guid contactMethodId = Guid.NewGuid();
 
-        _repositoryMock.Setup(r => r.GetByIdAsync<ContactMethod>(contactMethodId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync((ContactMethod?)null);
+        _repositoryMock.Setup(r => r.ListProjectedAsync<ContactMethod, Guid?>(
+            It.IsAny<System.Linq.Expressions.Expression<Func<ContactMethod, bool>>>(),
+            It.IsAny<System.Linq.Expressions.Expression<Func<ContactMethod, Guid?>>>(),
+            It.IsAny<CancellationToken>()))
+            .ReturnsAsync([]);
 
         OperationResult result = await _service.DeleteAsync(contactMethodId);
 
         Assert.False(result.Success);
         Assert.Equal("Contact method not found.", result.ErrorMessage);
 
-        _repositoryMock.Verify(r => r.DeleteAsync<ContactMethod>(It.IsAny<Guid>(), It.IsAny<CancellationToken>()), Times.Never);
+        _repositoryMock.Verify(r => r.DeleteAsync(It.IsAny<System.Linq.Expressions.Expression<Func<ContactMethod, bool>>>(), It.IsAny<CancellationToken>()), Times.Never);
         _repositoryMock.Verify(r => r.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
     }
 
