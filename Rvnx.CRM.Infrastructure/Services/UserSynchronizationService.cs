@@ -1,9 +1,7 @@
 using Microsoft.EntityFrameworkCore;
-using Rvnx.CRM.Core.Constants;
 using Rvnx.CRM.Core.Interfaces;
 using Rvnx.CRM.Core.Models;
 using Rvnx.CRM.Infrastructure.Data;
-using System.Security.Claims;
 
 namespace Rvnx.CRM.Infrastructure.Services;
 
@@ -12,29 +10,20 @@ public class UserSynchronizationService(CRMDbContext dbContext, IRepository repo
     private readonly CRMDbContext _dbContext = dbContext;
     private readonly IRepository _repository = repository;
 
-    public async Task SyncUserAsync(ClaimsPrincipal principal)
+    public async Task<UserSyncResult?> SyncUserAsync(string subjectId, string? email, string? name)
     {
-        string? subject = principal.FindFirst(ClaimTypes.NameIdentifier)?.Value
-                   ?? principal.FindFirst("sub")?.Value;
-
-        string? email = principal.FindFirst(ClaimTypes.Email)?.Value
-                 ?? principal.FindFirst("email")?.Value;
-
-        string? name = principal.FindFirst(ClaimTypes.Name)?.Value
-                ?? principal.FindFirst("name")?.Value;
-
-        if (string.IsNullOrEmpty(subject))
+        if (string.IsNullOrEmpty(subjectId))
         {
-            return; // Cannot sync without a subject identifier
+            return null; // Cannot sync without a subject identifier
         }
 
-        User? user = await _repository.QueryUnfiltered<User>().FirstOrDefaultAsync(u => u.SubjectId == subject);
+        User? user = await _repository.QueryUnfiltered<User>().FirstOrDefaultAsync(u => u.SubjectId == subjectId);
 
         if (user == null)
         {
             user = new User
             {
-                SubjectId = subject,
+                SubjectId = subjectId,
                 Email = email ?? "unknown@example.com",
                 DisplayName = name ?? email,
                 CreatedBy = "System",
@@ -86,33 +75,11 @@ public class UserSynchronizationService(CRMDbContext dbContext, IRepository repo
             }
         }
 
-        // Add internal user ID as a separate claim instead of replacing NameIdentifier
-        // This preserves the original external identity for logging/auditing while
-        // providing the internal ID for CRM operations
-        if (principal.Identity is ClaimsIdentity identity)
+        return new UserSyncResult
         {
-            Claim? existingUserClaim = identity.FindFirst(ClaimConstants.InternalUserIdClaimType);
-            if (existingUserClaim != null)
-            {
-                identity.RemoveClaim(existingUserClaim);
-            }
-            identity.AddClaim(new Claim(ClaimConstants.InternalUserIdClaimType, user.Id.ToString()));
-
-            Claim? existingGroupClaim = identity.FindFirst(ClaimConstants.InternalGroupIdClaimType);
-            if (existingGroupClaim != null)
-            {
-                identity.RemoveClaim(existingGroupClaim);
-            }
-
-            if (user.GroupId.HasValue)
-            {
-                identity.AddClaim(new Claim(ClaimConstants.InternalGroupIdClaimType, user.GroupId.Value.ToString()));
-            }
-
-            if (!identity.HasClaim(c => c.Type == ClaimTypes.Name) && !string.IsNullOrEmpty(user.DisplayName))
-            {
-                identity.AddClaim(new Claim(ClaimTypes.Name, user.DisplayName));
-            }
-        }
+            UserId = user.Id,
+            GroupId = user.GroupId,
+            DisplayName = user.DisplayName
+        };
     }
 }
