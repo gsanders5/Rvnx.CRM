@@ -67,12 +67,15 @@ public class ContactMethodService(IRepository repository) : IContactMethodServic
 
     public async Task<OperationResult> DeleteAsync(Guid id)
     {
-        ContactMethod? contactInfo = await _repository.GetByIdAsync<ContactMethod>(id);
-        if (contactInfo != null)
+        List<Guid?> contactIds = await _repository.ListProjectedAsync<ContactMethod, Guid?>(
+            cm => cm.Id == id,
+            cm => cm.ContactId);
+
+        if (contactIds.Count > 0)
         {
-            Guid entityId = contactInfo.ContactId ?? Guid.Empty;
+            Guid entityId = contactIds.FirstOrDefault() ?? Guid.Empty;
             string entityType = EntityTypes.Person;
-            await _repository.DeleteAsync<ContactMethod>(id);
+            await _repository.DeleteAsync<ContactMethod>(cm => cm.Id == id);
             await _repository.SaveChangesAsync();
             return OperationResult.Ok(entityId, entityType);
         }
