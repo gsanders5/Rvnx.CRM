@@ -201,4 +201,139 @@ public class ActivityServiceTests
 
         _repositoryMock.Verify(r => r.DeleteAsync<Activity>(activityId, It.IsAny<CancellationToken>()), Times.Once);
     }
+
+    [Fact]
+    public async Task UpdateAsyncWhenActivityNotFoundReturnsFailure()
+    {
+        Guid activityId = Guid.NewGuid();
+        ActivityFormDto dto = new() { EntityId = Guid.NewGuid() };
+
+        _repositoryMock.Setup(r => r.GetByIdWithIncludesAsync<Activity>(activityId, It.IsAny<string[]>()))
+            .ReturnsAsync((Activity?)null);
+
+        OperationResult result = await _service.UpdateAsync(activityId, dto);
+
+        Assert.False(result.Success);
+        Assert.Equal("Activity not found.", result.ErrorMessage);
+    }
+
+    [Fact]
+    public async Task DeleteAsyncWhenActivityNotFoundReturnsFailure()
+    {
+        Guid activityId = Guid.NewGuid();
+
+        _repositoryMock.Setup(r => r.ExistsAsync<Activity>(activityId, It.IsAny<CancellationToken>())).ReturnsAsync(false);
+
+        OperationResult result = await _service.DeleteAsync(activityId);
+
+        Assert.False(result.Success);
+        Assert.Equal("Activity not found.", result.ErrorMessage);
+    }
+
+    [Fact]
+    public async Task GetFormAsyncWhenActivityNotFoundReturnsNull()
+    {
+        Guid activityId = Guid.NewGuid();
+
+        _repositoryMock.Setup(r => r.GetByIdWithIncludesAsync<Activity>(activityId, It.IsAny<string[]>()))
+            .ReturnsAsync((Activity?)null);
+
+        ActivityFormDto? result = await _service.GetFormAsync(activityId);
+
+        Assert.Null(result);
+    }
+
+    [Fact]
+    public async Task GetFormAsyncWhenActivityFoundReturnsDto()
+    {
+        Guid activityId = Guid.NewGuid();
+        Guid contactId1 = Guid.NewGuid();
+        Guid contactId2 = Guid.NewGuid();
+
+        Activity activity = new()
+        {
+            Id = activityId,
+            Title = "Test Title",
+            Description = "Test Desc",
+            ActivityDate = new DateTime(2025, 1, 1),
+            ActivityType = "Meeting",
+            Location = "Office",
+            ActivityContacts = [
+                new ActivityContact { ContactId = contactId1 },
+                new ActivityContact { ContactId = contactId2 }
+            ]
+        };
+
+        _repositoryMock.Setup(r => r.GetByIdWithIncludesAsync<Activity>(activityId, It.IsAny<string[]>()))
+            .ReturnsAsync(activity);
+
+        ActivityFormDto? result = await _service.GetFormAsync(activityId);
+
+        Assert.NotNull(result);
+        Assert.Equal(activityId, result.Id);
+        Assert.Equal(contactId1, result.EntityId);
+        Assert.Contains(contactId1, result.ContactIds);
+        Assert.Contains(contactId2, result.ContactIds);
+        Assert.Equal(2, result.ContactIds.Count);
+        Assert.Equal("Test Title", result.Title);
+        Assert.Equal("Test Desc", result.Description);
+        Assert.Equal(new DateTime(2025, 1, 1), result.ActivityDate);
+        Assert.Equal("Meeting", result.ActivityType);
+        Assert.Equal("Office", result.Location);
+    }
+
+    [Fact]
+    public async Task GetFormForCreateAsyncWhenContactIsInvalidReturnsNull()
+    {
+        Guid entityId = Guid.NewGuid();
+
+        _repositoryMock.Setup(r => r.CountAsync(It.IsAny<Expression<Func<Core.Models.Contact.Contact, bool>>>(), It.IsAny<CancellationToken>())).ReturnsAsync(0);
+
+        ActivityFormDto? result = await _service.GetFormForCreateAsync(entityId);
+
+        Assert.Null(result);
+    }
+
+    [Fact]
+    public async Task GetByIdAsyncReturnsActivity()
+    {
+        Guid activityId = Guid.NewGuid();
+        Activity activity = new() { Id = activityId };
+
+        _repositoryMock.Setup(r => r.GetByIdWithIncludesAsync<Activity>(activityId, It.IsAny<string[]>()))
+            .ReturnsAsync(activity);
+
+        Activity? result = await _service.GetByIdAsync(activityId);
+
+        Assert.NotNull(result);
+        Assert.Equal(activityId, result.Id);
+    }
+
+    [Fact]
+    public async Task GetByContactAsyncReturnsMappedActivities()
+    {
+        Guid contactId = Guid.NewGuid();
+        Guid activityId = Guid.NewGuid();
+
+        List<ActivityContact> activityContacts = [
+            new ActivityContact {
+                ContactId = contactId,
+                ActivityId = activityId,
+                Activity = new Activity { Id = activityId, Title = "Test Title" }
+            }
+        ];
+
+        _repositoryMock.Setup(r => r.ListAsync<ActivityContact>(
+                It.IsAny<Expression<Func<ActivityContact, bool>>>(),
+                It.IsAny<CancellationToken>(),
+                It.IsAny<string[]>()))
+            .ReturnsAsync(activityContacts);
+
+        List<ActivityDto> result = await _service.GetByContactAsync(contactId);
+
+        Assert.NotNull(result);
+        Assert.Single(result);
+        Assert.Equal(activityId, result[0].Id);
+        Assert.Equal("Test Title", result[0].Title);
+    }
 }
