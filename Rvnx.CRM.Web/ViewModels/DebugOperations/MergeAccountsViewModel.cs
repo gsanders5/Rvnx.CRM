@@ -1,5 +1,5 @@
 
-using Rvnx.CRM.Core.Interfaces;
+using Rvnx.CRM.Core.DTOs.DebugOperations;
 
 namespace Rvnx.CRM.Web.ViewModels.DebugOperations;
 
