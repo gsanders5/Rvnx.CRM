@@ -87,8 +87,9 @@ The system supports "Partial Contacts" — contacts that exist primarily as a na
 Relationships are polymorphic but primarily link Person to Person.
 
 -   **Storage**: Stored as `EntityId` (Source) -> `RelatedEntityId` (Target).
--   **Selection**: The UI sends a string like `{TypeId}_Fwd` or `{TypeId}_Rev`.
--   **Parsing**: `RelationshipService` parses this string. If `Rev` (Reverse) is selected, the service swaps the `EntityId` and `RelatedEntityId` before saving, ensuring the relationship is stored in the semantic direction intended by the user.
+-   **API**: The `CreateRelationshipRequest` DTO accepts a typed `RelationshipDirection` enum (`Forward` or `Reverse`) alongside a `RelationshipTypeId` GUID. The API controller converts this to the internal `{TypeId}_Fwd` / `{TypeId}_Rev` string before passing it to the service.
+-   **Web UI**: The UI sends the combined string directly as a `<select>` value.
+-   **Parsing**: `RelationshipService` parses the combined string. If `Rev` (Reverse) is selected, the service swaps `EntityId` and `RelatedEntityId` before saving, ensuring the relationship is stored in the semantic direction intended by the caller.
 
 ## Console Application
 

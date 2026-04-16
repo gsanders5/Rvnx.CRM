@@ -1,85 +1,175 @@
-# Rvnx CRM System
+# Rvnx CRM
 
-**WARNING: This project is currently unstable. Updates may result in data loss.**
+A self-hosted personal CRM — keep track of the people in your life without giving your data to anyone else.
 
-A modern CRM system built with **ASP.NET Core 8.0** using clean architecture principles and **Entity Framework Core 9**.
+Built with ASP.NET Core and SQLite. No subscriptions, no cloud sync, no third-party services required.
 
-For technical details, architecture, and design documentation, please see [DESIGN.md](DESIGN.md).
+![Demo](.screenshots/demo.gif)
+
+---
 
 ## Features
 
-- **Person Management**: Full CRUD operations for contacts, including profile images (stored as `AttachmentContent`).
-- **Relationships**: Polymorphic relationship system supporting **Partial Contacts** (contacts that exist primarily as names without full profiles).
-- **Import/Export**: vCard (.vcf) import and export functionality via `FolkerKinzel.VCards`.
-- **Authentication & Isolation**: Supports OpenID Connect authentication. Implements user isolation (multi-tenancy) via `ICurrentUserService` and EF Core global query filters.
-- **API Access**: RESTful API protected by Bearer token authentication. Covers contacts, activities, addresses, tasks, favorites, labels, calendar events, and more.
-- **Labels**: Categorize contacts with custom labels.
-- **Attachments**: Upload and manage files related to contacts.
-- **Notes & Quick Facts**: Add notes and quick facts with Markdown editing (EasyMDE).
-- **Activities**: Log activities (meetings, calls, etc.) linked to one or more contacts.
-- **Addresses**: Manage contact addresses with Line 1/Line 2, city, state, zip, country, and address type.
-- **Tasks / Follow-ups**: Per-contact to-do items with due dates, completion toggling, and calendar integration.
-- **Favorites**: Mark contacts as favorites for quick access.
-- **Significant Dates & Calendar**: Track birthdays and other important dates with calendar-aware recurrence. Calendar view combines significant dates (current and next year) with incomplete tasks.
-- **Self Contact**: Manage your own profile as a contact within the system.
-- **Scheduled Tasks**: Console application for background jobs via cron / Task Scheduler.
+### Contacts
+- Full contact profiles: name, company, job title, pronouns, gender, birthday, religion
+- Profile photos, labels, and favorites
+- Hide contacts without deleting them
+- Merge duplicates
+- Import/export via vCard (.vcf)
+- **Partial Contacts** — lightweight placeholders for people in relationships who don't need a full profile yet
 
-## Project Structure
+### Per-Contact Detail Panels
 
-- **Rvnx.CRM.Core**: Domain layer containing entities, interfaces, DTOs, and pure business logic services (e.g., `DateCalculationService`, `FileValidationService`).
-- **Rvnx.CRM.Infrastructure**: Data access layer with EF Core DbContext, migrations, and repository implementations.
-- **Rvnx.CRM.API**: ASP.NET Core RESTful API layer using API Token authentication and Swagger for documentation.
-- **Rvnx.CRM.Web**: ASP.NET Core MVC presentation layer, controllers, views, and service registration.
-- **Rvnx.CRM.ConsoleApp**: Console application for scheduled tasks and background jobs (cron / Task Scheduler).
-- **Rvnx.CRM.Tests**: Unit and integration tests (using `xUnit`, `Moq`, `Microsoft.AspNetCore.Mvc.Testing`, and `Sqlite` integration tests).
+![Contact Detail](.screenshots/contact-detail.png)
 
-## Setup Instructions
+Each contact has dedicated sections for:
+- **Contact Info** — emails, phone numbers, websites
+- **Addresses** — structured postal addresses with type
+- **Quick Facts** — freeform key/value pairs for memorable details
+- **Relationships** — family, friends, colleagues; links to full or partial contacts
+- **Pets** — companion animals with support for multiple owners
+- **Important Dates** — birthdays, anniversaries, and custom milestones with recurrence
+- **Notes** — long-form Markdown notes
+- **Activities** — logged meetings, calls, and events; activities can link to multiple contacts at once
+- **Tasks / Follow-ups** — per-contact to-do items with due dates
+- **Attachments** — photos, documents, or any file
+- **Social Media** — linked social accounts
+
+### Calendar
+
+![Calendar](.screenshots/calendar.png)
+
+Monthly calendar view of upcoming significant dates and incomplete tasks, with list view for compact browsing.
+
+### Network Graph
+Interactive visualization of contact relationships on the dashboard. Node color reflects gender (blue = male, pink = female, purple = non-binary, grey = unset).
+
+### Organization
+- **Labels** — create and apply custom labels to any contact
+- **Favorites** — star contacts for quick access
+
+### REST API
+
+![Swagger UI](.screenshots/swagger.png)
+
+Full API coverage for all resources: contacts, activities, addresses, tasks, favorites, labels, notes, facts, significant dates, pets, attachments, relationships, and calendar events.
+
+- Bearer token authentication (`crm_` prefix tokens, created via the console app)
+- String-based enums — all enum fields accept human-readable strings (`"Annual"`, `"Forward"`)
+- Swagger/OpenAPI docs at `/swagger`
+- Partial update support via JSON Merge Patch (`PATCH`) on all resources
+
+### Authentication
+- OpenID Connect (OIDC) — tested with [Authentik](https://goauthentik.io/)
+- Per-user data isolation; users only see their own contacts
+
+---
+
+## Setup
 
 ### Prerequisites
-- .NET 8.0 SDK
-- Visual Studio 2022 or VS Code
+- [.NET 8.0 SDK](https://dotnet.microsoft.com/download)
 
-### Database Setup
+### 1. Configure each project
 
-The project is configured to use **SQLite** by default for development.
+Each runnable project (`Web`, `API`, `ConsoleApp`) reads an `appsettings.Local.json` that is not committed to source control. Create one in each project directory you plan to run.
 
-#### 1. Initial Setup
-
-If you are setting up the project for the first time:
-```bash
-# Apply migrations to create the database
-dotnet ef database update --project Rvnx.CRM.Infrastructure --startup-project Rvnx.CRM.Web
+**Minimum — no authentication:**
+```json
+{
+  "DatabaseProvider": "SQLite",
+  "ConnectionStrings": {
+    "DefaultConnection": "Data Source=/absolute/path/to/rvnx-crm.db"
+  }
+}
 ```
-This command creates the database file `rvnx-crm.db` in `Rvnx.CRM.Web/` and applies all existing migrations.
 
-### Configuration
+**With OIDC authentication (Web only):**
+```json
+{
+  "Authentication": {
+    "Enabled": true,
+    "Authority": "https://your-sso-provider/application/o/your-app/",
+    "ClientId": "your-client-id",
+    "ClientSecret": "your-client-secret",
+    "CallbackPath": "/signin-oidc",
+    "ResponseType": "code",
+    "Scopes": "openid profile email"
+  },
+  "DatabaseProvider": "SQLite",
+  "ConnectionStrings": {
+    "DefaultConnection": "Data Source=/absolute/path/to/rvnx-crm.db"
+  }
+}
+```
 
-Configuration is handled in `appsettings.json`. By default, authentication is disabled (`"Enabled": false`). To enable OIDC authentication, configure the `Authentication` section with your provider details (Authority, ClientId, ClientSecret).
+> Use an absolute path in the connection string.
 
-### Run the Application
+### 2. Create the database
+
+```bash
+cd Rvnx.CRM.ConsoleApp
+dotnet run -- COUNT-CONTACTS
+```
+
+This auto-applies EF Core migrations and prints the contact count (0 on a fresh database).
+
+### 3. Run the web app
+
 ```bash
 dotnet run --project Rvnx.CRM.Web
+# → http://localhost:5215
 ```
 
-### Console App (Scheduled Tasks)
+Log in via your OIDC provider, or browse freely if auth is disabled. Your account is created on first login.
 
-The console application runs background tasks and is designed for cron / Task Scheduler.
+### 4. Create an API token (optional)
+
 ```bash
-# Run a specific task
-dotnet run --project Rvnx.CRM.ConsoleApp -- COUNT-CONTACTS
+cd Rvnx.CRM.ConsoleApp
+dotnet run -- ADD-API-TOKEN your@email.com my-token-name
+# Prints: Raw Token: crm_xxxxxxxxxxxx  (shown once — save it)
 ```
+
+### 5. Run the API (optional)
+
+```bash
+dotnet run --project Rvnx.CRM.API
+# → http://localhost:5212
+# Swagger UI → http://localhost:5212/swagger
+```
+
+```bash
+curl -H "Authorization: Bearer crm_xxxxxxxxxxxx" http://localhost:5212/api/contacts
+```
+
+---
+
+## Console Commands
+
+| Command | Description |
+|---|---|
+| `COUNT-CONTACTS` | Print count of non-partial contacts |
+| `SEND-DATE-REMINDERS` | Send email reminders for upcoming significant dates |
+| `LIST-USERS` | List all users |
+| `PROMOTE-USER <email>` | Grant administrator rights |
+| `DEMOTE-USER <email>` | Revoke administrator rights |
+| `ADD-API-TOKEN <email> <name>` | Create a new API token |
+| `REVOKE-API-TOKEN <email> <name>` | Revoke an API token by name |
+| `MERGE-USERS <email1> <email2> [--confirm]` | Merge two user accounts |
+
+---
 
 ## Running Tests
 
-To run the full test suite (Unit and Integration):
 ```bash
 dotnet test
 ```
 
+---
+
+For architecture and technical design details, see [DESIGN.md](DESIGN.md).
+
 ## License
 
-This project is source available under a custom license. Non-commercial use,
-personal projects, and self-hosting are permitted free of charge. Commercial
-use by any business or legal entity requires a separate written agreement.
-See [LICENSE](LICENSE) and [THIRD-PARTY-LICENSES.md](THIRD-PARTY-LICENSES.md)
-for full details.
+Source available under a custom license. Non-commercial use, personal projects, and self-hosting are free. Commercial use requires a separate written agreement. See [LICENSE](LICENSE) and [THIRD-PARTY-LICENSES.md](THIRD-PARTY-LICENSES.md) for details.
