@@ -54,7 +54,7 @@
     <div class="crm-card">
         @if (Model.ProfileImageId.HasValue)
         {
-            <img src="@Url.Action("View", "Attachments", new { id = Model.ProfileImageId })" class="crm-profile-image w-100" alt="Profile photo of @Model.FullName" style="border-radius: var(--crm-radius-md) var(--crm-radius-md) 0 0;">
+            <img src="@Url.Action("Thumbnail", "Attachments", new { id = Model.ProfileImageId, maxWidth = 400 })" class="crm-profile-image w-100" alt="Profile photo of @Model.FullName" loading="lazy" style="border-radius: var(--crm-radius-md) var(--crm-radius-md) 0 0;">
         }
         else
         {
