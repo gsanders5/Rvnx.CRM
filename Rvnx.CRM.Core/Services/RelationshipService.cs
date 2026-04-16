@@ -606,8 +606,6 @@ public class RelationshipService(IRepository repository) : IRelationshipService
 
     public async Task<OperationResult> DeleteRelationshipAsync(Guid id)
     {
-        // ⚡ Bolt Optimization: Replaced GetByIdAsync with ListProjectedAsync to fetch only the required fields.
-        // Also replaced the DeleteAsync(id) with bulk DeleteAsync(expression) to avoid full entity materialization and tracking overhead.
         List<(Guid EntityId, string EntityType)> relationshipInfos = await repository.ListProjectedAsync<Relationship, (Guid EntityId, string EntityType)>(
             r => r.Id == id,
             r => new ValueTuple<Guid, string>(r.EntityId, r.EntityType));
