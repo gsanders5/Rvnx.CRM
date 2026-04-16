@@ -136,3 +136,7 @@ Action: When a service builds a read-only in-memory aggregate (graph nodes, rece
 ## 2026-11-12 - Avoid full entity fetch for ContactMethod deletion
 **Learning:** `ContactMethodService.DeleteAsync` was loading the entire `ContactMethod` entity into memory via `GetByIdAsync` just to get its `ContactId` and check if it existed before deleting it. This caused EF Core to load unnecessary fields and track an entity that was about to be deleted.
 **Action:** Replace `GetByIdAsync` with `ListProjectedAsync` to fetch only the required `ContactId` (to return in the `OperationResult`), and then use the bulk delete feature (`DeleteAsync(Expression)`) to avoid fetching and deleting the entity in two roundtrips.
+
+## 2026-11-12 - Avoid full entity fetch for Relationship deletion
+**Learning:** `RelationshipService.DeleteRelationshipAsync` was loading the entire `Relationship` entity into memory via `GetByIdAsync` just to get its `EntityId` and `EntityType` and check if it existed before deleting it. This caused EF Core to load unnecessary fields and track an entity that was about to be deleted.
+**Action:** Replace `GetByIdAsync` with `ListProjectedAsync` to fetch only the required `EntityId` and `EntityType` (to return in the `OperationResult`), and then use the bulk delete feature (`DeleteAsync(Expression)`) to avoid fetching and deleting the entity in two roundtrips. Ensure to leave inline comments explaining the performance optimization.
