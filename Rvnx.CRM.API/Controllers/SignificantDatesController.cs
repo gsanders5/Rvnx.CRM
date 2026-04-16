@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Rvnx.CRM.API.Helpers;
 using Rvnx.CRM.Core.DTOs.Dates;
 using Rvnx.CRM.Core.Interfaces;
+using Rvnx.CRM.Core.Enumerations;
 
 namespace Rvnx.CRM.API.Controllers;
 
@@ -31,19 +32,44 @@ public class SignificantDatesController(ISignificantDateService significantDateS
     }
 
     /// <summary>
-    /// Create a new significant date. Required fields: title, eventDate, entityId, entityType ("Person").
+    /// Create a new significant date.
     /// </summary>
-    /// <param name="model">The significant date data.</param>
+    /// <remarks>
+    /// Required fields: title, eventDate, entityId, entityType ("Person").
+    ///
+    /// RecurrenceType values: None, Annual, Monthly, Custom.
+    /// Use Custom with customIntervalDays to set an arbitrary repeat interval.
+    /// ReminderOffsetDays is a list of integers (days before the event to send a reminder), e.g. [7, 1].
+    ///
+    /// Example — add an annual birthday:
+    ///
+    ///     {
+    ///       "entityId": "&lt;contact-id&gt;",
+    ///       "entityType": "Person",
+    ///       "title": "Birthday",
+    ///       "eventDate": "1990-06-15",
+    ///       "recurrenceType": "Annual"
+    ///     }
+    /// </remarks>
+    /// <param name="request">The significant date data.</param>
     /// <returns>The new significant date's ID.</returns>
     [HttpPost]
-    public async Task<IActionResult> Create([FromBody] SignificantDateDto model)
+    public async Task<IActionResult> Create([FromBody] CreateSignificantDateRequest request)
     {
-        Core.Models.OperationResult result = await _significantDateService.CreateAsync(model);
-        if (!result.Success)
+        var model = new SignificantDateDto
         {
-            return BadRequest(new { Error = result.ErrorMessage });
-        }
-        return Ok(new { Id = result.RedirectId });
+            EntityId = request.EntityId,
+            EntityType = request.EntityType,
+            Title = request.Title,
+            Description = request.Description,
+            EventDate = request.EventDate,
+            RecurrenceType = request.RecurrenceType,
+            CustomIntervalDays = request.CustomIntervalDays,
+            IsActive = true
+        };
+
+        Core.Models.OperationResult result = await _significantDateService.CreateAsync(model);
+        return result.Success ? Ok(new { Id = result.RedirectId }) : BadRequest(new { Error = result.ErrorMessage });
     }
 
     /// <summary>

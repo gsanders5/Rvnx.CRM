@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Rvnx.CRM.Core.DTOs.Contact;
+using Rvnx.CRM.Core.Enumerations;
 using Rvnx.CRM.Core.Interfaces;
 using Rvnx.CRM.Core.Models.Contact;
 using Rvnx.CRM.Core.Services;
@@ -8,9 +9,9 @@ using Rvnx.CRM.Core.Services;
 namespace Rvnx.CRM.API.Controllers;
 
 /// <summary>
-/// Manages relationships between contacts (e.g., parent/child, spouse, sibling, friend).
-/// Relationships are stored as a single record — the list endpoint returns both directions.
-/// Use GET /api/relationships/types to discover available relationship type IDs.
+/// Manages relationships between contacts (e.g. Parent/Child, Spouse, Friend, Colleague).
+/// Relationships are directional but the list endpoint returns both directions.
+/// Call GET /api/relationships/types first to discover relationship type IDs.
 /// </summary>
 [ApiController]
 [Route("api/[controller]")]
@@ -21,18 +22,14 @@ public class RelationshipsController(IRelationshipService relationshipService, I
     private readonly IContactReadService _contactReadService = contactReadService;
 
     /// <summary>
-    /// List all relationships for a contact, in both directions (where the contact is
-    /// the source entity and where it is the related entity).
+    /// List all relationships for a contact, in both directions.
     /// </summary>
     /// <param name="contactId">The contact GUID.</param>
     [HttpGet("contact/{contactId}")]
     public async Task<IActionResult> ListByContact(Guid contactId)
     {
         ContactDetailDto? contactDetails = await _contactReadService.GetContactDetailsAsync(contactId);
-        if (contactDetails == null)
-        {
-            return NotFound();
-        }
+        if (contactDetails == null) return NotFound();
 
         List<RelationshipDto> allRelationships = [.. contactDetails.Relationships, .. contactDetails.RelatedTo];
         return Ok(allRelationships);
@@ -40,10 +37,13 @@ public class RelationshipsController(IRelationshipService relationshipService, I
 
     /// <summary>
     /// List all available relationship types with their IDs, names, and categories.
-    /// Use the returned id in the selectedRelationshipType query parameter when creating
-    /// or updating relationships. Format: "{id}_Fwd" for forward direction (e.g., "Parent")
-    /// or "{id}_Rev" for reverse direction (e.g., "Child").
+    /// Use the returned id as RelationshipTypeId when creating or updating relationships.
     /// </summary>
+    /// <remarks>
+    /// Each type has a Name and OppositeName. For asymmetric types (e.g. Parent/Child) use
+    /// Direction=Forward to apply the Name to EntityId, or Direction=Reverse to apply OppositeName.
+    /// For symmetric types (Friend, Sibling, Colleague) Direction is ignored.
+    /// </remarks>
     [HttpGet("types")]
     public IActionResult ListTypes()
     {
@@ -62,37 +62,48 @@ public class RelationshipsController(IRelationshipService relationshipService, I
     /// Create a new relationship between two contacts.
     /// </summary>
     /// <remarks>
-    /// The selectedRelationshipType query parameter must be in the format "{typeId}_Fwd" or "{typeId}_Rev".
-    /// Use GET /api/relationships/types to discover available type IDs.
-    /// For example, to create a "Parent" relationship: ?selectedRelationshipType={parentTypeId}_Fwd.
-    /// For the reverse ("Child"): ?selectedRelationshipType={parentTypeId}_Rev.
-    /// For symmetric types like "Sibling" or "Friend", _Fwd and _Rev are equivalent.
+    /// Workflow:
+    /// 1. Call GET /api/relationships/types to find the RelationshipTypeId you want.
+    /// 2. Set Direction=Forward to apply the type's Name to EntityId (e.g. EntityId is the "Parent").
+    ///    Set Direction=Reverse to apply OppositeName (e.g. EntityId is the "Child").
+    ///    For symmetric types (Friend, Colleague, Sibling) direction does not matter.
+    ///
+    /// Example — create a Parent/Child relationship where Alice is the parent of Bob:
+    ///
+    ///     POST /api/relationships
+    ///     {
+    ///       "entityId": "&lt;alice-id&gt;",
+    ///       "relatedEntityId": "&lt;bob-id&gt;",
+    ///       "entityType": "Person",
+    ///       "relationshipTypeId": "7c1f8d22-1b6a-4c28-9c1e-3f5a2b8e9d1a",
+    ///       "direction": "Forward"
+    ///     }
     /// </remarks>
-    /// <param name="model">The relationship data. Required fields: entityId, relatedEntityId, entityType ("Person").</param>
-    /// <param name="selectedRelationshipType">The relationship type and direction, e.g., "{typeId}_Fwd".</param>
-    /// <returns>The ID of the related entity for navigation.</returns>
+    /// <param name="request">The relationship data.</param>
+    /// <returns>The ID of the new relationship record.</returns>
     [HttpPost]
-    public async Task<IActionResult> Create([FromBody] Relationship model, [FromQuery] string selectedRelationshipType)
+    public async Task<IActionResult> Create([FromBody] CreateRelationshipRequest request)
     {
-        RelationshipOperationResult result = await _relationshipService.CreateRelationshipAsync(model, selectedRelationshipType);
-        if (!result.Success)
-        {
-            return BadRequest(new { Error = result.ErrorMessage });
-        }
-        return Ok(new { Id = result.RedirectId });
+        var model = MapToRelationship(request);
+        string selectedType = BuildSelectedType(request.RelationshipTypeId, request.Direction);
+
+        RelationshipOperationResult result = await _relationshipService.CreateRelationshipAsync(model, selectedType);
+        return result.Success ? Ok(new { Id = result.RedirectId }) : BadRequest(new { Error = result.ErrorMessage });
     }
 
     /// <summary>
-    /// Full update of a relationship.
+    /// Update an existing relationship.
     /// </summary>
     /// <param name="id">The relationship GUID.</param>
-    /// <param name="model">The updated relationship data.</param>
-    /// <param name="selectedRelationshipType">The relationship type and direction, e.g., "{typeId}_Fwd".</param>
+    /// <param name="request">The updated relationship data.</param>
     [HttpPut("{id}")]
-    public async Task<IActionResult> Update(Guid id, [FromBody] Relationship model, [FromQuery] string selectedRelationshipType)
+    public async Task<IActionResult> Update(Guid id, [FromBody] CreateRelationshipRequest request)
     {
-        RelationshipOperationResult result = await _relationshipService.UpdateRelationshipAsync(id, model, selectedRelationshipType);
-        return !result.Success ? BadRequest(new { Error = result.ErrorMessage }) : NoContent();
+        var model = MapToRelationship(request);
+        string selectedType = BuildSelectedType(request.RelationshipTypeId, request.Direction);
+
+        RelationshipOperationResult result = await _relationshipService.UpdateRelationshipAsync(id, model, selectedType);
+        return result.Success ? NoContent() : BadRequest(new { Error = result.ErrorMessage });
     }
 
     /// <summary>
@@ -103,6 +114,19 @@ public class RelationshipsController(IRelationshipService relationshipService, I
     public async Task<IActionResult> Delete(Guid id)
     {
         Core.Models.OperationResult result = await _relationshipService.DeleteRelationshipAsync(id);
-        return !result.Success ? BadRequest(new { Error = result.ErrorMessage }) : NoContent();
+        return result.Success ? NoContent() : BadRequest(new { Error = result.ErrorMessage });
     }
+
+    private static Relationship MapToRelationship(CreateRelationshipRequest r) => new()
+    {
+        EntityId = r.EntityId,
+        RelatedEntityId = r.RelatedEntityId,
+        EntityType = r.EntityType,
+        Description = r.Description,
+        StartDate = r.StartDate,
+        EndDate = r.EndDate
+    };
+
+    private static string BuildSelectedType(Guid typeId, CoreEnumerations.RelationshipDirection direction) =>
+        $"{typeId}_{(direction == CoreEnumerations.RelationshipDirection.Reverse ? "Rev" : "Fwd")}";
 }

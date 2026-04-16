@@ -10,4 +10,16 @@ public static class CoreEnumerations
         Work = 3,
         Other = 4
     }
+
+    /// <summary>
+    /// Direction of a relationship when the type is asymmetric.
+    /// For symmetric types (Friend, Sibling, Colleague) both directions are equivalent.
+    /// </summary>
+    public enum RelationshipDirection
+    {
+        /// <summary>Applies the type's forward name (e.g. "Parent").</summary>
+        Forward = 0,
+        /// <summary>Applies the type's opposite name (e.g. "Child").</summary>
+        Reverse = 1
+    }
 }

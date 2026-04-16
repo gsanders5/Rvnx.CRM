@@ -1,3 +1,4 @@
+using System.Text.Json.Serialization;
 using Microsoft.OpenApi;
 using Rvnx.CRM.API.Authentication;
 using Rvnx.CRM.API.Services;
@@ -10,7 +11,13 @@ WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 builder.Configuration.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true);
 builder.Configuration.AddJsonFile("appsettings.Local.json", optional: true, reloadOnChange: true);
 
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        // Serialize enums as strings ("Annual", "Forward") instead of integers in both
+        // requests and responses. This makes Swagger bodies self-documenting.
+        options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+    });
 builder.Services.AddCoreServices();
 builder.Services.AddInfrastructure(builder.Configuration);
 

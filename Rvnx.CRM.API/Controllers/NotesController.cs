@@ -30,19 +30,34 @@ public class NotesController(INoteService noteService) : ControllerBase
     }
 
     /// <summary>
-    /// Create a new note. Required fields: title, value (content), entityId, entityType ("Person").
+    /// Create a new note.
     /// </summary>
+    /// <remarks>
+    /// Required fields: title, value (the note body — supports Markdown), entityId, entityType ("Person").
+    ///
+    /// Example:
+    ///
+    ///     {
+    ///       "entityId": "&lt;contact-id&gt;",
+    ///       "entityType": "Person",
+    ///       "title": "First meeting",
+    ///       "value": "Met at the conference. Very knowledgeable about distributed systems."
+    ///     }
+    /// </remarks>
     /// <param name="model">The note data.</param>
     /// <returns>The new note's ID.</returns>
     [HttpPost]
-    public async Task<IActionResult> Create([FromBody] NoteFormViewModel model)
+    public async Task<IActionResult> Create([FromBody] NoteFormDto model)
     {
-        Core.Models.OperationResult result = await _noteService.CreateAsync(model);
-        if (!result.Success)
+        var vm = new NoteFormViewModel
         {
-            return BadRequest(new { Error = result.ErrorMessage });
-        }
-        return Ok(new { Id = result.RedirectId });
+            Title = model.Title,
+            Value = model.Value,
+            EntityId = model.EntityId,
+            EntityType = model.EntityType
+        };
+        Core.Models.OperationResult result = await _noteService.CreateAsync(vm);
+        return result.Success ? Ok(new { Id = result.RedirectId }) : BadRequest(new { Error = result.ErrorMessage });
     }
 
     /// <summary>
