@@ -602,15 +602,11 @@ public class RelationshipServiceTests
         Guid entityId = Guid.NewGuid();
         string entityType = EntityTypes.Person;
 
-        Relationship relationship = new()
-        {
-            Id = relationshipId,
-            EntityId = entityId,
-            EntityType = entityType
-        };
-
-        _repositoryMock.Setup(r => r.GetByIdAsync<Relationship>(relationshipId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(relationship);
+        _repositoryMock.Setup(r => r.ListProjectedAsync<Relationship, (Guid EntityId, string EntityType)>(
+                It.IsAny<Expression<Func<Relationship, bool>>>(),
+                It.IsAny<Expression<Func<Relationship, (Guid EntityId, string EntityType)>>>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync([(entityId, entityType)]);
 
         OperationResult result = await _service.DeleteRelationshipAsync(relationshipId);
 
@@ -618,7 +614,7 @@ public class RelationshipServiceTests
         Assert.Equal(entityId, result.RedirectId);
         Assert.Equal(entityType, result.RedirectType);
 
-        _repositoryMock.Verify(r => r.DeleteAsync<Relationship>(relationshipId, It.IsAny<CancellationToken>()), Times.Once);
+        _repositoryMock.Verify(r => r.DeleteAsync(It.IsAny<Expression<Func<Relationship, bool>>>(), It.IsAny<CancellationToken>()), Times.Once);
         _repositoryMock.Verify(r => r.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
     }
 
@@ -629,15 +625,18 @@ public class RelationshipServiceTests
     {
         Guid relationshipId = Guid.NewGuid();
 
-        _repositoryMock.Setup(r => r.GetByIdAsync<Relationship>(relationshipId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync((Relationship?)null);
+        _repositoryMock.Setup(r => r.ListProjectedAsync<Relationship, (Guid EntityId, string EntityType)>(
+                It.IsAny<Expression<Func<Relationship, bool>>>(),
+                It.IsAny<Expression<Func<Relationship, (Guid EntityId, string EntityType)>>>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync([]);
 
         OperationResult result = await _service.DeleteRelationshipAsync(relationshipId);
 
         Assert.False(result.Success);
         Assert.Equal("Relationship not found.", result.ErrorMessage);
 
-        _repositoryMock.Verify(r => r.DeleteAsync<Relationship>(It.IsAny<Guid>(), It.IsAny<CancellationToken>()), Times.Never);
+        _repositoryMock.Verify(r => r.DeleteAsync(It.IsAny<Expression<Func<Relationship, bool>>>(), It.IsAny<CancellationToken>()), Times.Never);
         _repositoryMock.Verify(r => r.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
     }
 }
