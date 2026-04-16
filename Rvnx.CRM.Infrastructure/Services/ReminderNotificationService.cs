@@ -135,7 +135,7 @@ public class ReminderNotificationService(
 
             if (!string.IsNullOrEmpty(smtpSettings["Username"]))
             {
-                await client.AuthenticateAsync(smtpSettings["Username"], smtpSettings["Password"]);
+                await client.AuthenticateAsync(smtpSettings["Username"]!, smtpSettings["Password"]!);
             }
 
             await client.SendAsync(message);
