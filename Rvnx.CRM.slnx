@@ -1,0 +1,13 @@
+<Solution>
+  <Configurations>
+    <Platform Name="Any CPU" />
+    <Platform Name="x64" />
+    <Platform Name="x86" />
+  </Configurations>
+  <Project Path="Rvnx.CRM.API/Rvnx.CRM.API.csproj" />
+  <Project Path="Rvnx.CRM.ConsoleApp/Rvnx.CRM.ConsoleApp.csproj" />
+  <Project Path="Rvnx.CRM.Core/Rvnx.CRM.Core.csproj" />
+  <Project Path="Rvnx.CRM.Infrastructure/Rvnx.CRM.Infrastructure.csproj" />
+  <Project Path="Rvnx.CRM.Tests/Rvnx.CRM.Tests.csproj" />
+  <Project Path="Rvnx.CRM.Web/Rvnx.CRM.Web.csproj" />
+</Solution>
