@@ -172,7 +172,7 @@ h5, .card-title {
   /* Staggered card entrance animation */
   opacity: 0;
   transform: translateY(8px);
-  animation: crm-card-enter var(--crm-transition-normal) ease-out forwards;
+  animation: crm-card-enter var(--crm-transition-normal) forwards;
 }
 
 .crm-card:nth-child(1) { animation-delay: 0ms; }
