@@ -18,7 +18,7 @@
 **Learning:** Even non-generic controllers that manage related entities (like Notes, Reminders) are vulnerable to IDOR if they blindly trust the parent `entityId` during creation. `AddAsync` does not trigger query filters.
 **Prevention:** Explicitly verify existence and access to the parent entity using `_repository.ExistsAsync<ParentT>(entityId)` before creating the child entity.
 
-## 2026-05-15 - Trusted Content-Type Stored XSS
+## 2026-04-16 - Trusted Content-Type Stored XSS
 **Vulnerability:** `AttachmentsController` trusted the user-provided `Content-Type` header during file upload. An attacker could upload a `.txt` file with `Content-Type: text/html`, which would be served back to users as HTML, executing malicious scripts (Stored XSS).
 **Learning:** Never trust client-provided metadata like `Content-Type`. Browsers often respect this header over file extensions, leading to XSS if not validated.
 **Prevention:** Determine the MIME type server-side based on the file content or extension using a strict whitelist. Ignore the client's `Content-Type` header entirely.
@@ -52,7 +52,7 @@
 **Vulnerability:** SQL Injection via `ExecuteSqlRawAsync` string concatenation.
 **Learning:** In EF Core 9.0+, `ExecuteUpdateAsync` provides a safer and parameterized way to perform bulk updates while preventing SQL injection. However, since it bypasses `SaveChangesAsync` and `CRMDbContext.UpdateAuditFields()`, explicit documentation and fallback mechanisms are required.
 **Prevention:** Use `ExecuteUpdateAsync` for bulk operations and provide an `InMemory` tracking fallback for tests. Ensure proper documentation of audit bypass.
-## $(date +%Y-%m-%d) - Enforce HttpClient Timeout
+## 2026-04-16 - Enforce HttpClient Timeout
 **Vulnerability:** The `HttpClient` registered for `IVCardService` in `ServiceCollectionExtensions` had no explicit timeout configured.
 **Learning:** By default, `HttpClient` has a very long timeout (often 100 seconds). If an external server hangs during operations like downloading a profile photo, the application thread can block, potentially leading to a Denial of Service (DoS) condition under heavy load.
 **Prevention:** Always configure an explicit, reasonable timeout (e.g., `TimeSpan.FromSeconds(10)`) when registering `HttpClient` services in the DI container.

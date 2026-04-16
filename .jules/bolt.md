@@ -1,16 +1,16 @@
 # Bolt's Journal
 
-## 2026-05-22 - Polymorphic N+1 Optimization
+## 2026-04-16 - Polymorphic N+1 Optimization
 
 **Learning:** Polymorphic relationships in EF Core (using `EntityId` and `EntityType`) prevent standard `Include` navigation, leading to manual N+1 loading patterns in controllers.
 **Action:** Use a two-step loading process: 1) Fetch the lightweight polymorphic entities (e.g., Relationships), 2) Collect IDs and fetch the related entities in a single batch query using `Contains`, then map them in memory.
 
-## 2026-05-22 - SQL Parameter Limit
+## 2026-04-16 - SQL Parameter Limit
 
 **Learning:** Using `Contains` with large lists (>2100 items) in EF Core causes SQL parameter limit exceptions (or performance degradation).
 **Action:** When filtering by a large list of IDs, consider fetching a broader set (e.g., all relevant entities) and filtering in memory, especially if the broader set size is comparable to the requested set.
 
-## 2026-05-23 - Memory Leak in Read-Only Lookups
+## 2026-04-16 - Memory Leak in Read-Only Lookups
 
 **Learning:** `PopulateRelatedEntityDropdown` was fetching thousands of tracked entities into memory just to filter one out and populate a dropdown.
 **Action:** Use `ListAsNoTrackingAsync` with a predicate for read-only lookups to avoid change tracking overhead and filter at the database level.
@@ -54,10 +54,6 @@
 
 **Learning:** `ArchiveExistingProfilePhotoAsync` in `ContactManagementService` was updating `AttachmentType` within a `foreach` loop and calling `UpdateAsync` inside the loop, causing an N+1 query problem when a contact has multiple profile photos needing archiving.
 **Action:** Move `UpdateAsync` outside the loop and use `UpdateRangeAsync` on the entire collection instead to reduce database roundtrips.
-## 2026-03-27 - N+1 Optimization for Updating Entity Collections
-
-**Learning:** `ContactManagementService` was executing an N+1 query in `ArchiveExistingProfilePhotoAsync` by iterating through existing attachments and calling `UpdateAsync` on each iteration to set `AttachmentType` to `"General"`.
-**Action:** When updating a collection of entities retrieved from the database, update the properties within the loop and call `UpdateRangeAsync` outside the loop to batch the updates, reducing database roundtrips and optimizing performance.
 ## 2026-03-27 - Avoid loading full entities just to get a count
 **Learning:** In the DashboardService, retrieving the count of hidden contacts and filtering contacts with relationships were using inefficient methods (e.g., loading all hidden contacts into a list via `ListAsNoTrackingAsync` just to call `.Count` and using `.Any(c => c.Id == id)` over a list of contacts instead of a pre-existing dictionary).
 **Action:** Always prefer `CountAsync()` on the repository or fast dictionary lookups (`ContainsKey`) over loading full entity instances or using `O(n)` list scans just to count elements or check existence.
@@ -82,11 +78,11 @@
 Learning: DashboardService previously loaded full Contact entities to build the graph and recent contacts list. A private ContactSummary record (6 columns) projected via ListProjectedAsync replaces this, eliminating Notes, Company, JobTitle, Religion, Pronouns, MaidenName, Nickname, and all navigation collections from the dashboard query.
 Action: When a service builds a read-only in-memory aggregate (graph nodes, recent contacts, stats), project to a minimal sealed record rather than fetching full entities. Keep the record nested inside the service and internal — expose it to tests via <InternalsVisibleTo> in the .csproj rather than promoting it to a shared DTO namespace.
 
-## 2026-05-23 - Dashboard Contacts With Relationships Count Optimization
+## 2026-04-16 - Dashboard Contacts With Relationships Count Optimization
 **Learning:** `GetDashboardDataAsync` computed `ContactsWithRelationships` by creating two new lists via `Select()`, then instantiating a new `HashSet<Guid>` using a collection expression containing both lists, and finally iterating over this combined `HashSet` to count keys present in a dictionary via `Count()`. This led to significant unnecessary memory allocation (from multiple list creations) and CPU usage (iterating over relationships multiple times).
 **Action:** Replace multi-step collection creation and the `.Count(predicate)` with a single `foreach` loop over the original `relationships` list, utilizing the `Add` method of a single `HashSet` (initialized with appropriate capacity) to enforce uniqueness. In this loop, conditionally increment a local counter variable if the `Add` call succeeds and the key is present in the dictionary.
 
-## 2026-05-24 - GroupBy Overhead when Creating Dictionary of Collections
+## 2026-04-16 - GroupBy Overhead when Creating Dictionary of Collections
 **Learning:** Creating a `Dictionary<K, List<V>>` using `.GroupBy(x => x.Key).ToDictionary(...)` introduces unnecessary overhead due to the instantiation of intermediate `IGrouping` structures.
 **Action:** Pre-allocate a `Dictionary` and populate it manually using a `foreach` loop. If a list doesn't exist for a key, initialize it and `.TryAdd()` it, then add the item to the list. This avoids `GroupBy` allocations entirely and provides a significant performance boost for in-memory mapping operations.
 
@@ -103,21 +99,14 @@ Action: When a service builds a read-only in-memory aggregate (graph nodes, rece
 **Learning:** Executing `_repository.ListAsync` inside a loop (e.g., inside `MergeService`) creates an N+1 query problem, severely impacting backend performance during batch operations. Replacing LINQ `.Select().ToHashSet()` with pre-sized HashSets via `foreach` additions avoids dynamic resizing and iterator overhead.
 **Action:** When avoiding N+1 query issues in Rvnx.CRM batch operations, pre-fetch the necessary records into a properly sized `HashSet` before the loop to perform O(1) in-memory lookups. Do not use LINQ `.Select().ToHashSet()` when pre-allocating the `HashSet`.
 
-## 2026-03-25 - Pre-allocated HashSet for Contact ID Tracking
-**Learning:** Replacing `.Select().ToHashSet()` with a pre-allocated `HashSet` and a `foreach` loop eliminates LINQ iterator overhead and prevents dynamic array resizing during insertion. This is particularly relevant when tracking collections of Entity IDs during batch operations.
-**Action:** When gathering related entity IDs or performing aggregations into a `HashSet`, and the exact count of items is known, manually pre-allocate the `HashSet` using the source collection's count and populate it via a single loop instead of chaining LINQ collection extensions.
 ## 2026-03-26 - Optimize IsPartialContactAsync to avoid full entity fetching
 **Learning:** Helper methods like `IsPartialContactAsync` in `AttachmentService.cs` frequently use `GetByIdAsync` which fetches the entire entity with all columns into memory. This creates substantial unnecessary allocation and serialization overhead when only a single property (like a boolean flag) is needed.
 **Action:** Replaced `GetByIdAsync` with `ListProjectedAsync` in read-only helper methods to fetch only the needed properties from the database (e.g., `IsPartial`). Also, ensure proper handling of empty projected lists utilizing `FirstOrDefault()` without arguments to prevent null exception.
 
-## 2025-02-14 - HashSet LINQ Chain Optimization
-**Learning:** In modern .NET, replacing a LINQ chain like `Select().Concat().Distinct().ToList()` with a manually populated, pre-sized `HashSet` avoids multiple intermediate enumerator allocations, dynamic array resizing, and multiple iterations over the collections. Using `[.. hashSet]` for the final conversion to list is a highly optimized C# 12 feature.
-**Action:** When extracting and merging distinct IDs from multiple collections, pre-allocate a `HashSet` with the combined capacity of the source collections, populate it using `foreach` loops, and convert it to a list using a collection expression (`[.. hashSet]`).
-
-## 2026-06-25 - Avoid full entity fetch for Attachment ID
+## 2026-04-16 - Avoid full entity fetch for Attachment ID
 **Learning:** `GetContactFormAsync` in `ContactReadService.cs` was using `ListAsync<Attachment>` to retrieve a profile image attachment just to get its `Id`. This caused EF Core to load the entire `Attachment` entity into memory (including large string fields like `ContentType` and `FileName` and potentially navigation properties) just to extract a single `Guid`.
 **Action:** When only an entity's ID is required, always use a projection method like `ListProjectedAsync<T, Guid>(predicate, e => e.Id)` to limit the database query to fetching only the necessary column, preventing unnecessary data transfer and memory allocation.
-## 2026-06-15 - Optimize GetLabelsForContactAsync by using ListProjectedAsync
+## 2026-04-16 - Optimize GetLabelsForContactAsync by using ListProjectedAsync
 **Learning:** `GetLabelsForContactAsync` was fetching full `ContactLabel` entities including joined `Label` entities into memory only to map a few properties into DTOs, creating unnecessary memory allocation and serialization overhead.
 **Action:** Replaced `ListAsNoTrackingAsync` + in-memory LINQ projection with `ListProjectedAsync` to project the DTOs directly from the database query.
 
@@ -125,15 +114,15 @@ Action: When a service builds a read-only in-memory aggregate (graph nodes, rece
 **Learning:** `FactService.DeleteAsync` was loading the entire `Fact` entity into memory via `GetByIdAsync` just to get its `ContactId` and check if it existed before deleting it. This caused EF Core to load unnecessary fields and track an entity that was about to be deleted.
 **Action:** Replace `GetByIdAsync` with `ListProjectedAsync` to fetch only the required `ContactId` (to return in the `OperationResult`), and then use the bulk delete feature (`DeleteAsync(Expression)`) to avoid fetching and deleting the entity in two roundtrips.
 
-## 2026-11-09 - Optimize Bulk Insertions with AddRangeAsync
+## 2026-04-16 - Optimize Bulk Insertions with AddRangeAsync
 **Learning:** Iterative `AddAsync` calls within loops (e.g., inside data seeding services like `DebugDataService`) incur significant database and entity tracking overhead, creating multiple roundtrips when a batch could be submitted at once.
 **Action:** When performing bulk insertions, aggregate entities into a collection in-memory and perform a single `AddRangeAsync` call outside the loop to optimize database insertion performance.
 
-## 2026-11-10 - Avoid full entity fetch for Note deletion
+## 2026-04-16 - Avoid full entity fetch for Note deletion
 **Learning:** `NoteService.DeleteAsync` was loading the entire `Note` entity into memory via `GetByIdAsync` just to get its `ContactId` and check if it existed before deleting it. This caused EF Core to load unnecessary fields and track an entity that was about to be deleted.
 **Action:** Replace `GetByIdAsync` with `ListProjectedAsync` to fetch only the required `ContactId` (to return in the `OperationResult`), and then use the bulk delete feature (`DeleteAsync(Expression)`) to avoid fetching and deleting the entity in two roundtrips.
 
-## 2026-11-12 - Avoid full entity fetch for ContactMethod deletion
+## 2026-04-16 - Avoid full entity fetch for ContactMethod deletion
 **Learning:** `ContactMethodService.DeleteAsync` was loading the entire `ContactMethod` entity into memory via `GetByIdAsync` just to get its `ContactId` and check if it existed before deleting it. This caused EF Core to load unnecessary fields and track an entity that was about to be deleted.
 **Action:** Replace `GetByIdAsync` with `ListProjectedAsync` to fetch only the required `ContactId` (to return in the `OperationResult`), and then use the bulk delete feature (`DeleteAsync(Expression)`) to avoid fetching and deleting the entity in two roundtrips.
 

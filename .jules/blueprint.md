@@ -25,7 +25,7 @@
 **Learning:** `FakeDataGenerator` was located in `Core/Services`, confusing domain logic with development/seeding utilities. Such utilities, even if returning domain entities, belong in `Infrastructure` (for data seeding) or `Tests`.
 **Action:** When finding utility classes that generate random data or handle development-only tasks, verify they are not in `Core`. Move them to `Infrastructure` or `Shared` to keep the domain pure.
 
-## 2026-05-26 - [Controller Orchestrating Data Operations]
+## 2026-04-16 - [Controller Orchestrating Data Operations]
 
 **Learning:** `DebugOperationsController` contained significant data manipulation logic (seeding, reset) directly in action methods, coupling the web layer to concrete infrastructure utilities (`FakeDataGenerator`) and orchestrating complex repository operations.
 **Action:** Extract such logic into a dedicated service (e.g., `IDebugDataService` in Core, implementation in Infrastructure) so the controller only delegates commands. This decouples the web layer from implementation details of data management.
@@ -37,7 +37,7 @@
 **Action:** Replaced direct EF Core async extensions with appropriate `IRepository` abstraction methods (e.g., `GetByIdAsync`, `ListAsNoTrackingAsync().FirstOrDefault()`) to remove the EF Core using directives and strict dependencies from the Web layer, restoring the clean boundary.
 ## 2024-05-28 - [Extract Business Logic from View Helper to Core Service]
 
-**Learning:** String-manipulation logic (`ExtractUsername` for social media URIs) incorrectly resided in the `Web` layer (`SocialMediaEmbedHelper`) despite being a domain-level data normalization rule.
+**Learning:** String-manipulation logic (`ExtractUsername` for social media URIs) was moved from the `Web` layer to `SocialMediaUrlNormalizer` in `Core`, where it belongs as a domain-level data normalization rule. The old `SocialMediaEmbedHelper` no longer exists.
 **Action:** When finding logic that normalizes or validates strings representing domain concepts, verify it lives in `Core` (like `SocialMediaUrlNormalizer`). Move it if it's currently in a Web layer helper to centralize the rules.
 ## 2026-03-29 - [Extract Infrastructure Claims from Core Interface]
 **Learning:** The `System.Security.Claims.ClaimsPrincipal` is an ASP.NET Core infrastructure/web type that was incorrectly leaked into the `ISelfContactService` domain interface, coupling the Core layer to identity abstractions.

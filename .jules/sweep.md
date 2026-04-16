@@ -14,10 +14,6 @@
 **Action:** Use `IsValidContactAsync` in `RepositoryController` which explicitly enforces both existence and non-partial status for contact-related operations.
 ## 2026-02-28 - [DateCalculationService - Avoid using try-catch for leap year flow control] **Learning:** The codebase contained a pattern of handling leap year edge cases (instantiating February 29th on non-leap years) by intentionally throwing and catching `ArgumentOutOfRangeException` and defaulting to February 28th. **Action:** Replace this exception-driven control flow with mathematical bounding using `Math.Min(expectedDay, DateTime.DaysInMonth(year, month))` to correctly and safely handle month-end day calculations.
 
-## 2026-03-09 - Duplicate repository helpers
-
-**Learning:** Controllers inherited from `RepositoryController` and used duplicate logic for `GetEntityName` and `IsPartialContactAsync` which were already implemented in `EntityService` as `GetEntityNameAsync` and `IsPartialAsync`.
-**Action:** Remove the duplicate helper methods in `RepositoryController` and switch controller actions to use the centralized methods in `IEntityService` to reduce redundancy.
 ## 2024-03-24 - Deduplication using HashSet.Add return value
 **Learning:** Checking `HashSet.Contains()` immediately before `HashSet.Add()` is redundant because `Add()` already returns a boolean indicating whether the element was successfully added (not present) or false (already present). This applies across various areas in Rvnx.CRM batch operations.
 **Action:** Use `if (set.Add(item))` directly to perform insertion and checking in a single operation, reducing verbosity and improving performance.
