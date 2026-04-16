@@ -51,3 +51,6 @@
 ## 2026-04-12 - [Feature Specific View Models]
 **Learning:** In Rvnx.CRM.Web, ViewModels shouldn't be placed directly in the generic `Models/` folder if they are feature-specific. Instead, they should be grouped into feature-specific subdirectories under `ViewModels/` (e.g., `ViewModels/DebugOperations`, `ViewModels/Merge`) to improve code modularity and separation of concerns.
 **Action:** Always place newly created ViewModels in a feature-specific subdirectory within `ViewModels/` rather than leaving them at the root or within a generic models folder.
+## 2025-04-15 - [Decouple Web Identity from Core Interfaces]
+**Learning:** `ClaimsPrincipal` was previously being passed directly to `IUserSynchronizationService` in the `Core` layer, and the `Infrastructure` implementation was reading and mutating claims directly. This leaked `System.Security.Claims` and Web-specific authentication concerns into the inner layers, violating the dependency rule.
+**Action:** Always extract primitive identifiers (`subjectId`, `email`, `name`) in the `Web` layer (like in `Program.cs` or controllers) and pass those primitives to `Core` interfaces. Return DTOs (`UserSyncResult`) to the `Web` layer so it can handle its own identity mutations (adding internal ID claims).

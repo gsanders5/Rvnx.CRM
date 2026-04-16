@@ -1,11 +1,9 @@
 using Microsoft.EntityFrameworkCore;
 using Moq;
-using Rvnx.CRM.Core.Constants;
 using Rvnx.CRM.Core.Interfaces;
 using Rvnx.CRM.Infrastructure.Data;
 using Rvnx.CRM.Infrastructure.Repositories;
 using Rvnx.CRM.Infrastructure.Services;
-using System.Security.Claims;
 
 namespace Rvnx.CRM.Tests.Services;
 
@@ -33,59 +31,20 @@ public class UserSynchronizationTests
         Repository repository = new(context);
         UserSynchronizationService service = new(context, repository);
 
-        List<Claim> claims =
-        [
-            new Claim(ClaimTypes.NameIdentifier, "sub123"),
-            new Claim(ClaimTypes.Email, "test@example.com"),
-            new Claim(ClaimTypes.Name, "Test User")
-        ];
-        ClaimsIdentity identity = new(claims, "TestAuth");
-        ClaimsPrincipal principal = new(identity);
-
-        await service.SyncUserAsync(principal);
+        UserSyncResult? result = await service.SyncUserAsync("sub123", "test@example.com", "Test User");
 
         Core.Models.User? user = await repository.QueryUnfiltered<Core.Models.User>().FirstOrDefaultAsync(u => u.SubjectId == "sub123");
         Assert.NotNull(user);
         Assert.Equal("test@example.com", user.Email);
         Assert.Equal("Test User", user.DisplayName);
 
-        Assert.Contains(principal.Claims, c =>
-            c.Type == ClaimConstants.InternalUserIdClaimType &&
-            c.Value == user.Id.ToString());
+        Assert.NotNull(result);
+        Assert.Equal(user.Id, result.UserId);
+        Assert.Equal("Test User", result.DisplayName);
     }
 
     [Fact]
-    public async Task SyncUserAsyncNewUserShouldPreserveOriginalNameIdentifier()
-    {
-        using CRMDbContext context = GetInMemoryDbContext();
-        Repository repository = new(context);
-        UserSynchronizationService service = new(context, repository);
-
-        const string originalSubject = "external-idp-sub-123";
-        List<Claim> claims =
-        [
-            new Claim(ClaimTypes.NameIdentifier, originalSubject),
-            new Claim(ClaimTypes.Email, "test@example.com")
-        ];
-        ClaimsIdentity identity = new(claims, "TestAuth");
-        ClaimsPrincipal principal = new(identity);
-
-        await service.SyncUserAsync(principal);
-
-        Assert.Contains(principal.Claims, c =>
-            c.Type == ClaimTypes.NameIdentifier &&
-            c.Value == originalSubject);
-
-        // Internal ID should be in separate claim
-        Core.Models.User? user = await repository.QueryUnfiltered<Core.Models.User>().FirstOrDefaultAsync(u => u.SubjectId == originalSubject);
-        Assert.NotNull(user);
-        Assert.Contains(principal.Claims, c =>
-            c.Type == ClaimConstants.InternalUserIdClaimType &&
-            c.Value == user.Id.ToString());
-    }
-
-    [Fact]
-    public async Task SyncUserAsyncExistingUserShouldUpdateDetailsAndAddInternalIdClaim()
+    public async Task SyncUserAsyncExistingUserShouldUpdateDetailsAndReturnInternalId()
     {
         using CRMDbContext context = GetInMemoryDbContext();
         Repository repository = new(context);
@@ -102,81 +61,15 @@ public class UserSynchronizationTests
         await context.SaveChangesAsync();
         context.ChangeTracker.Clear(); // Clear tracker to simulate fresh request
 
-        List<Claim> claims =
-        [
-            new Claim(ClaimTypes.NameIdentifier, "sub456"),
-            new Claim(ClaimTypes.Email, "new@example.com"),
-            new Claim(ClaimTypes.Name, "New Name")
-        ];
-        ClaimsIdentity identity = new(claims, "TestAuth");
-        ClaimsPrincipal principal = new(identity);
-
-        await service.SyncUserAsync(principal);
+        UserSyncResult? result = await service.SyncUserAsync("sub456", "new@example.com", "New Name");
 
         Core.Models.User? user = await repository.QueryUnfiltered<Core.Models.User>().FirstOrDefaultAsync(u => u.SubjectId == "sub456");
         Assert.NotNull(user);
         Assert.Equal("new@example.com", user.Email); // Should update
         Assert.Equal("New Name", user.DisplayName); // Should update
 
-        // Original NameIdentifier should be preserved
-        Assert.Contains(principal.Claims, c =>
-            c.Type == ClaimTypes.NameIdentifier &&
-            c.Value == "sub456");
-
-        // Internal ID should be in separate claim
-        Assert.Contains(principal.Claims, c =>
-            c.Type == ClaimConstants.InternalUserIdClaimType &&
-            c.Value == existingUser.Id.ToString());
-    }
-
-    [Fact]
-    public async Task SyncUserAsyncShouldAddNameClaimWhenNotPresent()
-    {
-        using CRMDbContext context = GetInMemoryDbContext();
-        Repository repository = new(context);
-        UserSynchronizationService service = new(context, repository);
-
-        List<Claim> claims =
-        [
-            new Claim(ClaimTypes.NameIdentifier, "sub789"),
-            new Claim(ClaimTypes.Email, "test@example.com")
-        ];
-        ClaimsIdentity identity = new(claims, "TestAuth");
-        ClaimsPrincipal principal = new(identity);
-
-        await service.SyncUserAsync(principal);
-
-        Core.Models.User? user = await repository.QueryUnfiltered<Core.Models.User>().FirstOrDefaultAsync(u => u.SubjectId == "sub789");
-        Assert.NotNull(user);
-
-        // Name claim should be added from DisplayName
-        Assert.Contains(principal.Claims, c =>
-            c.Type == ClaimTypes.Name &&
-            c.Value == user.DisplayName);
-    }
-
-    [Fact]
-    public async Task SyncUserAsyncShouldNotAddNameClaimWhenAlreadyPresent()
-    {
-        using CRMDbContext context = GetInMemoryDbContext();
-        Repository repository = new(context);
-        UserSynchronizationService service = new(context, repository);
-
-        const string existingName = "Existing Name";
-        List<Claim> claims =
-        [
-            new Claim(ClaimTypes.NameIdentifier, "sub999"),
-            new Claim(ClaimTypes.Email, "test@example.com"),
-            new Claim(ClaimTypes.Name, existingName)
-        ];
-        ClaimsIdentity identity = new(claims, "TestAuth");
-        ClaimsPrincipal principal = new(identity);
-
-        await service.SyncUserAsync(principal);
-
-        List<Claim> nameClaims = principal.Claims.Where(c => c.Type == ClaimTypes.Name).ToList();
-        Assert.Single(nameClaims);
-        Assert.Equal(existingName, nameClaims[0].Value);
+        Assert.NotNull(result);
+        Assert.Equal(existingUser.Id, result.UserId);
     }
 
     [Fact]
@@ -186,68 +79,28 @@ public class UserSynchronizationTests
         Repository repository = new(context);
         UserSynchronizationService service = new(context, repository);
 
-        // No NameIdentifier claim
-        List<Claim> claims =
-        [
-            new Claim(ClaimTypes.Email, "test@example.com")
-        ];
-        ClaimsIdentity identity = new(claims, "TestAuth");
-        ClaimsPrincipal principal = new(identity);
-
-        await service.SyncUserAsync(principal);
+        UserSyncResult? result = await service.SyncUserAsync(string.Empty, "test@example.com", null);
 
         int userCount = await repository.QueryUnfiltered<Core.Models.User>().CountAsync();
         Assert.Equal(0, userCount);
-
-        Assert.DoesNotContain(principal.Claims, c =>
-            c.Type == ClaimConstants.InternalUserIdClaimType);
+        Assert.Null(result);
     }
 
     [Fact]
-    public async Task SyncUserAsyncShouldReplaceInternalIdClaimWhenCalledMultipleTimes()
+    public async Task SyncUserAsyncShouldReturnSameResultWhenCalledMultipleTimes()
     {
         using CRMDbContext context = GetInMemoryDbContext();
         Repository repository = new(context);
         UserSynchronizationService service = new(context, repository);
 
-        List<Claim> claims =
-        [
-            new Claim(ClaimTypes.NameIdentifier, "sub-multiple"),
-            new Claim(ClaimTypes.Email, "test@example.com")
-        ];
-        ClaimsIdentity identity = new(claims, "TestAuth");
-        ClaimsPrincipal principal = new(identity);
+        UserSyncResult? result1 = await service.SyncUserAsync("sub-multiple", "test@example.com", null);
+        UserSyncResult? result2 = await service.SyncUserAsync("sub-multiple", "test@example.com", null);
+        UserSyncResult? result3 = await service.SyncUserAsync("sub-multiple", "test@example.com", null);
 
-        await service.SyncUserAsync(principal);
-        await service.SyncUserAsync(principal);
-        await service.SyncUserAsync(principal);
-
-        List<Claim> internalIdClaims = principal.Claims
-            .Where(c => c.Type == ClaimConstants.InternalUserIdClaimType)
-            .ToList();
-        Assert.Single(internalIdClaims);
-    }
-
-    [Fact]
-    public async Task SyncUserAsyncShouldUseSubClaimWhenNameIdentifierNotPresent()
-    {
-        using CRMDbContext context = GetInMemoryDbContext();
-        Repository repository = new(context);
-        UserSynchronizationService service = new(context, repository);
-
-        // Use "sub" claim instead of NameIdentifier (common in OAuth2/OIDC)
-        List<Claim> claims =
-        [
-            new Claim("sub", "oauth-subject-id"),
-            new Claim("email", "oauth@example.com")
-        ];
-        ClaimsIdentity identity = new(claims, "TestAuth");
-        ClaimsPrincipal principal = new(identity);
-
-        await service.SyncUserAsync(principal);
-
-        Core.Models.User? user = await repository.QueryUnfiltered<Core.Models.User>().FirstOrDefaultAsync(u => u.SubjectId == "oauth-subject-id");
-        Assert.NotNull(user);
-        Assert.Equal("oauth@example.com", user.Email);
+        Assert.NotNull(result1);
+        Assert.NotNull(result2);
+        Assert.NotNull(result3);
+        Assert.Equal(result1.UserId, result2.UserId);
+        Assert.Equal(result2.UserId, result3.UserId);
     }
 }
