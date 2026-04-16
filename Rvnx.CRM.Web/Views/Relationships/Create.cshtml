@@ -18,12 +18,12 @@
     <div class="col-md-8">
         <ul class="nav nav-pills mb-4" id="relationshipTab" role="tablist">
             <li class="nav-item" role="presentation">
-                <button class="nav-link active" id="existing-tab" data-mdb-pill-init data-mdb-target="#existing" type="button" role="tab" aria-controls="existing" aria-selected="true"><i class="bi bi-link"></i> Link Existing Contact</button>
+                <button class="nav-link active" id="existing-tab" data-mdb-pill-init data-mdb-target="#existing" type="button" role="tab" aria-controls="existing" aria-selected="true"><i class="bi bi-link" aria-hidden="true"></i> Link Existing Contact</button>
             </li>
             @if (Model.EntityType == EntityTypes.Person)
             {
                 <li class="nav-item" role="presentation">
-                    <button class="nav-link" id="new-tab" data-mdb-pill-init data-mdb-target="#new" type="button" role="tab" aria-controls="new" aria-selected="false"><i class="bi bi-person-plus"></i> Create New Partial Contact</button>
+                    <button class="nav-link" id="new-tab" data-mdb-pill-init data-mdb-target="#new" type="button" role="tab" aria-controls="new" aria-selected="false"><i class="bi bi-person-plus" aria-hidden="true"></i> Create New Partial Contact</button>
                 </li>
             }
         </ul>
@@ -48,7 +48,7 @@
                             <div class="crm-card-body p-2 d-flex justify-content-between align-items-center">
                                 <span class="fw-bold" style="color: var(--crm-brand);" id="selected-type-text"></span>
                                 <button type="button" class="crm-btn-tertiary btn-sm" id="change-type-btn" aria-label="Change relationship type">
-                                    <i class="bi bi-pencil me-1"></i> Change
+                                    <i class="bi bi-pencil me-1" aria-hidden="true"></i> Change
                                 </button>
                             </div>
                         </div>
@@ -123,14 +123,14 @@
                     </div>
 
                     <div class="d-grid gap-2 d-md-flex mt-4">
-                        <button type="submit" class="crm-btn-primary"><i class="bi bi-save"></i> Save Relationship</button>
+                        <button type="submit" class="crm-btn-primary"><i class="bi bi-save" aria-hidden="true"></i> Save Relationship</button>
                         @if (Model.EntityType == EntityTypes.Person)
                         {
-                            <a asp-controller="Contacts" asp-action="Details" asp-route-id="@Model.EntityId" class="crm-btn-tertiary"><i class="bi bi-x-lg"></i> Cancel</a>
+                            <a asp-controller="Contacts" asp-action="Details" asp-route-id="@Model.EntityId" class="crm-btn-tertiary"><i class="bi bi-x-lg" aria-hidden="true"></i> Cancel</a>
                         }
                         else
                         {
-                            <a asp-controller="Home" asp-action="Index" class="crm-btn-tertiary"><i class="bi bi-x-lg"></i> Cancel</a>
+                            <a asp-controller="Home" asp-action="Index" class="crm-btn-tertiary"><i class="bi bi-x-lg" aria-hidden="true"></i> Cancel</a>
                         }
                     </div>
                 </form>
@@ -155,7 +155,7 @@
                                 <div class="crm-card-body p-2 d-flex justify-content-between align-items-center">
                                     <span class="fw-bold" style="color: var(--crm-brand);" id="selected-type-text-partial"></span>
                                     <button type="button" class="crm-btn-tertiary btn-sm" id="change-type-btn-partial" aria-label="Change partial relationship type">
-                                        <i class="bi bi-pencil me-1"></i> Change
+                                            <i class="bi bi-pencil me-1" aria-hidden="true"></i> Change
                                     </button>
                                 </div>
                             </div>
@@ -215,7 +215,7 @@
                         <div class="form-floating mb-3">
                             <input id="Birthday" name="Birthday" type="date" class="form-control" placeholder=" "/>
                             <label for="Birthday">Birthday</label>
-                            <div class="form-text mt-1 text-muted"><i class="bi bi-info-circle"></i> Entering a birthday will automatically add a yearly reminder for this person.</div>
+                            <div class="form-text mt-1 text-muted"><i class="bi bi-info-circle" aria-hidden="true"></i> Entering a birthday will automatically add a yearly reminder for this person.</div>
                         </div>
 
                         <div class="form-floating mb-3">
@@ -224,8 +224,8 @@
                         </div>
 
                         <div class="d-grid gap-2 d-md-flex mt-4">
-                            <button type="submit" class="crm-btn-primary"><i class="bi bi-save"></i> Save Partial Contact</button>
-                            <a asp-controller="Contacts" asp-action="Details" asp-route-id="@Model.EntityId" class="crm-btn-tertiary"><i class="bi bi-x-lg"></i> Cancel</a>
+                            <button type="submit" class="crm-btn-primary"><i class="bi bi-save" aria-hidden="true"></i> Save Partial Contact</button>
+                            <a asp-controller="Contacts" asp-action="Details" asp-route-id="@Model.EntityId" class="crm-btn-tertiary"><i class="bi bi-x-lg" aria-hidden="true"></i> Cancel</a>
                         </div>
                     </form>
                 </div>
@@ -462,7 +462,7 @@
 
                             const header = document.createElement('h6');
                             header.className = 'card-title text-primary d-flex align-items-center mb-2';
-                            header.innerHTML = '<i class="bi bi-magic me-2 fs-5"></i> Suggested Connections';
+                            header.innerHTML = '<i class="bi bi-magic me-2 fs-5" aria-hidden="true"></i> Suggested Connections';
                             cardBody.appendChild(header);
 
                             const desc = document.createElement('p');
