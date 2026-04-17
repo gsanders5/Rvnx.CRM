@@ -314,11 +314,9 @@ public class ContactReadService(IRepository repository, IFavoriteService favorit
             {
                 if (participantsByActivity.TryGetValue(actDto.Id, out List<Guid>? pIds))
                 {
-                    actDto.ContactIds = pIds;
-                    actDto.ContactNames = pIds
-                        .Where(pid => pid != id && contactNameMap.ContainsKey(pid))
-                        .Select(pid => contactNameMap[pid])
-                        .ToList();
+                    List<Guid> others = pIds.Where(pid => pid != id && contactNameMap.ContainsKey(pid)).ToList();
+                    actDto.ContactIds = others;
+                    actDto.ContactNames = others.Select(pid => contactNameMap[pid]).ToList();
                 }
             }
         }

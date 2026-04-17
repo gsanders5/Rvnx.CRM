@@ -578,52 +578,71 @@
         <div class="crm-card-body">
             @if (Model.Activities != null && Model.Activities.Any())
             {
-                @foreach (var activity in Model.Activities.OrderByDescending(a => a.ActivityDate))
-                {
-                    <div class="mb-2 p-3" style="background: var(--crm-surface-secondary); border-radius: var(--crm-radius-sm); border: 1px solid var(--crm-border-subtle);">
-                        <div class="d-flex justify-content-between">
-                            <div>
-                                <h6 class="mb-1" style="font-size: 0.875rem;">
-                                    @activity.Title
-                                    @if (!string.IsNullOrEmpty(activity.ActivityType))
+                var sortedActivities = Model.Activities.OrderByDescending(a => a.ActivityDate).ToList();
+                <div id="activities-list">
+                    @foreach (var activity in sortedActivities)
+                    {
+                        <div class="activity-item mb-2 p-3" style="background: var(--crm-surface-secondary); border-radius: var(--crm-radius-sm); border: 1px solid var(--crm-border-subtle);">
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <h6 class="mb-1" style="font-size: 0.875rem;">
+                                        @activity.Title
+                                        @if (!string.IsNullOrEmpty(activity.ActivityType))
+                                        {
+                                            <span class="crm-role-badge ms-1">@activity.ActivityType</span>
+                                        }
+                                    </h6>
+                                    <div class="crm-meta">
+                                        <i class="bi bi-calendar3"></i> @activity.ActivityDate.ToShortDateString()
+                                        @if (!string.IsNullOrEmpty(activity.Location))
+                                        {
+                                            <span class="ms-2"><i class="bi bi-geo-alt"></i> @activity.Location</span>
+                                        }
+                                    </div>
+                                    @if (activity.ContactNames.Any())
                                     {
-                                        <span class="crm-role-badge ms-1">@activity.ActivityType</span>
-                                    }
-                                </h6>
-                                <div class="crm-meta">
-                                    <i class="bi bi-calendar3"></i> @activity.ActivityDate.ToShortDateString()
-                                    @if (!string.IsNullOrEmpty(activity.Location))
-                                    {
-                                        <span class="ms-2"><i class="bi bi-geo-alt"></i> @activity.Location</span>
+                                        <div class="crm-meta mt-1">
+                                            <i class="bi bi-people"></i>
+                                            with @for (int ci = 0; ci < activity.ContactNames.Count; ci++)
+                                            {
+                                                if (ci > 0) { <text>, </text> }
+                                                <a asp-controller="Contacts" asp-action="Details" asp-route-id="@activity.ContactIds[ci]">@activity.ContactNames[ci]</a>
+                                            }
+                                        </div>
                                     }
                                 </div>
-                                @if (activity.ContactNames.Any())
-                                {
-                                    <div class="crm-meta mt-1">
-                                        <i class="bi bi-people"></i>
-                                        with @string.Join(", ", activity.ContactNames)
-                                    </div>
-                                }
+                                <div class="crm-icon-actions align-self-start">
+                                    <a asp-controller="Activities" asp-action="Edit" asp-route-id="@activity.Id" class="crm-icon-btn icon-edit" title="Edit" aria-label="Edit @activity.Title">
+                                        <i class="bi bi-pencil-square"></i>
+                                    </a>
+                                    <button type="button" class="crm-icon-btn icon-danger"
+                                            data-confirm-action="@Url.Action("Delete", "Activities", new { id = activity.Id })"
+                                            data-confirm-title="Delete Activity"
+                                            data-confirm-body="Are you sure you want to delete &quot;@activity.Title&quot;?"
+                                            data-confirm-reload
+                                            title="Delete" aria-label="Delete @activity.Title">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </div>
                             </div>
-                            <div class="crm-icon-actions align-self-start">
-                                <a asp-controller="Activities" asp-action="Edit" asp-route-id="@activity.Id" class="crm-icon-btn icon-edit" title="Edit" aria-label="Edit @activity.Title">
-                                    <i class="bi bi-pencil-square"></i>
-                                </a>
-                                <button type="button" class="crm-icon-btn icon-danger"
-                                        data-confirm-action="@Url.Action("Delete", "Activities", new { id = activity.Id })"
-                                        data-confirm-title="Delete Activity"
-                                        data-confirm-body="Are you sure you want to delete &quot;@activity.Title&quot;?"
-                                        data-confirm-reload
-                                        title="Delete" aria-label="Delete @activity.Title">
-                                    <i class="bi bi-trash"></i>
-                                </button>
-                            </div>
+                            @if (!string.IsNullOrEmpty(activity.Description))
+                            {
+                                <div class="d-none note-source">@activity.Description</div>
+                                <div class="note-render mt-2" style="font-size: 0.875rem;"></div>
+                            }
                         </div>
-                        @if (!string.IsNullOrEmpty(activity.Description))
-                        {
-                            <div class="d-none note-source">@activity.Description</div>
-                            <div class="note-render mt-2" style="font-size: 0.875rem;"></div>
-                        }
+                    }
+                </div>
+                if (sortedActivities.Count > 5)
+                {
+                    <div id="activities-pagination" class="d-flex justify-content-between align-items-center mt-2">
+                        <button type="button" id="activities-prev" class="crm-btn-tertiary btn-sm" disabled>
+                            <i class="bi bi-chevron-left"></i> Previous
+                        </button>
+                        <span id="activities-page-info" class="text-muted small"></span>
+                        <button type="button" id="activities-next" class="crm-btn-tertiary btn-sm">
+                            Next <i class="bi bi-chevron-right"></i>
+                        </button>
                     </div>
                 }
             }
@@ -916,6 +935,30 @@
                         percentPosition: true
                     });
                 });
+            }
+
+            const activityItems = document.querySelectorAll('.activity-item');
+            const prevBtn = document.getElementById('activities-prev');
+            const nextBtn = document.getElementById('activities-next');
+            const pageInfo = document.getElementById('activities-page-info');
+            const pageSize = 5;
+            let currentPage = 0;
+
+            if (activityItems.length > pageSize && prevBtn && nextBtn) {
+                const totalPages = Math.ceil(activityItems.length / pageSize);
+
+                function showPage(page) {
+                    activityItems.forEach((item, i) => {
+                        item.style.display = (i >= page * pageSize && i < (page + 1) * pageSize) ? '' : 'none';
+                    });
+                    prevBtn.disabled = page === 0;
+                    nextBtn.disabled = page === totalPages - 1;
+                    pageInfo.textContent = `${page * pageSize + 1}–${Math.min((page + 1) * pageSize, activityItems.length)} of ${activityItems.length}`;
+                }
+
+                prevBtn.addEventListener('click', () => { currentPage--; showPage(currentPage); });
+                nextBtn.addEventListener('click', () => { currentPage++; showPage(currentPage); });
+                showPage(0);
             }
         });
     </script>
