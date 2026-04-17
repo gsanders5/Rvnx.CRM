@@ -6,6 +6,7 @@ using Rvnx.CRM.Core.Constants;
 using Rvnx.CRM.Core.Interfaces;
 using Rvnx.CRM.Infrastructure;
 using Rvnx.CRM.Infrastructure.Data;
+using Rvnx.CRM.Web.Extensions;
 using Rvnx.CRM.Web.Services;
 using System.Security.Claims;
 
@@ -99,45 +100,9 @@ public class Program
                     {
                         OnTokenValidated = async context =>
                         {
-                            IUserSynchronizationService userSyncService = context.HttpContext.RequestServices
-                                .GetRequiredService<IUserSynchronizationService>();
                             if (context.Principal?.Identity is ClaimsIdentity identity)
                             {
-                                string? subjectId = context.Principal.FindFirst(ClaimTypes.NameIdentifier)?.Value
-                                                   ?? context.Principal.FindFirst("sub")?.Value;
-                                string? email = context.Principal.FindFirst(ClaimTypes.Email)?.Value
-                                                 ?? context.Principal.FindFirst("email")?.Value;
-                                string? name = context.Principal.FindFirst(ClaimTypes.Name)?.Value
-                                                ?? context.Principal.FindFirst("name")?.Value;
-
-                                if (!string.IsNullOrEmpty(subjectId))
-                                {
-                                    UserSyncResult? result = await userSyncService.SyncUserAsync(subjectId, email, name);
-                                    if (result != null)
-                                    {
-                                        Claim? existingUserClaim = identity.FindFirst(ClaimConstants.InternalUserIdClaimType);
-                                        if (existingUserClaim != null)
-                                        {
-                                            identity.RemoveClaim(existingUserClaim);
-                                        }
-                                        identity.AddClaim(new Claim(ClaimConstants.InternalUserIdClaimType, result.UserId.ToString()));
-
-                                        Claim? existingGroupClaim = identity.FindFirst(ClaimConstants.InternalGroupIdClaimType);
-                                        if (existingGroupClaim != null)
-                                        {
-                                            identity.RemoveClaim(existingGroupClaim);
-                                        }
-                                        if (result.GroupId.HasValue)
-                                        {
-                                            identity.AddClaim(new Claim(ClaimConstants.InternalGroupIdClaimType, result.GroupId.Value.ToString()));
-                                        }
-
-                                        if (!identity.HasClaim(c => c.Type == ClaimTypes.Name) && !string.IsNullOrEmpty(result.DisplayName))
-                                        {
-                                            identity.AddClaim(new Claim(ClaimTypes.Name, result.DisplayName));
-                                        }
-                                    }
-                                }
+                                await identity.SyncUserAndEnrichClaimsAsync(context.HttpContext.RequestServices);
                             }
                         },
                         OnRemoteFailure = context =>
@@ -220,44 +185,7 @@ public class Program
             {
                 if (context.User.Identity is ClaimsIdentity identity && identity.IsAuthenticated)
                 {
-                    IUserSynchronizationService? userSync =
-                        context.RequestServices.GetRequiredService<IUserSynchronizationService>();
-
-                    string? subjectId = context.User.FindFirst(ClaimTypes.NameIdentifier)?.Value
-                                       ?? context.User.FindFirst("sub")?.Value;
-                    string? email = context.User.FindFirst(ClaimTypes.Email)?.Value
-                                     ?? context.User.FindFirst("email")?.Value;
-                    string? name = context.User.FindFirst(ClaimTypes.Name)?.Value
-                                    ?? context.User.FindFirst("name")?.Value;
-
-                    if (!string.IsNullOrEmpty(subjectId))
-                    {
-                        UserSyncResult? result = await userSync.SyncUserAsync(subjectId, email, name);
-                        if (result != null)
-                        {
-                            Claim? existingUserClaim = identity.FindFirst(ClaimConstants.InternalUserIdClaimType);
-                            if (existingUserClaim != null)
-                            {
-                                identity.RemoveClaim(existingUserClaim);
-                            }
-                            identity.AddClaim(new Claim(ClaimConstants.InternalUserIdClaimType, result.UserId.ToString()));
-
-                            Claim? existingGroupClaim = identity.FindFirst(ClaimConstants.InternalGroupIdClaimType);
-                            if (existingGroupClaim != null)
-                            {
-                                identity.RemoveClaim(existingGroupClaim);
-                            }
-                            if (result.GroupId.HasValue)
-                            {
-                                identity.AddClaim(new Claim(ClaimConstants.InternalGroupIdClaimType, result.GroupId.Value.ToString()));
-                            }
-
-                            if (!identity.HasClaim(c => c.Type == ClaimTypes.Name) && !string.IsNullOrEmpty(result.DisplayName))
-                            {
-                                identity.AddClaim(new Claim(ClaimTypes.Name, result.DisplayName));
-                            }
-                        }
-                    }
+                    await identity.SyncUserAndEnrichClaimsAsync(context.RequestServices);
                 }
 
                 await next();
