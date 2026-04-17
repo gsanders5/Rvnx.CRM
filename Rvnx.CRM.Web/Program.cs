@@ -4,10 +4,10 @@ using Microsoft.EntityFrameworkCore;
 using Rvnx.CRM.Core;
 using Rvnx.CRM.Core.Constants;
 using Rvnx.CRM.Core.Interfaces;
-using System.Security.Claims;
 using Rvnx.CRM.Infrastructure;
 using Rvnx.CRM.Infrastructure.Data;
 using Rvnx.CRM.Web.Services;
+using System.Security.Claims;
 
 
 namespace Rvnx.CRM.Web;

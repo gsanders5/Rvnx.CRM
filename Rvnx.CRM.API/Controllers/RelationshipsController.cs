@@ -29,7 +29,10 @@ public class RelationshipsController(IRelationshipService relationshipService, I
     public async Task<IActionResult> ListByContact(Guid contactId)
     {
         ContactDetailDto? contactDetails = await _contactReadService.GetContactDetailsAsync(contactId);
-        if (contactDetails == null) return NotFound();
+        if (contactDetails == null)
+        {
+            return NotFound();
+        }
 
         List<RelationshipDto> allRelationships = [.. contactDetails.Relationships, .. contactDetails.RelatedTo];
         return Ok(allRelationships);

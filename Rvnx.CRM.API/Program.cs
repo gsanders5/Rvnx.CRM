@@ -1,10 +1,10 @@
-using System.Text.Json.Serialization;
 using Microsoft.OpenApi;
 using Rvnx.CRM.API.Authentication;
 using Rvnx.CRM.API.Services;
 using Rvnx.CRM.Core;
 using Rvnx.CRM.Core.Interfaces;
 using Rvnx.CRM.Infrastructure;
+using System.Text.Json.Serialization;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
