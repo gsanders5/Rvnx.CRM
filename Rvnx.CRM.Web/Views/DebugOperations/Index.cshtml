@@ -22,13 +22,13 @@
             <div class="d-flex gap-2">
                 <form asp-action="SeedTestData" method="post">
                     <button type="submit" class="crm-btn-primary">
-                        <i class="bi bi-database-add"></i> Add Test Contacts
+                        <i class="bi bi-database-add" aria-hidden="true"></i> Add Test Contacts
                     </button>
                 </form>
 
                 <form asp-action="AddRandomRelationships" method="post">
                     <button type="submit" class="crm-btn-secondary">
-                        <i class="bi bi-people-fill"></i> Add Random Relationships
+                        <i class="bi bi-people-fill" aria-hidden="true"></i> Add Random Relationships
                     </button>
                 </form>
             </div>
@@ -42,7 +42,7 @@
         <div class="crm-card-body">
             <p>Combine two user accounts into a single shared group.</p>
             <a asp-action="MergeAccounts" class="crm-btn-secondary">
-                <i class="bi bi-person-fill-gear"></i> Merge Accounts (Admin Only)
+                <i class="bi bi-person-fill-gear" aria-hidden="true"></i> Merge Accounts (Admin Only)
             </a>
         </div>
     </div>
@@ -55,7 +55,7 @@
             <p style="color: var(--crm-danger);">Warning: This will delete all data!</p>
             <form asp-action="ResetDatabase" method="post">
                 <button type="submit" class="crm-btn-danger" onclick="return confirm('Are you sure you want to delete everything?');">
-                    <i class="bi bi-trash"></i> Reset Database
+                    <i class="bi bi-trash" aria-hidden="true"></i> Reset Database
                 </button>
             </form>
         </div>

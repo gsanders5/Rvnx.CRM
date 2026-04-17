@@ -6,5 +6,5 @@
     var textColor = ColorContrastHelper.GetContrastTextColor(bgColor);
 }
 <span class="badge" style="background-color: @bgColor; color: @textColor; border: 1px solid var(--crm-border-subtle);">
-    <i class="bi bi-tag-fill me-1" style="opacity: 0.7;"></i>@Model.Name
+    <i class="bi bi-tag-fill me-1" style="opacity: 0.7;" aria-hidden="true"></i>@Model.Name
 </span>

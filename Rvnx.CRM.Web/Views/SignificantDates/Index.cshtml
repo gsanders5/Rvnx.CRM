@@ -6,20 +6,20 @@
 }
 
 <div class="d-flex justify-content-between align-items-center mb-4">
-    <h2><i class="bi bi-calendar-event me-2"></i>Significant Dates</h2>
+    <h2><i class="bi bi-calendar-event me-2" aria-hidden="true"></i>Significant Dates</h2>
     <a asp-action="Create" asp-route-contactId="@contactId" class="crm-btn-primary btn-sm">
-        <i class="bi bi-plus-circle"></i> Add New Date
+        <i class="bi bi-plus-circle" aria-hidden="true"></i> Add New Date
     </a>
 </div>
 
 @if (!Model.Any())
 {
     <div class="text-center py-5 my-5">
-        <i class="bi bi-calendar-event display-1 opacity-25 mb-3" style="color: var(--crm-text-tertiary);"></i>
+        <i class="bi bi-calendar-event display-1 opacity-25 mb-3" style="color: var(--crm-text-tertiary);" aria-hidden="true"></i>
         <h3 class="h4 mt-3" style="color: var(--crm-text-secondary);">No Significant Dates</h3>
         <p class="mb-4" style="color: var(--crm-text-tertiary);">No significant dates found for this contact.</p>
         <a asp-action="Create" asp-route-contactId="@contactId" class="crm-btn-primary">
-            <i class="bi bi-plus-lg"></i> Add New Date
+            <i class="bi bi-plus-lg" aria-hidden="true"></i> Add New Date
         </a>
     </div>
 }
@@ -92,7 +92,7 @@ else
                                 <td class="align-middle text-end">
                                     <div class="crm-icon-actions">
                                         <a asp-action="Edit" asp-route-id="@item.Id" class="crm-icon-btn icon-edit" title="Edit" aria-label="Edit @item.Title">
-                                            <i class="bi bi-pencil-square"></i>
+                                            <i class="bi bi-pencil-square" aria-hidden="true"></i>
                                         </a>
                                         <button type="button" class="crm-icon-btn icon-danger"
                                                 data-confirm-action="@Url.Action("Delete", "SignificantDates", new { id = item.Id, contactId = ViewBag.ContactId })"
@@ -100,7 +100,7 @@ else
                                                 data-confirm-body="Are you sure you want to delete &quot;@item.Title&quot;?"
                                                 data-confirm-remove="tr"
                                                 title="Delete" aria-label="Delete @item.Title">
-                                            <i class="bi bi-trash"></i>
+                                            <i class="bi bi-trash" aria-hidden="true"></i>
                                         </button>
                                     </div>
                                 </td>
@@ -115,6 +115,6 @@ else
 
 <div class="mt-4">
     <a asp-controller="Contacts" asp-action="Details" asp-route-id="@contactId" class="crm-btn-tertiary">
-        <i class="bi bi-arrow-left"></i> Back to Contact
+        <i class="bi bi-arrow-left" aria-hidden="true"></i> Back to Contact
     </a>
 </div>

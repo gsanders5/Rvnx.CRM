@@ -33,8 +33,8 @@
         <input type="hidden" asp-for="Id"/>
         <input type="hidden" name="contactId" value="@Model.EntityId" />
         <div class="d-grid gap-2 d-md-flex">
-            <button type="submit" class="crm-btn-danger"><i class="bi bi-trash"></i> Delete</button>
-            <a asp-action="Index" asp-route-contactId="@Model.EntityId" class="crm-btn-tertiary"><i class="bi bi-arrow-left"></i> Back</a>
+            <button type="submit" class="crm-btn-danger"><i class="bi bi-trash" aria-hidden="true"></i> Delete</button>
+            <a asp-action="Index" asp-route-contactId="@Model.EntityId" class="crm-btn-tertiary"><i class="bi bi-arrow-left" aria-hidden="true"></i> Back</a>
         </div>
     </form>
 </div>

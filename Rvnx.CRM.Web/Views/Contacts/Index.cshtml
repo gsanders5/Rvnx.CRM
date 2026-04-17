@@ -15,8 +15,8 @@
         {
             <a asp-action="Index" asp-route-showHidden="True" class="crm-btn-tertiary btn-sm">View Hidden</a>
         }
-        <a asp-action="Import" class="crm-btn-secondary btn-sm"><i class="fa-solid fa-file-import"></i> Import VCF</a>
-        <a asp-action="Create" class="crm-btn-primary btn-sm"><i class="bi bi-plus-lg"></i> Create New</a>
+        <a asp-action="Import" class="crm-btn-secondary btn-sm"><i class="fa-solid fa-file-import" aria-hidden="true"></i> Import VCF</a>
+        <a asp-action="Create" class="crm-btn-primary btn-sm"><i class="bi bi-plus-lg" aria-hidden="true"></i> Create New</a>
     </div>
 </div>
 
@@ -142,7 +142,7 @@
 else
 {
     <div class="text-center py-5 my-5">
-        <i class="bi bi-person-rolodex display-1 opacity-25 mb-3" style="color: var(--crm-text-tertiary);"></i>
+        <i class="bi bi-person-rolodex display-1 opacity-25 mb-3" style="color: var(--crm-text-tertiary);" aria-hidden="true"></i>
         <h3 class="h4 mt-3" style="color: var(--crm-text-secondary);">No contacts found</h3>
         <p class="mb-4" style="color: var(--crm-text-tertiary);">
             @(Context.Request.Query["showHidden"] == "True"
@@ -150,7 +150,7 @@ else
                 : "Get started by adding your first contact to the system.")
         </p>
         <a asp-action="Create" class="crm-btn-primary" style="padding: 0.5rem 1.25rem;">
-            <i class="bi bi-plus-lg me-2"></i>Create Contact
+            <i class="bi bi-plus-lg me-2" aria-hidden="true"></i>Create Contact
         </a>
     </div>
 }
@@ -206,7 +206,7 @@ else
                         buttons: [
                             {
                                 extend: 'colvis',
-                                text: '<i class="bi bi-layout-three-columns"></i>',
+                                text: '<i class="bi bi-layout-three-columns" aria-hidden="true"></i>',
                                 titleAttr: 'Choose columns'
                             }
                         ]
