@@ -105,7 +105,7 @@
                 @if (Model.IsEntityPartial || Model.IsRelatedEntityPartial)
                 {
                     <button type="button" class="crm-btn-secondary" data-mdb-modal-init data-mdb-target="#promoteModal">
-                        <i class="bi bi-arrow-up-circle" aria-hidden="true"></i> Promote to contact
+                        <i class="bi bi-person-check" aria-hidden="true"></i> Promote to Contact
                     </button>
                 }
                 @if (Model.EntityType == EntityTypes.Person)
@@ -128,7 +128,7 @@
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="promoteModalLabel">Promote Partial Contact</h5>
+                    <h5 class="modal-title" id="promoteModalLabel">Promote to Contact</h5>
                     <button type="button" class="btn-close" data-mdb-ripple-init data-mdb-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">

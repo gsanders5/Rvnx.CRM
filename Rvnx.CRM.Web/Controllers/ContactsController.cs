@@ -200,7 +200,8 @@ public class ContactsController(
             return NotFound();
         }
 
-        ContactEditViewModel viewModel = MapToEditViewModel(dto, dto.ProfileImageId);
+        bool hasRelationships = await _contactReadService.HasRelationshipsAsync(id.Value);
+        ContactEditViewModel viewModel = MapToEditViewModel(dto, dto.ProfileImageId, hasRelationships);
 
         return View(viewModel);
     }
@@ -262,7 +263,8 @@ public class ContactsController(
             contactDto.AssignedLabelIds = formConfig.AssignedLabelIds;
         }
 
-        ContactEditViewModel viewModel = MapToEditViewModel(contactDto, formConfig?.ProfileImageId);
+        bool hasRelationships = await _contactReadService.HasRelationshipsAsync(id);
+        ContactEditViewModel viewModel = MapToEditViewModel(contactDto, formConfig?.ProfileImageId, hasRelationships);
 
         return View(viewModel);
     }
@@ -395,7 +397,7 @@ public class ContactsController(
         dto.Religion = string.IsNullOrWhiteSpace(dto.Religion) ? null : dto.Religion;
     }
 
-    private static ContactEditViewModel MapToEditViewModel(ContactFormDto dto, Guid? profileImageId)
+    private static ContactEditViewModel MapToEditViewModel(ContactFormDto dto, Guid? profileImageId, bool hasRelationships = false)
     {
         return new ContactEditViewModel
         {
@@ -417,7 +419,28 @@ public class ContactsController(
             PronounOptions = PersonalAttributeOptions.Pronouns,
             GenderOptions = PersonalAttributeOptions.Gender,
             AllLabels = dto.AllLabels,
-            AssignedLabelIds = dto.AssignedLabelIds
+            AssignedLabelIds = dto.AssignedLabelIds,
+            HasRelationships = hasRelationships
         };
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> DemoteToPartial(Guid id)
+    {
+        if (!await _contactReadService.ContactExistsAsync(id))
+        {
+            return NotFound();
+        }
+
+        if (!await _contactReadService.HasRelationshipsAsync(id))
+        {
+            return BadRequest("Contact must have at least one relationship to be converted to a partial contact.");
+        }
+
+        ContactOperationResult result = await _contactManagementService.DemoteToPartialAsync(id);
+
+        return result.Success
+            ? RedirectToAction(nameof(Index))
+            : BadRequest("Could not demote contact.");
     }
 }

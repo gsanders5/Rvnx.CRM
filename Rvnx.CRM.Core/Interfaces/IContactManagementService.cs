@@ -44,4 +44,11 @@ public interface IContactManagementService
     /// <param name="attachmentId">The ID of the attachment to promote.</param>
     /// <returns>A <see cref="ContactOperationResult"/> indicating success or failure.</returns>
     Task<ContactOperationResult> SetAttachmentAsProfilePhotoAsync(Guid contactId, Guid attachmentId);
+
+    /// <summary>
+    /// Converts a full contact back to a partial contact by setting IsPartial = true.
+    /// </summary>
+    /// <param name="contactId">The ID of the contact to demote.</param>
+    /// <returns>A <see cref="ContactOperationResult"/> indicating success or failure.</returns>
+    Task<ContactOperationResult> DemoteToPartialAsync(Guid contactId);
 }

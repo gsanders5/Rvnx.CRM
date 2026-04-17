@@ -149,12 +149,24 @@
                     <button type="submit" class="crm-btn-primary"><i class="bi bi-save"></i> Save</button>
                     <a asp-action="Details" asp-route-id="@Model.Id" class="crm-btn-tertiary"><i class="bi bi-arrow-left"></i> Back to Contact</a>
                 </div>
-                <button type="button" class="crm-btn-danger"
-                        data-confirm-action="@Url.Action("Delete", "Contacts", new { id = Model.Id })"
-                        data-confirm-title="Delete Contact"
-                        data-confirm-body="Are you sure you want to delete this contact? This cannot be undone.">
-                    <i class="bi bi-trash"></i> Delete
-                </button>
+                <div class="d-flex gap-2">
+                    <button type="button" class="crm-btn-secondary"
+                            disabled="@(!Model.HasRelationships)"
+                            title="@(!Model.HasRelationships ? "Contact must have at least one relationship to be converted to a partial contact." : null)"
+                            data-confirm-action="@(Model.HasRelationships ? Url.Action("DemoteToPartial", "Contacts", new { id = Model.Id }) : null)"
+                            data-confirm-title="Convert to Partial Contact"
+                            data-confirm-body="This will convert the contact back to a partial contact. Their data will be preserved but they will no longer appear in the main contacts list. Continue?"
+                            data-confirm-btn-label="Convert to Partial"
+                            data-confirm-btn-icon="bi-person-dash">
+                        <i class="bi bi-person-dash"></i> Convert to Partial
+                    </button>
+                    <button type="button" class="crm-btn-danger"
+                            data-confirm-action="@Url.Action("Delete", "Contacts", new { id = Model.Id })"
+                            data-confirm-title="Delete Contact"
+                            data-confirm-body="Are you sure you want to delete this contact? This cannot be undone.">
+                        <i class="bi bi-trash"></i> Delete
+                    </button>
+                </div>
             </div>
         </form>
     </div>

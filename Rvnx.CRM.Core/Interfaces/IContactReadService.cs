@@ -34,6 +34,11 @@ public interface IContactReadService
     Task<bool> ContactExistsAsync(Guid id);
 
     /// <summary>
+    /// Returns true if the contact has at least one relationship (in either direction).
+    /// </summary>
+    Task<bool> HasRelationshipsAsync(Guid id);
+
+    /// <summary>
     /// Retrieves a lightweight list of contact Id and FullName pairs for use in select lists.
     /// </summary>
     Task<List<(Guid Id, string FullName)>> GetContactNamesAsync();

@@ -294,6 +294,20 @@ public class ContactManagementService(IRepository repository, IFileValidationSer
         await _repository.DeleteAsync<T>(e => e.EntityId == contactId && e.EntityType == EntityTypes.Person);
     }
 
+    public async Task<ContactOperationResult> DemoteToPartialAsync(Guid contactId)
+    {
+        Contact? contact = await _repository.GetByIdAsync<Contact>(contactId);
+        if (contact == null)
+        {
+            return ContactOperationResult.NotFound();
+        }
+
+        contact.IsPartial = true;
+        await _repository.UpdateAsync(contact);
+        await _repository.SaveChangesAsync();
+        return ContactOperationResult.Ok(contactId);
+    }
+
     private async Task<ContactMethod?> GetPrimaryContactMethodAsync(Guid contactId, ContactMethodType type)
     {
         List<ContactMethod> methods = await _repository.ListAsync<ContactMethod>(c => c.ContactId == contactId && c.Type == type);

@@ -404,6 +404,13 @@ public class ContactReadService(IRepository repository, IFavoriteService favorit
         return await _repository.IsValidContactAsync(id);
     }
 
+    public async Task<bool> HasRelationshipsAsync(Guid id)
+    {
+        int count = await _repository.CountAsync<Relationship>(r =>
+            (r.EntityId == id || r.RelatedEntityId == id) && r.EntityType == EntityTypes.Person);
+        return count > 0;
+    }
+
     public async Task<List<(Guid Id, string FullName)>> GetContactNamesAsync()
     {
         return await _repository.ListProjectedAsync<Contact, (Guid, string)>(
