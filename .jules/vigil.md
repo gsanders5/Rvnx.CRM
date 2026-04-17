@@ -116,3 +116,7 @@
 ## 2026-04-16 - Added explicit test coverage for DateCalculationService recurrence and leap year boundaries
 **Learning:** Even well-covered calculation utility methods (like `DateCalculationService`) can harbor hidden edge cases such as negative recurrence intervals and explicit leap year boundary handling (clamping Feb 29 dates to valid years). The lack of explicit tests meant refactors to those areas could introduce silent regressions without failing existing tests.
 **Action:** When working on calculation or date-handling services, always proactively identify and test logical edge cases (such as negative intervals, non-standard recurrence values, and leap year conditions) even if basic happy-path coverage exists.
+
+## 2024-04-17 - Added "not found" edge case tests for EntityService
+**Learning:** The `GetEntityNameAsync` and `IsPartialAsync` methods in `EntityService` rely on `FirstOrDefault()` to handle missing entities (where `ListProjectedAsync` returns an empty collection). Because these early-exit or fallback paths (e.g. returning "Unknown Person" or "Unknown Company" and `false` for `IsPartialAsync`) were entirely untested, there was a risk that modifying the LINQ projections could silently break these critical failure fallbacks without any tests failing.
+**Action:** When working with LINQ projections in services, always explicitly test the scenario where the repository query returns an empty collection to ensure that defaults and fallbacks are triggered correctly and regressions aren't introduced.

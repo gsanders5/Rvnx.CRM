@@ -99,6 +99,21 @@ public class EntityServiceTests
     }
 
     [Fact]
+    public async Task GetEntityNameAsyncPersonWhenNotFoundReturnsUnknownPerson()
+    {
+        Guid id = Guid.NewGuid();
+        _repositoryMock.Setup(r => r.ListProjectedAsync(
+                It.IsAny<System.Linq.Expressions.Expression<Func<Contact, bool>>>(),
+                It.IsAny<System.Linq.Expressions.Expression<Func<Contact, string>>>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync([]);
+
+        string result = await _service.GetEntityNameAsync(EntityTypes.Person, id);
+
+        Assert.Equal("Unknown Person", result);
+    }
+
+    [Fact]
     public async Task GetEntityNameAsyncCompanyReturnsCompanyName()
     {
         Guid id = Guid.NewGuid();
@@ -111,6 +126,21 @@ public class EntityServiceTests
         string result = await _service.GetEntityNameAsync(EntityTypes.Company, id);
 
         Assert.Equal("Acme Corp", result);
+    }
+
+    [Fact]
+    public async Task GetEntityNameAsyncCompanyWhenNotFoundReturnsUnknownCompany()
+    {
+        Guid id = Guid.NewGuid();
+        _repositoryMock.Setup(r => r.ListProjectedAsync(
+                It.IsAny<System.Linq.Expressions.Expression<Func<Employer, bool>>>(),
+                It.IsAny<System.Linq.Expressions.Expression<Func<Employer, string>>>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync([]);
+
+        string result = await _service.GetEntityNameAsync(EntityTypes.Company, id);
+
+        Assert.Equal("Unknown Company", result);
     }
 
     [Fact]
@@ -136,6 +166,21 @@ public class EntityServiceTests
         bool result = await _service.IsPartialAsync(EntityTypes.Person, id);
 
         Assert.True(result);
+    }
+
+    [Fact]
+    public async Task IsPartialAsyncPersonWhenNotFoundReturnsFalse()
+    {
+        Guid id = Guid.NewGuid();
+        _repositoryMock.Setup(r => r.ListProjectedAsync(
+                It.IsAny<System.Linq.Expressions.Expression<Func<Contact, bool>>>(),
+                It.IsAny<System.Linq.Expressions.Expression<Func<Contact, bool>>>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync([]);
+
+        bool result = await _service.IsPartialAsync(EntityTypes.Person, id);
+
+        Assert.False(result);
     }
 
     [Fact]
