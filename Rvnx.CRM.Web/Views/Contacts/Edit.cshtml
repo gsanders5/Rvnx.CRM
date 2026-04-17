@@ -128,7 +128,7 @@
                     <div class="d-flex align-items-center mb-2">
                         <img src="@Url.Action("View", "Attachments", new { id = Model.ProfileImageId })" class="rounded me-2" alt="Current Profile" style="width: 50px; height: 50px; object-fit: cover;"/>
                         <button type="submit" asp-action="UnsetPhoto" asp-route-id="@Model.Id" class="crm-btn-danger btn-sm" onclick="return confirm('Are you sure you want to remove the profile photo?');">
-                            <i class="bi bi-x-circle"></i> Unset Photo
+                            <i class="bi bi-x-circle" aria-hidden="true"></i> Unset Photo
                         </button>
                     </div>
                 }
@@ -146,8 +146,8 @@
 
             <div class="d-flex justify-content-between align-items-center mt-4">
                 <div class="d-grid gap-2 d-md-flex">
-                    <button type="submit" class="crm-btn-primary"><i class="bi bi-save"></i> Save</button>
-                    <a asp-action="Details" asp-route-id="@Model.Id" class="crm-btn-tertiary"><i class="bi bi-arrow-left"></i> Back to Contact</a>
+                    <button type="submit" class="crm-btn-primary"><i class="bi bi-save" aria-hidden="true"></i> Save</button>
+                    <a asp-action="Details" asp-route-id="@Model.Id" class="crm-btn-tertiary"><i class="bi bi-arrow-left" aria-hidden="true"></i> Back to Contact</a>
                 </div>
                 <div class="d-flex gap-2">
                     <button type="button" class="crm-btn-secondary"
@@ -158,13 +158,13 @@
                             data-confirm-body="This will convert the contact back to a partial contact. Their data will be preserved but they will no longer appear in the main contacts list. Continue?"
                             data-confirm-btn-label="Convert to Partial"
                             data-confirm-btn-icon="bi-person-dash">
-                        <i class="bi bi-person-dash"></i> Convert to Partial
+                        <i class="bi bi-person-dash" aria-hidden="true"></i> Convert to Partial
                     </button>
                     <button type="button" class="crm-btn-danger"
                             data-confirm-action="@Url.Action("Delete", "Contacts", new { id = Model.Id })"
                             data-confirm-title="Delete Contact"
                             data-confirm-body="Are you sure you want to delete this contact? This cannot be undone.">
-                        <i class="bi bi-trash"></i> Delete
+                        <i class="bi bi-trash" aria-hidden="true"></i> Delete
                     </button>
                 </div>
             </div>
@@ -217,7 +217,7 @@
                                     <option value="@label.Id">@label.Name</option>
                                 }
                             </select>
-                            <button type="submit" class="crm-btn-secondary btn-sm"><i class="bi bi-plus"></i> Add</button>
+                            <button type="submit" class="crm-btn-secondary btn-sm"><i class="bi bi-plus" aria-hidden="true"></i> Add</button>
                         </form>
                     }
                     else if (!Model.AllLabels.Any())
@@ -230,7 +230,7 @@
                     }
 
                     <div class="mt-4 pt-3" style="border-top: 1px solid var(--crm-border-subtle);">
-                        <a asp-controller="Labels" asp-action="Index" class="small text-decoration-none" style="color: var(--crm-brand);"><i class="bi bi-gear me-1"></i>Manage all labels</a>
+                        <a asp-controller="Labels" asp-action="Index" class="small text-decoration-none" style="color: var(--crm-brand);"><i class="bi bi-gear me-1" aria-hidden="true"></i>Manage all labels</a>
                     </div>
                 }
             </div>
