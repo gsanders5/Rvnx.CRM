@@ -371,3 +371,4 @@ FodyWeavers.xsd
 /Rvnx.CRM.ConsoleApp/Properties/launchSettings.json
 /.claude/settings.local.json
 /.playwright-mcp
+.mcp.json

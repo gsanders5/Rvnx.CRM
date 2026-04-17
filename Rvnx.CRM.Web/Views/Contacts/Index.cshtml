@@ -56,7 +56,7 @@
             {
                 <tr>
                     <td data-order="@(item.ProfileImageId.HasValue ? 1 : 0)">
-                        <div class="d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                        <a asp-action="Details" asp-route-id="@item.Id" class="d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
                             @if (item.ProfileImageId.HasValue)
                             {
                                 <img src="@Url.Action("Thumbnail", "Attachments", new { id = item.ProfileImageId, maxWidth = 80, maxHeight = 80 })" class="crm-avatar" width="40" height="40" alt="@item.FullName" loading="lazy" />
@@ -67,7 +67,7 @@
                                     <i class="bi bi-person-fill" aria-hidden="true"></i>
                                 </div>
                             }
-                        </div>
+                        </a>
                     </td>
                     <td data-order="@(item.IsFavorite ? "0" : "1") @item.FullName">
                         <a asp-action="Details" asp-route-id="@item.Id" class="fw-semibold text-decoration-none" style="color: var(--crm-text-primary);">
