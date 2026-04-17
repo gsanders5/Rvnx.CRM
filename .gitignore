@@ -372,3 +372,4 @@ FodyWeavers.xsd
 /.claude/settings.local.json
 /.playwright-mcp
 .mcp.json
+.claude/settings.json
