@@ -57,3 +57,7 @@
 ## 2024-06-08 - [Extract Repeated Claims Enrichment Logic]
 **Learning:** Claims enrichment logic (fetching user details, adding internal app claims) was duplicated exactly across two locations in `Program.cs` (`OnTokenValidated` and the custom auth middleware). This violates DRY and litters the app bootstrapping file with verbose business logic.
 **Action:** When finding repeated logic acting on ASP.NET Core primitives (like `ClaimsIdentity` or `ClaimsPrincipal`) inside `Program.cs` or controllers, extract it to a cleanly separated Extension Method within the `Web` project (e.g., `Rvnx.CRM.Web/Extensions`). This keeps the host configuration clean and focuses the identity logic in one reusable location.
+
+## 2026-04-18 - [Extract Direct Repository Access from Web Security]
+**Learning:** `UserClaimsTransformation` in the Web layer was previously directly querying the database via `IRepository` to map standard subject claims to internal `UserId` and `GroupId` claims. This leaked data access logic into a security component.
+**Action:** When working on claims transformation or security middleware, do not query the database directly. Instead, delegate the claims generation to a dedicated domain service (like `IUserSynchronizationService`) and use shared extension methods (`SyncUserAndEnrichClaimsAsync`) to maintain a single source of truth for identity logic.
