@@ -43,7 +43,7 @@ public class AccountControllerTests
 
         Mock<IUrlHelper> urlHelperMock = new();
         urlHelperMock.Setup(x => x.IsLocalUrl(It.IsAny<string>()))
-            .Returns((string url) => !string.IsNullOrEmpty(url) && url.StartsWith('/'));
+            .Returns(false);
 
         controller.Url = urlHelperMock.Object;
 
@@ -55,14 +55,14 @@ public class AccountControllerTests
     }
 
     [Fact]
-    public void LoginShouldUseReturnUrlWhenValidLocalUrl()
+    public void LoginShouldUseReturnUrlWhenValidLocalUrlInSafelist()
     {
         AccountController controller = new();
         string localUrl = "/Home/Index";
 
         Mock<IUrlHelper> urlHelperMock = new();
         urlHelperMock.Setup(x => x.IsLocalUrl(It.IsAny<string>()))
-            .Returns((string url) => !string.IsNullOrEmpty(url) && url.StartsWith('/'));
+            .Returns(true);
 
         controller.Url = urlHelperMock.Object;
 
@@ -71,5 +71,64 @@ public class AccountControllerTests
         ChallengeResult challengeResult = Assert.IsType<ChallengeResult>(result);
         Assert.Equal(OpenIdConnectDefaults.AuthenticationScheme, challengeResult.AuthenticationSchemes[0]);
         Assert.Equal(localUrl, challengeResult.Properties!.RedirectUri);
+    }
+
+    [Fact]
+    public void LoginShouldDefaultToRootWhenLocalUrlNotInSafelist()
+    {
+        AccountController controller = new();
+        string localUrl = "/UnauthorizedPath/Secret";
+
+        Mock<IUrlHelper> urlHelperMock = new();
+        urlHelperMock.Setup(x => x.IsLocalUrl(It.IsAny<string>()))
+            .Returns(true);
+
+        controller.Url = urlHelperMock.Object;
+
+        IActionResult result = controller.Login(localUrl);
+
+        ChallengeResult challengeResult = Assert.IsType<ChallengeResult>(result);
+        Assert.Equal(OpenIdConnectDefaults.AuthenticationScheme, challengeResult.AuthenticationSchemes[0]);
+        Assert.Equal("/", challengeResult.Properties!.RedirectUri);
+    }
+
+    [Theory]
+    [InlineData("/Contacts")]
+    [InlineData("/Contacts/")]
+    [InlineData("/Contacts/Details/123")]
+    [InlineData("/Contacts?page=1")]
+    public void LoginShouldAllowVariationsOfSafelistedPaths(string localUrl)
+    {
+        AccountController controller = new();
+
+        Mock<IUrlHelper> urlHelperMock = new();
+        urlHelperMock.Setup(x => x.IsLocalUrl(It.IsAny<string>()))
+            .Returns(true);
+
+        controller.Url = urlHelperMock.Object;
+
+        IActionResult result = controller.Login(localUrl);
+
+        ChallengeResult challengeResult = Assert.IsType<ChallengeResult>(result);
+        Assert.Equal(localUrl, challengeResult.Properties!.RedirectUri);
+    }
+
+    [Theory]
+    [InlineData("/Contactsss")]
+    [InlineData("/Contact")]
+    public void LoginShouldRejectPartialMatchesOrExtensionsOfSafelistPrefixes(string localUrl)
+    {
+        AccountController controller = new();
+
+        Mock<IUrlHelper> urlHelperMock = new();
+        urlHelperMock.Setup(x => x.IsLocalUrl(It.IsAny<string>()))
+            .Returns(true);
+
+        controller.Url = urlHelperMock.Object;
+
+        IActionResult result = controller.Login(localUrl);
+
+        ChallengeResult challengeResult = Assert.IsType<ChallengeResult>(result);
+        Assert.Equal("/", challengeResult.Properties!.RedirectUri);
     }
 }
