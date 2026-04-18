@@ -110,16 +110,22 @@ public class PetService(IRepository repository) : IPetService
 
     public async Task<OperationResult> DeleteAsync(Guid id)
     {
-        Pet? pet = await _repository.GetByIdWithIncludesAsync<Pet>(id, nameof(Pet.PetContacts));
-        if (pet != null)
+        if (!await _repository.ExistsAsync<Pet>(id))
         {
-            Guid entityId = pet.PetContacts.Select(pc => pc.ContactId).FirstOrDefault();
-            string entityType = EntityTypes.Person;
-            await _repository.DeleteAsync<Pet>(id);
-            await _repository.SaveChangesAsync();
-            return OperationResult.Ok(entityId, entityType);
+            return OperationResult.Failure("Pet not found.");
         }
-        return OperationResult.Failure("Pet not found.");
+
+        List<Guid> contactIds = await _repository.ListProjectedAsync<PetContact, Guid>(
+            pc => pc.PetId == id,
+            pc => pc.ContactId);
+
+        Guid entityId = contactIds.FirstOrDefault();
+        string entityType = EntityTypes.Person;
+
+        await _repository.DeleteAsync<Pet>(p => p.Id == id);
+        await _repository.SaveChangesAsync();
+
+        return OperationResult.Ok(entityId, entityType);
     }
 
     public async Task<PetFormDto?> GetFormAsync(Guid id)

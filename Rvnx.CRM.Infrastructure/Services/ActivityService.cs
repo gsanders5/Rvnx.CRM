@@ -116,7 +116,7 @@ public class ActivityService(IRepository repository, ISelfContactService selfCon
             ac => ac.ActivityId == id,
             ac => ac.ContactId)).FirstOrDefault();
 
-        await _repository.DeleteAsync<Activity>(id);
+        await _repository.DeleteAsync<Activity>(a => a.Id == id);
         await _repository.SaveChangesAsync();
 
         return OperationResult.Ok(entityId, EntityTypes.Person);
