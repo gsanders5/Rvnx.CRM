@@ -1091,6 +1091,52 @@ a:focus-visible .crm-avatar-placeholder {
   background-color: var(--crm-brand-subtle) !important;
 }
 
+[data-mdb-theme="dark"] table.dataTable > tbody > tr > td.dtr-control::before,
+[data-mdb-theme="dark"] table.dataTable > tbody > tr > th.dtr-control::before {
+  border-left-color: rgba(255, 255, 255, 0.5) !important;
+}
+
+[data-mdb-theme="dark"] table.dataTable > tbody > tr > td.dtr-control.arrow-right::before,
+[data-mdb-theme="dark"] table.dataTable > tbody > tr > th.dtr-control.arrow-right::before {
+  border-right-color: rgba(255, 255, 255, 0.5) !important;
+}
+
+[data-mdb-theme="dark"] table.dataTable > tbody > tr.dtr-expanded > td.dtr-control::before,
+[data-mdb-theme="dark"] table.dataTable > tbody > tr.dtr-expanded > th.dtr-control::before {
+  border-top-color: rgba(255, 255, 255, 0.5) !important;
+  border-left-color: transparent !important;
+  border-right-color: transparent !important;
+}
+
+table.dataTable.dtr-inline.collapsed > tbody > tr > td.dtr-control {
+  position: relative;
+  padding-left: 30px !important;
+}
+
+table.dataTable.dtr-inline.collapsed > tbody > tr > td.dtr-control::before {
+  position: absolute !important;
+  left: 9px;
+  top: 50%;
+  transform: translateY(-50%);
+  margin: 0 !important;
+}
+
+table.dataTable .crm-dtr-child-label,
+table.dataTable .crm-dtr-child-value {
+  border: none;
+}
+
+table.dataTable .crm-dtr-child-label {
+  font-weight: 600;
+  padding-right: 0.75rem;
+  white-space: nowrap;
+  color: var(--crm-text-secondary);
+}
+
+table.dataTable .crm-dtr-child-empty {
+  color: var(--crm-text-tertiary);
+}
+
 .table-responsive {
   overflow: visible !important;
 }
@@ -1100,6 +1146,24 @@ a:focus-visible .crm-avatar-placeholder {
 }
 
 @media screen and (max-width: 767.98px) {
+  .table-responsive {
+    overflow-x: auto !important;
+  }
+
+  div.dt-container div.dt-search {
+    width: 100%;
+    text-align: left;
+  }
+
+  div.dt-container div.dt-search input {
+    width: 100%;
+    margin-left: 0;
+  }
+
+  div.dt-container div.dt-length {
+    text-align: left;
+  }
+
   .dt-buttons.btn-group {
     box-shadow: none !important;
     width: auto !important;
