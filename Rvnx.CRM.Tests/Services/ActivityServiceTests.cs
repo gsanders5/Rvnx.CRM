@@ -199,7 +199,7 @@ public class ActivityServiceTests
         Assert.True(result.Success);
         Assert.Equal(primaryContactId, result.RedirectId);
 
-        _repositoryMock.Verify(r => r.DeleteAsync<Activity>(activityId, It.IsAny<CancellationToken>()), Times.Once);
+        _repositoryMock.Verify(r => r.DeleteAsync(It.IsAny<Expression<Func<Activity, bool>>>(), It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]

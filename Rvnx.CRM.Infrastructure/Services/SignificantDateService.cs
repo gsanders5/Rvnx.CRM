@@ -132,33 +132,43 @@ public class SignificantDateService(IRepository repository) : ISignificantDateSe
 
     public async Task<OperationResult> DeleteReminderOffsetAsync(Guid offsetId)
     {
-        ReminderOffset? offset = await _repository.GetByIdAsync<ReminderOffset>(offsetId);
-        if (offset == null)
+        List<Guid> significantDateIds = await _repository.ListProjectedAsync<ReminderOffset, Guid>(
+            ro => ro.Id == offsetId,
+            ro => ro.SignificantDateId);
+
+        if (significantDateIds.Count == 0)
         {
             return OperationResult.Failure("Reminder offset not found.");
         }
 
-        SignificantDate? importantDate = await _repository.GetByIdAsync<SignificantDate>(offset.SignificantDateId);
-        if (importantDate == null)
+        Guid significantDateId = significantDateIds.FirstOrDefault();
+        List<Guid?> contactIds = await _repository.ListProjectedAsync<SignificantDate, Guid?>(
+            sd => sd.Id == significantDateId,
+            sd => sd.ContactId);
+
+        if (contactIds.Count == 0)
         {
             return OperationResult.Failure("Significant date not found.");
         }
 
-        await _repository.DeleteAsync<ReminderOffset>(offsetId);
+        await _repository.DeleteAsync<ReminderOffset>(ro => ro.Id == offsetId);
         await _repository.SaveChangesAsync();
 
-        return OperationResult.Ok(importantDate.ContactId ?? Guid.Empty, EntityTypes.Person);
+        return OperationResult.Ok(contactIds.FirstOrDefault() ?? Guid.Empty, EntityTypes.Person);
     }
 
     public async Task<OperationResult> DeleteAsync(Guid id)
     {
-        SignificantDate? importantDate = await _repository.GetByIdAsync<SignificantDate>(id);
-        if (importantDate != null)
+        List<Guid?> contactIds = await _repository.ListProjectedAsync<SignificantDate, Guid?>(
+            sd => sd.Id == id,
+            sd => sd.ContactId);
+
+        if (contactIds.Count > 0)
         {
-            Guid entityId = importantDate.ContactId ?? Guid.Empty;
+            Guid entityId = contactIds.FirstOrDefault() ?? Guid.Empty;
             string entityType = EntityTypes.Person;
 
-            await _repository.DeleteAsync<SignificantDate>(id);
+            await _repository.DeleteAsync<SignificantDate>(sd => sd.Id == id);
             await _repository.SaveChangesAsync();
 
             return OperationResult.Ok(entityId, entityType);
