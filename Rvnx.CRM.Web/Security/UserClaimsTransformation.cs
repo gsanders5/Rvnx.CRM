@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Authentication;
 using Rvnx.CRM.Core.Constants;
 using Rvnx.CRM.Core.Interfaces;
-using Rvnx.CRM.Core.Models;
+using Rvnx.CRM.Web.Extensions;
 using System.Security.Claims;
 
 namespace Rvnx.CRM.Web.Security;
@@ -37,28 +37,10 @@ public class UserClaimsTransformation(IServiceProvider serviceProvider, IConfigu
             return principal;
         }
 
-        string? subjectId = principal.FindFirst(ClaimTypes.NameIdentifier)?.Value
-                           ?? principal.FindFirst("sub")?.Value;
-
-        if (string.IsNullOrEmpty(subjectId))
-        {
-            return principal;
-        }
-
         using IServiceScope scope = _serviceProvider.CreateScope();
-        IRepository repo = scope.ServiceProvider.GetRequiredService<IRepository>();
+        IUserSynchronizationService userSyncService = scope.ServiceProvider.GetRequiredService<IUserSynchronizationService>();
 
-        User? user = (await repo.ListAsNoTrackingAsync<User>(u => u.SubjectId == subjectId)).FirstOrDefault();
-
-        if (user != null)
-        {
-            identity.AddClaim(new Claim(ClaimConstants.InternalUserIdClaimType, user.Id.ToString()));
-
-            if (user.GroupId.HasValue)
-            {
-                identity.AddClaim(new Claim(ClaimConstants.InternalGroupIdClaimType, user.GroupId.Value.ToString()));
-            }
-        }
+        await identity.SyncUserAndEnrichClaimsAsync(userSyncService);
 
         identity.AddClaim(new Claim(TransformationProcessedKey, "true"));
         return principal;
