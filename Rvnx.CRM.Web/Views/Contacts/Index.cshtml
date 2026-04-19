@@ -32,7 +32,6 @@
 
 @if (Model.Contacts.Any())
 {
-    <div class="table-responsive">
         <table id="contacts-table" class="table table-striped table-hover align-middle" style="width: 100%; visibility: hidden;">
             <thead>
             <tr>
@@ -137,7 +136,6 @@
             }
             </tbody>
         </table>
-    </div>
 }
 else
 {
@@ -199,24 +197,44 @@ else
                 searching: true,
                 searchDelay: 300,
                 autoWidth: false,
-                responsive: true,
+                responsive: {
+                    details: {
+                        renderer: function (api, rowIdx, columns) {
+                            var rows = $.map(columns, function (col) {
+                                if (!col.hidden) return '';
+                                if (col.columnIndex === 0) return '';
+                                var isEmpty = !String(col.data ?? '').replace(/<[^>]*>/g, '').trim();
+                                var value = isEmpty
+                                    ? '<span class="crm-dtr-child-empty">—</span>'
+                                    : col.data;
+                                return '<tr data-dt-row="' + col.rowIndex + '" data-dt-column="' + col.columnIndex + '">' +
+                                       '<td class="crm-dtr-child-label">' + col.title + '</td>' +
+                                       '<td class="crm-dtr-child-value">' + value + '</td>' +
+                                       '</tr>';
+                            }).join('');
+                            return rows ? $('<table class="mb-0" style="width: auto;"/>').append(rows) : false;
+                        }
+                    }
+                },
                 layout: {
-                    topStart: 'pageLength',
+                    topStart: null,
                     topEnd: {
                         search: { placeholder: 'Search contacts...' },
                         buttons: [
                             {
                                 extend: 'colvis',
                                 text: '<i class="bi bi-layout-three-columns" aria-hidden="true"></i>',
-                                titleAttr: 'Choose columns'
+                                titleAttr: 'Choose columns',
+                                className: 'd-none d-md-inline-flex'
                             }
                         ]
-                    }
+                    },
+                    bottomStart: 'pageLength',
+                    bottomEnd: 'paging'
                 },
                 columnDefs: [
                     { orderable: false, targets: 'no-sort' },
-                    { visible: false, targets: 'default-hidden' },
-                    { searchable: false, targets: 'default-hidden' },
+                    { visible: false, searchable: false, targets: 'default-hidden' },
                     { width: '60px', targets: 'col-photo' },
                     { width: '155px', targets: 'col-actions' },
                     { responsivePriority: 1, targets: 1 },
@@ -226,7 +244,8 @@ else
                     { responsivePriority: 5, targets: 3 }
                 ],
                 language: {
-                    search: ''
+                    search: '',
+                    lengthMenu: '_MENU_ per page'
                 },
                 initComplete: function () {
                     $('#contacts-table').css('visibility', 'visible');
@@ -236,6 +255,14 @@ else
             table.on('column-visibility', function (e, settings, colIdx, state) {
                 settings.aoColumns[colIdx].bSearchable = state;
                 table.rows().invalidate('data').draw(false);
+            });
+
+            var resizeTimer;
+            $(window).on('resize', function () {
+                clearTimeout(resizeTimer);
+                resizeTimer = setTimeout(function () {
+                    table.responsive.recalc();
+                }, 150);
             });
         });
 
