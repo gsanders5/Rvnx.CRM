@@ -2,7 +2,6 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.EntityFrameworkCore;
 using Rvnx.CRM.Core;
-using Rvnx.CRM.Core.Constants;
 using Rvnx.CRM.Core.Interfaces;
 using Rvnx.CRM.Infrastructure;
 using Rvnx.CRM.Infrastructure.Data;
@@ -61,12 +60,15 @@ public class Program
                     options.LoginPath = "/Account/Login";
                     options.LogoutPath = "/Account/Logout";
 
-                    // 🛡️ Sentinel: Enforce secure cookie settings to prevent XSS and ensure transmission over HTTPS
+                    // Enforce secure cookie settings to prevent XSS and ensure transmission over HTTPS
                     options.Cookie.HttpOnly = true;
                     options.Cookie.SecurePolicy = builder.Environment.IsDevelopment()
                         ? CookieSecurePolicy.SameAsRequest
                         : CookieSecurePolicy.Always;
-                    options.Cookie.SameSite = SameSiteMode.Strict;
+                    // Must be Lax, not Strict: the OIDC callback from the IdP is a cross-site redirect
+                    // chain, and Strict would withhold the freshly-set auth cookie on the final hop,
+                    // causing an infinite login loop whenever the IdP is on a different registrable domain.
+                    options.Cookie.SameSite = SameSiteMode.Lax;
                 })
                 .AddOpenIdConnect(options =>
                 {
