@@ -10,6 +10,7 @@ function initializeNetworkGraph(nodes, links) {
   svg.setAttribute("width", "100%");
   svg.setAttribute("height", "100%");
   svg.setAttribute("viewBox", `0 0 ${currentWidth} ${currentHeight}`);
+  svg.style.touchAction = "none";
   container.appendChild(svg);
 
   const resizeObserver = new ResizeObserver(() => {
@@ -69,11 +70,15 @@ function initializeNetworkGraph(nodes, links) {
   }
 
   let isPanning = false;
+  let panPointerId = null;
   let panStartX = 0;
   let panStartY = 0;
   let currentPanX = 0;
   let currentPanY = 0;
   let currentScale = 1;
+
+  const activePointers = new Map();
+  let pinchState = null;
 
   const cameraLayer = document.createElementNS(svgNS, "g");
   svg.appendChild(cameraLayer);
@@ -97,36 +102,133 @@ function initializeNetworkGraph(nodes, links) {
   };
 
   svg.style.cursor = "grab";
-  svg.addEventListener("mousedown", (e) => {
-    if (e.target === svg) {
-      isPanning = true;
-      svg.style.cursor = "grabbing";
-      panStartX = e.clientX - currentPanX;
-      panStartY = e.clientY - currentPanY;
-    }
+
+  const clampScale = (s) => Math.max(0.1, Math.min(5, s));
+
+  const startPinch = () => {
+    const ids = [...activePointers.keys()];
+    if (ids.length < 2) return;
+    const [id1, id2] = ids;
+    const p1 = activePointers.get(id1);
+    const p2 = activePointers.get(id2);
+    const rect = svg.getBoundingClientRect();
+    const centerX = (p1.x + p2.x) / 2 - rect.left;
+    const centerY = (p1.y + p2.y) / 2 - rect.top;
+    const dist = Math.hypot(p1.x - p2.x, p1.y - p2.y) || 1;
+    pinchState = {
+      id1,
+      id2,
+      initialDist: dist,
+      initialScale: currentScale,
+      worldX: (centerX - currentPanX) / currentScale,
+      worldY: (centerY - currentPanY) / currentScale,
+    };
+  };
+
+  const updatePinch = () => {
+    if (!pinchState) return;
+    const p1 = activePointers.get(pinchState.id1);
+    const p2 = activePointers.get(pinchState.id2);
+    if (!p1 || !p2) return;
+    const currentDist = Math.hypot(p1.x - p2.x, p1.y - p2.y);
+    const newScale = clampScale(
+      pinchState.initialScale * (currentDist / pinchState.initialDist),
+    );
+    const rect = svg.getBoundingClientRect();
+    const centerX = (p1.x + p2.x) / 2 - rect.left;
+    const centerY = (p1.y + p2.y) / 2 - rect.top;
+
+    currentPanX = centerX - pinchState.worldX * newScale;
+    currentPanY = centerY - pinchState.worldY * newScale;
+    currentScale = newScale;
+    updateTransform();
+  };
+
+  // Capture phase: always track the pointer and detect pinch before any
+  // child (node) handlers run in the bubble phase.
+  svg.addEventListener(
+    "pointerdown",
+    (e) => {
+      activePointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+
+      if (activePointers.size >= 2) {
+        if (isPanning) {
+          isPanning = false;
+          panPointerId = null;
+          svg.style.cursor = "grab";
+        }
+        if (draggedNode) {
+          // Prevent a navigation click when aborting a drag for pinch
+          draggedNode.wasDragged = true;
+          draggedNode = null;
+          dragPointerId = null;
+        }
+        startPinch();
+      }
+    },
+    true,
+  );
+
+  svg.addEventListener("pointerdown", (e) => {
+    if (pinchState) return;
+    if (draggedNode) return;
+    if (e.target !== svg) return;
+
+    isPanning = true;
+    panPointerId = e.pointerId;
+    svg.style.cursor = "grabbing";
+    panStartX = e.clientX - currentPanX;
+    panStartY = e.clientY - currentPanY;
   });
 
-  document.addEventListener("mousemove", (e) => {
-    if (isPanning) {
+  document.addEventListener("pointermove", (e) => {
+    if (!activePointers.has(e.pointerId)) return;
+    activePointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+
+    if (pinchState) {
+      updatePinch();
+      return;
+    }
+
+    if (isPanning && e.pointerId === panPointerId) {
       currentPanX = e.clientX - panStartX;
       currentPanY = e.clientY - panStartY;
       updateTransform();
+      return;
+    }
+
+    if (draggedNode && e.pointerId === dragPointerId) {
+      drag(e);
     }
   });
 
-  document.addEventListener("mouseup", () => {
-    if (isPanning) {
+  const handlePointerEnd = (e) => {
+    if (!activePointers.delete(e.pointerId)) return;
+
+    if (pinchState && activePointers.size < 2) {
+      pinchState = null;
+    }
+
+    if (isPanning && e.pointerId === panPointerId) {
       isPanning = false;
+      panPointerId = null;
       svg.style.cursor = "grab";
     }
-  });
+
+    if (draggedNode && e.pointerId === dragPointerId) {
+      endDrag();
+    }
+  };
+
+  document.addEventListener("pointerup", handlePointerEnd);
+  document.addEventListener("pointercancel", handlePointerEnd);
 
   svg.addEventListener("wheel", (e) => {
     e.preventDefault();
     const zoomIntensity = 0.1;
     const direction = e.deltaY > 0 ? -1 : 1;
     const factor = 1 + direction * zoomIntensity;
-    const newScale = Math.max(0.1, Math.min(5, currentScale * factor));
+    const newScale = clampScale(currentScale * factor);
     const scaleRatio = newScale / currentScale;
 
     const rect = svg.getBoundingClientRect();
@@ -145,7 +247,7 @@ function initializeNetworkGraph(nodes, links) {
   const resetZoomBtn = document.getElementById("reset-zoom-btn");
 
   const handleButtonZoom = (factor) => {
-    const newScale = Math.max(0.1, Math.min(5, currentScale * factor));
+    const newScale = clampScale(currentScale * factor);
     const scaleRatio = newScale / currentScale;
 
     const rect = svg.getBoundingClientRect();
@@ -271,7 +373,7 @@ function initializeNetworkGraph(nodes, links) {
       });
     });
 
-    g.addEventListener("mousedown", (e) => startDrag(e, node));
+    g.addEventListener("pointerdown", (e) => startDrag(e, node));
     g.addEventListener("click", (e) => {
       if (!node.wasDragged) {
         window.location.href = `/Contacts/Details/${node.id}`;
@@ -289,11 +391,17 @@ function initializeNetworkGraph(nodes, links) {
   });
 
   let draggedNode = null;
+  let dragPointerId = null;
   let simulationAlpha = 1.0;
 
   function startDrag(e, node) {
+    // The svg capture-phase pointerdown already tracked this pointer.
+    // If a pinch has started or another pointer is already active, don't
+    // start a node drag.
+    if (pinchState) return;
+    if (activePointers.size >= 2) return;
+
     e.preventDefault();
-    e.stopPropagation();
 
     // Wake up physics slightly when interacting so the network responds naturally
     if (simulationAlpha < 0.1) {
@@ -301,9 +409,8 @@ function initializeNetworkGraph(nodes, links) {
     }
 
     draggedNode = node;
+    dragPointerId = e.pointerId;
     node.wasDragged = false;
-    document.addEventListener("mousemove", drag);
-    document.addEventListener("mouseup", endDrag);
   }
 
   function drag(e) {
@@ -320,8 +427,7 @@ function initializeNetworkGraph(nodes, links) {
 
   function endDrag() {
     draggedNode = null;
-    document.removeEventListener("mousemove", drag);
-    document.removeEventListener("mouseup", endDrag);
+    dragPointerId = null;
   }
 
   function tick() {
