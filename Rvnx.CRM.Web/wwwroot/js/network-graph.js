@@ -99,7 +99,6 @@ function initializeNetworkGraph(nodes, links) {
   svg.style.cursor = "grab";
   svg.addEventListener("mousedown", (e) => {
     if (e.target === svg) {
-      // Ensure we didn't click a node
       isPanning = true;
       svg.style.cursor = "grabbing";
       panStartX = e.clientX - currentPanX;
@@ -198,7 +197,6 @@ function initializeNetworkGraph(nodes, links) {
     const g = document.createElementNS(svgNS, "g");
     g.style.cursor = "grab";
 
-    // Fallback circle
     const circle = document.createElementNS(svgNS, "circle");
     circle.setAttribute("r", "20");
     circle.setAttribute("fill", getGenderColor(node.gender));
@@ -313,7 +311,6 @@ function initializeNetworkGraph(nodes, links) {
     draggedNode.wasDragged = true;
     const rect = svg.getBoundingClientRect();
 
-    // Subtract current pan offset and scale to convert screen space to SVG space
     draggedNode.x = (e.clientX - rect.left - currentPanX) / currentScale;
     draggedNode.y = (e.clientY - rect.top - currentPanY) / currentScale;
 

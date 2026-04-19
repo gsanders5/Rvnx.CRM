@@ -22,7 +22,6 @@ public class MergeController(
             return NotFound("Primary contact not found.");
         }
 
-        // We need a list of other contacts to select from
         List<Core.DTOs.Contact.ContactDto> allContacts = await _contactReadService.GetIndexDataAsync(false);
         List<Core.DTOs.Contact.ContactDto> availableContacts = allContacts.Where(c => c.Id != primaryId).ToList();
 

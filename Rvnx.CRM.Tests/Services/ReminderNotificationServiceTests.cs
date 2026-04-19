@@ -82,7 +82,6 @@ public class ReminderNotificationServiceTests
 
         DateOnly today = new(2025, 6, 1);
 
-        // Contact has no GroupId
         Contact contact = new() { FirstName = "Jane", LastName = "Doe" };
         context.Contacts!.Add(contact);
 
@@ -122,7 +121,6 @@ public class ReminderNotificationServiceTests
 
         Guid groupId = Guid.NewGuid();
 
-        // Contact belongs to a group, but no users are in that group
         Contact contact = new() { FirstName = "John", LastName = "Smith", GroupId = groupId };
         context.Contacts!.Add(contact);
 

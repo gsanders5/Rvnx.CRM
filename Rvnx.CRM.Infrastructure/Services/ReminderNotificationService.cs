@@ -56,7 +56,6 @@ public class ReminderNotificationService(
                 continue;
             }
 
-            // Resolve recipient emails: all users in the same group as the contact.
             Guid? contactGroupId = offset.SignificantDate?.Contact?.GroupId;
             List<string> recipientEmails = [];
 

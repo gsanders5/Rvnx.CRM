@@ -27,17 +27,14 @@ public class ActivityServiceTests
     [Fact]
     public async Task GetFormForCreateAsyncWithValidContactIncludesSelfContactId()
     {
-        // Arrange
         Guid entityId = Guid.NewGuid();
         Guid selfContactId = Guid.NewGuid();
 
         _repositoryMock.Setup(r => r.CountAsync(It.IsAny<Expression<Func<Core.Models.Contact.Contact, bool>>>(), It.IsAny<CancellationToken>())).ReturnsAsync(1);
         _selfContactServiceMock.Setup(s => s.GetSelfContactIdAsync()).ReturnsAsync(selfContactId);
 
-        // Act
         ActivityFormDto? result = await _service.GetFormForCreateAsync(entityId);
 
-        // Assert
         Assert.NotNull(result);
         Assert.Equal(entityId, result.EntityId);
         Assert.Contains(entityId, result.ContactIds);
@@ -48,16 +45,13 @@ public class ActivityServiceTests
     [Fact]
     public async Task GetFormForCreateAsyncWhenSelfContactIsEntityDoesNotDuplicateId()
     {
-        // Arrange
         Guid entityId = Guid.NewGuid();
 
         _repositoryMock.Setup(r => r.CountAsync(It.IsAny<Expression<Func<Core.Models.Contact.Contact, bool>>>(), It.IsAny<CancellationToken>())).ReturnsAsync(1);
         _selfContactServiceMock.Setup(s => s.GetSelfContactIdAsync()).ReturnsAsync(entityId);
 
-        // Act
         ActivityFormDto? result = await _service.GetFormForCreateAsync(entityId);
 
-        // Assert
         Assert.NotNull(result);
         Assert.Single(result.ContactIds);
         Assert.Equal(entityId, result.ContactIds[0]);
@@ -66,7 +60,6 @@ public class ActivityServiceTests
     [Fact]
     public async Task CreateAsyncWithoutEntityIdInContactIdsAutomaticallyAddsEntityId()
     {
-        // Arrange
         Guid entityId = Guid.NewGuid();
         Guid otherContactId = Guid.NewGuid();
 
@@ -84,10 +77,8 @@ public class ActivityServiceTests
             .Callback<IEnumerable<ActivityContact>, CancellationToken>((acs, _) => addedActivityContacts = acs.ToList())
             .ReturnsAsync(new List<ActivityContact>());
 
-        // Act
         OperationResult result = await _service.CreateAsync(dto);
 
-        // Assert
         Assert.True(result.Success);
         Assert.NotNull(addedActivityContacts);
         Assert.Equal(2, addedActivityContacts.Count);
@@ -98,16 +89,13 @@ public class ActivityServiceTests
     [Fact]
     public async Task CreateAsyncWithInvalidContactReturnsFailure()
     {
-        // Arrange
         Guid entityId = Guid.NewGuid();
         ActivityFormDto dto = new() { EntityId = entityId };
 
         _repositoryMock.Setup(r => r.CountAsync(It.IsAny<Expression<Func<Core.Models.Contact.Contact, bool>>>(), It.IsAny<CancellationToken>())).ReturnsAsync(0);
 
-        // Act
         OperationResult result = await _service.CreateAsync(dto);
 
-        // Assert
         Assert.False(result.Success);
         Assert.Equal("Contact not found.", result.ErrorMessage);
     }
@@ -115,7 +103,6 @@ public class ActivityServiceTests
     [Fact]
     public async Task UpdateAsyncWhenContactRemovedDeletesActivityContact()
     {
-        // Arrange
         Guid activityId = Guid.NewGuid();
         Guid entityId = Guid.NewGuid();
         Guid keepContactId = Guid.NewGuid();
@@ -144,10 +131,8 @@ public class ActivityServiceTests
             .Callback<IEnumerable<ActivityContact>, CancellationToken>((acs, _) => removedActivityContacts = acs.ToList())
             .Returns(Task.CompletedTask);
 
-        // Act
         OperationResult result = await _service.UpdateAsync(activityId, dto);
 
-        // Assert
         Assert.True(result.Success);
         Assert.NotNull(removedActivityContacts);
         Assert.Single(removedActivityContacts);
@@ -157,7 +142,6 @@ public class ActivityServiceTests
     [Fact]
     public async Task UpdateAsyncWithEntityConcurrencyExceptionAndDeletedEntityReturnsFailure()
     {
-        // Arrange
         Guid activityId = Guid.NewGuid();
         ActivityFormDto dto = new() { EntityId = Guid.NewGuid() };
 
@@ -169,10 +153,8 @@ public class ActivityServiceTests
 
         _repositoryMock.Setup(r => r.ExistsAsync<Activity>(activityId, It.IsAny<CancellationToken>())).ReturnsAsync(false);
 
-        // Act
         OperationResult result = await _service.UpdateAsync(activityId, dto);
 
-        // Assert
         Assert.False(result.Success);
         Assert.Equal("Activity not found.", result.ErrorMessage);
     }
@@ -180,7 +162,6 @@ public class ActivityServiceTests
     [Fact]
     public async Task DeleteAsyncWhenActivityExistsReturnsEntityIdOfFirstContact()
     {
-        // Arrange
         Guid activityId = Guid.NewGuid();
         Guid primaryContactId = Guid.NewGuid();
 
@@ -192,10 +173,8 @@ public class ActivityServiceTests
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync([primaryContactId]);
 
-        // Act
         OperationResult result = await _service.DeleteAsync(activityId);
 
-        // Assert
         Assert.True(result.Success);
         Assert.Equal(primaryContactId, result.RedirectId);
 

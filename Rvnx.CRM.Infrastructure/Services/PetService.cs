@@ -29,7 +29,6 @@ public class PetService(IRepository repository) : IPetService
             return OperationResult.Failure("Contact not found.");
         }
 
-        // Ensure EntityId is always included in ContactIds
         List<Guid> contactIds = dto.ContactIds.Count > 0 ? dto.ContactIds : [dto.EntityId];
         if (!contactIds.Contains(dto.EntityId))
         {
@@ -64,7 +63,6 @@ public class PetService(IRepository repository) : IPetService
             existingPet.UpdateEntity(dto);
             await _repository.UpdateAsync(existingPet);
 
-            // Sync PetContact records
             List<Guid> contactIds = dto.ContactIds.Count > 0 ? dto.ContactIds : [dto.EntityId];
             if (!contactIds.Contains(dto.EntityId))
             {
@@ -74,7 +72,6 @@ public class PetService(IRepository repository) : IPetService
             HashSet<Guid> desiredContactIds = [.. contactIds];
             HashSet<Guid> existingContactIds = [.. existingPet.PetContacts.Select(pc => pc.ContactId)];
 
-            // Remove PetContacts no longer needed
             List<PetContact> toRemove = existingPet.PetContacts
                 .Where(pc => !desiredContactIds.Contains(pc.ContactId))
                 .ToList();
@@ -83,7 +80,6 @@ public class PetService(IRepository repository) : IPetService
                 await _repository.DeleteRangeAsync(toRemove);
             }
 
-            // Add new PetContacts
             List<Guid> toAdd = contactIds.Where(cid => !existingContactIds.Contains(cid)).ToList();
             if (toAdd.Count > 0)
             {
