@@ -639,4 +639,104 @@ public class ContactReadServiceTests
                 It.IsAny<string[]>()), Times.Never);
         }
     }
+
+    public class ContactReadServiceGetContactNamesTests
+    {
+        private readonly Mock<IRepository> _repositoryMock;
+        private readonly Mock<IFavoriteService> _favoriteServiceMock;
+        private readonly ContactReadService _service;
+
+        public ContactReadServiceGetContactNamesTests()
+        {
+            _repositoryMock = new Mock<IRepository>();
+            _favoriteServiceMock = new Mock<IFavoriteService>();
+            _favoriteServiceMock.Setup(f => f.GetFavoriteContactIdsAsync()).ReturnsAsync([]);
+            _service = new ContactReadService(_repositoryMock.Object, _favoriteServiceMock.Object);
+        }
+
+        [Fact]
+        public async Task GetContactNamesAsyncEvaluatesProjectionCorrectly()
+        {
+            // Arrange
+            Guid id1 = Guid.NewGuid();
+            Guid id2 = Guid.NewGuid();
+
+            List<Contact> testContacts =
+            [
+                new Contact { Id = id1, FirstName = "John", LastName = "Doe", IsPartial = false, IsHidden = false },
+                new Contact { Id = id2, FirstName = "Jane", LastName = "Smith", IsPartial = true, IsHidden = false }
+            ];
+
+            Expression<Func<Contact, (Guid, string)>>? capturedProjection = null;
+            Expression<Func<Contact, bool>>? capturedFilter = null;
+
+            _repositoryMock.Setup(r => r.ListProjectedAsync(
+                It.IsAny<Expression<Func<Contact, bool>>>(),
+                It.IsAny<Expression<Func<Contact, (Guid, string)>>>(),
+                It.IsAny<CancellationToken>()))
+                .Callback<Expression<Func<Contact, bool>>, Expression<Func<Contact, (Guid, string)>>, CancellationToken>(
+                    (filter, projection, ct) =>
+                    {
+                        capturedFilter = filter;
+                        capturedProjection = projection;
+                    })
+                .ReturnsAsync(new List<(Guid, string)>()); // Return value doesn't matter, we evaluate the expression
+
+            // Act
+            await _service.GetContactNamesAsync();
+
+            // Assert
+            Assert.NotNull(capturedProjection);
+            Assert.NotNull(capturedFilter);
+
+            var filterFunc = capturedFilter.Compile();
+            var projectionFunc = capturedProjection.Compile();
+
+            // Validate the filter works
+            Assert.True(filterFunc(testContacts[0]));
+            Assert.True(filterFunc(testContacts[1]));
+            Assert.False(filterFunc(new Contact { IsHidden = true }));
+
+            // Validate the projection logic on real in-memory objects
+            var projectedFull = projectionFunc(testContacts[0]);
+            Assert.Equal(id1, projectedFull.Item1);
+            Assert.Equal("John Doe", projectedFull.Item2);
+
+            var projectedPartial = projectionFunc(testContacts[1]);
+            Assert.Equal(id2, projectedPartial.Item1);
+            Assert.Equal("Jane Smith (partial contact)", projectedPartial.Item2);
+        }
+
+        [Fact]
+        public async Task HasRelationshipsAsyncEvaluatesFilterCorrectly()
+        {
+            // Arrange
+            Guid queryId = Guid.NewGuid();
+            Guid otherId = Guid.NewGuid();
+
+            Expression<Func<Relationship, bool>>? capturedFilter = null;
+
+            _repositoryMock.Setup(r => r.CountAsync<Relationship>(It.IsAny<Expression<Func<Relationship, bool>>>(), It.IsAny<CancellationToken>()))
+                .Callback<Expression<Func<Relationship, bool>>, CancellationToken>(
+                    (filter, ct) => capturedFilter = filter)
+                .ReturnsAsync(0);
+
+            // Act
+            await _service.HasRelationshipsAsync(queryId);
+
+            // Assert
+            Assert.NotNull(capturedFilter);
+            var filterFunc = capturedFilter.Compile();
+
+            // Should match: entity is queryId and type is person
+            Assert.True(filterFunc(new Relationship { EntityId = queryId, RelatedEntityId = otherId, EntityType = EntityTypes.Person }));
+            // Should match: related entity is queryId and type is person
+            Assert.True(filterFunc(new Relationship { EntityId = otherId, RelatedEntityId = queryId, EntityType = EntityTypes.Person }));
+
+            // Should not match: neither ID matches
+            Assert.False(filterFunc(new Relationship { EntityId = Guid.NewGuid(), RelatedEntityId = otherId, EntityType = EntityTypes.Person }));
+            // Should not match: wrong entity type
+            Assert.False(filterFunc(new Relationship { EntityId = queryId, RelatedEntityId = otherId, EntityType = EntityTypes.Company }));
+        }
+    }
 }
