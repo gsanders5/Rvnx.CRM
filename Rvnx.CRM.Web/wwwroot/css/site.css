@@ -1100,6 +1100,12 @@ a:focus-visible .crm-avatar-placeholder {
 }
 
 @media screen and (max-width: 767.98px) {
+  .table-responsive {
+    overflow-x: auto !important;
+  }
+}
+
+@media screen and (max-width: 767.98px) {
   .dt-buttons.btn-group {
     box-shadow: none !important;
     width: auto !important;

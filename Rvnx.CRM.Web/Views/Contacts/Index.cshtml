@@ -199,6 +199,7 @@ else
                 searching: true,
                 searchDelay: 300,
                 autoWidth: false,
+                responsive: true,
                 layout: {
                     topStart: 'pageLength',
                     topEnd: {
@@ -217,7 +218,12 @@ else
                     { visible: false, targets: 'default-hidden' },
                     { searchable: false, targets: 'default-hidden' },
                     { width: '60px', targets: 'col-photo' },
-                    { width: '155px', targets: 'col-actions' }
+                    { width: '155px', targets: 'col-actions' },
+                    { responsivePriority: 1, targets: 1 },
+                    { responsivePriority: 2, targets: 12 },
+                    { responsivePriority: 3, targets: 0 },
+                    { responsivePriority: 4, targets: 2 },
+                    { responsivePriority: 5, targets: 3 }
                 ],
                 language: {
                     search: ''
