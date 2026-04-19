@@ -141,7 +141,6 @@ public class DebugDataService(IRepository repository) : IDebugDataService
             List<Relationship> existing = await _repository.ListAsNoTrackingAsync<Relationship>(r =>
                 r.EntityId == c1.Id && r.RelatedEntityId == c2.Id && r.RelationshipTypeId == type.Id);
 
-            // Also check the ones we are about to add
             if (existing.Count > 0 || relationshipsToAdd.Any(r => r.EntityId == c1.Id && r.RelatedEntityId == c2.Id && r.RelationshipTypeId == type.Id))
             {
                 continue;

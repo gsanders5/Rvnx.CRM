@@ -108,7 +108,6 @@ public class SignificantDateServiceTests : IDisposable
     [Fact]
     public async Task GetCalendarEventsAsyncWhenNoActiveDatesReturnsEmptyList()
     {
-        // Arrange
         var contactId = Guid.NewGuid();
         _context.Contacts!.Add(new Contact { Id = contactId, FirstName = "John", LastName = "Doe" });
 
@@ -124,17 +123,14 @@ public class SignificantDateServiceTests : IDisposable
 
         await _context.SaveChangesAsync();
 
-        // Act
         var events = await _service.GetCalendarEventsAsync();
 
-        // Assert
         Assert.Empty(events);
     }
 
     [Fact]
     public async Task GetCalendarEventsAsyncIncludesCurrentYearOccurrenceWhenApplicable()
     {
-        // Arrange
         var contactId = Guid.NewGuid();
         _context.Contacts!.Add(new Contact { Id = contactId, FirstName = "Alice", LastName = "Wonderland" });
 
@@ -153,10 +149,8 @@ public class SignificantDateServiceTests : IDisposable
 
         await _context.SaveChangesAsync();
 
-        // Act
         var events = await _service.GetCalendarEventsAsync();
 
-        // Assert
         // We expect two events: the next occurrence (next year) and the current year's occurrence
         Assert.Equal(2, events.Count);
         Assert.All(events, e => Assert.Equal("Alice's Annual Meeting", e.Title));

@@ -68,7 +68,6 @@ public class MergeService(CRMDbContext context, IRepository repository) : IMerge
             }
             else
             {
-                // Keep secondary's as ProfileImage and just move them
                 foreach (Attachment photo in secondaryProfilePhotos)
                 {
                     photo.ContactId = primaryId;
@@ -161,7 +160,6 @@ public class MergeService(CRMDbContext context, IRepository repository) : IMerge
                 }
             }
 
-            // Also handle relationships where secondary is the RelatedEntityId
             List<Relationship> relatedToSecondary = await _repository.ListAsync<Relationship>(r => r.RelatedEntityId == secondaryId);
 
             // Pre-fetch all relationships pointing to primary to avoid N+1 queries
@@ -181,7 +179,6 @@ public class MergeService(CRMDbContext context, IRepository repository) : IMerge
                 }
                 else
                 {
-                    // Check if rel.EntityId is already related to Primary with the same RelationshipTypeId
                     if (existingInverseRels.Add((rel.EntityId, rel.RelationshipTypeId)))
                     {
                         rel.RelatedEntityId = primaryId;
@@ -216,7 +213,6 @@ public class MergeService(CRMDbContext context, IRepository repository) : IMerge
             {
                 if (existingPetNames.Add(pc.Pet.Name.ToLowerInvariant()))
                 {
-                    // Unique pet — link to primary contact
                     if (!primaryPetIds.Contains(pc.PetId))
                     {
                         await _repository.AddAsync(new PetContact
@@ -228,7 +224,6 @@ public class MergeService(CRMDbContext context, IRepository repository) : IMerge
                 }
                 else
                 {
-                    // Duplicate pet name — mark for cleanup
                     orphanPetsToDelete.Add(pc.Pet);
                 }
                 petContactsToDelete.Add(pc);

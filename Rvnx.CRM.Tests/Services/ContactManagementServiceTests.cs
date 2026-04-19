@@ -269,7 +269,6 @@ public class ContactManagementServiceTests
         private readonly Mock<IFileValidationService> _fileValidationServiceMock;
         private readonly ContactManagementService _service;
 
-        // Counters for calls
         private int _relationshipListCalls;
         private int _contactListCalls;
 

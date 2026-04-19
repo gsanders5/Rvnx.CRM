@@ -11,7 +11,6 @@ public partial class PetMultipleOwners : Migration
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Performance", "CA1861:Avoid constant arrays as arguments", Justification = "EF Core Migrations generated code creates arrays for columns")]
     protected override void Up(MigrationBuilder migrationBuilder)
     {
-        // 1. Create the PetContact join table first (before dropping ContactId)
         migrationBuilder.CreateTable(
             name: "PetContact",
             columns: table => new
@@ -66,7 +65,6 @@ public partial class PetMultipleOwners : Migration
             table: "PetContact",
             column: "UserId");
 
-        // 2. Migrate existing Pet → Contact relationships into PetContact
         migrationBuilder.Sql(@"
                 INSERT INTO PetContact (Id, PetId, ContactId, CreatedBy, LastChangedBy, CreatedDate, LastChangedDate, UserId, GroupId)
                 SELECT
@@ -84,7 +82,6 @@ public partial class PetMultipleOwners : Migration
                   AND p.ContactId != '00000000-0000-0000-0000-000000000000';
             ");
 
-        // 3. Now drop the old FK, index, and column
         migrationBuilder.DropForeignKey(
             name: "FK_Pet_Contact_ContactId",
             table: "Pet");
@@ -108,7 +105,6 @@ public partial class PetMultipleOwners : Migration
             nullable: false,
             defaultValue: new Guid("00000000-0000-0000-0000-000000000000"));
 
-        // Migrate data back: take one ContactId per Pet from PetContact
         migrationBuilder.Sql(@"
                 UPDATE Pet
                 SET ContactId = (

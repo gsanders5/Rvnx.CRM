@@ -288,7 +288,6 @@ public class LabelServiceTests
     [Fact]
     public async Task GetLabelsForContactAsyncReturnsMappedOrderedDtos()
     {
-        // Arrange
         Guid contactId = Guid.NewGuid();
         Guid labelId1 = Guid.NewGuid();
         Guid labelId2 = Guid.NewGuid();
@@ -307,14 +306,11 @@ public class LabelServiceTests
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(labelDtos);
 
-        // Act
         List<Core.DTOs.Contact.LabelDto> result = await _service.GetLabelsForContactAsync(contactId);
 
-        // Assert
         Assert.NotNull(result);
         Assert.Equal(2, result.Count);
 
-        // Assert Ordering
         Assert.Equal("Alpha", result[0].Name);
         Assert.Equal(labelId2, result[0].Id);
         Assert.Equal("#ffffff", result[0].Color);
@@ -327,7 +323,6 @@ public class LabelServiceTests
     [Fact]
     public async Task GetLabelsForContactAsyncReturnsEmptyListWhenNoLabelsFound()
     {
-        // Arrange
         Guid contactId = Guid.NewGuid();
 
         _mockRepo.Setup(r => r.ListProjectedAsync<ContactLabel, Core.DTOs.Contact.LabelDto, string>(
@@ -338,10 +333,8 @@ public class LabelServiceTests
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync([]);
 
-        // Act
         List<Core.DTOs.Contact.LabelDto> result = await _service.GetLabelsForContactAsync(contactId);
 
-        // Assert
         Assert.NotNull(result);
         Assert.Empty(result);
     }
@@ -349,7 +342,6 @@ public class LabelServiceTests
     [Fact]
     public async Task GetLabelsForContactAsyncReturnsEmptyListWhenRepositoryReturnsNull()
     {
-        // Arrange
         Guid contactId = Guid.NewGuid();
 
         _mockRepo.Setup(r => r.ListProjectedAsync<ContactLabel, Core.DTOs.Contact.LabelDto, string>(
@@ -360,10 +352,8 @@ public class LabelServiceTests
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync((List<Core.DTOs.Contact.LabelDto>?)null!);
 
-        // Act
         List<Core.DTOs.Contact.LabelDto> result = await _service.GetLabelsForContactAsync(contactId);
 
-        // Assert
         Assert.NotNull(result);
         Assert.Empty(result);
     }

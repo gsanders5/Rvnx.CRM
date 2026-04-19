@@ -67,7 +67,6 @@ public class VCardService : IVCardService
             contact.FirstName = n.Given.Count > 0 ? n.Given[0] : "";
         }
 
-        // Read maiden name from the X-MAIDENNAME extension property
         FolkerKinzel.VCards.Models.Properties.NonStandardProperty? maidenNameProp =
             vc.NonStandards?.FirstOrDefault(p =>
                 p is not null && MaidenNameKey.Equals(p.Key, StringComparison.OrdinalIgnoreCase));
@@ -77,7 +76,6 @@ public class VCardService : IVCardService
             contact.MaidenName = maidenNameProp.Value;
         }
 
-        // Name Fallback using Display Name
         if (string.IsNullOrEmpty(contact.FirstName) && string.IsNullOrEmpty(contact.LastName))
         {
             FolkerKinzel.VCards.Models.Properties.TextProperty? displayProp = vc.DisplayNames?.FirstOrNull();
