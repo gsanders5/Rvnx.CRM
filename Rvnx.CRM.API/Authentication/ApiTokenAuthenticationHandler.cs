@@ -9,6 +9,7 @@ namespace Rvnx.CRM.API.Authentication;
 public class ApiTokenAuthenticationOptions : AuthenticationSchemeOptions
 {
     public const string DefaultScheme = "ApiToken";
+    public const string ResolvedTokenItemKey = "ResolvedApiToken";
 }
 
 public class ApiTokenAuthenticationHandler : AuthenticationHandler<ApiTokenAuthenticationOptions>
@@ -52,7 +53,7 @@ public class ApiTokenAuthenticationHandler : AuthenticationHandler<ApiTokenAuthe
 
             if (resolvedToken != null)
             {
-                Context.Items["ResolvedApiToken"] = resolvedToken;
+                Context.Items[ApiTokenAuthenticationOptions.ResolvedTokenItemKey] = resolvedToken;
             }
         }
 

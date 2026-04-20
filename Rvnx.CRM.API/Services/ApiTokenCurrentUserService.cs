@@ -1,3 +1,4 @@
+using Rvnx.CRM.API.Authentication;
 using Rvnx.CRM.Core.Interfaces;
 using Rvnx.CRM.Core.Models;
 
@@ -81,7 +82,7 @@ public class ApiTokenCurrentUserService : ICurrentUserService
             return;
         }
 
-        if (context.Items.TryGetValue("ResolvedApiToken", out object? preResolvedToken) && preResolvedToken is ApiToken token)
+        if (context.Items.TryGetValue(ApiTokenAuthenticationOptions.ResolvedTokenItemKey, out object? preResolvedToken) && preResolvedToken is ApiToken token)
         {
             _resolvedToken = token;
             return;

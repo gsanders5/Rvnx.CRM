@@ -4,6 +4,8 @@ using Ical.Net.Serialization;
 using Rvnx.CRM.Core.DTOs.Calendar;
 using Rvnx.CRM.Core.Interfaces;
 using System.Globalization;
+using System.Security.Cryptography;
+using System.Text;
 using IcalCalendar = Ical.Net.Calendar;
 
 namespace Rvnx.CRM.Infrastructure.Services;
@@ -17,9 +19,6 @@ public class CalendarFeedService : ICalendarFeedService
         IEnumerable<CalendarEventDto> significantDateEvents,
         IEnumerable<CalendarEventDto> taskEvents)
     {
-        ArgumentNullException.ThrowIfNull(significantDateEvents);
-        ArgumentNullException.ThrowIfNull(taskEvents);
-
         IcalCalendar calendar = new();
         calendar.AddProperty("PRODID", "-//Rvnx CRM//EN");
 
@@ -45,7 +44,10 @@ public class CalendarFeedService : ICalendarFeedService
             return;
         }
 
-        string uid = $"{eventType}-{dto.ContactId:N}-{startDate:yyyyMMdd}@rvnx-crm";
+        // Title hash disambiguates same-contact, same-day events (e.g. two tasks, or anniversary + "met on")
+        // so calendar clients don't dedupe distinct events to a single entry.
+        string titleHash = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(dto.Title ?? string.Empty)))[..8];
+        string uid = $"{eventType}-{dto.ContactId:N}-{startDate:yyyyMMdd}-{titleHash}@rvnx-crm";
 
         CalendarEvent calendarEvent = new()
         {

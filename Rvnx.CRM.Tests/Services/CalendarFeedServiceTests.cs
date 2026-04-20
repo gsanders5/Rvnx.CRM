@@ -89,6 +89,25 @@ public class CalendarFeedServiceTests
     }
 
     [Fact]
+    public void BuildIcsFeedProducesDistinctUidsForSameContactSameDayDifferentTitles()
+    {
+        Guid contactId = Guid.NewGuid();
+
+        List<CalendarEventDto> taskEvents = new()
+        {
+            new CalendarEventDto { Title = "Call", Start = "2026-06-15", ContactId = contactId },
+            new CalendarEventDto { Title = "Email", Start = "2026-06-15", ContactId = contactId },
+        };
+
+        string ics = _service.BuildIcsFeed(Array.Empty<CalendarEventDto>(), taskEvents);
+        IcalCalendar parsed = IcalCalendar.Load(ics);
+
+        Assert.Equal(2, parsed.Events.Count);
+        string[] uids = parsed.Events.Select(e => e.Uid).Distinct().ToArray();
+        Assert.Equal(2, uids.Length);
+    }
+
+    [Fact]
     public void BuildIcsFeedSkipsEventsWithUnparsableStart()
     {
         List<CalendarEventDto> dateEvents = new()

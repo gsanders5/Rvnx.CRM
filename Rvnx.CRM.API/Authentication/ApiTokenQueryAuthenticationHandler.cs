@@ -47,7 +47,7 @@ public class ApiTokenQueryAuthenticationHandler : AuthenticationHandler<ApiToken
             return AuthenticateResult.Fail("Invalid token");
         }
 
-        Context.Items["ResolvedApiToken"] = resolvedToken;
+        Context.Items[ApiTokenAuthenticationOptions.ResolvedTokenItemKey] = resolvedToken;
 
         Claim[] claims = new[]
         {
