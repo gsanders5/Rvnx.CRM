@@ -10,169 +10,184 @@ using Rvnx.CRM.Core.Models.Dates;
 
 namespace Rvnx.CRM.Infrastructure.Services;
 
-public sealed record CsvColumn(string Header, Func<Contact, CsvExportContext, string> GetValue);
-
-public sealed class CsvExportContext
-{
-    public IReadOnlyDictionary<Guid, List<string>> EmailsByContact { get; init; } =
-        new Dictionary<Guid, List<string>>();
-    public IReadOnlyDictionary<Guid, List<string>> PhonesByContact { get; init; } =
-        new Dictionary<Guid, List<string>>();
-    public IReadOnlyDictionary<Guid, Address> FirstAddressByContact { get; init; } =
-        new Dictionary<Guid, Address>();
-    public IReadOnlyDictionary<Guid, DateOnly> BirthdayByContact { get; init; } =
-        new Dictionary<Guid, DateOnly>();
-}
-
 public class CsvExportService(IRepository repository) : ICsvExportService
 {
-    private readonly IRepository _repository = repository;
+    private const int MaxEmails = 5;
+    private const int MaxPhones = 5;
 
-    public const int MaxEmails = 5;
-    public const int MaxPhones = 5;
-
-    public static IReadOnlyList<CsvColumn> Columns { get; } = BuildColumns();
+    public static IReadOnlyList<string> ColumnHeaders { get; } = BuildColumnHeaders();
 
     public async Task<ContactExportResult> ExportContactsAsync()
     {
-        List<Contact> contacts = await _repository.ListAsNoTrackingAsync<Contact>(c => !c.IsHidden && !c.IsPartial);
-
+        List<Contact> contacts = await repository.ListAsNoTrackingAsync<Contact>(c => !c.IsHidden && !c.IsPartial);
         List<Guid> contactIds = [.. contacts.Select(c => c.Id)];
 
-        List<ContactMethod> methods = contactIds.Count > 0
-            ? await _repository.ListProjectedByChunkedContainsAsync<ContactMethod, ContactMethod, Guid>(
-                contactIds,
-                chunk => cm => cm.ContactId.HasValue && chunk.Contains(cm.ContactId.Value),
-                cm => new ContactMethod
-                {
-                    Id = cm.Id,
-                    ContactId = cm.ContactId,
-                    Type = cm.Type,
-                    Value = cm.Value,
-                    Label = cm.Label,
-                    CreatedDate = cm.CreatedDate
-                })
-            : [];
+        (Dictionary<Guid, List<string>> emails, Dictionary<Guid, List<string>> phones) = await LoadContactMethodsAsync(contactIds);
+        Dictionary<Guid, Address> firstAddress = await LoadFirstAddressPerContactAsync(contactIds);
+        Dictionary<Guid, DateOnly> birthdays = await LoadBirthdaysAsync(contactIds);
 
-        Dictionary<Guid, List<string>> emailsByContact = [];
-        Dictionary<Guid, List<string>> phonesByContact = [];
-        foreach (ContactMethod cm in methods.OrderBy(m => m.CreatedDate))
-        {
-            if (!cm.ContactId.HasValue)
-            {
-                continue;
-            }
-
-            if (cm.Type == ContactMethodType.Email)
-            {
-                if (!emailsByContact.TryGetValue(cm.ContactId.Value, out List<string>? list))
-                {
-                    list = [];
-                    emailsByContact[cm.ContactId.Value] = list;
-                }
-                list.Add(cm.Value);
-            }
-            else if (cm.Type == ContactMethodType.Phone)
-            {
-                if (!phonesByContact.TryGetValue(cm.ContactId.Value, out List<string>? list))
-                {
-                    list = [];
-                    phonesByContact[cm.ContactId.Value] = list;
-                }
-                list.Add(cm.Value);
-            }
-        }
-
-        List<Address> addresses = contactIds.Count > 0
-            ? await _repository.ListProjectedByChunkedContainsAsync<Address, Address, Guid>(
-                contactIds,
-                chunk => a => a.ContactId.HasValue && chunk.Contains(a.ContactId.Value),
-                a => new Address
-                {
-                    Id = a.Id,
-                    ContactId = a.ContactId,
-                    Line1 = a.Line1,
-                    Line2 = a.Line2,
-                    City = a.City,
-                    State = a.State,
-                    Zip = a.Zip,
-                    Country = a.Country,
-                    AddressType = a.AddressType,
-                    CreatedDate = a.CreatedDate
-                })
-            : [];
-
-        Dictionary<Guid, Address> firstAddressByContact = [];
-        foreach (Address a in addresses.OrderBy(a => a.CreatedDate))
-        {
-            if (!a.ContactId.HasValue)
-            {
-                continue;
-            }
-
-            firstAddressByContact.TryAdd(a.ContactId.Value, a);
-        }
-
-        List<(Guid ContactId, DateOnly EventDate)> birthdayDates = contactIds.Count > 0
-            ? await _repository.ListProjectedByChunkedContainsAsync<SignificantDate, (Guid, DateOnly), Guid>(
-                contactIds,
-                chunk => sd => sd.ContactId.HasValue && chunk.Contains(sd.ContactId.Value) &&
-                    sd.Title == SignificantDateTitles.Birthday,
-                sd => new ValueTuple<Guid, DateOnly>(sd.ContactId!.Value, sd.EventDate))
-            : [];
-
-        Dictionary<Guid, DateOnly> birthdayByContact = new(birthdayDates.Count);
-        foreach (var (cid, date) in birthdayDates)
-        {
-            birthdayByContact.TryAdd(cid, date);
-        }
-
-        CsvExportContext context = new()
-        {
-            EmailsByContact = emailsByContact,
-            PhonesByContact = phonesByContact,
-            FirstAddressByContact = firstAddressByContact,
-            BirthdayByContact = birthdayByContact
-        };
-
-        byte[] bytes = BuildCsvBytes(contacts, context);
-        string fileName = $"contacts_{DateTime.Now:yyyyMMdd_HHmmss}.csv";
+        byte[] bytes = BuildCsvBytes(contacts, emails, phones, firstAddress, birthdays);
 
         return new ContactExportResult
         {
             FileContent = bytes,
-            FileName = fileName,
+            FileName = $"contacts_{DateTime.Now:yyyyMMdd_HHmmss}.csv",
             ContentType = "text/csv"
         };
     }
 
-    private static byte[] BuildCsvBytes(IEnumerable<Contact> contacts, CsvExportContext context)
+    private async Task<(Dictionary<Guid, List<string>> Emails, Dictionary<Guid, List<string>> Phones)> LoadContactMethodsAsync(
+        List<Guid> contactIds)
     {
-        StringBuilder sb = new();
-        sb.Append(string.Join(",", Columns.Select(c => EscapeField(c.Header))));
-        sb.Append("\r\n");
+        Dictionary<Guid, List<string>> emails = [];
+        Dictionary<Guid, List<string>> phones = [];
 
-        foreach (Contact contact in contacts)
+        if (contactIds.Count == 0)
         {
-            for (int i = 0; i < Columns.Count; i++)
-            {
-                if (i > 0)
-                {
-                    sb.Append(',');
-                }
-
-                string value = Columns[i].GetValue(contact, context) ?? string.Empty;
-                sb.Append(EscapeField(value));
-            }
-            sb.Append("\r\n");
+            return (emails, phones);
         }
 
-        byte[] bom = Encoding.UTF8.GetPreamble();
-        byte[] body = Encoding.UTF8.GetBytes(sb.ToString());
-        byte[] result = new byte[bom.Length + body.Length];
-        Buffer.BlockCopy(bom, 0, result, 0, bom.Length);
-        Buffer.BlockCopy(body, 0, result, bom.Length, body.Length);
-        return result;
+        List<(Guid ContactId, ContactMethodType Type, string Value, DateTime CreatedDate)> rows =
+            await repository.ListProjectedByChunkedContainsAsync<ContactMethod, (Guid, ContactMethodType, string, DateTime), Guid>(
+                contactIds,
+                chunk => cm => cm.ContactId.HasValue && chunk.Contains(cm.ContactId.Value),
+                cm => new ValueTuple<Guid, ContactMethodType, string, DateTime>(
+                    cm.ContactId!.Value, cm.Type, cm.Value, cm.CreatedDate));
+
+        foreach ((Guid contactId, ContactMethodType type, string value, DateTime _) in rows.OrderBy(r => r.CreatedDate))
+        {
+            Dictionary<Guid, List<string>>? bucket = type switch
+            {
+                ContactMethodType.Email => emails,
+                ContactMethodType.Phone => phones,
+                _ => null
+            };
+
+            if (bucket == null)
+            {
+                continue;
+            }
+
+            if (!bucket.TryGetValue(contactId, out List<string>? list))
+            {
+                list = [];
+                bucket[contactId] = list;
+            }
+            list.Add(value);
+        }
+
+        return (emails, phones);
+    }
+
+    private async Task<Dictionary<Guid, Address>> LoadFirstAddressPerContactAsync(List<Guid> contactIds)
+    {
+        Dictionary<Guid, Address> firstAddress = [];
+        if (contactIds.Count == 0)
+        {
+            return firstAddress;
+        }
+
+        List<Address> addresses = await repository.ListProjectedByChunkedContainsAsync<Address, Address, Guid>(
+            contactIds,
+            chunk => a => a.ContactId.HasValue && chunk.Contains(a.ContactId.Value),
+            a => new Address
+            {
+                ContactId = a.ContactId,
+                Line1 = a.Line1,
+                Line2 = a.Line2,
+                City = a.City,
+                State = a.State,
+                Zip = a.Zip,
+                Country = a.Country,
+                AddressType = a.AddressType,
+                CreatedDate = a.CreatedDate
+            });
+
+        foreach (Address a in addresses.OrderBy(a => a.CreatedDate))
+        {
+            firstAddress.TryAdd(a.ContactId!.Value, a);
+        }
+
+        return firstAddress;
+    }
+
+    private async Task<Dictionary<Guid, DateOnly>> LoadBirthdaysAsync(List<Guid> contactIds)
+    {
+        Dictionary<Guid, DateOnly> birthdays = [];
+        if (contactIds.Count == 0)
+        {
+            return birthdays;
+        }
+
+        List<(Guid ContactId, DateOnly EventDate)> rows =
+            await repository.ListProjectedByChunkedContainsAsync<SignificantDate, (Guid, DateOnly), Guid>(
+                contactIds,
+                chunk => sd => sd.ContactId.HasValue && chunk.Contains(sd.ContactId.Value)
+                    && sd.Title == SignificantDateTitles.Birthday,
+                sd => new ValueTuple<Guid, DateOnly>(sd.ContactId!.Value, sd.EventDate));
+
+        foreach ((Guid cid, DateOnly date) in rows)
+        {
+            birthdays.TryAdd(cid, date);
+        }
+
+        return birthdays;
+    }
+
+    private static byte[] BuildCsvBytes(
+        IEnumerable<Contact> contacts,
+        Dictionary<Guid, List<string>> emails,
+        Dictionary<Guid, List<string>> phones,
+        Dictionary<Guid, Address> firstAddress,
+        Dictionary<Guid, DateOnly> birthdays)
+    {
+        using MemoryStream stream = new();
+        stream.Write(Encoding.UTF8.GetPreamble());
+
+        using (StreamWriter writer = new(stream, new UTF8Encoding(encoderShouldEmitUTF8Identifier: false), leaveOpen: true))
+        {
+            writer.NewLine = "\r\n";
+            writer.WriteLine(string.Join(",", ColumnHeaders));
+
+            foreach (Contact c in contacts)
+            {
+                emails.TryGetValue(c.Id, out List<string>? emailList);
+                phones.TryGetValue(c.Id, out List<string>? phoneList);
+                firstAddress.TryGetValue(c.Id, out Address? addr);
+                string birthday = birthdays.TryGetValue(c.Id, out DateOnly d)
+                    ? d.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)
+                    : string.Empty;
+
+                string[] fields =
+                [
+                    c.Id.ToString(),
+                    c.FirstName ?? string.Empty,
+                    c.LastName ?? string.Empty,
+                    c.Nickname ?? string.Empty,
+                    c.Company ?? string.Empty,
+                    c.JobTitle ?? string.Empty,
+                    c.Pronouns ?? string.Empty,
+                    c.Gender ?? string.Empty,
+                    c.Religion ?? string.Empty,
+                    birthday,
+                    c.IsHidden ? "true" : "false",
+                    c.IsPartial ? "true" : "false",
+                    ItemAt(emailList, 0), ItemAt(emailList, 1), ItemAt(emailList, 2), ItemAt(emailList, 3), ItemAt(emailList, 4),
+                    ItemAt(phoneList, 0), ItemAt(phoneList, 1), ItemAt(phoneList, 2), ItemAt(phoneList, 3), ItemAt(phoneList, 4),
+                    addr?.Line1 ?? string.Empty,
+                    addr?.Line2 ?? string.Empty,
+                    addr?.City ?? string.Empty,
+                    addr?.State ?? string.Empty,
+                    addr?.Zip ?? string.Empty,
+                    addr?.Country ?? string.Empty,
+                    addr?.AddressType ?? string.Empty,
+                ];
+
+                writer.WriteLine(string.Join(",", fields.Select(EscapeField)));
+            }
+        }
+
+        return stream.ToArray();
     }
 
     private static string EscapeField(string value)
@@ -182,8 +197,7 @@ public class CsvExportService(IRepository repository) : ICsvExportService
             return string.Empty;
         }
 
-        bool needsQuoting = value.IndexOfAny(['"', ',', '\r', '\n']) >= 0;
-        if (!needsQuoting)
+        if (value.IndexOfAny(['"', ',', '\r', '\n']) < 0)
         {
             return value;
         }
@@ -191,61 +205,35 @@ public class CsvExportService(IRepository repository) : ICsvExportService
         return "\"" + value.Replace("\"", "\"\"") + "\"";
     }
 
-    private static List<CsvColumn> BuildColumns()
+    private static string ItemAt(List<string>? list, int index)
     {
-        List<CsvColumn> columns =
+        return list != null && index < list.Count ? list[index] : string.Empty;
+    }
+
+    private static List<string> BuildColumnHeaders()
+    {
+        List<string> headers =
         [
-            new("contact_id", (c, _) => c.Id.ToString()),
-            new("first_name", (c, _) => c.FirstName ?? string.Empty),
-            new("last_name", (c, _) => c.LastName ?? string.Empty),
-            new("nickname", (c, _) => c.Nickname ?? string.Empty),
-            new("company", (c, _) => c.Company ?? string.Empty),
-            new("job_title", (c, _) => c.JobTitle ?? string.Empty),
-            new("pronouns", (c, _) => c.Pronouns ?? string.Empty),
-            new("gender", (c, _) => c.Gender ?? string.Empty),
-            new("religion", (c, _) => c.Religion ?? string.Empty),
-            new("birthday", (c, ctx) => ctx.BirthdayByContact.TryGetValue(c.Id, out DateOnly d)
-                ? d.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)
-                : string.Empty),
-            new("is_hidden", (c, _) => c.IsHidden ? "true" : "false"),
-            new("is_partial", (c, _) => c.IsPartial ? "true" : "false"),
+            "contact_id", "first_name", "last_name", "nickname", "company",
+            "job_title", "pronouns", "gender", "religion", "birthday",
+            "is_hidden", "is_partial",
         ];
 
         for (int i = 1; i <= MaxEmails; i++)
         {
-            int index = i;
-            columns.Add(new CsvColumn($"email_{index}", (c, ctx) => GetItemAt(ctx.EmailsByContact, c.Id, index - 1)));
+            headers.Add($"email_{i}");
         }
-
         for (int i = 1; i <= MaxPhones; i++)
         {
-            int index = i;
-            columns.Add(new CsvColumn($"phone_{index}", (c, ctx) => GetItemAt(ctx.PhonesByContact, c.Id, index - 1)));
+            headers.Add($"phone_{i}");
         }
 
-        columns.Add(new CsvColumn("address_1_line1", (c, ctx) => GetAddress(ctx, c.Id)?.Line1 ?? string.Empty));
-        columns.Add(new CsvColumn("address_1_line2", (c, ctx) => GetAddress(ctx, c.Id)?.Line2 ?? string.Empty));
-        columns.Add(new CsvColumn("address_1_city", (c, ctx) => GetAddress(ctx, c.Id)?.City ?? string.Empty));
-        columns.Add(new CsvColumn("address_1_state", (c, ctx) => GetAddress(ctx, c.Id)?.State ?? string.Empty));
-        columns.Add(new CsvColumn("address_1_zip", (c, ctx) => GetAddress(ctx, c.Id)?.Zip ?? string.Empty));
-        columns.Add(new CsvColumn("address_1_country", (c, ctx) => GetAddress(ctx, c.Id)?.Country ?? string.Empty));
-        columns.Add(new CsvColumn("address_1_type", (c, ctx) => GetAddress(ctx, c.Id)?.AddressType ?? string.Empty));
+        headers.AddRange(
+        [
+            "address_1_line1", "address_1_line2", "address_1_city",
+            "address_1_state", "address_1_zip", "address_1_country", "address_1_type"
+        ]);
 
-        return columns;
-    }
-
-    private static string GetItemAt(IReadOnlyDictionary<Guid, List<string>> map, Guid id, int index)
-    {
-        if (!map.TryGetValue(id, out List<string>? list))
-        {
-            return string.Empty;
-        }
-
-        return index < list.Count ? list[index] : string.Empty;
-    }
-
-    private static Address? GetAddress(CsvExportContext ctx, Guid id)
-    {
-        return ctx.FirstAddressByContact.TryGetValue(id, out Address? a) ? a : null;
+        return headers;
     }
 }
