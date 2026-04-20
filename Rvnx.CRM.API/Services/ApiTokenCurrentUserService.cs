@@ -81,15 +81,15 @@ public class ApiTokenCurrentUserService : ICurrentUserService
             return;
         }
 
-        string? authHeader = context.Request.Headers.Authorization.FirstOrDefault();
-        if (string.IsNullOrEmpty(authHeader) || !authHeader.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
-        {
-            return;
-        }
-
         if (context.Items.TryGetValue("ResolvedApiToken", out object? preResolvedToken) && preResolvedToken is ApiToken token)
         {
             _resolvedToken = token;
+            return;
+        }
+
+        string? authHeader = context.Request.Headers.Authorization.FirstOrDefault();
+        if (string.IsNullOrEmpty(authHeader) || !authHeader.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
+        {
             return;
         }
 

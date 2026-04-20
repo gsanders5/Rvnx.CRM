@@ -62,6 +62,8 @@ public static class ServiceCollectionExtensions
 
         services.AddScoped<IApiTokenService, ApiTokenService>();
 
+        services.AddScoped<ICalendarFeedService, CalendarFeedService>();
+
         return services;
     }
 }

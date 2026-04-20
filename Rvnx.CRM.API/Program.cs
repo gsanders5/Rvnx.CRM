@@ -25,7 +25,8 @@ builder.Services.AddScoped<ICurrentUserService, ApiTokenCurrentUserService>();
 builder.Services.AddHttpContextAccessor();
 
 builder.Services.AddAuthentication(ApiTokenAuthenticationOptions.DefaultScheme)
-    .AddScheme<ApiTokenAuthenticationOptions, ApiTokenAuthenticationHandler>(ApiTokenAuthenticationOptions.DefaultScheme, options => { });
+    .AddScheme<ApiTokenAuthenticationOptions, ApiTokenAuthenticationHandler>(ApiTokenAuthenticationOptions.DefaultScheme, options => { })
+    .AddScheme<ApiTokenQueryAuthenticationOptions, ApiTokenQueryAuthenticationHandler>(ApiTokenQueryAuthenticationOptions.DefaultScheme, options => { });
 
 builder.Services.AddAuthorization();
 
