@@ -13,6 +13,7 @@ public class ContactsController(
     ICurrentUserService currentUserService,
     IContactImportService contactImportService,
     IContactExportService contactExportService,
+    ICsvExportService csvExportService,
     IContactManagementService contactManagementService,
     IContactReadService contactReadService,
     ISelfContactService selfContactService,
@@ -22,6 +23,7 @@ public class ContactsController(
     private readonly ICurrentUserService _currentUserService = currentUserService;
     private readonly IContactImportService _contactImportService = contactImportService;
     private readonly IContactExportService _contactExportService = contactExportService;
+    private readonly ICsvExportService _csvExportService = csvExportService;
     private readonly IContactManagementService _contactManagementService = contactManagementService;
     private readonly IContactReadService _contactReadService = contactReadService;
     private readonly ISelfContactService _selfContactService = selfContactService;
@@ -388,6 +390,13 @@ public class ContactsController(
         {
             return NotFound();
         }
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> ExportCsv()
+    {
+        ContactExportResult result = await _csvExportService.ExportContactsAsync();
+        return File(result.FileContent, result.ContentType, result.FileName);
     }
 
     private static void NormalizeContactForm(ContactFormDto dto)

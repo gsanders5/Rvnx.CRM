@@ -15,7 +15,15 @@
         {
             <a asp-action="Index" asp-route-showHidden="True" class="crm-btn-tertiary btn-sm">View Hidden</a>
         }
-        <a asp-action="Import" class="crm-btn-secondary btn-sm"><i class="fa-solid fa-file-import" aria-hidden="true"></i> Import VCF</a>
+        <div class="dropdown">
+            <button class="crm-btn-secondary btn-sm dropdown-toggle" type="button" data-mdb-dropdown-init data-mdb-toggle="dropdown" aria-expanded="false">
+                <i class="fa-solid fa-file-csv" aria-hidden="true"></i> Import / Export
+            </button>
+            <ul class="dropdown-menu dropdown-menu-end">
+                <li><a class="dropdown-item" asp-action="Import"><i class="fa-solid fa-file-import me-2" aria-hidden="true"></i>Import VCF</a></li>
+                <li><a class="dropdown-item" asp-action="ExportCsv"><i class="fa-solid fa-file-export me-2" aria-hidden="true"></i>Export CSV</a></li>
+            </ul>
+        </div>
         <a asp-action="Create" class="crm-btn-primary btn-sm"><i class="bi bi-plus-lg" aria-hidden="true"></i> Create New</a>
     </div>
 </div>
