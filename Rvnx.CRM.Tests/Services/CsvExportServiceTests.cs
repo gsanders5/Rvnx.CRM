@@ -207,4 +207,27 @@ public class CsvExportServiceTests
         Assert.StartsWith("contacts_", result.FileName);
         Assert.EndsWith(".csv", result.FileName);
     }
+
+    [Fact]
+    public async Task ExportContactsAsyncIncludesHiddenAndExcludesPartial()
+    {
+        Expression<Func<Contact, bool>>? capturedPredicate = null;
+        _repositoryMock
+            .Setup(r => r.ListAsNoTrackingAsync<Contact>(
+                It.IsAny<Expression<Func<Contact, bool>>>(),
+                It.IsAny<CancellationToken>(),
+                It.IsAny<string[]>()))
+            .Callback<Expression<Func<Contact, bool>>, CancellationToken, string[]>(
+                (predicate, _, _) => capturedPredicate = predicate)
+            .ReturnsAsync([]);
+
+        await _service.ExportContactsAsync();
+
+        Assert.NotNull(capturedPredicate);
+        Func<Contact, bool> compiled = capturedPredicate!.Compile();
+        Assert.True(compiled(new Contact { IsHidden = true, IsPartial = false }));
+        Assert.True(compiled(new Contact { IsHidden = false, IsPartial = false }));
+        Assert.False(compiled(new Contact { IsHidden = false, IsPartial = true }));
+        Assert.False(compiled(new Contact { IsHidden = true, IsPartial = true }));
+    }
 }

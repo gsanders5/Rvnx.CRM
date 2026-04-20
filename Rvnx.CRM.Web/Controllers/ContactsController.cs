@@ -399,6 +399,13 @@ public class ContactsController(
         return File(result.FileContent, result.ContentType, result.FileName);
     }
 
+    [HttpGet]
+    public async Task<IActionResult> ExportAllVCard(CancellationToken cancellationToken)
+    {
+        ContactExportResult result = await _contactExportService.ExportAllToVCardZipAsync(cancellationToken);
+        return File(result.FileContent, result.ContentType, result.FileName);
+    }
+
     private static void NormalizeContactForm(ContactFormDto dto)
     {
         dto.Pronouns = dto.Pronouns == PersonalAttributeOptions.Unspecified ? null : dto.Pronouns;

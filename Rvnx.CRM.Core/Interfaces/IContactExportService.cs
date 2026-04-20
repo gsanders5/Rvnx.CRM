@@ -11,4 +11,12 @@ public interface IContactExportService
     /// <param name="contactId">The ID of the contact to export.</param>
     /// <returns>A <see cref="ContactExportResult"/> containing the file content and metadata.</returns>
     Task<ContactExportResult> ExportToVCardAsync(Guid contactId);
+
+    /// <summary>
+    /// Generates a zip archive containing one vCard (.vcf) file per non-partial contact.
+    /// Hidden contacts are included; partial contacts are excluded.
+    /// </summary>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>A <see cref="ContactExportResult"/> containing the zip file content and metadata.</returns>
+    Task<ContactExportResult> ExportAllToVCardZipAsync(CancellationToken cancellationToken = default);
 }

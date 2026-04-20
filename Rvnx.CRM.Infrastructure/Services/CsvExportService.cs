@@ -19,7 +19,7 @@ public class CsvExportService(IRepository repository) : ICsvExportService
 
     public async Task<ContactExportResult> ExportContactsAsync()
     {
-        List<Contact> contacts = await repository.ListAsNoTrackingAsync<Contact>(c => !c.IsHidden && !c.IsPartial);
+        List<Contact> contacts = await repository.ListAsNoTrackingAsync<Contact>(c => !c.IsPartial);
         List<Guid> contactIds = [.. contacts.Select(c => c.Id)];
 
         (Dictionary<Guid, List<string>> emails, Dictionary<Guid, List<string>> phones) = await LoadContactMethodsAsync(contactIds);
