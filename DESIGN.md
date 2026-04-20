@@ -163,6 +163,7 @@ The API application delegates logic to the shared `Core` services via DI, just l
 
 - **API Token Authentication**: The API is protected using bearer tokens. It uses a custom `ApiTokenAuthenticationHandler` for the `"Bearer"` scheme.
 - **User Context**: It resolves the current user context using `ApiTokenCurrentUserService`, which implements `ICurrentUserService` by extracting the user ID from the validated API token.
+- **Token Delivery**: Normal endpoints accept the token via the `Authorization: Bearer crm_…` header; the iCal feed endpoint additionally accepts `?token=crm_…` as a query parameter so calendar clients without custom-header support can subscribe.
 
 ### Endpoints
 
@@ -173,6 +174,7 @@ The API application delegates logic to the shared `Core` services via DI, just l
 | Addresses | ListByContact, Create, Update, Delete |
 | Attachments | ListByContact, Upload, Download, Thumbnail, Delete |
 | Calendar | Events (significant dates + tasks, fetched concurrently) |
+| CalendarFeed | `GET feed.ics` (query-param token, returns RFC 5545 VCALENDAR) |
 | ContactMethods | ListByContact, Create, Update, Delete |
 | ContactTasks | ListByContact, Create, Update, Delete, ToggleComplete |
 | Facts | ListByContact, Create, Update, Delete |
@@ -266,6 +268,8 @@ Attachments are split into two tables to optimize performance (loading metadata 
   - `AddressService`: CRUD for contact addresses.
   - `FavoriteService`: Toggle and query favorite contacts.
   - `SignificantDateService`: Manages significant dates and generates calendar events for both current-year and next-year occurrences.
+  - `CalendarFeedService`: Generates an RFC 5545 iCalendar (.ics) feed aggregating significant dates and incomplete tasks; used by the subscribable calendar endpoint. Deterministic UIDs per event so subscribed clients dedupe on refresh.
+  - `CsvExportService`: Exports all contacts (plus flattened emails, phones, first address, and birthday) as an RFC 4180 CSV. Column definitions are exposed as a reusable list so a future CSV-import can map the same headers in reverse.
 
 - **Constants**:
   - `CalendarColors`: Centralized color constants for calendar event types (Birthday, SignificantDate, Task).

@@ -15,7 +15,8 @@ Built with ASP.NET Core and SQLite. No subscriptions, no cloud sync, no third-pa
 - Profile photos, labels, and favorites
 - Hide contacts without deleting them
 - Merge duplicates
-- Import/export via vCard (.vcf)
+- Import via vCard (.vcf)
+- Export to **CSV** (round-trippable — a future CSV import will reuse the same schema) or **vCard** (.vcf)
 - **Partial Contacts** — lightweight placeholders for people in relationships who don't need a full profile yet
 
 ### Per-Contact Detail Panels
@@ -58,6 +59,7 @@ Full API coverage for all resources: contacts, activities, addresses, tasks, fav
 - String-based enums — all enum fields accept human-readable strings (`"Annual"`, `"Forward"`)
 - Swagger/OpenAPI docs at `/swagger`
 - Partial update support via JSON Merge Patch (`PATCH`) on all resources
+- **iCal subscription feed** at `/api/calendar/feed.ics?token=<api-token>` — subscribe from Google / Apple / Outlook Calendar to see significant dates and tasks. Token is passed as a query parameter so calendar clients that don't support custom headers can subscribe.
 
 ### Authentication
 - OpenID Connect (OIDC) — tested with [Authentik](https://goauthentik.io/)
