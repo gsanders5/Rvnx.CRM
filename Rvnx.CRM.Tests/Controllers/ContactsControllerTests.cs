@@ -35,7 +35,7 @@ public class ContactsControllerTests
 
             readServiceMock.Setup(s => s.GetContactDetailsAsync(contactId)).ReturnsAsync(detailDto);
 
-            ContactsController controller = new(loggerMock.Object, userMock.Object, Mock.Of<IContactImportService>(), Mock.Of<IContactExportService>(), Mock.Of<IContactManagementService>(), readServiceMock.Object, Mock.Of<ISelfContactService>(), Mock.Of<IFileValidationService>())
+            ContactsController controller = new(loggerMock.Object, userMock.Object, Mock.Of<IContactImportService>(), Mock.Of<IContactExportService>(), Mock.Of<ICsvExportService>(), Mock.Of<IContactManagementService>(), readServiceMock.Object, Mock.Of<ISelfContactService>(), Mock.Of<IFileValidationService>())
             {
                 ControllerContext = new ControllerContext { HttpContext = new DefaultHttpContext() }
             };
@@ -65,7 +65,7 @@ public class ContactsControllerTests
 
             readServiceMock.Setup(s => s.GetIndexDataAsync(It.IsAny<bool>())).ReturnsAsync(contactDtos);
 
-            ContactsController controller = new(loggerMock.Object, userMock.Object, Mock.Of<IContactImportService>(), Mock.Of<IContactExportService>(), Mock.Of<IContactManagementService>(), readServiceMock.Object, Mock.Of<ISelfContactService>(), Mock.Of<IFileValidationService>())
+            ContactsController controller = new(loggerMock.Object, userMock.Object, Mock.Of<IContactImportService>(), Mock.Of<IContactExportService>(), Mock.Of<ICsvExportService>(), Mock.Of<IContactManagementService>(), readServiceMock.Object, Mock.Of<ISelfContactService>(), Mock.Of<IFileValidationService>())
             {
                 ControllerContext = new ControllerContext { HttpContext = new DefaultHttpContext() }
             };
@@ -84,6 +84,7 @@ public class ContactsControllerTests
         private readonly Mock<ICurrentUserService> _userMock = new();
         private readonly Mock<IContactImportService> _contactImportServiceMock = new();
         private readonly Mock<IContactExportService> _contactExportServiceMock = new();
+        private readonly Mock<ICsvExportService> _csvExportServiceMock = new();
         private readonly Mock<IContactManagementService> _contactManagementServiceMock = new();
         private readonly Mock<IContactReadService> _contactReadServiceMock = new();
         private readonly Mock<ISelfContactService> _selfContactServiceMock = new();
@@ -103,6 +104,7 @@ public class ContactsControllerTests
                 _userMock.Object,
                 _contactImportServiceMock.Object,
                 _contactExportServiceMock.Object,
+                _csvExportServiceMock.Object,
                 _contactManagementServiceMock.Object,
                 _contactReadServiceMock.Object,
                 _selfContactServiceMock.Object,
@@ -418,7 +420,7 @@ public class ContactsControllerTests
             userMock.Setup(u => u.UserName).Returns("Test User");
             userMock.Setup(u => u.IsAuthenticated).Returns(true);
 
-            ContactsController controller = new(loggerMock.Object, userMock.Object, new Mock<IContactImportService>().Object, new Mock<IContactExportService>().Object, new Mock<IContactManagementService>().Object, new Mock<IContactReadService>().Object, selfContactServiceMock.Object, Mock.Of<IFileValidationService>())
+            ContactsController controller = new(loggerMock.Object, userMock.Object, new Mock<IContactImportService>().Object, new Mock<IContactExportService>().Object, new Mock<ICsvExportService>().Object, new Mock<IContactManagementService>().Object, new Mock<IContactReadService>().Object, selfContactServiceMock.Object, Mock.Of<IFileValidationService>())
             {
                 ControllerContext = new ControllerContext
                 {
