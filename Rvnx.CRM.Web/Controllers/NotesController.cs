@@ -37,15 +37,12 @@ public class NotesController(INoteService noteService, IRepository repository, I
                 return RedirectToEntity(result.RedirectId, result.RedirectType);
             }
 
-            if (result.ErrorMessage == "Only Person entities are supported.")
-            {
-                return BadRequest(result.ErrorMessage);
-            }
-
-            if (result.ErrorMessage == "Contact not found.")
+            if (result.IsNotFound)
             {
                 return NotFound();
             }
+
+            return BadRequest(result.ErrorMessage);
         }
 
         if (viewModel.EntityId != Guid.Empty)
@@ -85,7 +82,7 @@ public class NotesController(INoteService noteService, IRepository repository, I
                 return RedirectToEntity(result.RedirectId, result.RedirectType);
             }
 
-            if (result.ErrorMessage == "Note not found.")
+            if (result.IsNotFound)
             {
                 return NotFound();
             }

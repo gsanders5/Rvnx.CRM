@@ -18,4 +18,13 @@ public static class ActivityTypeSuggestions
         "Text/Message",
         "Email"
     ];
+
+    public record QuickLogOption(string Type, string Icon, string Label);
+
+    public static readonly IReadOnlyList<QuickLogOption> QuickLog =
+    [
+        new("Phone Call", "fa-solid fa-phone", "Call"),
+        new("Meeting", "fa-solid fa-handshake", "Met"),
+        new("Text/Message", "fa-solid fa-comment-dots", "Messaged")
+    ];
 }

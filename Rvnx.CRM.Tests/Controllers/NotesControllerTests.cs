@@ -46,7 +46,7 @@ public class NotesControllerTests
 
             Mock<INoteService> mockNoteService = new(); // Adding missing mock
             mockNoteService.Setup(s => s.CreateAsync(It.IsAny<NoteFormViewModel>()))
-                .ReturnsAsync(new OperationResult { Success = false, ErrorMessage = "Contact not found." });
+                .ReturnsAsync(OperationResult.NotFound("Contact not found."));
 
             _controller = new NotesController(mockNoteService.Object, repository, mockEntityService.Object);
         }
@@ -192,6 +192,23 @@ public class NotesControllerTests
             Assert.NotNull(created);
             Assert.Equal("Test Note", created.Title);
             Assert.Equal(contactId, created.ContactId);
+        }
+
+        [Fact]
+        public async Task CreatePostWithNonPersonEntityTypeShouldReturnBadRequest()
+        {
+            NoteFormViewModel note = new()
+            {
+                EntityId = Guid.NewGuid(),
+                EntityType = EntityType.Company,
+                Title = "Test Note",
+                Value = "Content"
+            };
+
+            IActionResult result = await _controller.Create(note);
+
+            BadRequestObjectResult badRequest = Assert.IsType<BadRequestObjectResult>(result);
+            Assert.Equal("Only Person entities are supported.", badRequest.Value);
         }
 
         [Fact]

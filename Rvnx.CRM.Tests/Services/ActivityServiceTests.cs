@@ -289,6 +289,101 @@ public class ActivityServiceTests
     }
 
     [Fact]
+    public async Task QuickLogAsyncWithInvalidTypeReturnsFailure()
+    {
+        OperationResult result = await _service.QuickLogAsync(Guid.NewGuid(), "Not A Real Type");
+
+        Assert.False(result.Success);
+        Assert.Equal("Invalid activity type.", result.ErrorMessage);
+    }
+
+    [Fact]
+    public async Task QuickLogAsyncWithNonQuickLogTypeReturnsFailure()
+    {
+        OperationResult result = await _service.QuickLogAsync(Guid.NewGuid(), "Email");
+
+        Assert.False(result.Success);
+        Assert.Equal("Invalid activity type.", result.ErrorMessage);
+    }
+
+    [Fact]
+    public async Task QuickLogAsyncWithEmptyTypeReturnsFailure()
+    {
+        OperationResult result = await _service.QuickLogAsync(Guid.NewGuid(), "");
+
+        Assert.False(result.Success);
+        Assert.Equal("Invalid activity type.", result.ErrorMessage);
+    }
+
+    [Fact]
+    public async Task QuickLogAsyncWithValidTypeCreatesActivityWithTodayAndSelfContact()
+    {
+        Guid contactId = Guid.NewGuid();
+        Guid selfContactId = Guid.NewGuid();
+
+        _repositoryMock.Setup(r => r.CountAsync(It.IsAny<Expression<Func<Core.Models.Contact.Contact, bool>>>(), It.IsAny<CancellationToken>())).ReturnsAsync(1);
+        _selfContactServiceMock.Setup(s => s.GetSelfContactIdAsync()).ReturnsAsync(selfContactId);
+
+        Activity? addedActivity = null;
+        _repositoryMock.Setup(r => r.AddAsync(It.IsAny<Activity>(), It.IsAny<CancellationToken>()))
+            .Callback<Activity, CancellationToken>((a, _) => addedActivity = a)
+            .ReturnsAsync((Activity a, CancellationToken _) => a);
+
+        List<ActivityContact>? addedActivityContacts = null;
+        _repositoryMock.Setup(r => r.AddRangeAsync(It.IsAny<IEnumerable<ActivityContact>>(), It.IsAny<CancellationToken>()))
+            .Callback<IEnumerable<ActivityContact>, CancellationToken>((acs, _) => addedActivityContacts = acs.ToList())
+            .ReturnsAsync(new List<ActivityContact>());
+
+        OperationResult result = await _service.QuickLogAsync(contactId, "Phone Call");
+
+        Assert.True(result.Success);
+        Assert.Equal(contactId, result.RedirectId);
+        Assert.NotNull(addedActivity);
+        Assert.Equal("Phone Call", addedActivity.Title);
+        Assert.Equal("Phone Call", addedActivity.ActivityType);
+        Assert.Equal(DateTime.Today, addedActivity.ActivityDate);
+        Assert.NotNull(addedActivityContacts);
+        Assert.Equal(2, addedActivityContacts.Count);
+        Assert.Contains(addedActivityContacts, ac => ac.ContactId == contactId);
+        Assert.Contains(addedActivityContacts, ac => ac.ContactId == selfContactId);
+    }
+
+    [Fact]
+    public async Task QuickLogAsyncWhenSelfContactIsTargetDoesNotDuplicate()
+    {
+        Guid contactId = Guid.NewGuid();
+
+        _repositoryMock.Setup(r => r.CountAsync(It.IsAny<Expression<Func<Core.Models.Contact.Contact, bool>>>(), It.IsAny<CancellationToken>())).ReturnsAsync(1);
+        _selfContactServiceMock.Setup(s => s.GetSelfContactIdAsync()).ReturnsAsync(contactId);
+
+        List<ActivityContact>? addedActivityContacts = null;
+        _repositoryMock.Setup(r => r.AddRangeAsync(It.IsAny<IEnumerable<ActivityContact>>(), It.IsAny<CancellationToken>()))
+            .Callback<IEnumerable<ActivityContact>, CancellationToken>((acs, _) => addedActivityContacts = acs.ToList())
+            .ReturnsAsync(new List<ActivityContact>());
+
+        OperationResult result = await _service.QuickLogAsync(contactId, "Meeting");
+
+        Assert.True(result.Success);
+        Assert.NotNull(addedActivityContacts);
+        Assert.Single(addedActivityContacts);
+        Assert.Equal(contactId, addedActivityContacts[0].ContactId);
+    }
+
+    [Fact]
+    public async Task QuickLogAsyncWithInvalidContactReturnsFailure()
+    {
+        Guid contactId = Guid.NewGuid();
+
+        _repositoryMock.Setup(r => r.CountAsync(It.IsAny<Expression<Func<Core.Models.Contact.Contact, bool>>>(), It.IsAny<CancellationToken>())).ReturnsAsync(0);
+        _selfContactServiceMock.Setup(s => s.GetSelfContactIdAsync()).ReturnsAsync((Guid?)null);
+
+        OperationResult result = await _service.QuickLogAsync(contactId, "Text/Message");
+
+        Assert.False(result.Success);
+        Assert.Equal("Contact not found.", result.ErrorMessage);
+    }
+
+    [Fact]
     public async Task GetByContactAsyncReturnsMappedActivities()
     {
         Guid contactId = Guid.NewGuid();

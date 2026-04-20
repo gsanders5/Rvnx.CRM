@@ -8,6 +8,7 @@ public interface IActivityService
 {
     Task<List<ActivityDto>> GetByContactAsync(Guid contactId);
     Task<OperationResult> CreateAsync(ActivityFormDto dto);
+    Task<OperationResult> QuickLogAsync(Guid contactId, string activityType);
     Task<OperationResult> UpdateAsync(Guid id, ActivityFormDto dto);
     Task<OperationResult> DeleteAsync(Guid id);
     Task<ActivityFormDto?> GetFormAsync(Guid id);

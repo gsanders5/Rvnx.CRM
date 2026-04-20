@@ -37,7 +37,7 @@ public class PetsController(IPetService petService, IRepository repository, ICon
                 return RedirectToEntity(result.RedirectId, result.RedirectType);
             }
 
-            if (result.ErrorMessage == "Contact not found.")
+            if (result.IsNotFound)
             {
                 return NotFound();
             }
@@ -76,7 +76,7 @@ public class PetsController(IPetService petService, IRepository repository, ICon
                 return RedirectToEntity(result.RedirectId, result.RedirectType);
             }
 
-            if (result.ErrorMessage == "Pet not found.")
+            if (result.IsNotFound)
             {
                 return NotFound();
             }

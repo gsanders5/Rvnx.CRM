@@ -26,7 +26,7 @@ public class PetService(IRepository repository) : IPetService
     {
         if (!await _repository.IsValidContactAsync(dto.EntityId))
         {
-            return OperationResult.Failure("Contact not found.");
+            return OperationResult.NotFound("Contact not found.");
         }
 
         List<Guid> contactIds = dto.ContactIds.Count > 0 ? dto.ContactIds : [dto.EntityId];
@@ -57,7 +57,7 @@ public class PetService(IRepository repository) : IPetService
             Pet? existingPet = await _repository.GetByIdWithIncludesAsync<Pet>(id, nameof(Pet.PetContacts));
             if (existingPet == null)
             {
-                return OperationResult.Failure("Pet not found.");
+                return OperationResult.NotFound("Pet not found.");
             }
 
             existingPet.UpdateEntity(dto);
@@ -98,7 +98,7 @@ public class PetService(IRepository repository) : IPetService
         {
             if (!await _repository.ExistsAsync<Pet>(dto.Id ?? Guid.Empty))
             {
-                return OperationResult.Failure("Pet not found.");
+                return OperationResult.NotFound("Pet not found.");
             }
             throw;
         }
@@ -108,7 +108,7 @@ public class PetService(IRepository repository) : IPetService
     {
         if (!await _repository.ExistsAsync<Pet>(id))
         {
-            return OperationResult.Failure("Pet not found.");
+            return OperationResult.NotFound("Pet not found.");
         }
 
         List<Guid> contactIds = await _repository.ListProjectedAsync<PetContact, Guid>(

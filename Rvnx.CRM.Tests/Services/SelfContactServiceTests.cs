@@ -49,6 +49,46 @@ public class SelfContactServiceTests
     }
 
     [Fact]
+    public async Task GetSelfContactIdAsyncCachesResultAcrossCalls()
+    {
+        Guid userId = Guid.NewGuid();
+        Guid selfContactId = Guid.NewGuid();
+        _currentUserServiceMock.Setup(c => c.UserId).Returns(userId);
+
+        Rvnx.CRM.Core.Models.User user = new() { Id = userId, SelfContactId = selfContactId };
+        _repositoryMock.Setup(r => r.GetByIdAsync<Rvnx.CRM.Core.Models.User>(userId, It.IsAny<CancellationToken>())).ReturnsAsync(user);
+
+        Guid? first = await _service.GetSelfContactIdAsync();
+        Guid? second = await _service.GetSelfContactIdAsync();
+        Guid? third = await _service.GetSelfContactIdAsync();
+
+        Assert.Equal(selfContactId, first);
+        Assert.Equal(selfContactId, second);
+        Assert.Equal(selfContactId, third);
+        _repositoryMock.Verify(r => r.GetByIdAsync<Rvnx.CRM.Core.Models.User>(userId, It.IsAny<CancellationToken>()), Times.Once());
+    }
+
+    [Fact]
+    public async Task GetSelfContactIdAndFormAsyncShareUserQueryCache()
+    {
+        Guid userId = Guid.NewGuid();
+        Guid selfContactId = Guid.NewGuid();
+        _currentUserServiceMock.Setup(c => c.UserId).Returns(userId);
+        _currentUserServiceMock.Setup(c => c.UserName).Returns("Jane Doe");
+
+        Rvnx.CRM.Core.Models.User user = new() { Id = userId, SelfContactId = selfContactId, Email = "jane@example.com" };
+        _repositoryMock.Setup(r => r.GetByIdAsync<Rvnx.CRM.Core.Models.User>(userId, It.IsAny<CancellationToken>())).ReturnsAsync(user);
+
+        Guid? idResult = await _service.GetSelfContactIdAsync();
+        ContactFormDto? formResult = await _service.GetSelfContactFormAsync();
+
+        Assert.Equal(selfContactId, idResult);
+        Assert.NotNull(formResult);
+        Assert.Equal("jane@example.com", formResult.Email);
+        _repositoryMock.Verify(r => r.GetByIdAsync<Rvnx.CRM.Core.Models.User>(userId, It.IsAny<CancellationToken>()), Times.Once());
+    }
+
+    [Fact]
     public async Task GetSelfContactFormAsyncWithNoUserIdReturnsNull()
     {
         _currentUserServiceMock.Setup(c => c.UserId).Returns((Guid?)null);

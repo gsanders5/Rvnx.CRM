@@ -24,7 +24,7 @@ public class FactService(IRepository repository) : IFactService
     {
         if (!await _repository.IsValidContactAsync(dto.EntityId))
         {
-            return OperationResult.Failure("Contact not found.");
+            return OperationResult.NotFound("Contact not found.");
         }
 
         Fact fact = dto.ToEntity();
@@ -41,7 +41,7 @@ public class FactService(IRepository repository) : IFactService
             Fact? existingFact = await _repository.GetByIdAsync<Fact>(id);
             if (existingFact == null || !await _repository.IsValidContactAsync(existingFact.ContactId ?? Guid.Empty))
             {
-                return OperationResult.Failure("Fact not found.");
+                return OperationResult.NotFound("Fact not found.");
             }
 
             existingFact.UpdateEntity(dto);
@@ -55,7 +55,7 @@ public class FactService(IRepository repository) : IFactService
         {
             if (!await _repository.ExistsAsync<Fact>(dto.Id ?? Guid.Empty))
             {
-                return OperationResult.Failure("Fact not found.");
+                return OperationResult.NotFound("Fact not found.");
             }
             throw;
         }
@@ -76,7 +76,7 @@ public class FactService(IRepository repository) : IFactService
 
             return OperationResult.Ok(entityId, EntityType.Person);
         }
-        return OperationResult.Failure("Fact not found.");
+        return OperationResult.NotFound("Fact not found.");
     }
 
     public async Task<FactFormDto?> GetFormAsync(Guid id)

@@ -30,7 +30,7 @@ public class ContactTasksController(IContactTaskService contactTaskService, IRep
                 return RedirectToEntity(result.RedirectId, result.RedirectType);
             }
 
-            if (result.ErrorMessage == "Contact not found.")
+            if (result.IsNotFound)
             {
                 return NotFound();
             }
@@ -62,7 +62,7 @@ public class ContactTasksController(IContactTaskService contactTaskService, IRep
                 return RedirectToEntity(result.RedirectId, result.RedirectType);
             }
 
-            if (result.ErrorMessage == "Task not found.")
+            if (result.IsNotFound)
             {
                 return NotFound();
             }

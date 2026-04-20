@@ -31,7 +31,7 @@ public class ContactMethodsController(IContactMethodService contactMethodService
                 return RedirectToEntity(result.RedirectId, result.RedirectType);
             }
 
-            if (result.ErrorMessage == "Contact not found.")
+            if (result.IsNotFound)
             {
                 return NotFound();
             }
@@ -68,7 +68,7 @@ public class ContactMethodsController(IContactMethodService contactMethodService
                 return RedirectToEntity(result.RedirectId, result.RedirectType);
             }
 
-            if (result.ErrorMessage == "Contact method not found.")
+            if (result.IsNotFound)
             {
                 return NotFound();
             }

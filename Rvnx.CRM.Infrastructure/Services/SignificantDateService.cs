@@ -30,14 +30,14 @@ public class SignificantDateService(IRepository repository) : ISignificantDateSe
     {
         if (!await _repository.IsValidContactAsync(dto.EntityId))
         {
-            return OperationResult.Failure("Contact not found.");
+            return OperationResult.NotFound("Contact not found.");
         }
 
         if (string.Equals(dto.Title, SignificantDateTitles.Birthday, StringComparison.OrdinalIgnoreCase))
         {
             if (await IsBirthdayAlreadySetAsync(dto.EntityId))
             {
-                return OperationResult.Failure("A birthday is already set for this contact.");
+                return OperationResult.Conflict("A birthday is already set for this contact.");
             }
 
             dto.RecurrenceType = Core.Enumerations.RecurrenceType.Annual;
@@ -74,14 +74,14 @@ public class SignificantDateService(IRepository repository) : ISignificantDateSe
             SignificantDate? importantDate = await _repository.GetByIdAsync<SignificantDate>(id);
             if (importantDate == null || !await _repository.IsValidContactAsync(importantDate.ContactId ?? Guid.Empty))
             {
-                return OperationResult.Failure("Significant date not found.");
+                return OperationResult.NotFound("Significant date not found.");
             }
 
             if (string.Equals(dto.Title, SignificantDateTitles.Birthday, StringComparison.OrdinalIgnoreCase))
             {
                 if (await IsBirthdayAlreadySetAsync(dto.EntityId, dto.Id))
                 {
-                    return OperationResult.Failure("A birthday is already set for this contact.");
+                    return OperationResult.Conflict("A birthday is already set for this contact.");
                 }
 
                 dto.RecurrenceType = Core.Enumerations.RecurrenceType.Annual;
@@ -103,7 +103,7 @@ public class SignificantDateService(IRepository repository) : ISignificantDateSe
         {
             if (!await _repository.ExistsAsync<SignificantDate>(dto.Id))
             {
-                return OperationResult.Failure("Significant date not found.");
+                return OperationResult.NotFound("Significant date not found.");
             }
             throw;
         }
@@ -114,7 +114,7 @@ public class SignificantDateService(IRepository repository) : ISignificantDateSe
         SignificantDate? importantDate = await _repository.GetByIdAsync<SignificantDate>(significantDateId);
         if (importantDate == null || !await _repository.IsValidContactAsync(importantDate.ContactId ?? Guid.Empty))
         {
-            return OperationResult.Failure("Significant date not found.");
+            return OperationResult.NotFound("Significant date not found.");
         }
 
         ReminderOffset offset = new()
@@ -139,7 +139,7 @@ public class SignificantDateService(IRepository repository) : ISignificantDateSe
 
         if (significantDateIds.Count == 0)
         {
-            return OperationResult.Failure("Reminder offset not found.");
+            return OperationResult.NotFound("Reminder offset not found.");
         }
 
         Guid significantDateId = significantDateIds.FirstOrDefault();
@@ -149,7 +149,7 @@ public class SignificantDateService(IRepository repository) : ISignificantDateSe
 
         if (contactIds.Count == 0)
         {
-            return OperationResult.Failure("Significant date not found.");
+            return OperationResult.NotFound("Significant date not found.");
         }
 
         await _repository.DeleteAsync<ReminderOffset>(ro => ro.Id == offsetId);
@@ -173,7 +173,7 @@ public class SignificantDateService(IRepository repository) : ISignificantDateSe
 
             return OperationResult.Ok(entityId, EntityType.Person);
         }
-        return OperationResult.Failure("Significant date not found.");
+        return OperationResult.NotFound("Significant date not found.");
     }
 
     public async Task<SignificantDateDto?> GetDtoAsync(Guid id)

@@ -30,7 +30,7 @@ public class NoteService(IRepository repository, IEntityService entityService) :
 
         if (!await _repository.IsValidContactAsync(dto.EntityId))
         {
-            return OperationResult.Failure("Contact not found.");
+            return OperationResult.NotFound("Contact not found.");
         }
 
         Note note = dto.ToEntity();
@@ -47,7 +47,7 @@ public class NoteService(IRepository repository, IEntityService entityService) :
             Note? existingNote = await _repository.GetByIdAsync<Note>(id);
             if (existingNote == null || !await _repository.IsValidContactAsync(existingNote.ContactId ?? Guid.Empty))
             {
-                return OperationResult.Failure("Note not found.");
+                return OperationResult.NotFound("Note not found.");
             }
 
             existingNote.UpdateEntity(dto);
@@ -61,7 +61,7 @@ public class NoteService(IRepository repository, IEntityService entityService) :
         {
             if (!await _repository.ExistsAsync<Note>(dto.Id ?? Guid.Empty))
             {
-                return OperationResult.Failure("Note not found.");
+                return OperationResult.NotFound("Note not found.");
             }
             throw;
         }
@@ -80,7 +80,7 @@ public class NoteService(IRepository repository, IEntityService entityService) :
             await _repository.SaveChangesAsync();
             return OperationResult.Ok(entityId, EntityType.Person);
         }
-        return OperationResult.Failure("Note not found.");
+        return OperationResult.NotFound("Note not found.");
     }
 
     public async Task<NoteFormViewModel?> GetFormAsync(Guid id)

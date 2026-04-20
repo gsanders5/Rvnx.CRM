@@ -26,7 +26,7 @@ public class ContactTaskService(IRepository repository) : IContactTaskService
     {
         if (!await _repository.IsValidContactAsync(dto.EntityId))
         {
-            return OperationResult.Failure("Contact not found.");
+            return OperationResult.NotFound("Contact not found.");
         }
 
         ContactTask task = dto.ToEntity();
@@ -43,7 +43,7 @@ public class ContactTaskService(IRepository repository) : IContactTaskService
             ContactTask? existing = await _repository.GetByIdAsync<ContactTask>(id);
             if (existing == null || !await _repository.IsValidContactAsync(existing.ContactId ?? Guid.Empty))
             {
-                return OperationResult.Failure("Task not found.");
+                return OperationResult.NotFound("Task not found.");
             }
 
             existing.UpdateEntity(dto);
@@ -56,7 +56,7 @@ public class ContactTaskService(IRepository repository) : IContactTaskService
         {
             if (!await _repository.ExistsAsync<ContactTask>(dto.Id ?? Guid.Empty))
             {
-                return OperationResult.Failure("Task not found.");
+                return OperationResult.NotFound("Task not found.");
             }
             throw;
         }
@@ -76,7 +76,7 @@ public class ContactTaskService(IRepository repository) : IContactTaskService
             return OperationResult.Ok(entityId, EntityType.Person);
         }
 
-        return OperationResult.Failure("Task not found.");
+        return OperationResult.NotFound("Task not found.");
     }
 
     public async Task<ContactTaskFormDto?> GetFormAsync(Guid id)
@@ -117,7 +117,7 @@ public class ContactTaskService(IRepository repository) : IContactTaskService
         ContactTask? task = await _repository.GetByIdAsync<ContactTask>(id);
         if (task == null || !await _repository.IsValidContactAsync(task.ContactId ?? Guid.Empty))
         {
-            return OperationResult.Failure("Task not found.");
+            return OperationResult.NotFound("Task not found.");
         }
 
         task.IsCompleted = !task.IsCompleted;

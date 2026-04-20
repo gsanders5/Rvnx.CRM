@@ -24,7 +24,7 @@ public class AddressService(IRepository repository) : IAddressService
     {
         if (!await _repository.IsValidContactAsync(dto.EntityId))
         {
-            return OperationResult.Failure("Contact not found.");
+            return OperationResult.NotFound("Contact not found.");
         }
 
         Address address = dto.ToEntity();
@@ -41,7 +41,7 @@ public class AddressService(IRepository repository) : IAddressService
             Address? existing = await _repository.GetByIdAsync<Address>(id);
             if (existing == null || !await _repository.IsValidContactAsync(existing.ContactId ?? Guid.Empty))
             {
-                return OperationResult.Failure("Address not found.");
+                return OperationResult.NotFound("Address not found.");
             }
 
             existing.UpdateEntity(dto);
@@ -54,7 +54,7 @@ public class AddressService(IRepository repository) : IAddressService
         {
             if (!await _repository.ExistsAsync<Address>(id))
             {
-                return OperationResult.Failure("Address not found.");
+                return OperationResult.NotFound("Address not found.");
             }
             throw;
         }
@@ -74,7 +74,7 @@ public class AddressService(IRepository repository) : IAddressService
             return OperationResult.Ok(entityId, EntityType.Person);
         }
 
-        return OperationResult.Failure("Address not found.");
+        return OperationResult.NotFound("Address not found.");
     }
 
     public async Task<AddressFormDto?> GetFormAsync(Guid id)

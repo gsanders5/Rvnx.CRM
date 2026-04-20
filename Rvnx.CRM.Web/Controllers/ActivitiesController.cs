@@ -37,7 +37,7 @@ public class ActivitiesController(IActivityService activityService, IRepository 
                 return RedirectToEntity(result.RedirectId, result.RedirectType);
             }
 
-            if (result.ErrorMessage == "Contact not found.")
+            if (result.IsNotFound)
             {
                 return NotFound();
             }
@@ -45,6 +45,23 @@ public class ActivitiesController(IActivityService activityService, IRepository 
 
         await PopulateContactsSelectList(_contactReadService, dto.ContactIds);
         return View(dto);
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> QuickLog(Guid contactId, string activityType)
+    {
+        OperationResult result = await _activityService.QuickLogAsync(contactId, activityType);
+        if (result.Success)
+        {
+            return RedirectToEntity(result.RedirectId, result.RedirectType);
+        }
+
+        if (result.IsNotFound)
+        {
+            return NotFound();
+        }
+
+        return BadRequest(result.ErrorMessage);
     }
 
     [HttpGet]
@@ -76,7 +93,7 @@ public class ActivitiesController(IActivityService activityService, IRepository 
                 return RedirectToEntity(result.RedirectId, result.RedirectType);
             }
 
-            if (result.ErrorMessage == "Activity not found.")
+            if (result.IsNotFound)
             {
                 return NotFound();
             }

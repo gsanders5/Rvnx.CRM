@@ -1,3 +1,4 @@
+using Rvnx.CRM.Core.Constants;
 using Rvnx.CRM.Core.DTOs.Contact;
 using Rvnx.CRM.Core.Enumerations;
 using Rvnx.CRM.Core.Exceptions;
@@ -27,7 +28,7 @@ public class ActivityService(IRepository repository, ISelfContactService selfCon
     {
         if (!await _repository.IsValidContactAsync(dto.EntityId))
         {
-            return OperationResult.Failure("Contact not found.");
+            return OperationResult.NotFound("Contact not found.");
         }
 
         List<Guid> contactIds = dto.ContactIds.Count > 0 ? dto.ContactIds : [dto.EntityId];
@@ -51,6 +52,36 @@ public class ActivityService(IRepository repository, ISelfContactService selfCon
         return OperationResult.Ok(dto.EntityId, EntityType.Person);
     }
 
+    public async Task<OperationResult> QuickLogAsync(Guid contactId, string activityType)
+    {
+        if (!ActivityTypeSuggestions.QuickLog.Any(q => q.Type == activityType))
+        {
+            return OperationResult.Failure("Invalid activity type.");
+        }
+
+        ActivityFormDto dto = new()
+        {
+            EntityId = contactId,
+            Title = activityType,
+            ActivityType = activityType,
+            ActivityDate = DateTime.Today,
+            ContactIds = await BuildContactIdsWithSelfAsync(contactId)
+        };
+
+        return await CreateAsync(dto);
+    }
+
+    private async Task<List<Guid>> BuildContactIdsWithSelfAsync(Guid entityId)
+    {
+        List<Guid> contactIds = [entityId];
+        Guid? selfContactId = await _selfContactService.GetSelfContactIdAsync();
+        if (selfContactId.HasValue && selfContactId.Value != entityId)
+        {
+            contactIds.Add(selfContactId.Value);
+        }
+        return contactIds;
+    }
+
     public async Task<OperationResult> UpdateAsync(Guid id, ActivityFormDto dto)
     {
         try
@@ -58,7 +89,7 @@ public class ActivityService(IRepository repository, ISelfContactService selfCon
             Activity? existing = await _repository.GetByIdWithIncludesAsync<Activity>(id, nameof(Activity.ActivityContacts));
             if (existing == null)
             {
-                return OperationResult.Failure("Activity not found.");
+                return OperationResult.NotFound("Activity not found.");
             }
 
             existing.UpdateEntity(dto);
@@ -99,7 +130,7 @@ public class ActivityService(IRepository repository, ISelfContactService selfCon
         {
             if (!await _repository.ExistsAsync<Activity>(id))
             {
-                return OperationResult.Failure("Activity not found.");
+                return OperationResult.NotFound("Activity not found.");
             }
             throw;
         }
@@ -109,7 +140,7 @@ public class ActivityService(IRepository repository, ISelfContactService selfCon
     {
         if (!await _repository.ExistsAsync<Activity>(id))
         {
-            return OperationResult.Failure("Activity not found.");
+            return OperationResult.NotFound("Activity not found.");
         }
 
         Guid entityId = (await _repository.ListProjectedAsync<ActivityContact, Guid>(
@@ -153,15 +184,7 @@ public class ActivityService(IRepository repository, ISelfContactService selfCon
             return null;
         }
 
-        List<Guid> contactIds = [entityId];
-
-        Guid? selfContactId = await _selfContactService.GetSelfContactIdAsync();
-        if (selfContactId.HasValue && selfContactId.Value != entityId)
-        {
-            contactIds.Add(selfContactId.Value);
-        }
-
-        return new ActivityFormDto { EntityId = entityId, ContactIds = contactIds };
+        return new ActivityFormDto { EntityId = entityId, ContactIds = await BuildContactIdsWithSelfAsync(entityId) };
     }
 
     public async Task<Activity?> GetByIdAsync(Guid id)

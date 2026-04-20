@@ -30,7 +30,7 @@ public class AddressesController(IAddressService addressService, IRepository rep
                 return RedirectToEntity(result.RedirectId, result.RedirectType);
             }
 
-            if (result.ErrorMessage == "Contact not found.")
+            if (result.IsNotFound)
             {
                 return NotFound();
             }
@@ -62,7 +62,7 @@ public class AddressesController(IAddressService addressService, IRepository rep
                 return RedirectToEntity(result.RedirectId, result.RedirectType);
             }
 
-            if (result.ErrorMessage == "Address not found.")
+            if (result.IsNotFound)
             {
                 return NotFound();
             }

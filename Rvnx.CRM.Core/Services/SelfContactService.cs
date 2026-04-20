@@ -10,28 +10,18 @@ public class SelfContactService(IRepository repository, ICurrentUserService curr
 {
     private readonly IRepository _repository = repository;
     private readonly ICurrentUserService _currentUserService = currentUserService;
+    private Rvnx.CRM.Core.Models.User? _cachedUser;
+    private bool _userLoaded;
 
     public async Task<Guid?> GetSelfContactIdAsync()
     {
-        Guid? userId = _currentUserService.UserId;
-        if (!userId.HasValue)
-        {
-            return null;
-        }
-
-        Rvnx.CRM.Core.Models.User? userEntity = await GetUserAsync(userId.Value);
+        Rvnx.CRM.Core.Models.User? userEntity = await GetCachedUserAsync();
         return userEntity?.SelfContactId;
     }
 
     public async Task<ContactFormDto?> GetSelfContactFormAsync()
     {
-        Guid? userId = _currentUserService.UserId;
-        if (!userId.HasValue)
-        {
-            return null;
-        }
-
-        Rvnx.CRM.Core.Models.User? userEntity = await GetUserAsync(userId.Value);
+        Rvnx.CRM.Core.Models.User? userEntity = await GetCachedUserAsync();
         if (userEntity == null)
         {
             return null;
@@ -62,13 +52,12 @@ public class SelfContactService(IRepository repository, ICurrentUserService curr
 
     public async Task<ContactOperationResult> CreateSelfContactAsync(ContactFormDto contactDto)
     {
-        Guid? userId = _currentUserService.UserId;
-        if (!userId.HasValue)
+        if (!_currentUserService.UserId.HasValue)
         {
             return ContactOperationResult.Failure("User not authenticated.");
         }
 
-        Rvnx.CRM.Core.Models.User? userEntity = await GetUserAsync(userId.Value);
+        Rvnx.CRM.Core.Models.User? userEntity = await GetCachedUserAsync();
         if (userEntity == null)
         {
             return ContactOperationResult.Failure("User entity not found.");
@@ -96,10 +85,24 @@ public class SelfContactService(IRepository repository, ICurrentUserService curr
         return ContactOperationResult.Ok(contact.Id);
     }
 
-    private async Task<Rvnx.CRM.Core.Models.User?> GetUserAsync(Guid userId)
+    private async Task<Rvnx.CRM.Core.Models.User?> GetCachedUserAsync()
     {
-        Rvnx.CRM.Core.Models.User? user = await _repository.GetByIdAsync<Rvnx.CRM.Core.Models.User>(userId);
-        return user ?? (await _repository.ListAsync<Rvnx.CRM.Core.Models.User>(u => u.SubjectId == userId.ToString())).FirstOrDefault();
+        if (_userLoaded)
+        {
+            return _cachedUser;
+        }
+
+        Guid? userId = _currentUserService.UserId;
+        if (!userId.HasValue)
+        {
+            _userLoaded = true;
+            return null;
+        }
+
+        Rvnx.CRM.Core.Models.User? user = await _repository.GetByIdAsync<Rvnx.CRM.Core.Models.User>(userId.Value);
+        _cachedUser = user ?? (await _repository.ListAsync<Rvnx.CRM.Core.Models.User>(u => u.SubjectId == userId.Value.ToString())).FirstOrDefault();
+        _userLoaded = true;
+        return _cachedUser;
     }
 
 }

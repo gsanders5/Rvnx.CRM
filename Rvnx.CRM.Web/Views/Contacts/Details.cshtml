@@ -571,9 +571,20 @@
     <div class="crm-card">
         <div class="crm-card-header">
             <h5 class="card-title mb-0"><i class="bi bi-calendar-check" aria-hidden="true"></i> Activities</h5>
-            <a asp-controller="Activities" asp-action="Create" asp-route-entityId="@Model.Id" class="crm-btn-secondary btn-sm" aria-label="Add Activity">
-                <i class="bi bi-plus-lg" aria-hidden="true"></i> Add
-            </a>
+            <div class="d-flex gap-1 flex-wrap align-items-center">
+                <form method="post" asp-controller="Activities" asp-action="QuickLog" class="d-flex gap-1 flex-wrap align-items-center">
+                    <input type="hidden" name="contactId" value="@Model.Id"/>
+                    @foreach (var option in ActivityTypeSuggestions.QuickLog)
+                    {
+                        <button type="submit" name="activityType" value="@option.Type" class="crm-btn-secondary btn-sm" title="Log @option.Label today">
+                            <i class="@option.Icon" aria-hidden="true"></i> @option.Label
+                        </button>
+                    }
+                </form>
+                <a asp-controller="Activities" asp-action="Create" asp-route-entityId="@Model.Id" class="crm-btn-secondary btn-sm" aria-label="Add Activity">
+                    <i class="bi bi-plus-lg" aria-hidden="true"></i> Add
+                </a>
+            </div>
         </div>
         <div class="crm-card-body">
             @if (Model.Activities != null && Model.Activities.Any())

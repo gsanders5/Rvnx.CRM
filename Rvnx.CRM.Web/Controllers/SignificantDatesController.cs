@@ -63,13 +63,13 @@ public class SignificantDatesController(ISignificantDateService significantDateS
                 return RedirectToAction(nameof(Index), new { contactId = dto.EntityId });
             }
 
-            if (result.ErrorMessage == "A birthday is already set for this contact.")
+            if (result.IsConflict)
             {
-                ModelState.AddModelError("Title", result.ErrorMessage);
+                ModelState.AddModelError("Title", result.ErrorMessage!);
                 return View(dto);
             }
 
-            if (result.ErrorMessage == "Contact not found.")
+            if (result.IsNotFound)
             {
                 return NotFound();
             }
@@ -135,13 +135,13 @@ public class SignificantDatesController(ISignificantDateService significantDateS
                 return RedirectToAction(nameof(Index), new { contactId = dto.EntityId });
             }
 
-            if (result.ErrorMessage == "A birthday is already set for this contact.")
+            if (result.IsConflict)
             {
-                ModelState.AddModelError("Title", result.ErrorMessage);
+                ModelState.AddModelError("Title", result.ErrorMessage!);
                 return View(dto);
             }
 
-            if (result.ErrorMessage == "Significant date not found.")
+            if (result.IsNotFound)
             {
                 return NotFound();
             }

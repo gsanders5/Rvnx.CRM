@@ -30,7 +30,7 @@ public class FactsController(IFactService factService, IRepository repository) :
                 return RedirectToEntity(result.RedirectId, result.RedirectType);
             }
 
-            if (result.ErrorMessage == "Contact not found.")
+            if (result.IsNotFound)
             {
                 return NotFound();
             }
@@ -67,7 +67,7 @@ public class FactsController(IFactService factService, IRepository repository) :
                 return RedirectToEntity(result.RedirectId, result.RedirectType);
             }
 
-            if (result.ErrorMessage == "Fact not found.")
+            if (result.IsNotFound)
             {
                 return NotFound();
             }

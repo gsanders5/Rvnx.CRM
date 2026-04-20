@@ -25,7 +25,7 @@ public class ContactMethodService(IRepository repository) : IContactMethodServic
     {
         if (!await _repository.IsValidContactAsync(dto.EntityId))
         {
-            return OperationResult.Failure("Contact not found.");
+            return OperationResult.NotFound("Contact not found.");
         }
 
         ContactMethod contactInfo = dto.ToEntity();
@@ -44,7 +44,7 @@ public class ContactMethodService(IRepository repository) : IContactMethodServic
             ContactMethod? existingContactInfo = await _repository.GetByIdAsync<ContactMethod>(id);
             if (existingContactInfo == null || !await _repository.IsValidContactAsync(existingContactInfo.ContactId ?? Guid.Empty))
             {
-                return OperationResult.Failure("Contact method not found.");
+                return OperationResult.NotFound("Contact method not found.");
             }
 
             existingContactInfo.UpdateEntity(dto);
@@ -59,7 +59,7 @@ public class ContactMethodService(IRepository repository) : IContactMethodServic
         {
             if (!await _repository.ExistsAsync<ContactMethod>(dto.Id ?? Guid.Empty))
             {
-                return OperationResult.Failure("Contact method not found.");
+                return OperationResult.NotFound("Contact method not found.");
             }
             throw;
         }
@@ -78,7 +78,7 @@ public class ContactMethodService(IRepository repository) : IContactMethodServic
             await _repository.SaveChangesAsync();
             return OperationResult.Ok(entityId, EntityType.Person);
         }
-        return OperationResult.Failure("Contact method not found.");
+        return OperationResult.NotFound("Contact method not found.");
     }
 
     public async Task<ContactMethodFormDto?> GetFormAsync(Guid id)
