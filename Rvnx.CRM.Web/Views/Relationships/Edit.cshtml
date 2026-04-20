@@ -1,4 +1,4 @@
-@using Rvnx.CRM.Core.Constants
+@using Rvnx.CRM.Core.Enumerations
 @model Rvnx.CRM.Core.DTOs.Contact.RelationshipFormViewModel
 
 @{
@@ -108,7 +108,7 @@
                         <i class="bi bi-person-check" aria-hidden="true"></i> Promote to Contact
                     </button>
                 }
-                @if (Model.EntityType == EntityTypes.Person)
+                @if (Model.EntityType == EntityType.Person)
                 {
                     <a asp-controller="Contacts" asp-action="Details" asp-route-id="@Model.EntityId" class="crm-btn-tertiary"><i class="bi bi-x-lg" aria-hidden="true"></i> Cancel</a>
                 }

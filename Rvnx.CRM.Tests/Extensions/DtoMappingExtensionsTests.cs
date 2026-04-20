@@ -113,7 +113,7 @@ public class DtoMappingExtensionsTests
             Assert.Equal("application/pdf", dto.ContentType);
             Assert.Equal("Document", dto.AttachmentType);
             Assert.Equal(contactId, dto.EntityId);
-            Assert.Equal(EntityTypes.Person, dto.EntityType);
+            Assert.Equal(EntityType.Person, dto.EntityType);
         }
 
         [Fact]
@@ -164,7 +164,7 @@ public class DtoMappingExtensionsTests
 
             AttachmentDto dto = attachment.ToDto();
 
-            Assert.Equal(EntityTypes.Person, dto.EntityType);
+            Assert.Equal(EntityType.Person, dto.EntityType);
         }
     }
     public class ContactDetailDtoMappingTests
@@ -314,7 +314,7 @@ public class DtoMappingExtensionsTests
             Assert.Equal(entity.Value, dto.Value);
             Assert.Equal(entity.Label, dto.Label);
             Assert.Equal(entity.ContactId.Value, dto.EntityId);
-            Assert.Equal(EntityTypes.Person, dto.EntityType);
+            Assert.Equal(EntityType.Person, dto.EntityType);
             Assert.Equal(entity.CreatedDate, dto.CreatedDate);
         }
 
@@ -338,7 +338,7 @@ public class DtoMappingExtensionsTests
             Assert.Equal(entity.Value, dto.Value);
             Assert.Equal(entity.Label, dto.Label);
             Assert.Equal(Guid.Empty, dto.EntityId);
-            Assert.Equal(EntityTypes.Person, dto.EntityType);
+            Assert.Equal(EntityType.Person, dto.EntityType);
             Assert.Equal(entity.CreatedDate, dto.CreatedDate);
         }
 
@@ -465,7 +465,7 @@ public class DtoMappingExtensionsTests
             Assert.Equal(fact.Category, dto.Category);
             Assert.Equal(fact.Value, dto.Value);
             Assert.Equal(fact.ContactId.Value, dto.EntityId);
-            Assert.Equal(EntityTypes.Person, dto.EntityType);
+            Assert.Equal(EntityType.Person, dto.EntityType);
             Assert.Equal(fact.CreatedDate, dto.CreatedDate);
         }
 
@@ -552,7 +552,7 @@ public class DtoMappingExtensionsTests
             Assert.Equal(note.Title, dto.Title);
             Assert.Equal(note.Value, dto.Value);
             Assert.Equal(note.ContactId.Value, dto.EntityId);
-            Assert.Equal(EntityTypes.Person, dto.EntityType);
+            Assert.Equal(EntityType.Person, dto.EntityType);
             Assert.Equal(note.CreatedDate, dto.CreatedDate);
         }
 
@@ -751,7 +751,7 @@ public class DtoMappingExtensionsTests
             Assert.Equal(entity.EventDate, dto.EventDate);
             Assert.Equal(entity.Description, dto.Description);
             Assert.Equal(entity.ContactId, dto.EntityId);
-            Assert.Equal(EntityTypes.Person, dto.EntityType);
+            Assert.Equal(EntityType.Person, dto.EntityType);
             Assert.Equal(entity.RecurrenceType, dto.RecurrenceType);
             Assert.Equal(entity.CustomIntervalDays, dto.CustomIntervalDays);
             Assert.Equal(entity.IsActive, dto.IsActive);
@@ -795,7 +795,7 @@ public class DtoMappingExtensionsTests
 
             SignificantDateDto dto = entity.ToDto();
 
-            Assert.Equal(EntityTypes.Person, dto.EntityType);
+            Assert.Equal(EntityType.Person, dto.EntityType);
         }
 
         [Fact]

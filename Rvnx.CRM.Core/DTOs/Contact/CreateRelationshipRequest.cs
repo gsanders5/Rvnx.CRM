@@ -17,8 +17,8 @@ public class CreateRelationshipRequest
     [Required]
     public Guid RelatedEntityId { get; set; }
 
-    /// <summary>Entity type. Always "Person" for contact-to-contact relationships.</summary>
-    public string EntityType { get; set; } = "Person";
+    /// <summary>Entity type. Always <c>Person</c> for contact-to-contact relationships.</summary>
+    public EntityType EntityType { get; set; } = EntityType.Person;
 
     /// <summary>
     /// The relationship type GUID. Use GET /api/relationships/types to list all types with their IDs,

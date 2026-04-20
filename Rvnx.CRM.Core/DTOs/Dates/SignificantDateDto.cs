@@ -1,4 +1,6 @@
 using Rvnx.CRM.Core.DTOs.Base;
+using Rvnx.CRM.Core.Enumerations;
+
 namespace Rvnx.CRM.Core.DTOs.Dates;
 
 public class SignificantDateDto : BaseDto
@@ -7,7 +9,7 @@ public class SignificantDateDto : BaseDto
     public DateOnly EventDate { get; set; }
     public string? Description { get; set; }
     public Guid EntityId { get; set; }
-    public string EntityType { get; set; } = string.Empty;
+    public EntityType EntityType { get; set; } = EntityType.Person;
     public Enumerations.RecurrenceType RecurrenceType { get; set; }
     public int? CustomIntervalDays { get; set; }
     public bool IsActive { get; set; } = true;

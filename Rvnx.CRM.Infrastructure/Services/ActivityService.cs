@@ -1,5 +1,5 @@
-using Rvnx.CRM.Core.Constants;
 using Rvnx.CRM.Core.DTOs.Contact;
+using Rvnx.CRM.Core.Enumerations;
 using Rvnx.CRM.Core.Exceptions;
 using Rvnx.CRM.Core.Extensions;
 using Rvnx.CRM.Core.Interfaces;
@@ -48,7 +48,7 @@ public class ActivityService(IRepository repository, ISelfContactService selfCon
 
         await _repository.SaveChangesAsync();
 
-        return OperationResult.Ok(dto.EntityId, EntityTypes.Person);
+        return OperationResult.Ok(dto.EntityId, EntityType.Person);
     }
 
     public async Task<OperationResult> UpdateAsync(Guid id, ActivityFormDto dto)
@@ -93,7 +93,7 @@ public class ActivityService(IRepository repository, ISelfContactService selfCon
 
             await _repository.SaveChangesAsync();
 
-            return OperationResult.Ok(dto.EntityId, EntityTypes.Person);
+            return OperationResult.Ok(dto.EntityId, EntityType.Person);
         }
         catch (EntityConcurrencyException)
         {
@@ -119,7 +119,7 @@ public class ActivityService(IRepository repository, ISelfContactService selfCon
         await _repository.DeleteAsync<Activity>(a => a.Id == id);
         await _repository.SaveChangesAsync();
 
-        return OperationResult.Ok(entityId, EntityTypes.Person);
+        return OperationResult.Ok(entityId, EntityType.Person);
     }
 
     public async Task<ActivityFormDto?> GetFormAsync(Guid id)

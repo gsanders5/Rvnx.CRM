@@ -1,5 +1,5 @@
-using Rvnx.CRM.Core.Constants;
 using Rvnx.CRM.Core.DTOs.Base;
+using Rvnx.CRM.Core.Enumerations;
 using Rvnx.CRM.Core.Exceptions;
 using Rvnx.CRM.Core.Extensions;
 using Rvnx.CRM.Core.Interfaces;
@@ -23,7 +23,7 @@ public class NoteService(IRepository repository, IEntityService entityService) :
 
     public async Task<OperationResult> CreateAsync(NoteFormViewModel dto)
     {
-        if (dto.EntityType != EntityTypes.Person)
+        if (dto.EntityType != EntityType.Person)
         {
             return OperationResult.Failure("Only Person entities are supported.");
         }
@@ -37,7 +37,7 @@ public class NoteService(IRepository repository, IEntityService entityService) :
         await _repository.AddAsync(note);
         await _repository.SaveChangesAsync();
 
-        return OperationResult.Ok(note.ContactId ?? Guid.Empty, EntityTypes.Person);
+        return OperationResult.Ok(note.ContactId ?? Guid.Empty, EntityType.Person);
     }
 
     public async Task<OperationResult> UpdateAsync(Guid id, NoteFormViewModel dto)
@@ -55,7 +55,7 @@ public class NoteService(IRepository repository, IEntityService entityService) :
             await _repository.UpdateAsync(existingNote);
             await _repository.SaveChangesAsync();
 
-            return OperationResult.Ok(existingNote.ContactId ?? Guid.Empty, EntityTypes.Person);
+            return OperationResult.Ok(existingNote.ContactId ?? Guid.Empty, EntityType.Person);
         }
         catch (EntityConcurrencyException)
         {
@@ -76,10 +76,9 @@ public class NoteService(IRepository repository, IEntityService entityService) :
         if (contactIds.Count > 0)
         {
             Guid entityId = contactIds.FirstOrDefault() ?? Guid.Empty;
-            string entityType = EntityTypes.Person;
             await _repository.DeleteAsync<Note>(n => n.Id == id);
             await _repository.SaveChangesAsync();
-            return OperationResult.Ok(entityId, entityType);
+            return OperationResult.Ok(entityId, EntityType.Person);
         }
         return OperationResult.Failure("Note not found.");
     }
@@ -96,14 +95,14 @@ public class NoteService(IRepository repository, IEntityService entityService) :
                 Title = note.Title,
                 Value = note.Value,
                 EntityId = note.ContactId ?? Guid.Empty,
-                EntityType = EntityTypes.Person,
-                EntityName = await _entityService.GetEntityNameAsync(EntityTypes.Person, note.ContactId ?? Guid.Empty)
+                EntityType = EntityType.Person,
+                EntityName = await _entityService.GetEntityNameAsync(EntityType.Person, note.ContactId ?? Guid.Empty)
             };
     }
 
-    public async Task<NoteFormViewModel?> GetFormForCreateAsync(Guid entityId, string entityType)
+    public async Task<NoteFormViewModel?> GetFormForCreateAsync(Guid entityId, EntityType entityType)
     {
-        return entityId == Guid.Empty || entityType != EntityTypes.Person
+        return entityId == Guid.Empty || entityType != EntityType.Person
             ? null
             : !await _repository.IsValidContactAsync(entityId)
             ? null

@@ -1,4 +1,5 @@
 using Rvnx.CRM.Core.DTOs.Base;
+using Rvnx.CRM.Core.Enumerations;
 using Rvnx.CRM.Core.Models;
 using Rvnx.CRM.Core.Models.Base;
 
@@ -43,7 +44,7 @@ public interface INoteService
     /// <param name="entityId">The ID of the parent entity.</param>
     /// <param name="entityType">The type of the parent entity.</param>
     /// <returns>A pre-populated <see cref="NoteFormViewModel"/>.</returns>
-    Task<NoteFormViewModel?> GetFormForCreateAsync(Guid entityId, string entityType);
+    Task<NoteFormViewModel?> GetFormForCreateAsync(Guid entityId, EntityType entityType);
 
     /// <summary>
     /// Retrieves a note entity by its ID.

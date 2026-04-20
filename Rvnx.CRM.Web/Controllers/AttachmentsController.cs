@@ -2,6 +2,7 @@ using FileTypeChecker.Web.Attributes;
 using Microsoft.AspNetCore.Mvc;
 using Rvnx.CRM.Core.DTOs.Base;
 using Rvnx.CRM.Core.DTOs.Contact;
+using Rvnx.CRM.Core.Enumerations;
 using Rvnx.CRM.Core.Interfaces;
 using Rvnx.CRM.Web.Controllers.Base;
 using System.Collections.Frozen;
@@ -21,7 +22,7 @@ public class AttachmentsController(
         new[] { "image/jpeg", "image/png", "image/gif" }.ToFrozenSet(StringComparer.OrdinalIgnoreCase);
 
     [HttpPost]
-    public async Task<IActionResult> Upload(Guid entityId, string entityType, [ForbidExecutables] IFormFile file,
+    public async Task<IActionResult> Upload(Guid entityId, EntityType entityType, [ForbidExecutables] IFormFile file,
         string? returnUrl = null)
     {
         if (file == null || file.Length == 0)

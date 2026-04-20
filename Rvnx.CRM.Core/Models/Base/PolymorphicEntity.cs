@@ -1,3 +1,4 @@
+using Rvnx.CRM.Core.Enumerations;
 using System.ComponentModel.DataAnnotations;
 
 namespace Rvnx.CRM.Core.Models.Base;
@@ -9,7 +10,6 @@ public abstract class PolymorphicEntity : BaseEntity
     public Guid EntityId { get; set; }
 
     [Required]
-    [MaxLength(50)]
     [Display(Name = "Entity Type")]
-    public string EntityType { get; set; } = string.Empty;
+    public EntityType EntityType { get; set; } = EntityType.Person;
 }

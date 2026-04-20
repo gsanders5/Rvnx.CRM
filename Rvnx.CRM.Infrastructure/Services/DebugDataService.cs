@@ -1,4 +1,4 @@
-using Rvnx.CRM.Core.Constants;
+using Rvnx.CRM.Core.Enumerations;
 using Rvnx.CRM.Core.Interfaces;
 using Rvnx.CRM.Core.Models.Base;
 using Rvnx.CRM.Core.Models.Contact;
@@ -151,7 +151,7 @@ public class DebugDataService(IRepository repository) : IDebugDataService
                 Id = Guid.NewGuid(),
                 EntityId = c1.Id,
                 RelatedEntityId = c2.Id,
-                EntityType = EntityTypes.Person,
+                EntityType = EntityType.Person,
                 RelationshipTypeId = type.Id,
                 Description = "Randomly generated"
             };

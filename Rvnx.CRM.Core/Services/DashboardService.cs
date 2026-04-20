@@ -1,6 +1,7 @@
 using Microsoft.Extensions.Logging;
 using Rvnx.CRM.Core.Constants;
 using Rvnx.CRM.Core.DTOs.Dashboard;
+using Rvnx.CRM.Core.Enumerations;
 using Rvnx.CRM.Core.Extensions;
 using Rvnx.CRM.Core.Interfaces;
 using Rvnx.CRM.Core.Models.Base;
@@ -90,7 +91,7 @@ public class DashboardService(IRepository repository, ILogger<DashboardService> 
 
         List<(Guid EntityId, Guid RelatedEntityId)> relationships =
             await _repository.ListProjectedAsync<Relationship, (Guid EntityId, Guid RelatedEntityId)>(
-                r => r.EntityType == EntityTypes.Person,
+                r => r.EntityType == EntityType.Person,
                 r => new ValueTuple<Guid, Guid>(r.EntityId, r.RelatedEntityId));
 
         foreach (var (entityId, relatedEntityId) in relationships)

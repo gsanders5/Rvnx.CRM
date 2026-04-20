@@ -1,5 +1,6 @@
 using Rvnx.CRM.Core.DTOs.Common;
 using Rvnx.CRM.Core.DTOs.Contact;
+using Rvnx.CRM.Core.Enumerations;
 using Rvnx.CRM.Core.Models;
 using Rvnx.CRM.Core.Models.Contact;
 
@@ -33,7 +34,7 @@ public interface IRelationshipService
     /// <param name="entityType">The type of the entity (e.g., Person, Company).</param>
     /// <param name="selectedId">The ID of the currently selected related entity, if any.</param>
     /// <returns>A list of <see cref="SelectOptionDto"/> representing available entities.</returns>
-    Task<List<SelectOptionDto>> GetRelatedEntityOptionsAsync(Guid entityId, string entityType, Guid? selectedId = null);
+    Task<List<SelectOptionDto>> GetRelatedEntityOptionsAsync(Guid entityId, EntityType entityType, Guid? selectedId = null);
 
     /// <summary>
     /// Retrieves available relationship types for a given entity type, formatted for selection.
@@ -42,7 +43,7 @@ public interface IRelationshipService
     /// <param name="entityType">The type of the source entity.</param>
     /// <param name="selectedValue">The currently selected value (e.g., "{TypeId}_Fwd"), if any.</param>
     /// <returns>A list of <see cref="SelectOptionDto"/> representing relationship types.</returns>
-    List<SelectOptionDto> GetRelationshipTypeOptions(string entityType, string? selectedValue = null);
+    List<SelectOptionDto> GetRelationshipTypeOptions(EntityType entityType, string? selectedValue = null);
 
     /// <summary>
     /// Retrieves the list of relationship type definitions for a given entity type.
@@ -50,7 +51,7 @@ public interface IRelationshipService
     /// </summary>
     /// <param name="entityType">The type of the source entity.</param>
     /// <returns>A list of <see cref="RelationshipTypeDefinition"/>.</returns>
-    List<RelationshipTypeDefinition> GetRelationshipTypes(string entityType);
+    List<RelationshipTypeDefinition> GetRelationshipTypes(EntityType entityType);
 
     /// <summary>
     /// Creates a new "Partial Contact" and establishes a relationship to it.

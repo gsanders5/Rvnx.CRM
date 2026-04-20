@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Moq;
 using Rvnx.CRM.Core.Constants;
 using Rvnx.CRM.Core.DTOs.Base;
+using Rvnx.CRM.Core.Enumerations;
 using Rvnx.CRM.Core.Interfaces;
 using Rvnx.CRM.Core.Models.Base;
 using Rvnx.CRM.Core.Models.Contact;
@@ -39,7 +40,7 @@ public class AttachmentServiceTests
         fileServiceMock.Setup(s => s.GetMimeType(It.IsAny<string>())).Returns("image/png");
 
         Mock<IEntityService> entityServiceMock = new();
-        entityServiceMock.Setup(s => s.ExistsAsync(It.IsAny<string>(), It.IsAny<Guid>())).ReturnsAsync(true);
+        entityServiceMock.Setup(s => s.ExistsAsync(It.IsAny<EntityType>(), It.IsAny<Guid>())).ReturnsAsync(true);
 
         AttachmentService service = new(repo, fileServiceMock.Object, entityServiceMock.Object);
 
@@ -49,7 +50,7 @@ public class AttachmentServiceTests
 
         byte[] content = [1, 2, 3];
 
-        AttachmentOperationResult result = await service.UploadAttachmentAsync(contactId, EntityTypes.Person, content, "test.png");
+        AttachmentOperationResult result = await service.UploadAttachmentAsync(contactId, EntityType.Person, content, "test.png");
 
         Assert.True(result.Success);
         Assert.NotNull(result.AttachmentId);
@@ -65,11 +66,11 @@ public class AttachmentServiceTests
         Repository repo = new(context);
         Mock<IFileValidationService> fileServiceMock = new();
         Mock<IEntityService> entityServiceMock = new();
-        entityServiceMock.Setup(s => s.ExistsAsync(It.IsAny<string>(), It.IsAny<Guid>())).ReturnsAsync(false);
+        entityServiceMock.Setup(s => s.ExistsAsync(It.IsAny<EntityType>(), It.IsAny<Guid>())).ReturnsAsync(false);
 
         AttachmentService service = new(repo, fileServiceMock.Object, entityServiceMock.Object);
 
-        AttachmentOperationResult result = await service.UploadAttachmentAsync(Guid.NewGuid(), EntityTypes.Person, [1], "test.png");
+        AttachmentOperationResult result = await service.UploadAttachmentAsync(Guid.NewGuid(), EntityType.Person, [1], "test.png");
 
         Assert.False(result.Success);
         Assert.True(result.IsNotFound);
@@ -82,7 +83,7 @@ public class AttachmentServiceTests
         Repository repo = new(context);
         Mock<IFileValidationService> fileServiceMock = new();
         Mock<IEntityService> entityServiceMock = new();
-        entityServiceMock.Setup(s => s.ExistsAsync(It.IsAny<string>(), It.IsAny<Guid>())).ReturnsAsync(true);
+        entityServiceMock.Setup(s => s.ExistsAsync(It.IsAny<EntityType>(), It.IsAny<Guid>())).ReturnsAsync(true);
 
         AttachmentService service = new(repo, fileServiceMock.Object, entityServiceMock.Object);
 
@@ -90,7 +91,7 @@ public class AttachmentServiceTests
         context.Contacts!.Add(new Contact { Id = contactId, FirstName = "Partial", IsPartial = true });
         context.SaveChanges();
 
-        AttachmentOperationResult result = await service.UploadAttachmentAsync(contactId, EntityTypes.Person, [1], "test.png");
+        AttachmentOperationResult result = await service.UploadAttachmentAsync(contactId, EntityType.Person, [1], "test.png");
 
         Assert.False(result.Success);
         Assert.True(result.IsNotFound);
@@ -108,7 +109,7 @@ public class AttachmentServiceTests
 
         AttachmentService service = new(repo, fileServiceMock.Object, entityServiceMock.Object);
 
-        AttachmentOperationResult result = await service.UploadAttachmentAsync(Guid.NewGuid(), "UnsupportedType", [1, 2, 3], "test.txt");
+        AttachmentOperationResult result = await service.UploadAttachmentAsync(Guid.NewGuid(), EntityType.Company, [1, 2, 3], "test.txt");
 
         Assert.False(result.Success);
         Assert.Contains("not currently supported", result.Errors[0]);
@@ -121,14 +122,14 @@ public class AttachmentServiceTests
         Repository repo = new(context);
         Mock<IFileValidationService> fileServiceMock = new();
         Mock<IEntityService> entityServiceMock = new();
-        entityServiceMock.Setup(s => s.ExistsAsync(It.IsAny<string>(), It.IsAny<Guid>())).ReturnsAsync(true);
+        entityServiceMock.Setup(s => s.ExistsAsync(It.IsAny<EntityType>(), It.IsAny<Guid>())).ReturnsAsync(true);
 
         AttachmentService service = new(repo, fileServiceMock.Object, entityServiceMock.Object);
         Guid contactId = Guid.NewGuid();
         context.Contacts!.Add(new Contact { Id = contactId, FirstName = "Test", LastName = "User" });
         context.SaveChanges();
 
-        AttachmentOperationResult result = await service.UploadAttachmentAsync(contactId, EntityTypes.Person, [], "test.png");
+        AttachmentOperationResult result = await service.UploadAttachmentAsync(contactId, EntityType.Person, [], "test.png");
 
         Assert.False(result.Success);
         Assert.Contains("File is empty", result.Errors[0]);
@@ -143,14 +144,14 @@ public class AttachmentServiceTests
         fileServiceMock.Setup(s => s.IsAllowedFileSize(It.IsAny<long>())).Returns(false);
 
         Mock<IEntityService> entityServiceMock = new();
-        entityServiceMock.Setup(s => s.ExistsAsync(It.IsAny<string>(), It.IsAny<Guid>())).ReturnsAsync(true);
+        entityServiceMock.Setup(s => s.ExistsAsync(It.IsAny<EntityType>(), It.IsAny<Guid>())).ReturnsAsync(true);
 
         AttachmentService service = new(repo, fileServiceMock.Object, entityServiceMock.Object);
         Guid contactId = Guid.NewGuid();
         context.Contacts!.Add(new Contact { Id = contactId, FirstName = "Test", LastName = "User" });
         context.SaveChanges();
 
-        AttachmentOperationResult result = await service.UploadAttachmentAsync(contactId, EntityTypes.Person, [1, 2, 3], "test.png");
+        AttachmentOperationResult result = await service.UploadAttachmentAsync(contactId, EntityType.Person, [1, 2, 3], "test.png");
 
         Assert.False(result.Success);
         Assert.Contains("File is too large", result.Errors[0]);
@@ -166,14 +167,14 @@ public class AttachmentServiceTests
         fileServiceMock.Setup(s => s.IsAllowedExtension(It.IsAny<string>())).Returns(false);
 
         Mock<IEntityService> entityServiceMock = new();
-        entityServiceMock.Setup(s => s.ExistsAsync(It.IsAny<string>(), It.IsAny<Guid>())).ReturnsAsync(true);
+        entityServiceMock.Setup(s => s.ExistsAsync(It.IsAny<EntityType>(), It.IsAny<Guid>())).ReturnsAsync(true);
 
         AttachmentService service = new(repo, fileServiceMock.Object, entityServiceMock.Object);
         Guid contactId = Guid.NewGuid();
         context.Contacts!.Add(new Contact { Id = contactId, FirstName = "Test", LastName = "User" });
         context.SaveChanges();
 
-        AttachmentOperationResult result = await service.UploadAttachmentAsync(contactId, EntityTypes.Person, [1, 2, 3], "test.exe");
+        AttachmentOperationResult result = await service.UploadAttachmentAsync(contactId, EntityType.Person, [1, 2, 3], "test.exe");
 
         Assert.False(result.Success);
         Assert.Contains("File type not allowed", result.Errors[0]);
@@ -190,14 +191,14 @@ public class AttachmentServiceTests
         fileServiceMock.Setup(s => s.IsValidFileSignature(It.IsAny<byte[]>(), It.IsAny<string>())).Returns(false);
 
         Mock<IEntityService> entityServiceMock = new();
-        entityServiceMock.Setup(s => s.ExistsAsync(It.IsAny<string>(), It.IsAny<Guid>())).ReturnsAsync(true);
+        entityServiceMock.Setup(s => s.ExistsAsync(It.IsAny<EntityType>(), It.IsAny<Guid>())).ReturnsAsync(true);
 
         AttachmentService service = new(repo, fileServiceMock.Object, entityServiceMock.Object);
         Guid contactId = Guid.NewGuid();
         context.Contacts!.Add(new Contact { Id = contactId, FirstName = "Test", LastName = "User" });
         context.SaveChanges();
 
-        AttachmentOperationResult result = await service.UploadAttachmentAsync(contactId, EntityTypes.Person, [1, 2, 3], "test.png");
+        AttachmentOperationResult result = await service.UploadAttachmentAsync(contactId, EntityType.Person, [1, 2, 3], "test.png");
 
         Assert.False(result.Success);
         Assert.Contains("Invalid file signature", result.Errors[0]);
@@ -316,7 +317,7 @@ public class AttachmentServiceTests
         Assert.Equal("image/png", result.ContentType);
         Assert.Equal(AttachmentTypes.General, result.AttachmentType);
         Assert.Equal(contactId, result.EntityId);
-        Assert.Equal(EntityTypes.Person, result.EntityType);
+        Assert.Equal(EntityType.Person, result.EntityType);
     }
 
     [Fact]
@@ -470,7 +471,7 @@ public class AttachmentServiceTests
             fileServiceMock.Setup(s => s.GetMimeType(It.IsAny<string>())).Returns("text/plain");
 
             Mock<IEntityService> entityServiceMock = new();
-            entityServiceMock.Setup(s => s.ExistsAsync(It.IsAny<string>(), It.IsAny<Guid>())).ReturnsAsync(true);
+            entityServiceMock.Setup(s => s.ExistsAsync(It.IsAny<EntityType>(), It.IsAny<Guid>())).ReturnsAsync(true);
 
             AttachmentService service = new(repo, fileServiceMock.Object, entityServiceMock.Object);
 
@@ -483,7 +484,7 @@ public class AttachmentServiceTests
 
             // The malicious Content-Type is no longer even passed to the method.
             // The method signature change itself is part of the security fix (Defense in Depth / Trust Nothing).
-            AttachmentOperationResult result = await service.UploadAttachmentAsync(contactId, EntityTypes.Person, content, fileName);
+            AttachmentOperationResult result = await service.UploadAttachmentAsync(contactId, EntityType.Person, content, fileName);
 
             Assert.True(result.Success);
 

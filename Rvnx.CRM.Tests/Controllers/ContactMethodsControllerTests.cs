@@ -3,7 +3,6 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ViewFeatures;
 using Microsoft.EntityFrameworkCore;
 using Moq;
-using Rvnx.CRM.Core.Constants;
 using Rvnx.CRM.Core.DTOs.Contact;
 using Rvnx.CRM.Core.Enumerations;
 using Rvnx.CRM.Core.Interfaces;
@@ -56,28 +55,23 @@ public class ContactMethodsControllerTests : IDisposable
         _context.Contacts!.Add(new Contact { Id = entityId, FirstName = "Parent" });
         await _context.SaveChangesAsync();
 
-        string entityType = EntityTypes.Person;
-
-        IActionResult result = await _controller.Create(entityId, entityType);
+        IActionResult result = await _controller.Create(entityId, EntityType.Person);
 
         ViewResult viewResult = Assert.IsType<ViewResult>(result);
         ContactMethodFormDto model = Assert.IsType<ContactMethodFormDto>(viewResult.Model);
         Assert.Equal(entityId, model.EntityId);
-        Assert.Equal(entityType, model.EntityType);
     }
 
     [Fact]
     public async Task CreatePostValidDataCreatesContactMethod()
     {
         Guid entityId = Guid.NewGuid();
-        string entityType = EntityTypes.Person;
         _context.Contacts!.Add(new Contact { Id = entityId, FirstName = "Parent", LastName = "Entity" });
         await _context.SaveChangesAsync();
 
         ContactMethodFormDto dto = new()
         {
             EntityId = entityId,
-            EntityType = entityType,
             Type = ContactMethodType.Phone,
             Value = "555-0199",
             Label = "Work"
@@ -106,7 +100,6 @@ public class ContactMethodsControllerTests : IDisposable
         ContactMethodFormDto dto = new()
         {
             EntityId = entityId,
-            EntityType = EntityTypes.Person,
         };
         _controller.ModelState.AddModelError("Value", "Required");
 
@@ -122,12 +115,10 @@ public class ContactMethodsControllerTests : IDisposable
     {
         // We do NOT create the parent entity
         Guid nonExistentEntityId = Guid.NewGuid();
-        string entityType = EntityTypes.Person;
 
         ContactMethodFormDto dto = new()
         {
             EntityId = nonExistentEntityId,
-            EntityType = entityType,
             Type = ContactMethodType.Email,
             Value = "orphan@example.com"
         };
@@ -163,7 +154,6 @@ public class ContactMethodsControllerTests : IDisposable
         {
             Id = methodId,
             EntityId = entityId,
-            EntityType = EntityTypes.Person,
             Type = ContactMethodType.Email,
             Value = "New Value",
             Label = "New Label"
@@ -189,7 +179,6 @@ public class ContactMethodsControllerTests : IDisposable
         {
             Id = methodId,
             EntityId = Guid.NewGuid(),
-            EntityType = EntityTypes.Person,
             Type = ContactMethodType.Phone,
             Value = "Val"
         };

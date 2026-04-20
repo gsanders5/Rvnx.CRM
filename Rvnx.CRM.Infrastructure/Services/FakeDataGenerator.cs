@@ -134,7 +134,7 @@ public class FakeDataGenerator
     public static List<Relationship> GenerateRelationships(List<Contact> contacts, int count)
     {
         List<Relationship> relationships = [];
-        List<RelationshipTypeDefinition> personTypes = RelationshipTypeService.GetByEntityType(EntityTypes.Person);
+        List<RelationshipTypeDefinition> personTypes = RelationshipTypeService.GetByEntityType(EntityType.Person);
 
         if (contacts.Count < 2)
         {
@@ -157,7 +157,7 @@ public class FakeDataGenerator
             {
                 Id = Guid.NewGuid(),
                 EntityId = contact1.Id,
-                EntityType = EntityTypes.Person,
+                EntityType = EntityType.Person,
                 RelatedEntityId = contact2.Id,
                 RelationshipTypeId = type.Id,
                 Description = "Generated relationship"

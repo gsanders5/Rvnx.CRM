@@ -18,14 +18,14 @@ public class ReminderNotificationService(
     private readonly IRepository _repository = repository;
     private readonly IConfiguration _configuration = configuration;
 
-    public async Task<OperationResult> SendDueRemindersAsync(DateOnly forDate)
+    public async Task<string> SendDueRemindersAsync(DateOnly forDate)
     {
         IConfigurationSection emailConfig = _configuration.GetSection("EmailNotifications");
         bool isEnabled = bool.TryParse(emailConfig["Enabled"], out bool result) && result;
 
         if (!isEnabled)
         {
-            return OperationResult.Ok(Guid.Empty, "Email notifications are disabled in configuration.");
+            return "Email notifications are disabled in configuration.";
         }
 
         List<ReminderOffset> offsets = await _repository.QueryUnfiltered<ReminderOffset>()
@@ -114,7 +114,7 @@ public class ReminderNotificationService(
         }
 
         await _repository.SaveChangesAsync();
-        return OperationResult.Ok(Guid.Empty, $"Processed: {sentCount} sent, {failedCount} failed.");
+        return $"Processed: {sentCount} sent, {failedCount} failed.";
     }
 
     private static async Task<(bool Success, string? Error)> SendEmailAsync(

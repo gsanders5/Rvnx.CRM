@@ -177,8 +177,8 @@ public class ContactReadService(IRepository repository, IFavoriteService favorit
 
         // Relationships Optimization: Fetch both outgoing and incoming relationships in one query
         List<Relationship> allRelationships = await _repository.ListAsNoTrackingAsync<Relationship>(r =>
-            (r.EntityId == id && r.EntityType == EntityTypes.Person) ||
-            (r.RelatedEntityId == id && r.EntityType == EntityTypes.Person));
+            (r.EntityId == id && r.EntityType == EntityType.Person) ||
+            (r.RelatedEntityId == id && r.EntityType == EntityType.Person));
 
         List<Relationship> relationships = allRelationships.Where(r => r.EntityId == id).ToList();
         List<Relationship> relatedTo = allRelationships.Where(r => r.RelatedEntityId == id).ToList();
@@ -405,7 +405,7 @@ public class ContactReadService(IRepository repository, IFavoriteService favorit
     public async Task<bool> HasRelationshipsAsync(Guid id)
     {
         int count = await _repository.CountAsync<Relationship>(r =>
-            (r.EntityId == id || r.RelatedEntityId == id) && r.EntityType == EntityTypes.Person);
+            (r.EntityId == id || r.RelatedEntityId == id) && r.EntityType == EntityType.Person);
         return count > 0;
     }
 

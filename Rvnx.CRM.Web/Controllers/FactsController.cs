@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Rvnx.CRM.Core.DTOs.Contact;
+using Rvnx.CRM.Core.Enumerations;
 using Rvnx.CRM.Core.Interfaces;
 using Rvnx.CRM.Core.Models;
 using Rvnx.CRM.Core.Models.Contact;
@@ -12,7 +13,7 @@ public class FactsController(IFactService factService, IRepository repository) :
     private readonly IFactService _factService = factService;
 
     [HttpGet]
-    public async Task<IActionResult> Create(Guid entityId, string entityType)
+    public async Task<IActionResult> Create(Guid entityId, EntityType entityType)
     {
         FactFormDto? dto = await _factService.GetFormForCreateAsync(entityId, entityType);
         return dto == null ? NotFound() : View(dto);

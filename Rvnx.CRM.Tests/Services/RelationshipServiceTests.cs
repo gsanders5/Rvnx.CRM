@@ -2,6 +2,7 @@ using Moq;
 using Rvnx.CRM.Core.Constants;
 using Rvnx.CRM.Core.DTOs.Common;
 using Rvnx.CRM.Core.DTOs.Contact;
+using Rvnx.CRM.Core.Enumerations;
 using Rvnx.CRM.Core.Interfaces;
 using Rvnx.CRM.Core.Models;
 using Rvnx.CRM.Core.Models.Business;
@@ -39,7 +40,7 @@ public class RelationshipServiceTests
                 new SelectOptionDto { Value = otherContactId.ToString(), Text = "John Doe" }
             ]);
 
-        List<SelectOptionDto> result = await _service.GetRelatedEntityOptionsAsync(entityId, EntityTypes.Person);
+        List<SelectOptionDto> result = await _service.GetRelatedEntityOptionsAsync(entityId, EntityType.Person);
 
         Assert.Single(result);
         Assert.Equal("John Doe", result[0].Text);
@@ -59,7 +60,7 @@ public class RelationshipServiceTests
     {
         // (No arrange needed as we are using the statically populated list of relationship types)
 
-        List<SelectOptionDto> result = _service.GetRelationshipTypeOptions(EntityTypes.Person);
+        List<SelectOptionDto> result = _service.GetRelationshipTypeOptions(EntityType.Person);
 
         List<SelectOptionDto> spouseOptions = result.Where(x => x.Value.StartsWith(RelationshipTypeIds.Spouse.ToString(), StringComparison.Ordinal)).ToList();
 
@@ -76,7 +77,7 @@ public class RelationshipServiceTests
     {
         // (No arrange needed as we are using the statically populated list of relationship types)
 
-        List<SelectOptionDto> result = _service.GetRelationshipTypeOptions(EntityTypes.Person);
+        List<SelectOptionDto> result = _service.GetRelationshipTypeOptions(EntityType.Person);
 
         List<SelectOptionDto> parentOptions = result.Where(x => x.Value.StartsWith(RelationshipTypeIds.Parent.ToString(), StringComparison.Ordinal)).ToList();
 
@@ -101,7 +102,7 @@ public class RelationshipServiceTests
     {
         string selectedValue = $"{RelationshipTypeIds.Parent}_Rev";
 
-        List<SelectOptionDto> result = _service.GetRelationshipTypeOptions(EntityTypes.Person, selectedValue);
+        List<SelectOptionDto> result = _service.GetRelationshipTypeOptions(EntityType.Person, selectedValue);
 
         List<SelectOptionDto> parentOptions = result.Where(x => x.Value.StartsWith(RelationshipTypeIds.Parent.ToString(), StringComparison.Ordinal)).ToList();
 
@@ -126,7 +127,7 @@ public class RelationshipServiceTests
                 new SelectOptionDto { Value = companyId.ToString(), Text = "Acme Corp" }
             ]);
 
-        List<SelectOptionDto> result = await _service.GetRelatedEntityOptionsAsync(entityId, EntityTypes.Company);
+        List<SelectOptionDto> result = await _service.GetRelatedEntityOptionsAsync(entityId, EntityType.Company);
 
         Assert.Single(result);
         Assert.Equal("Acme Corp", result[0].Text);
@@ -140,16 +141,12 @@ public class RelationshipServiceTests
                 It.IsAny<CancellationToken>()), Times.Once);
     }
 
-    [Theory]
-    [InlineData("UnknownType")]
-    [InlineData(EntityTypes.Opportunity)]
-    [InlineData(EntityTypes.Note)]
-    [InlineData(EntityTypes.Attachment)]
-    public async Task GetRelatedEntityOptionsAsyncWhenEntityTypeIsUnsupportedReturnsEmptyList(string entityType)
+    [Fact]
+    public async Task GetRelatedEntityOptionsAsyncWhenEntityTypeIsUnsupportedReturnsEmptyList()
     {
         Guid entityId = Guid.NewGuid();
 
-        List<SelectOptionDto> result = await _service.GetRelatedEntityOptionsAsync(entityId, entityType);
+        List<SelectOptionDto> result = await _service.GetRelatedEntityOptionsAsync(entityId, EntityType.Opportunity);
 
         Assert.Empty(result);
         Assert.Empty(_repositoryMock.Invocations);
@@ -336,7 +333,7 @@ public class RelationshipServiceTests
         {
             EntityId = entityId,
             RelatedEntityId = relatedEntityId,
-            EntityType = EntityTypes.Person,
+            EntityType = EntityType.Person,
             Description = "Updated description"
         };
 
@@ -352,7 +349,7 @@ public class RelationshipServiceTests
 
         Assert.True(result.Success);
         Assert.Equal(entityId, result.RedirectId);
-        Assert.Equal(EntityTypes.Person, result.EntityType);
+        Assert.Equal(EntityType.Person, result.EntityType);
 
         Assert.Equal(typeId, existingRelationship.RelationshipTypeId);
         Assert.Equal(entityId, existingRelationship.EntityId);
@@ -379,7 +376,7 @@ public class RelationshipServiceTests
         {
             EntityId = entityId,
             RelatedEntityId = relatedEntityId,
-            EntityType = EntityTypes.Person
+            EntityType = EntityType.Person
         };
 
         _repositoryMock.Setup(r => r.GetByIdAsync<Relationship>(relationshipId, It.IsAny<CancellationToken>()))
@@ -394,7 +391,7 @@ public class RelationshipServiceTests
 
         Assert.True(result.Success);
         Assert.Equal(entityId, result.RedirectId);
-        Assert.Equal(EntityTypes.Person, result.EntityType);
+        Assert.Equal(EntityType.Person, result.EntityType);
 
         Assert.Equal(typeId, existingRelationship.RelationshipTypeId);
         Assert.Equal(relatedEntityId, existingRelationship.EntityId); // Swapped
@@ -464,14 +461,14 @@ public class RelationshipServiceTests
         {
             EntityId = entityId,
             RelatedEntityId = relatedEntityId,
-            EntityType = EntityTypes.Person
+            EntityType = EntityType.Person
         };
 
         RelationshipOperationResult result = await _service.CreateRelationshipAsync(relationship, selection);
 
         Assert.True(result.Success);
         Assert.Equal(entityId, result.RedirectId);
-        Assert.Equal(EntityTypes.Person, result.EntityType);
+        Assert.Equal(EntityType.Person, result.EntityType);
 
         Assert.Equal(typeId, relationship.RelationshipTypeId);
         Assert.Equal(entityId, relationship.EntityId);
@@ -495,7 +492,7 @@ public class RelationshipServiceTests
         {
             EntityId = entityId,
             RelatedEntityId = relatedEntityId,
-            EntityType = EntityTypes.Person
+            EntityType = EntityType.Person
         };
 
         RelationshipOperationResult result = await _service.CreateRelationshipAsync(relationship, selection);
@@ -503,7 +500,7 @@ public class RelationshipServiceTests
         Assert.True(result.Success);
         Assert.Equal(entityId,
             result.RedirectId); // The original entity stays the primary entity because Swap is called before Ok
-        Assert.Equal(EntityTypes.Person, result.EntityType);
+        Assert.Equal(EntityType.Person, result.EntityType);
 
         Assert.Equal(typeId, relationship.RelationshipTypeId);
         Assert.Equal(relatedEntityId, relationship.EntityId); // Swapped
@@ -600,11 +597,11 @@ public class RelationshipServiceTests
     {
         Guid relationshipId = Guid.NewGuid();
         Guid entityId = Guid.NewGuid();
-        string entityType = EntityTypes.Person;
+        EntityType entityType = EntityType.Person;
 
-        _repositoryMock.Setup(r => r.ListProjectedAsync<Relationship, (Guid EntityId, string EntityType)>(
+        _repositoryMock.Setup(r => r.ListProjectedAsync<Relationship, (Guid EntityId, EntityType EntityType)>(
                 It.IsAny<Expression<Func<Relationship, bool>>>(),
-                It.IsAny<Expression<Func<Relationship, (Guid EntityId, string EntityType)>>>(),
+                It.IsAny<Expression<Func<Relationship, (Guid EntityId, EntityType EntityType)>>>(),
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync([(entityId, entityType)]);
 
@@ -625,9 +622,9 @@ public class RelationshipServiceTests
     {
         Guid relationshipId = Guid.NewGuid();
 
-        _repositoryMock.Setup(r => r.ListProjectedAsync<Relationship, (Guid EntityId, string EntityType)>(
+        _repositoryMock.Setup(r => r.ListProjectedAsync<Relationship, (Guid EntityId, EntityType EntityType)>(
                 It.IsAny<Expression<Func<Relationship, bool>>>(),
-                It.IsAny<Expression<Func<Relationship, (Guid EntityId, string EntityType)>>>(),
+                It.IsAny<Expression<Func<Relationship, (Guid EntityId, EntityType EntityType)>>>(),
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync([]);
 

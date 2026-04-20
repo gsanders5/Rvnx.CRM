@@ -1,9 +1,9 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Moq;
-using Rvnx.CRM.Core.Constants;
 using Rvnx.CRM.Core.DTOs.Base;
 using Rvnx.CRM.Core.DTOs.Contact;
+using Rvnx.CRM.Core.Enumerations;
 using Rvnx.CRM.Core.Interfaces;
 using Rvnx.CRM.Core.Models.Base;
 using Rvnx.CRM.Core.Models.Contact;
@@ -42,8 +42,8 @@ public class EntityStateTamperingTests
         Repository repository = new(context);
 
         Mock<IEntityService> mockEntityService = new();
-        mockEntityService.Setup(s => s.IsPartialAsync(It.IsAny<string>(), It.IsAny<Guid>())).ReturnsAsync(false);
-        mockEntityService.Setup(s => s.GetEntityNameAsync(It.IsAny<string>(), It.IsAny<Guid>())).ReturnsAsync("Test Entity");
+        mockEntityService.Setup(s => s.IsPartialAsync(It.IsAny<EntityType>(), It.IsAny<Guid>())).ReturnsAsync(false);
+        mockEntityService.Setup(s => s.GetEntityNameAsync(It.IsAny<EntityType>(), It.IsAny<Guid>())).ReturnsAsync("Test Entity");
 
         INoteService noteService = new NoteService(repository, mockEntityService.Object);
         NotesController controller = new(noteService, repository, mockEntityService.Object);
@@ -70,7 +70,7 @@ public class EntityStateTamperingTests
         {
             Id = noteId,
             EntityId = attackerContactId, // Attempting to move note to different contact
-            EntityType = EntityTypes.Company, // Attempting to change entity type
+            EntityType = EntityType.Company, // Attempting to change entity type
             Title = "Updated Title",
             Value = "Updated Content"
         };
@@ -91,8 +91,8 @@ public class EntityStateTamperingTests
         Repository repository = new(context);
 
         Mock<IEntityService> mockEntityService = new();
-        mockEntityService.Setup(s => s.IsPartialAsync(It.IsAny<string>(), It.IsAny<Guid>())).ReturnsAsync(false);
-        mockEntityService.Setup(s => s.GetEntityNameAsync(It.IsAny<string>(), It.IsAny<Guid>())).ReturnsAsync("Test Entity");
+        mockEntityService.Setup(s => s.IsPartialAsync(It.IsAny<EntityType>(), It.IsAny<Guid>())).ReturnsAsync(false);
+        mockEntityService.Setup(s => s.GetEntityNameAsync(It.IsAny<EntityType>(), It.IsAny<Guid>())).ReturnsAsync("Test Entity");
 
         INoteService noteService = new NoteService(repository, mockEntityService.Object);
         NotesController controller = new(noteService, repository, mockEntityService.Object);
@@ -180,7 +180,6 @@ public class EntityStateTamperingTests
         {
             Id = factId,
             EntityId = attackerContactId,
-            EntityType = EntityTypes.Company,
             Category = "Updated Category",
             Value = "Updated Value"
         };
@@ -228,7 +227,6 @@ public class EntityStateTamperingTests
         {
             Id = contactMethodId,
             EntityId = attackerContactId,
-            EntityType = EntityTypes.Company,
             Type = Core.Enumerations.ContactMethodType.Email,
             Value = "updated@example.com",
             Label = "Personal"
@@ -254,8 +252,8 @@ public class EntityStateTamperingTests
         Repository repository = new(context);
 
         Mock<IEntityService> mockEntityService = new();
-        mockEntityService.Setup(s => s.IsPartialAsync(It.IsAny<string>(), It.IsAny<Guid>())).ReturnsAsync(false);
-        mockEntityService.Setup(s => s.GetEntityNameAsync(It.IsAny<string>(), It.IsAny<Guid>())).ReturnsAsync("Test Entity");
+        mockEntityService.Setup(s => s.IsPartialAsync(It.IsAny<EntityType>(), It.IsAny<Guid>())).ReturnsAsync(false);
+        mockEntityService.Setup(s => s.GetEntityNameAsync(It.IsAny<EntityType>(), It.IsAny<Guid>())).ReturnsAsync("Test Entity");
 
         INoteService noteService = new NoteService(repository, mockEntityService.Object);
         NotesController controller = new(noteService, repository, mockEntityService.Object);

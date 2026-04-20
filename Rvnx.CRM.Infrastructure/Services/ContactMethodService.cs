@@ -1,5 +1,5 @@
-using Rvnx.CRM.Core.Constants;
 using Rvnx.CRM.Core.DTOs.Contact;
+using Rvnx.CRM.Core.Enumerations;
 using Rvnx.CRM.Core.Exceptions;
 using Rvnx.CRM.Core.Extensions;
 using Rvnx.CRM.Core.Helpers;
@@ -34,7 +34,7 @@ public class ContactMethodService(IRepository repository) : IContactMethodServic
         await _repository.AddAsync(contactInfo);
         await _repository.SaveChangesAsync();
 
-        return OperationResult.Ok(contactInfo.ContactId ?? Guid.Empty, EntityTypes.Person);
+        return OperationResult.Ok(contactInfo.ContactId ?? Guid.Empty, EntityType.Person);
     }
 
     public async Task<OperationResult> UpdateAsync(Guid id, ContactMethodFormDto dto)
@@ -53,7 +53,7 @@ public class ContactMethodService(IRepository repository) : IContactMethodServic
             await _repository.UpdateAsync(existingContactInfo);
             await _repository.SaveChangesAsync();
 
-            return OperationResult.Ok(existingContactInfo.ContactId ?? Guid.Empty, EntityTypes.Person);
+            return OperationResult.Ok(existingContactInfo.ContactId ?? Guid.Empty, EntityType.Person);
         }
         catch (EntityConcurrencyException)
         {
@@ -74,10 +74,9 @@ public class ContactMethodService(IRepository repository) : IContactMethodServic
         if (contactIds.Count > 0)
         {
             Guid entityId = contactIds.FirstOrDefault() ?? Guid.Empty;
-            string entityType = EntityTypes.Person;
             await _repository.DeleteAsync<ContactMethod>(cm => cm.Id == id);
             await _repository.SaveChangesAsync();
-            return OperationResult.Ok(entityId, entityType);
+            return OperationResult.Ok(entityId, EntityType.Person);
         }
         return OperationResult.Failure("Contact method not found.");
     }
@@ -94,14 +93,15 @@ public class ContactMethodService(IRepository repository) : IContactMethodServic
                 Type = contactInfo.Type,
                 Value = contactInfo.Value,
                 Label = contactInfo.Label,
-                EntityId = contactInfo.ContactId ?? Guid.Empty,
-                EntityType = EntityTypes.Person
+                EntityId = contactInfo.ContactId ?? Guid.Empty
             };
     }
 
-    public async Task<ContactMethodFormDto?> GetFormForCreateAsync(Guid entityId, string entityType)
+    public async Task<ContactMethodFormDto?> GetFormForCreateAsync(Guid entityId, EntityType entityType)
     {
-        return !await _repository.IsValidContactAsync(entityId) ? null : new ContactMethodFormDto { EntityId = entityId, EntityType = entityType };
+        return entityType != EntityType.Person || !await _repository.IsValidContactAsync(entityId)
+            ? null
+            : new ContactMethodFormDto { EntityId = entityId };
     }
 
     public async Task<ContactMethod?> GetByIdAsync(Guid id)

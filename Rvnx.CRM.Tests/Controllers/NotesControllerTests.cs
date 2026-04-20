@@ -1,8 +1,8 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Moq;
-using Rvnx.CRM.Core.Constants;
 using Rvnx.CRM.Core.DTOs.Base;
+using Rvnx.CRM.Core.Enumerations;
 using Rvnx.CRM.Core.Interfaces;
 using Rvnx.CRM.Core.Models;
 using Rvnx.CRM.Core.Models.Base;
@@ -41,8 +41,8 @@ public class NotesControllerTests
             Repository repository = new(_context);
 
             Mock<IEntityService> mockEntityService = new();
-            mockEntityService.Setup(s => s.IsPartialAsync(It.IsAny<string>(), It.IsAny<Guid>())).ReturnsAsync(false);
-            mockEntityService.Setup(s => s.GetEntityNameAsync(It.IsAny<string>(), It.IsAny<Guid>())).ReturnsAsync("Test Entity");
+            mockEntityService.Setup(s => s.IsPartialAsync(It.IsAny<EntityType>(), It.IsAny<Guid>())).ReturnsAsync(false);
+            mockEntityService.Setup(s => s.GetEntityNameAsync(It.IsAny<EntityType>(), It.IsAny<Guid>())).ReturnsAsync("Test Entity");
 
             Mock<INoteService> mockNoteService = new(); // Adding missing mock
             mockNoteService.Setup(s => s.CreateAsync(It.IsAny<NoteFormViewModel>()))
@@ -88,7 +88,7 @@ public class NotesControllerTests
             NoteFormViewModel maliciousNote = new()
             {
                 EntityId = otherUserContactId,
-                EntityType = EntityTypes.Person,
+                EntityType = EntityType.Person,
                 Title = "Malicious Note",
                 Value = "I shouldn't be here"
             };
@@ -114,7 +114,7 @@ public class NotesControllerTests
             await _context.SaveChangesAsync();
             _context.ChangeTracker.Clear();
 
-            IActionResult result = await _controller.Create(otherUserContactId, EntityTypes.Person);
+            IActionResult result = await _controller.Create(otherUserContactId, EntityType.Person);
 
             Assert.IsType<NotFoundResult>(result);
         }
@@ -124,7 +124,7 @@ public class NotesControllerTests
         {
             Guid entityId = Guid.NewGuid();
 
-            IActionResult result = await _controller.Create(entityId, EntityTypes.Company);
+            IActionResult result = await _controller.Create(entityId, EntityType.Company);
 
             BadRequestObjectResult badRequest = Assert.IsType<BadRequestObjectResult>(result);
             Assert.Equal("Only Person entities are supported.", badRequest.Value);
@@ -151,8 +151,8 @@ public class NotesControllerTests
             Repository repository = new(_context);
 
             Mock<IEntityService> mockEntityService = new();
-            mockEntityService.Setup(s => s.IsPartialAsync(It.IsAny<string>(), It.IsAny<Guid>())).ReturnsAsync(false);
-            mockEntityService.Setup(s => s.GetEntityNameAsync(It.IsAny<string>(), It.IsAny<Guid>())).ReturnsAsync("Test Entity");
+            mockEntityService.Setup(s => s.IsPartialAsync(It.IsAny<EntityType>(), It.IsAny<Guid>())).ReturnsAsync(false);
+            mockEntityService.Setup(s => s.GetEntityNameAsync(It.IsAny<EntityType>(), It.IsAny<Guid>())).ReturnsAsync("Test Entity");
 
             INoteService noteService = new NoteService(repository, mockEntityService.Object);
 
@@ -177,7 +177,7 @@ public class NotesControllerTests
             NoteFormViewModel note = new()
             {
                 EntityId = contactId,
-                EntityType = EntityTypes.Person,
+                EntityType = EntityType.Person,
                 Title = "Test Note",
                 Value = "Content"
             };
@@ -208,7 +208,7 @@ public class NotesControllerTests
             {
                 Id = noteId,
                 EntityId = contactId,
-                EntityType = EntityTypes.Person,
+                EntityType = EntityType.Person,
                 Title = "New",
                 Value = "NewVal"
             };

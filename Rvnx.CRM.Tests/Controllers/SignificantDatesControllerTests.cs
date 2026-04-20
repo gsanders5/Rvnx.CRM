@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Moq;
 using Rvnx.CRM.Core.Constants;
 using Rvnx.CRM.Core.DTOs.Dates;
+using Rvnx.CRM.Core.Enumerations;
 using Rvnx.CRM.Core.Interfaces;
 using Rvnx.CRM.Core.Models.Contact;
 using Rvnx.CRM.Core.Models.Dates;
@@ -52,7 +53,6 @@ public class SignificantDatesControllerTests : IDisposable
         CreateSignificantDateRequest dto = new()
         {
             EntityId = contactId,
-            EntityType = EntityTypes.Person,
             Title = "Anniversary",
             EventDate = DateOnly.FromDateTime(DateTime.Today),
             RecurrenceType = Core.Enumerations.RecurrenceType.Annual
@@ -88,7 +88,6 @@ public class SignificantDatesControllerTests : IDisposable
         CreateSignificantDateRequest dto = new()
         {
             EntityId = contactId,
-            EntityType = EntityTypes.Person,
             Title = SignificantDateTitles.Birthday, // Duplicate Title
             EventDate = DateOnly.FromDateTime(DateTime.Today)
         };
@@ -123,7 +122,6 @@ public class SignificantDatesControllerTests : IDisposable
         CreateSignificantDateRequest dto = new()
         {
             EntityId = contactId,
-            EntityType = EntityTypes.Person,
             Title = SignificantDateTitles.Birthday, // Uppercase (Standard)
             EventDate = DateOnly.FromDateTime(DateTime.Today)
         };
@@ -165,7 +163,6 @@ public class SignificantDatesControllerTests : IDisposable
         {
             Id = anniversaryId,
             EntityId = contactId,
-            EntityType = EntityTypes.Person,
             Title = SignificantDateTitles.Birthday, // Change Anniversary to Birthday
             EventDate = new DateOnly(2010, 5, 5)
         };
@@ -197,7 +194,6 @@ public class SignificantDatesControllerTests : IDisposable
         {
             Id = birthdayId,
             EntityId = contactId,
-            EntityType = EntityTypes.Person,
             Title = SignificantDateTitles.Birthday,
             EventDate = new DateOnly(1990, 1, 2) // Change date only
         };

@@ -1,6 +1,7 @@
 using Moq;
 using Rvnx.CRM.Core.Constants;
 using Rvnx.CRM.Core.DTOs.Contact;
+using Rvnx.CRM.Core.Enumerations;
 using Rvnx.CRM.Core.Interfaces;
 using Rvnx.CRM.Core.Models.Base;
 using Rvnx.CRM.Core.Models.Contact;
@@ -294,7 +295,7 @@ public class ContactManagementServiceTests
             {
                 EntityId = p.Id,
                 RelatedEntityId = Guid.NewGuid(), // Unique sibling
-                EntityType = EntityTypes.Person
+                EntityType = EntityType.Person
             }).ToList();
 
             // Initial Relationships (Deleted contact <-> Partial contacts)
@@ -302,7 +303,7 @@ public class ContactManagementServiceTests
             {
                 EntityId = contactId,
                 RelatedEntityId = p.Id,
-                EntityType = EntityTypes.Person
+                EntityType = EntityType.Person
             }).ToList();
 
             List<Relationship> allRelationships = [.. initialRelationships, .. siblingRelationships];

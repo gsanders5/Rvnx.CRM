@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Rvnx.CRM.Core.DTOs.Contact;
+using Rvnx.CRM.Core.Enumerations;
 using Rvnx.CRM.Core.Interfaces;
 using Rvnx.CRM.Core.Models;
 using Rvnx.CRM.Core.Models.Contact;
@@ -13,7 +14,7 @@ public class ContactMethodsController(IContactMethodService contactMethodService
     private readonly IContactMethodService _contactMethodService = contactMethodService;
 
     [HttpGet]
-    public async Task<IActionResult> Create(Guid entityId, string entityType)
+    public async Task<IActionResult> Create(Guid entityId, EntityType entityType)
     {
         ContactMethodFormDto? dto = await _contactMethodService.GetFormForCreateAsync(entityId, entityType);
         return dto == null ? NotFound() : View(dto);

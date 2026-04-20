@@ -1,11 +1,11 @@
-using System.ComponentModel.DataAnnotations;
-using System.Text;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Rvnx.CRM.API.Authentication;
 using Rvnx.CRM.Core.DTOs.Calendar;
 using Rvnx.CRM.Core.Interfaces;
 using Rvnx.CRM.Core.Models;
+using System.ComponentModel.DataAnnotations;
+using System.Text;
 
 namespace Rvnx.CRM.API.Controllers;
 

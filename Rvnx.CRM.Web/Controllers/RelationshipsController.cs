@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
-using Rvnx.CRM.Core.Constants;
 using Rvnx.CRM.Core.DTOs.Contact;
+using Rvnx.CRM.Core.Enumerations;
 using Rvnx.CRM.Core.Extensions;
 using Rvnx.CRM.Core.Interfaces;
 using Rvnx.CRM.Core.Models;
@@ -19,9 +19,9 @@ public class RelationshipsController(
     private readonly IEntityService _entityService = entityService;
 
     [HttpGet]
-    public async Task<IActionResult> Create(Guid entityId, string entityType)
+    public async Task<IActionResult> Create(Guid entityId, EntityType entityType)
     {
-        if (entityId == Guid.Empty || string.IsNullOrEmpty(entityType))
+        if (entityId == Guid.Empty)
         {
             return NotFound();
         }
@@ -66,7 +66,7 @@ public class RelationshipsController(
                     viewModel.SelectedRelationshipType, viewModel.SuggestedRelationships);
             if (result.Success)
             {
-                return RedirectToEntity(result.RedirectId, result.EntityType ?? string.Empty);
+                return RedirectToEntity(result.RedirectId, result.EntityType);
             }
             else
             {
@@ -87,10 +87,10 @@ public class RelationshipsController(
     }
 
     [HttpPost]
-    public async Task<IActionResult> CreatePartial(Guid entityId, string entityType,
+    public async Task<IActionResult> CreatePartial(Guid entityId, EntityType entityType,
         CreatePartialContactRelationshipDto dto)
     {
-        if (entityId == Guid.Empty || string.IsNullOrEmpty(entityType) || entityType != EntityTypes.Person)
+        if (entityId == Guid.Empty || entityType != EntityType.Person)
         {
             return NotFound();
         }
@@ -107,7 +107,7 @@ public class RelationshipsController(
                     dto.SelectedRelationshipType, dto);
             if (result.Success)
             {
-                return RedirectToEntity(result.RedirectId, result.EntityType ?? string.Empty);
+                return RedirectToEntity(result.RedirectId, result.EntityType);
             }
 
             ModelState.AddModelError(string.Empty,
@@ -198,8 +198,8 @@ public class RelationshipsController(
                 _relationshipService.GetRelationshipTypeOptions(relationship.EntityType, currentSelection),
             RelationshipTypes = _relationshipService.GetRelationshipTypes(relationship.EntityType),
             SelectedRelationshipType = currentSelection,
-            IsEntityPartial = await _entityService.IsPartialAsync(EntityTypes.Person, relationship.EntityId),
-            IsRelatedEntityPartial = await _entityService.IsPartialAsync(EntityTypes.Person, relationship.RelatedEntityId)
+            IsEntityPartial = await _entityService.IsPartialAsync(EntityType.Person, relationship.EntityId),
+            IsRelatedEntityPartial = await _entityService.IsPartialAsync(EntityType.Person, relationship.RelatedEntityId)
         };
 
         return View(viewModel);
@@ -231,7 +231,7 @@ public class RelationshipsController(
                     viewModel.SelectedRelationshipType);
             if (result.Success)
             {
-                return RedirectToEntity(result.RedirectId, result.EntityType ?? string.Empty);
+                return RedirectToEntity(result.RedirectId, result.EntityType);
             }
             else
             {
