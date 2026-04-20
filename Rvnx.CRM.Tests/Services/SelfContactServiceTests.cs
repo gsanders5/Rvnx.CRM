@@ -200,7 +200,7 @@ public class SelfContactServiceTests
             FirstName = "Test",
             LastName = "User",
             Email = "test@example.com",
-            Phone = "555-1234",
+            Phone = "212-736-5000",
             Birthday = new DateTime(1990, 1, 1),
             RemindOnBirthday = true
         };
@@ -218,7 +218,7 @@ public class SelfContactServiceTests
 
         // 3. ContactMethods (Email, Phone) via ContactUpdateHelper
         _repositoryMock.Verify(r => r.AddAsync(It.Is<ContactMethod>(cm => cm.Type == ContactMethodType.Email && cm.Value == "test@example.com"), It.IsAny<CancellationToken>()), Times.Once());
-        _repositoryMock.Verify(r => r.AddAsync(It.Is<ContactMethod>(cm => cm.Type == ContactMethodType.Phone && cm.Value == "555-1234"), It.IsAny<CancellationToken>()), Times.Once());
+        _repositoryMock.Verify(r => r.AddAsync(It.Is<ContactMethod>(cm => cm.Type == ContactMethodType.Phone && cm.Value == "+12127365000"), It.IsAny<CancellationToken>()), Times.Once());
 
         // 4. Birthday via ContactUpdateHelper
         _repositoryMock.Verify(r => r.AddAsync(It.Is<SignificantDate>(sd => sd.EventDate == new DateOnly(1990, 1, 1) && sd.Title == Rvnx.CRM.Core.Constants.SignificantDateTitles.Birthday), It.IsAny<CancellationToken>()), Times.Once());

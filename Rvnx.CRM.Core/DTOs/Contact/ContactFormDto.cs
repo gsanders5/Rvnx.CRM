@@ -1,3 +1,4 @@
+using Rvnx.CRM.Core.Validation;
 using System.ComponentModel.DataAnnotations;
 
 namespace Rvnx.CRM.Core.DTOs.Contact;
@@ -26,7 +27,8 @@ public class ContactFormDto
     [MaxLength(256)]
     public string? Email { get; set; }
 
-    [MaxLength(20)]
+    [MaxLength(50)]
+    [PhoneNumber]
     public string? Phone { get; set; }
 
     [MaxLength(100)]

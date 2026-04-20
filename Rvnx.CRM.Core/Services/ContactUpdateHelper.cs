@@ -1,5 +1,6 @@
 using Rvnx.CRM.Core.Constants;
 using Rvnx.CRM.Core.Enumerations;
+using Rvnx.CRM.Core.Helpers;
 using Rvnx.CRM.Core.Interfaces;
 using Rvnx.CRM.Core.Models.Contact;
 using Rvnx.CRM.Core.Models.Dates;
@@ -12,6 +13,8 @@ internal static class ContactUpdateHelper
     {
         if (!string.IsNullOrEmpty(newValue))
         {
+            newValue = PhoneNumberNormalizer.NormalizeOrThrow(type, newValue);
+
             if (existingMethod != null)
             {
                 if (existingMethod.Value != newValue)

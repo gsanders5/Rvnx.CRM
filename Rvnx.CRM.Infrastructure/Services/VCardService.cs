@@ -5,6 +5,7 @@ using FolkerKinzel.VCards.Models;
 using Microsoft.Extensions.Logging;
 using Rvnx.CRM.Core.Constants;
 using Rvnx.CRM.Core.Enumerations;
+using Rvnx.CRM.Core.Helpers;
 using Rvnx.CRM.Core.Interfaces;
 using Rvnx.CRM.Core.Models.Base;
 using Rvnx.CRM.Core.Models.Contact;
@@ -28,6 +29,12 @@ public class VCardService : IVCardService
             LogLevel.Warning,
             new EventId(1, nameof(LogWarningDownloadingPhoto)),
             "Error downloading photo from {PhotoUri}");
+
+    private static readonly Action<ILogger, string, Exception?> LogWarningInvalidPhoneOnImport =
+        LoggerMessage.Define<string>(
+            LogLevel.Warning,
+            new EventId(2, nameof(LogWarningInvalidPhoneOnImport)),
+            "vCard import: skipping unparseable phone number {Phone}");
 
     public VCardService(HttpClient? httpClient = null, ILogger<VCardService>? logger = null)
     {
@@ -163,12 +170,21 @@ public class VCardService : IVCardService
             {
                 if (phoneProp?.Value is string phone && !string.IsNullOrWhiteSpace(phone))
                 {
+                    if (!PhoneNumberNormalizer.TryNormalize(phone, out string normalizedPhone, out _))
+                    {
+                        if (_logger != null)
+                        {
+                            LogWarningInvalidPhoneOnImport(_logger, phone, null);
+                        }
+                        continue;
+                    }
+
                     contact.ContactMethods.Add(new ContactMethod
                     {
                         Id = Guid.NewGuid(),
                         ContactId = contact.Id,
                         Type = ContactMethodType.Phone,
-                        Value = phone,
+                        Value = normalizedPhone,
                         Label = "Imported"
                     });
                 }

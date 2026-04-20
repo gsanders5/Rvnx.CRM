@@ -615,7 +615,7 @@ public class ContactManagementServiceTests
                 FirstName = "Performance",
                 LastName = "Test",
                 Email = "perf@example.com",
-                Phone = "123456789",
+                Phone = "212-736-5000",
                 Birthday = new DateTime(1990, 1, 1)
             };
 
@@ -651,7 +651,7 @@ public class ContactManagementServiceTests
                 FirstName = "Jane",
                 LastName = "Doe",
                 Email = "jane.doe@example.com",
-                Phone = "+1234567890",
+                Phone = "(212) 736-5000",
                 Birthday = new DateTime(1985, 5, 15),
                 RemindOnBirthday = true
             };
@@ -671,7 +671,7 @@ public class ContactManagementServiceTests
 
             // Verify that ContactUpdateHelper was used to add methods and dates
             _repositoryMock.Verify(r => r.AddAsync(It.Is<ContactMethod>(cm => cm.Type == Rvnx.CRM.Core.Enumerations.ContactMethodType.Email && cm.Value == dto.Email), It.IsAny<CancellationToken>()), Times.Once);
-            _repositoryMock.Verify(r => r.AddAsync(It.Is<ContactMethod>(cm => cm.Type == Rvnx.CRM.Core.Enumerations.ContactMethodType.Phone && cm.Value == dto.Phone), It.IsAny<CancellationToken>()), Times.Once);
+            _repositoryMock.Verify(r => r.AddAsync(It.Is<ContactMethod>(cm => cm.Type == Rvnx.CRM.Core.Enumerations.ContactMethodType.Phone && cm.Value == "+12127365000"), It.IsAny<CancellationToken>()), Times.Once);
             _repositoryMock.Verify(r => r.AddAsync(It.Is<SignificantDate>(sd => sd.EventDate == DateOnly.FromDateTime(dto.Birthday.Value)), It.IsAny<CancellationToken>()), Times.Once);
             _repositoryMock.Verify(r => r.AddAsync(It.Is<ReminderOffset>(ro => ro.DaysBeforeEvent == 0 && ro.IsActive == true), It.IsAny<CancellationToken>()), Times.Once);
 
