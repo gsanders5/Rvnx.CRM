@@ -31,9 +31,9 @@ public class FavoriteServiceTests
 
         // Assert
         Assert.False(result);
-        _repositoryMock.Verify(x => x.ListAsync(It.IsAny<Expression<Func<ContactFavorite, bool>>>(), It.IsAny<CancellationToken>(), It.IsAny<string[]>()), Times.Never);
+        _repositoryMock.Verify(x => x.CountAsync(It.IsAny<Expression<Func<ContactFavorite, bool>>>(), It.IsAny<CancellationToken>()), Times.Never);
         _repositoryMock.Verify(x => x.AddAsync(It.IsAny<ContactFavorite>(), It.IsAny<CancellationToken>()), Times.Never);
-        _repositoryMock.Verify(x => x.DeleteAsync(It.IsAny<ContactFavorite>(), It.IsAny<CancellationToken>()), Times.Never);
+        _repositoryMock.Verify(x => x.DeleteAsync(It.IsAny<Expression<Func<ContactFavorite, bool>>>(), It.IsAny<CancellationToken>()), Times.Never);
         _repositoryMock.Verify(x => x.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
     }
 
@@ -45,10 +45,10 @@ public class FavoriteServiceTests
         Guid contactId = Guid.NewGuid();
         _currentUserServiceMock.Setup(x => x.UserId).Returns(userId);
 
-        _repositoryMock.Setup(x => x.ListAsync(
+        _repositoryMock.Setup(x => x.CountAsync(
             It.IsAny<Expression<Func<ContactFavorite, bool>>>(),
             It.IsAny<CancellationToken>()))
-            .ReturnsAsync([]);
+            .ReturnsAsync(0);
 
         // Act
         bool result = await _service.ToggleFavoriteAsync(contactId);
@@ -56,7 +56,7 @@ public class FavoriteServiceTests
         // Assert
         Assert.True(result);
         _repositoryMock.Verify(x => x.AddAsync(It.Is<ContactFavorite>(cf => cf.ContactId == contactId && cf.UserId == userId), It.IsAny<CancellationToken>()), Times.Once);
-        _repositoryMock.Verify(x => x.DeleteAsync(It.IsAny<ContactFavorite>(), It.IsAny<CancellationToken>()), Times.Never);
+        _repositoryMock.Verify(x => x.DeleteAsync(It.IsAny<Expression<Func<ContactFavorite, bool>>>(), It.IsAny<CancellationToken>()), Times.Never);
         _repositoryMock.Verify(x => x.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
     }
 
@@ -68,11 +68,10 @@ public class FavoriteServiceTests
         Guid contactId = Guid.NewGuid();
         _currentUserServiceMock.Setup(x => x.UserId).Returns(userId);
 
-        ContactFavorite existingFavorite = new() { ContactId = contactId, UserId = userId };
-        _repositoryMock.Setup(x => x.ListAsync(
+        _repositoryMock.Setup(x => x.CountAsync(
             It.IsAny<Expression<Func<ContactFavorite, bool>>>(),
             It.IsAny<CancellationToken>()))
-            .ReturnsAsync([existingFavorite]);
+            .ReturnsAsync(1);
 
         // Act
         bool result = await _service.ToggleFavoriteAsync(contactId);
@@ -80,7 +79,7 @@ public class FavoriteServiceTests
         // Assert
         Assert.False(result);
         _repositoryMock.Verify(x => x.AddAsync(It.IsAny<ContactFavorite>(), It.IsAny<CancellationToken>()), Times.Never);
-        _repositoryMock.Verify(x => x.DeleteAsync(existingFavorite, It.IsAny<CancellationToken>()), Times.Once);
+        _repositoryMock.Verify(x => x.DeleteAsync(It.IsAny<Expression<Func<ContactFavorite, bool>>>(), It.IsAny<CancellationToken>()), Times.Once);
         _repositoryMock.Verify(x => x.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
     }
 
