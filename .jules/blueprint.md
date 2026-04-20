@@ -61,3 +61,7 @@
 ## 2026-04-18 - [Extract Direct Repository Access from Web Security]
 **Learning:** `UserClaimsTransformation` in the Web layer was previously directly querying the database via `IRepository` to map standard subject claims to internal `UserId` and `GroupId` claims. This leaked data access logic into a security component.
 **Action:** When working on claims transformation or security middleware, do not query the database directly. Instead, delegate the claims generation to a dedicated domain service (like `IUserSynchronizationService`) and use shared extension methods (`SyncUserAndEnrichClaimsAsync`) to maintain a single source of truth for identity logic.
+
+## 2024-06-10 - [Extract Database Migrations from Web]
+**Learning:** The `Program.cs` file in the Web project was directly referencing `Microsoft.EntityFrameworkCore` to execute `context.Database.Migrate()` on startup, violating layer boundaries by coupling the presentation layer to the persistence technology.
+**Action:** Extract database initialization logic, including `CRMDbContext` dependencies and ORM-specific error logging, into an extension method (e.g., `ApplyDatabaseMigrations`) in the `Infrastructure` layer's `ServiceCollectionExtensions`. This keeps `Program.cs` clean and strictly separates concerns.

@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Rvnx.CRM.Core.Interfaces;
 using Rvnx.CRM.Infrastructure.Data;
 using Rvnx.CRM.Infrastructure.Repositories;
@@ -67,5 +68,27 @@ public static class ServiceCollectionExtensions
         services.AddScoped<ICalendarFeedService, CalendarFeedService>();
 
         return services;
+    }
+
+    private static readonly Action<ILogger, Exception?> LogDbCreationError =
+        LoggerMessage.Define(
+            LogLevel.Error,
+            new EventId(1, nameof(LogDbCreationError)),
+            "An error occurred creating the DB.");
+
+    public static void ApplyDatabaseMigrations(this IServiceProvider provider)
+    {
+        using IServiceScope scope = provider.CreateScope();
+        IServiceProvider services = scope.ServiceProvider;
+        try
+        {
+            CRMDbContext context = services.GetRequiredService<CRMDbContext>();
+            context.Database.Migrate();
+        }
+        catch (Exception ex)
+        {
+            ILogger<CRMDbContext> logger = services.GetRequiredService<ILogger<CRMDbContext>>();
+            LogDbCreationError(logger, ex);
+        }
     }
 }
