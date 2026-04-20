@@ -1,3 +1,4 @@
+using Rvnx.CRM.API.Authentication;
 using Rvnx.CRM.Core.Interfaces;
 using Rvnx.CRM.Core.Models;
 
@@ -81,15 +82,15 @@ public class ApiTokenCurrentUserService : ICurrentUserService
             return;
         }
 
-        string? authHeader = context.Request.Headers.Authorization.FirstOrDefault();
-        if (string.IsNullOrEmpty(authHeader) || !authHeader.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
+        if (context.Items.TryGetValue(ApiTokenAuthenticationOptions.ResolvedTokenItemKey, out object? preResolvedToken) && preResolvedToken is ApiToken token)
         {
+            _resolvedToken = token;
             return;
         }
 
-        if (context.Items.TryGetValue("ResolvedApiToken", out object? preResolvedToken) && preResolvedToken is ApiToken token)
+        string? authHeader = context.Request.Headers.Authorization.FirstOrDefault();
+        if (string.IsNullOrEmpty(authHeader) || !authHeader.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
         {
-            _resolvedToken = token;
             return;
         }
 
