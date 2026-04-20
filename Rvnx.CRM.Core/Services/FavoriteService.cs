@@ -16,12 +16,12 @@ public class FavoriteService(IRepository repository, ICurrentUserService current
             return false;
         }
 
-        List<ContactFavorite> existing = await _repository.ListAsync<ContactFavorite>(
+        int count = await _repository.CountAsync<ContactFavorite>(
             f => f.ContactId == contactId && f.UserId == userId);
 
-        if (existing.Count > 0)
+        if (count > 0)
         {
-            await _repository.DeleteAsync(existing[0]);
+            await _repository.DeleteAsync<ContactFavorite>(f => f.ContactId == contactId && f.UserId == userId);
             await _repository.SaveChangesAsync();
             return false;
         }
