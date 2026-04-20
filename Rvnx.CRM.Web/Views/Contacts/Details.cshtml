@@ -1,6 +1,7 @@
 @using Rvnx.CRM.Core.DTOs.Contact
 @using Rvnx.CRM.Core.Enumerations
 @using Rvnx.CRM.Core.Constants
+@using Rvnx.CRM.Core.Helpers
 @model ContactDetailDto
 
 @inject Microsoft.AspNetCore.Antiforgery.IAntiforgery Antiforgery
@@ -133,7 +134,7 @@
                                 }
                                 else if (info.Type == ContactMethodType.Phone)
                                 {
-                                    <a href="tel:@info.Value" style="color: var(--crm-brand);">@info.Value</a>
+                                    <a href="@PhoneNumberNormalizer.FormatForTelUri(info.Value)" style="color: var(--crm-brand);">@PhoneNumberNormalizer.FormatForDisplay(info.Value)</a>
                                 }
                                 else if (info.Type == ContactMethodType.Website || info.Value.StartsWith("http"))
                                 {

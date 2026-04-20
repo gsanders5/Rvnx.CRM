@@ -30,6 +30,7 @@ public class ContactMethodService(IRepository repository) : IContactMethodServic
 
         ContactMethod contactInfo = dto.ToEntity();
         contactInfo.Value = SocialMediaUrlNormalizer.Normalize(contactInfo.Type, contactInfo.Value);
+        contactInfo.Value = PhoneNumberNormalizer.NormalizeOrThrow(contactInfo.Type, contactInfo.Value);
 
         await _repository.AddAsync(contactInfo);
         await _repository.SaveChangesAsync();
@@ -49,6 +50,7 @@ public class ContactMethodService(IRepository repository) : IContactMethodServic
 
             existingContactInfo.UpdateEntity(dto);
             existingContactInfo.Value = SocialMediaUrlNormalizer.Normalize(existingContactInfo.Type, existingContactInfo.Value);
+            existingContactInfo.Value = PhoneNumberNormalizer.NormalizeOrThrow(existingContactInfo.Type, existingContactInfo.Value);
 
             await _repository.UpdateAsync(existingContactInfo);
             await _repository.SaveChangesAsync();

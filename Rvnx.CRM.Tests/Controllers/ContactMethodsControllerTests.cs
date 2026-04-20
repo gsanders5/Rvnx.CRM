@@ -73,7 +73,7 @@ public class ContactMethodsControllerTests : IDisposable
         {
             EntityId = entityId,
             Type = ContactMethodType.Phone,
-            Value = "555-0199",
+            Value = "(212) 736-5000",
             Label = "Work"
         };
 
@@ -84,7 +84,7 @@ public class ContactMethodsControllerTests : IDisposable
         Assert.Equal("Contacts", redirectResult.ControllerName);
         Assert.Equal(entityId, redirectResult.RouteValues?["id"]);
 
-        ContactMethod? created = await _context.Set<ContactMethod>().FirstOrDefaultAsync(c => c.Value == "555-0199");
+        ContactMethod? created = await _context.Set<ContactMethod>().FirstOrDefaultAsync(c => c.Value == "+12127365000");
         Assert.NotNull(created);
         Assert.Equal(entityId, created.ContactId);
         Assert.Equal(ContactMethodType.Phone, created.Type);

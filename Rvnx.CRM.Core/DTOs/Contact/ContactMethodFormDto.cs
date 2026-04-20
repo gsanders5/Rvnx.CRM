@@ -1,9 +1,10 @@
 using Rvnx.CRM.Core.Enumerations;
+using Rvnx.CRM.Core.Helpers;
 using System.ComponentModel.DataAnnotations;
 
 namespace Rvnx.CRM.Core.DTOs.Contact;
 
-public class ContactMethodFormDto
+public class ContactMethodFormDto : IValidatableObject
 {
     public Guid? Id { get; set; }
 
@@ -21,4 +22,13 @@ public class ContactMethodFormDto
     public string? Label { get; set; }
 
     public Guid EntityId { get; set; }
+
+    public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
+    {
+        if (Type == ContactMethodType.Phone
+            && !PhoneNumberNormalizer.TryNormalize(Value, out _, out string? error))
+        {
+            yield return new ValidationResult(error, [nameof(Value)]);
+        }
+    }
 }

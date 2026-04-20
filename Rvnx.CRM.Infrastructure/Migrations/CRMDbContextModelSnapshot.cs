@@ -15,7 +15,7 @@ namespace Rvnx.CRM.Infrastructure.Migrations
         protected override void BuildModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
-            modelBuilder.HasAnnotation("ProductVersion", "9.0.14");
+            modelBuilder.HasAnnotation("ProductVersion", "9.0.15");
 
             modelBuilder.Entity("Rvnx.CRM.Core.Models.Activity.Activity", b =>
                 {
@@ -71,7 +71,7 @@ namespace Rvnx.CRM.Infrastructure.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("Activity");
+                    b.ToTable("Activity", (string)null);
                 });
 
             modelBuilder.Entity("Rvnx.CRM.Core.Models.Activity.ActivityContact", b =>
@@ -120,7 +120,7 @@ namespace Rvnx.CRM.Infrastructure.Migrations
                     b.HasIndex("ActivityId", "ContactId")
                         .IsUnique();
 
-                    b.ToTable("ActivityContact");
+                    b.ToTable("ActivityContact", (string)null);
                 });
 
             modelBuilder.Entity("Rvnx.CRM.Core.Models.ApiToken", b =>
@@ -181,7 +181,7 @@ namespace Rvnx.CRM.Infrastructure.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("ApiTokens");
+                    b.ToTable("ApiTokens", (string)null);
                 });
 
             modelBuilder.Entity("Rvnx.CRM.Core.Models.Base.Attachment", b =>
@@ -238,7 +238,7 @@ namespace Rvnx.CRM.Infrastructure.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("Attachment", t =>
+                    b.ToTable("Attachment", null, t =>
                         {
                             t.HasCheckConstraint("CHK_Attachment_Owner", "ContactId IS NOT NULL");
                         });
@@ -289,7 +289,7 @@ namespace Rvnx.CRM.Infrastructure.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("AttachmentContent");
+                    b.ToTable("AttachmentContent", (string)null);
                 });
 
             modelBuilder.Entity("Rvnx.CRM.Core.Models.Base.Note", b =>
@@ -341,7 +341,7 @@ namespace Rvnx.CRM.Infrastructure.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("Note", t =>
+                    b.ToTable("Note", null, t =>
                         {
                             t.HasCheckConstraint("CHK_Note_Owner", "ContactId IS NOT NULL");
                         });
@@ -404,7 +404,7 @@ namespace Rvnx.CRM.Infrastructure.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("Employer");
+                    b.ToTable("Employer", (string)null);
                 });
 
             modelBuilder.Entity("Rvnx.CRM.Core.Models.Contact.Address", b =>
@@ -481,7 +481,7 @@ namespace Rvnx.CRM.Infrastructure.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("Address", t =>
+                    b.ToTable("Address", null, t =>
                         {
                             t.HasCheckConstraint("CHK_Address_Owner", "ContactId IS NOT NULL");
                         });
@@ -565,7 +565,7 @@ namespace Rvnx.CRM.Infrastructure.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("Contact");
+                    b.ToTable("Contact", (string)null);
                 });
 
             modelBuilder.Entity("Rvnx.CRM.Core.Models.Contact.ContactFavorite", b =>
@@ -611,7 +611,7 @@ namespace Rvnx.CRM.Infrastructure.Migrations
                     b.HasIndex("UserId", "ContactId")
                         .IsUnique();
 
-                    b.ToTable("ContactFavorite");
+                    b.ToTable("ContactFavorite", (string)null);
                 });
 
             modelBuilder.Entity("Rvnx.CRM.Core.Models.Contact.ContactLabel", b =>
@@ -660,7 +660,7 @@ namespace Rvnx.CRM.Infrastructure.Migrations
                     b.HasIndex("ContactId", "LabelId")
                         .IsUnique();
 
-                    b.ToTable("ContactLabel");
+                    b.ToTable("ContactLabel", (string)null);
                 });
 
             modelBuilder.Entity("Rvnx.CRM.Core.Models.Contact.ContactMethod", b =>
@@ -715,7 +715,7 @@ namespace Rvnx.CRM.Infrastructure.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("ContactMethod", t =>
+                    b.ToTable("ContactMethod", null, t =>
                         {
                             t.HasCheckConstraint("CHK_ContactMethod_Owner", "ContactId IS NOT NULL");
                         });
@@ -778,7 +778,7 @@ namespace Rvnx.CRM.Infrastructure.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("ContactTask", t =>
+                    b.ToTable("ContactTask", null, t =>
                         {
                             t.HasCheckConstraint("CHK_ContactTask_Owner", "ContactId IS NOT NULL");
                         });
@@ -834,7 +834,7 @@ namespace Rvnx.CRM.Infrastructure.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("Fact", t =>
+                    b.ToTable("Fact", null, t =>
                         {
                             t.HasCheckConstraint("CHK_Fact_Owner", "ContactId IS NOT NULL");
                         });
@@ -884,7 +884,7 @@ namespace Rvnx.CRM.Infrastructure.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("Label");
+                    b.ToTable("Label", (string)null);
                 });
 
             modelBuilder.Entity("Rvnx.CRM.Core.Models.Contact.Pet", b =>
@@ -941,7 +941,7 @@ namespace Rvnx.CRM.Infrastructure.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("Pet");
+                    b.ToTable("Pet", (string)null);
                 });
 
             modelBuilder.Entity("Rvnx.CRM.Core.Models.Contact.PetContact", b =>
@@ -990,7 +990,7 @@ namespace Rvnx.CRM.Infrastructure.Migrations
                     b.HasIndex("PetId", "ContactId")
                         .IsUnique();
 
-                    b.ToTable("PetContact");
+                    b.ToTable("PetContact", (string)null);
                 });
 
             modelBuilder.Entity("Rvnx.CRM.Core.Models.Contact.Relationship", b =>
@@ -1055,7 +1055,7 @@ namespace Rvnx.CRM.Infrastructure.Migrations
 
                     b.HasIndex("RelatedEntityId", "EntityType");
 
-                    b.ToTable("Relationship");
+                    b.ToTable("Relationship", (string)null);
                 });
 
             modelBuilder.Entity("Rvnx.CRM.Core.Models.Dates.ReminderLog", b =>
@@ -1118,7 +1118,7 @@ namespace Rvnx.CRM.Infrastructure.Migrations
                     b.HasIndex("ReminderOffsetId", "OccurrenceDate")
                         .IsUnique();
 
-                    b.ToTable("ReminderLog");
+                    b.ToTable("ReminderLog", (string)null);
                 });
 
             modelBuilder.Entity("Rvnx.CRM.Core.Models.Dates.ReminderOffset", b =>
@@ -1167,7 +1167,7 @@ namespace Rvnx.CRM.Infrastructure.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("ReminderOffset");
+                    b.ToTable("ReminderOffset", (string)null);
                 });
 
             modelBuilder.Entity("Rvnx.CRM.Core.Models.Dates.SignificantDate", b =>
@@ -1229,7 +1229,7 @@ namespace Rvnx.CRM.Infrastructure.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("SignificantDate", t =>
+                    b.ToTable("SignificantDate", null, t =>
                         {
                             t.HasCheckConstraint("CHK_SignificantDate_Owner", "ContactId IS NOT NULL");
                         });
@@ -1293,7 +1293,7 @@ namespace Rvnx.CRM.Infrastructure.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("Users");
+                    b.ToTable("Users", (string)null);
                 });
 
             modelBuilder.Entity("Rvnx.CRM.Core.Models.UserGroup", b =>
@@ -1336,7 +1336,7 @@ namespace Rvnx.CRM.Infrastructure.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("UserGroups");
+                    b.ToTable("UserGroups", (string)null);
                 });
 
             modelBuilder.Entity("Rvnx.CRM.Core.Models.Activity.ActivityContact", b =>
