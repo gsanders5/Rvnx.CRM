@@ -1,10 +1,8 @@
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
-using Microsoft.EntityFrameworkCore;
 using Rvnx.CRM.Core;
 using Rvnx.CRM.Core.Interfaces;
 using Rvnx.CRM.Infrastructure;
-using Rvnx.CRM.Infrastructure.Data;
 using Rvnx.CRM.Web.Extensions;
 using Rvnx.CRM.Web.Services;
 using System.Security.Claims;
@@ -14,12 +12,6 @@ namespace Rvnx.CRM.Web;
 
 public class Program
 {
-    private static readonly Action<ILogger, Exception?> LogDbCreationError =
-        LoggerMessage.Define(
-            LogLevel.Error,
-            new EventId(1, nameof(LogDbCreationError)),
-            "An error occurred creating the DB.");
-
     public static void Main(string[] args)
     {
         WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
@@ -157,20 +149,7 @@ public class Program
             await next();
         });
 
-        using (IServiceScope scope = app.Services.CreateScope())
-        {
-            IServiceProvider services = scope.ServiceProvider;
-            try
-            {
-                CRMDbContext context = services.GetRequiredService<CRMDbContext>();
-                context.Database.Migrate();
-            }
-            catch (Exception ex)
-            {
-                ILogger<Program> logger = services.GetRequiredService<ILogger<Program>>();
-                LogDbCreationError(logger, ex);
-            }
-        }
+        app.Services.ApplyDatabaseMigrations();
 
         if (!app.Environment.IsDevelopment())
         {
