@@ -6,7 +6,6 @@ public class UpdateSignificantDateRequest
 {
     public Guid Id { get; set; }
     public Guid EntityId { get; set; }
-    public string EntityType { get; set; } = string.Empty;
     public string Title { get; set; } = string.Empty;
     public string? Description { get; set; }
     public DateOnly EventDate { get; set; }

@@ -1,6 +1,7 @@
 using Moq;
 using Rvnx.CRM.Core.Constants;
 using Rvnx.CRM.Core.DTOs.Base;
+using Rvnx.CRM.Core.Enumerations;
 using Rvnx.CRM.Core.Exceptions;
 using Rvnx.CRM.Core.Interfaces;
 using Rvnx.CRM.Core.Models;
@@ -31,7 +32,7 @@ public class NoteServiceTests
         NoteFormViewModel dto = new()
         {
             EntityId = contactId,
-            EntityType = EntityTypes.Person,
+            EntityType = EntityType.Person,
             Title = "New Note",
             Value = "Note content"
         };
@@ -51,7 +52,7 @@ public class NoteServiceTests
         // Assert
         Assert.True(result.Success);
         Assert.Equal(contactId, result.RedirectId);
-        Assert.Equal(EntityTypes.Person, result.RedirectType);
+        Assert.Equal(EntityType.Person, result.RedirectType);
         _repositoryMock.Verify(r => r.AddAsync(It.IsAny<Note>(), It.IsAny<CancellationToken>()), Times.Once);
         _repositoryMock.Verify(r => r.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
     }
@@ -63,7 +64,7 @@ public class NoteServiceTests
         NoteFormViewModel dto = new()
         {
             EntityId = Guid.NewGuid(),
-            EntityType = EntityTypes.Company,
+            EntityType = EntityType.Company,
             Title = "New Note",
             Value = "Note content"
         };
@@ -85,7 +86,7 @@ public class NoteServiceTests
         NoteFormViewModel dto = new()
         {
             EntityId = Guid.NewGuid(),
-            EntityType = EntityTypes.Person,
+            EntityType = EntityType.Person,
             Title = "New Note",
             Value = "Note content"
         };
@@ -112,7 +113,7 @@ public class NoteServiceTests
         Note existingNote = new()
         { Id = noteId, ContactId = contactId, Title = "Old Title" };
         NoteFormViewModel dto = new()
-        { Id = noteId, EntityId = contactId, EntityType = EntityTypes.Person, Title = "New Title" };
+        { Id = noteId, EntityId = contactId, EntityType = EntityType.Person, Title = "New Title" };
 
         _repositoryMock.Setup(r => r.GetByIdAsync<Note>(noteId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(existingNote);
@@ -132,7 +133,7 @@ public class NoteServiceTests
         // Assert
         Assert.True(result.Success);
         Assert.Equal(contactId, result.RedirectId);
-        Assert.Equal(EntityTypes.Person, result.RedirectType);
+        Assert.Equal(EntityType.Person, result.RedirectType);
         _repositoryMock.Verify(r => r.UpdateAsync(It.IsAny<Note>(), It.IsAny<CancellationToken>()), Times.Once);
         _repositoryMock.Verify(r => r.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
     }
@@ -162,7 +163,7 @@ public class NoteServiceTests
         // Assert
         Assert.True(result.Success);
         Assert.Equal(contactId, result.RedirectId);
-        Assert.Equal(EntityTypes.Person, result.RedirectType);
+        Assert.Equal(EntityType.Person, result.RedirectType);
         _repositoryMock.Verify(r => r.DeleteAsync<Note>(It.IsAny<System.Linq.Expressions.Expression<Func<Note, bool>>>(), It.IsAny<CancellationToken>()), Times.Once);
         _repositoryMock.Verify(r => r.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
     }
@@ -197,7 +198,7 @@ public class NoteServiceTests
         Note existingNote = new()
         { Id = noteId, ContactId = contactId, Title = "Test Note" };
         NoteFormViewModel dto = new()
-        { Id = noteId, EntityId = contactId, EntityType = EntityTypes.Person, Title = "Updated Note" };
+        { Id = noteId, EntityId = contactId, EntityType = EntityType.Person, Title = "Updated Note" };
 
         _repositoryMock.Setup(r => r.GetByIdAsync<Note>(noteId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(existingNote);
@@ -222,7 +223,7 @@ public class NoteServiceTests
         Note existingNote = new()
         { Id = noteId, ContactId = contactId, Title = "Test Note" };
         NoteFormViewModel dto = new()
-        { Id = noteId, EntityId = contactId, EntityType = EntityTypes.Person, Title = "Updated Note" };
+        { Id = noteId, EntityId = contactId, EntityType = EntityType.Person, Title = "Updated Note" };
 
         _repositoryMock.Setup(r => r.GetByIdAsync<Note>(noteId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(existingNote);

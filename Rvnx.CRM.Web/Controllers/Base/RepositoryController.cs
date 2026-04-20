@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
-using Rvnx.CRM.Core.Constants;
+using Rvnx.CRM.Core.Enumerations;
 using Rvnx.CRM.Core.Extensions;
 using Rvnx.CRM.Core.Interfaces;
 
@@ -26,11 +26,11 @@ public abstract class RepositoryController : AuthorizedController
         return await _repository.IsValidContactAsync(id);
     }
 
-    protected IActionResult RedirectToEntity(Guid id, string? type)
+    protected IActionResult RedirectToEntity(Guid id, EntityType? type)
     {
-        return id == Guid.Empty || string.IsNullOrEmpty(type)
+        return id == Guid.Empty || type == null
             ? RedirectToAction("Index", "Home")
-            : type == EntityTypes.Person ? RedirectToAction("Details", "Contacts", new { id }) : RedirectToAction("Index", "Home");
+            : type == EntityType.Person ? RedirectToAction("Details", "Contacts", new { id }) : RedirectToAction("Index", "Home");
     }
 
     protected async Task PopulateContactsSelectList(IContactReadService contactReadService, List<Guid> selectedIds)

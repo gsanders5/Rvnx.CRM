@@ -1,6 +1,7 @@
 using Moq;
 using Rvnx.CRM.Core.Constants;
 using Rvnx.CRM.Core.DTOs.Contact;
+using Rvnx.CRM.Core.Enumerations;
 using Rvnx.CRM.Core.Exceptions;
 using Rvnx.CRM.Core.Interfaces;
 using Rvnx.CRM.Core.Models;
@@ -28,7 +29,7 @@ public class FactServiceTests
         Fact existingFact = new()
         { Id = factId, ContactId = contactId };
         FactFormDto dto = new()
-        { Id = factId, EntityId = contactId, EntityType = EntityTypes.Person };
+        { Id = factId, EntityId = contactId };
 
         _repositoryMock.Setup(r => r.GetByIdAsync<Fact>(factId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(existingFact);
@@ -53,7 +54,7 @@ public class FactServiceTests
         Fact existingFact = new()
         { Id = factId, ContactId = contactId };
         FactFormDto dto = new()
-        { Id = factId, EntityId = contactId, EntityType = EntityTypes.Person };
+        { Id = factId, EntityId = contactId };
 
         _repositoryMock.Setup(r => r.GetByIdAsync<Fact>(factId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(existingFact);

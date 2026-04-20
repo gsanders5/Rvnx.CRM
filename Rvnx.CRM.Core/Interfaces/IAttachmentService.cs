@@ -1,4 +1,5 @@
 using Rvnx.CRM.Core.DTOs.Base;
+using Rvnx.CRM.Core.Enumerations;
 
 namespace Rvnx.CRM.Core.Interfaces;
 
@@ -11,11 +12,11 @@ public interface IAttachmentService
     /// Determines MIME type safely based on file extension and validates content.
     /// </summary>
     /// <param name="entityId">The ID of the entity to attach the file to.</param>
-    /// <param name="entityType">The type of the entity (e.g., Person, Contact).</param>
+    /// <param name="entityType">The type of the entity.</param>
     /// <param name="content">The raw file content.</param>
     /// <param name="fileName">The original filename.</param>
     /// <returns>A <see cref="AttachmentOperationResult"/> indicating success or failure.</returns>
-    Task<AttachmentOperationResult> UploadAttachmentAsync(Guid entityId, string entityType, byte[] content, string fileName);
+    Task<AttachmentOperationResult> UploadAttachmentAsync(Guid entityId, EntityType entityType, byte[] content, string fileName);
 
     /// <summary>
     /// Deletes an attachment and its associated content.

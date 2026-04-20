@@ -1,4 +1,4 @@
-@using Rvnx.CRM.Core.Constants
+@using Rvnx.CRM.Core.Enumerations
 @model Rvnx.CRM.Core.DTOs.Contact.RelationshipFormViewModel
 
 @{
@@ -20,7 +20,7 @@
             <li class="nav-item" role="presentation">
                 <button class="nav-link active" id="existing-tab" data-mdb-pill-init data-mdb-target="#existing" type="button" role="tab" aria-controls="existing" aria-selected="true"><i class="bi bi-link" aria-hidden="true"></i> Link Existing Contact</button>
             </li>
-            @if (Model.EntityType == EntityTypes.Person)
+            @if (Model.EntityType == EntityType.Person)
             {
                 <li class="nav-item" role="presentation">
                     <button class="nav-link" id="new-tab" data-mdb-pill-init data-mdb-target="#new" type="button" role="tab" aria-controls="new" aria-selected="false"><i class="bi bi-person-plus" aria-hidden="true"></i> Create New Partial Contact</button>
@@ -124,7 +124,7 @@
 
                     <div class="d-grid gap-2 d-md-flex mt-4">
                         <button type="submit" class="crm-btn-primary"><i class="bi bi-save" aria-hidden="true"></i> Save Relationship</button>
-                        @if (Model.EntityType == EntityTypes.Person)
+                        @if (Model.EntityType == EntityType.Person)
                         {
                             <a asp-controller="Contacts" asp-action="Details" asp-route-id="@Model.EntityId" class="crm-btn-tertiary"><i class="bi bi-x-lg" aria-hidden="true"></i> Cancel</a>
                         }
@@ -136,7 +136,7 @@
                 </form>
             </div>
 
-            @if (Model.EntityType == EntityTypes.Person)
+            @if (Model.EntityType == EntityType.Person)
             {
                 <div class="tab-pane fade" id="new" role="tabpanel" aria-labelledby="new-tab">
                     <form asp-action="CreatePartial" id="create-partial-form">

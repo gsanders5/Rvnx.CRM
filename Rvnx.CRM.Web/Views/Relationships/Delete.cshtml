@@ -1,4 +1,4 @@
-@using Rvnx.CRM.Core.Constants
+@using Rvnx.CRM.Core.Enumerations
 @model Rvnx.CRM.Core.DTOs.Contact.RelationshipDeleteViewModel
 
 @{
@@ -41,7 +41,7 @@
             {
                 <a href="@Model.ReturnUrl" class="crm-btn-tertiary"><i class="bi bi-x-lg" aria-hidden="true"></i>Cancel</a>
             }
-            else if (Model.EntityType == EntityTypes.Person)
+            else if (Model.EntityType == EntityType.Person)
             {
                 <a asp-controller="Contacts" asp-action="Details" asp-route-id="@Model.EntityId" class="crm-btn-tertiary"><i class="bi bi-x-lg" aria-hidden="true"></i>Cancel</a>
             }

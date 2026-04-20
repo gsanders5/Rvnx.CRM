@@ -1,5 +1,6 @@
 using Rvnx.CRM.Core.Constants;
 using Rvnx.CRM.Core.DTOs.Base;
+using Rvnx.CRM.Core.Enumerations;
 using Rvnx.CRM.Core.Extensions;
 using Rvnx.CRM.Core.Interfaces;
 using Rvnx.CRM.Core.Models.Base;
@@ -29,15 +30,9 @@ public class AttachmentService : IAttachmentService
     }
 
     /// <inheritdoc />
-    public async Task<AttachmentOperationResult> UploadAttachmentAsync(Guid entityId, string entityType, byte[] content, string fileName)
+    public async Task<AttachmentOperationResult> UploadAttachmentAsync(Guid entityId, EntityType entityType, byte[] content, string fileName)
     {
-        if (string.IsNullOrEmpty(entityType))
-        {
-            return AttachmentOperationResult.Failure("Entity Type is required.");
-        }
-
-        // Currently, attachments are only supported for Contacts due to schema limitations
-        if (!string.Equals(entityType, EntityTypes.Person, StringComparison.OrdinalIgnoreCase))
+        if (entityType != EntityType.Person)
         {
             return AttachmentOperationResult.Failure($"Attachments are not currently supported for {entityType}.");
         }
@@ -152,7 +147,7 @@ public class AttachmentService : IAttachmentService
                 ContentType = attachment.ContentType,
                 AttachmentType = attachment.AttachmentType,
                 EntityId = attachment.ContactId ?? Guid.Empty,
-                EntityType = EntityTypes.Person
+                EntityType = EntityType.Person
             };
     }
 

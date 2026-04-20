@@ -21,5 +21,4 @@ public class ContactMethodFormDto
     public string? Label { get; set; }
 
     public Guid EntityId { get; set; }
-    public string EntityType { get; set; } = string.Empty;
 }

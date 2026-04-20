@@ -1,6 +1,6 @@
-using System.Security.Claims;
 using Rvnx.CRM.Core.Constants;
 using Rvnx.CRM.Core.Interfaces;
+using System.Security.Claims;
 
 namespace Rvnx.CRM.Web.Extensions;
 

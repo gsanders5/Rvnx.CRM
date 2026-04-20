@@ -1,5 +1,5 @@
-using Rvnx.CRM.Core.Constants;
 using Rvnx.CRM.Core.DTOs.Contact;
+using Rvnx.CRM.Core.Enumerations;
 using Rvnx.CRM.Core.Exceptions;
 using Rvnx.CRM.Core.Extensions;
 using Rvnx.CRM.Core.Interfaces;
@@ -47,7 +47,7 @@ public class PetService(IRepository repository) : IPetService
 
         await _repository.SaveChangesAsync();
 
-        return OperationResult.Ok(dto.EntityId, EntityTypes.Person);
+        return OperationResult.Ok(dto.EntityId, EntityType.Person);
     }
 
     public async Task<OperationResult> UpdateAsync(Guid id, PetFormDto dto)
@@ -92,7 +92,7 @@ public class PetService(IRepository repository) : IPetService
 
             await _repository.SaveChangesAsync();
 
-            return OperationResult.Ok(dto.EntityId, EntityTypes.Person);
+            return OperationResult.Ok(dto.EntityId, EntityType.Person);
         }
         catch (EntityConcurrencyException)
         {
@@ -116,12 +116,11 @@ public class PetService(IRepository repository) : IPetService
             pc => pc.ContactId);
 
         Guid entityId = contactIds.FirstOrDefault();
-        string entityType = EntityTypes.Person;
 
         await _repository.DeleteAsync<Pet>(p => p.Id == id);
         await _repository.SaveChangesAsync();
 
-        return OperationResult.Ok(entityId, entityType);
+        return OperationResult.Ok(entityId, EntityType.Person);
     }
 
     public async Task<PetFormDto?> GetFormAsync(Guid id)

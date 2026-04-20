@@ -59,7 +59,6 @@ public class SignificantDatesController(ISignificantDateService significantDateS
         var model = new SignificantDateDto
         {
             EntityId = request.EntityId,
-            EntityType = request.EntityType,
             Title = request.Title,
             Description = request.Description,
             EventDate = request.EventDate,

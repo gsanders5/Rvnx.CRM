@@ -1,7 +1,7 @@
-using Rvnx.CRM.Core.Constants;
 using Rvnx.CRM.Core.DTOs.Base;
 using Rvnx.CRM.Core.DTOs.Contact;
 using Rvnx.CRM.Core.DTOs.Dates;
+using Rvnx.CRM.Core.Enumerations;
 using Rvnx.CRM.Core.Models.Activity;
 using Rvnx.CRM.Core.Models.Base;
 using Rvnx.CRM.Core.Models.Contact;
@@ -21,7 +21,7 @@ public static class DtoMappingExtensions
             Value = entity.Value,
             CreatedDate = entity.CreatedDate,
             EntityId = entity.ContactId ?? Guid.Empty,
-            EntityType = EntityTypes.Person
+            EntityType = EntityType.Person
         };
     }
 
@@ -34,7 +34,7 @@ public static class DtoMappingExtensions
             EventDate = entity.EventDate,
             Description = entity.Description,
             EntityId = entity.ContactId ?? Guid.Empty,
-            EntityType = EntityTypes.Person,
+            EntityType = EntityType.Person,
             RecurrenceType = entity.RecurrenceType,
             CustomIntervalDays = entity.CustomIntervalDays,
             IsActive = entity.IsActive,
@@ -87,7 +87,7 @@ public static class DtoMappingExtensions
             ContentType = entity.ContentType,
             AttachmentType = entity.AttachmentType,
             EntityId = entity.ContactId ?? Guid.Empty,
-            EntityType = EntityTypes.Person
+            EntityType = EntityType.Person
         };
     }
 
@@ -116,7 +116,7 @@ public static class DtoMappingExtensions
             Value = entity.Value,
             Label = entity.Label,
             EntityId = entity.ContactId ?? Guid.Empty,
-            EntityType = EntityTypes.Person,
+            EntityType = EntityType.Person,
             CreatedDate = entity.CreatedDate
         };
     }
@@ -129,7 +129,7 @@ public static class DtoMappingExtensions
             Category = entity.Category,
             Value = entity.Value,
             EntityId = entity.ContactId ?? Guid.Empty,
-            EntityType = EntityTypes.Person,
+            EntityType = EntityType.Person,
             CreatedDate = entity.CreatedDate
         };
     }

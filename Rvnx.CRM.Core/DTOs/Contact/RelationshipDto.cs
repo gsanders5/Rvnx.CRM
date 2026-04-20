@@ -1,10 +1,12 @@
 using Rvnx.CRM.Core.DTOs.Base;
+using Rvnx.CRM.Core.Enumerations;
+
 namespace Rvnx.CRM.Core.DTOs.Contact;
 
 public class RelationshipDto : BaseDto
 {
     public Guid EntityId { get; set; }
-    public string EntityType { get; set; } = string.Empty;
+    public EntityType EntityType { get; set; } = EntityType.Person;
     public string EntityName { get; set; } = string.Empty;
 
     public Guid RelatedEntityId { get; set; }

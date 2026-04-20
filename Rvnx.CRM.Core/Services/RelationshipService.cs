@@ -1,6 +1,7 @@
 using Rvnx.CRM.Core.Constants;
 using Rvnx.CRM.Core.DTOs.Common;
 using Rvnx.CRM.Core.DTOs.Contact;
+using Rvnx.CRM.Core.Enumerations;
 using Rvnx.CRM.Core.Interfaces;
 using Rvnx.CRM.Core.Models;
 using Rvnx.CRM.Core.Models.Business;
@@ -181,13 +182,13 @@ public class RelationshipService(IRepository repository) : IRelationshipService
              (r.EntityId == relatedEntityId && r.RelatedEntityId == entityId))) > 0;
     }
 
-    public async Task<List<SelectOptionDto>> GetRelatedEntityOptionsAsync(Guid entityId, string entityType,
+    public async Task<List<SelectOptionDto>> GetRelatedEntityOptionsAsync(Guid entityId, EntityType entityType,
         Guid? selectedId = null)
     {
         return entityType switch
         {
-            EntityTypes.Person => await GetPersonOptionsAsync(entityId, selectedId),
-            EntityTypes.Company => await GetCompanyOptionsAsync(entityId, selectedId),
+            EntityType.Person => await GetPersonOptionsAsync(entityId, selectedId),
+            EntityType.Company => await GetCompanyOptionsAsync(entityId, selectedId),
             _ => []
         };
     }
@@ -220,7 +221,7 @@ public class RelationshipService(IRepository repository) : IRelationshipService
             c => c.CompanyName);
     }
 
-    public List<SelectOptionDto> GetRelationshipTypeOptions(string entityType, string? selectedValue = null)
+    public List<SelectOptionDto> GetRelationshipTypeOptions(EntityType entityType, string? selectedValue = null)
     {
         List<RelationshipTypeDefinition> types = RelationshipTypeService.GetByEntityType(entityType);
         types = [.. types.OrderBy(t => t.Category).ThenBy(t => t.Name)];
@@ -262,7 +263,7 @@ public class RelationshipService(IRepository repository) : IRelationshipService
         };
     }
 
-    public List<RelationshipTypeDefinition> GetRelationshipTypes(string entityType)
+    public List<RelationshipTypeDefinition> GetRelationshipTypes(EntityType entityType)
     {
         return
             [.. RelationshipTypeService.GetByEntityType(entityType).OrderBy(t => t.Category).ThenBy(t => t.Name)];
@@ -307,7 +308,7 @@ public class RelationshipService(IRepository repository) : IRelationshipService
             Id = Guid.NewGuid(),
             EntityId = parentEntityId,
             RelatedEntityId = partialContact.Id,
-            EntityType = EntityTypes.Person,
+            EntityType = EntityType.Person,
             RelationshipTypeId = typeId,
             Description = dto.Description
         };
@@ -370,7 +371,7 @@ public class RelationshipService(IRepository repository) : IRelationshipService
                     {
                         EntityId = sId,
                         RelatedEntityId = tId,
-                        EntityType = EntityTypes.Person,
+                        EntityType = EntityType.Person,
                         RelationshipTypeId = typeId,
                         Description = "Automatically added from suggested relationship."
                     };
@@ -391,7 +392,7 @@ public class RelationshipService(IRepository repository) : IRelationshipService
 
         await repository.SaveChangesAsync();
 
-        return RelationshipOperationResult.Ok(parentEntityId, EntityTypes.Person);
+        return RelationshipOperationResult.Ok(parentEntityId, EntityType.Person);
     }
 
     public async Task<List<SuggestedRelationshipDto>> GetSuggestedRelationshipsAsync(Guid entityId,
@@ -576,7 +577,7 @@ public class RelationshipService(IRepository repository) : IRelationshipService
         await repository.UpdateAsync(contact);
         await repository.SaveChangesAsync();
 
-        return RelationshipOperationResult.Ok(contact.Id, EntityTypes.Person);
+        return RelationshipOperationResult.Ok(contact.Id, EntityType.Person);
     }
 
     public async Task<Relationship?> GetRelationshipForEditAsync(Guid id)
@@ -604,9 +605,9 @@ public class RelationshipService(IRepository repository) : IRelationshipService
 
     public async Task<OperationResult> DeleteRelationshipAsync(Guid id)
     {
-        List<(Guid EntityId, string EntityType)> relationshipInfos = await repository.ListProjectedAsync<Relationship, (Guid EntityId, string EntityType)>(
+        List<(Guid EntityId, EntityType EntityType)> relationshipInfos = await repository.ListProjectedAsync<Relationship, (Guid EntityId, EntityType EntityType)>(
             r => r.Id == id,
-            r => new ValueTuple<Guid, string>(r.EntityId, r.EntityType));
+            r => new ValueTuple<Guid, EntityType>(r.EntityId, r.EntityType));
 
         if (relationshipInfos.Count > 0)
         {

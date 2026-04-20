@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Rvnx.CRM.Core.DTOs.Dates;
+using Rvnx.CRM.Core.Enumerations;
 using Rvnx.CRM.Core.Interfaces;
 using Rvnx.CRM.Core.Models;
 using Rvnx.CRM.Web.Controllers.Base;
@@ -32,9 +33,8 @@ public class SignificantDatesController(ISignificantDateService significantDateS
             : View(new Rvnx.CRM.Core.DTOs.Dates.CreateSignificantDateRequest
             {
                 EntityId = contactId,
-                EntityType = Core.Constants.EntityTypes.Person,
                 EventDate = DateOnly.FromDateTime(DateTime.Today),
-                RecurrenceType = Core.Enumerations.RecurrenceType.Annual,
+                RecurrenceType = RecurrenceType.Annual,
                 ReminderOffsetDays = [0, 7, 30]
             });
     }
@@ -47,7 +47,6 @@ public class SignificantDatesController(ISignificantDateService significantDateS
             SignificantDateDto sdDto = new()
             {
                 EntityId = dto.EntityId,
-                EntityType = dto.EntityType,
                 Title = dto.Title,
                 Description = dto.Description,
                 EventDate = dto.EventDate,
@@ -99,7 +98,6 @@ public class SignificantDatesController(ISignificantDateService significantDateS
         {
             Id = dto.Id,
             EntityId = dto.EntityId,
-            EntityType = dto.EntityType,
             Title = dto.Title,
             Description = dto.Description,
             EventDate = dto.EventDate,
@@ -123,7 +121,6 @@ public class SignificantDatesController(ISignificantDateService significantDateS
             {
                 Id = dto.Id,
                 EntityId = dto.EntityId,
-                EntityType = dto.EntityType,
                 Title = dto.Title,
                 Description = dto.Description,
                 EventDate = dto.EventDate,

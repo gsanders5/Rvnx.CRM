@@ -9,7 +9,7 @@ namespace Rvnx.CRM.API.Controllers;
 
 /// <summary>
 /// Manages notes attached to contacts. Notes support Markdown content.
-/// Requires entityId (contact GUID) and entityType ("Person") when creating.
+/// Requires entityId (contact GUID) when creating.
 /// </summary>
 [ApiController]
 [Route("api/[controller]")]
@@ -33,13 +33,12 @@ public class NotesController(INoteService noteService) : ControllerBase
     /// Create a new note.
     /// </summary>
     /// <remarks>
-    /// Required fields: title, value (the note body — supports Markdown), entityId, entityType ("Person").
+    /// Required fields: title, value (the note body — supports Markdown), entityId.
     ///
     /// Example:
     ///
     ///     {
     ///       "entityId": "&lt;contact-id&gt;",
-    ///       "entityType": "Person",
     ///       "title": "First meeting",
     ///       "value": "Met at the conference. Very knowledgeable about distributed systems."
     ///     }
@@ -53,8 +52,7 @@ public class NotesController(INoteService noteService) : ControllerBase
         {
             Title = model.Title,
             Value = model.Value,
-            EntityId = model.EntityId,
-            EntityType = model.EntityType
+            EntityId = model.EntityId
         };
         Core.Models.OperationResult result = await _noteService.CreateAsync(vm);
         return result.Success ? Ok(new { Id = result.RedirectId }) : BadRequest(new { Error = result.ErrorMessage });

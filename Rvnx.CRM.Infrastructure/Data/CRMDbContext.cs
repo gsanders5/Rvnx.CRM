@@ -57,6 +57,11 @@ public class CRMDbContext(DbContextOptions<CRMDbContext> options, ICurrentUserSe
             .HasIndex(u => u.SelfContactId)
             .IsUnique();
 
+        modelBuilder.Entity<Relationship>()
+            .Property(e => e.EntityType)
+            .HasConversion<string>()
+            .HasMaxLength(50);
+
         modelBuilder.Entity<Relationship>().HasIndex(e => new { e.EntityId, e.EntityType });
         modelBuilder.Entity<Relationship>().HasIndex(e => new { e.RelatedEntityId, e.EntityType });
 

@@ -1,6 +1,7 @@
 using Rvnx.CRM.Core.Constants;
 using Rvnx.CRM.Core.DTOs.Calendar;
 using Rvnx.CRM.Core.DTOs.Dates;
+using Rvnx.CRM.Core.Enumerations;
 using Rvnx.CRM.Core.Exceptions;
 using Rvnx.CRM.Core.Extensions;
 using Rvnx.CRM.Core.Interfaces;
@@ -127,7 +128,7 @@ public class SignificantDateService(IRepository repository) : ISignificantDateSe
         await _repository.AddAsync(offset);
         await _repository.SaveChangesAsync();
 
-        return OperationResult.Ok(importantDate.ContactId ?? Guid.Empty, EntityTypes.Person);
+        return OperationResult.Ok(importantDate.ContactId ?? Guid.Empty, EntityType.Person);
     }
 
     public async Task<OperationResult> DeleteReminderOffsetAsync(Guid offsetId)
@@ -154,7 +155,7 @@ public class SignificantDateService(IRepository repository) : ISignificantDateSe
         await _repository.DeleteAsync<ReminderOffset>(ro => ro.Id == offsetId);
         await _repository.SaveChangesAsync();
 
-        return OperationResult.Ok(contactIds.FirstOrDefault() ?? Guid.Empty, EntityTypes.Person);
+        return OperationResult.Ok(contactIds.FirstOrDefault() ?? Guid.Empty, EntityType.Person);
     }
 
     public async Task<OperationResult> DeleteAsync(Guid id)
@@ -166,12 +167,11 @@ public class SignificantDateService(IRepository repository) : ISignificantDateSe
         if (contactIds.Count > 0)
         {
             Guid entityId = contactIds.FirstOrDefault() ?? Guid.Empty;
-            string entityType = EntityTypes.Person;
 
             await _repository.DeleteAsync<SignificantDate>(sd => sd.Id == id);
             await _repository.SaveChangesAsync();
 
-            return OperationResult.Ok(entityId, entityType);
+            return OperationResult.Ok(entityId, EntityType.Person);
         }
         return OperationResult.Failure("Significant date not found.");
     }

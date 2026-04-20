@@ -263,9 +263,9 @@ public class MergeServiceTests : IDisposable
         Guid typeId = Guid.NewGuid();
 
         Relationship rel1 = new()
-        { Id = Guid.NewGuid(), EntityId = primary.Id, RelatedEntityId = other.Id, RelationshipTypeId = typeId, EntityType = "Person" };
+        { Id = Guid.NewGuid(), EntityId = primary.Id, RelatedEntityId = other.Id, RelationshipTypeId = typeId, EntityType = EntityType.Person };
         Relationship rel2 = new()
-        { Id = Guid.NewGuid(), EntityId = secondary.Id, RelatedEntityId = other.Id, RelationshipTypeId = typeId, EntityType = "Person" };
+        { Id = Guid.NewGuid(), EntityId = secondary.Id, RelatedEntityId = other.Id, RelationshipTypeId = typeId, EntityType = EntityType.Person };
 
         await _context.Contacts!.AddRangeAsync(primary, secondary, other);
         await _context.Set<Relationship>().AddRangeAsync(rel1, rel2);

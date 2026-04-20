@@ -63,10 +63,9 @@ public class ReminderNotificationServiceTests
 
         ReminderNotificationService service = new(repository, BuildDisabledConfig());
 
-        OperationResult result = await service.SendDueRemindersAsync(DateOnly.FromDateTime(DateTime.Today));
+        string result = await service.SendDueRemindersAsync(DateOnly.FromDateTime(DateTime.Today));
 
-        Assert.True(result.Success);
-        Assert.Contains("disabled", result.RedirectType, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("disabled", result, StringComparison.OrdinalIgnoreCase);
 
         // No logs should have been written
         int logCount = await context.Set<ReminderLog>().CountAsync();
@@ -101,9 +100,7 @@ public class ReminderNotificationServiceTests
         await context.SaveChangesAsync();
 
         ReminderNotificationService service = new(repository, BuildEnabledConfig());
-        OperationResult result = await service.SendDueRemindersAsync(today);
-
-        Assert.True(result.Success);
+        _ = await service.SendDueRemindersAsync(today);
 
         // No ReminderLog created since there are no recipients
         int logCount = await context.Set<ReminderLog>().CountAsync();
@@ -140,9 +137,7 @@ public class ReminderNotificationServiceTests
         await context.SaveChangesAsync();
 
         ReminderNotificationService service = new(repository, BuildEnabledConfig());
-        OperationResult result = await service.SendDueRemindersAsync(today);
-
-        Assert.True(result.Success);
+        _ = await service.SendDueRemindersAsync(today);
 
         // No log because no recipients in group
         int logCount = await context.Set<ReminderLog>().CountAsync();
@@ -182,9 +177,7 @@ public class ReminderNotificationServiceTests
         await context.SaveChangesAsync();
 
         ReminderNotificationService service = new(repository, BuildEnabledConfig());
-        OperationResult result = await service.SendDueRemindersAsync(today);
-
-        Assert.True(result.Success);
+        _ = await service.SendDueRemindersAsync(today);
 
         // Not due today, no log entry
         int logCount = await context.Set<ReminderLog>().CountAsync();
@@ -236,12 +229,10 @@ public class ReminderNotificationServiceTests
         await context.SaveChangesAsync();
 
         ReminderNotificationService service = new(repository, BuildEnabledConfig());
-        OperationResult result = await service.SendDueRemindersAsync(today);
-
-        Assert.True(result.Success);
+        string result = await service.SendDueRemindersAsync(today);
 
         // Should not have sent anything or added any new log, sent count should be 0, failed count 0
-        Assert.Contains("0 sent, 0 failed", result.RedirectType);
+        Assert.Contains("0 sent, 0 failed", result);
 
         // Still only 1 log
         int logCount = await context.Set<ReminderLog>().CountAsync();

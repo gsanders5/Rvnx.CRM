@@ -29,7 +29,7 @@ public class ContactMethodServiceTests
         ContactMethod existingContactMethod = new()
         { Id = contactMethodId, ContactId = contactId };
         ContactMethodFormDto dto = new()
-        { Id = contactMethodId, EntityId = contactId, EntityType = EntityTypes.Person };
+        { Id = contactMethodId, EntityId = contactId };
 
         _repositoryMock.Setup(r => r.GetByIdAsync<ContactMethod>(contactMethodId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(existingContactMethod);
@@ -54,7 +54,7 @@ public class ContactMethodServiceTests
         ContactMethod existingContactMethod = new()
         { Id = contactMethodId, ContactId = contactId, Type = ContactMethodType.Email, Value = "old@example.com" };
         ContactMethodFormDto dto = new()
-        { Id = contactMethodId, EntityId = contactId, EntityType = EntityTypes.Person, Type = ContactMethodType.Email, Value = "new@example.com" };
+        { Id = contactMethodId, EntityId = contactId, Type = ContactMethodType.Email, Value = "new@example.com" };
 
         _repositoryMock.Setup(r => r.GetByIdAsync<ContactMethod>(contactMethodId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(existingContactMethod);
@@ -78,7 +78,7 @@ public class ContactMethodServiceTests
         ContactMethod existingContactMethod = new()
         { Id = contactMethodId, ContactId = contactId };
         ContactMethodFormDto dto = new()
-        { Id = contactMethodId, EntityId = contactId, EntityType = EntityTypes.Person };
+        { Id = contactMethodId, EntityId = contactId };
 
         _repositoryMock.Setup(r => r.GetByIdAsync<ContactMethod>(contactMethodId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(existingContactMethod);
@@ -115,7 +115,7 @@ public class ContactMethodServiceTests
 
         Assert.True(result.Success);
         Assert.Equal(contactId, result.RedirectId);
-        Assert.Equal(EntityTypes.Person, result.RedirectType);
+        Assert.Equal(EntityType.Person, result.RedirectType);
 
         _repositoryMock.Verify(r => r.DeleteAsync(It.IsAny<System.Linq.Expressions.Expression<Func<ContactMethod, bool>>>(), It.IsAny<CancellationToken>()), Times.Once);
         _repositoryMock.Verify(r => r.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
@@ -195,7 +195,6 @@ public class ContactMethodServiceTests
         Assert.NotNull(result);
         Assert.Equal(contactMethodId, result.Id);
         Assert.Equal(contactId, result.EntityId);
-        Assert.Equal(EntityTypes.Person, result.EntityType);
         Assert.Equal(ContactMethodType.Email, result.Type);
         Assert.Equal("test@example.com", result.Value);
         Assert.Equal(ContactMethodLabels.Primary, result.Label);
@@ -208,7 +207,6 @@ public class ContactMethodServiceTests
         ContactMethodFormDto dto = new()
         {
             EntityId = contactId,
-            EntityType = EntityTypes.Person,
             Type = ContactMethodType.Email,
             Value = "new@example.com"
         };
@@ -231,7 +229,6 @@ public class ContactMethodServiceTests
         ContactMethodFormDto dto = new()
         {
             EntityId = contactId,
-            EntityType = EntityTypes.Person,
             Type = ContactMethodType.Email,
             Value = "new@example.com"
         };

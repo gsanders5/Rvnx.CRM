@@ -1,5 +1,3 @@
-using System.Linq.Expressions;
-using System.Text;
 using Moq;
 using Rvnx.CRM.Core.Constants;
 using Rvnx.CRM.Core.DTOs.Contact;
@@ -8,6 +6,8 @@ using Rvnx.CRM.Core.Interfaces;
 using Rvnx.CRM.Core.Models.Contact;
 using Rvnx.CRM.Core.Models.Dates;
 using Rvnx.CRM.Infrastructure.Services;
+using System.Linq.Expressions;
+using System.Text;
 
 namespace Rvnx.CRM.Tests.Services;
 

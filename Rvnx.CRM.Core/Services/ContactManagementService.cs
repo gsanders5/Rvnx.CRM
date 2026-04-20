@@ -28,7 +28,7 @@ public class ContactManagementService(IRepository repository, IFileValidationSer
         }
 
         List<Relationship> userRelationships = await _repository.ListAsync<Relationship>(r =>
-            (r.EntityId == contactId || r.RelatedEntityId == contactId) && r.EntityType == EntityTypes.Person);
+            (r.EntityId == contactId || r.RelatedEntityId == contactId) && r.EntityType == EntityType.Person);
 
         List<Guid> linkedContactIds = userRelationships
             .Select(r => r.EntityId == contactId ? r.RelatedEntityId : r.EntityId)
@@ -51,7 +51,7 @@ public class ContactManagementService(IRepository repository, IFileValidationSer
                 List<Guid> partialContactIds = linkedPartialContacts.Select(c => c.Id).ToList();
                 List<Relationship> allPartialRels = await _repository.ListByChunkedContainsAsync<Relationship, Guid>(
                     partialContactIds,
-                    chunk => r => (chunk.Contains(r.EntityId) || chunk.Contains(r.RelatedEntityId)) && r.EntityType == EntityTypes.Person,
+                    chunk => r => (chunk.Contains(r.EntityId) || chunk.Contains(r.RelatedEntityId)) && r.EntityType == EntityType.Person,
                     asNoTracking: false);
 
                 // Optimization: avoid multiple iterations and LINQ enumerations by iterating once over the relationships
@@ -286,12 +286,12 @@ public class ContactManagementService(IRepository repository, IFileValidationSer
         // are now configured with Cascade Delete via ContactId foreign key.
 
         await DeleteRelatedEntitiesAsync<Relationship>(contactId);
-        await _repository.DeleteAsync<Relationship>(r => r.RelatedEntityId == contactId && r.EntityType == EntityTypes.Person);
+        await _repository.DeleteAsync<Relationship>(r => r.RelatedEntityId == contactId && r.EntityType == EntityType.Person);
     }
 
     private async Task DeleteRelatedEntitiesAsync<T>(Guid contactId) where T : PolymorphicEntity
     {
-        await _repository.DeleteAsync<T>(e => e.EntityId == contactId && e.EntityType == EntityTypes.Person);
+        await _repository.DeleteAsync<T>(e => e.EntityId == contactId && e.EntityType == EntityType.Person);
     }
 
     public async Task<ContactOperationResult> DemoteToPartialAsync(Guid contactId)

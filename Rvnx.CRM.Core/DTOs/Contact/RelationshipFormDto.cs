@@ -1,3 +1,4 @@
+using Rvnx.CRM.Core.Enumerations;
 using System.ComponentModel.DataAnnotations;
 
 namespace Rvnx.CRM.Core.DTOs.Contact;
@@ -7,7 +8,7 @@ public class RelationshipFormDto
     public Guid? Id { get; set; }
     public Guid EntityId { get; set; }
     public Guid RelatedEntityId { get; set; }
-    public string EntityType { get; set; } = string.Empty;
+    public EntityType EntityType { get; set; } = EntityType.Person;
 
     [Required]
     public Guid RelationshipTypeId { get; set; }

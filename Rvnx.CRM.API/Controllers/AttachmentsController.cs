@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Rvnx.CRM.Core.Enumerations;
 using Rvnx.CRM.Core.Interfaces;
 
 namespace Rvnx.CRM.API.Controllers;
@@ -45,7 +46,7 @@ public class AttachmentsController(IAttachmentService attachmentService, IThumbn
         await file.CopyToAsync(stream);
         byte[] content = stream.ToArray();
 
-        Core.DTOs.Base.AttachmentOperationResult result = await _attachmentService.UploadAttachmentAsync(contactId, "Person", content, file.FileName);
+        Core.DTOs.Base.AttachmentOperationResult result = await _attachmentService.UploadAttachmentAsync(contactId, EntityType.Person, content, file.FileName);
 
         if (!result.Success)
         {

@@ -1,4 +1,4 @@
-using Rvnx.CRM.Core.Constants;
+using Rvnx.CRM.Core.Enumerations;
 using Rvnx.CRM.Core.Models.Contact;
 
 namespace Rvnx.CRM.Core.Services;
@@ -56,58 +56,58 @@ public static class RelationshipTypeService
 
     private static readonly Lazy<List<RelationshipTypeDefinition>> _types = new(() =>
     [
-        new(RelationshipTypeIds.Spouse, "Spouse", "Spouse", "Romantic", EntityTypes.Person,
+        new(RelationshipTypeIds.Spouse, "Spouse", "Spouse", "Romantic", EntityType.Person,
             NameMale: "Husband", NameFemale: "Wife", OppositeNameMale: "Husband", OppositeNameFemale: "Wife"),
 
-        new(RelationshipTypeIds.ExSpouse, "Ex-Spouse", "Ex-Spouse", "Romantic", EntityTypes.Person,
+        new(RelationshipTypeIds.ExSpouse, "Ex-Spouse", "Ex-Spouse", "Romantic", EntityType.Person,
             NameMale: "Ex-Husband", NameFemale: "Ex-Wife", OppositeNameMale: "Ex-Husband", OppositeNameFemale: "Ex-Wife"),
 
-        new(RelationshipTypeIds.Parent, "Parent", "Child", "Family", EntityTypes.Person,
+        new(RelationshipTypeIds.Parent, "Parent", "Child", "Family", EntityType.Person,
             NameMale: "Father", NameFemale: "Mother", OppositeNameMale: "Son", OppositeNameFemale: "Daughter"),
 
-        new(RelationshipTypeIds.Sibling, "Sibling", "Sibling", "Family", EntityTypes.Person,
+        new(RelationshipTypeIds.Sibling, "Sibling", "Sibling", "Family", EntityType.Person,
             NameMale: "Brother", NameFemale: "Sister", OppositeNameMale: "Brother", OppositeNameFemale: "Sister"),
 
-        new(RelationshipTypeIds.Grandparent, "Grandparent", "Grandchild", "Family", EntityTypes.Person,
+        new(RelationshipTypeIds.Grandparent, "Grandparent", "Grandchild", "Family", EntityType.Person,
             NameMale: "Grandfather", NameFemale: "Grandmother", OppositeNameMale: "Grandson", OppositeNameFemale: "Granddaughter"),
 
-        new(RelationshipTypeIds.UncleAunt, "Uncle/Aunt", "Nephew/Niece", "Family", EntityTypes.Person,
+        new(RelationshipTypeIds.UncleAunt, "Uncle/Aunt", "Nephew/Niece", "Family", EntityType.Person,
             NameMale: "Uncle", NameFemale: "Aunt", OppositeNameMale: "Nephew", OppositeNameFemale: "Niece"),
 
-        new(RelationshipTypeIds.Cousin, "Cousin", "Cousin", "Family", EntityTypes.Person),
+        new(RelationshipTypeIds.Cousin, "Cousin", "Cousin", "Family", EntityType.Person),
 
-        new(RelationshipTypeIds.Godparent, "Godparent", "Godchild", "Family", EntityTypes.Person,
+        new(RelationshipTypeIds.Godparent, "Godparent", "Godchild", "Family", EntityType.Person,
             NameMale: "Godfather", NameFemale: "Godmother", OppositeNameMale: "Godson", OppositeNameFemale: "Goddaughter"),
 
-        new(RelationshipTypeIds.StepParent, "Step-Parent", "Step-Child", "Family", EntityTypes.Person,
+        new(RelationshipTypeIds.StepParent, "Step-Parent", "Step-Child", "Family", EntityType.Person,
             NameMale: "Step-Father", NameFemale: "Step-Mother", OppositeNameMale: "Step-Son", OppositeNameFemale: "Step-Daughter"),
 
-        new(RelationshipTypeIds.StepSibling, "Step-Sibling", "Step-Sibling", "Family", EntityTypes.Person,
+        new(RelationshipTypeIds.StepSibling, "Step-Sibling", "Step-Sibling", "Family", EntityType.Person,
             NameMale: "Step-Brother", NameFemale: "Step-Sister", OppositeNameMale: "Step-Brother", OppositeNameFemale: "Step-Sister"),
 
-        new(RelationshipTypeIds.HalfSibling, "Half-Sibling", "Half-Sibling", "Family", EntityTypes.Person,
+        new(RelationshipTypeIds.HalfSibling, "Half-Sibling", "Half-Sibling", "Family", EntityType.Person,
             NameMale: "Half-Brother", NameFemale: "Half-Sister", OppositeNameMale: "Half-Brother", OppositeNameFemale: "Half-Sister"),
 
-        new(RelationshipTypeIds.SignificantOther, "Significant Other", "Significant Other", "Romantic", EntityTypes.Person),
-        new(RelationshipTypeIds.ExPartner, "Ex-Partner", "Ex-Partner", "Romantic", EntityTypes.Person),
+        new(RelationshipTypeIds.SignificantOther, "Significant Other", "Significant Other", "Romantic", EntityType.Person),
+        new(RelationshipTypeIds.ExPartner, "Ex-Partner", "Ex-Partner", "Romantic", EntityType.Person),
 
-        new(RelationshipTypeIds.Manager, "Manager", "Employee", "Professional", EntityTypes.Person),
-        new(RelationshipTypeIds.Mentor, "Mentor", "Protege", "Professional", EntityTypes.Person),
-        new(RelationshipTypeIds.Teacher, "Teacher", "Student", "Professional", EntityTypes.Person),
-        new(RelationshipTypeIds.Colleague, "Colleague", "Colleague", "Professional", EntityTypes.Person),
-        new(RelationshipTypeIds.BusinessPartner, "Business Partner", "Business Partner", "Professional", EntityTypes.Person),
+        new(RelationshipTypeIds.Manager, "Manager", "Employee", "Professional", EntityType.Person),
+        new(RelationshipTypeIds.Mentor, "Mentor", "Protege", "Professional", EntityType.Person),
+        new(RelationshipTypeIds.Teacher, "Teacher", "Student", "Professional", EntityType.Person),
+        new(RelationshipTypeIds.Colleague, "Colleague", "Colleague", "Professional", EntityType.Person),
+        new(RelationshipTypeIds.BusinessPartner, "Business Partner", "Business Partner", "Professional", EntityType.Person),
 
-        new(RelationshipTypeIds.Friend, "Friend", "Friend", "Social", EntityTypes.Person),
-        new(RelationshipTypeIds.BestFriend, "Best Friend", "Best Friend", "Social", EntityTypes.Person),
-        new(RelationshipTypeIds.Acquaintance, "Acquaintance", "Acquaintance", "Social", EntityTypes.Person),
+        new(RelationshipTypeIds.Friend, "Friend", "Friend", "Social", EntityType.Person),
+        new(RelationshipTypeIds.BestFriend, "Best Friend", "Best Friend", "Social", EntityType.Person),
+        new(RelationshipTypeIds.Acquaintance, "Acquaintance", "Acquaintance", "Social", EntityType.Person),
 
-        new(RelationshipTypeIds.ParentCompany, "Parent Company", "Subsidiary", "Company", EntityTypes.Company)
+        new(RelationshipTypeIds.ParentCompany, "Parent Company", "Subsidiary", "Company", EntityType.Company)
     ]);
 
     private static readonly Lazy<Dictionary<Guid, RelationshipTypeDefinition>> _byId =
         new(() => _types.Value.ToDictionary(t => t.Id));
 
-    private static readonly Lazy<ILookup<string, RelationshipTypeDefinition>> _byEntityType =
+    private static readonly Lazy<ILookup<EntityType, RelationshipTypeDefinition>> _byEntityType =
         new(() => _types.Value.ToLookup(t => t.EntityType));
 
     /// <summary>
@@ -121,7 +121,7 @@ public static class RelationshipTypeService
     /// <summary>
     /// Returns all relationship types valid for a specific entity type.
     /// </summary>
-    public static List<RelationshipTypeDefinition> GetByEntityType(string entityType)
+    public static List<RelationshipTypeDefinition> GetByEntityType(EntityType entityType)
     {
         return [.. _byEntityType.Value[entityType]];
     }

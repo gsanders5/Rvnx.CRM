@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Rvnx.CRM.Core.DTOs.Base;
+using Rvnx.CRM.Core.Enumerations;
 using Rvnx.CRM.Core.Interfaces;
 using Rvnx.CRM.Core.Models;
 using Rvnx.CRM.Core.Models.Base;
@@ -14,12 +15,12 @@ public class NotesController(INoteService noteService, IRepository repository, I
     private readonly IEntityService _entityService = entityService;
 
     [HttpGet]
-    public async Task<IActionResult> Create(Guid entityId, string entityType)
+    public async Task<IActionResult> Create(Guid entityId, EntityType entityType)
     {
         NoteFormViewModel? viewModel = await _noteService.GetFormForCreateAsync(entityId, entityType);
 
         return viewModel == null
-            ? entityType != Rvnx.CRM.Core.Constants.EntityTypes.Person
+            ? entityType != EntityType.Person
                 ? BadRequest("Only Person entities are supported.")
                 : NotFound()
             : View(viewModel);
@@ -119,9 +120,9 @@ public class NotesController(INoteService noteService, IRepository repository, I
             Title = note.Title,
             Value = note.Value,
             EntityId = note.ContactId ?? Guid.Empty,
-            EntityType = Rvnx.CRM.Core.Constants.EntityTypes.Person,
+            EntityType = EntityType.Person,
             CreatedDate = note.CreatedDate,
-            EntityName = await _entityService.GetEntityNameAsync(Rvnx.CRM.Core.Constants.EntityTypes.Person,
+            EntityName = await _entityService.GetEntityNameAsync(EntityType.Person,
                 note.ContactId ?? Guid.Empty)
         };
         return View(viewModel);
