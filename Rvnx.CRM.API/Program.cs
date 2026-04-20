@@ -1,5 +1,6 @@
 using Microsoft.OpenApi;
 using Rvnx.CRM.API.Authentication;
+using Rvnx.CRM.API.OpenApi;
 using Rvnx.CRM.API.Services;
 using Rvnx.CRM.Core;
 using Rvnx.CRM.Core.Interfaces;
@@ -25,8 +26,7 @@ builder.Services.AddScoped<ICurrentUserService, ApiTokenCurrentUserService>();
 builder.Services.AddHttpContextAccessor();
 
 builder.Services.AddAuthentication(ApiTokenAuthenticationOptions.DefaultScheme)
-    .AddScheme<ApiTokenAuthenticationOptions, ApiTokenAuthenticationHandler>(ApiTokenAuthenticationOptions.DefaultScheme, options => { })
-    .AddScheme<ApiTokenQueryAuthenticationOptions, ApiTokenQueryAuthenticationHandler>(ApiTokenQueryAuthenticationOptions.DefaultScheme, options => { });
+    .AddScheme<ApiTokenAuthenticationOptions, ApiTokenAuthenticationHandler>(ApiTokenAuthenticationOptions.DefaultScheme, options => { });
 
 builder.Services.AddAuthorization();
 
@@ -56,6 +56,8 @@ builder.Services.AddSwaggerGen(c =>
             new List<string>()
         }
     });
+
+    c.OperationFilter<AllowAnonymousOperationFilter>();
 
     string xmlFilename = $"{System.Reflection.Assembly.GetExecutingAssembly().GetName().Name}.xml";
     c.IncludeXmlComments(Path.Combine(AppContext.BaseDirectory, xmlFilename));
