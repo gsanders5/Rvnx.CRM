@@ -86,7 +86,6 @@ public class RelationshipService(IRepository repository) : IRelationshipService
                         SwapRelationshipEntities(newRel);
                     }
 
-                    // ⚡ Bolt: Combine Contains and Add into a single O(1) operation
                     if (existingEdges.Add((newRel.EntityId, newRel.RelatedEntityId)))
                     {
                         await repository.AddAsync(newRel);
@@ -381,7 +380,6 @@ public class RelationshipService(IRepository repository) : IRelationshipService
                         SwapRelationshipEntities(newRel);
                     }
 
-                    // ⚡ Bolt: Combine Contains and Add into a single O(1) operation
                     if (existingEdges.Add((newRel.EntityId, newRel.RelatedEntityId)))
                     {
                         await repository.AddAsync(newRel);

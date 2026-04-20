@@ -158,8 +158,6 @@ public class AttachmentService : IAttachmentService
 
     private async Task<bool> IsPartialContactAsync(Guid contactId)
     {
-        // ⚡ Bolt Optimization: Use ListProjectedAsync to fetch only the IsPartial flag instead of loading
-        // the entire Contact entity into memory via GetByIdAsync. This reduces DB payload and allocation overhead.
         List<bool> isPartial = await _repository.ListProjectedAsync<Contact, bool>(
             c => c.Id == contactId,
             c => c.IsPartial);

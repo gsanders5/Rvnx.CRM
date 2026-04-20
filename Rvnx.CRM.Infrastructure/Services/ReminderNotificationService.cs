@@ -38,6 +38,7 @@ public class ReminderNotificationService(
 
         int sentCount = 0;
         int failedCount = 0;
+        Dictionary<Guid, List<string>> emailsByGroupId = [];
 
         foreach (ReminderOffset offset in offsets)
         {
@@ -61,10 +62,15 @@ public class ReminderNotificationService(
 
             if (contactGroupId.HasValue)
             {
-                recipientEmails = await _repository.QueryUnfiltered<User>()
-                    .Where(u => u.GroupId == contactGroupId.Value && !string.IsNullOrEmpty(u.Email))
-                    .Select(u => u.Email)
-                    .ToListAsync();
+                if (!emailsByGroupId.TryGetValue(contactGroupId.Value, out List<string>? cached))
+                {
+                    cached = await _repository.QueryUnfiltered<User>()
+                        .Where(u => u.GroupId == contactGroupId.Value && !string.IsNullOrEmpty(u.Email))
+                        .Select(u => u.Email)
+                        .ToListAsync();
+                    emailsByGroupId[contactGroupId.Value] = cached;
+                }
+                recipientEmails = cached;
             }
 
             if (recipientEmails.Count == 0)

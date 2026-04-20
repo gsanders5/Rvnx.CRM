@@ -63,8 +63,6 @@ public class FactService(IRepository repository) : IFactService
 
     public async Task<OperationResult> DeleteAsync(Guid id)
     {
-        // ⚡ Bolt Optimization: Use ListProjectedAsync to fetch only the ContactId
-        // instead of loading the entire Fact entity into memory via GetByIdAsync.
         List<Guid?> contactIds = await _repository.ListProjectedAsync<Fact, Guid?>(
             f => f.Id == id,
             f => f.ContactId);
@@ -74,7 +72,6 @@ public class FactService(IRepository repository) : IFactService
             Guid entityId = contactIds.FirstOrDefault() ?? Guid.Empty;
             string entityType = EntityTypes.Person;
 
-            // ⚡ Bolt: Use bulk delete to avoid fetching the entity into memory and save a database roundtrip
             await _repository.DeleteAsync<Fact>(f => f.Id == id);
             await _repository.SaveChangesAsync();
 

@@ -90,7 +90,6 @@ public class LabelService(IRepository repository) : ILabelService
 
     public async Task DeleteAsync(Guid id)
     {
-        // ⚡ Bolt: Use bulk delete to avoid fetching the entity into memory and save a database roundtrip
         await _repository.DeleteAsync<Label>(l => l.Id == id);
         await _repository.SaveChangesAsync();
     }
@@ -108,15 +107,12 @@ public class LabelService(IRepository repository) : ILabelService
 
     public async Task RemoveLabelAsync(Guid contactId, Guid labelId)
     {
-        // ⚡ Bolt: Use bulk delete to avoid fetching the entity into memory and save a database roundtrip
         await _repository.DeleteAsync<ContactLabel>(cl => cl.ContactId == contactId && cl.LabelId == labelId);
         await _repository.SaveChangesAsync();
     }
 
     public async Task<List<LabelDto>> GetLabelsForContactAsync(Guid contactId)
     {
-        // ⚡ Bolt Optimization: Use ListProjectedAsync to fetch only the required Label properties
-        // instead of loading full ContactLabel and joined Label entities into memory.
         return await _repository.ListProjectedAsync<ContactLabel, LabelDto, string>(
             cl => cl.ContactId == contactId,
             cl => new LabelDto { Id = cl.Label.Id, Name = cl.Label.Name, Color = cl.Label.Color },
