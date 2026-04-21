@@ -492,8 +492,7 @@ public class VCardService : IVCardService
         // Fix compatibility: Replace "ENCODING=b" with "ENCODING=BASE64"
         // The library uses the abbreviated form per RFC 2426, but many applications
         // (including Google Contacts) only recognize the full "BASE64" form
-        vcfString = vcfString.Replace("ENCODING=b;", "ENCODING=BASE64;")
-                             .Replace("ENCODING=b:", "ENCODING=BASE64:");
+        vcfString = vcfString.Replace("ENCODING=b", "ENCODING=BASE64", StringComparison.OrdinalIgnoreCase);
 
         // X-MAIDENNAME and X-GENDER have no standard vCard 3.0 fields and are silently
         // dropped by FolkerKinzel during v3.0 serialization. Inject them manually before
