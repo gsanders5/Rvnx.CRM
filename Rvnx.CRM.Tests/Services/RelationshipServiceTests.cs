@@ -17,11 +17,13 @@ public class RelationshipServiceTests
 {
     private readonly Mock<IRepository> _repositoryMock;
     private readonly RelationshipService _service;
+    private readonly RelationshipSuggestionService _suggestionService;
 
     public RelationshipServiceTests()
     {
         _repositoryMock = new Mock<IRepository>();
-        _service = new RelationshipService(_repositoryMock.Object);
+        _suggestionService = new RelationshipSuggestionService(_repositoryMock.Object);
+        _service = new RelationshipService(_repositoryMock.Object, _suggestionService);
     }
 
     [Fact]
@@ -439,7 +441,7 @@ public class RelationshipServiceTests
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(0);
 
-        List<SuggestedRelationshipDto> suggestions = await _service.GetSuggestedRelationshipsAsync(sourceId, targetId, typeId, false, null);
+        List<SuggestedRelationshipDto> suggestions = await _suggestionService.GetSuggestedRelationshipsAsync(sourceId, targetId, typeId, false, null);
 
         SuggestedRelationshipDto? jackJamesSuggestion =
             suggestions.FirstOrDefault(s => s.SourceName == "Jack" && s.TargetName == "James");

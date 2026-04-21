@@ -18,6 +18,8 @@ public static class ServiceCollectionExtensions
 
         services.AddScoped<IRelationshipService, RelationshipService>();
 
+        services.AddScoped<IRelationshipSuggestionService, RelationshipSuggestionService>();
+
         services.AddScoped<IEntityService, EntityService>();
 
         services.AddScoped<IFileValidationService, FileValidationService>();

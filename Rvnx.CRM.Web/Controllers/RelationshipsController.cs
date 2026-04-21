@@ -11,11 +11,13 @@ namespace Rvnx.CRM.Web.Controllers;
 
 public class RelationshipsController(
     IRelationshipService relationshipService,
+    IRelationshipSuggestionService relationshipSuggestionService,
     IRepository repository,
     IEntityService entityService)
     : RepositoryController(repository)
 {
     private readonly IRelationshipService _relationshipService = relationshipService;
+    private readonly IRelationshipSuggestionService _relationshipSuggestionService = relationshipSuggestionService;
     private readonly IEntityService _entityService = entityService;
 
     [HttpGet]
@@ -139,7 +141,7 @@ public class RelationshipsController(
         bool isReverse = parts[1] == "Rev";
 
         List<SuggestedRelationshipDto> suggestions =
-            await _relationshipService.GetSuggestedRelationshipsAsync(entityId, relatedEntityId, typeId, isReverse,
+            await _relationshipSuggestionService.GetSuggestedRelationshipsAsync(entityId, relatedEntityId, typeId, isReverse,
                 partialContactName);
         return Json(suggestions);
     }
