@@ -70,8 +70,6 @@ public interface IRelationshipService
     /// <returns>A <see cref="RelationshipOperationResult"/> indicating success or failure.</returns>
     Task<RelationshipOperationResult> PromotePartialContactAsync(Guid contactId);
 
-    Task<List<SuggestedRelationshipDto>> GetSuggestedRelationshipsAsync(Guid entityId, Guid? relatedEntityId, Guid relationshipTypeId, bool isReverse, string? partialContactName);
-
     Task<Relationship?> GetRelationshipForEditAsync(Guid id);
     Task<Relationship?> GetRelationshipForDeleteAsync(Guid id);
     Task<OperationResult> DeleteRelationshipAsync(Guid id);
