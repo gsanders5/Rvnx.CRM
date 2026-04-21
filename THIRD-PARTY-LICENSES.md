@@ -13,7 +13,7 @@ Purpose: License compliance audit
 | File.TypeChecker | 4.3.0 | Rvnx.CRM.Core | MIT | https://github.com/AJMitev/FileTypeChecker/blob/master/LICENSE |
 | File.TypeChecker.Web | 2.0.0 | Rvnx.CRM.Web | MIT | https://github.com/AJMitev/FileTypeChecker.Web/blob/master/LICENSE |
 | FolkerKinzel.VCards | 8.1.2 | Rvnx.CRM.Infrastructure | MIT | https://github.com/FolkerKinzel/VCards/blob/master/LICENSE |
-| libphonenumber-csharp | 9.0.28 | Rvnx.CRM.Core | Apache-2.0 | https://github.com/Googlei18n/libphonenumber-csharp/blob/master/LICENSE |
+| libphonenumber-csharp | 9.0.28 | Rvnx.CRM.Core | Apache-2.0 | https://github.com/google/libphonenumber/blob/master/LICENSE |
 | MailKit | 4.15.0 | Rvnx.CRM.Infrastructure | MIT | https://github.com/jstedfast/MailKit/blob/master/LICENSE |
 | Microsoft.AspNetCore.Authentication.OpenIdConnect | 8.0.24 | Rvnx.CRM.Web | MIT | https://licenses.nuget.org/MIT |
 | Microsoft.AspNetCore.Mvc.Testing | 8.0.24 | Rvnx.CRM.Tests | MIT | https://licenses.nuget.org/MIT |
