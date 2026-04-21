@@ -1,6 +1,6 @@
 
 # Third-Party License Inventory
-Generated: 2026-04-09
+Generated: 2026-04-20
 Purpose: License compliance audit
 
 ---
@@ -13,6 +13,7 @@ Purpose: License compliance audit
 | File.TypeChecker | 4.3.0 | Rvnx.CRM.Core | MIT | https://github.com/AJMitev/FileTypeChecker/blob/master/LICENSE |
 | File.TypeChecker.Web | 2.0.0 | Rvnx.CRM.Web | MIT | https://github.com/AJMitev/FileTypeChecker.Web/blob/master/LICENSE |
 | FolkerKinzel.VCards | 8.1.2 | Rvnx.CRM.Infrastructure | MIT | https://github.com/FolkerKinzel/VCards/blob/master/LICENSE |
+| libphonenumber-csharp | 9.0.28 | Rvnx.CRM.Core | Apache-2.0 | https://github.com/google/libphonenumber/blob/master/LICENSE |
 | MailKit | 4.15.0 | Rvnx.CRM.Infrastructure | MIT | https://github.com/jstedfast/MailKit/blob/master/LICENSE |
 | Microsoft.AspNetCore.Authentication.OpenIdConnect | 8.0.24 | Rvnx.CRM.Web | MIT | https://licenses.nuget.org/MIT |
 | Microsoft.AspNetCore.Mvc.Testing | 8.0.24 | Rvnx.CRM.Tests | MIT | https://licenses.nuget.org/MIT |
@@ -95,7 +96,7 @@ Purpose: License compliance audit
 
 ## Summary
 
-Total dependencies audited: 39
+Total dependencies audited: 40
 Licenses identified: MIT, Apache-2.0, BSD-3-Clause, CC BY 4.0 (Icons), MPL-2.0 (Option), Six Labors Split License 1.0, SIL Open Font License 1.1, Proprietary (Social Embeds)
 Unresolved: 0
 

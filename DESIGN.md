@@ -6,6 +6,7 @@
 ├── Rvnx.CRM.Core/              # Domain layer (business entities, interfaces, core services)
 │   ├── DTOs/                   # Data Transfer Objects
 │   ├── Enumerations/           # Domain enums
+│   ├── Helpers/                # Static helpers (e.g. PhoneNumberNormalizer)
 │   ├── Interfaces/             # Service and Repository interfaces
 │   ├── Models/                 # Domain entities (organized by feature)
 │   │   ├── Base/               # Base classes (BaseEntity, Person)
@@ -14,6 +15,7 @@
 │   │   ├── Dates/              # SignificantDate, Reminder
 │   │   └── Business/           # Employer, Attachment, Note
 │   ├── Services/               # Pure domain logic services (e.g. FileValidation, DateCalculation)
+│   ├── Validation/             # Custom ValidationAttributes (e.g. PhoneNumberAttribute)
 │   └── Rvnx.CRM.Core.csproj
 ├── Rvnx.CRM.Infrastructure/    # Data access & Implementation layer
 │   ├── Data/
@@ -268,11 +270,19 @@ Attachments are split into two tables to optimize performance (loading metadata 
   - `AddressService`: CRUD for contact addresses.
   - `FavoriteService`: Toggle and query favorite contacts.
   - `SignificantDateService`: Manages significant dates and generates calendar events for both current-year and next-year occurrences.
-  - `CalendarFeedService`: Generates an RFC 5545 iCalendar (.ics) feed aggregating significant dates and incomplete tasks; used by the subscribable calendar endpoint. Deterministic UIDs per event so subscribed clients dedupe on refresh.
+  - `CalendarFeedService`: Generates an RFC 5545 iCalendar (.ics) feed aggregating significant dates and incomplete tasks; used by the subscribable calendar endpoint. Uses Ical.Net and builds deterministic per-event UIDs (`{type}-{contactId}-{yyyyMMdd}-{titleHash}@rvnx-crm`) so subscribed clients dedupe on refresh while still keeping multiple same-day events distinct.
   - `CsvExportService`: Exports all contacts (plus flattened emails, phones, first address, and birthday) as an RFC 4180 CSV. Column definitions are exposed as a reusable list so a future CSV-import can map the same headers in reverse.
+  - `ReminderNotificationService`: Run from the console app; scans active `ReminderOffset`s, computes the next occurrence via `DateCalculationService`, and emails the owning group's users via MailKit SMTP (StartTls) when the offset fires on `forDate`. Writes a `ReminderLog` row per occurrence so successful sends are not duplicated on re-runs, and caches group recipients per invocation to avoid N+1 user lookups.
+  - `ThumbnailService`: On-demand JPEG thumbnail generator for image attachments using ImageSharp (`ResizeMode.Max`, quality 75). Clamps requested dimensions, falls back to a 200px default, and caches results in `IMemoryCache` keyed by `(AttachmentId, MaxWidth, MaxHeight)` for 24 hours. Returns `null` for non-image content types or on decode failure (logged as a warning).
+  - `MergeService`: Merges a secondary contact into a primary. Scalar fields fall back to the primary's value (or the secondary's if the primary is blank). Child records (attachments, notes, contact methods, significant dates, facts, relationships, pets) are reassigned to the primary, de-duplicated by natural key, and orphans are deleted. Profile-photo conflicts are resolved by downgrading the secondary's profile photos to general attachments. The whole operation runs in a single `CRMDbContext` transaction when the provider is relational.
+  - `DebugDataService`: Populates and clears sample data for local/debug environments. `SeedTestDataAsync` uses `FakeDataGenerator` to create contacts plus related addresses, contact methods, and significant dates. `ResetDatabaseAsync` clears all contacts and their dependent entities. `AddRandomRelationshipsAsync` wires up random relationships between existing contacts (skipping self-links and duplicates).
 
 - **Constants**:
   - `CalendarColors`: Centralized color constants for calendar event types (Birthday, SignificantDate, Task).
+
+- **Helpers**:
+  - `PhoneNumberNormalizer` (`Rvnx.CRM.Core/Helpers/`): Wraps Google's libphonenumber (`PhoneNumbers` package). `TryNormalize` parses a user-entered number and returns the canonical E.164 form (with `;ext=` suffix when an extension is present), falling back to an error message on invalid input. `NormalizeOrThrow` is the write-path helper (only normalizes `ContactMethodType.Phone`; throws `ValidationException` on failure). `FormatForDisplay` renders stored E.164 values in national format when the country code matches `DefaultRegion` ("US"), otherwise international, and `FormatForTelUri` produces an RFC 3966 `tel:` URI.
+  - `PhoneNumberAttribute` (`Rvnx.CRM.Core/Validation/`): `ValidationAttribute` that defers to `PhoneNumberNormalizer.TryNormalize` so DTOs and view models enforce phone validity with the same rules used on write. Returns the shared `InvalidPhoneMessage` and attaches the member name to the validation result so clients can surface field-level errors.
 
 ## Database Configuration
 
