@@ -16,7 +16,7 @@ Built with ASP.NET Core and SQLite. No subscriptions, no cloud sync, no third-pa
 - Hide contacts without deleting them
 - Merge duplicates
 - Import via vCard (.vcf)
-- Export to **CSV** (round-trippable — a future CSV import will reuse the same schema) or **vCard** (.vcf)
+- Export to **CSV** (round-trippable — a future CSV import will reuse the same schema), single **vCard** (.vcf), or a **bulk vCard zip** of all contacts
 - **Partial Contacts** — lightweight placeholders for people in relationships who don't need a full profile yet
 
 ### Per-Contact Detail Panels
@@ -24,14 +24,14 @@ Built with ASP.NET Core and SQLite. No subscriptions, no cloud sync, no third-pa
 ![Contact Detail](.screenshots/contact-detail.png)
 
 Each contact has dedicated sections for:
-- **Contact Info** — emails, phone numbers, websites
+- **Contact Info** — emails, phone numbers (normalized to E.164 on save, formatted for display), websites
 - **Addresses** — structured postal addresses with type
 - **Quick Facts** — freeform key/value pairs for memorable details
 - **Relationships** — family, friends, colleagues; links to full or partial contacts
 - **Pets** — companion animals with support for multiple owners
 - **Important Dates** — birthdays, anniversaries, and custom milestones with recurrence
 - **Notes** — long-form Markdown notes
-- **Activities** — logged meetings, calls, and events; activities can link to multiple contacts at once
+- **Activities** — logged meetings, calls, and events; activities can link to multiple contacts at once, with a one-click **QuickLog** for fast entry
 - **Tasks / Follow-ups** — per-contact to-do items with due dates
 - **Attachments** — photos, documents, or any file
 - **Social Media** — linked social accounts
