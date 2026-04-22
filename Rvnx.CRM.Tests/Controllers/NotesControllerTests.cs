@@ -10,6 +10,7 @@ using Rvnx.CRM.Core.Models.Contact;
 using Rvnx.CRM.Infrastructure.Data;
 using Rvnx.CRM.Infrastructure.Repositories;
 using Rvnx.CRM.Infrastructure.Services;
+using Rvnx.CRM.Tests.Helpers;
 using Rvnx.CRM.Web.Controllers;
 
 namespace Rvnx.CRM.Tests.Controllers;
@@ -29,15 +30,7 @@ public class NotesControllerTests
             _currentUserId = Guid.NewGuid();
             _otherUserId = Guid.NewGuid();
 
-            DbContextOptions<CRMDbContext> options = new DbContextOptionsBuilder<CRMDbContext>()
-                .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
-                .Options;
-
-            Mock<ICurrentUserService> mockCurrentUserService = new();
-            mockCurrentUserService.Setup(s => s.UserId).Returns(_currentUserId);
-            mockCurrentUserService.Setup(s => s.UserName).Returns("test-user");
-
-            _context = new CRMDbContext(options, mockCurrentUserService.Object);
+            _context = TestDbContextFactory.Create(_currentUserId, "test-user", null, out _);
             Repository repository = new(_context);
 
             Mock<IEntityService> mockEntityService = new();

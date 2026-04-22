@@ -7,6 +7,7 @@ using Rvnx.CRM.Core.Models.Contact;
 using Rvnx.CRM.Infrastructure.Data;
 using Rvnx.CRM.Infrastructure.Repositories;
 using Rvnx.CRM.Infrastructure.Services;
+using Rvnx.CRM.Tests.Helpers;
 using Rvnx.CRM.Web.Controllers;
 
 namespace Rvnx.CRM.Tests.Controllers;
@@ -18,15 +19,7 @@ public class PetsControllerTests : IDisposable
 
     public PetsControllerTests()
     {
-        DbContextOptions<CRMDbContext> options = new DbContextOptionsBuilder<CRMDbContext>()
-            .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
-            .Options;
-
-        Mock<ICurrentUserService> mockCurrentUserService = new();
-        mockCurrentUserService.Setup(s => s.UserId).Returns(Guid.Parse("c5b50a20-34b2-44b2-8b9c-aa4135f60938"));
-        mockCurrentUserService.Setup(s => s.UserName).Returns("test-user");
-
-        _context = new CRMDbContext(options, mockCurrentUserService.Object);
+        _context = TestDbContextFactory.CreateForDefaultUser();
         Repository repository = new(_context);
         IPetService petService = new PetService(repository);
 

@@ -1,14 +1,13 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
-using Moq;
 using Rvnx.CRM.Core.Enumerations;
-using Rvnx.CRM.Core.Interfaces;
 using Rvnx.CRM.Core.Models;
 using Rvnx.CRM.Core.Models.Contact;
 using Rvnx.CRM.Core.Models.Dates;
 using Rvnx.CRM.Infrastructure.Data;
 using Rvnx.CRM.Infrastructure.Repositories;
 using Rvnx.CRM.Infrastructure.Services;
+using Rvnx.CRM.Tests.Helpers;
 using System.Diagnostics.CodeAnalysis;
 
 namespace Rvnx.CRM.Tests.Services;
@@ -17,18 +16,7 @@ public class ReminderNotificationServiceTests
 {
     private static (CRMDbContext Context, Repository Repository) CreateInMemoryDb()
     {
-        DbContextOptions<CRMDbContext> options = new DbContextOptionsBuilder<CRMDbContext>()
-            .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
-            .Options;
-
-        Mock<ICurrentUserService> mockUserService = new();
-        mockUserService.Setup(u => u.UserId).Returns((Guid?)null);
-        mockUserService.Setup(u => u.GroupId).Returns((Guid?)null);
-        mockUserService.Setup(u => u.UserName).Returns("System");
-
-        CRMDbContext context = new(options, mockUserService.Object);
-        context.Database.EnsureCreated();
-
+        CRMDbContext context = TestDbContextFactory.CreateForSystemUser(ensureCreated: true);
         return (context, new Repository(context));
     }
 

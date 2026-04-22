@@ -2,12 +2,12 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Controllers;
 using Microsoft.AspNetCore.Mvc.Filters;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Moq;
 using Rvnx.CRM.Core.Interfaces;
 using Rvnx.CRM.Infrastructure.Data;
+using Rvnx.CRM.Tests.Helpers;
 using Rvnx.CRM.Web.Controllers;
 
 namespace Rvnx.CRM.Tests.Controllers;
@@ -20,11 +20,7 @@ public class DebugOperationsControllerTests : IDisposable
 
     public DebugOperationsControllerTests()
     {
-        DbContextOptions<CRMDbContext> options = new DbContextOptionsBuilder<CRMDbContext>()
-            .UseInMemoryDatabase(Guid.NewGuid().ToString())
-            .Options;
-        _currentUserServiceMock = new Mock<ICurrentUserService>();
-        _dbContext = new CRMDbContext(options, _currentUserServiceMock.Object);
+        _dbContext = TestDbContextFactory.Create(null, null, null, out _currentUserServiceMock);
         _loggerMock = new Mock<ILogger<DebugOperationsController>>();
     }
 

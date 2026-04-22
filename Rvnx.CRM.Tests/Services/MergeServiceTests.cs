@@ -8,6 +8,7 @@ using Rvnx.CRM.Core.Models.Dates;
 using Rvnx.CRM.Infrastructure.Data;
 using Rvnx.CRM.Infrastructure.Repositories;
 using Rvnx.CRM.Infrastructure.Services;
+using Rvnx.CRM.Tests.Helpers;
 
 namespace Rvnx.CRM.Tests.Services;
 
@@ -19,18 +20,7 @@ public class MergeServiceTests : IDisposable
 
     public MergeServiceTests()
     {
-        DbContextOptions<CRMDbContext> options = new DbContextOptionsBuilder<CRMDbContext>()
-            .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
-            .Options;
-
-        Mock<ICurrentUserService> mockUserService = new();
-        mockUserService.Setup(u => u.UserId).Returns((Guid?)null);
-        mockUserService.Setup(u => u.GroupId).Returns((Guid?)null);
-        mockUserService.Setup(u => u.UserName).Returns("System");
-
-        _context = new CRMDbContext(options, mockUserService.Object);
-        _context.Database.EnsureCreated();
-
+        _context = TestDbContextFactory.CreateForSystemUser(ensureCreated: true);
         _repository = new Repository(_context);
         _sut = new MergeService(_context, _repository);
     }

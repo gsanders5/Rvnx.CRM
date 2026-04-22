@@ -6,6 +6,7 @@ using Rvnx.CRM.Core.Models.Business;
 using Rvnx.CRM.Core.Models.Contact;
 using Rvnx.CRM.Infrastructure.Data;
 using Rvnx.CRM.Infrastructure.Repositories;
+using Rvnx.CRM.Tests.Helpers;
 
 namespace Rvnx.CRM.Tests.Repositories;
 
@@ -14,18 +15,7 @@ public class RepositoryTests
     public class General
     {
         private static CRMDbContext GetInMemoryDbContext()
-        {
-            DbContextOptions<CRMDbContext> options = new DbContextOptionsBuilder<CRMDbContext>()
-                .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
-                .Options;
-
-            Mock<ICurrentUserService> mockUserService = new();
-            mockUserService.Setup(u => u.UserId).Returns((Guid?)null);
-            mockUserService.Setup(u => u.UserName).Returns("TestUser");
-
-            CRMDbContext context = new(options, mockUserService.Object);
-            return context;
-        }
+            => TestDbContextFactory.Create(null, "TestUser", null, out _);
 
         [Fact]
         public async Task ListAsyncPredicateShouldFilterCorrectly()

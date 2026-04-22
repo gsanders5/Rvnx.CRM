@@ -13,29 +13,37 @@ namespace Rvnx.CRM.Tests.Services;
 
 public class ContactReadServiceTests
 {
-    public class ContactReadServiceContactExistsTests
+    /// <summary>
+    /// Shared scaffolding for nested test classes — wires up a <see cref="ContactReadService"/>
+    /// backed by Moq'd dependencies with sensible defaults.
+    /// </summary>
+    public abstract class ContactReadServiceTestBase
     {
-        private readonly Mock<IRepository> _repositoryMock;
-        private readonly Mock<IFavoriteService> _favoriteServiceMock;
-        private readonly ContactReadService _service;
+        protected Mock<IRepository> RepositoryMock { get; }
+        protected Mock<IFavoriteService> FavoriteServiceMock { get; }
+        protected ContactReadService Service { get; }
 
-        public ContactReadServiceContactExistsTests()
+        protected ContactReadServiceTestBase()
         {
-            _repositoryMock = new Mock<IRepository>();
-            _favoriteServiceMock = new Mock<IFavoriteService>();
-            _favoriteServiceMock.Setup(f => f.GetFavoriteContactIdsAsync()).ReturnsAsync([]);
-            _service = new ContactReadService(_repositoryMock.Object, _favoriteServiceMock.Object);
+            RepositoryMock = new Mock<IRepository>();
+            FavoriteServiceMock = new Mock<IFavoriteService>();
+            FavoriteServiceMock.Setup(f => f.GetFavoriteContactIdsAsync()).ReturnsAsync([]);
+            Service = new ContactReadService(RepositoryMock.Object, FavoriteServiceMock.Object);
         }
+    }
+
+    public class ContactReadServiceContactExistsTests : ContactReadServiceTestBase
+    {
 
         [Fact]
         public async Task ContactExistsAsyncWhenContactExistsAndIsFullReturnsTrue()
         {
             Guid contactId = Guid.NewGuid();
 
-            _repositoryMock.Setup(r => r.CountAsync<Contact>(It.IsAny<Expression<Func<Contact, bool>>>(), It.IsAny<CancellationToken>()))
+            RepositoryMock.Setup(r => r.CountAsync<Contact>(It.IsAny<Expression<Func<Contact, bool>>>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(1);
 
-            bool result = await _service.ContactExistsAsync(contactId);
+            bool result = await Service.ContactExistsAsync(contactId);
 
             Assert.True(result);
         }
@@ -45,29 +53,18 @@ public class ContactReadServiceTests
         {
             Guid contactId = Guid.NewGuid();
 
-            _repositoryMock.Setup(r => r.CountAsync<Contact>(It.IsAny<Expression<Func<Contact, bool>>>(), It.IsAny<CancellationToken>()))
+            RepositoryMock.Setup(r => r.CountAsync<Contact>(It.IsAny<Expression<Func<Contact, bool>>>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(0);
 
-            bool result = await _service.ContactExistsAsync(contactId);
+            bool result = await Service.ContactExistsAsync(contactId);
 
             Assert.False(result);
         }
 
     }
 
-    public class ContactReadServiceGetContactDetailsTests
+    public class ContactReadServiceGetContactDetailsTests : ContactReadServiceTestBase
     {
-        private readonly Mock<IRepository> _repositoryMock;
-        private readonly Mock<IFavoriteService> _favoriteServiceMock;
-        private readonly ContactReadService _service;
-
-        public ContactReadServiceGetContactDetailsTests()
-        {
-            _repositoryMock = new Mock<IRepository>();
-            _favoriteServiceMock = new Mock<IFavoriteService>();
-            _favoriteServiceMock.Setup(f => f.GetFavoriteContactIdsAsync()).ReturnsAsync([]);
-            _service = new ContactReadService(_repositoryMock.Object, _favoriteServiceMock.Object);
-        }
 
         [Fact]
         public async Task GetContactDetailsAsyncReturnsContactDetailsWithRelationships()
@@ -90,25 +87,25 @@ public class ContactReadServiceTests
                 new Relationship { Id = Guid.NewGuid(), EntityId = relatedId2, RelatedEntityId = contactId, EntityType = EntityType.Person, RelationshipTypeId = Guid.NewGuid() }  // incoming
             ];
 
-            _repositoryMock.Setup(r => r.ListAsNoTrackingAsync<Contact>(
+            RepositoryMock.Setup(r => r.ListAsNoTrackingAsync<Contact>(
                 It.IsAny<Expression<Func<Contact, bool>>>(),
                 It.IsAny<CancellationToken>(),
                 It.IsAny<string[]>()))
                 .ReturnsAsync([contact]);
 
-            _repositoryMock.Setup(r => r.ListAsNoTrackingAsync<Relationship>(
+            RepositoryMock.Setup(r => r.ListAsNoTrackingAsync<Relationship>(
                 It.IsAny<Expression<Func<Relationship, bool>>>(),
                 It.IsAny<CancellationToken>(),
                 It.IsAny<string[]>()))
                 .ReturnsAsync(allRelationships);
 
-            _repositoryMock.Setup(r => r.ListProjectedAsync(
+            RepositoryMock.Setup(r => r.ListProjectedAsync(
                 It.IsAny<Expression<Func<Contact, bool>>>(),
                 It.IsAny<Expression<Func<Contact, Contact>>>(),
                 It.IsAny<CancellationToken>()))
                 .ReturnsAsync(relatedContacts);
 
-            ContactDetailDto? result = await _service.GetContactDetailsAsync(contactId);
+            ContactDetailDto? result = await Service.GetContactDetailsAsync(contactId);
 
             Assert.NotNull(result);
             Assert.Equal(contactId, result.Id);
@@ -127,42 +124,31 @@ public class ContactReadServiceTests
         {
             Guid contactId = Guid.NewGuid();
 
-            _repositoryMock.Setup(r => r.ListAsNoTrackingAsync<Contact>(
+            RepositoryMock.Setup(r => r.ListAsNoTrackingAsync<Contact>(
                 It.IsAny<Expression<Func<Contact, bool>>>(),
                 It.IsAny<CancellationToken>(),
                 It.IsAny<string[]>()))
                 .ReturnsAsync([]); // Returns empty list
 
-            ContactDetailDto? result = await _service.GetContactDetailsAsync(contactId);
+            ContactDetailDto? result = await Service.GetContactDetailsAsync(contactId);
 
             Assert.Null(result);
         }
     }
 
-    public class ContactReadServiceGetContactFormTests
+    public class ContactReadServiceGetContactFormTests : ContactReadServiceTestBase
     {
-        private readonly Mock<IRepository> _repositoryMock;
-        private readonly Mock<IFavoriteService> _favoriteServiceMock;
-        private readonly ContactReadService _service;
-
-        public ContactReadServiceGetContactFormTests()
-        {
-            _repositoryMock = new Mock<IRepository>();
-            _favoriteServiceMock = new Mock<IFavoriteService>();
-            _favoriteServiceMock.Setup(f => f.GetFavoriteContactIdsAsync()).ReturnsAsync([]);
-            _service = new ContactReadService(_repositoryMock.Object, _favoriteServiceMock.Object);
-        }
 
         [Fact]
         public async Task GetContactFormAsyncWhenContactDoesNotExistReturnsNull()
         {
-            _repositoryMock.Setup(r => r.ListAsNoTrackingAsync<Contact>(
+            RepositoryMock.Setup(r => r.ListAsNoTrackingAsync<Contact>(
                 It.IsAny<Expression<Func<Contact, bool>>>(),
                 It.IsAny<CancellationToken>(),
                 It.IsAny<string[]>()))
                 .ReturnsAsync([]);
 
-            ContactFormDto? result = await _service.GetContactFormAsync(Guid.NewGuid());
+            ContactFormDto? result = await Service.GetContactFormAsync(Guid.NewGuid());
 
             Assert.Null(result);
         }
@@ -186,24 +172,24 @@ public class ContactReadServiceTests
                 Religion = "Atheist"
             };
 
-            _repositoryMock.Setup(r => r.ListAsNoTrackingAsync<Contact>(
+            RepositoryMock.Setup(r => r.ListAsNoTrackingAsync<Contact>(
                 It.IsAny<Expression<Func<Contact, bool>>>(),
                 It.IsAny<CancellationToken>(),
                 It.IsAny<string[]>()))
                 .ReturnsAsync([contact]);
 
-            _repositoryMock.Setup(r => r.ListAsync<Attachment>(
+            RepositoryMock.Setup(r => r.ListAsync<Attachment>(
                 It.IsAny<Expression<Func<Attachment, bool>>>(),
                 It.IsAny<CancellationToken>()))
                 .ReturnsAsync([]);
 
-            _repositoryMock.Setup(r => r.ListAsNoTrackingAsync<Label>(
+            RepositoryMock.Setup(r => r.ListAsNoTrackingAsync<Label>(
                 It.IsAny<Expression<Func<Label, bool>>>(),
                 It.IsAny<CancellationToken>(),
                 It.IsAny<string[]>()))
                 .ReturnsAsync([]);
 
-            ContactFormDto? result = await _service.GetContactFormAsync(contactId);
+            ContactFormDto? result = await Service.GetContactFormAsync(contactId);
 
             Assert.NotNull(result);
             Assert.Equal(contact.Id, result.Id);
@@ -236,24 +222,24 @@ public class ContactReadServiceTests
             contact.ContactMethods.Add(new ContactMethod { Type = ContactMethodType.Phone, Label = "Home", Value = "555-1234" });
             contact.ContactMethods.Add(new ContactMethod { Type = ContactMethodType.Phone, Label = ContactMethodLabels.Primary, Value = "555-9999" });
 
-            _repositoryMock.Setup(r => r.ListAsNoTrackingAsync<Contact>(
+            RepositoryMock.Setup(r => r.ListAsNoTrackingAsync<Contact>(
                 It.IsAny<Expression<Func<Contact, bool>>>(),
                 It.IsAny<CancellationToken>(),
                 It.IsAny<string[]>()))
                 .ReturnsAsync([contact]);
 
-            _repositoryMock.Setup(r => r.ListAsync<Attachment>(
+            RepositoryMock.Setup(r => r.ListAsync<Attachment>(
                 It.IsAny<Expression<Func<Attachment, bool>>>(),
                 It.IsAny<CancellationToken>()))
                 .ReturnsAsync([]);
 
-            _repositoryMock.Setup(r => r.ListAsNoTrackingAsync<Label>(
+            RepositoryMock.Setup(r => r.ListAsNoTrackingAsync<Label>(
                 It.IsAny<Expression<Func<Label, bool>>>(),
                 It.IsAny<CancellationToken>(),
                 It.IsAny<string[]>()))
                 .ReturnsAsync([]);
 
-            ContactFormDto? result = await _service.GetContactFormAsync(contactId);
+            ContactFormDto? result = await Service.GetContactFormAsync(contactId);
 
             Assert.NotNull(result);
             Assert.Equal("primary@example.com", result.Email);
@@ -281,24 +267,24 @@ public class ContactReadServiceTests
 
             contact.SignificantDates.Add(significantDate);
 
-            _repositoryMock.Setup(r => r.ListAsNoTrackingAsync<Contact>(
+            RepositoryMock.Setup(r => r.ListAsNoTrackingAsync<Contact>(
                 It.IsAny<Expression<Func<Contact, bool>>>(),
                 It.IsAny<CancellationToken>(),
                 It.IsAny<string[]>()))
                 .ReturnsAsync([contact]);
 
-            _repositoryMock.Setup(r => r.ListAsync<Attachment>(
+            RepositoryMock.Setup(r => r.ListAsync<Attachment>(
                 It.IsAny<Expression<Func<Attachment, bool>>>(),
                 It.IsAny<CancellationToken>()))
                 .ReturnsAsync([]);
 
-            _repositoryMock.Setup(r => r.ListAsNoTrackingAsync<Label>(
+            RepositoryMock.Setup(r => r.ListAsNoTrackingAsync<Label>(
                 It.IsAny<Expression<Func<Label, bool>>>(),
                 It.IsAny<CancellationToken>(),
                 It.IsAny<string[]>()))
                 .ReturnsAsync([]);
 
-            ContactFormDto? result = await _service.GetContactFormAsync(contactId);
+            ContactFormDto? result = await Service.GetContactFormAsync(contactId);
 
             Assert.NotNull(result);
             Assert.Equal(birthdayDate.ToDateTime(TimeOnly.MinValue), result.Birthday);
@@ -325,24 +311,24 @@ public class ContactReadServiceTests
 
             contact.SignificantDates.Add(significantDate);
 
-            _repositoryMock.Setup(r => r.ListAsNoTrackingAsync<Contact>(
+            RepositoryMock.Setup(r => r.ListAsNoTrackingAsync<Contact>(
                 It.IsAny<Expression<Func<Contact, bool>>>(),
                 It.IsAny<CancellationToken>(),
                 It.IsAny<string[]>()))
                 .ReturnsAsync([contact]);
 
-            _repositoryMock.Setup(r => r.ListAsync<Attachment>(
+            RepositoryMock.Setup(r => r.ListAsync<Attachment>(
                 It.IsAny<Expression<Func<Attachment, bool>>>(),
                 It.IsAny<CancellationToken>()))
                 .ReturnsAsync([]);
 
-            _repositoryMock.Setup(r => r.ListAsNoTrackingAsync<Label>(
+            RepositoryMock.Setup(r => r.ListAsNoTrackingAsync<Label>(
                 It.IsAny<Expression<Func<Label, bool>>>(),
                 It.IsAny<CancellationToken>(),
                 It.IsAny<string[]>()))
                 .ReturnsAsync([]);
 
-            ContactFormDto? result = await _service.GetContactFormAsync(contactId);
+            ContactFormDto? result = await Service.GetContactFormAsync(contactId);
 
             Assert.NotNull(result);
             Assert.Equal(1, result.Birthday?.Year);
@@ -373,25 +359,25 @@ public class ContactReadServiceTests
                 new Label { Id = Guid.NewGuid(), Name = "Work", Color = "Blue" }
             ];
 
-            _repositoryMock.Setup(r => r.ListAsNoTrackingAsync<Contact>(
+            RepositoryMock.Setup(r => r.ListAsNoTrackingAsync<Contact>(
                 It.IsAny<Expression<Func<Contact, bool>>>(),
                 It.IsAny<CancellationToken>(),
                 It.IsAny<string[]>()))
                 .ReturnsAsync([contact]);
 
-            _repositoryMock.Setup(r => r.ListProjectedAsync<Attachment, Guid>(
+            RepositoryMock.Setup(r => r.ListProjectedAsync<Attachment, Guid>(
                 It.IsAny<Expression<Func<Attachment, bool>>>(),
                 It.IsAny<Expression<Func<Attachment, Guid>>>(),
                 It.IsAny<CancellationToken>()))
                 .ReturnsAsync([profileAttachment.Id]);
 
-            _repositoryMock.Setup(r => r.ListAsNoTrackingAsync<Label>(
+            RepositoryMock.Setup(r => r.ListAsNoTrackingAsync<Label>(
                 It.IsAny<Expression<Func<Label, bool>>>(),
                 It.IsAny<CancellationToken>(),
                 It.IsAny<string[]>()))
                 .ReturnsAsync(allLabels);
 
-            ContactFormDto? result = await _service.GetContactFormAsync(contactId);
+            ContactFormDto? result = await Service.GetContactFormAsync(contactId);
 
             Assert.NotNull(result);
             Assert.Equal(profileImageId, result.ProfileImageId);
@@ -405,19 +391,8 @@ public class ContactReadServiceTests
         }
     }
 
-    public class ContactReadServiceIndexTests
+    public class ContactReadServiceIndexTests : ContactReadServiceTestBase
     {
-        private readonly Mock<IRepository> _repositoryMock;
-        private readonly Mock<IFavoriteService> _favoriteServiceMock;
-        private readonly ContactReadService _service;
-
-        public ContactReadServiceIndexTests()
-        {
-            _repositoryMock = new Mock<IRepository>();
-            _favoriteServiceMock = new Mock<IFavoriteService>();
-            _favoriteServiceMock.Setup(f => f.GetFavoriteContactIdsAsync()).ReturnsAsync([]);
-            _service = new ContactReadService(_repositoryMock.Object, _favoriteServiceMock.Object);
-        }
 
         [Fact]
         public async Task GetIndexDataAsyncCorrectlyRestitchesBulkLoadedRelatedEntities()
@@ -433,31 +408,31 @@ public class ContactReadServiceTests
                 new ContactDto { Id = contact2Id, FirstName = "Bob" }
             ];
 
-            _repositoryMock.Setup(x => x.ListProjectedAsync<Contact, ContactDto>(
+            RepositoryMock.Setup(x => x.ListProjectedAsync<Contact, ContactDto>(
                 It.IsAny<Expression<Func<Contact, bool>>>(),
                 It.IsAny<Expression<Func<Contact, ContactDto>>>(),
                 It.IsAny<CancellationToken>()))
                 .ReturnsAsync(contacts);
 
-            _repositoryMock.Setup(x => x.ListProjectedAsync<Attachment, (Guid, Guid)>(
+            RepositoryMock.Setup(x => x.ListProjectedAsync<Attachment, (Guid, Guid)>(
                 It.IsAny<Expression<Func<Attachment, bool>>>(),
                 It.IsAny<Expression<Func<Attachment, (Guid, Guid)>>>(),
                 It.IsAny<CancellationToken>()))
                 .ReturnsAsync([(contact1Id, attachmentId)]);
 
-            _repositoryMock.Setup(x => x.ListProjectedAsync<ContactLabel, (Guid, Guid, string, string?)>(
+            RepositoryMock.Setup(x => x.ListProjectedAsync<ContactLabel, (Guid, Guid, string, string?)>(
                 It.IsAny<Expression<Func<ContactLabel, bool>>>(),
                 It.IsAny<Expression<Func<ContactLabel, (Guid, Guid, string, string?)>>>(),
                 It.IsAny<CancellationToken>()))
                 .ReturnsAsync([(contact2Id, labelId, "Friend", "Blue")]);
 
-            _repositoryMock.Setup(x => x.ListProjectedAsync<SignificantDate, (Guid, DateOnly)>(
+            RepositoryMock.Setup(x => x.ListProjectedAsync<SignificantDate, (Guid, DateOnly)>(
                 It.IsAny<Expression<Func<SignificantDate, bool>>>(),
                 It.IsAny<Expression<Func<SignificantDate, (Guid, DateOnly)>>>(),
                 It.IsAny<CancellationToken>()))
                 .ReturnsAsync([(contact1Id, new DateOnly(1990, 5, 10))]);
 
-            List<ContactDto> result = await _service.GetIndexDataAsync(false);
+            List<ContactDto> result = await Service.GetIndexDataAsync(false);
 
             Assert.NotNull(result);
             Assert.Equal(2, result.Count);
@@ -491,7 +466,7 @@ public class ContactReadServiceTests
                 new ContactDto { Id = contact2Id, FirstName = "Bob" } // Bob has no attachments returned
             ];
 
-            _repositoryMock.Setup(x => x.ListProjectedAsync<Contact, ContactDto>(
+            RepositoryMock.Setup(x => x.ListProjectedAsync<Contact, ContactDto>(
                 It.IsAny<Expression<Func<Contact, bool>>>(),
                 It.IsAny<Expression<Func<Contact, ContactDto>>>(),
                 It.IsAny<CancellationToken>()))
@@ -500,7 +475,7 @@ public class ContactReadServiceTests
             // Alice has two profile images (a duplicate condition the system should handle gracefully by picking one)
             // Also returning an attachment for a contact ID that does NOT exist in our DTO list (e.g., an orphaned or mistmatched record)
             Guid missingContactId = Guid.NewGuid();
-            _repositoryMock.Setup(x => x.ListProjectedAsync<Attachment, (Guid, Guid)>(
+            RepositoryMock.Setup(x => x.ListProjectedAsync<Attachment, (Guid, Guid)>(
                 It.IsAny<Expression<Func<Attachment, bool>>>(),
                 It.IsAny<Expression<Func<Attachment, (Guid, Guid)>>>(),
                 It.IsAny<CancellationToken>()))
@@ -510,19 +485,19 @@ public class ContactReadServiceTests
                     (missingContactId, Guid.NewGuid()) // Key not in map
                 ]);
 
-            _repositoryMock.Setup(x => x.ListProjectedAsync<ContactLabel, (Guid, Guid, string, string?)>(
+            RepositoryMock.Setup(x => x.ListProjectedAsync<ContactLabel, (Guid, Guid, string, string?)>(
                 It.IsAny<Expression<Func<ContactLabel, bool>>>(),
                 It.IsAny<Expression<Func<ContactLabel, (Guid, Guid, string, string?)>>>(),
                 It.IsAny<CancellationToken>()))
                 .ReturnsAsync([]);
 
-            _repositoryMock.Setup(x => x.ListProjectedAsync<SignificantDate, (Guid, DateOnly)>(
+            RepositoryMock.Setup(x => x.ListProjectedAsync<SignificantDate, (Guid, DateOnly)>(
                 It.IsAny<Expression<Func<SignificantDate, bool>>>(),
                 It.IsAny<Expression<Func<SignificantDate, (Guid, DateOnly)>>>(),
                 It.IsAny<CancellationToken>()))
                 .ReturnsAsync([]);
 
-            List<ContactDto> result = await _service.GetIndexDataAsync(false);
+            List<ContactDto> result = await Service.GetIndexDataAsync(false);
 
             Assert.NotNull(result);
             Assert.Equal(2, result.Count);
@@ -540,19 +515,8 @@ public class ContactReadServiceTests
         }
     }
 
-    public class ContactReadServiceLabelOptimizationTests
+    public class ContactReadServiceLabelOptimizationTests : ContactReadServiceTestBase
     {
-        private readonly Mock<IRepository> _repositoryMock;
-        private readonly Mock<IFavoriteService> _favoriteServiceMock;
-        private readonly ContactReadService _service;
-
-        public ContactReadServiceLabelOptimizationTests()
-        {
-            _repositoryMock = new Mock<IRepository>();
-            _favoriteServiceMock = new Mock<IFavoriteService>();
-            _favoriteServiceMock.Setup(f => f.GetFavoriteContactIdsAsync()).ReturnsAsync([]);
-            _service = new ContactReadService(_repositoryMock.Object, _favoriteServiceMock.Object);
-        }
 
         [Fact]
         public async Task GetContactFormAsyncFetchesLabelsEagerly()
@@ -565,13 +529,13 @@ public class ContactReadServiceTests
 
             // We use It.IsAny<string[]> because we are testing if the optimization works regardless of exact includes for now,
             // but we expect "ContactLabels" to be present eventually.
-            _repositoryMock.Setup(r => r.ListAsNoTrackingAsync<Contact>(
+            RepositoryMock.Setup(r => r.ListAsNoTrackingAsync<Contact>(
                 It.IsAny<Expression<Func<Contact, bool>>>(),
                 It.IsAny<CancellationToken>(),
                 It.IsAny<string[]>()))
                 .ReturnsAsync([contact]);
 
-            _repositoryMock.Setup(r => r.ListAsNoTrackingAsync<Label>(
+            RepositoryMock.Setup(r => r.ListAsNoTrackingAsync<Label>(
                It.IsAny<Expression<Func<Label, bool>>>(),
                It.IsAny<CancellationToken>(),
                It.IsAny<string[]>()))
@@ -579,22 +543,22 @@ public class ContactReadServiceTests
 
             // If the code uses this query, result.AssignedLabelIds will be EMPTY.
             // If the code uses contact.ContactLabels, result.AssignedLabelIds will contain labelId.
-            _repositoryMock.Setup(r => r.ListAsNoTrackingAsync<ContactLabel>(
+            RepositoryMock.Setup(r => r.ListAsNoTrackingAsync<ContactLabel>(
                 It.IsAny<Expression<Func<ContactLabel, bool>>>(),
                 It.IsAny<CancellationToken>(),
                 It.IsAny<string[]>()))
                 .ReturnsAsync([]);
 
-            _repositoryMock.Setup(r => r.ListAsync<Attachment>(It.IsAny<Expression<Func<Attachment, bool>>>(), It.IsAny<CancellationToken>()))
+            RepositoryMock.Setup(r => r.ListAsync<Attachment>(It.IsAny<Expression<Func<Attachment, bool>>>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync([]);
 
-            ContactFormDto? result = await _service.GetContactFormAsync(contactId);
+            ContactFormDto? result = await Service.GetContactFormAsync(contactId);
 
             Assert.NotNull(result);
 
             Assert.Contains(labelId, result.AssignedLabelIds);
 
-            _repositoryMock.Verify(r => r.ListAsNoTrackingAsync<ContactLabel>(
+            RepositoryMock.Verify(r => r.ListAsNoTrackingAsync<ContactLabel>(
                 It.IsAny<Expression<Func<ContactLabel, bool>>>(),
                 It.IsAny<CancellationToken>(),
                 It.IsAny<string[]>()), Times.Never);
@@ -610,7 +574,7 @@ public class ContactReadServiceTests
 
             contact.ContactLabels.Add(new ContactLabel { ContactId = contactId, LabelId = labelId, Label = label });
 
-            _repositoryMock.Setup(r => r.ListAsNoTrackingAsync<Contact>(
+            RepositoryMock.Setup(r => r.ListAsNoTrackingAsync<Contact>(
                 It.IsAny<Expression<Func<Contact, bool>>>(),
                 It.IsAny<CancellationToken>(),
                 It.IsAny<string[]>()))
@@ -618,41 +582,30 @@ public class ContactReadServiceTests
 
             // Setup related entities (needed for GetContactDetailsAsync) to return empty lists to avoid null ref if logic expects them
             // We can rely on default null/empty behavior if logic handles it, but let's be safe
-            _repositoryMock.Setup(r => r.ListAsNoTrackingAsync<Relationship>(It.IsAny<Expression<Func<Relationship, bool>>>(), default)).ReturnsAsync([]);
+            RepositoryMock.Setup(r => r.ListAsNoTrackingAsync<Relationship>(It.IsAny<Expression<Func<Relationship, bool>>>(), default)).ReturnsAsync([]);
 
-            _repositoryMock.Setup(r => r.ListAsNoTrackingAsync<ContactLabel>(
+            RepositoryMock.Setup(r => r.ListAsNoTrackingAsync<ContactLabel>(
                 It.IsAny<Expression<Func<ContactLabel, bool>>>(),
                 It.IsAny<CancellationToken>(),
                 It.IsAny<string[]>()))
                 .ReturnsAsync([]);
 
-            ContactDetailDto? result = await _service.GetContactDetailsAsync(contactId);
+            ContactDetailDto? result = await Service.GetContactDetailsAsync(contactId);
 
             Assert.NotNull(result);
 
             Assert.Single(result.Labels);
             Assert.Equal("Test Label", result.Labels.First().Name);
 
-            _repositoryMock.Verify(r => r.ListAsNoTrackingAsync<ContactLabel>(
+            RepositoryMock.Verify(r => r.ListAsNoTrackingAsync<ContactLabel>(
                 It.IsAny<Expression<Func<ContactLabel, bool>>>(),
                 It.IsAny<CancellationToken>(),
                 It.IsAny<string[]>()), Times.Never);
         }
     }
 
-    public class ContactReadServiceGetContactNamesTests
+    public class ContactReadServiceGetContactNamesTests : ContactReadServiceTestBase
     {
-        private readonly Mock<IRepository> _repositoryMock;
-        private readonly Mock<IFavoriteService> _favoriteServiceMock;
-        private readonly ContactReadService _service;
-
-        public ContactReadServiceGetContactNamesTests()
-        {
-            _repositoryMock = new Mock<IRepository>();
-            _favoriteServiceMock = new Mock<IFavoriteService>();
-            _favoriteServiceMock.Setup(f => f.GetFavoriteContactIdsAsync()).ReturnsAsync([]);
-            _service = new ContactReadService(_repositoryMock.Object, _favoriteServiceMock.Object);
-        }
 
         [Fact]
         public async Task GetContactNamesAsyncEvaluatesProjectionCorrectly()
@@ -670,7 +623,7 @@ public class ContactReadServiceTests
             Expression<Func<Contact, (Guid, string)>>? capturedProjection = null;
             Expression<Func<Contact, bool>>? capturedFilter = null;
 
-            _repositoryMock.Setup(r => r.ListProjectedAsync(
+            RepositoryMock.Setup(r => r.ListProjectedAsync(
                 It.IsAny<Expression<Func<Contact, bool>>>(),
                 It.IsAny<Expression<Func<Contact, (Guid, string)>>>(),
                 It.IsAny<CancellationToken>()))
@@ -683,7 +636,7 @@ public class ContactReadServiceTests
                 .ReturnsAsync([]); // Return value doesn't matter, we evaluate the expression
 
             // Act
-            await _service.GetContactNamesAsync();
+            await Service.GetContactNamesAsync();
 
             // Assert
             Assert.NotNull(capturedProjection);
@@ -716,13 +669,13 @@ public class ContactReadServiceTests
 
             Expression<Func<Relationship, bool>>? capturedFilter = null;
 
-            _repositoryMock.Setup(r => r.CountAsync<Relationship>(It.IsAny<Expression<Func<Relationship, bool>>>(), It.IsAny<CancellationToken>()))
+            RepositoryMock.Setup(r => r.CountAsync<Relationship>(It.IsAny<Expression<Func<Relationship, bool>>>(), It.IsAny<CancellationToken>()))
                 .Callback<Expression<Func<Relationship, bool>>, CancellationToken>(
                     (filter, ct) => capturedFilter = filter)
                 .ReturnsAsync(0);
 
             // Act
-            await _service.HasRelationshipsAsync(queryId);
+            await Service.HasRelationshipsAsync(queryId);
 
             // Assert
             Assert.NotNull(capturedFilter);

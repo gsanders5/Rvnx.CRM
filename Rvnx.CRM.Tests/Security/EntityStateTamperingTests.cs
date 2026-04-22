@@ -1,5 +1,4 @@
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using Moq;
 using Rvnx.CRM.Core.DTOs.Base;
 using Rvnx.CRM.Core.DTOs.Contact;
@@ -10,6 +9,7 @@ using Rvnx.CRM.Core.Models.Contact;
 using Rvnx.CRM.Infrastructure.Data;
 using Rvnx.CRM.Infrastructure.Repositories;
 using Rvnx.CRM.Infrastructure.Services;
+using Rvnx.CRM.Tests.Helpers;
 using Rvnx.CRM.Web.Controllers;
 
 namespace Rvnx.CRM.Tests.Security;
@@ -20,18 +20,7 @@ namespace Rvnx.CRM.Tests.Security;
 /// </summary>
 public class EntityStateTamperingTests
 {
-    private static CRMDbContext GetInMemoryDbContext()
-    {
-        DbContextOptions<CRMDbContext> options = new DbContextOptionsBuilder<CRMDbContext>()
-            .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
-            .Options;
-
-        Mock<ICurrentUserService> mockCurrentUserService = new();
-        mockCurrentUserService.Setup(s => s.UserId).Returns(Guid.Parse("c5b50a20-34b2-44b2-8b9c-aa4135f60938"));
-        mockCurrentUserService.Setup(s => s.UserName).Returns("test-user");
-
-        return new CRMDbContext(options, mockCurrentUserService.Object);
-    }
+    private static CRMDbContext GetInMemoryDbContext() => TestDbContextFactory.CreateForDefaultUser();
 
     #region NotesController Tests
 

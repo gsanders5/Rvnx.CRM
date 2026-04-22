@@ -1,28 +1,15 @@
 using Microsoft.EntityFrameworkCore;
-using Moq;
 using Rvnx.CRM.Core.Interfaces;
 using Rvnx.CRM.Infrastructure.Data;
 using Rvnx.CRM.Infrastructure.Repositories;
 using Rvnx.CRM.Infrastructure.Services;
+using Rvnx.CRM.Tests.Helpers;
 
 namespace Rvnx.CRM.Tests.Services;
 
 public class UserSynchronizationTests
 {
-    private static CRMDbContext GetInMemoryDbContext()
-    {
-        DbContextOptions<CRMDbContext> options = new DbContextOptionsBuilder<CRMDbContext>()
-            .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
-            .Options;
-
-        Mock<ICurrentUserService> mockUserService = new();
-        mockUserService.Setup(u => u.UserId).Returns((Guid?)null); // Setup as system for syncing
-        mockUserService.Setup(u => u.UserName).Returns("System");
-
-        CRMDbContext context = new(options, mockUserService.Object);
-        context.Database.EnsureCreated();
-        return context;
-    }
+    private static CRMDbContext GetInMemoryDbContext() => TestDbContextFactory.CreateForSystemUser(ensureCreated: true);
 
     [Fact]
     public async Task SyncUserAsyncNewUserShouldCreateUser()
