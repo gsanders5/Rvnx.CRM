@@ -319,6 +319,10 @@ The Immich gallery on the Contact Details page is rendered by an async fetch + p
 - **Set-as-profile** (`POST /Immich/SetAsProfilePhoto`): downloads the Immich original, checks declared `Content-Length` against `IFileValidationService.IsAllowedFileSize` before buffering, then reuses the existing `IAttachmentService.UploadAttachmentAsync` + `IContactManagementService.SetAttachmentAsProfilePhotoAsync` pipeline to persist and flip the attachment. Filenames default to `immich-{assetId}{ext}` (extension derived from `ImmichMediaPayload.DefaultExtension`) when Immich doesn't provide one.
 - **AuthorizedController.SafeRedirect** is a shared redirect-safety helper on the MVC base class (moved there from `AttachmentsController` to avoid duplication with `ImmichController`).
 
+### Known limitation: single Immich account
+
+The Immich `BaseUrl` and `ApiKey` are read from `appsettings` at app start and bound to the typed `HttpClient`. There is no per-user credential store, so every CRM user on this instance shares one Immich account — they all see the same people, tags, and photos. This is fine when the CRM users already share an Immich library (solo use, partners); it is not suitable when each CRM user should have their own separate Immich library. Lifting this restriction would require (a) persisting per-user Immich credentials, (b) switching the typed `HttpClient` to construct `x-api-key` per request from the current user's credentials rather than at handler construction, and (c) partitioning the `IMemoryCache` keys for people/tags/assets by user.
+
 ## Known Deviations from Pure Architecture
 
 1. **Core Dependency on EF Core**: Pragmatic choice to use Data Annotations (`[Key]`, `[Table]`) directly on domain models.

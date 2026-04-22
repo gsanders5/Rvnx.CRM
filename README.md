@@ -34,7 +34,7 @@ Each contact has dedicated sections for:
 - **Activities** — logged meetings, calls, and events; activities can link to multiple contacts at once, with a one-click **QuickLog** for fast entry
 - **Tasks / Follow-ups** — per-contact to-do items with due dates
 - **Attachments** — photos, documents, or any file
-- **Immich Photos** — optional integration with a self-hosted [Immich](https://immich.app) server. Link a contact to an Immich Person (face recognition) and/or Tag, and the Details page surfaces their photos inline. Set any Immich image as the contact's profile photo in one click.
+- **Immich Photos** — optional integration with a self-hosted [Immich](https://immich.app) server. Link a contact to an Immich Person (face recognition) and/or Tag, and the Details page surfaces their photos inline. Set any Immich image as the contact's profile photo in one click. _**Single Immich account only:** the API key is server-wide, so all CRM users on this instance share the same Immich library. That's fine for solo use or partners who already share an Immich account — but don't enable this if your CRM users need their own separate Immich libraries._
 - **Social Media** — linked social accounts
 
 ### Calendar
@@ -119,6 +119,8 @@ Each runnable project (`Web`, `API`, `ConsoleApp`) reads an `appsettings.Local.j
 ```
 
 `BaseUrl` must include the `/api` suffix (the API key is passed via `x-api-key`). Disabled by default; flip `Enabled` to `true` once you've filled in the URL and key. Create the API key in Immich under Account Settings → API Keys.
+
+**⚠️ Single Immich account only.** The `ApiKey` is configured at the server level, not per CRM user. Every CRM user on this instance sees the same Immich people, tags, and photos. That's fine when the CRM users already share an Immich library (solo use, partners); it is _not_ suitable for deployments where each CRM user should have their own separate Immich library. Leave `Enabled: false` if that applies to you.
 
 > Use an absolute path in the connection string.
 
