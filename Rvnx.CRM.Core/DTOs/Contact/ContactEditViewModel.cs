@@ -5,4 +5,5 @@ public class ContactEditViewModel : ContactFormDto
     public IEnumerable<string> PronounOptions { get; set; } = [];
     public IEnumerable<string> GenderOptions { get; set; } = [];
     public bool HasRelationships { get; set; }
+    public bool ImmichEnabled { get; set; }
 }

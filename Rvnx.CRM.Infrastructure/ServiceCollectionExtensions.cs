@@ -29,6 +29,22 @@ public static class ServiceCollectionExtensions
             client.Timeout = TimeSpan.FromSeconds(10);
         });
 
+        services.AddHttpClient<IImmichService, ImmichService>((_, client) =>
+        {
+            IConfigurationSection cfg = configuration.GetSection(ImmichService.ConfigSection);
+            string? baseUrl = cfg["BaseUrl"];
+            string? apiKey = cfg["ApiKey"];
+            if (!string.IsNullOrWhiteSpace(baseUrl))
+            {
+                client.BaseAddress = new Uri(baseUrl.TrimEnd('/') + "/");
+            }
+            if (!string.IsNullOrWhiteSpace(apiKey))
+            {
+                client.DefaultRequestHeaders.Add("x-api-key", apiKey);
+            }
+            client.Timeout = TimeSpan.FromSeconds(10);
+        });
+
         services.AddScoped<IUserSynchronizationService, UserSynchronizationService>();
 
         services.AddScoped<IContactImportService, ContactImportService>();

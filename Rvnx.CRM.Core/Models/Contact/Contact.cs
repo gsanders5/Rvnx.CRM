@@ -29,4 +29,6 @@ public class Contact : Person
     public virtual ICollection<ContactLabel> ContactLabels { get; set; } = [];
 
     public virtual ICollection<ActivityContact> ActivityContacts { get; set; } = [];
+
+    public virtual ContactImmichLink? ImmichLink { get; set; }
 }

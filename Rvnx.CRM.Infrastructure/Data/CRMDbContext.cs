@@ -37,6 +37,7 @@ public class CRMDbContext(DbContextOptions<CRMDbContext> options, ICurrentUserSe
     public DbSet<ActivityContact>? ActivityContacts { get; set; }
     public DbSet<ContactTask>? ContactTasks { get; set; }
     public DbSet<ApiToken>? ApiTokens { get; set; }
+    public DbSet<ContactImmichLink>? ContactImmichLinks { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -200,6 +201,16 @@ public class CRMDbContext(DbContextOptions<CRMDbContext> options, ICurrentUserSe
 
         modelBuilder.Entity<Attachment>()
             .ToTable(t => t.HasCheckConstraint("CHK_Attachment_Owner", "ContactId IS NOT NULL"));
+
+        modelBuilder.Entity<ContactImmichLink>()
+            .HasOne(e => e.Contact)
+            .WithOne(c => c.ImmichLink)
+            .HasForeignKey<ContactImmichLink>(e => e.ContactId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<ContactImmichLink>()
+            .HasIndex(e => e.ContactId)
+            .IsUnique();
 
         IEnumerable<Microsoft.EntityFrameworkCore.Metadata.IMutableEntityType> entityTypes = modelBuilder.Model.GetEntityTypes()
             .Where(e => typeof(BaseEntity).IsAssignableFrom(e.ClrType));

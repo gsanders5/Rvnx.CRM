@@ -17,7 +17,8 @@ public class ContactsController(
     IContactManagementService contactManagementService,
     IContactReadService contactReadService,
     ISelfContactService selfContactService,
-    IFileValidationService fileValidationService) : AuthorizedController
+    IFileValidationService fileValidationService,
+    IImmichService immichService) : AuthorizedController
 {
     private readonly ILogger<ContactsController> _logger = logger;
     private readonly ICurrentUserService _currentUserService = currentUserService;
@@ -28,6 +29,7 @@ public class ContactsController(
     private readonly IContactReadService _contactReadService = contactReadService;
     private readonly ISelfContactService _selfContactService = selfContactService;
     private readonly IFileValidationService _fileValidationService = fileValidationService;
+    private readonly IImmichService _immichService = immichService;
 
     private static readonly Action<ILogger, Exception?> LogErrorImportingVcf =
         LoggerMessage.Define(
@@ -203,7 +205,7 @@ public class ContactsController(
         }
 
         bool hasRelationships = await _contactReadService.HasRelationshipsAsync(id.Value);
-        ContactEditViewModel viewModel = MapToEditViewModel(dto, dto.ProfileImageId, hasRelationships);
+        ContactEditViewModel viewModel = MapToEditViewModel(dto, dto.ProfileImageId, hasRelationships, _immichService.IsEnabled);
 
         return View(viewModel);
     }
@@ -266,7 +268,7 @@ public class ContactsController(
         }
 
         bool hasRelationships = await _contactReadService.HasRelationshipsAsync(id);
-        ContactEditViewModel viewModel = MapToEditViewModel(contactDto, formConfig?.ProfileImageId, hasRelationships);
+        ContactEditViewModel viewModel = MapToEditViewModel(contactDto, formConfig?.ProfileImageId, hasRelationships, _immichService.IsEnabled);
 
         return View(viewModel);
     }
@@ -413,7 +415,7 @@ public class ContactsController(
         dto.Religion = string.IsNullOrWhiteSpace(dto.Religion) ? null : dto.Religion;
     }
 
-    private static ContactEditViewModel MapToEditViewModel(ContactFormDto dto, Guid? profileImageId, bool hasRelationships = false)
+    private static ContactEditViewModel MapToEditViewModel(ContactFormDto dto, Guid? profileImageId, bool hasRelationships = false, bool immichEnabled = false)
     {
         return new ContactEditViewModel
         {
@@ -432,11 +434,16 @@ public class ContactsController(
             Gender = dto.Gender,
             Religion = dto.Religion,
             ProfileImageId = profileImageId,
+            ImmichPersonId = dto.ImmichPersonId,
+            ImmichPersonName = dto.ImmichPersonName,
+            ImmichTagId = dto.ImmichTagId,
+            ImmichTagValue = dto.ImmichTagValue,
             PronounOptions = PersonalAttributeOptions.Pronouns,
             GenderOptions = PersonalAttributeOptions.Gender,
             AllLabels = dto.AllLabels,
             AssignedLabelIds = dto.AssignedLabelIds,
-            HasRelationships = hasRelationships
+            HasRelationships = hasRelationships,
+            ImmichEnabled = immichEnabled
         };
     }
 

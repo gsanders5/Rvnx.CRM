@@ -167,7 +167,8 @@ public class ContactReadService(IRepository repository, IFavoriteService favorit
             nameof(Contact.Attachments),
             nameof(Contact.ContactLabels) + "." + nameof(ContactLabel.Label),
             nameof(Contact.ActivityContacts) + "." + nameof(ActivityContact.Activity),
-            nameof(Contact.ContactTasks));
+            nameof(Contact.ContactTasks),
+            nameof(Contact.ImmichLink));
 
         Contact? contact = contacts.FirstOrDefault();
         if (contact == null)
@@ -333,7 +334,8 @@ public class ContactReadService(IRepository repository, IFavoriteService favorit
             default,
             nameof(Contact.ContactMethods),
             nameof(Contact.SignificantDates) + "." + nameof(SignificantDate.ReminderOffsets),
-            nameof(Contact.ContactLabels));
+            nameof(Contact.ContactLabels),
+            nameof(Contact.ImmichLink));
 
         Contact? contact = contacts.FirstOrDefault();
 
@@ -354,7 +356,11 @@ public class ContactReadService(IRepository repository, IFavoriteService favorit
             IsHidden = contact.IsHidden,
             Pronouns = contact.Pronouns,
             Gender = contact.Gender,
-            Religion = contact.Religion
+            Religion = contact.Religion,
+            ImmichPersonId = contact.ImmichLink?.ImmichPersonId,
+            ImmichPersonName = contact.ImmichLink?.ImmichPersonName,
+            ImmichTagId = contact.ImmichLink?.ImmichTagId,
+            ImmichTagValue = contact.ImmichLink?.ImmichTagValue
         };
 
         ContactMethod? email = contact.ContactMethods

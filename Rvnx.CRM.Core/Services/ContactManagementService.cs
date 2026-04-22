@@ -161,6 +161,8 @@ public class ContactManagementService(IRepository repository, IFileValidationSer
             return imageResult;
         }
 
+        await UpdateImmichLinkAsync(id, contactDto);
+
         await _repository.UpdateAsync(existingContact);
 
         try
@@ -320,4 +322,39 @@ public class ContactManagementService(IRepository repository, IFileValidationSer
         return bdays.FirstOrDefault();
     }
 
+    private async Task UpdateImmichLinkAsync(Guid contactId, ContactFormDto dto)
+    {
+        List<ContactImmichLink>? existing = await _repository.ListAsync<ContactImmichLink>(l => l.ContactId == contactId);
+        ContactImmichLink? link = existing?.FirstOrDefault();
+
+        bool hasAny = dto.ImmichPersonId.HasValue || dto.ImmichTagId.HasValue;
+
+        if (!hasAny)
+        {
+            if (link != null)
+            {
+                await _repository.DeleteAsync(link);
+            }
+            return;
+        }
+
+        if (link == null)
+        {
+            await _repository.AddAsync(new ContactImmichLink
+            {
+                ContactId = contactId,
+                ImmichPersonId = dto.ImmichPersonId,
+                ImmichPersonName = dto.ImmichPersonName,
+                ImmichTagId = dto.ImmichTagId,
+                ImmichTagValue = dto.ImmichTagValue
+            });
+            return;
+        }
+
+        link.ImmichPersonId = dto.ImmichPersonId;
+        link.ImmichPersonName = dto.ImmichPersonName;
+        link.ImmichTagId = dto.ImmichTagId;
+        link.ImmichTagValue = dto.ImmichTagValue;
+        await _repository.UpdateAsync(link);
+    }
 }

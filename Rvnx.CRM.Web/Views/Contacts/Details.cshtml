@@ -808,9 +808,6 @@
                                 {
                                     <div class="attachment-preview-container d-flex align-items-center justify-content-center cursor-pointer" style="height: 200px; background: var(--crm-surface-primary);" data-preview-url="@Url.Action("View", "Attachments", new { id = attachment.Id })" data-filename="@attachment.FileName">
                                         <img src="@Url.Action("Thumbnail", "Attachments", new { id = attachment.Id, maxWidth = 400 })" class="img-fluid w-100 h-100" alt="@attachment.FileName" loading="lazy" style="object-fit: cover;" />
-                                        <div class="position-absolute top-50 start-50 translate-middle text-white preview-overlay" style="opacity: 0; transition: opacity var(--crm-transition-fast); background: rgba(0,0,0,0.5); padding: 10px; border-radius: 50%;">
-                                            <i class="bi bi-zoom-in fs-3" aria-hidden="true"></i>
-                                        </div>
                                     </div>
                                 }
                                 else
@@ -866,6 +863,13 @@
         </div>
     </div>
 
+    @if (Model.ImmichPersonId.HasValue || Model.ImmichTagId.HasValue)
+    {
+        <div id="immich-mount"
+             data-immich-person-id="@Model.ImmichPersonId"
+             data-immich-tag-id="@Model.ImmichTagId"></div>
+    }
+
     <!-- Social Media Embeds -->
     <partial name="_SocialMediaEmbeds" model="Model" />
 
@@ -915,13 +919,11 @@
                 document.body.style.overflow = '';
             }
 
-            document.querySelectorAll('.attachment-preview-container[data-preview-url]').forEach(container => {
-                container.addEventListener('click', function(e) {
-                    if (e.target.closest('a') || e.target.closest('button')) return;
-                    const url = this.getAttribute('data-preview-url');
-                    const filename = this.getAttribute('data-filename');
-                    openLightbox(url, filename);
-                });
+            document.addEventListener('click', function (e) {
+                const container = e.target.closest('.attachment-preview-container[data-preview-url]');
+                if (!container) return;
+                if (e.target.closest('a') || e.target.closest('button')) return;
+                openLightbox(container.getAttribute('data-preview-url'), container.getAttribute('data-filename'));
             });
 
             lightboxCloseBtn.addEventListener('click', closeLightbox);
@@ -938,14 +940,31 @@
                 }
             });
 
-            const grid = document.querySelector('.masonry-grid');
-            if (grid && window.Masonry && window.imagesLoaded) {
-                imagesLoaded(grid, function() {
-                    new Masonry(grid, {
-                        itemSelector: '.masonry-item',
-                        percentPosition: true
-                    });
+            function initMasonry(grid) {
+                if (!grid || !window.Masonry || !window.imagesLoaded) return;
+                imagesLoaded(grid, function () {
+                    new Masonry(grid, { itemSelector: '.masonry-item', percentPosition: true });
                 });
+            }
+
+            document.querySelectorAll('.masonry-grid').forEach(initMasonry);
+
+            const immichMount = document.getElementById('immich-mount');
+            if (immichMount) {
+                const params = new URLSearchParams();
+                const personId = immichMount.getAttribute('data-immich-person-id');
+                const tagId = immichMount.getAttribute('data-immich-tag-id');
+                if (personId) params.set('personId', personId);
+                if (tagId) params.set('tagId', tagId);
+
+                fetch('/Immich/Gallery?' + params.toString(), { credentials: 'same-origin' })
+                    .then(function (r) { return r.ok ? r.text() : ''; })
+                    .then(function (html) {
+                        if (!html.trim()) return;
+                        immichMount.innerHTML = html;
+                        initMasonry(immichMount.querySelector('.masonry-grid'));
+                    })
+                    .catch(function () { /* swallow — mount stays empty */ });
             }
 
             const activityItems = document.querySelectorAll('.activity-item');

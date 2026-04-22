@@ -121,6 +121,34 @@
                 <span asp-validation-for="Religion" class="text-danger"></span>
             </div>
 
+            @if (Model.ImmichEnabled)
+            {
+                <input type="hidden" asp-for="ImmichPersonName" id="ImmichPersonName"/>
+                <input type="hidden" asp-for="ImmichTagValue" id="ImmichTagValue"/>
+
+                <div class="mb-3">
+                    <label for="ImmichPersonId" class="form-label">Immich Person</label>
+                    <select asp-for="ImmichPersonId" id="ImmichPersonId" class="form-select">
+                        @if (Model.ImmichPersonId.HasValue)
+                        {
+                            <option value="@Model.ImmichPersonId" selected>@Model.ImmichPersonName</option>
+                        }
+                    </select>
+                    <div class="form-text">Links this contact to an Immich face-recognition person.</div>
+                </div>
+
+                <div class="mb-3">
+                    <label for="ImmichTagId" class="form-label">Immich Tag</label>
+                    <select asp-for="ImmichTagId" id="ImmichTagId" class="form-select">
+                        @if (Model.ImmichTagId.HasValue)
+                        {
+                            <option value="@Model.ImmichTagId" selected>@Model.ImmichTagValue</option>
+                        }
+                    </select>
+                    <div class="form-text">Links this contact to an Immich tag.</div>
+                </div>
+            }
+
             <div class="mb-3">
                 <label for="profileImage" class="form-label">Profile Image</label>
                 @if (Model.ProfileImageId.HasValue)
@@ -245,6 +273,38 @@
             $('#pronouns-select').select2({ width: '100%', tags: true, placeholder: 'Select or enter pronouns...', allowClear: true });
             $('#gender-select').select2({ width: '100%', tags: true, placeholder: 'Select or enter gender...', allowClear: true });
             $('#labelId').select2({ width: '100%', placeholder: 'Select a label...' });
+
+            @if (Model.ImmichEnabled)
+            {
+                <text>
+                function initImmichSelect(selectId, url, hiddenNameId, placeholder) {
+                    const $el = $('#' + selectId);
+                    if ($el.length === 0) return;
+                    $el.select2({
+                        width: '100%',
+                        allowClear: true,
+                        placeholder: placeholder,
+                        minimumInputLength: 1,
+                        ajax: {
+                            url: url,
+                            dataType: 'json',
+                            delay: 250,
+                            data: function (params) { return { q: params.term }; },
+                            processResults: function (data) { return { results: data.results.map(r => ({ id: r.id, text: r.text })) }; }
+                        }
+                    });
+                    $el.on('select2:select', function (e) {
+                        document.getElementById(hiddenNameId).value = e.params.data.text;
+                    });
+                    $el.on('select2:clear', function () {
+                        document.getElementById(hiddenNameId).value = '';
+                    });
+                }
+
+                initImmichSelect('ImmichPersonId', '/Immich/People', 'ImmichPersonName', 'Search Immich people...');
+                initImmichSelect('ImmichTagId', '/Immich/Tags', 'ImmichTagValue', 'Search Immich tags...');
+                </text>
+            }
 
             const birthdayField = document.getElementById('BirthdayField');
             const birthdayYearUnknownField = document.getElementById('BirthdayYearUnknownField');

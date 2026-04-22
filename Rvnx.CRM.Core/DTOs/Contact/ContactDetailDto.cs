@@ -20,4 +20,7 @@ public class ContactDetailDto : ContactDto
     public IEnumerable<AddressDto> Addresses { get; set; } = [];
     public IEnumerable<ActivityDto> Activities { get; set; } = [];
     public IEnumerable<ContactTaskDto> ContactTasks { get; set; } = [];
+
+    public Guid? ImmichPersonId { get; set; }
+    public Guid? ImmichTagId { get; set; }
 }

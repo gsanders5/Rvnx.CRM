@@ -56,6 +56,16 @@ public class ContactFormDto
 
     public Guid? ProfileImageId { get; set; }
 
+    public Guid? ImmichPersonId { get; set; }
+
+    [MaxLength(256)]
+    public string? ImmichPersonName { get; set; }
+
+    public Guid? ImmichTagId { get; set; }
+
+    [MaxLength(256)]
+    public string? ImmichTagValue { get; set; }
+
     public List<LabelDto> AllLabels { get; set; } = [];
     public List<Guid> AssignedLabelIds { get; set; } = [];
 }

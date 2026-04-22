@@ -846,9 +846,6 @@ a:focus-visible .crm-avatar-placeholder {
   .attachment-card:hover .attachment-actions {
     opacity: 1;
   }
-  .attachment-card:hover .preview-overlay {
-    opacity: 1 !important;
-  }
 }
 
 .attachment-card {

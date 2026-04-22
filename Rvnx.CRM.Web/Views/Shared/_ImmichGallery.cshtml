@@ -1,0 +1,35 @@
+@using Rvnx.CRM.Core.DTOs.Base
+@model IReadOnlyList<ImmichAssetDto>
+
+@if (Model.Count > 0)
+{
+    <div class="crm-card">
+        <div class="crm-card-header">
+            <h5 class="card-title mb-0">
+                <i class="bi bi-images" aria-hidden="true"></i> Immich Photos
+                <span class="badge bg-secondary ms-2">@Model.Count</span>
+            </h5>
+        </div>
+        <div class="crm-card-body">
+            <div class="row masonry-grid" data-masonry='{"percentPosition": true }'>
+                @foreach (ImmichAssetDto asset in Model)
+                {
+                    <div class="col-12 col-sm-6 col-md-4 mb-3 masonry-item">
+                        <div class="attachment-card overflow-hidden position-relative" style="background: var(--crm-surface-elevated); border: 1px solid var(--crm-border-subtle);">
+                            <div class="attachment-preview-container d-flex align-items-center justify-content-center cursor-pointer"
+                                 style="height: 200px; background: var(--crm-surface-primary);"
+                                 data-preview-url="@Url.Action("Original", "Immich", new { assetId = asset.Id })"
+                                 data-filename="@asset.FileName">
+                                <img src="@Url.Action("Thumbnail", "Immich", new { assetId = asset.Id })"
+                                     class="img-fluid w-100 h-100"
+                                     alt="@asset.FileName"
+                                     loading="lazy"
+                                     style="object-fit: cover;"/>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+}
