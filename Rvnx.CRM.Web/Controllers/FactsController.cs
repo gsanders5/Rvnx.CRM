@@ -24,15 +24,10 @@ public class FactsController(IFactService factService, IRepository repository) :
     {
         if (ModelState.IsValid)
         {
-            OperationResult result = await _factService.CreateAsync(factDto);
-            if (result.Success)
+            IActionResult? handled = HandleOperationResult(await _factService.CreateAsync(factDto));
+            if (handled != null)
             {
-                return RedirectToEntity(result.RedirectId, result.RedirectType);
-            }
-
-            if (result.IsNotFound)
-            {
-                return NotFound();
+                return handled;
             }
         }
 
@@ -61,15 +56,10 @@ public class FactsController(IFactService factService, IRepository repository) :
 
         if (ModelState.IsValid)
         {
-            OperationResult result = await _factService.UpdateAsync(id, factDto);
-            if (result.Success)
+            IActionResult? handled = HandleOperationResult(await _factService.UpdateAsync(id, factDto));
+            if (handled != null)
             {
-                return RedirectToEntity(result.RedirectId, result.RedirectType);
-            }
-
-            if (result.IsNotFound)
-            {
-                return NotFound();
+                return handled;
             }
         }
 

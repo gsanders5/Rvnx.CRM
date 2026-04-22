@@ -45,8 +45,7 @@ public class LabelsController(ILabelService labelService) : AuthorizedController
     [HttpGet]
     public async Task<IActionResult> Edit(Guid id)
     {
-        List<LabelDto> labels = await _labelService.GetAllAsync();
-        LabelDto? label = labels.FirstOrDefault(l => l.Id == id);
+        LabelDto? label = await _labelService.GetByIdAsync(id);
         return label == null
             ? NotFound()
             : View(new LabelFormDto { Id = label.Id, Name = label.Name, Color = label.Color });

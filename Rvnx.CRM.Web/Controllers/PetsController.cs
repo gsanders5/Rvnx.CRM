@@ -31,15 +31,10 @@ public class PetsController(IPetService petService, IRepository repository, ICon
     {
         if (ModelState.IsValid)
         {
-            OperationResult result = await _petService.CreateAsync(petDto);
-            if (result.Success)
+            IActionResult? handled = HandleOperationResult(await _petService.CreateAsync(petDto));
+            if (handled != null)
             {
-                return RedirectToEntity(result.RedirectId, result.RedirectType);
-            }
-
-            if (result.IsNotFound)
-            {
-                return NotFound();
+                return handled;
             }
         }
 
@@ -70,15 +65,10 @@ public class PetsController(IPetService petService, IRepository repository, ICon
 
         if (ModelState.IsValid)
         {
-            OperationResult result = await _petService.UpdateAsync(id, petDto);
-            if (result.Success)
+            IActionResult? handled = HandleOperationResult(await _petService.UpdateAsync(id, petDto));
+            if (handled != null)
             {
-                return RedirectToEntity(result.RedirectId, result.RedirectType);
-            }
-
-            if (result.IsNotFound)
-            {
-                return NotFound();
+                return handled;
             }
         }
 

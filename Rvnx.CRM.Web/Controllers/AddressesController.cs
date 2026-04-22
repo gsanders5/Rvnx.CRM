@@ -24,15 +24,10 @@ public class AddressesController(IAddressService addressService, IRepository rep
     {
         if (ModelState.IsValid)
         {
-            OperationResult result = await _addressService.CreateAsync(dto);
-            if (result.Success)
+            IActionResult? handled = HandleOperationResult(await _addressService.CreateAsync(dto));
+            if (handled != null)
             {
-                return RedirectToEntity(result.RedirectId, result.RedirectType);
-            }
-
-            if (result.IsNotFound)
-            {
-                return NotFound();
+                return handled;
             }
         }
 
@@ -56,15 +51,10 @@ public class AddressesController(IAddressService addressService, IRepository rep
 
         if (ModelState.IsValid)
         {
-            OperationResult result = await _addressService.UpdateAsync(id, dto);
-            if (result.Success)
+            IActionResult? handled = HandleOperationResult(await _addressService.UpdateAsync(id, dto));
+            if (handled != null)
             {
-                return RedirectToEntity(result.RedirectId, result.RedirectType);
-            }
-
-            if (result.IsNotFound)
-            {
-                return NotFound();
+                return handled;
             }
         }
 

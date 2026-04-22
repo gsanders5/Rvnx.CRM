@@ -78,7 +78,6 @@
 
                 <form asp-action="AddOffset" method="post" class="d-flex align-items-center mb-3">
                     <input type="hidden" name="significantDateId" value="@Model.Id"/>
-                    <input type="hidden" name="contactId" value="@Model.EntityId"/>
                     <div class="input-group">
                         <input type="number" name="daysBeforeEvent" class="form-control" placeholder="Days before" required min="0"/>
                         <button type="submit" class="crm-btn-secondary">Add</button>
@@ -98,7 +97,6 @@
                                 <form asp-action="DeleteOffset" method="post" style="display:inline;">
                                     <input type="hidden" name="offsetId" value="@offset.Id"/>
                                     <input type="hidden" name="significantDateId" value="@Model.Id"/>
-                                    <input type="hidden" name="contactId" value="@Model.EntityId"/>
                                     <button type="submit" class="crm-icon-btn icon-danger" title="Delete offset" aria-label="Delete reminder offset">
                                         <i class="bi bi-x-lg" aria-hidden="true"></i>
                                     </button>

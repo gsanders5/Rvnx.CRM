@@ -24,15 +24,10 @@ public class ContactTasksController(IContactTaskService contactTaskService, IRep
     {
         if (ModelState.IsValid)
         {
-            OperationResult result = await _contactTaskService.CreateAsync(dto);
-            if (result.Success)
+            IActionResult? handled = HandleOperationResult(await _contactTaskService.CreateAsync(dto));
+            if (handled != null)
             {
-                return RedirectToEntity(result.RedirectId, result.RedirectType);
-            }
-
-            if (result.IsNotFound)
-            {
-                return NotFound();
+                return handled;
             }
         }
 
@@ -56,15 +51,10 @@ public class ContactTasksController(IContactTaskService contactTaskService, IRep
 
         if (ModelState.IsValid)
         {
-            OperationResult result = await _contactTaskService.UpdateAsync(id, dto);
-            if (result.Success)
+            IActionResult? handled = HandleOperationResult(await _contactTaskService.UpdateAsync(id, dto));
+            if (handled != null)
             {
-                return RedirectToEntity(result.RedirectId, result.RedirectType);
-            }
-
-            if (result.IsNotFound)
-            {
-                return NotFound();
+                return handled;
             }
         }
 

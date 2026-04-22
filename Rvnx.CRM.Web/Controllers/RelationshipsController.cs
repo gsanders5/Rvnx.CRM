@@ -23,12 +23,7 @@ public class RelationshipsController(
     [HttpGet]
     public async Task<IActionResult> Create(Guid entityId, EntityType entityType)
     {
-        if (entityId == Guid.Empty)
-        {
-            return NotFound();
-        }
-
-        if (!await _entityService.ExistsAsync(entityType, entityId))
+        if (entityId == Guid.Empty || !await _entityService.ExistsAsync(entityType, entityId))
         {
             return NotFound();
         }
@@ -36,13 +31,10 @@ public class RelationshipsController(
         RelationshipFormViewModel viewModel = new()
         {
             EntityId = entityId,
-            EntityType = entityType,
-            EntityName = await _entityService.GetEntityNameAsync(entityType, entityId),
-            RelatedEntityOptions =
-                await _relationshipService.GetRelatedEntityOptionsAsync(entityId, entityType),
-            RelationshipTypeOptions = _relationshipService.GetRelationshipTypeOptions(entityType),
-            RelationshipTypes = _relationshipService.GetRelationshipTypes(entityType)
+            EntityType = entityType
         };
+
+        await PopulateRelationshipFormOptionsAsync(viewModel);
 
         return View(viewModel);
     }
@@ -70,22 +62,24 @@ public class RelationshipsController(
             {
                 return RedirectToEntity(result.RedirectId, result.EntityType);
             }
-            else
-            {
-                ModelState.AddModelError("SelectedRelationshipType",
-                    result.ErrorMessage ?? "Invalid Relationship Type.");
-            }
+
+            ModelState.AddModelError("SelectedRelationshipType",
+                result.ErrorMessage ?? "Invalid Relationship Type.");
         }
 
-        viewModel.EntityName = await _entityService.GetEntityNameAsync(viewModel.EntityType, viewModel.EntityId);
-        viewModel.RelatedEntityOptions = await _relationshipService.GetRelatedEntityOptionsAsync(viewModel.EntityId,
-            viewModel.EntityType, viewModel.RelatedEntityId);
-        viewModel.RelationshipTypeOptions =
-            _relationshipService.GetRelationshipTypeOptions(viewModel.EntityType,
-                viewModel.SelectedRelationshipType);
-        viewModel.RelationshipTypes = _relationshipService.GetRelationshipTypes(viewModel.EntityType);
-
+        await PopulateRelationshipFormOptionsAsync(viewModel);
         return View(viewModel);
+    }
+
+    private async Task PopulateRelationshipFormOptionsAsync(RelationshipFormViewModel viewModel)
+    {
+        viewModel.EntityName = await _entityService.GetEntityNameAsync(viewModel.EntityType, viewModel.EntityId);
+        Guid? selectedId = viewModel.RelatedEntityId == Guid.Empty ? null : viewModel.RelatedEntityId;
+        viewModel.RelatedEntityOptions = await _relationshipService.GetRelatedEntityOptionsAsync(
+            viewModel.EntityId, viewModel.EntityType, selectedId);
+        viewModel.RelationshipTypeOptions = _relationshipService.GetRelationshipTypeOptions(
+            viewModel.EntityType, viewModel.SelectedRelationshipType);
+        viewModel.RelationshipTypes = _relationshipService.GetRelationshipTypes(viewModel.EntityType);
     }
 
     [HttpPost]
@@ -235,21 +229,12 @@ public class RelationshipsController(
             {
                 return RedirectToEntity(result.RedirectId, result.EntityType);
             }
-            else
-            {
-                ModelState.AddModelError("SelectedRelationshipType",
-                    result.ErrorMessage ?? "Invalid Relationship Type.");
-            }
+
+            ModelState.AddModelError("SelectedRelationshipType",
+                result.ErrorMessage ?? "Invalid Relationship Type.");
         }
 
-        viewModel.EntityName = await _entityService.GetEntityNameAsync(viewModel.EntityType, viewModel.EntityId);
-        viewModel.RelatedEntityOptions = await _relationshipService.GetRelatedEntityOptionsAsync(viewModel.EntityId,
-            viewModel.EntityType, viewModel.RelatedEntityId);
-        viewModel.RelationshipTypeOptions =
-            _relationshipService.GetRelationshipTypeOptions(viewModel.EntityType,
-                viewModel.SelectedRelationshipType);
-        viewModel.RelationshipTypes = _relationshipService.GetRelationshipTypes(viewModel.EntityType);
-
+        await PopulateRelationshipFormOptionsAsync(viewModel);
         return View(viewModel);
     }
 

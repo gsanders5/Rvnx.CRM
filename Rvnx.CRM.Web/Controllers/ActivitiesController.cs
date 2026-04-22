@@ -31,15 +31,10 @@ public class ActivitiesController(IActivityService activityService, IRepository 
     {
         if (ModelState.IsValid)
         {
-            OperationResult result = await _activityService.CreateAsync(dto);
-            if (result.Success)
+            IActionResult? handled = HandleOperationResult(await _activityService.CreateAsync(dto));
+            if (handled != null)
             {
-                return RedirectToEntity(result.RedirectId, result.RedirectType);
-            }
-
-            if (result.IsNotFound)
-            {
-                return NotFound();
+                return handled;
             }
         }
 
@@ -79,15 +74,10 @@ public class ActivitiesController(IActivityService activityService, IRepository 
 
         if (ModelState.IsValid)
         {
-            OperationResult result = await _activityService.UpdateAsync(id, dto);
-            if (result.Success)
+            IActionResult? handled = HandleOperationResult(await _activityService.UpdateAsync(id, dto));
+            if (handled != null)
             {
-                return RedirectToEntity(result.RedirectId, result.RedirectType);
-            }
-
-            if (result.IsNotFound)
-            {
-                return NotFound();
+                return handled;
             }
         }
 

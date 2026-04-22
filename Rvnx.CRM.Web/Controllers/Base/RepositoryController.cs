@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Rvnx.CRM.Core.Enumerations;
 using Rvnx.CRM.Core.Extensions;
 using Rvnx.CRM.Core.Interfaces;
+using Rvnx.CRM.Core.Models;
 
 namespace Rvnx.CRM.Web.Controllers.Base;
 
@@ -31,6 +32,22 @@ public abstract class RepositoryController : AuthorizedController
         return id == Guid.Empty || type == null
             ? RedirectToAction("Index", "Home")
             : type == EntityType.Person ? RedirectToAction("Details", "Contacts", new { id }) : RedirectToAction("Index", "Home");
+    }
+
+    /// <summary>
+    /// Maps a service <see cref="OperationResult"/> to the standard controller response:
+    /// success redirects to the associated entity, IsNotFound returns 404, otherwise returns null
+    /// (signalling the caller should re-render the form). Eliminates repeated boilerplate across
+    /// every Create/Edit/Delete POST action.
+    /// </summary>
+    protected IActionResult? HandleOperationResult(OperationResult result)
+    {
+        if (result.Success)
+        {
+            return RedirectToEntity(result.RedirectId, result.RedirectType);
+        }
+
+        return result.IsNotFound ? NotFound() : null;
     }
 
     protected async Task PopulateContactsSelectList(IContactReadService contactReadService, List<Guid> selectedIds)
