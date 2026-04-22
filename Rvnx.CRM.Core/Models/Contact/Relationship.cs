@@ -8,11 +8,9 @@ namespace Rvnx.CRM.Core.Models.Contact;
 [Table("Relationship")]
 public class Relationship : PolymorphicEntity
 {
-    [Required]
     [Display(Name = "Related Entity ID")]
     public Guid RelatedEntityId { get; set; }
 
-    [Required]
     [Display(Name = "Relationship Type")]
     public Guid RelationshipTypeId { get; set; }
 
@@ -40,14 +38,13 @@ public class Relationship : PolymorphicEntity
     public virtual Person? RelatedPerson { get; set; }
 
     [NotMapped]
-    public string RelationshipTypeName =>
-        RelationshipTypeService.GetById(RelationshipTypeId)?.Name ?? "Unknown";
+    public string RelationshipTypeName => TypeDefinition?.Name ?? "Unknown";
 
     [NotMapped]
-    public string RelationshipTypeOppositeName =>
-        RelationshipTypeService.GetById(RelationshipTypeId)?.OppositeName ?? "Unknown";
+    public string RelationshipTypeOppositeName => TypeDefinition?.OppositeName ?? "Unknown";
 
     [NotMapped]
-    public string RelationshipTypeCategory =>
-        RelationshipTypeService.GetById(RelationshipTypeId)?.Category ?? "Other";
+    public string RelationshipTypeCategory => TypeDefinition?.Category ?? "Other";
+
+    private RelationshipTypeDefinition? TypeDefinition => RelationshipTypeService.GetById(RelationshipTypeId);
 }

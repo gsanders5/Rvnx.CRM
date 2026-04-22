@@ -13,7 +13,6 @@ public class ContactMethod : BaseEntity
     [ForeignKey(nameof(ContactId))]
     public virtual Contact? Contact { get; set; }
 
-    [Required]
     [Display(Name = "Type")]
     public ContactMethodType Type { get; set; }
 

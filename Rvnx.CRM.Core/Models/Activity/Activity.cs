@@ -15,7 +15,6 @@ public class Activity : BaseEntity
     [Display(Name = "Description")]
     public string? Description { get; set; }
 
-    [Required]
     [Display(Name = "Date")]
     public DateTime ActivityDate { get; set; }
 

@@ -8,7 +8,7 @@ namespace Rvnx.CRM.Core.Models.Business;
 public class Employer : Company
 {
     [Display(Name = "Job Title")]
-    public string? JobTitle { get; set; } = string.Empty;
+    public string? JobTitle { get; set; }
 
     [Display(Name = "Start Date")]
     public DateTime? StartDate { get; set; }
@@ -16,7 +16,6 @@ public class Employer : Company
     [Display(Name = "End Date")]
     public DateTime? EndDate { get; set; }
 
-    [Required]
     [Display(Name = "Employee ID")]
     public Guid EmployeeId { get; set; }
 

@@ -18,10 +18,8 @@ public class ApiToken : BaseEntity, IGlobalEntity
     [MaxLength(8)]
     public string TokenPrefix { get; set; } = string.Empty;
 
-    [Required]
     public new Guid UserId { get; set; }
 
-    [Required]
     public new Guid GroupId { get; set; }
 
     public DateTime? ExpiresAt { get; set; }
