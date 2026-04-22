@@ -18,9 +18,9 @@ public class ImmichService : IImmichService
     private const string PeopleAllCacheKey = "immich:people:all";
 
     private readonly HttpClient _httpClient;
-    private readonly IConfiguration _configuration;
     private readonly IMemoryCache _cache;
     private readonly ILogger<ImmichService> _logger;
+    private readonly bool _isConfigEnabled;
 
     private static readonly JsonSerializerOptions JsonOptions = new()
     {
@@ -55,24 +55,12 @@ public class ImmichService : IImmichService
         ILogger<ImmichService> logger)
     {
         _httpClient = httpClient;
-        _configuration = configuration;
         _cache = cache;
         _logger = logger;
+        _isConfigEnabled = bool.TryParse(configuration.GetSection(ConfigSection)["Enabled"], out bool enabled) && enabled;
     }
 
-    public bool IsEnabled
-    {
-        get
-        {
-            if (_httpClient.BaseAddress is null)
-            {
-                return false;
-            }
-
-            IConfigurationSection cfg = _configuration.GetSection(ConfigSection);
-            return bool.TryParse(cfg["Enabled"], out bool enabled) && enabled;
-        }
-    }
+    public bool IsEnabled => _isConfigEnabled && _httpClient.BaseAddress is not null;
 
     public string? WebBaseUrl
     {

@@ -267,28 +267,7 @@ public class VCardService : IVCardService
         (byte[]? photoBytes, string? mediaType) = await TryGetPhotoAsync(vc, _httpClient != null, cancellationToken);
         if (photoBytes != null && photoBytes.Length > 0)
         {
-            string extension = ".jpg";
-            string contentType = "image/jpeg";
-
-            // Refine using MediaType if available
-            if (!string.IsNullOrEmpty(mediaType))
-            {
-                if (mediaType.Contains("png", StringComparison.OrdinalIgnoreCase))
-                {
-                    extension = ".png";
-                    contentType = "image/png";
-                }
-                else if (mediaType.Contains("gif", StringComparison.OrdinalIgnoreCase))
-                {
-                    extension = ".gif";
-                    contentType = "image/gif";
-                }
-                else if (mediaType.Contains("jpeg", StringComparison.OrdinalIgnoreCase) || mediaType.Contains("jpg", StringComparison.OrdinalIgnoreCase))
-                {
-                    extension = ".jpg";
-                    contentType = "image/jpeg";
-                }
-            }
+            (string extension, string contentType) = ResolvePhotoType(mediaType);
 
             Attachment attachment = new()
             {
@@ -311,6 +290,22 @@ public class VCardService : IVCardService
         }
 
         return contact;
+    }
+
+    private static (string Extension, string ContentType) ResolvePhotoType(string? mediaType)
+    {
+        if (!string.IsNullOrEmpty(mediaType))
+        {
+            if (mediaType.Contains("png", StringComparison.OrdinalIgnoreCase))
+            {
+                return (".png", "image/png");
+            }
+            if (mediaType.Contains("gif", StringComparison.OrdinalIgnoreCase))
+            {
+                return (".gif", "image/gif");
+            }
+        }
+        return (".jpg", "image/jpeg");
     }
 
     private async Task<(byte[]? Content, string? MediaType)> TryGetPhotoAsync(VCard vc, bool resolveUrls, CancellationToken cancellationToken)
@@ -453,17 +448,21 @@ public class VCardService : IVCardService
 
         if (contact.ContactMethods != null)
         {
-            foreach (ContactMethod? cm in contact.ContactMethods.Where(m => m.Type == ContactMethodType.Email && !string.IsNullOrEmpty(m.Value)))
+            foreach (ContactMethod cm in contact.ContactMethods)
             {
-                builder.EMails.Add(cm.Value);
-            }
-        }
+                if (string.IsNullOrEmpty(cm.Value))
+                {
+                    continue;
+                }
 
-        if (contact.ContactMethods != null)
-        {
-            foreach (ContactMethod? cm in contact.ContactMethods.Where(m => m.Type == ContactMethodType.Phone && !string.IsNullOrEmpty(m.Value)))
-            {
-                builder.Phones.Add(cm.Value);
+                if (cm.Type == ContactMethodType.Email)
+                {
+                    builder.EMails.Add(cm.Value);
+                }
+                else if (cm.Type == ContactMethodType.Phone)
+                {
+                    builder.Phones.Add(cm.Value);
+                }
             }
         }
 

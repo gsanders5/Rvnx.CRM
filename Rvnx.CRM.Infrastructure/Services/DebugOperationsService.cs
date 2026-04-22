@@ -1,10 +1,12 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.Extensions.Logging;
 using Rvnx.CRM.Core.DTOs.DebugOperations;
 using Rvnx.CRM.Core.Interfaces;
 using Rvnx.CRM.Core.Models;
 using Rvnx.CRM.Core.Models.Base;
 using Rvnx.CRM.Infrastructure.Data;
+using System.Reflection;
 
 namespace Rvnx.CRM.Infrastructure.Services;
 
@@ -32,28 +34,12 @@ public class DebugOperationsService(
                 .ThenInclude(g => g!.Members)
             .ToListAsync();
 
-        return users.Select(u =>
+        return users.Select(u => new MergeUserDto
         {
-            string groupName = "No Group";
-            int memberCount = 0;
-
-            // Explicit null check for Group to avoid CS8602
-            if (u.Group != null)
-            {
-                groupName = u.Group.Name;
-                if (u.Group.Members != null)
-                {
-                    memberCount = u.Group.Members.Count;
-                }
-            }
-
-            return new MergeUserDto
-            {
-                Id = u.Id,
-                Name = u.DisplayName ?? u.Email ?? "Unknown User",
-                GroupName = groupName,
-                GroupMemberCount = memberCount
-            };
+            Id = u.Id,
+            Name = u.DisplayName ?? u.Email ?? "Unknown User",
+            GroupName = u.Group?.Name ?? "No Group",
+            GroupMemberCount = u.Group?.Members?.Count ?? 0
         }).ToList();
     }
 
@@ -92,43 +78,27 @@ public class DebugOperationsService(
             return new MergeAccountsResult { Success = false, Message = "Users are already in the same group." };
         }
 
-        UserGroup g1 = group1!;
-        UserGroup g2 = group2!;
+        int count1 = group1.Members?.Count ?? 0;
+        int count2 = group2.Members?.Count ?? 0;
 
-        int count1 = 0;
-        // Suppress nullable warning as we checked for nulls above, but static analysis might not infer deep prop
-        if (g1.Members != null)
-        {
-            count1 = g1.Members.Count;
-        }
-
-        int count2 = 0;
-        if (g2.Members != null)
-        {
-            count2 = g2.Members.Count;
-        }
-
-        UserGroup keptGroup = count1 >= count2 ? g1 : g2;
-        UserGroup discardedGroup = keptGroup.Id == g1.Id ? g2 : g1;
+        UserGroup keptGroup = count1 >= count2 ? group1 : group2;
+        UserGroup discardedGroup = keptGroup.Id == group1.Id ? group2 : group1;
 
         Guid keptGroupId = keptGroup.Id;
         Guid discardedGroupId = discardedGroup.Id;
 
-        IEnumerable<Microsoft.EntityFrameworkCore.Metadata.IEntityType> entityTypes = _context.Model.GetEntityTypes()
+        IEnumerable<IEntityType> entityTypes = _context.Model.GetEntityTypes()
             .Where(e => typeof(BaseEntity).IsAssignableFrom(e.ClrType) && !typeof(IGlobalEntity).IsAssignableFrom(e.ClrType));
 
-        foreach (Microsoft.EntityFrameworkCore.Metadata.IEntityType? entityType in entityTypes)
+        foreach (IEntityType entityType in entityTypes)
         {
-            if (entityType.ClrType != null)
-            {
-                System.Reflection.MethodInfo? method = typeof(DebugOperationsService)
-                    .GetMethod(nameof(UpdateGroupIdsDb), System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)
-                    ?.MakeGenericMethod(entityType.ClrType);
+            MethodInfo? method = typeof(DebugOperationsService)
+                .GetMethod(nameof(UpdateGroupIdsDb), BindingFlags.NonPublic | BindingFlags.Instance)
+                ?.MakeGenericMethod(entityType.ClrType);
 
-                if (method != null)
-                {
-                    await (Task)method.Invoke(this, [keptGroupId, discardedGroupId])!;
-                }
+            if (method != null)
+            {
+                await (Task)method.Invoke(this, [keptGroupId, discardedGroupId])!;
             }
         }
 

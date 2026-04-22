@@ -1,4 +1,6 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
+using Microsoft.EntityFrameworkCore.Metadata;
 using Rvnx.CRM.Core.Interfaces;
 using Rvnx.CRM.Core.Models;
 using Rvnx.CRM.Core.Models.Activity;
@@ -212,10 +214,10 @@ public class CRMDbContext(DbContextOptions<CRMDbContext> options, ICurrentUserSe
             .HasIndex(e => e.ContactId)
             .IsUnique();
 
-        IEnumerable<Microsoft.EntityFrameworkCore.Metadata.IMutableEntityType> entityTypes = modelBuilder.Model.GetEntityTypes()
+        IEnumerable<IMutableEntityType> entityTypes = modelBuilder.Model.GetEntityTypes()
             .Where(e => typeof(BaseEntity).IsAssignableFrom(e.ClrType));
 
-        foreach (Microsoft.EntityFrameworkCore.Metadata.IMutableEntityType? entityType in entityTypes)
+        foreach (IMutableEntityType entityType in entityTypes)
         {
             modelBuilder.Entity(entityType.Name).HasIndex(nameof(BaseEntity.UserId));
             modelBuilder.Entity(entityType.Name).HasIndex(nameof(BaseEntity.GroupId));
@@ -226,7 +228,7 @@ public class CRMDbContext(DbContextOptions<CRMDbContext> options, ICurrentUserSe
                     .GetMethod(nameof(ConfigureGlobalFilter), BindingFlags.NonPublic | BindingFlags.Instance)
                     ?.MakeGenericMethod(entityType.ClrType);
 
-                method?.Invoke(this, new object[] { modelBuilder });
+                method?.Invoke(this, [modelBuilder]);
             }
         }
     }
@@ -250,33 +252,24 @@ public class CRMDbContext(DbContextOptions<CRMDbContext> options, ICurrentUserSe
 
     private void UpdateAuditFields()
     {
-        IEnumerable<Microsoft.EntityFrameworkCore.ChangeTracking.EntityEntry<BaseEntity>> entries = ChangeTracker.Entries<BaseEntity>()
+        IEnumerable<EntityEntry<BaseEntity>> entries = ChangeTracker.Entries<BaseEntity>()
             .Where(e => e.State is EntityState.Added or EntityState.Modified);
 
-        string username = GetUsername();
-        Guid? userId = GetUserId();
-        Guid? groupId = GetGroupId();
+        string username = _currentUserService.UserName ?? "System";
+        Guid? userId = _currentUserService.UserId;
+        Guid? groupId = _currentUserService.GroupId;
+        DateTime now = DateTime.UtcNow;
 
-        foreach (Microsoft.EntityFrameworkCore.ChangeTracking.EntityEntry<BaseEntity>? entry in entries)
+        foreach (EntityEntry<BaseEntity> entry in entries)
         {
-            DateTime now = DateTime.UtcNow;
-
             if (entry.State == EntityState.Added)
             {
                 entry.Entity.CreatedDate = now;
                 entry.Entity.LastChangedDate = now;
                 entry.Entity.CreatedBy = username;
                 entry.Entity.LastChangedBy = username;
-
-                if (entry.Entity.UserId == null)
-                {
-                    entry.Entity.UserId = userId;
-                }
-
-                if (entry.Entity.GroupId == null)
-                {
-                    entry.Entity.GroupId = groupId;
-                }
+                entry.Entity.UserId ??= userId;
+                entry.Entity.GroupId ??= groupId;
             }
             else if (entry.State == EntityState.Modified)
             {
@@ -286,20 +279,5 @@ public class CRMDbContext(DbContextOptions<CRMDbContext> options, ICurrentUserSe
                 entry.Property(nameof(BaseEntity.CreatedBy)).IsModified = false;
             }
         }
-    }
-
-    private string GetUsername()
-    {
-        return _currentUserService.UserName ?? "System";
-    }
-
-    private Guid? GetUserId()
-    {
-        return _currentUserService.UserId;
-    }
-
-    private Guid? GetGroupId()
-    {
-        return _currentUserService.GroupId;
     }
 }
