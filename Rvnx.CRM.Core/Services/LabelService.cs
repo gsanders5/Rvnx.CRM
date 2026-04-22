@@ -24,9 +24,6 @@ public class LabelService(IRepository repository) : ILabelService
         return label == null ? null : new LabelDto { Id = label.Id, Name = label.Name, Color = label.Color };
     }
 
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "CA1862:Prefer using 'string.Equals(string, StringComparison)' to perform a case-insensitive comparison", Justification = "EF Core SQLite translation requires parameterless .ToLower() for case-insensitive comparisons.")]
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("Globalization", "CA1304:Specify CultureInfo", Justification = "EF Core SQLite translation requires parameterless .ToLower() for case-insensitive comparisons.")]
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("Globalization", "CA1311:Specify a culture or use an invariant version", Justification = "EF Core SQLite translation requires parameterless .ToLower() for case-insensitive comparisons.")]
     public async Task<LabelOperationResult> CreateAsync(string name, string? color)
     {
         if (string.IsNullOrWhiteSpace(name))
@@ -34,10 +31,7 @@ public class LabelService(IRepository repository) : ILabelService
             return LabelOperationResult.Failure("Label name cannot be empty.");
         }
 
-        string testName = name.ToLower();
-        List<Label> candidates =
-            await _repository.ListAsNoTrackingAsync<Label>(l => l.Name.ToLower() == testName) ?? [];
-        if (candidates.Any(e => e.Name.Equals(name, StringComparison.OrdinalIgnoreCase)))
+        if (await NameConflictExistsAsync(name, excludeId: null))
         {
             return LabelOperationResult.Failure($"A label with the name '{name}' already exists.");
         }
@@ -50,9 +44,6 @@ public class LabelService(IRepository repository) : ILabelService
         return LabelOperationResult.Ok(label.Id);
     }
 
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "CA1862:Prefer using 'string.Equals(string, StringComparison)' to perform a case-insensitive comparison", Justification = "EF Core SQLite translation requires parameterless .ToLower() for case-insensitive comparisons.")]
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("Globalization", "CA1304:Specify CultureInfo", Justification = "EF Core SQLite translation requires parameterless .ToLower() for case-insensitive comparisons.")]
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("Globalization", "CA1311:Specify a culture or use an invariant version", Justification = "EF Core SQLite translation requires parameterless .ToLower() for case-insensitive comparisons.")]
     public async Task<LabelOperationResult> UpdateAsync(Guid id, string name, string? color)
     {
         if (string.IsNullOrWhiteSpace(name))
@@ -66,10 +57,7 @@ public class LabelService(IRepository repository) : ILabelService
             return LabelOperationResult.NotFound();
         }
 
-        string testName = name.ToLower();
-        List<Label> candidates =
-            await _repository.ListAsNoTrackingAsync<Label>(l => l.Id != id && l.Name.ToLower() == testName) ?? [];
-        if (candidates.Any(e => e.Name.Equals(name, StringComparison.OrdinalIgnoreCase)))
+        if (await NameConflictExistsAsync(name, excludeId: id))
         {
             return LabelOperationResult.Failure($"A label with the name '{name}' already exists.");
         }
@@ -81,6 +69,17 @@ public class LabelService(IRepository repository) : ILabelService
         await _repository.SaveChangesAsync();
 
         return LabelOperationResult.Ok(label.Id);
+    }
+
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "CA1862:Prefer using 'string.Equals(string, StringComparison)' to perform a case-insensitive comparison", Justification = "EF Core SQLite translation requires parameterless .ToLower() for case-insensitive comparisons.")]
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Globalization", "CA1304:Specify CultureInfo", Justification = "EF Core SQLite translation requires parameterless .ToLower() for case-insensitive comparisons.")]
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Globalization", "CA1311:Specify a culture or use an invariant version", Justification = "EF Core SQLite translation requires parameterless .ToLower() for case-insensitive comparisons.")]
+    private async Task<bool> NameConflictExistsAsync(string name, Guid? excludeId)
+    {
+        string testName = name.ToLower();
+        List<Label> candidates = await _repository.ListAsNoTrackingAsync<Label>(
+            l => (excludeId == null || l.Id != excludeId) && l.Name.ToLower() == testName) ?? [];
+        return candidates.Any(e => e.Name.Equals(name, StringComparison.OrdinalIgnoreCase));
     }
 
     public async Task DeleteAsync(Guid id)

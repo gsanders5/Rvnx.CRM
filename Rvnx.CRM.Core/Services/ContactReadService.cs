@@ -64,9 +64,9 @@ public class ContactReadService(IRepository repository, IFavoriteService favorit
                 attachmentMap.TryAdd(ContactId, AttachmentId);
             }
 
-            foreach (ContactDto? dto in contactDtos)
+            foreach (ContactDto dto in contactDtos)
             {
-                if (dto != null && attachmentMap.TryGetValue(dto.Id, out Guid attachmentId))
+                if (attachmentMap.TryGetValue(dto.Id, out Guid attachmentId))
                 {
                     dto.ProfileImageId = attachmentId;
                 }
@@ -85,23 +85,23 @@ public class ContactReadService(IRepository repository, IFavoriteService favorit
         // Optimization: Use Dictionary with capacity and foreach loop instead of GroupBy().ToDictionary(...)
         // to avoid allocations of IGrouping structures and redundant list iterations.
         Dictionary<Guid, List<LabelDto>> labelsByContact = new(allContactLabels.Count);
-        foreach ((Guid ContactId, Guid LabelId, string Name, string Color) in allContactLabels)
+        foreach ((Guid contactId, Guid labelId, string labelName, string? color) in allContactLabels)
         {
-            if (!labelsByContact.TryGetValue(ContactId, out List<LabelDto>? labelsList))
+            if (!labelsByContact.TryGetValue(contactId, out List<LabelDto>? labelsList))
             {
                 labelsList = [];
-                labelsByContact.TryAdd(ContactId, labelsList);
+                labelsByContact.TryAdd(contactId, labelsList);
             }
-            labelsList.Add(new LabelDto { Id = LabelId, Name = Name, Color = Color });
+            labelsList.Add(new LabelDto { Id = labelId, Name = labelName, Color = color });
         }
         foreach (List<LabelDto> list in labelsByContact.Values)
         {
             list.Sort((a, b) => string.Compare(a.Name, b.Name, StringComparison.Ordinal));
         }
 
-        foreach (ContactDto? dto in contactDtos)
+        foreach (ContactDto dto in contactDtos)
         {
-            if (dto != null && labelsByContact.TryGetValue(dto.Id, out List<LabelDto>? labels))
+            if (labelsByContact.TryGetValue(dto.Id, out List<LabelDto>? labels))
             {
                 dto.Labels = labels;
             }
@@ -127,9 +127,9 @@ public class ContactReadService(IRepository repository, IFavoriteService favorit
                 birthdayMap.TryAdd(ContactId, EventDate);
             }
 
-            foreach (ContactDto? dto in contactDtos)
+            foreach (ContactDto dto in contactDtos)
             {
-                if (dto != null && birthdayMap.TryGetValue(dto.Id, out DateOnly bday))
+                if (birthdayMap.TryGetValue(dto.Id, out DateOnly bday))
                 {
                     dto.Birthday = bday.ToDateTime(TimeOnly.MinValue);
                 }
@@ -139,12 +139,9 @@ public class ContactReadService(IRepository repository, IFavoriteService favorit
         HashSet<Guid> favoriteIds = await _favoriteService.GetFavoriteContactIdsAsync();
         if (favoriteIds.Count > 0)
         {
-            foreach (ContactDto? dto in contactDtos)
+            foreach (ContactDto dto in contactDtos)
             {
-                if (dto != null)
-                {
-                    dto.IsFavorite = favoriteIds.Contains(dto.Id);
-                }
+                dto.IsFavorite = favoriteIds.Contains(dto.Id);
             }
         }
 
