@@ -41,7 +41,8 @@ public class CalendarFeedServiceTests
 
         string ics = _service.BuildIcsFeed(dateEvents, taskEvents);
 
-        IcalCalendar parsed = IcalCalendar.Load(ics);
+        IcalCalendar? parsed = IcalCalendar.Load(ics);
+        Assert.NotNull(parsed);
         Assert.Equal(2, parsed.Events.Count);
         Assert.Contains(parsed.Events, e => e.Summary == "Alice's Birthday");
         Assert.Contains(parsed.Events, e => e.Summary == "Bob: Follow up");
@@ -77,11 +78,13 @@ public class CalendarFeedServiceTests
         string firstIcs = _service.BuildIcsFeed(dateEvents, taskEvents);
         string secondIcs = _service.BuildIcsFeed(dateEvents, taskEvents);
 
-        IcalCalendar firstParsed = IcalCalendar.Load(firstIcs);
-        IcalCalendar secondParsed = IcalCalendar.Load(secondIcs);
+        IcalCalendar? firstParsed = IcalCalendar.Load(firstIcs);
+        IcalCalendar? secondParsed = IcalCalendar.Load(secondIcs);
+        Assert.NotNull(firstParsed);
+        Assert.NotNull(secondParsed);
 
-        string[] firstUids = firstParsed.Events.Select(e => e.Uid).OrderBy(u => u).ToArray();
-        string[] secondUids = secondParsed.Events.Select(e => e.Uid).OrderBy(u => u).ToArray();
+        string[] firstUids = firstParsed.Events.Select(e => e.Uid!).OrderBy(u => u).ToArray();
+        string[] secondUids = secondParsed.Events.Select(e => e.Uid!).OrderBy(u => u).ToArray();
 
         Assert.Equal(firstUids, secondUids);
         Assert.Contains(firstUids, u => u.StartsWith("date-", StringComparison.Ordinal) && u.EndsWith("@rvnx-crm", StringComparison.Ordinal));
@@ -100,10 +103,11 @@ public class CalendarFeedServiceTests
         ];
 
         string ics = _service.BuildIcsFeed(Array.Empty<CalendarEventDto>(), taskEvents);
-        IcalCalendar parsed = IcalCalendar.Load(ics);
+        IcalCalendar? parsed = IcalCalendar.Load(ics);
+        Assert.NotNull(parsed);
 
         Assert.Equal(2, parsed.Events.Count);
-        string[] uids = parsed.Events.Select(e => e.Uid).Distinct().ToArray();
+        string[] uids = parsed.Events.Select(e => e.Uid!).Distinct().ToArray();
         Assert.Equal(2, uids.Length);
     }
 
@@ -127,7 +131,8 @@ public class CalendarFeedServiceTests
         ];
 
         string ics = _service.BuildIcsFeed(dateEvents, Array.Empty<CalendarEventDto>());
-        IcalCalendar parsed = IcalCalendar.Load(ics);
+        IcalCalendar? parsed = IcalCalendar.Load(ics);
+        Assert.NotNull(parsed);
 
         Assert.Single(parsed.Events);
         Assert.Equal("Valid", parsed.Events.First().Summary);

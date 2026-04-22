@@ -34,7 +34,7 @@ public class CalendarFeedService : ICalendarFeedService
             AddEvent(calendar, dto, TaskEventType, stamp);
         }
 
-        return new CalendarSerializer().SerializeToString(calendar);
+        return new CalendarSerializer().SerializeToString(calendar) ?? string.Empty;
     }
 
     private static void AddEvent(IcalCalendar calendar, CalendarEventDto dto, string eventType, DateTime stamp)
@@ -49,12 +49,13 @@ public class CalendarFeedService : ICalendarFeedService
         string titleHash = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(dto.Title ?? string.Empty)))[..8];
         string uid = $"{eventType}-{dto.ContactId:N}-{startDate:yyyyMMdd}-{titleHash}@rvnx-crm";
 
+        // Ical.Net 5.x: a CalDateTime built from date-only components (no time) makes the
+        // event all-day; IsAllDay is now derived and no longer directly assignable.
         CalendarEvent calendarEvent = new()
         {
             Uid = uid,
             Summary = dto.Title,
             Start = new CalDateTime(startDate.Year, startDate.Month, startDate.Day),
-            IsAllDay = true,
             DtStamp = new CalDateTime(stamp, "UTC"),
         };
 
