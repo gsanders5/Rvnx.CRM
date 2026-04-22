@@ -1,13 +1,11 @@
-using Microsoft.EntityFrameworkCore;
-using Moq;
 using Rvnx.CRM.Core.Constants;
 using Rvnx.CRM.Core.DTOs.Calendar;
-using Rvnx.CRM.Core.Interfaces;
 using Rvnx.CRM.Core.Models.Contact;
 using Rvnx.CRM.Core.Models.Dates;
 using Rvnx.CRM.Infrastructure.Data;
 using Rvnx.CRM.Infrastructure.Repositories;
 using Rvnx.CRM.Infrastructure.Services;
+using Rvnx.CRM.Tests.Helpers;
 
 namespace Rvnx.CRM.Tests.Services;
 
@@ -19,15 +17,7 @@ public class SignificantDateServiceTests : IDisposable
 
     public SignificantDateServiceTests()
     {
-        DbContextOptions<CRMDbContext> options = new DbContextOptionsBuilder<CRMDbContext>()
-            .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
-            .Options;
-
-        Mock<ICurrentUserService> mockCurrentUserService = new();
-        mockCurrentUserService.Setup(s => s.UserId).Returns(Guid.NewGuid());
-        mockCurrentUserService.Setup(s => s.UserName).Returns("test-user");
-
-        _context = new CRMDbContext(options, mockCurrentUserService.Object);
+        _context = TestDbContextFactory.Create(Guid.NewGuid(), "test-user", null, out _);
         _repository = new Repository(_context);
         _service = new SignificantDateService(_repository);
     }

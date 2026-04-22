@@ -10,6 +10,7 @@ using Rvnx.CRM.Core.Models.Contact;
 using Rvnx.CRM.Infrastructure.Data;
 using Rvnx.CRM.Infrastructure.Repositories;
 using Rvnx.CRM.Infrastructure.Services;
+using Rvnx.CRM.Tests.Helpers;
 using Rvnx.CRM.Web.Controllers;
 
 namespace Rvnx.CRM.Tests.Controllers;
@@ -17,19 +18,11 @@ namespace Rvnx.CRM.Tests.Controllers;
 public class ContactMethodsControllerTests : IDisposable
 {
     private readonly CRMDbContext _context;
-    private readonly Mock<ICurrentUserService> _userMock = new();
     private readonly ContactMethodsController _controller;
 
     public ContactMethodsControllerTests()
     {
-        DbContextOptions<CRMDbContext> options = new DbContextOptionsBuilder<CRMDbContext>()
-            .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
-            .Options;
-
-        _userMock.Setup(s => s.UserId).Returns(Guid.Parse("c5b50a20-34b2-44b2-8b9c-aa4135f60938"));
-        _userMock.Setup(s => s.UserName).Returns("test-user");
-
-        _context = new CRMDbContext(options, _userMock.Object);
+        _context = TestDbContextFactory.CreateForDefaultUser();
         Repository repository = new(_context);
         IContactMethodService contactMethodService = new ContactMethodService(repository);
 

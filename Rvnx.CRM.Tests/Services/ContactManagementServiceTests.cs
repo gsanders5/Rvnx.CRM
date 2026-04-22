@@ -13,18 +13,26 @@ namespace Rvnx.CRM.Tests.Services;
 
 public class ContactManagementServiceTests
 {
-    public class ContactManagementServiceDeleteTests
+    /// <summary>
+    /// Shared scaffolding for nested test classes — constructs a <see cref="ContactManagementService"/>
+    /// backed by Moq'd dependencies.
+    /// </summary>
+    public abstract class ContactManagementServiceTestBase
     {
-        private readonly Mock<IRepository> _repositoryMock;
-        private readonly Mock<IFileValidationService> _fileValidationServiceMock;
-        private readonly ContactManagementService _service;
+        protected Mock<IRepository> RepositoryMock { get; }
+        protected Mock<IFileValidationService> FileValidationServiceMock { get; }
+        protected ContactManagementService Service { get; }
 
-        public ContactManagementServiceDeleteTests()
+        protected ContactManagementServiceTestBase()
         {
-            _repositoryMock = new Mock<IRepository>();
-            _fileValidationServiceMock = new Mock<IFileValidationService>();
-            _service = new ContactManagementService(_repositoryMock.Object, _fileValidationServiceMock.Object);
+            RepositoryMock = new Mock<IRepository>();
+            FileValidationServiceMock = new Mock<IFileValidationService>();
+            Service = new ContactManagementService(RepositoryMock.Object, FileValidationServiceMock.Object);
         }
+    }
+
+    public class ContactManagementServiceDeleteTests : ContactManagementServiceTestBase
+    {
 
         [Fact]
         public async Task DeleteContactAsyncShouldNotUpdateUsersInLoop()
@@ -37,40 +45,32 @@ public class ContactManagementServiceTests
                 new Rvnx.CRM.Core.Models.User { Id = Guid.NewGuid(), SelfContactId = contactId }
             ];
 
-            _repositoryMock.Setup(r => r.ListAsync(It.IsAny<Expression<Func<Rvnx.CRM.Core.Models.User, bool>>>(), It.IsAny<CancellationToken>()))
+            RepositoryMock.Setup(r => r.ListAsync(It.IsAny<Expression<Func<Rvnx.CRM.Core.Models.User, bool>>>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(users);
 
-            _repositoryMock.Setup(r => r.ListAsync(It.IsAny<Expression<Func<Relationship, bool>>>(), It.IsAny<CancellationToken>()))
+            RepositoryMock.Setup(r => r.ListAsync(It.IsAny<Expression<Func<Relationship, bool>>>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync([]);
 
-            _repositoryMock.Setup(r => r.ListAsync<Pet>(It.IsAny<Expression<Func<Pet, bool>>>(), It.IsAny<CancellationToken>())).ReturnsAsync([]);
-            _repositoryMock.Setup(r => r.ListAsync<Fact>(It.IsAny<Expression<Func<Fact, bool>>>(), It.IsAny<CancellationToken>())).ReturnsAsync([]);
-            _repositoryMock.Setup(r => r.ListAsync<Note>(It.IsAny<Expression<Func<Note, bool>>>(), It.IsAny<CancellationToken>())).ReturnsAsync([]);
+            RepositoryMock.Setup(r => r.ListAsync<Pet>(It.IsAny<Expression<Func<Pet, bool>>>(), It.IsAny<CancellationToken>())).ReturnsAsync([]);
+            RepositoryMock.Setup(r => r.ListAsync<Fact>(It.IsAny<Expression<Func<Fact, bool>>>(), It.IsAny<CancellationToken>())).ReturnsAsync([]);
+            RepositoryMock.Setup(r => r.ListAsync<Note>(It.IsAny<Expression<Func<Note, bool>>>(), It.IsAny<CancellationToken>())).ReturnsAsync([]);
 
-            await _service.DeleteContactAsync(contactId);
+            await Service.DeleteContactAsync(contactId);
 
-            _repositoryMock.Verify(r => r.UpdateAsync(It.IsAny<Rvnx.CRM.Core.Models.User>(), It.IsAny<CancellationToken>()), Times.Never);
-            _repositoryMock.Verify(r => r.UpdateRangeAsync(It.IsAny<IEnumerable<Rvnx.CRM.Core.Models.User>>(), It.IsAny<CancellationToken>()), Times.Once);
+            RepositoryMock.Verify(r => r.UpdateAsync(It.IsAny<Rvnx.CRM.Core.Models.User>(), It.IsAny<CancellationToken>()), Times.Never);
+            RepositoryMock.Verify(r => r.UpdateRangeAsync(It.IsAny<IEnumerable<Rvnx.CRM.Core.Models.User>>(), It.IsAny<CancellationToken>()), Times.Once);
         }
     }
 
-    public class ImageTests
+    public class ImageTests : ContactManagementServiceTestBase
     {
-
-        private readonly Mock<IRepository> _repositoryMock;
-        private readonly Mock<IFileValidationService> _fileValidationServiceMock;
-        private readonly ContactManagementService _service;
         private readonly List<Attachment> _attachments = [];
         private readonly List<ContactMethod> _contactMethods = [];
         private readonly List<SignificantDate> _significantDates = [];
 
         public ImageTests()
         {
-            _repositoryMock = new Mock<IRepository>();
-            _fileValidationServiceMock = new Mock<IFileValidationService>();
-            _service = new ContactManagementService(_repositoryMock.Object, _fileValidationServiceMock.Object);
-
-            _repositoryMock.Setup(r => r.ListAsync<Attachment>(
+            RepositoryMock.Setup(r => r.ListAsync<Attachment>(
                 It.IsAny<Expression<Func<Attachment, bool>>>(),
                 It.IsAny<CancellationToken>()))
                 .ReturnsAsync((Expression<Func<Attachment, bool>> predicate, CancellationToken ct) =>
@@ -78,7 +78,7 @@ public class ContactManagementServiceTests
                     return _attachments.AsQueryable().Where(predicate).ToList();
                 });
 
-            _repositoryMock.Setup(r => r.ListAsync<ContactMethod>(
+            RepositoryMock.Setup(r => r.ListAsync<ContactMethod>(
                 It.IsAny<Expression<Func<ContactMethod, bool>>>(),
                 It.IsAny<CancellationToken>()))
                 .ReturnsAsync((Expression<Func<ContactMethod, bool>> predicate, CancellationToken ct) =>
@@ -86,7 +86,7 @@ public class ContactManagementServiceTests
                     return _contactMethods.AsQueryable().Where(predicate).ToList();
                 });
 
-            _repositoryMock.Setup(r => r.ListAsync<SignificantDate>(
+            RepositoryMock.Setup(r => r.ListAsync<SignificantDate>(
                 It.IsAny<Expression<Func<SignificantDate, bool>>>(),
                 It.IsAny<CancellationToken>()))
                 .ReturnsAsync((Expression<Func<SignificantDate, bool>> predicate, CancellationToken ct) =>
@@ -105,12 +105,12 @@ public class ContactManagementServiceTests
             _attachments.Add(existingAttachment1);
             _attachments.Add(existingAttachment2);
 
-            ContactOperationResult result = await _service.UnsetProfilePhotoAsync(contactId);
+            ContactOperationResult result = await Service.UnsetProfilePhotoAsync(contactId);
 
             Assert.True(result.Success);
-            _repositoryMock.Verify(r => r.UpdateRangeAsync(It.Is<IEnumerable<Attachment>>(list => list.Count() == 2), It.IsAny<CancellationToken>()), Times.Once());
-            _repositoryMock.Verify(r => r.UpdateAsync(It.IsAny<Attachment>(), It.IsAny<CancellationToken>()), Times.Never());
-            _repositoryMock.Verify(r => r.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once());
+            RepositoryMock.Verify(r => r.UpdateRangeAsync(It.Is<IEnumerable<Attachment>>(list => list.Count() == 2), It.IsAny<CancellationToken>()), Times.Once());
+            RepositoryMock.Verify(r => r.UpdateAsync(It.IsAny<Attachment>(), It.IsAny<CancellationToken>()), Times.Never());
+            RepositoryMock.Verify(r => r.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once());
         }
 
         [Fact]
@@ -119,7 +119,7 @@ public class ContactManagementServiceTests
             Guid contactId = Guid.NewGuid();
             Guid attachmentId = Guid.NewGuid();
 
-            ContactOperationResult result = await _service.SetAttachmentAsProfilePhotoAsync(contactId, attachmentId);
+            ContactOperationResult result = await Service.SetAttachmentAsProfilePhotoAsync(contactId, attachmentId);
 
             Assert.False(result.Success);
             Assert.True(result.IsNotFound);
@@ -133,9 +133,9 @@ public class ContactManagementServiceTests
             Guid attachmentId = Guid.NewGuid();
 
             Attachment attachment = new() { Id = attachmentId, ContactId = otherContactId, FileName = "test.png", ContentType = "image/png" };
-            _repositoryMock.Setup(r => r.GetByIdAsync<Attachment>(attachmentId, It.IsAny<CancellationToken>())).ReturnsAsync(attachment);
+            RepositoryMock.Setup(r => r.GetByIdAsync<Attachment>(attachmentId, It.IsAny<CancellationToken>())).ReturnsAsync(attachment);
 
-            ContactOperationResult result = await _service.SetAttachmentAsProfilePhotoAsync(contactId, attachmentId);
+            ContactOperationResult result = await Service.SetAttachmentAsProfilePhotoAsync(contactId, attachmentId);
 
             Assert.False(result.Success);
             Assert.True(result.IsNotFound);
@@ -148,11 +148,11 @@ public class ContactManagementServiceTests
             Guid attachmentId = Guid.NewGuid();
 
             Attachment attachment = new() { Id = attachmentId, ContactId = contactId, FileName = "test.txt", ContentType = "text/plain" };
-            _repositoryMock.Setup(r => r.GetByIdAsync<Attachment>(attachmentId, It.IsAny<CancellationToken>())).ReturnsAsync(attachment);
+            RepositoryMock.Setup(r => r.GetByIdAsync<Attachment>(attachmentId, It.IsAny<CancellationToken>())).ReturnsAsync(attachment);
 
-            _fileValidationServiceMock.Setup(f => f.IsImageExtension(It.IsAny<string>())).Returns(false);
+            FileValidationServiceMock.Setup(f => f.IsImageExtension(It.IsAny<string>())).Returns(false);
 
-            ContactOperationResult result = await _service.SetAttachmentAsProfilePhotoAsync(contactId, attachmentId);
+            ContactOperationResult result = await Service.SetAttachmentAsProfilePhotoAsync(contactId, attachmentId);
 
             Assert.False(result.Success);
             Assert.Contains("Attachment is not an image.", result.Errors);
@@ -168,21 +168,21 @@ public class ContactManagementServiceTests
             _attachments.Add(existingProfilePic);
 
             Attachment attachment = new() { Id = attachmentId, ContactId = contactId, FileName = "test.png", ContentType = "image/png", AttachmentType = AttachmentTypes.General };
-            _repositoryMock.Setup(r => r.GetByIdAsync<Attachment>(attachmentId, It.IsAny<CancellationToken>())).ReturnsAsync(attachment);
+            RepositoryMock.Setup(r => r.GetByIdAsync<Attachment>(attachmentId, It.IsAny<CancellationToken>())).ReturnsAsync(attachment);
 
-            _fileValidationServiceMock.Setup(f => f.IsImageExtension(".png")).Returns(true);
+            FileValidationServiceMock.Setup(f => f.IsImageExtension(".png")).Returns(true);
 
-            ContactOperationResult result = await _service.SetAttachmentAsProfilePhotoAsync(contactId, attachmentId);
+            ContactOperationResult result = await Service.SetAttachmentAsProfilePhotoAsync(contactId, attachmentId);
 
             Assert.True(result.Success);
             Assert.Equal(contactId, result.ContactId);
 
             Assert.Equal(AttachmentTypes.General, existingProfilePic.AttachmentType);
-            _repositoryMock.Verify(r => r.UpdateRangeAsync(It.Is<IEnumerable<Attachment>>(list => list.Contains(existingProfilePic)), It.IsAny<CancellationToken>()), Times.Once());
+            RepositoryMock.Verify(r => r.UpdateRangeAsync(It.Is<IEnumerable<Attachment>>(list => list.Contains(existingProfilePic)), It.IsAny<CancellationToken>()), Times.Once());
 
             Assert.Equal(AttachmentTypes.ProfileImage, attachment.AttachmentType);
-            _repositoryMock.Verify(r => r.UpdateAsync(attachment, It.IsAny<CancellationToken>()), Times.Once());
-            _repositoryMock.Verify(r => r.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once());
+            RepositoryMock.Verify(r => r.UpdateAsync(attachment, It.IsAny<CancellationToken>()), Times.Once());
+            RepositoryMock.Verify(r => r.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once());
         }
 
         [Fact]
@@ -191,11 +191,11 @@ public class ContactManagementServiceTests
             Guid contactId = Guid.NewGuid();
             Contact contact = new() { Id = contactId, FirstName = "Test", LastName = "User" };
 
-            _repositoryMock.Setup(r => r.GetByIdAsync<Contact>(contactId, It.IsAny<CancellationToken>()))
+            RepositoryMock.Setup(r => r.GetByIdAsync<Contact>(contactId, It.IsAny<CancellationToken>()))
                 .ReturnsAsync(contact);
 
-            _fileValidationServiceMock.Setup(f => f.IsImageExtension(It.IsAny<string>())).Returns(true);
-            _fileValidationServiceMock.Setup(f => f.IsValidImageSignature(It.IsAny<byte[]>(), It.IsAny<string>())).Returns(true);
+            FileValidationServiceMock.Setup(f => f.IsImageExtension(It.IsAny<string>())).Returns(true);
+            FileValidationServiceMock.Setup(f => f.IsValidImageSignature(It.IsAny<byte[]>(), It.IsAny<string>())).Returns(true);
 
             ContactFormDto dto = new() { Id = contactId, FirstName = "Test", LastName = "User" };
 
@@ -204,10 +204,10 @@ public class ContactManagementServiceTests
             byte[] fileContent = [1, 2, 3];
             using MemoryStream stream = new(fileContent);
 
-            ContactOperationResult result = await _service.UpdateContactAsync(contactId, dto, stream, fileName, contentType);
+            ContactOperationResult result = await Service.UpdateContactAsync(contactId, dto, stream, fileName, contentType);
 
             Assert.True(result.Success);
-            _repositoryMock.Verify(r => r.AddAsync(It.Is<Attachment>(a =>
+            RepositoryMock.Verify(r => r.AddAsync(It.Is<Attachment>(a =>
                 a.ContactId == contactId &&
                 a.AttachmentType == AttachmentTypes.ProfileImage &&
                 a.FileName == fileName &&
@@ -216,42 +216,30 @@ public class ContactManagementServiceTests
         }
 
     }
-    public class OptimizationTests
+    public class OptimizationTests : ContactManagementServiceTestBase
     {
-
-        private readonly Mock<IRepository> _repositoryMock;
-        private readonly Mock<IFileValidationService> _fileValidationServiceMock;
-        private readonly ContactManagementService _service;
-
         private int _relationshipListCalls;
-
-        public OptimizationTests()
-        {
-            _repositoryMock = new Mock<IRepository>();
-            _fileValidationServiceMock = new Mock<IFileValidationService>();
-            _service = new ContactManagementService(_repositoryMock.Object, _fileValidationServiceMock.Object);
-        }
 
         [Fact]
         public async Task DeleteContactAsyncShouldReduceRoundTrips()
         {
             Guid contactId = Guid.NewGuid();
 
-            _repositoryMock.Setup(r => r.ListAsync<Rvnx.CRM.Core.Models.User>(It.IsAny<Expression<Func<Rvnx.CRM.Core.Models.User, bool>>>(), It.IsAny<CancellationToken>()))
+            RepositoryMock.Setup(r => r.ListAsync<Rvnx.CRM.Core.Models.User>(It.IsAny<Expression<Func<Rvnx.CRM.Core.Models.User, bool>>>(), It.IsAny<CancellationToken>()))
                .ReturnsAsync([]);
 
-            _repositoryMock.Setup(r => r.ListAsync<Relationship>(It.IsAny<Expression<Func<Relationship, bool>>>(), It.IsAny<CancellationToken>()))
+            RepositoryMock.Setup(r => r.ListAsync<Relationship>(It.IsAny<Expression<Func<Relationship, bool>>>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync((Expression<Func<Relationship, bool>> predicate, CancellationToken ct) =>
                 {
                     _relationshipListCalls++;
                     return [];
                 });
 
-            _repositoryMock.Setup(r => r.ListAsync<Pet>(It.IsAny<Expression<Func<Pet, bool>>>(), It.IsAny<CancellationToken>())).ReturnsAsync([]);
-            _repositoryMock.Setup(r => r.ListAsync<Fact>(It.IsAny<Expression<Func<Fact, bool>>>(), It.IsAny<CancellationToken>())).ReturnsAsync([]);
-            _repositoryMock.Setup(r => r.ListAsync<Note>(It.IsAny<Expression<Func<Note, bool>>>(), It.IsAny<CancellationToken>())).ReturnsAsync([]);
+            RepositoryMock.Setup(r => r.ListAsync<Pet>(It.IsAny<Expression<Func<Pet, bool>>>(), It.IsAny<CancellationToken>())).ReturnsAsync([]);
+            RepositoryMock.Setup(r => r.ListAsync<Fact>(It.IsAny<Expression<Func<Fact, bool>>>(), It.IsAny<CancellationToken>())).ReturnsAsync([]);
+            RepositoryMock.Setup(r => r.ListAsync<Note>(It.IsAny<Expression<Func<Note, bool>>>(), It.IsAny<CancellationToken>())).ReturnsAsync([]);
 
-            await _service.DeleteContactAsync(contactId);
+            await Service.DeleteContactAsync(contactId);
 
             // 1. Initial Relationship fetch -> ListAsync (1 call)
             // 2. DeleteRelatedEntitiesAsync<Relationship> -> DeleteAsync(predicate) (NO ListAsync)
@@ -259,26 +247,14 @@ public class ContactManagementServiceTests
 
             Assert.Equal(1, _relationshipListCalls);
 
-            _repositoryMock.Verify(r => r.DeleteAsync(It.IsAny<Expression<Func<Relationship, bool>>>(), It.IsAny<CancellationToken>()), Times.Exactly(2));
+            RepositoryMock.Verify(r => r.DeleteAsync(It.IsAny<Expression<Func<Relationship, bool>>>(), It.IsAny<CancellationToken>()), Times.Exactly(2));
         }
 
     }
-    public class PerformanceTests
+    public class PerformanceTests : ContactManagementServiceTestBase
     {
-
-        private readonly Mock<IRepository> _repositoryMock;
-        private readonly Mock<IFileValidationService> _fileValidationServiceMock;
-        private readonly ContactManagementService _service;
-
         private int _relationshipListCalls;
         private int _contactListCalls;
-
-        public PerformanceTests()
-        {
-            _repositoryMock = new Mock<IRepository>();
-            _fileValidationServiceMock = new Mock<IFileValidationService>();
-            _service = new ContactManagementService(_repositoryMock.Object, _fileValidationServiceMock.Object);
-        }
 
         [Fact]
         public async Task DeleteContactAsyncWithManyPartialContactsShouldOptimizeQueries()
@@ -315,10 +291,10 @@ public class ContactManagementServiceTests
                 ];
 
 
-            _repositoryMock.Setup(r => r.ListAsync<Rvnx.CRM.Core.Models.User>(It.IsAny<Expression<Func<Rvnx.CRM.Core.Models.User, bool>>>(), It.IsAny<CancellationToken>()))
+            RepositoryMock.Setup(r => r.ListAsync<Rvnx.CRM.Core.Models.User>(It.IsAny<Expression<Func<Rvnx.CRM.Core.Models.User, bool>>>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync([]);
 
-            _repositoryMock.Setup(r => r.ListAsync<Relationship>(It.IsAny<Expression<Func<Relationship, bool>>>(), It.IsAny<CancellationToken>()))
+            RepositoryMock.Setup(r => r.ListAsync<Relationship>(It.IsAny<Expression<Func<Relationship, bool>>>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync((Expression<Func<Relationship, bool>> predicate, CancellationToken ct) =>
                 {
                     _relationshipListCalls++;
@@ -326,7 +302,7 @@ public class ContactManagementServiceTests
                     return allRelationships.Where(func).ToList();
                 });
 
-            _repositoryMock.Setup(r => r.ListAsync<Relationship>(It.IsAny<Expression<Func<Relationship, bool>>>(), It.IsAny<CancellationToken>(), It.IsAny<string[]>()))
+            RepositoryMock.Setup(r => r.ListAsync<Relationship>(It.IsAny<Expression<Func<Relationship, bool>>>(), It.IsAny<CancellationToken>(), It.IsAny<string[]>()))
                 .ReturnsAsync((Expression<Func<Relationship, bool>> predicate, CancellationToken ct, string[] includes) =>
                 {
                     _relationshipListCalls++;
@@ -334,7 +310,7 @@ public class ContactManagementServiceTests
                     return allRelationships.Where(func).ToList();
                 });
 
-            _repositoryMock.Setup(r => r.ListAsync<Contact>(It.IsAny<Expression<Func<Contact, bool>>>(), It.IsAny<CancellationToken>(), It.IsAny<string[]>()))
+            RepositoryMock.Setup(r => r.ListAsync<Contact>(It.IsAny<Expression<Func<Contact, bool>>>(), It.IsAny<CancellationToken>(), It.IsAny<string[]>()))
                  .ReturnsAsync((Expression<Func<Contact, bool>> predicate, CancellationToken ct, string[] includes) =>
                  {
                      _contactListCalls++;
@@ -342,7 +318,7 @@ public class ContactManagementServiceTests
                      return allContacts.Where(func).ToList();
                  });
 
-            _repositoryMock.Setup(r => r.ListAsNoTrackingAsync<Contact>(It.IsAny<Expression<Func<Contact, bool>>>(), It.IsAny<CancellationToken>(), It.IsAny<string[]>()))
+            RepositoryMock.Setup(r => r.ListAsNoTrackingAsync<Contact>(It.IsAny<Expression<Func<Contact, bool>>>(), It.IsAny<CancellationToken>(), It.IsAny<string[]>()))
                  .ReturnsAsync((Expression<Func<Contact, bool>> predicate, CancellationToken ct, string[] includes) =>
                  {
                      _contactListCalls++;
@@ -351,12 +327,12 @@ public class ContactManagementServiceTests
                  });
 
             // Also mock dependencies deletion calls to avoid null ref if we accidentally delete something
-            _repositoryMock.Setup(r => r.ListAsync<Pet>(It.IsAny<Expression<Func<Pet, bool>>>(), It.IsAny<CancellationToken>())).ReturnsAsync([]);
-            _repositoryMock.Setup(r => r.ListAsync<Fact>(It.IsAny<Expression<Func<Fact, bool>>>(), It.IsAny<CancellationToken>())).ReturnsAsync([]);
-            _repositoryMock.Setup(r => r.ListAsync<Note>(It.IsAny<Expression<Func<Note, bool>>>(), It.IsAny<CancellationToken>())).ReturnsAsync([]);
+            RepositoryMock.Setup(r => r.ListAsync<Pet>(It.IsAny<Expression<Func<Pet, bool>>>(), It.IsAny<CancellationToken>())).ReturnsAsync([]);
+            RepositoryMock.Setup(r => r.ListAsync<Fact>(It.IsAny<Expression<Func<Fact, bool>>>(), It.IsAny<CancellationToken>())).ReturnsAsync([]);
+            RepositoryMock.Setup(r => r.ListAsync<Note>(It.IsAny<Expression<Func<Note, bool>>>(), It.IsAny<CancellationToken>())).ReturnsAsync([]);
 
 
-            await _service.DeleteContactAsync(contactId);
+            await Service.DeleteContactAsync(contactId);
 
             // 1. Initial Relationship fetch (1 call, 2-arg)
             // 2. Partial contacts fetch (1 call, Contact 3-arg)
@@ -385,25 +361,25 @@ public class ContactManagementServiceTests
             Guid contactId = Guid.NewGuid();
             Contact contact = new() { Id = contactId, FirstName = "Test", LastName = "User" };
 
-            _repositoryMock.Setup(r => r.GetByIdAsync<Contact>(contactId, It.IsAny<CancellationToken>()))
+            RepositoryMock.Setup(r => r.GetByIdAsync<Contact>(contactId, It.IsAny<CancellationToken>()))
                 .ReturnsAsync(contact);
 
             ContactFormDto dto = new() { Id = contactId, FirstName = "Test", LastName = "User", Birthday = new DateTime(1990, 1, 1), RemindOnBirthday = true };
 
-            _repositoryMock.Setup(r => r.ListAsync<ContactMethod>(It.IsAny<Expression<Func<ContactMethod, bool>>>(), It.IsAny<CancellationToken>()))
+            RepositoryMock.Setup(r => r.ListAsync<ContactMethod>(It.IsAny<Expression<Func<ContactMethod, bool>>>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync([]);
 
-            _repositoryMock.Setup(r => r.ListAsync<SignificantDate>(It.IsAny<Expression<Func<SignificantDate, bool>>>(), It.IsAny<CancellationToken>()))
+            RepositoryMock.Setup(r => r.ListAsync<SignificantDate>(It.IsAny<Expression<Func<SignificantDate, bool>>>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync([]);
 
-            _repositoryMock.Setup(r => r.ListAsync<ReminderOffset>(It.IsAny<Expression<Func<ReminderOffset, bool>>>(), It.IsAny<CancellationToken>()))
+            RepositoryMock.Setup(r => r.ListAsync<ReminderOffset>(It.IsAny<Expression<Func<ReminderOffset, bool>>>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync([]);
 
-            ContactOperationResult result = await _service.UpdateContactAsync(contactId, dto, null, null, null);
+            ContactOperationResult result = await Service.UpdateContactAsync(contactId, dto, null, null, null);
 
             Assert.True(result.Success);
-            _repositoryMock.Verify(r => r.AddAsync(It.Is<SignificantDate>(d => d.ContactId == contactId && d.EventDate == new DateOnly(1990, 1, 1) && d.Title == Rvnx.CRM.Core.Constants.SignificantDateTitles.Birthday), It.IsAny<CancellationToken>()), Times.Once);
-            _repositoryMock.Verify(r => r.AddAsync(It.Is<ReminderOffset>(o => o.DaysBeforeEvent == 0 && o.IsActive == true), It.IsAny<CancellationToken>()), Times.Once);
+            RepositoryMock.Verify(r => r.AddAsync(It.Is<SignificantDate>(d => d.ContactId == contactId && d.EventDate == new DateOnly(1990, 1, 1) && d.Title == Rvnx.CRM.Core.Constants.SignificantDateTitles.Birthday), It.IsAny<CancellationToken>()), Times.Once);
+            RepositoryMock.Verify(r => r.AddAsync(It.Is<ReminderOffset>(o => o.DaysBeforeEvent == 0 && o.IsActive == true), It.IsAny<CancellationToken>()), Times.Once);
         }
 
         [Fact]
@@ -413,31 +389,31 @@ public class ContactManagementServiceTests
             Contact contact = new() { Id = contactId, FirstName = "Test", LastName = "User" };
             Guid dateId = Guid.NewGuid();
 
-            _repositoryMock.Setup(r => r.GetByIdAsync<Contact>(contactId, It.IsAny<CancellationToken>()))
+            RepositoryMock.Setup(r => r.GetByIdAsync<Contact>(contactId, It.IsAny<CancellationToken>()))
                 .ReturnsAsync(contact);
 
             SignificantDate existingDate = new() { Id = dateId, ContactId = contactId, EventDate = new DateOnly(1990, 1, 1), Title = Rvnx.CRM.Core.Constants.SignificantDateTitles.Birthday };
 
-            _repositoryMock.Setup(r => r.ListAsync<ContactMethod>(It.IsAny<Expression<Func<ContactMethod, bool>>>(), It.IsAny<CancellationToken>()))
+            RepositoryMock.Setup(r => r.ListAsync<ContactMethod>(It.IsAny<Expression<Func<ContactMethod, bool>>>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync([]);
 
-            _repositoryMock.Setup(r => r.ListAsync<SignificantDate>(It.IsAny<Expression<Func<SignificantDate, bool>>>(), It.IsAny<CancellationToken>()))
+            RepositoryMock.Setup(r => r.ListAsync<SignificantDate>(It.IsAny<Expression<Func<SignificantDate, bool>>>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync((Expression<Func<SignificantDate, bool>> predicate, CancellationToken ct) =>
                 {
                     return new List<SignificantDate> { existingDate }.Where(predicate.Compile()).ToList();
                 });
 
-            _repositoryMock.Setup(r => r.ListAsync<ReminderOffset>(It.IsAny<Expression<Func<ReminderOffset, bool>>>(), It.IsAny<CancellationToken>()))
+            RepositoryMock.Setup(r => r.ListAsync<ReminderOffset>(It.IsAny<Expression<Func<ReminderOffset, bool>>>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync([]);
 
             ContactFormDto dto = new() { Id = contactId, FirstName = "Test", LastName = "User", Birthday = new DateTime(1995, 5, 5) };
 
-            ContactOperationResult result = await _service.UpdateContactAsync(contactId, dto, null, null, null);
+            ContactOperationResult result = await Service.UpdateContactAsync(contactId, dto, null, null, null);
 
             Assert.True(result.Success);
             Assert.Equal(new DateOnly(1995, 5, 5), existingDate.EventDate);
-            _repositoryMock.Verify(r => r.UpdateAsync(existingDate, It.IsAny<CancellationToken>()), Times.Once);
-            _repositoryMock.Verify(r => r.AddAsync(It.IsAny<SignificantDate>(), It.IsAny<CancellationToken>()), Times.Never);
+            RepositoryMock.Verify(r => r.UpdateAsync(existingDate, It.IsAny<CancellationToken>()), Times.Once);
+            RepositoryMock.Verify(r => r.AddAsync(It.IsAny<SignificantDate>(), It.IsAny<CancellationToken>()), Times.Never);
         }
 
         [Fact]
@@ -447,15 +423,15 @@ public class ContactManagementServiceTests
             Contact contact = new() { Id = contactId, FirstName = "Test", LastName = "User" };
             Guid dateId = Guid.NewGuid();
 
-            _repositoryMock.Setup(r => r.GetByIdAsync<Contact>(contactId, It.IsAny<CancellationToken>()))
+            RepositoryMock.Setup(r => r.GetByIdAsync<Contact>(contactId, It.IsAny<CancellationToken>()))
                 .ReturnsAsync(contact);
 
             SignificantDate existingDate = new() { Id = dateId, ContactId = contactId, EventDate = new DateOnly(1990, 1, 1), Title = Rvnx.CRM.Core.Constants.SignificantDateTitles.Birthday };
 
-            _repositoryMock.Setup(r => r.ListAsync<ContactMethod>(It.IsAny<Expression<Func<ContactMethod, bool>>>(), It.IsAny<CancellationToken>()))
+            RepositoryMock.Setup(r => r.ListAsync<ContactMethod>(It.IsAny<Expression<Func<ContactMethod, bool>>>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync([]);
 
-            _repositoryMock.Setup(r => r.ListAsync<SignificantDate>(It.IsAny<Expression<Func<SignificantDate, bool>>>(), It.IsAny<CancellationToken>()))
+            RepositoryMock.Setup(r => r.ListAsync<SignificantDate>(It.IsAny<Expression<Func<SignificantDate, bool>>>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync((Expression<Func<SignificantDate, bool>> predicate, CancellationToken ct) =>
                 {
                     return new List<SignificantDate> { existingDate }.Where(predicate.Compile()).ToList();
@@ -463,11 +439,11 @@ public class ContactManagementServiceTests
 
             ContactFormDto dto = new() { Id = contactId, FirstName = "Test", LastName = "User", Birthday = null };
 
-            ContactOperationResult result = await _service.UpdateContactAsync(contactId, dto, null, null, null);
+            ContactOperationResult result = await Service.UpdateContactAsync(contactId, dto, null, null, null);
 
             Assert.True(result.Success);
-            _repositoryMock.Verify(r => r.DeleteAsync<SignificantDate>(dateId, It.IsAny<CancellationToken>()), Times.Once);
-            _repositoryMock.Verify(r => r.UpdateAsync(It.IsAny<SignificantDate>(), It.IsAny<CancellationToken>()), Times.Never);
+            RepositoryMock.Verify(r => r.DeleteAsync<SignificantDate>(dateId, It.IsAny<CancellationToken>()), Times.Once);
+            RepositoryMock.Verify(r => r.UpdateAsync(It.IsAny<SignificantDate>(), It.IsAny<CancellationToken>()), Times.Never);
         }
 
         [Fact]
@@ -477,23 +453,23 @@ public class ContactManagementServiceTests
             Contact contact = new() { Id = contactId, FirstName = "Test", LastName = "User" };
             Guid dateId = Guid.NewGuid();
 
-            _repositoryMock.Setup(r => r.GetByIdAsync<Contact>(contactId, It.IsAny<CancellationToken>()))
+            RepositoryMock.Setup(r => r.GetByIdAsync<Contact>(contactId, It.IsAny<CancellationToken>()))
                 .ReturnsAsync(contact);
 
             SignificantDate existingDate = new() { Id = dateId, ContactId = contactId, EventDate = new DateOnly(1990, 1, 1), Title = Rvnx.CRM.Core.Constants.SignificantDateTitles.Birthday };
 
             ReminderOffset existingOffset = new() { Id = Guid.NewGuid(), SignificantDateId = dateId, DaysBeforeEvent = 0, IsActive = false };
 
-            _repositoryMock.Setup(r => r.ListAsync<ContactMethod>(It.IsAny<Expression<Func<ContactMethod, bool>>>(), It.IsAny<CancellationToken>()))
+            RepositoryMock.Setup(r => r.ListAsync<ContactMethod>(It.IsAny<Expression<Func<ContactMethod, bool>>>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync([]);
 
-            _repositoryMock.Setup(r => r.ListAsync<SignificantDate>(It.IsAny<Expression<Func<SignificantDate, bool>>>(), It.IsAny<CancellationToken>()))
+            RepositoryMock.Setup(r => r.ListAsync<SignificantDate>(It.IsAny<Expression<Func<SignificantDate, bool>>>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync((Expression<Func<SignificantDate, bool>> predicate, CancellationToken ct) =>
                 {
                     return new List<SignificantDate> { existingDate }.Where(predicate.Compile()).ToList();
                 });
 
-            _repositoryMock.Setup(r => r.ListAsync<ReminderOffset>(It.IsAny<Expression<Func<ReminderOffset, bool>>>(), It.IsAny<CancellationToken>()))
+            RepositoryMock.Setup(r => r.ListAsync<ReminderOffset>(It.IsAny<Expression<Func<ReminderOffset, bool>>>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync((Expression<Func<ReminderOffset, bool>> predicate, CancellationToken ct) =>
                 {
                     return new List<ReminderOffset> { existingOffset }.Where(predicate.Compile()).ToList();
@@ -501,12 +477,12 @@ public class ContactManagementServiceTests
 
             ContactFormDto dto = new() { Id = contactId, FirstName = "Test", LastName = "User", Birthday = new DateTime(1990, 1, 1), RemindOnBirthday = true };
 
-            ContactOperationResult result = await _service.UpdateContactAsync(contactId, dto, null, null, null);
+            ContactOperationResult result = await Service.UpdateContactAsync(contactId, dto, null, null, null);
 
             Assert.True(result.Success);
             Assert.True(existingOffset.IsActive);
-            _repositoryMock.Verify(r => r.UpdateAsync(existingOffset, It.IsAny<CancellationToken>()), Times.Once);
-            _repositoryMock.Verify(r => r.AddAsync(It.IsAny<ReminderOffset>(), It.IsAny<CancellationToken>()), Times.Never);
+            RepositoryMock.Verify(r => r.UpdateAsync(existingOffset, It.IsAny<CancellationToken>()), Times.Once);
+            RepositoryMock.Verify(r => r.AddAsync(It.IsAny<ReminderOffset>(), It.IsAny<CancellationToken>()), Times.Never);
         }
 
         [Fact]
@@ -516,23 +492,23 @@ public class ContactManagementServiceTests
             Contact contact = new() { Id = contactId, FirstName = "Test", LastName = "User" };
             Guid dateId = Guid.NewGuid();
 
-            _repositoryMock.Setup(r => r.GetByIdAsync<Contact>(contactId, It.IsAny<CancellationToken>()))
+            RepositoryMock.Setup(r => r.GetByIdAsync<Contact>(contactId, It.IsAny<CancellationToken>()))
                 .ReturnsAsync(contact);
 
             SignificantDate existingDate = new() { Id = dateId, ContactId = contactId, EventDate = new DateOnly(1990, 1, 1), Title = Rvnx.CRM.Core.Constants.SignificantDateTitles.Birthday };
 
             ReminderOffset existingOffset = new() { Id = Guid.NewGuid(), SignificantDateId = dateId, DaysBeforeEvent = 0, IsActive = true };
 
-            _repositoryMock.Setup(r => r.ListAsync<ContactMethod>(It.IsAny<Expression<Func<ContactMethod, bool>>>(), It.IsAny<CancellationToken>()))
+            RepositoryMock.Setup(r => r.ListAsync<ContactMethod>(It.IsAny<Expression<Func<ContactMethod, bool>>>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync([]);
 
-            _repositoryMock.Setup(r => r.ListAsync<SignificantDate>(It.IsAny<Expression<Func<SignificantDate, bool>>>(), It.IsAny<CancellationToken>()))
+            RepositoryMock.Setup(r => r.ListAsync<SignificantDate>(It.IsAny<Expression<Func<SignificantDate, bool>>>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync((Expression<Func<SignificantDate, bool>> predicate, CancellationToken ct) =>
                 {
                     return new List<SignificantDate> { existingDate }.Where(predicate.Compile()).ToList();
                 });
 
-            _repositoryMock.Setup(r => r.ListAsync<ReminderOffset>(It.IsAny<Expression<Func<ReminderOffset, bool>>>(), It.IsAny<CancellationToken>()))
+            RepositoryMock.Setup(r => r.ListAsync<ReminderOffset>(It.IsAny<Expression<Func<ReminderOffset, bool>>>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync((Expression<Func<ReminderOffset, bool>> predicate, CancellationToken ct) =>
                 {
                     return new List<ReminderOffset> { existingOffset }.Where(predicate.Compile()).ToList();
@@ -540,11 +516,11 @@ public class ContactManagementServiceTests
 
             ContactFormDto dto = new() { Id = contactId, FirstName = "Test", LastName = "User", Birthday = new DateTime(1990, 1, 1), RemindOnBirthday = false };
 
-            ContactOperationResult result = await _service.UpdateContactAsync(contactId, dto, null, null, null);
+            ContactOperationResult result = await Service.UpdateContactAsync(contactId, dto, null, null, null);
 
             Assert.True(result.Success);
             Assert.False(existingOffset.IsActive);
-            _repositoryMock.Verify(r => r.UpdateAsync(existingOffset, It.IsAny<CancellationToken>()), Times.Once);
+            RepositoryMock.Verify(r => r.UpdateAsync(existingOffset, It.IsAny<CancellationToken>()), Times.Once);
         }
 
         [Fact]
@@ -554,22 +530,22 @@ public class ContactManagementServiceTests
             Contact existingContact = new() { Id = contactId };
             ContactFormDto dto = new() { FirstName = "Updated" };
 
-            _repositoryMock.Setup(r => r.GetByIdAsync<Contact>(contactId, It.IsAny<CancellationToken>()))
+            RepositoryMock.Setup(r => r.GetByIdAsync<Contact>(contactId, It.IsAny<CancellationToken>()))
                 .ReturnsAsync(existingContact);
 
-            _repositoryMock.Setup(r => r.ListAsync<ContactMethod>(It.IsAny<Expression<Func<ContactMethod, bool>>>(), It.IsAny<CancellationToken>()))
+            RepositoryMock.Setup(r => r.ListAsync<ContactMethod>(It.IsAny<Expression<Func<ContactMethod, bool>>>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync([]);
 
-            _repositoryMock.Setup(r => r.ListAsync<SignificantDate>(It.IsAny<Expression<Func<SignificantDate, bool>>>(), It.IsAny<CancellationToken>()))
+            RepositoryMock.Setup(r => r.ListAsync<SignificantDate>(It.IsAny<Expression<Func<SignificantDate, bool>>>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync([]);
 
-            _repositoryMock.Setup(r => r.SaveChangesAsync(It.IsAny<CancellationToken>()))
+            RepositoryMock.Setup(r => r.SaveChangesAsync(It.IsAny<CancellationToken>()))
                 .ThrowsAsync(new Rvnx.CRM.Core.Exceptions.EntityConcurrencyException("Concurrency conflict"));
 
-            _repositoryMock.Setup(r => r.ExistsAsync<Contact>(contactId, It.IsAny<CancellationToken>()))
+            RepositoryMock.Setup(r => r.ExistsAsync<Contact>(contactId, It.IsAny<CancellationToken>()))
                 .ReturnsAsync(true);
 
-            ContactOperationResult result = await _service.UpdateContactAsync(contactId, dto, null, null, null);
+            ContactOperationResult result = await Service.UpdateContactAsync(contactId, dto, null, null, null);
 
             Assert.False(result.Success);
             Assert.False(result.IsNotFound);
@@ -583,22 +559,22 @@ public class ContactManagementServiceTests
             Contact existingContact = new() { Id = contactId };
             ContactFormDto dto = new() { FirstName = "Updated" };
 
-            _repositoryMock.Setup(r => r.GetByIdAsync<Contact>(contactId, It.IsAny<CancellationToken>()))
+            RepositoryMock.Setup(r => r.GetByIdAsync<Contact>(contactId, It.IsAny<CancellationToken>()))
                 .ReturnsAsync(existingContact);
 
-            _repositoryMock.Setup(r => r.ListAsync<ContactMethod>(It.IsAny<Expression<Func<ContactMethod, bool>>>(), It.IsAny<CancellationToken>()))
+            RepositoryMock.Setup(r => r.ListAsync<ContactMethod>(It.IsAny<Expression<Func<ContactMethod, bool>>>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync([]);
 
-            _repositoryMock.Setup(r => r.ListAsync<SignificantDate>(It.IsAny<Expression<Func<SignificantDate, bool>>>(), It.IsAny<CancellationToken>()))
+            RepositoryMock.Setup(r => r.ListAsync<SignificantDate>(It.IsAny<Expression<Func<SignificantDate, bool>>>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync([]);
 
-            _repositoryMock.Setup(r => r.SaveChangesAsync(It.IsAny<CancellationToken>()))
+            RepositoryMock.Setup(r => r.SaveChangesAsync(It.IsAny<CancellationToken>()))
                 .ThrowsAsync(new Rvnx.CRM.Core.Exceptions.EntityConcurrencyException("Concurrency conflict"));
 
-            _repositoryMock.Setup(r => r.ExistsAsync<Contact>(contactId, It.IsAny<CancellationToken>()))
+            RepositoryMock.Setup(r => r.ExistsAsync<Contact>(contactId, It.IsAny<CancellationToken>()))
                 .ReturnsAsync(false);
 
-            ContactOperationResult result = await _service.UpdateContactAsync(contactId, dto, null, null, null);
+            ContactOperationResult result = await Service.UpdateContactAsync(contactId, dto, null, null, null);
 
             Assert.False(result.Success);
             Assert.True(result.IsNotFound);
@@ -607,7 +583,7 @@ public class ContactManagementServiceTests
         [Fact]
         public async Task CreateContactAsyncUsesSingleSaveChangesAsync()
         {
-            _repositoryMock.Setup(r => r.ListAsync<ReminderOffset>(It.IsAny<System.Linq.Expressions.Expression<Func<ReminderOffset, bool>>>(), It.IsAny<CancellationToken>()))
+            RepositoryMock.Setup(r => r.ListAsync<ReminderOffset>(It.IsAny<System.Linq.Expressions.Expression<Func<ReminderOffset, bool>>>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync([]);
 
             ContactFormDto dto = new()
@@ -619,29 +595,19 @@ public class ContactManagementServiceTests
                 Birthday = new DateTime(1990, 1, 1)
             };
 
-            await _service.CreateContactAsync(dto);
+            await Service.CreateContactAsync(dto);
 
             // Verifies that only ONE SaveChangesAsync is called, reducing DB roundtrips
-            _repositoryMock.Verify(r => r.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
+            RepositoryMock.Verify(r => r.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
 
-            _repositoryMock.Verify(r => r.AddAsync(It.IsAny<Contact>(), It.IsAny<CancellationToken>()), Times.Once);
-            _repositoryMock.Verify(r => r.AddAsync(It.IsAny<ContactMethod>(), It.IsAny<CancellationToken>()), Times.Exactly(2)); // Email and Phone
-            _repositoryMock.Verify(r => r.AddAsync(It.IsAny<SignificantDate>(), It.IsAny<CancellationToken>()), Times.Once); // Birthday
+            RepositoryMock.Verify(r => r.AddAsync(It.IsAny<Contact>(), It.IsAny<CancellationToken>()), Times.Once);
+            RepositoryMock.Verify(r => r.AddAsync(It.IsAny<ContactMethod>(), It.IsAny<CancellationToken>()), Times.Exactly(2)); // Email and Phone
+            RepositoryMock.Verify(r => r.AddAsync(It.IsAny<SignificantDate>(), It.IsAny<CancellationToken>()), Times.Once); // Birthday
         }
     }
 
-    public class CreateTests
+    public class CreateTests : ContactManagementServiceTestBase
     {
-        private readonly Mock<IRepository> _repositoryMock;
-        private readonly Mock<IFileValidationService> _fileValidationServiceMock;
-        private readonly ContactManagementService _service;
-
-        public CreateTests()
-        {
-            _repositoryMock = new Mock<IRepository>();
-            _fileValidationServiceMock = new Mock<IFileValidationService>();
-            _service = new ContactManagementService(_repositoryMock.Object, _fileValidationServiceMock.Object);
-        }
 
         [Fact]
         public async Task CreateContactAsyncWithValidDtoReturnsSuccessAndAddsEntities()
@@ -656,26 +622,26 @@ public class ContactManagementServiceTests
                 RemindOnBirthday = true
             };
 
-            _repositoryMock.Setup(r => r.AddAsync(It.IsAny<Contact>(), It.IsAny<CancellationToken>()))
+            RepositoryMock.Setup(r => r.AddAsync(It.IsAny<Contact>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync((Contact c, CancellationToken ct) => c);
 
-            _repositoryMock.Setup(r => r.ListAsync<ReminderOffset>(It.IsAny<System.Linq.Expressions.Expression<Func<ReminderOffset, bool>>>(), It.IsAny<CancellationToken>()))
+            RepositoryMock.Setup(r => r.ListAsync<ReminderOffset>(It.IsAny<System.Linq.Expressions.Expression<Func<ReminderOffset, bool>>>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync([]);
 
-            ContactOperationResult result = await _service.CreateContactAsync(dto);
+            ContactOperationResult result = await Service.CreateContactAsync(dto);
 
             Assert.True(result.Success);
             Assert.NotNull(result.ContactId);
 
-            _repositoryMock.Verify(r => r.AddAsync(It.Is<Contact>(c => c.FirstName == "Jane" && c.LastName == "Doe"), It.IsAny<CancellationToken>()), Times.Once);
+            RepositoryMock.Verify(r => r.AddAsync(It.Is<Contact>(c => c.FirstName == "Jane" && c.LastName == "Doe"), It.IsAny<CancellationToken>()), Times.Once);
 
             // Verify that ContactUpdateHelper was used to add methods and dates
-            _repositoryMock.Verify(r => r.AddAsync(It.Is<ContactMethod>(cm => cm.Type == Rvnx.CRM.Core.Enumerations.ContactMethodType.Email && cm.Value == dto.Email), It.IsAny<CancellationToken>()), Times.Once);
-            _repositoryMock.Verify(r => r.AddAsync(It.Is<ContactMethod>(cm => cm.Type == Rvnx.CRM.Core.Enumerations.ContactMethodType.Phone && cm.Value == "+12127365000"), It.IsAny<CancellationToken>()), Times.Once);
-            _repositoryMock.Verify(r => r.AddAsync(It.Is<SignificantDate>(sd => sd.EventDate == DateOnly.FromDateTime(dto.Birthday.Value)), It.IsAny<CancellationToken>()), Times.Once);
-            _repositoryMock.Verify(r => r.AddAsync(It.Is<ReminderOffset>(ro => ro.DaysBeforeEvent == 0 && ro.IsActive == true), It.IsAny<CancellationToken>()), Times.Once);
+            RepositoryMock.Verify(r => r.AddAsync(It.Is<ContactMethod>(cm => cm.Type == Rvnx.CRM.Core.Enumerations.ContactMethodType.Email && cm.Value == dto.Email), It.IsAny<CancellationToken>()), Times.Once);
+            RepositoryMock.Verify(r => r.AddAsync(It.Is<ContactMethod>(cm => cm.Type == Rvnx.CRM.Core.Enumerations.ContactMethodType.Phone && cm.Value == "+12127365000"), It.IsAny<CancellationToken>()), Times.Once);
+            RepositoryMock.Verify(r => r.AddAsync(It.Is<SignificantDate>(sd => sd.EventDate == DateOnly.FromDateTime(dto.Birthday.Value)), It.IsAny<CancellationToken>()), Times.Once);
+            RepositoryMock.Verify(r => r.AddAsync(It.Is<ReminderOffset>(ro => ro.DaysBeforeEvent == 0 && ro.IsActive == true), It.IsAny<CancellationToken>()), Times.Once);
 
-            _repositoryMock.Verify(r => r.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
+            RepositoryMock.Verify(r => r.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
         }
 
         [Fact]
@@ -687,21 +653,21 @@ public class ContactManagementServiceTests
                 LastName = "Contact"
             };
 
-            _repositoryMock.Setup(r => r.AddAsync(It.IsAny<Contact>(), It.IsAny<CancellationToken>()))
+            RepositoryMock.Setup(r => r.AddAsync(It.IsAny<Contact>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync((Contact c, CancellationToken ct) => c);
 
-            ContactOperationResult result = await _service.CreateContactAsync(dto);
+            ContactOperationResult result = await Service.CreateContactAsync(dto);
 
             Assert.True(result.Success);
             Assert.NotNull(result.ContactId);
 
-            _repositoryMock.Verify(r => r.AddAsync(It.Is<Contact>(c => c.FirstName == "Minimal" && c.LastName == "Contact"), It.IsAny<CancellationToken>()), Times.Once);
+            RepositoryMock.Verify(r => r.AddAsync(It.Is<Contact>(c => c.FirstName == "Minimal" && c.LastName == "Contact"), It.IsAny<CancellationToken>()), Times.Once);
 
-            _repositoryMock.Verify(r => r.AddAsync(It.IsAny<ContactMethod>(), It.IsAny<CancellationToken>()), Times.Never);
-            _repositoryMock.Verify(r => r.AddAsync(It.IsAny<SignificantDate>(), It.IsAny<CancellationToken>()), Times.Never);
-            _repositoryMock.Verify(r => r.AddAsync(It.IsAny<ReminderOffset>(), It.IsAny<CancellationToken>()), Times.Never);
+            RepositoryMock.Verify(r => r.AddAsync(It.IsAny<ContactMethod>(), It.IsAny<CancellationToken>()), Times.Never);
+            RepositoryMock.Verify(r => r.AddAsync(It.IsAny<SignificantDate>(), It.IsAny<CancellationToken>()), Times.Never);
+            RepositoryMock.Verify(r => r.AddAsync(It.IsAny<ReminderOffset>(), It.IsAny<CancellationToken>()), Times.Never);
 
-            _repositoryMock.Verify(r => r.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
+            RepositoryMock.Verify(r => r.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
         }
     }
 }

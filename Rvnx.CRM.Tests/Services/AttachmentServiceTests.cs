@@ -1,5 +1,3 @@
-
-using Microsoft.EntityFrameworkCore;
 using Moq;
 using Rvnx.CRM.Core.Constants;
 using Rvnx.CRM.Core.DTOs.Base;
@@ -10,23 +8,13 @@ using Rvnx.CRM.Core.Models.Contact;
 using Rvnx.CRM.Core.Services;
 using Rvnx.CRM.Infrastructure.Data;
 using Rvnx.CRM.Infrastructure.Repositories;
+using Rvnx.CRM.Tests.Helpers;
 
 namespace Rvnx.CRM.Tests.Services;
 
 public class AttachmentServiceTests
 {
-    private static CRMDbContext GetInMemoryDbContext()
-    {
-        DbContextOptions<CRMDbContext> options = new DbContextOptionsBuilder<CRMDbContext>()
-            .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
-            .Options;
-
-        Mock<ICurrentUserService> mockCurrentUserService = new();
-        mockCurrentUserService.Setup(s => s.UserId).Returns(Guid.Parse("c5b50a20-34b2-44b2-8b9c-aa4135f60938")); // Test User ID
-        mockCurrentUserService.Setup(s => s.UserName).Returns("test-user");
-
-        return new CRMDbContext(options, mockCurrentUserService.Object);
-    }
+    private static CRMDbContext GetInMemoryDbContext() => TestDbContextFactory.CreateForDefaultUser();
 
     [Fact]
     public async Task UploadAttachmentAsyncShouldSucceedWhenValid()
@@ -445,18 +433,7 @@ public class AttachmentServiceTests
 
     public class AttachmentContentTypeSecurityTests
     {
-        private static CRMDbContext GetInMemoryDbContext()
-        {
-            DbContextOptions<CRMDbContext> options = new DbContextOptionsBuilder<CRMDbContext>()
-                .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
-                .Options;
-
-            Mock<ICurrentUserService> mockCurrentUserService = new();
-            mockCurrentUserService.Setup(s => s.UserId).Returns(Guid.Parse("c5b50a20-34b2-44b2-8b9c-aa4135f60938"));
-            mockCurrentUserService.Setup(s => s.UserName).Returns("test-user");
-
-            return new CRMDbContext(options, mockCurrentUserService.Object);
-        }
+        private static CRMDbContext GetInMemoryDbContext() => TestDbContextFactory.CreateForDefaultUser();
 
         [Fact]
         public async Task UploadAttachmentShouldIgnoreMaliciousContentTypeAndUseSafeMimeType()
