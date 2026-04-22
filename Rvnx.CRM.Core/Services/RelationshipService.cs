@@ -36,70 +36,98 @@ public class RelationshipService(IRepository repository, IRelationshipSuggestion
 
         await repository.AddAsync(relationship);
 
-        if (suggestedEntityIds != null && suggestedEntityIds.Count > 0)
-        {
-            HashSet<Guid> allNodeIds = [];
-            List<(Guid sId, Guid tId, bool reverse)> parsedSuggestions = [];
-
-            foreach (string payload in suggestedEntityIds)
-            {
-                string[] parts = payload.Split('_');
-                if (parts.Length == 3 && Guid.TryParse(parts[0], out Guid sId) &&
-                    Guid.TryParse(parts[1], out Guid tId) && bool.TryParse(parts[2], out bool reverse))
-                {
-                    parsedSuggestions.Add((sId, tId, reverse));
-                    allNodeIds.Add(sId);
-                    allNodeIds.Add(tId);
-                }
-            }
-
-            if (parsedSuggestions.Count > 0)
-            {
-                List<Relationship> existingRels = await repository.ListAsNoTrackingAsync<Relationship>(r =>
-                    r.RelationshipTypeId == typeId &&
-                    allNodeIds.Contains(r.EntityId) &&
-                    allNodeIds.Contains(r.RelatedEntityId));
-
-                HashSet<(Guid, Guid)> existingEdges = [];
-                // Include the primary relationship being added in this transaction to avoid duplicates
-                existingEdges.Add((relationship.EntityId, relationship.RelatedEntityId));
-                existingEdges.Add((relationship.RelatedEntityId, relationship.EntityId));
-
-                foreach (Relationship r in existingRels)
-                {
-                    existingEdges.Add((r.EntityId, r.RelatedEntityId));
-                    existingEdges.Add((r.RelatedEntityId, r.EntityId));
-                }
-
-                foreach ((Guid sId, Guid tId, bool reverse) in parsedSuggestions)
-                {
-                    Relationship newRel = new()
-                    {
-                        EntityId = sId,
-                        RelatedEntityId = tId,
-                        EntityType = relationship.EntityType,
-                        RelationshipTypeId = typeId,
-                        Description = "Automatically added from suggested relationship."
-                    };
-
-                    if (reverse)
-                    {
-                        SwapRelationshipEntities(newRel);
-                    }
-
-                    if (existingEdges.Add((newRel.EntityId, newRel.RelatedEntityId)))
-                    {
-                        await repository.AddAsync(newRel);
-                        existingEdges.Add((newRel.RelatedEntityId, newRel.EntityId));
-                    }
-                }
-            }
-        }
+        await AddSuggestedRelationshipsAsync(relationship, typeId, suggestedEntityIds, partialContactId: null);
 
         await repository.SaveChangesAsync();
 
         Guid redirectId = isReverse ? relationship.RelatedEntityId : relationship.EntityId;
         return RelationshipOperationResult.Ok(redirectId, relationship.EntityType);
+    }
+
+    private async Task AddSuggestedRelationshipsAsync(
+        Relationship primaryRelationship,
+        Guid typeId,
+        List<string>? suggestedEntityIds,
+        Guid? partialContactId)
+    {
+        if (suggestedEntityIds == null || suggestedEntityIds.Count == 0)
+        {
+            return;
+        }
+
+        HashSet<Guid> allNodeIds = [];
+        List<(Guid sId, Guid tId, bool reverse)> parsedSuggestions = [];
+
+        foreach (string payload in suggestedEntityIds)
+        {
+            string[] parts = payload.Split('_');
+            if (parts.Length == 3 && Guid.TryParse(parts[0], out Guid sId) &&
+                Guid.TryParse(parts[1], out Guid tId) && bool.TryParse(parts[2], out bool reverse))
+            {
+                if (partialContactId.HasValue)
+                {
+                    if (sId == Guid.Empty)
+                    {
+                        sId = partialContactId.Value;
+                    }
+
+                    if (tId == Guid.Empty)
+                    {
+                        tId = partialContactId.Value;
+                    }
+                }
+
+                parsedSuggestions.Add((sId, tId, reverse));
+                allNodeIds.Add(sId);
+                allNodeIds.Add(tId);
+            }
+        }
+
+        if (parsedSuggestions.Count == 0)
+        {
+            return;
+        }
+
+        List<Relationship> existingRels = await repository.ListAsNoTrackingAsync<Relationship>(r =>
+            r.RelationshipTypeId == typeId &&
+            allNodeIds.Contains(r.EntityId) &&
+            allNodeIds.Contains(r.RelatedEntityId));
+
+        // Include the primary relationship being added in this transaction to avoid duplicates
+        HashSet<(Guid, Guid)> existingEdges =
+        [
+            (primaryRelationship.EntityId, primaryRelationship.RelatedEntityId),
+            (primaryRelationship.RelatedEntityId, primaryRelationship.EntityId),
+        ];
+
+        foreach (Relationship r in existingRels)
+        {
+            existingEdges.Add((r.EntityId, r.RelatedEntityId));
+            existingEdges.Add((r.RelatedEntityId, r.EntityId));
+        }
+
+        foreach ((Guid sId, Guid tId, bool reverse) in parsedSuggestions)
+        {
+            Relationship newRel = new()
+            {
+                EntityId = sId,
+                RelatedEntityId = tId,
+                EntityType = primaryRelationship.EntityType,
+                RelationshipTypeId = typeId,
+                Description = "Automatically added from suggested relationship."
+            };
+
+            if (reverse)
+            {
+                SwapRelationshipEntities(newRel);
+            }
+
+            if (existingEdges.Add((newRel.EntityId, newRel.RelatedEntityId)))
+            {
+                await repository.AddAsync(newRel);
+                existingEdges.Add((newRel.RelatedEntityId, newRel.EntityId));
+            }
+        }
     }
 
     public async Task<RelationshipOperationResult> UpdateRelationshipAsync(Guid id,
@@ -305,75 +333,7 @@ public class RelationshipService(IRepository repository, IRelationshipSuggestion
 
         await repository.AddAsync(relationship);
 
-        if (dto.SuggestedRelationships != null && dto.SuggestedRelationships.Count > 0)
-        {
-            HashSet<Guid> allNodeIds = [];
-            List<(Guid sId, Guid tId, bool reverse)> parsedSuggestions = [];
-
-            foreach (string payload in dto.SuggestedRelationships)
-            {
-                string[] parts = payload.Split('_');
-                if (parts.Length == 3 && Guid.TryParse(parts[0], out Guid sId) &&
-                    Guid.TryParse(parts[1], out Guid tId) && bool.TryParse(parts[2], out bool reverse))
-                {
-                    if (sId == Guid.Empty)
-                    {
-                        sId = partialContact.Id;
-                    }
-
-                    if (tId == Guid.Empty)
-                    {
-                        tId = partialContact.Id;
-                    }
-
-                    parsedSuggestions.Add((sId, tId, reverse));
-                    allNodeIds.Add(sId);
-                    allNodeIds.Add(tId);
-                }
-            }
-
-            if (parsedSuggestions.Count > 0)
-            {
-                List<Relationship> existingRels = await repository.ListAsNoTrackingAsync<Relationship>(r =>
-                    r.RelationshipTypeId == typeId &&
-                    allNodeIds.Contains(r.EntityId) &&
-                    allNodeIds.Contains(r.RelatedEntityId));
-
-                HashSet<(Guid, Guid)> existingEdges = [];
-                // Include the primary relationship being added in this transaction to avoid duplicates
-                existingEdges.Add((relationship.EntityId, relationship.RelatedEntityId));
-                existingEdges.Add((relationship.RelatedEntityId, relationship.EntityId));
-
-                foreach (Relationship r in existingRels)
-                {
-                    existingEdges.Add((r.EntityId, r.RelatedEntityId));
-                    existingEdges.Add((r.RelatedEntityId, r.EntityId));
-                }
-
-                foreach ((Guid sId, Guid tId, bool reverse) in parsedSuggestions)
-                {
-                    Relationship newRel = new()
-                    {
-                        EntityId = sId,
-                        RelatedEntityId = tId,
-                        EntityType = EntityType.Person,
-                        RelationshipTypeId = typeId,
-                        Description = "Automatically added from suggested relationship."
-                    };
-
-                    if (reverse)
-                    {
-                        SwapRelationshipEntities(newRel);
-                    }
-
-                    if (existingEdges.Add((newRel.EntityId, newRel.RelatedEntityId)))
-                    {
-                        await repository.AddAsync(newRel);
-                        existingEdges.Add((newRel.RelatedEntityId, newRel.EntityId));
-                    }
-                }
-            }
-        }
+        await AddSuggestedRelationshipsAsync(relationship, typeId, dto.SuggestedRelationships, partialContact.Id);
 
         await repository.SaveChangesAsync();
 
