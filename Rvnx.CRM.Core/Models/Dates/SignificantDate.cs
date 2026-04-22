@@ -1,4 +1,6 @@
+using Rvnx.CRM.Core.Enumerations;
 using Rvnx.CRM.Core.Models.Base;
+using Rvnx.CRM.Core.Services;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -19,13 +21,12 @@ public class SignificantDate : BaseEntity
     [Display(Name = "Description")]
     public string? Description { get; set; }
 
-    [Required]
     [Display(Name = "Date")]
     [DataType(DataType.Date)]
     public DateOnly EventDate { get; set; }
 
     [Display(Name = "Recurrence Type")]
-    public Rvnx.CRM.Core.Enumerations.RecurrenceType RecurrenceType { get; set; } = Rvnx.CRM.Core.Enumerations.RecurrenceType.None;
+    public RecurrenceType RecurrenceType { get; set; } = RecurrenceType.None;
 
     [Display(Name = "Custom Interval Days")]
     public int? CustomIntervalDays { get; set; }
@@ -37,6 +38,6 @@ public class SignificantDate : BaseEntity
 
     public DateOnly GetNextOccurrence()
     {
-        return Rvnx.CRM.Core.Services.DateCalculationService.GetNextOccurrence(this, DateOnly.FromDateTime(DateTime.Today));
+        return DateCalculationService.GetNextOccurrence(this, DateOnly.FromDateTime(DateTime.Today));
     }
 }

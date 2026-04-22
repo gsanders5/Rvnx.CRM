@@ -8,17 +8,20 @@ public record RelationshipTypeDefinition(Guid Id, string Name, string OppositeNa
 {
     public bool IsSymmetric => Name == OppositeName;
 
-    public string GetName(string? gender)
-    {
-        return string.Equals(gender, "Male", StringComparison.OrdinalIgnoreCase)
-            ? NameMale ?? Name
-            : string.Equals(gender, "Female", StringComparison.OrdinalIgnoreCase) ? NameFemale ?? Name : Name;
-    }
+    public string GetName(string? gender) => ResolveByGender(gender, Name, NameMale, NameFemale);
 
-    public string GetOppositeName(string? gender)
+    public string GetOppositeName(string? gender) => ResolveByGender(gender, OppositeName, OppositeNameMale, OppositeNameFemale);
+
+    private static string ResolveByGender(string? gender, string neutral, string? male, string? female)
     {
-        return string.Equals(gender, "Male", StringComparison.OrdinalIgnoreCase)
-            ? OppositeNameMale ?? OppositeName
-            : string.Equals(gender, "Female", StringComparison.OrdinalIgnoreCase) ? OppositeNameFemale ?? OppositeName : OppositeName;
+        if (string.Equals(gender, "Male", StringComparison.OrdinalIgnoreCase))
+        {
+            return male ?? neutral;
+        }
+        if (string.Equals(gender, "Female", StringComparison.OrdinalIgnoreCase))
+        {
+            return female ?? neutral;
+        }
+        return neutral;
     }
 }

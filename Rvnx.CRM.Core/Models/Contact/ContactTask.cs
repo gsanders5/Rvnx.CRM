@@ -20,7 +20,6 @@ public class ContactTask : BaseEntity
     [Display(Name = "Description")]
     public string? Description { get; set; }
 
-    [Required]
     [Display(Name = "Due Date")]
     public DateOnly DueDate { get; set; }
 

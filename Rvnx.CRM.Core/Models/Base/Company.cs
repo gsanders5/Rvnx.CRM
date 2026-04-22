@@ -10,5 +10,5 @@ public abstract class Company : BaseEntity
     public string CompanyName { get; set; } = string.Empty;
 
     [Display(Name = "Website")]
-    public string? Website { get; set; } = string.Empty;
+    public string? Website { get; set; }
 }
