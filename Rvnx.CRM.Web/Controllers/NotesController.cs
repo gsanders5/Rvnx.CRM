@@ -68,15 +68,10 @@ public class NotesController(INoteService noteService, IRepository repository, I
 
         if (ModelState.IsValid)
         {
-            OperationResult result = await _noteService.UpdateAsync(id, viewModel);
-            if (result.Success)
+            IActionResult? handled = HandleOperationResult(await _noteService.UpdateAsync(id, viewModel));
+            if (handled != null)
             {
-                return RedirectToEntity(result.RedirectId, result.RedirectType);
-            }
-
-            if (result.IsNotFound)
-            {
-                return NotFound();
+                return handled;
             }
         }
 

@@ -25,15 +25,10 @@ public class ContactMethodsController(IContactMethodService contactMethodService
     {
         if (ModelState.IsValid)
         {
-            OperationResult result = await _contactMethodService.CreateAsync(contactInfoInput);
-            if (result.Success)
+            IActionResult? handled = HandleOperationResult(await _contactMethodService.CreateAsync(contactInfoInput));
+            if (handled != null)
             {
-                return RedirectToEntity(result.RedirectId, result.RedirectType);
-            }
-
-            if (result.IsNotFound)
-            {
-                return NotFound();
+                return handled;
             }
         }
 
@@ -62,15 +57,10 @@ public class ContactMethodsController(IContactMethodService contactMethodService
 
         if (ModelState.IsValid)
         {
-            OperationResult result = await _contactMethodService.UpdateAsync(id, contactInfoInput);
-            if (result.Success)
+            IActionResult? handled = HandleOperationResult(await _contactMethodService.UpdateAsync(id, contactInfoInput));
+            if (handled != null)
             {
-                return RedirectToEntity(result.RedirectId, result.RedirectType);
-            }
-
-            if (result.IsNotFound)
-            {
-                return NotFound();
+                return handled;
             }
         }
 

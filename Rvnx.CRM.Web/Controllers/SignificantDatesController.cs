@@ -151,14 +151,14 @@ public class SignificantDatesController(ISignificantDateService significantDateS
     }
 
     [HttpPost]
-    public async Task<IActionResult> AddOffset(Guid significantDateId, int daysBeforeEvent, Guid contactId)
+    public async Task<IActionResult> AddOffset(Guid significantDateId, int daysBeforeEvent)
     {
         await _significantDateService.AddReminderOffsetAsync(significantDateId, daysBeforeEvent);
         return RedirectToAction(nameof(Edit), new { id = significantDateId });
     }
 
     [HttpPost]
-    public async Task<IActionResult> DeleteOffset(Guid offsetId, Guid significantDateId, Guid contactId)
+    public async Task<IActionResult> DeleteOffset(Guid offsetId, Guid significantDateId)
     {
         await _significantDateService.DeleteReminderOffsetAsync(offsetId);
         return RedirectToAction(nameof(Edit), new { id = significantDateId });
