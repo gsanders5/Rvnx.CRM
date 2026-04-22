@@ -41,82 +41,50 @@ internal static class ConsoleCommands
         return true;
     }
 
-    public static async Task<bool> RunPromoteUserAsync(IServiceProvider services, string[] args)
+    public static Task<bool> RunPromoteUserAsync(IServiceProvider services, string[] args) =>
+        SetAdministratorAsync(services, args, "PROMOTE-USER", promote: true);
+
+    public static Task<bool> RunDemoteUserAsync(IServiceProvider services, string[] args) =>
+        SetAdministratorAsync(services, args, "DEMOTE-USER", promote: false);
+
+    private static async Task<bool> SetAdministratorAsync(
+        IServiceProvider services,
+        string[] args,
+        string commandName,
+        bool promote)
     {
         if (args.Length < 2)
         {
-            Console.WriteLine("Error: Please provide the user's email address. Usage: PROMOTE-USER <email>");
+            Console.WriteLine($"Error: Please provide the user's email address. Usage: {commandName} <email>");
             return false;
         }
 
         string email = args[1];
         IRepository repository = services.GetRequiredService<IRepository>();
-
-        User? user = await repository.QueryUnfiltered<User>()
-            .FirstOrDefaultAsync(u => EF.Functions.Like(u.Email, email));
-
+        User? user = await FindUserByEmailAsync(repository, email);
         if (user == null)
         {
-            Console.WriteLine($"Error: User with email '{email}' not found.");
             return false;
         }
 
-        if (user.IsAdministrator)
+        if (user.IsAdministrator == promote)
         {
-            Console.WriteLine($"User '{email}' is already an administrator.");
+            Console.WriteLine(promote
+                ? $"User '{email}' is already an administrator."
+                : $"User '{email}' is already not an administrator.");
             return true;
         }
 
-        user.IsAdministrator = true;
+        user.IsAdministrator = promote;
         await repository.UpdateAsync(user);
         await repository.SaveChangesAsync();
 
-        Console.WriteLine($"Successfully promoted user '{email}' to administrator.");
+        Console.WriteLine(promote
+            ? $"Successfully promoted user '{email}' to administrator."
+            : $"Successfully demoted user '{email}' from administrator.");
         return true;
     }
 
-    public static async Task<bool> RunDemoteUserAsync(IServiceProvider services, string[] args)
-    {
-        if (args.Length < 2)
-        {
-            Console.WriteLine("Error: Please provide the user's email address. Usage: DEMOTE-USER <email>");
-            return false;
-        }
-
-        string email = args[1];
-        Core.Interfaces.IRepository repository = services.GetRequiredService<Core.Interfaces.IRepository>();
-
-        Core.Models.User? user = await repository.QueryUnfiltered<Core.Models.User>()
-            .FirstOrDefaultAsync(u => EF.Functions.Like(u.Email, email));
-
-        if (user == null)
-        {
-            Console.WriteLine($"Error: User with email '{email}' not found.");
-            return false;
-        }
-
-        if (!user.IsAdministrator)
-        {
-            Console.WriteLine($"User '{email}' is already not an administrator.");
-            return true;
-        }
-
-        user.IsAdministrator = false;
-        await repository.UpdateAsync(user);
-        await repository.SaveChangesAsync();
-
-        Console.WriteLine($"Successfully demoted user '{email}' from administrator.");
-        return true;
-    }
-
-    /// <summary>
-    /// Usage:
-    ///   MERGE-USERS                                    — list all users
-    ///   MERGE-USERS &lt;email1&gt; &lt;email2&gt;                  — dry-run (shows what would happen)
-    ///   MERGE-USERS &lt;email1&gt; &lt;email2&gt; --confirm        — actually performs the merge
-    ///
-    /// email1 is the TARGET (keeps the data); email2 is the SOURCE (is deleted).
-    /// </summary>
     public static async Task<bool> RunAddApiTokenAsync(IServiceProvider services, string[] args)
     {
         if (args.Length < 3)
@@ -129,12 +97,9 @@ internal static class ConsoleCommands
         string tokenName = args[2];
         IRepository repository = services.GetRequiredService<IRepository>();
 
-        User? user = await repository.QueryUnfiltered<User>()
-            .FirstOrDefaultAsync(u => EF.Functions.Like(u.Email, email));
-
+        User? user = await FindUserByEmailAsync(repository, email);
         if (user == null)
         {
-            Console.WriteLine($"Error: User with email '{email}' not found.");
             return false;
         }
 
@@ -145,9 +110,7 @@ internal static class ConsoleCommands
         }
 
         IApiTokenService tokenService = services.GetRequiredService<IApiTokenService>();
-
-        // Optional expiration date could be added if needed, for now we set it to null (no expiration)
-        (ApiToken token, string rawToken) = await tokenService.CreateTokenAsync(user.Id, user.GroupId.Value, tokenName, null);
+        (_, string rawToken) = await tokenService.CreateTokenAsync(user.Id, user.GroupId.Value, tokenName, expiresAt: null);
 
         Console.WriteLine($"Successfully created API token '{tokenName}' for user '{email}'.");
         Console.WriteLine($"Raw Token: {rawToken}");
@@ -167,18 +130,14 @@ internal static class ConsoleCommands
         string tokenName = args[2];
         IRepository repository = services.GetRequiredService<IRepository>();
 
-        User? user = await repository.QueryUnfiltered<User>()
-            .FirstOrDefaultAsync(u => EF.Functions.Like(u.Email, email));
-
+        User? user = await FindUserByEmailAsync(repository, email);
         if (user == null)
         {
-            Console.WriteLine($"Error: User with email '{email}' not found.");
             return false;
         }
 
         IApiTokenService tokenService = services.GetRequiredService<IApiTokenService>();
         IEnumerable<ApiToken> tokens = await tokenService.ListTokensAsync(user.Id);
-
         ApiToken? targetToken = tokens.FirstOrDefault(t => string.Equals(t.Name, tokenName, StringComparison.OrdinalIgnoreCase));
 
         if (targetToken == null)
@@ -187,9 +146,7 @@ internal static class ConsoleCommands
             return false;
         }
 
-        bool success = await tokenService.RevokeTokenAsync(targetToken.Id, user.Id);
-
-        if (success)
+        if (await tokenService.RevokeTokenAsync(targetToken.Id, user.Id))
         {
             Console.WriteLine($"Successfully revoked API token '{tokenName}' for user '{email}'.");
             return true;
@@ -199,6 +156,14 @@ internal static class ConsoleCommands
         return false;
     }
 
+    /// <summary>
+    /// Usage:
+    ///   MERGE-USERS                                    — list all users
+    ///   MERGE-USERS &lt;email1&gt; &lt;email2&gt;                  — dry-run (shows what would happen)
+    ///   MERGE-USERS &lt;email1&gt; &lt;email2&gt; --confirm        — actually performs the merge
+    ///
+    /// email1 is the TARGET (keeps the data); email2 is the SOURCE (is deleted).
+    /// </summary>
     public static async Task<bool> RunMergeUsersAsync(IServiceProvider services, string[] args)
     {
         IDebugOperationsService debugOps = services.GetRequiredService<IDebugOperationsService>();
@@ -225,21 +190,10 @@ internal static class ConsoleCommands
         bool confirmed = args.Length >= 4 && args[3].Equals("--confirm", StringComparison.OrdinalIgnoreCase);
 
         IRepository repository = services.GetRequiredService<IRepository>();
-
-        User? user1 = await repository.QueryUnfiltered<User>()
-            .FirstOrDefaultAsync(u => EF.Functions.Like(u.Email, email1));
-        User? user2 = await repository.QueryUnfiltered<User>()
-            .FirstOrDefaultAsync(u => EF.Functions.Like(u.Email, email2));
-
-        if (user1 == null)
+        User? user1 = await FindUserByEmailAsync(repository, email1);
+        User? user2 = await FindUserByEmailAsync(repository, email2);
+        if (user1 == null || user2 == null)
         {
-            Console.WriteLine($"Error: User '{email1}' not found.");
-            return false;
-        }
-
-        if (user2 == null)
-        {
-            Console.WriteLine($"Error: User '{email2}' not found.");
             return false;
         }
 
@@ -263,5 +217,18 @@ internal static class ConsoleCommands
 
         Console.WriteLine(result.Message ?? "Merge completed successfully.");
         return true;
+    }
+
+    private static async Task<User?> FindUserByEmailAsync(IRepository repository, string email)
+    {
+        User? user = await repository.QueryUnfiltered<User>()
+            .FirstOrDefaultAsync(u => EF.Functions.Like(u.Email, email));
+
+        if (user == null)
+        {
+            Console.WriteLine($"Error: User with email '{email}' not found.");
+        }
+
+        return user;
     }
 }
