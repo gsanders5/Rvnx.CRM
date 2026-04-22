@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Rvnx.CRM.API.Helpers;
 using Rvnx.CRM.Core.DTOs.Dates;
 using Rvnx.CRM.Core.Interfaces;
+using Rvnx.CRM.Core.Models;
 using System.Text.Json;
 
 namespace Rvnx.CRM.API.Controllers;
@@ -66,8 +67,8 @@ public class SignificantDatesController(ISignificantDateService significantDateS
             IsActive = true
         };
 
-        Core.Models.OperationResult result = await _significantDateService.CreateAsync(model);
-        return result.Success ? Ok(new { Id = result.RedirectId }) : BadRequest(new { Error = result.ErrorMessage });
+        OperationResult result = await _significantDateService.CreateAsync(model);
+        return result.ToCreatedResult();
     }
 
     /// <summary>
@@ -80,8 +81,8 @@ public class SignificantDatesController(ISignificantDateService significantDateS
     public async Task<IActionResult> Update(Guid id, [FromBody] SignificantDateDto model)
     {
         model.Id = id;
-        Core.Models.OperationResult result = await _significantDateService.UpdateAsync(id, model);
-        return !result.Success ? BadRequest(new { Error = result.ErrorMessage }) : NoContent();
+        OperationResult result = await _significantDateService.UpdateAsync(id, model);
+        return result.ToNoContentResult();
     }
 
     /// <summary>
@@ -99,16 +100,14 @@ public class SignificantDatesController(ISignificantDateService significantDateS
             return NotFound();
         }
 
-        JsonMergePatchHelper.ApplyPatch(existing, patch);
-
-        List<string> errors = JsonMergePatchHelper.Validate(existing);
-        if (errors.Count > 0)
+        IActionResult? validationFailure = JsonMergePatchHelper.ApplyAndValidate(existing, patch);
+        if (validationFailure != null)
         {
-            return BadRequest(new { Errors = errors });
+            return validationFailure;
         }
 
-        Core.Models.OperationResult result = await _significantDateService.UpdateAsync(id, existing);
-        return !result.Success ? BadRequest(new { Error = result.ErrorMessage }) : NoContent();
+        OperationResult result = await _significantDateService.UpdateAsync(id, existing);
+        return result.ToNoContentResult();
     }
 
     /// <summary>
@@ -118,7 +117,7 @@ public class SignificantDatesController(ISignificantDateService significantDateS
     [HttpDelete("{id}")]
     public async Task<IActionResult> Delete(Guid id)
     {
-        Core.Models.OperationResult result = await _significantDateService.DeleteAsync(id);
-        return !result.Success ? BadRequest(new { Error = result.ErrorMessage }) : NoContent();
+        OperationResult result = await _significantDateService.DeleteAsync(id);
+        return result.ToNoContentResult();
     }
 }

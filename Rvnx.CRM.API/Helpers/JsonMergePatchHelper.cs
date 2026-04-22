@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Mvc;
 using System.Collections.Concurrent;
 using System.ComponentModel.DataAnnotations;
 using System.Reflection;
@@ -71,5 +72,17 @@ public static class JsonMergePatchHelper
             .Where(r => !string.IsNullOrEmpty(r.ErrorMessage))
             .Select(r => r.ErrorMessage!)
             .ToList();
+    }
+
+    /// <summary>
+    /// Applies <paramref name="patch"/> to <paramref name="target"/> and validates the result.
+    /// Returns <c>null</c> if the object is valid, or a <see cref="BadRequestObjectResult"/>
+    /// describing the validation failures otherwise.
+    /// </summary>
+    public static IActionResult? ApplyAndValidate<T>(T target, JsonElement patch) where T : class
+    {
+        ApplyPatch(target, patch);
+        List<string> errors = Validate(target);
+        return errors.Count > 0 ? new BadRequestObjectResult(new { Errors = errors }) : null;
     }
 }

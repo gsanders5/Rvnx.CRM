@@ -54,7 +54,7 @@ public class LabelsController(ILabelService labelService) : ControllerBase
     public async Task<IActionResult> Update(Guid id, [FromBody] LabelFormDto model)
     {
         LabelOperationResult result = await _labelService.UpdateAsync(id, model.Name, model.Color);
-        return !result.Success ? result.IsNotFound ? NotFound() : BadRequest(new { result.Errors }) : NoContent();
+        return result.ToNoContentResult();
     }
 
     /// <summary>
@@ -73,16 +73,15 @@ public class LabelsController(ILabelService labelService) : ControllerBase
         }
 
         LabelFormDto existing = new() { Id = id, Name = label.Name, Color = label.Color };
-        JsonMergePatchHelper.ApplyPatch(existing, patch);
 
-        List<string> errors = JsonMergePatchHelper.Validate(existing);
-        if (errors.Count > 0)
+        IActionResult? validationFailure = JsonMergePatchHelper.ApplyAndValidate(existing, patch);
+        if (validationFailure != null)
         {
-            return BadRequest(new { Errors = errors });
+            return validationFailure;
         }
 
         LabelOperationResult result = await _labelService.UpdateAsync(id, existing.Name, existing.Color);
-        return !result.Success ? result.IsNotFound ? NotFound() : BadRequest(new { result.Errors }) : NoContent();
+        return result.ToNoContentResult();
     }
 
     /// <summary>
