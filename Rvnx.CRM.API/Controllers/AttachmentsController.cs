@@ -1,5 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Rvnx.CRM.API.Helpers;
+using Rvnx.CRM.Core.DTOs.Base;
 using Rvnx.CRM.Core.Enumerations;
 using Rvnx.CRM.Core.Interfaces;
 
@@ -24,7 +26,7 @@ public class AttachmentsController(IAttachmentService attachmentService, IThumbn
     [HttpGet("contact/{contactId}")]
     public async Task<IActionResult> ListByContact(Guid contactId)
     {
-        List<Core.DTOs.Base.AttachmentDto> attachments = await _attachmentService.GetByContactAsync(contactId);
+        List<AttachmentDto> attachments = await _attachmentService.GetByContactAsync(contactId);
         return Ok(attachments);
     }
 
@@ -46,7 +48,7 @@ public class AttachmentsController(IAttachmentService attachmentService, IThumbn
         await file.CopyToAsync(stream);
         byte[] content = stream.ToArray();
 
-        Core.DTOs.Base.AttachmentOperationResult result = await _attachmentService.UploadAttachmentAsync(contactId, EntityType.Person, content, file.FileName);
+        AttachmentOperationResult result = await _attachmentService.UploadAttachmentAsync(contactId, EntityType.Person, content, file.FileName);
 
         if (!result.Success)
         {
@@ -63,13 +65,13 @@ public class AttachmentsController(IAttachmentService attachmentService, IThumbn
     [HttpGet("{id}/download")]
     public async Task<IActionResult> Download(Guid id)
     {
-        Core.DTOs.Base.AttachmentDto? attachment = await _attachmentService.GetAttachmentAsync(id);
+        AttachmentDto? attachment = await _attachmentService.GetAttachmentAsync(id);
         if (attachment == null)
         {
             return NotFound();
         }
 
-        Core.DTOs.Base.AttachmentContentDto? content = await _attachmentService.GetAttachmentContentAsync(id);
+        AttachmentContentDto? content = await _attachmentService.GetAttachmentContentAsync(id);
         return content == null ? NotFound() : File(content.Content, content.ContentType, attachment.FileName);
     }
 
@@ -83,7 +85,7 @@ public class AttachmentsController(IAttachmentService attachmentService, IThumbn
     [HttpGet("{id}/thumbnail")]
     public async Task<IActionResult> Thumbnail(Guid id, int? maxWidth = null, int? maxHeight = null)
     {
-        Core.DTOs.Base.AttachmentContentDto? dto = await _attachmentService.GetAttachmentContentAsync(id);
+        AttachmentContentDto? dto = await _attachmentService.GetAttachmentContentAsync(id);
         if (dto == null)
         {
             return NotFound();
@@ -91,16 +93,16 @@ public class AttachmentsController(IAttachmentService attachmentService, IThumbn
 
         byte[]? thumbnail = await _thumbnailService.GetOrCreateThumbnailAsync(id, dto.Content, dto.ContentType, maxWidth, maxHeight);
 
+        Response.Headers.LastModified = dto.LastChangedDate.ToString("R");
+
         if (thumbnail != null)
         {
-            Response.Headers.LastModified = dto.LastChangedDate.ToString("R");
             Response.Headers.CacheControl = "public, max-age=604800";
             return File(thumbnail, "image/jpeg");
         }
 
-        // Thumbnail generation failed or not an image — fall back to full file
-        // Short cache so the caller retries rather than caching the failure permanently
-        Response.Headers.LastModified = dto.LastChangedDate.ToString("R");
+        // Thumbnail generation failed or not an image — fall back to full file.
+        // Short cache so the caller retries rather than caching the failure permanently.
         Response.Headers.CacheControl = "public, max-age=3600";
         return File(dto.Content, dto.ContentType, dto.FileName);
     }
@@ -112,7 +114,7 @@ public class AttachmentsController(IAttachmentService attachmentService, IThumbn
     [HttpDelete("{id}")]
     public async Task<IActionResult> Delete(Guid id)
     {
-        Core.DTOs.Base.AttachmentOperationResult result = await _attachmentService.DeleteAttachmentAsync(id);
-        return !result.Success ? result.IsNotFound ? NotFound() : BadRequest(new { result.Errors }) : NoContent();
+        AttachmentOperationResult result = await _attachmentService.DeleteAttachmentAsync(id);
+        return result.ToNoContentResult();
     }
 }

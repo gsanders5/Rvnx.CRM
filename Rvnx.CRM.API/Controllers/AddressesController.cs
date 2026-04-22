@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Rvnx.CRM.API.Helpers;
 using Rvnx.CRM.Core.DTOs.Contact;
 using Rvnx.CRM.Core.Interfaces;
+using Rvnx.CRM.Core.Models;
 using System.Text.Json;
 
 namespace Rvnx.CRM.API.Controllers;
@@ -37,12 +38,8 @@ public class AddressesController(IAddressService addressService) : ControllerBas
     [HttpPost]
     public async Task<IActionResult> Create([FromBody] AddressFormDto model)
     {
-        Core.Models.OperationResult result = await _addressService.CreateAsync(model);
-        if (!result.Success)
-        {
-            return BadRequest(new { Error = result.ErrorMessage });
-        }
-        return Ok(new { Id = result.RedirectId });
+        OperationResult result = await _addressService.CreateAsync(model);
+        return result.ToCreatedResult();
     }
 
     /// <summary>
@@ -55,8 +52,8 @@ public class AddressesController(IAddressService addressService) : ControllerBas
     public async Task<IActionResult> Update(Guid id, [FromBody] AddressFormDto model)
     {
         model.Id = id;
-        Core.Models.OperationResult result = await _addressService.UpdateAsync(id, model);
-        return !result.Success ? BadRequest(new { Error = result.ErrorMessage }) : NoContent();
+        OperationResult result = await _addressService.UpdateAsync(id, model);
+        return result.ToNoContentResult();
     }
 
     /// <summary>
@@ -74,16 +71,14 @@ public class AddressesController(IAddressService addressService) : ControllerBas
             return NotFound();
         }
 
-        JsonMergePatchHelper.ApplyPatch(existing, patch);
-
-        List<string> errors = JsonMergePatchHelper.Validate(existing);
-        if (errors.Count > 0)
+        IActionResult? validationFailure = JsonMergePatchHelper.ApplyAndValidate(existing, patch);
+        if (validationFailure != null)
         {
-            return BadRequest(new { Errors = errors });
+            return validationFailure;
         }
 
-        Core.Models.OperationResult result = await _addressService.UpdateAsync(id, existing);
-        return !result.Success ? BadRequest(new { Error = result.ErrorMessage }) : NoContent();
+        OperationResult result = await _addressService.UpdateAsync(id, existing);
+        return result.ToNoContentResult();
     }
 
     /// <summary>
@@ -93,7 +88,7 @@ public class AddressesController(IAddressService addressService) : ControllerBas
     [HttpDelete("{id}")]
     public async Task<IActionResult> Delete(Guid id)
     {
-        Core.Models.OperationResult result = await _addressService.DeleteAsync(id);
-        return !result.Success ? BadRequest(new { Error = result.ErrorMessage }) : NoContent();
+        OperationResult result = await _addressService.DeleteAsync(id);
+        return result.ToNoContentResult();
     }
 }

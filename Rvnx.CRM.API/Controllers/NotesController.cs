@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Rvnx.CRM.API.Helpers;
 using Rvnx.CRM.Core.DTOs.Base;
 using Rvnx.CRM.Core.Interfaces;
+using Rvnx.CRM.Core.Models;
 using System.Text.Json;
 
 namespace Rvnx.CRM.API.Controllers;
@@ -25,7 +26,7 @@ public class NotesController(INoteService noteService) : ControllerBase
     [HttpGet("contact/{contactId}")]
     public async Task<IActionResult> ListByContact(Guid contactId)
     {
-        List<Core.DTOs.Base.NoteDto> notes = await _noteService.GetByContactAsync(contactId);
+        List<NoteDto> notes = await _noteService.GetByContactAsync(contactId);
         return Ok(notes);
     }
 
@@ -54,8 +55,8 @@ public class NotesController(INoteService noteService) : ControllerBase
             Value = model.Value,
             EntityId = model.EntityId
         };
-        Core.Models.OperationResult result = await _noteService.CreateAsync(vm);
-        return result.Success ? Ok(new { Id = result.RedirectId }) : BadRequest(new { Error = result.ErrorMessage });
+        OperationResult result = await _noteService.CreateAsync(vm);
+        return result.ToCreatedResult();
     }
 
     /// <summary>
@@ -68,8 +69,8 @@ public class NotesController(INoteService noteService) : ControllerBase
     public async Task<IActionResult> Update(Guid id, [FromBody] NoteFormViewModel model)
     {
         model.Id = id;
-        Core.Models.OperationResult result = await _noteService.UpdateAsync(id, model);
-        return !result.Success ? BadRequest(new { Error = result.ErrorMessage }) : NoContent();
+        OperationResult result = await _noteService.UpdateAsync(id, model);
+        return result.ToNoContentResult();
     }
 
     /// <summary>
@@ -87,16 +88,14 @@ public class NotesController(INoteService noteService) : ControllerBase
             return NotFound();
         }
 
-        JsonMergePatchHelper.ApplyPatch(existing, patch);
-
-        List<string> errors = JsonMergePatchHelper.Validate(existing);
-        if (errors.Count > 0)
+        IActionResult? validationFailure = JsonMergePatchHelper.ApplyAndValidate(existing, patch);
+        if (validationFailure != null)
         {
-            return BadRequest(new { Errors = errors });
+            return validationFailure;
         }
 
-        Core.Models.OperationResult result = await _noteService.UpdateAsync(id, existing);
-        return !result.Success ? BadRequest(new { Error = result.ErrorMessage }) : NoContent();
+        OperationResult result = await _noteService.UpdateAsync(id, existing);
+        return result.ToNoContentResult();
     }
 
     /// <summary>
@@ -106,7 +105,7 @@ public class NotesController(INoteService noteService) : ControllerBase
     [HttpDelete("{id}")]
     public async Task<IActionResult> Delete(Guid id)
     {
-        Core.Models.OperationResult result = await _noteService.DeleteAsync(id);
-        return !result.Success ? BadRequest(new { Error = result.ErrorMessage }) : NoContent();
+        OperationResult result = await _noteService.DeleteAsync(id);
+        return result.ToNoContentResult();
     }
 }

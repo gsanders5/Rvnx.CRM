@@ -68,7 +68,7 @@ public class ContactsController(
     {
         model.Id = id;
         ContactOperationResult result = await _contactManagementService.UpdateContactAsync(id, model, null, null, null);
-        return !result.Success ? result.IsNotFound ? NotFound() : BadRequest(new { result.Errors }) : NoContent();
+        return result.ToNoContentResult();
     }
 
     /// <summary>
@@ -80,7 +80,7 @@ public class ContactsController(
     public async Task<IActionResult> SetPhoto(Guid id, Guid attachmentId)
     {
         ContactOperationResult result = await _contactManagementService.SetAttachmentAsProfilePhotoAsync(id, attachmentId);
-        return !result.Success ? result.IsNotFound ? NotFound() : BadRequest(new { result.Errors }) : NoContent();
+        return result.ToNoContentResult();
     }
 
     /// <summary>
@@ -102,16 +102,14 @@ public class ContactsController(
             return NotFound();
         }
 
-        JsonMergePatchHelper.ApplyPatch(existing, patch);
-
-        List<string> errors = JsonMergePatchHelper.Validate(existing);
-        if (errors.Count > 0)
+        IActionResult? validationFailure = JsonMergePatchHelper.ApplyAndValidate(existing, patch);
+        if (validationFailure != null)
         {
-            return BadRequest(new { Errors = errors });
+            return validationFailure;
         }
 
         ContactOperationResult result = await _contactManagementService.UpdateContactAsync(id, existing, null, null, null);
-        return !result.Success ? result.IsNotFound ? NotFound() : BadRequest(new { result.Errors }) : NoContent();
+        return result.ToNoContentResult();
     }
 
     /// <summary>
@@ -122,7 +120,7 @@ public class ContactsController(
     public async Task<IActionResult> UnsetPhoto(Guid id)
     {
         ContactOperationResult result = await _contactManagementService.UnsetProfilePhotoAsync(id);
-        return !result.Success ? result.IsNotFound ? NotFound() : BadRequest(new { result.Errors }) : NoContent();
+        return result.ToNoContentResult();
     }
 
     /// <summary>

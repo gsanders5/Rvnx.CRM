@@ -39,11 +39,7 @@ public class ContactMethodsController(IContactMethodService contactMethodService
     public async Task<IActionResult> Create([FromBody] ContactMethodFormDto model)
     {
         OperationResult result = await _contactMethodService.CreateAsync(model);
-        if (!result.Success)
-        {
-            return BadRequest(new { Error = result.ErrorMessage });
-        }
-        return Ok(new { Id = result.RedirectId });
+        return result.ToCreatedResult();
     }
 
     /// <summary>
@@ -57,7 +53,7 @@ public class ContactMethodsController(IContactMethodService contactMethodService
     {
         model.Id = id;
         OperationResult result = await _contactMethodService.UpdateAsync(id, model);
-        return !result.Success ? BadRequest(new { Error = result.ErrorMessage }) : NoContent();
+        return result.ToNoContentResult();
     }
 
     /// <summary>
@@ -75,16 +71,14 @@ public class ContactMethodsController(IContactMethodService contactMethodService
             return NotFound();
         }
 
-        JsonMergePatchHelper.ApplyPatch(existing, patch);
-
-        List<string> errors = JsonMergePatchHelper.Validate(existing);
-        if (errors.Count > 0)
+        IActionResult? validationFailure = JsonMergePatchHelper.ApplyAndValidate(existing, patch);
+        if (validationFailure != null)
         {
-            return BadRequest(new { Errors = errors });
+            return validationFailure;
         }
 
         OperationResult result = await _contactMethodService.UpdateAsync(id, existing);
-        return !result.Success ? BadRequest(new { Error = result.ErrorMessage }) : NoContent();
+        return result.ToNoContentResult();
     }
 
     /// <summary>
@@ -95,6 +89,6 @@ public class ContactMethodsController(IContactMethodService contactMethodService
     public async Task<IActionResult> Delete(Guid id)
     {
         OperationResult result = await _contactMethodService.DeleteAsync(id);
-        return !result.Success ? BadRequest(new { Error = result.ErrorMessage }) : NoContent();
+        return result.ToNoContentResult();
     }
 }

@@ -1,8 +1,10 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Rvnx.CRM.API.Helpers;
 using Rvnx.CRM.Core.DTOs.Contact;
 using Rvnx.CRM.Core.Enumerations;
 using Rvnx.CRM.Core.Interfaces;
+using Rvnx.CRM.Core.Models;
 using Rvnx.CRM.Core.Models.Contact;
 using Rvnx.CRM.Core.Services;
 
@@ -87,11 +89,13 @@ public class RelationshipsController(IRelationshipService relationshipService, I
     [HttpPost]
     public async Task<IActionResult> Create([FromBody] CreateRelationshipRequest request)
     {
-        Relationship model = MapToRelationship(request);
-        string selectedType = BuildSelectedType(request.RelationshipTypeId, request.Direction);
+        RelationshipOperationResult result = await _relationshipService.CreateRelationshipAsync(
+            MapToRelationship(request),
+            BuildSelectedType(request.RelationshipTypeId, request.Direction));
 
-        RelationshipOperationResult result = await _relationshipService.CreateRelationshipAsync(model, selectedType);
-        return result.Success ? Ok(new { Id = result.RedirectId }) : BadRequest(new { Error = result.ErrorMessage });
+        return result.Success
+            ? Ok(new { Id = result.RedirectId })
+            : BadRequest(new { Error = result.ErrorMessage });
     }
 
     /// <summary>
@@ -102,11 +106,14 @@ public class RelationshipsController(IRelationshipService relationshipService, I
     [HttpPut("{id}")]
     public async Task<IActionResult> Update(Guid id, [FromBody] CreateRelationshipRequest request)
     {
-        Relationship model = MapToRelationship(request);
-        string selectedType = BuildSelectedType(request.RelationshipTypeId, request.Direction);
+        RelationshipOperationResult result = await _relationshipService.UpdateRelationshipAsync(
+            id,
+            MapToRelationship(request),
+            BuildSelectedType(request.RelationshipTypeId, request.Direction));
 
-        RelationshipOperationResult result = await _relationshipService.UpdateRelationshipAsync(id, model, selectedType);
-        return result.Success ? NoContent() : BadRequest(new { Error = result.ErrorMessage });
+        return result.Success
+            ? NoContent()
+            : BadRequest(new { Error = result.ErrorMessage });
     }
 
     /// <summary>
@@ -116,8 +123,8 @@ public class RelationshipsController(IRelationshipService relationshipService, I
     [HttpDelete("{id}")]
     public async Task<IActionResult> Delete(Guid id)
     {
-        Core.Models.OperationResult result = await _relationshipService.DeleteRelationshipAsync(id);
-        return result.Success ? NoContent() : BadRequest(new { Error = result.ErrorMessage });
+        OperationResult result = await _relationshipService.DeleteRelationshipAsync(id);
+        return result.ToNoContentResult();
     }
 
     private static Relationship MapToRelationship(CreateRelationshipRequest r)
@@ -133,8 +140,11 @@ public class RelationshipsController(IRelationshipService relationshipService, I
         };
     }
 
+    // Converts the typed (TypeId, Direction) pair exposed by the API into the
+    // internal "{TypeId}_Fwd" / "{TypeId}_Rev" string key the service consumes.
     private static string BuildSelectedType(Guid typeId, CoreEnumerations.RelationshipDirection direction)
     {
-        return $"{typeId}_{(direction == CoreEnumerations.RelationshipDirection.Reverse ? "Rev" : "Fwd")}";
+        string suffix = direction == CoreEnumerations.RelationshipDirection.Reverse ? "Rev" : "Fwd";
+        return $"{typeId}_{suffix}";
     }
 }

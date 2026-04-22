@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Rvnx.CRM.API.Helpers;
 using Rvnx.CRM.Core.DTOs.Contact;
 using Rvnx.CRM.Core.Interfaces;
+using Rvnx.CRM.Core.Models;
 using System.Text.Json;
 
 namespace Rvnx.CRM.API.Controllers;
@@ -36,12 +37,8 @@ public class ContactTasksController(IContactTaskService contactTaskService) : Co
     [HttpPost]
     public async Task<IActionResult> Create([FromBody] ContactTaskFormDto model)
     {
-        Core.Models.OperationResult result = await _contactTaskService.CreateAsync(model);
-        if (!result.Success)
-        {
-            return BadRequest(new { Error = result.ErrorMessage });
-        }
-        return Ok(new { Id = result.RedirectId });
+        OperationResult result = await _contactTaskService.CreateAsync(model);
+        return result.ToCreatedResult();
     }
 
     /// <summary>
@@ -54,8 +51,8 @@ public class ContactTasksController(IContactTaskService contactTaskService) : Co
     public async Task<IActionResult> Update(Guid id, [FromBody] ContactTaskFormDto model)
     {
         model.Id = id;
-        Core.Models.OperationResult result = await _contactTaskService.UpdateAsync(id, model);
-        return !result.Success ? BadRequest(new { Error = result.ErrorMessage }) : NoContent();
+        OperationResult result = await _contactTaskService.UpdateAsync(id, model);
+        return result.ToNoContentResult();
     }
 
     /// <summary>
@@ -73,16 +70,14 @@ public class ContactTasksController(IContactTaskService contactTaskService) : Co
             return NotFound();
         }
 
-        JsonMergePatchHelper.ApplyPatch(existing, patch);
-
-        List<string> errors = JsonMergePatchHelper.Validate(existing);
-        if (errors.Count > 0)
+        IActionResult? validationFailure = JsonMergePatchHelper.ApplyAndValidate(existing, patch);
+        if (validationFailure != null)
         {
-            return BadRequest(new { Errors = errors });
+            return validationFailure;
         }
 
-        Core.Models.OperationResult result = await _contactTaskService.UpdateAsync(id, existing);
-        return !result.Success ? BadRequest(new { Error = result.ErrorMessage }) : NoContent();
+        OperationResult result = await _contactTaskService.UpdateAsync(id, existing);
+        return result.ToNoContentResult();
     }
 
     /// <summary>
@@ -92,8 +87,8 @@ public class ContactTasksController(IContactTaskService contactTaskService) : Co
     [HttpDelete("{id}")]
     public async Task<IActionResult> Delete(Guid id)
     {
-        Core.Models.OperationResult result = await _contactTaskService.DeleteAsync(id);
-        return !result.Success ? BadRequest(new { Error = result.ErrorMessage }) : NoContent();
+        OperationResult result = await _contactTaskService.DeleteAsync(id);
+        return result.ToNoContentResult();
     }
 
     /// <summary>
@@ -103,7 +98,7 @@ public class ContactTasksController(IContactTaskService contactTaskService) : Co
     [HttpPost("{id}/toggle")]
     public async Task<IActionResult> ToggleComplete(Guid id)
     {
-        Core.Models.OperationResult result = await _contactTaskService.ToggleCompleteAsync(id);
-        return !result.Success ? BadRequest(new { Error = result.ErrorMessage }) : NoContent();
+        OperationResult result = await _contactTaskService.ToggleCompleteAsync(id);
+        return result.ToNoContentResult();
     }
 }
