@@ -156,8 +156,8 @@ public class Repository(CRMDbContext context) : IRepository
 
     public async Task DeleteAsync<T>(Guid id, CancellationToken cancellationToken = default) where T : BaseEntity
     {
-        T? entity = _context.Set<T>().Local.FirstOrDefault(e => e.Id == id);
-        entity ??= await _context.Set<T>().FindAsync([id], cancellationToken);
+        // FindAsync already checks the context's local cache before querying the database.
+        T? entity = await _context.Set<T>().FindAsync([id], cancellationToken);
 
         if (entity != null)
         {
