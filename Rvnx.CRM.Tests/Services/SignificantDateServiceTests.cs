@@ -19,11 +19,11 @@ public class SignificantDateServiceTests : IDisposable
 
     public SignificantDateServiceTests()
     {
-        var options = new DbContextOptionsBuilder<CRMDbContext>()
+        DbContextOptions<CRMDbContext> options = new DbContextOptionsBuilder<CRMDbContext>()
             .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
             .Options;
 
-        var mockCurrentUserService = new Mock<ICurrentUserService>();
+        Mock<ICurrentUserService> mockCurrentUserService = new();
         mockCurrentUserService.Setup(s => s.UserId).Returns(Guid.NewGuid());
         mockCurrentUserService.Setup(s => s.UserName).Returns("test-user");
 
@@ -43,15 +43,15 @@ public class SignificantDateServiceTests : IDisposable
     public async Task GetCalendarEventsAsyncWithActiveDatesReturnsCorrectEvents()
     {
         // Arrange
-        var contactId1 = Guid.NewGuid();
-        var contactId2 = Guid.NewGuid();
+        Guid contactId1 = Guid.NewGuid();
+        Guid contactId2 = Guid.NewGuid();
 
         _context.Contacts!.AddRange(
             new Contact { Id = contactId1, FirstName = "John", LastName = "Doe" },
             new Contact { Id = contactId2, FirstName = "Jane", LastName = "Smith" }
         );
 
-        var today = DateOnly.FromDateTime(DateTime.Today);
+        DateOnly today = DateOnly.FromDateTime(DateTime.Today);
 
         _context.SignificantDates!.AddRange(
             new SignificantDate
@@ -86,19 +86,19 @@ public class SignificantDateServiceTests : IDisposable
         await _context.SaveChangesAsync();
 
         // Act
-        var events = await _service.GetCalendarEventsAsync();
+        List<CalendarEventDto> events = await _service.GetCalendarEventsAsync();
 
         // Assert
         Assert.NotNull(events);
         Assert.Equal(2, events.Count);
 
-        var birthdayEvent = events.FirstOrDefault(e => e.Title.Contains("Birthday"));
+        CalendarEventDto? birthdayEvent = events.FirstOrDefault(e => e.Title.Contains("Birthday"));
         Assert.NotNull(birthdayEvent);
         Assert.Equal("John's Birthday", birthdayEvent.Title);
         Assert.Equal(CalendarColors.Birthday, birthdayEvent.Color);
         Assert.Equal(contactId1, birthdayEvent.ContactId);
 
-        var anniversaryEvent = events.FirstOrDefault(e => e.Title.Contains("Anniversary"));
+        CalendarEventDto? anniversaryEvent = events.FirstOrDefault(e => e.Title.Contains("Anniversary"));
         Assert.NotNull(anniversaryEvent);
         Assert.Equal("Jane's Anniversary", anniversaryEvent.Title);
         Assert.Equal(CalendarColors.SignificantDate, anniversaryEvent.Color);
@@ -108,7 +108,7 @@ public class SignificantDateServiceTests : IDisposable
     [Fact]
     public async Task GetCalendarEventsAsyncWhenNoActiveDatesReturnsEmptyList()
     {
-        var contactId = Guid.NewGuid();
+        Guid contactId = Guid.NewGuid();
         _context.Contacts!.Add(new Contact { Id = contactId, FirstName = "John", LastName = "Doe" });
 
         _context.SignificantDates!.Add(new SignificantDate
@@ -123,7 +123,7 @@ public class SignificantDateServiceTests : IDisposable
 
         await _context.SaveChangesAsync();
 
-        var events = await _service.GetCalendarEventsAsync();
+        List<CalendarEventDto> events = await _service.GetCalendarEventsAsync();
 
         Assert.Empty(events);
     }
@@ -131,11 +131,11 @@ public class SignificantDateServiceTests : IDisposable
     [Fact]
     public async Task GetCalendarEventsAsyncIncludesCurrentYearOccurrenceWhenApplicable()
     {
-        var contactId = Guid.NewGuid();
+        Guid contactId = Guid.NewGuid();
         _context.Contacts!.Add(new Contact { Id = contactId, FirstName = "Alice", LastName = "Wonderland" });
 
-        var today = DateOnly.FromDateTime(DateTime.Today);
-        var eventDate = today.AddDays(-10); // Event was 10 days ago
+        DateOnly today = DateOnly.FromDateTime(DateTime.Today);
+        DateOnly eventDate = today.AddDays(-10); // Event was 10 days ago
 
         _context.SignificantDates!.Add(new SignificantDate
         {
@@ -149,7 +149,7 @@ public class SignificantDateServiceTests : IDisposable
 
         await _context.SaveChangesAsync();
 
-        var events = await _service.GetCalendarEventsAsync();
+        List<CalendarEventDto> events = await _service.GetCalendarEventsAsync();
 
         // We expect two events: the next occurrence (next year) and the current year's occurrence
         Assert.Equal(2, events.Count);

@@ -14,8 +14,8 @@ public class CalendarFeedServiceTests
         Guid contactA = Guid.NewGuid();
         Guid contactB = Guid.NewGuid();
 
-        List<CalendarEventDto> dateEvents = new()
-        {
+        List<CalendarEventDto> dateEvents =
+        [
             new CalendarEventDto
             {
                 Title = "Alice's Birthday",
@@ -25,10 +25,10 @@ public class CalendarFeedServiceTests
                 ContactId = contactA,
                 Url = "https://example.com/contacts/alice",
             },
-        };
+        ];
 
-        List<CalendarEventDto> taskEvents = new()
-        {
+        List<CalendarEventDto> taskEvents =
+        [
             new CalendarEventDto
             {
                 Title = "Bob: Follow up",
@@ -37,7 +37,7 @@ public class CalendarFeedServiceTests
                 AllDay = true,
                 ContactId = contactB,
             },
-        };
+        ];
 
         string ics = _service.BuildIcsFeed(dateEvents, taskEvents);
 
@@ -52,8 +52,8 @@ public class CalendarFeedServiceTests
     {
         Guid contactId = Guid.NewGuid();
 
-        List<CalendarEventDto> dateEvents = new()
-        {
+        List<CalendarEventDto> dateEvents =
+        [
             new CalendarEventDto
             {
                 Title = "Alice's Birthday",
@@ -61,10 +61,10 @@ public class CalendarFeedServiceTests
                 AllDay = true,
                 ContactId = contactId,
             },
-        };
+        ];
 
-        List<CalendarEventDto> taskEvents = new()
-        {
+        List<CalendarEventDto> taskEvents =
+        [
             new CalendarEventDto
             {
                 Title = "Alice: Call",
@@ -72,7 +72,7 @@ public class CalendarFeedServiceTests
                 AllDay = true,
                 ContactId = contactId,
             },
-        };
+        ];
 
         string firstIcs = _service.BuildIcsFeed(dateEvents, taskEvents);
         string secondIcs = _service.BuildIcsFeed(dateEvents, taskEvents);
@@ -93,11 +93,11 @@ public class CalendarFeedServiceTests
     {
         Guid contactId = Guid.NewGuid();
 
-        List<CalendarEventDto> taskEvents = new()
-        {
+        List<CalendarEventDto> taskEvents =
+        [
             new CalendarEventDto { Title = "Call", Start = "2026-06-15", ContactId = contactId },
             new CalendarEventDto { Title = "Email", Start = "2026-06-15", ContactId = contactId },
-        };
+        ];
 
         string ics = _service.BuildIcsFeed(Array.Empty<CalendarEventDto>(), taskEvents);
         IcalCalendar parsed = IcalCalendar.Load(ics);
@@ -110,8 +110,8 @@ public class CalendarFeedServiceTests
     [Fact]
     public void BuildIcsFeedSkipsEventsWithUnparsableStart()
     {
-        List<CalendarEventDto> dateEvents = new()
-        {
+        List<CalendarEventDto> dateEvents =
+        [
             new CalendarEventDto
             {
                 Title = "Valid",
@@ -124,7 +124,7 @@ public class CalendarFeedServiceTests
                 Start = "not-a-date",
                 ContactId = Guid.NewGuid(),
             },
-        };
+        ];
 
         string ics = _service.BuildIcsFeed(dateEvents, Array.Empty<CalendarEventDto>());
         IcalCalendar parsed = IcalCalendar.Load(ics);

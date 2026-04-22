@@ -48,7 +48,7 @@ public class NotesController(INoteService noteService) : ControllerBase
     [HttpPost]
     public async Task<IActionResult> Create([FromBody] NoteFormDto model)
     {
-        var vm = new NoteFormViewModel
+        NoteFormViewModel vm = new()
         {
             Title = model.Title,
             Value = model.Value,

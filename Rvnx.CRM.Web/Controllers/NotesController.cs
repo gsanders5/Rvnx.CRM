@@ -32,17 +32,9 @@ public class NotesController(INoteService noteService, IRepository repository, I
         if (ModelState.IsValid)
         {
             OperationResult result = await _noteService.CreateAsync(viewModel);
-            if (result.Success)
-            {
-                return RedirectToEntity(result.RedirectId, result.RedirectType);
-            }
-
-            if (result.IsNotFound)
-            {
-                return NotFound();
-            }
-
-            return BadRequest(result.ErrorMessage);
+            return result.Success
+                ? RedirectToEntity(result.RedirectId, result.RedirectType)
+                : result.IsNotFound ? NotFound() : BadRequest(result.ErrorMessage);
         }
 
         if (viewModel.EntityId != Guid.Empty)

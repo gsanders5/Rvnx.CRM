@@ -1,5 +1,4 @@
 using Moq;
-using Rvnx.CRM.Core.Constants;
 using Rvnx.CRM.Core.DTOs.Base;
 using Rvnx.CRM.Core.Enumerations;
 using Rvnx.CRM.Core.Exceptions;

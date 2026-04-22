@@ -179,12 +179,9 @@ public class ActivityService(IRepository repository, ISelfContactService selfCon
 
     public async Task<ActivityFormDto?> GetFormForCreateAsync(Guid entityId)
     {
-        if (!await _repository.IsValidContactAsync(entityId))
-        {
-            return null;
-        }
-
-        return new ActivityFormDto { EntityId = entityId, ContactIds = await BuildContactIdsWithSelfAsync(entityId) };
+        return !await _repository.IsValidContactAsync(entityId)
+            ? null
+            : new ActivityFormDto { EntityId = entityId, ContactIds = await BuildContactIdsWithSelfAsync(entityId) };
     }
 
     public async Task<Activity?> GetByIdAsync(Guid id)

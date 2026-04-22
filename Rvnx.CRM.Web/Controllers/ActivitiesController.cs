@@ -51,17 +51,9 @@ public class ActivitiesController(IActivityService activityService, IRepository 
     public async Task<IActionResult> QuickLog(Guid contactId, string activityType)
     {
         OperationResult result = await _activityService.QuickLogAsync(contactId, activityType);
-        if (result.Success)
-        {
-            return RedirectToEntity(result.RedirectId, result.RedirectType);
-        }
-
-        if (result.IsNotFound)
-        {
-            return NotFound();
-        }
-
-        return BadRequest(result.ErrorMessage);
+        return result.Success
+            ? RedirectToEntity(result.RedirectId, result.RedirectType)
+            : result.IsNotFound ? NotFound() : BadRequest(result.ErrorMessage);
     }
 
     [HttpGet]

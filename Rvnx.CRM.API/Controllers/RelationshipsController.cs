@@ -87,7 +87,7 @@ public class RelationshipsController(IRelationshipService relationshipService, I
     [HttpPost]
     public async Task<IActionResult> Create([FromBody] CreateRelationshipRequest request)
     {
-        var model = MapToRelationship(request);
+        Relationship model = MapToRelationship(request);
         string selectedType = BuildSelectedType(request.RelationshipTypeId, request.Direction);
 
         RelationshipOperationResult result = await _relationshipService.CreateRelationshipAsync(model, selectedType);
@@ -102,7 +102,7 @@ public class RelationshipsController(IRelationshipService relationshipService, I
     [HttpPut("{id}")]
     public async Task<IActionResult> Update(Guid id, [FromBody] CreateRelationshipRequest request)
     {
-        var model = MapToRelationship(request);
+        Relationship model = MapToRelationship(request);
         string selectedType = BuildSelectedType(request.RelationshipTypeId, request.Direction);
 
         RelationshipOperationResult result = await _relationshipService.UpdateRelationshipAsync(id, model, selectedType);
@@ -120,16 +120,21 @@ public class RelationshipsController(IRelationshipService relationshipService, I
         return result.Success ? NoContent() : BadRequest(new { Error = result.ErrorMessage });
     }
 
-    private static Relationship MapToRelationship(CreateRelationshipRequest r) => new()
+    private static Relationship MapToRelationship(CreateRelationshipRequest r)
     {
-        EntityId = r.EntityId,
-        RelatedEntityId = r.RelatedEntityId,
-        EntityType = r.EntityType,
-        Description = r.Description,
-        StartDate = r.StartDate,
-        EndDate = r.EndDate
-    };
+        return new()
+        {
+            EntityId = r.EntityId,
+            RelatedEntityId = r.RelatedEntityId,
+            EntityType = r.EntityType,
+            Description = r.Description,
+            StartDate = r.StartDate,
+            EndDate = r.EndDate
+        };
+    }
 
-    private static string BuildSelectedType(Guid typeId, CoreEnumerations.RelationshipDirection direction) =>
-        $"{typeId}_{(direction == CoreEnumerations.RelationshipDirection.Reverse ? "Rev" : "Fwd")}";
+    private static string BuildSelectedType(Guid typeId, CoreEnumerations.RelationshipDirection direction)
+    {
+        return $"{typeId}_{(direction == CoreEnumerations.RelationshipDirection.Reverse ? "Rev" : "Fwd")}";
+    }
 }

@@ -192,17 +192,9 @@ public class CsvExportService(IRepository repository) : ICsvExportService
 
     private static string EscapeField(string value)
     {
-        if (string.IsNullOrEmpty(value))
-        {
-            return string.Empty;
-        }
-
-        if (value.IndexOfAny(['"', ',', '\r', '\n']) < 0)
-        {
-            return value;
-        }
-
-        return "\"" + value.Replace("\"", "\"\"") + "\"";
+        return string.IsNullOrEmpty(value)
+            ? string.Empty
+            : value.IndexOfAny(['"', ',', '\r', '\n']) < 0 ? value : "\"" + value.Replace("\"", "\"\"") + "\"";
     }
 
     private static string ItemAt(List<string>? list, int index)

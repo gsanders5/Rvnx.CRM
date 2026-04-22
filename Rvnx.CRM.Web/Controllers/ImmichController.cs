@@ -43,11 +43,15 @@ public class ImmichController(
 
     [HttpGet("Immich/Thumbnail/{assetId:guid}")]
     public Task<IActionResult> Thumbnail(Guid assetId, CancellationToken ct)
-        => ProxyMedia(() => _immichService.GetThumbnailAsync(assetId, ct));
+    {
+        return ProxyMedia(() => _immichService.GetThumbnailAsync(assetId, ct));
+    }
 
     [HttpGet("Immich/Original/{assetId:guid}")]
     public Task<IActionResult> Original(Guid assetId, CancellationToken ct)
-        => ProxyMedia(() => _immichService.GetOriginalAsync(assetId, ct));
+    {
+        return ProxyMedia(() => _immichService.GetOriginalAsync(assetId, ct));
+    }
 
     [HttpPost("Immich/SetAsProfilePhoto")]
     public async Task<IActionResult> SetAsProfilePhoto(
@@ -93,14 +97,11 @@ public class ImmichController(
             ContactOperationResult set = await _contactManagementService
                 .SetAttachmentAsProfilePhotoAsync(contactId, upload.AttachmentId.Value);
 
-            if (!set.Success)
-            {
-                return set.IsNotFound
+            return !set.Success
+                ? set.IsNotFound
                     ? NotFound()
-                    : BadRequest(string.Join("; ", set.Errors));
-            }
-
-            return SafeRedirect(returnUrl);
+                    : BadRequest(string.Join("; ", set.Errors))
+                : SafeRedirect(returnUrl);
         }
     }
 

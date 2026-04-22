@@ -680,7 +680,7 @@ public class ContactReadServiceTests
                         capturedFilter = filter;
                         capturedProjection = projection;
                     })
-                .ReturnsAsync(new List<(Guid, string)>()); // Return value doesn't matter, we evaluate the expression
+                .ReturnsAsync([]); // Return value doesn't matter, we evaluate the expression
 
             // Act
             await _service.GetContactNamesAsync();
@@ -689,8 +689,8 @@ public class ContactReadServiceTests
             Assert.NotNull(capturedProjection);
             Assert.NotNull(capturedFilter);
 
-            var filterFunc = capturedFilter.Compile();
-            var projectionFunc = capturedProjection.Compile();
+            Func<Contact, bool> filterFunc = capturedFilter.Compile();
+            Func<Contact, (Guid, string)> projectionFunc = capturedProjection.Compile();
 
             // Validate the filter works
             Assert.True(filterFunc(testContacts[0]));
@@ -698,11 +698,11 @@ public class ContactReadServiceTests
             Assert.False(filterFunc(new Contact { IsHidden = true }));
 
             // Validate the projection logic on real in-memory objects
-            var projectedFull = projectionFunc(testContacts[0]);
+            (Guid, string) projectedFull = projectionFunc(testContacts[0]);
             Assert.Equal(id1, projectedFull.Item1);
             Assert.Equal("John Doe", projectedFull.Item2);
 
-            var projectedPartial = projectionFunc(testContacts[1]);
+            (Guid, string) projectedPartial = projectionFunc(testContacts[1]);
             Assert.Equal(id2, projectedPartial.Item1);
             Assert.Equal("Jane Smith (partial contact)", projectedPartial.Item2);
         }
@@ -726,7 +726,7 @@ public class ContactReadServiceTests
 
             // Assert
             Assert.NotNull(capturedFilter);
-            var filterFunc = capturedFilter.Compile();
+            Func<Relationship, bool> filterFunc = capturedFilter.Compile();
 
             // Should match: entity is queryId and type is person
             Assert.True(filterFunc(new Relationship { EntityId = queryId, RelatedEntityId = otherId, EntityType = EntityType.Person }));

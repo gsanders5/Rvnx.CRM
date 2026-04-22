@@ -1,8 +1,6 @@
 using Moq;
-using Rvnx.CRM.Core.Constants;
 using Rvnx.CRM.Core.DTOs.Contact;
 using Rvnx.CRM.Core.Exceptions;
-using Rvnx.CRM.Core.Extensions;
 using Rvnx.CRM.Core.Interfaces;
 using Rvnx.CRM.Core.Models;
 using Rvnx.CRM.Core.Models.Activity;
@@ -75,7 +73,7 @@ public class ActivityServiceTests
         List<ActivityContact>? addedActivityContacts = null;
         _repositoryMock.Setup(r => r.AddRangeAsync(It.IsAny<IEnumerable<ActivityContact>>(), It.IsAny<CancellationToken>()))
             .Callback<IEnumerable<ActivityContact>, CancellationToken>((acs, _) => addedActivityContacts = acs.ToList())
-            .ReturnsAsync(new List<ActivityContact>());
+            .ReturnsAsync([]);
 
         OperationResult result = await _service.CreateAsync(dto);
 
@@ -332,7 +330,7 @@ public class ActivityServiceTests
         List<ActivityContact>? addedActivityContacts = null;
         _repositoryMock.Setup(r => r.AddRangeAsync(It.IsAny<IEnumerable<ActivityContact>>(), It.IsAny<CancellationToken>()))
             .Callback<IEnumerable<ActivityContact>, CancellationToken>((acs, _) => addedActivityContacts = acs.ToList())
-            .ReturnsAsync(new List<ActivityContact>());
+            .ReturnsAsync([]);
 
         OperationResult result = await _service.QuickLogAsync(contactId, "Phone Call");
 
@@ -359,7 +357,7 @@ public class ActivityServiceTests
         List<ActivityContact>? addedActivityContacts = null;
         _repositoryMock.Setup(r => r.AddRangeAsync(It.IsAny<IEnumerable<ActivityContact>>(), It.IsAny<CancellationToken>()))
             .Callback<IEnumerable<ActivityContact>, CancellationToken>((acs, _) => addedActivityContacts = acs.ToList())
-            .ReturnsAsync(new List<ActivityContact>());
+            .ReturnsAsync([]);
 
         OperationResult result = await _service.QuickLogAsync(contactId, "Meeting");
 

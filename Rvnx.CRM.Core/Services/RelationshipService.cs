@@ -71,7 +71,7 @@ public class RelationshipService(IRepository repository, IRelationshipSuggestion
                     existingEdges.Add((r.RelatedEntityId, r.EntityId));
                 }
 
-                foreach (var (sId, tId, reverse) in parsedSuggestions)
+                foreach ((Guid sId, Guid tId, bool reverse) in parsedSuggestions)
                 {
                     Relationship newRel = new()
                     {
@@ -350,7 +350,7 @@ public class RelationshipService(IRepository repository, IRelationshipSuggestion
                     existingEdges.Add((r.RelatedEntityId, r.EntityId));
                 }
 
-                foreach (var (sId, tId, reverse) in parsedSuggestions)
+                foreach ((Guid sId, Guid tId, bool reverse) in parsedSuggestions)
                 {
                     Relationship newRel = new()
                     {
@@ -431,7 +431,7 @@ public class RelationshipService(IRepository repository, IRelationshipSuggestion
 
         if (relationshipInfos.Count > 0)
         {
-            var (entityId, entityType) = relationshipInfos[0];
+            (Guid entityId, EntityType entityType) = relationshipInfos[0];
             await repository.DeleteAsync<Relationship>(r => r.Id == id);
             await repository.SaveChangesAsync();
             return OperationResult.Ok(entityId, entityType);

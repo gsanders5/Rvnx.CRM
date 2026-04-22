@@ -2,7 +2,6 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Rvnx.CRM.API.Helpers;
 using Rvnx.CRM.Core.DTOs.Dates;
-using Rvnx.CRM.Core.Enumerations;
 using Rvnx.CRM.Core.Interfaces;
 using System.Text.Json;
 
@@ -56,7 +55,7 @@ public class SignificantDatesController(ISignificantDateService significantDateS
     [HttpPost]
     public async Task<IActionResult> Create([FromBody] CreateSignificantDateRequest request)
     {
-        var model = new SignificantDateDto
+        SignificantDateDto model = new()
         {
             EntityId = request.EntityId,
             Title = request.Title,

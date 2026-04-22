@@ -52,17 +52,11 @@ public static class PhoneNumberNormalizer
 
     public static string NormalizeOrThrow(ContactMethodType type, string? value, string defaultRegion = DefaultRegion)
     {
-        if (type != ContactMethodType.Phone)
-        {
-            return value ?? string.Empty;
-        }
-
-        if (!TryNormalize(value, out string normalized, out string? error, defaultRegion))
-        {
-            throw new ValidationException(error);
-        }
-
-        return normalized;
+        return type != ContactMethodType.Phone
+            ? value ?? string.Empty
+            : !TryNormalize(value, out string normalized, out string? error, defaultRegion)
+            ? throw new ValidationException(error)
+            : normalized;
     }
 
     public static string FormatForDisplay(string? stored, string defaultRegion = DefaultRegion)
