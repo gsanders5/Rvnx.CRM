@@ -10,7 +10,7 @@ public class SignificantDateDto : BaseDto
     public string? Description { get; set; }
     public Guid EntityId { get; set; }
     public EntityType EntityType { get; set; } = EntityType.Person;
-    public Enumerations.RecurrenceType RecurrenceType { get; set; }
+    public RecurrenceType RecurrenceType { get; set; }
     public int? CustomIntervalDays { get; set; }
     public bool IsActive { get; set; } = true;
     public DateOnly? NextOccurrence { get; set; }

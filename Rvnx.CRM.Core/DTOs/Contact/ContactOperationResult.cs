@@ -1,11 +1,10 @@
+using Rvnx.CRM.Core.DTOs.Base;
+
 namespace Rvnx.CRM.Core.DTOs.Contact;
 
-public class ContactOperationResult
+public class ContactOperationResult : EntityOperationResult
 {
-    public bool Success { get; set; }
     public Guid? ContactId { get; set; }
-    public List<string> Errors { get; set; } = [];
-    public bool IsNotFound { get; set; }
 
     public static ContactOperationResult Failure(params string[] errors)
     {
