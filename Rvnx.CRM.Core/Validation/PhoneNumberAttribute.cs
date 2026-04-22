@@ -18,9 +18,9 @@ public sealed class PhoneNumberAttribute : ValidationAttribute
             return ValidationResult.Success;
         }
 
-        string[]? memberNames = validationContext.MemberName is null
-            ? null
-            : [validationContext.MemberName];
-        return new ValidationResult(error ?? PhoneNumberNormalizer.InvalidPhoneMessage, memberNames);
+        string message = error ?? PhoneNumberNormalizer.InvalidPhoneMessage;
+        return validationContext.MemberName is { } memberName
+            ? new ValidationResult(message, [memberName])
+            : new ValidationResult(message);
     }
 }

@@ -41,25 +41,31 @@ public static class SocialMediaUrlNormalizer
 
         value = value.Trim();
 
-        return value.StartsWith("http://", StringComparison.OrdinalIgnoreCase) ||
-            value.StartsWith("https://", StringComparison.OrdinalIgnoreCase)
-            ? type == ContactMethodType.Twitter && value.Contains("x.com", StringComparison.OrdinalIgnoreCase)
+        bool isUrl = value.StartsWith("http://", StringComparison.OrdinalIgnoreCase)
+            || value.StartsWith("https://", StringComparison.OrdinalIgnoreCase);
+
+        if (isUrl)
+        {
+            // Canonicalize x.com -> twitter.com when typed as a Twitter URL.
+            return type == ContactMethodType.Twitter && value.Contains("x.com", StringComparison.OrdinalIgnoreCase)
                 ? value.Replace("x.com", "twitter.com", StringComparison.OrdinalIgnoreCase)
-                : value
-            : type switch
-            {
-                ContactMethodType.Twitter => $"https://twitter.com/{value.TrimStart('@')}",
-                ContactMethodType.Facebook => $"https://facebook.com/{value}",
-                ContactMethodType.Instagram => $"https://instagram.com/{value.TrimStart('@')}",
-                ContactMethodType.LinkedIn => $"https://linkedin.com/in/{value}",
-                ContactMethodType.GitHub => $"https://github.com/{value}",
-                ContactMethodType.YouTube => $"https://youtube.com/{(value.StartsWith('@') ? value : "@" + value)}",
-                ContactMethodType.Twitch => $"https://twitch.tv/{value}",
-                ContactMethodType.TikTok => $"https://tiktok.com/{(value.StartsWith('@') ? value : "@" + value)}",
-                ContactMethodType.Telegram => $"https://t.me/{value.TrimStart('@')}",
-                ContactMethodType.WhatsApp => $"https://wa.me/{value}",
-                ContactMethodType.Skype => $"skype:{value}?chat",
-                _ => value
-            };
+                : value;
+        }
+
+        return type switch
+        {
+            ContactMethodType.Twitter => $"https://twitter.com/{value.TrimStart('@')}",
+            ContactMethodType.Facebook => $"https://facebook.com/{value}",
+            ContactMethodType.Instagram => $"https://instagram.com/{value.TrimStart('@')}",
+            ContactMethodType.LinkedIn => $"https://linkedin.com/in/{value}",
+            ContactMethodType.GitHub => $"https://github.com/{value}",
+            ContactMethodType.YouTube => $"https://youtube.com/{(value.StartsWith('@') ? value : "@" + value)}",
+            ContactMethodType.Twitch => $"https://twitch.tv/{value}",
+            ContactMethodType.TikTok => $"https://tiktok.com/{(value.StartsWith('@') ? value : "@" + value)}",
+            ContactMethodType.Telegram => $"https://t.me/{value.TrimStart('@')}",
+            ContactMethodType.WhatsApp => $"https://wa.me/{value}",
+            ContactMethodType.Skype => $"skype:{value}?chat",
+            _ => value
+        };
     }
 }
