@@ -76,12 +76,12 @@ public class ImmichServiceTests
     }
 
     [Fact]
-    public async Task SearchPeopleAsyncReturnsEmptyWhenDisabled()
+    public async Task GetAllPeopleAsyncReturnsEmptyWhenDisabled()
     {
         (ImmichService service, Mock<HttpMessageHandler> handler, HttpClient client) = CreateService(enabled: false);
         using (client)
         {
-            IReadOnlyList<ImmichOptionDto> result = await service.SearchPeopleAsync("bob", CancellationToken.None);
+            IReadOnlyList<ImmichOptionDto> result = await service.GetAllPeopleAsync(CancellationToken.None);
 
             Assert.Empty(result);
             handler.Protected().Verify("SendAsync", Times.Never(), ItExpr.IsAny<HttpRequestMessage>(), ItExpr.IsAny<CancellationToken>());
@@ -89,7 +89,7 @@ public class ImmichServiceTests
     }
 
     [Fact]
-    public async Task SearchPeopleAsyncSendsApiKeyHeader()
+    public async Task GetAllPeopleAsyncSendsApiKeyHeader()
     {
         (ImmichService service, Mock<HttpMessageHandler> handler, HttpClient client) = CreateService();
         using (client)
@@ -101,10 +101,10 @@ public class ImmichServiceTests
                 .ReturnsAsync(new HttpResponseMessage
                 {
                     StatusCode = HttpStatusCode.OK,
-                    Content = new StringContent("[]", Encoding.UTF8, "application/json")
+                    Content = new StringContent("{\"people\":[]}", Encoding.UTF8, "application/json")
                 });
 
-            await service.SearchPeopleAsync("bob", CancellationToken.None);
+            await service.GetAllPeopleAsync(CancellationToken.None);
 
             Assert.NotNull(captured);
             Assert.True(captured!.Headers.Contains("x-api-key"));
@@ -112,20 +112,40 @@ public class ImmichServiceTests
     }
 
     [Fact]
-    public async Task SearchTagsAsyncFiltersCaseInsensitive()
+    public async Task GetAllPeopleAsyncMapsResponseAndSortsByName()
     {
         (ImmichService service, Mock<HttpMessageHandler> handler, HttpClient client) = CreateService();
         using (client)
         {
-            string tagId1 = Guid.NewGuid().ToString();
-            string tagId2 = Guid.NewGuid().ToString();
-            string json = $"[{{\"id\":\"{tagId1}\",\"name\":\"Bob\",\"value\":\"Bob\"}},{{\"id\":\"{tagId2}\",\"name\":\"Alice\",\"value\":\"Alice\"}}]";
+            Guid id1 = Guid.NewGuid();
+            Guid id2 = Guid.NewGuid();
+            string json = $"{{\"people\":[{{\"id\":\"{id1}\",\"name\":\"Zebra\"}},{{\"id\":\"{id2}\",\"name\":\"Alice\"}}],\"hasNextPage\":false}}";
+            SetupJson(handler, "/people?withHidden=false&size=1000", HttpMethod.Get, json);
+
+            IReadOnlyList<ImmichOptionDto> result = await service.GetAllPeopleAsync(CancellationToken.None);
+
+            Assert.Equal(2, result.Count);
+            Assert.Equal("Alice", result[0].Text);
+            Assert.Equal("Zebra", result[1].Text);
+        }
+    }
+
+    [Fact]
+    public async Task GetAllTagsAsyncReturnsAllMapped()
+    {
+        (ImmichService service, Mock<HttpMessageHandler> handler, HttpClient client) = CreateService();
+        using (client)
+        {
+            Guid id1 = Guid.NewGuid();
+            Guid id2 = Guid.NewGuid();
+            string json = $"[{{\"id\":\"{id1}\",\"name\":\"Bob\",\"value\":\"Bob\"}},{{\"id\":\"{id2}\",\"name\":\"Alice\",\"value\":\"Alice\"}}]";
             SetupJson(handler, "/tags", HttpMethod.Get, json);
 
-            IReadOnlyList<ImmichOptionDto> result = await service.SearchTagsAsync("bob", CancellationToken.None);
+            IReadOnlyList<ImmichOptionDto> result = await service.GetAllTagsAsync(CancellationToken.None);
 
-            Assert.Single(result);
-            Assert.Equal("Bob", result[0].Text);
+            Assert.Equal(2, result.Count);
+            Assert.Equal("Alice", result[0].Text);
+            Assert.Equal("Bob", result[1].Text);
         }
     }
 
@@ -197,21 +217,21 @@ public class ImmichServiceTests
     }
 
     [Fact]
-    public async Task SearchPeopleAsyncReturnsEmptyOnUnauthorized()
+    public async Task GetAllPeopleAsyncReturnsEmptyOnUnauthorized()
     {
         (ImmichService service, Mock<HttpMessageHandler> handler, HttpClient client) = CreateService();
         using (client)
         {
-            SetupJson(handler, "withHidden=false", HttpMethod.Get, "{}", HttpStatusCode.Unauthorized);
+            SetupJson(handler, "withHidden=false&size=1000", HttpMethod.Get, "{}", HttpStatusCode.Unauthorized);
 
-            IReadOnlyList<ImmichOptionDto> result = await service.SearchPeopleAsync("bob", CancellationToken.None);
+            IReadOnlyList<ImmichOptionDto> result = await service.GetAllPeopleAsync(CancellationToken.None);
 
             Assert.Empty(result);
         }
     }
 
     [Fact]
-    public async Task SearchPeopleAsyncReturnsEmptyOnTimeout()
+    public async Task GetAllPeopleAsyncReturnsEmptyOnTimeout()
     {
         (ImmichService service, Mock<HttpMessageHandler> handler, HttpClient client) = CreateService();
         using (client)
@@ -220,7 +240,7 @@ public class ImmichServiceTests
                 .Setup<Task<HttpResponseMessage>>("SendAsync", ItExpr.IsAny<HttpRequestMessage>(), ItExpr.IsAny<CancellationToken>())
                 .ThrowsAsync(new TaskCanceledException());
 
-            IReadOnlyList<ImmichOptionDto> result = await service.SearchPeopleAsync("bob", CancellationToken.None);
+            IReadOnlyList<ImmichOptionDto> result = await service.GetAllPeopleAsync(CancellationToken.None);
 
             Assert.Empty(result);
         }

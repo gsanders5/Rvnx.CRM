@@ -15,6 +15,7 @@ public class ImmichService : IImmichService
 
     private static readonly TimeSpan CacheTtl = TimeSpan.FromMinutes(5);
     private const string TagsAllCacheKey = "immich:tags:all";
+    private const string PeopleAllCacheKey = "immich:people:all";
 
     private readonly HttpClient _httpClient;
     private readonly IConfiguration _configuration;
@@ -37,6 +38,15 @@ public class ImmichService : IImmichService
             LogLevel.Warning,
             new EventId(2, nameof(LogRequestException)),
             "Immich API call to {Path} threw");
+
+    // Immich /people pages at 500 by default, max 1000. Above that we log and let the user know the dropdown is truncated.
+    private const int PeoplePageSize = 1000;
+
+    private static readonly Action<ILogger, Exception?> LogPeoplePaginationOverflow =
+        LoggerMessage.Define(
+            LogLevel.Warning,
+            new EventId(3, nameof(LogPeoplePaginationOverflow)),
+            "Immich returned hasNextPage=true for /people; the Select2 dropdown will be truncated at " + nameof(PeoplePageSize) + " entries.");
 
     public ImmichService(
         HttpClient httpClient,
@@ -64,54 +74,89 @@ public class ImmichService : IImmichService
         }
     }
 
-    public async Task<IReadOnlyList<ImmichOptionDto>> SearchPeopleAsync(string? query, CancellationToken ct)
+    public string? WebBaseUrl
     {
-        if (!IsEnabled || string.IsNullOrWhiteSpace(query))
+        get
         {
-            return [];
+            string? raw = _httpClient.BaseAddress?.ToString().TrimEnd('/');
+            if (string.IsNullOrEmpty(raw))
+            {
+                return null;
+            }
+            const string apiSuffix = "/api";
+            return raw.EndsWith(apiSuffix, StringComparison.OrdinalIgnoreCase)
+                ? raw[..^apiSuffix.Length]
+                : raw;
         }
-
-        string key = $"immich:people:{query.Trim().ToLowerInvariant()}";
-        if (_cache.TryGetValue(key, out IReadOnlyList<ImmichOptionDto>? cached) && cached is not null)
-        {
-            return cached;
-        }
-
-        string url = $"search/person?name={Uri.EscapeDataString(query)}&withHidden=false";
-        List<ImmichPerson>? people = await GetJsonAsync<List<ImmichPerson>>(url, ct);
-        if (people is null)
-        {
-            return [];
-        }
-
-        List<ImmichOptionDto> results = people
-            .Where(p => !string.IsNullOrWhiteSpace(p.Name))
-            .Select(p => new ImmichOptionDto(p.Id, p.Name!))
-            .ToList();
-
-        _cache.Set(key, (IReadOnlyList<ImmichOptionDto>)results, new MemoryCacheEntryOptions
-        {
-            AbsoluteExpirationRelativeToNow = CacheTtl
-        });
-        return results;
     }
 
-    public async Task<IReadOnlyList<ImmichOptionDto>> SearchTagsAsync(string? query, CancellationToken ct)
+    public async Task<IReadOnlyList<ImmichOptionDto>> GetAllPeopleAsync(CancellationToken ct)
     {
         if (!IsEnabled)
         {
             return [];
         }
 
-        IReadOnlyList<ImmichTag> tags = await GetAllTagsAsync(ct);
-        IEnumerable<ImmichTag> filtered = string.IsNullOrWhiteSpace(query)
-            ? tags
-            : tags.Where(t => ContainsIgnoreCase(t.Value, query) || ContainsIgnoreCase(t.Name, query));
+        if (_cache.TryGetValue(PeopleAllCacheKey, out IReadOnlyList<ImmichOptionDto>? cached) && cached is not null)
+        {
+            return cached;
+        }
 
-        return filtered
+        ImmichPeopleResponse? response = await GetJsonAsync<ImmichPeopleResponse>($"people?withHidden=false&size={PeoplePageSize}", ct);
+        if (response is null)
+        {
+            return [];
+        }
+
+        if (response.HasNextPage == true)
+        {
+            LogPeoplePaginationOverflow(_logger, null);
+        }
+
+        IReadOnlyList<ImmichOptionDto> result = response.People is null
+            ? []
+            : response.People
+                .Where(p => !string.IsNullOrWhiteSpace(p.Name))
+                .Select(p => new ImmichOptionDto(p.Id, p.Name!))
+                .OrderBy(o => o.Text, StringComparer.OrdinalIgnoreCase)
+                .ToList();
+
+        _cache.Set(PeopleAllCacheKey, result, new MemoryCacheEntryOptions
+        {
+            AbsoluteExpirationRelativeToNow = CacheTtl
+        });
+        return result;
+    }
+
+    public async Task<IReadOnlyList<ImmichOptionDto>> GetAllTagsAsync(CancellationToken ct)
+    {
+        if (!IsEnabled)
+        {
+            return [];
+        }
+
+        if (_cache.TryGetValue(TagsAllCacheKey, out IReadOnlyList<ImmichOptionDto>? cached) && cached is not null)
+        {
+            return cached;
+        }
+
+        List<ImmichTag>? tags = await GetJsonAsync<List<ImmichTag>>("tags", ct);
+        if (tags is null)
+        {
+            return [];
+        }
+
+        IReadOnlyList<ImmichOptionDto> result = tags
             .Select(t => new ImmichOptionDto(t.Id, t.Value ?? t.Name ?? string.Empty))
             .Where(o => !string.IsNullOrWhiteSpace(o.Text))
+            .OrderBy(o => o.Text, StringComparer.OrdinalIgnoreCase)
             .ToList();
+
+        _cache.Set(TagsAllCacheKey, result, new MemoryCacheEntryOptions
+        {
+            AbsoluteExpirationRelativeToNow = CacheTtl
+        });
+        return result;
     }
 
     public async Task<IReadOnlyList<ImmichAssetDto>> GetAssetsAsync(Guid? personId, Guid? tagId, int maxResults, CancellationToken ct)
@@ -192,26 +237,6 @@ public class ImmichService : IImmichService
         }
     }
 
-    private async Task<IReadOnlyList<ImmichTag>> GetAllTagsAsync(CancellationToken ct)
-    {
-        if (_cache.TryGetValue(TagsAllCacheKey, out IReadOnlyList<ImmichTag>? cached) && cached is not null)
-        {
-            return cached;
-        }
-
-        List<ImmichTag>? tags = await GetJsonAsync<List<ImmichTag>>("tags", ct);
-        IReadOnlyList<ImmichTag> result = tags ?? [];
-
-        if (tags is not null)
-        {
-            _cache.Set(TagsAllCacheKey, result, new MemoryCacheEntryOptions
-            {
-                AbsoluteExpirationRelativeToNow = CacheTtl
-            });
-        }
-        return result;
-    }
-
     private async Task<List<ImmichAsset>> SearchAssetsAsync(object body, CancellationToken ct)
     {
         try
@@ -245,19 +270,23 @@ public class ImmichService : IImmichService
             }
             return await response.Content.ReadFromJsonAsync<T>(JsonOptions, ct);
         }
-        catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException)
+        catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException or JsonException)
         {
             LogRequestException(_logger, relativeUrl, ex);
             return default;
         }
     }
 
-    private static bool ContainsIgnoreCase(string? haystack, string needle)
-    {
-        return !string.IsNullOrEmpty(haystack) && haystack.Contains(needle, StringComparison.OrdinalIgnoreCase);
-    }
-
     private sealed record ImmichPerson(Guid Id, string? Name);
+
+    private sealed class ImmichPeopleResponse
+    {
+        [JsonPropertyName("people")]
+        public List<ImmichPerson>? People { get; set; }
+
+        [JsonPropertyName("hasNextPage")]
+        public bool? HasNextPage { get; set; }
+    }
 
     private sealed record ImmichTag(Guid Id, string? Name, string? Value);
 

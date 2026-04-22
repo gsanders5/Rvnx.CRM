@@ -22,5 +22,7 @@ public class ContactDetailDto : ContactDto
     public IEnumerable<ContactTaskDto> ContactTasks { get; set; } = [];
 
     public Guid? ImmichPersonId { get; set; }
+    public string? ImmichPersonName { get; set; }
     public Guid? ImmichTagId { get; set; }
+    public string? ImmichTagValue { get; set; }
 }

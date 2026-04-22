@@ -6,9 +6,13 @@ public interface IImmichService
 {
     bool IsEnabled { get; }
 
-    Task<IReadOnlyList<ImmichOptionDto>> SearchPeopleAsync(string? query, CancellationToken ct);
+    // Web UI base (e.g. "https://immich.example.com") derived from the configured API BaseUrl;
+    // null when Immich isn't configured.
+    string? WebBaseUrl { get; }
 
-    Task<IReadOnlyList<ImmichOptionDto>> SearchTagsAsync(string? query, CancellationToken ct);
+    Task<IReadOnlyList<ImmichOptionDto>> GetAllPeopleAsync(CancellationToken ct);
+
+    Task<IReadOnlyList<ImmichOptionDto>> GetAllTagsAsync(CancellationToken ct);
 
     Task<IReadOnlyList<ImmichAssetDto>> GetAssetsAsync(Guid? personId, Guid? tagId, int maxResults, CancellationToken ct);
 
@@ -18,4 +22,13 @@ public interface IImmichService
 }
 
 // Response owns the connection; caller is responsible for disposing it after the stream has been written.
-public sealed record ImmichMediaPayload(HttpResponseMessage Response, Stream Content, string ContentType);
+public sealed record ImmichMediaPayload(HttpResponseMessage Response, Stream Content, string ContentType)
+{
+    public string DefaultExtension => ContentType switch
+    {
+        var t when t.StartsWith("image/png", StringComparison.OrdinalIgnoreCase) => ".png",
+        var t when t.StartsWith("image/gif", StringComparison.OrdinalIgnoreCase) => ".gif",
+        var t when t.StartsWith("image/webp", StringComparison.OrdinalIgnoreCase) => ".webp",
+        _ => ".jpg",
+    };
+}

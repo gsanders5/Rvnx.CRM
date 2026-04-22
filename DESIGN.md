@@ -254,6 +254,14 @@ Attachments are split into two tables to optimize performance (loading metadata 
 -   **Attachment**: Stores metadata (`FileName`, `ContentType`, `AttachmentType`) and links to a `ContactId`.
 -   **AttachmentContent**: Stores the actual file bytes (`byte[] Content`) and links back to `Attachment` via 1:1 relationship (`AttachmentId`).
 
+### ContactImmichLink
+
+Optional 1:1 child of `Contact` holding identifiers for an external [Immich](https://immich.app) server. Stored in a dedicated table (not on `Contact` itself) so the integration is cleanly droppable and stays out of the core entity.
+
+-   **ImmichPersonId** / **ImmichPersonName**: Nullable Immich face-recognition person reference, with the name cached for display without re-fetching from Immich on every form load.
+-   **ImmichTagId** / **ImmichTagValue**: Nullable Immich tag reference, with the tag value cached (used both for display and to build the Immich web-UI tag URL, which is indexed by name not id).
+-   **Unique index on ContactId**, cascade-deleted with the contact.
+
 ## Service Layer
 
 - **Core Services**: Pure logic implementations and domain orchestrations.
@@ -265,6 +273,7 @@ Attachments are split into two tables to optimize performance (loading metadata 
 - **Infrastructure Services**: Implementations requiring external dependencies or DB access.
   - `UserSynchronizationService`: Syncs OIDC user claims to the local `User` table.
   - `VCardService`: Uses `FolkerKinzel.VCards` to parse and generate VCF files.
+  - `ImmichService`: Typed-HttpClient client for a self-hosted [Immich](https://immich.app) photo server. `IsEnabled` is gated per-call on the `Immich:Enabled` config flag plus a non-null HttpClient `BaseAddress`, so toggling the flag takes effect without an app restart. Exposes: (a) `SearchPeopleAsync` / `SearchTagsAsync` for the Edit-view Select2 AJAX dropdowns, both cached in `IMemoryCache` with a 5-minute absolute TTL (per-query for people; single cache entry for the full tag list, filtered client-side); (b) `GetAssetsAsync(personId, tagId)` that issues parallel `POST /search/metadata` calls (Immich AND's `personIds` and `tagIds`, so two calls are unioned and de-duplicated), capped at 24 images; (c) `GetThumbnailAsync` / `GetOriginalAsync` that return an `ImmichMediaPayload` (HttpResponseMessage + content stream + content-type) for the controller to proxy. All failure modes (401, timeout, HTTP errors) log and return empty/null instead of throwing, so UI cards hide cleanly rather than surfacing errors. `WebBaseUrl` strips the `/api` suffix from the configured base URL to produce the Immich web-UI URL for deep-link buttons.
   - `ContactTaskService`: CRUD for per-contact tasks/follow-ups with completion toggling and calendar event generation.
   - `ActivityService`: CRUD for activities with multi-contact association.
   - `AddressService`: CRUD for contact addresses.
@@ -299,6 +308,16 @@ Attachments are split into two tables to optimize performance (loading metadata 
 - Sets `CreatedBy`, `LastChangedBy`, `CreatedDate`, `LastChangedDate`.
 - Sets `UserId` and `GroupId` on creation if null.
 - Console app uses "System" as the username.
+
+## Immich Integration (Web layer)
+
+The Immich gallery on the Contact Details page is rendered by an async fetch + partial-view pattern to keep the server-rendered page off the critical path of the external Immich server.
+
+- **Details.cshtml** emits an empty `<div id="immich-mount" data-...>` carrying the stored `ImmichPersonId`, `ImmichPersonName`, `ImmichTagId`, `ImmichTagValue`, and `ContactId` as data attributes. On `DOMContentLoaded`, client JS posts those values as query params to `GET /Immich/Gallery` and swaps the response HTML into the mount via `innerHTML`.
+- **`ImmichController.Gallery`** binds its query string to `ImmichGalleryRequest` (record), calls `IImmichService.GetAssetsAsync`, and renders `_ImmichGallery.cshtml` with an `ImmichGalleryViewModel` (contact id + person/tag context + assets + web-UI base URL). The partial is shared markup reused by both static rendering and AJAX inject.
+- **Thumbnail / Original proxy** (`GET /Immich/Thumbnail/{id}`, `GET /Immich/Original/{id}`): a single `ProxyMedia` helper streams Immich bytes through the Web app so the API key never reaches the browser. Uses `HttpCompletionOption.ResponseHeadersRead` to avoid buffering, and registers the `HttpResponseMessage` on `HttpContext.Response.RegisterForDispose` so the connection slot is released after the stream is written. Response sets `Cache-Control: private, max-age=3600`.
+- **Set-as-profile** (`POST /Immich/SetAsProfilePhoto`): downloads the Immich original, checks declared `Content-Length` against `IFileValidationService.IsAllowedFileSize` before buffering, then reuses the existing `IAttachmentService.UploadAttachmentAsync` + `IContactManagementService.SetAttachmentAsProfilePhotoAsync` pipeline to persist and flip the attachment. Filenames default to `immich-{assetId}{ext}` (extension derived from `ImmichMediaPayload.DefaultExtension`) when Immich doesn't provide one.
+- **AuthorizedController.SafeRedirect** is a shared redirect-safety helper on the MVC base class (moved there from `AttachmentsController` to avoid duplication with `ImmichController`).
 
 ## Known Deviations from Pure Architecture
 

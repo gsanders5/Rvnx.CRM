@@ -837,15 +837,37 @@ a:focus-visible .crm-avatar-placeholder {
   }
 }
 
-/* Attachment hover actions — existing pattern, extended */
+/* Attachment hover actions — filename visible at rest; action buttons fade in on hover and overlay the filename */
 @media (min-width: 768px) {
+  .attachment-card .attachment-filename {
+    transition: opacity 0.2s ease-in-out;
+  }
   .attachment-card .attachment-actions {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
     opacity: 0;
     transition: opacity 0.2s ease-in-out;
+  }
+  .attachment-card:hover .attachment-filename {
+    opacity: 0;
   }
   .attachment-card:hover .attachment-actions {
     opacity: 1;
   }
+}
+
+/* Round the outer corners of the first and last buttons in an action bar so a btn-group segment matches the card radius */
+.attachment-actions > :first-child,
+.attachment-actions > :first-child > button {
+  border-top-left-radius: var(--crm-radius-sm);
+  border-bottom-left-radius: var(--crm-radius-sm);
+}
+.attachment-actions > :last-child,
+.attachment-actions > :last-child > button {
+  border-top-right-radius: var(--crm-radius-sm);
+  border-bottom-right-radius: var(--crm-radius-sm);
 }
 
 .attachment-card {

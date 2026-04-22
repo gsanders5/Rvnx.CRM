@@ -1,6 +1,7 @@
 using FileTypeChecker.Web.Attributes;
 using Microsoft.AspNetCore.Mvc;
 using Rvnx.CRM.Core.Constants;
+using Rvnx.CRM.Core.DTOs.Base;
 using Rvnx.CRM.Core.DTOs.Contact;
 using Rvnx.CRM.Core.Interfaces;
 using Rvnx.CRM.Web.Controllers.Base;
@@ -205,7 +206,8 @@ public class ContactsController(
         }
 
         bool hasRelationships = await _contactReadService.HasRelationshipsAsync(id.Value);
-        ContactEditViewModel viewModel = MapToEditViewModel(dto, dto.ProfileImageId, hasRelationships, _immichService.IsEnabled);
+        (IReadOnlyList<ImmichOptionDto> people, IReadOnlyList<ImmichOptionDto> tags) = await LoadImmichOptionsAsync();
+        ContactEditViewModel viewModel = MapToEditViewModel(dto, dto.ProfileImageId, hasRelationships, _immichService.IsEnabled, people, tags);
 
         return View(viewModel);
     }
@@ -268,9 +270,33 @@ public class ContactsController(
         }
 
         bool hasRelationships = await _contactReadService.HasRelationshipsAsync(id);
-        ContactEditViewModel viewModel = MapToEditViewModel(contactDto, formConfig?.ProfileImageId, hasRelationships, _immichService.IsEnabled);
+        (IReadOnlyList<ImmichOptionDto> people, IReadOnlyList<ImmichOptionDto> tags) = await LoadImmichOptionsAsync();
+        ContactEditViewModel viewModel = MapToEditViewModel(contactDto, formConfig?.ProfileImageId, hasRelationships, _immichService.IsEnabled, people, tags);
 
         return View(viewModel);
+    }
+
+    private async Task<(IReadOnlyList<ImmichOptionDto> People, IReadOnlyList<ImmichOptionDto> Tags)> LoadImmichOptionsAsync()
+    {
+        if (!_immichService.IsEnabled)
+        {
+            return ([], []);
+        }
+
+        // Cap total wait so an unreachable Immich server can't pin every Edit page render to the full HttpClient timeout.
+        using CancellationTokenSource cts = new(TimeSpan.FromSeconds(3));
+        Task<IReadOnlyList<ImmichOptionDto>> peopleTask = _immichService.GetAllPeopleAsync(cts.Token);
+        Task<IReadOnlyList<ImmichOptionDto>> tagsTask = _immichService.GetAllTagsAsync(cts.Token);
+        try
+        {
+            await Task.WhenAll(peopleTask, tagsTask);
+            return (peopleTask.Result, tagsTask.Result);
+        }
+        catch (OperationCanceledException)
+        {
+            return (peopleTask.Status == TaskStatus.RanToCompletion ? peopleTask.Result : [],
+                    tagsTask.Status == TaskStatus.RanToCompletion ? tagsTask.Result : []);
+        }
     }
 
     [HttpGet]
@@ -415,7 +441,13 @@ public class ContactsController(
         dto.Religion = string.IsNullOrWhiteSpace(dto.Religion) ? null : dto.Religion;
     }
 
-    private static ContactEditViewModel MapToEditViewModel(ContactFormDto dto, Guid? profileImageId, bool hasRelationships = false, bool immichEnabled = false)
+    private static ContactEditViewModel MapToEditViewModel(
+        ContactFormDto dto,
+        Guid? profileImageId,
+        bool hasRelationships = false,
+        bool immichEnabled = false,
+        IReadOnlyList<ImmichOptionDto>? allImmichPeople = null,
+        IReadOnlyList<ImmichOptionDto>? allImmichTags = null)
     {
         return new ContactEditViewModel
         {
@@ -443,7 +475,9 @@ public class ContactsController(
             AllLabels = dto.AllLabels,
             AssignedLabelIds = dto.AssignedLabelIds,
             HasRelationships = hasRelationships,
-            ImmichEnabled = immichEnabled
+            ImmichEnabled = immichEnabled,
+            AllImmichPeople = allImmichPeople ?? [],
+            AllImmichTags = allImmichTags ?? []
         };
     }
 

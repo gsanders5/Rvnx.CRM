@@ -1,37 +1,44 @@
 using Microsoft.AspNetCore.Mvc;
 using Rvnx.CRM.Core.DTOs.Base;
+using Rvnx.CRM.Core.DTOs.Contact;
+using Rvnx.CRM.Core.Enumerations;
 using Rvnx.CRM.Core.Interfaces;
 using Rvnx.CRM.Web.Controllers.Base;
 
 namespace Rvnx.CRM.Web.Controllers;
 
-public class ImmichController(IImmichService immichService) : AuthorizedController
+public class ImmichController(
+    IImmichService immichService,
+    IAttachmentService attachmentService,
+    IContactManagementService contactManagementService,
+    IFileValidationService fileValidationService) : AuthorizedController
 {
     private readonly IImmichService _immichService = immichService;
+    private readonly IAttachmentService _attachmentService = attachmentService;
+    private readonly IContactManagementService _contactManagementService = contactManagementService;
+    private readonly IFileValidationService _fileValidationService = fileValidationService;
 
     private const int MaxAssets = 24;
 
-    [HttpGet("Immich/People")]
-    public async Task<IActionResult> People(string? q, CancellationToken ct)
-    {
-        IReadOnlyList<ImmichOptionDto> results = await _immichService.SearchPeopleAsync(q, ct);
-        return Json(new { results });
-    }
-
-    [HttpGet("Immich/Tags")]
-    public async Task<IActionResult> Tags(string? q, CancellationToken ct)
-    {
-        IReadOnlyList<ImmichOptionDto> results = await _immichService.SearchTagsAsync(q, ct);
-        return Json(new { results });
-    }
-
     [HttpGet("Immich/Gallery")]
-    public async Task<IActionResult> Gallery(Guid? personId, Guid? tagId, CancellationToken ct)
+    public async Task<IActionResult> Gallery([FromQuery] ImmichGalleryRequest request, CancellationToken ct)
     {
         IReadOnlyList<ImmichAssetDto> assets = _immichService.IsEnabled
-            ? await _immichService.GetAssetsAsync(personId, tagId, MaxAssets, ct)
+            ? await _immichService.GetAssetsAsync(request.PersonId, request.TagId, MaxAssets, ct)
             : [];
-        return PartialView("_ImmichGallery", assets);
+
+        ImmichGalleryViewModel vm = new()
+        {
+            ContactId = request.ContactId,
+            PersonId = request.PersonId,
+            PersonName = request.PersonName,
+            TagId = request.TagId,
+            TagValue = request.TagValue,
+            WebBaseUrl = _immichService.WebBaseUrl,
+            Assets = assets,
+        };
+
+        return PartialView("_ImmichGallery", vm);
     }
 
     [HttpGet("Immich/Thumbnail/{assetId:guid}")]
@@ -41,6 +48,61 @@ public class ImmichController(IImmichService immichService) : AuthorizedControll
     [HttpGet("Immich/Original/{assetId:guid}")]
     public Task<IActionResult> Original(Guid assetId, CancellationToken ct)
         => ProxyMedia(() => _immichService.GetOriginalAsync(assetId, ct));
+
+    [HttpPost("Immich/SetAsProfilePhoto")]
+    public async Task<IActionResult> SetAsProfilePhoto(
+        Guid contactId,
+        Guid assetId,
+        string? fileName,
+        string? returnUrl,
+        CancellationToken ct)
+    {
+        ImmichMediaPayload? media = await _immichService.GetOriginalAsync(assetId, ct);
+        if (media == null)
+        {
+            return NotFound();
+        }
+
+        using (media.Response)
+        {
+            long? declaredLength = media.Response.Content.Headers.ContentLength;
+            if (declaredLength is long len && !_fileValidationService.IsAllowedFileSize(len))
+            {
+                return BadRequest("File is too large.");
+            }
+
+            // Pre-sizing the buffer avoids reallocations during CopyToAsync; IsAllowedFileSize already caps well below int.MaxValue.
+            using MemoryStream ms = declaredLength is long capacity ? new((int)capacity) : new();
+            await media.Content.CopyToAsync(ms, ct);
+            byte[] bytes = ms.ToArray();
+
+            string effectiveFileName = string.IsNullOrWhiteSpace(fileName)
+                ? $"immich-{assetId}{media.DefaultExtension}"
+                : fileName;
+
+            AttachmentOperationResult upload = await _attachmentService.UploadAttachmentAsync(
+                contactId, EntityType.Person, bytes, effectiveFileName);
+
+            if (!upload.Success || upload.AttachmentId is null)
+            {
+                return upload.IsNotFound
+                    ? NotFound()
+                    : BadRequest(string.Join("; ", upload.Errors));
+            }
+
+            ContactOperationResult set = await _contactManagementService
+                .SetAttachmentAsProfilePhotoAsync(contactId, upload.AttachmentId.Value);
+
+            if (!set.Success)
+            {
+                return set.IsNotFound
+                    ? NotFound()
+                    : BadRequest(string.Join("; ", set.Errors));
+            }
+
+            return SafeRedirect(returnUrl);
+        }
+    }
 
     private async Task<IActionResult> ProxyMedia(Func<Task<ImmichMediaPayload?>> fetch)
     {

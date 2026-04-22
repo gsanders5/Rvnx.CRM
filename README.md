@@ -34,6 +34,7 @@ Each contact has dedicated sections for:
 - **Activities** — logged meetings, calls, and events; activities can link to multiple contacts at once, with a one-click **QuickLog** for fast entry
 - **Tasks / Follow-ups** — per-contact to-do items with due dates
 - **Attachments** — photos, documents, or any file
+- **Immich Photos** — optional integration with a self-hosted [Immich](https://immich.app) server. Link a contact to an Immich Person (face recognition) and/or Tag, and the Details page surfaces their photos inline. Set any Immich image as the contact's profile photo in one click.
 - **Social Media** — linked social accounts
 
 ### Calendar
@@ -104,6 +105,20 @@ Each runnable project (`Web`, `API`, `ConsoleApp`) reads an `appsettings.Local.j
   }
 }
 ```
+
+**Optional — Immich integration:**
+
+```json
+{
+  "Immich": {
+    "Enabled": true,
+    "BaseUrl": "https://photos.example.com/api",
+    "ApiKey": "your-immich-api-key"
+  }
+}
+```
+
+`BaseUrl` must include the `/api` suffix (the API key is passed via `x-api-key`). Disabled by default; flip `Enabled` to `true` once you've filled in the URL and key. Create the API key in Immich under Account Settings → API Keys.
 
 > Use an absolute path in the connection string.
 

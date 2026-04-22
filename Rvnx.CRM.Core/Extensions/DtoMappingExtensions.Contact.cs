@@ -58,7 +58,9 @@ public static partial class DtoMappingExtensions
             Addresses = entity.Addresses?.Select(a => a.ToDto()) ?? [],
             ContactTasks = entity.ContactTasks?.Select(t => t.ToDto()) ?? [],
             ImmichPersonId = entity.ImmichLink?.ImmichPersonId,
+            ImmichPersonName = entity.ImmichLink?.ImmichPersonName,
             ImmichTagId = entity.ImmichLink?.ImmichTagId,
+            ImmichTagValue = entity.ImmichLink?.ImmichTagValue,
             // Pets to be populated by caller as they are not on Person
         };
     }

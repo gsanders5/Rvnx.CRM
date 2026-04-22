@@ -1,18 +1,49 @@
+@using Microsoft.AspNetCore.Html
 @using Rvnx.CRM.Core.DTOs.Base
-@model IReadOnlyList<ImmichAssetDto>
+@using Rvnx.CRM.Core.DTOs.Contact
+@model ImmichGalleryViewModel
 
-@if (Model.Count > 0)
+@if (Model.Assets.Count > 0)
 {
+    string detailsUrl = Url.Action("Details", "Contacts", new { id = Model.ContactId })!;
+    string setAsProfileUrl = Url.Action("SetAsProfilePhoto", "Immich", new { returnUrl = detailsUrl })!;
+    IHtmlContent antiForgery = Html.AntiForgeryToken();
+
     <div class="crm-card">
         <div class="crm-card-header">
             <h5 class="card-title mb-0">
                 <i class="bi bi-images" aria-hidden="true"></i> Immich Photos
-                <span class="badge bg-secondary ms-2">@Model.Count</span>
+                <span class="badge bg-secondary ms-2">@Model.Assets.Count</span>
             </h5>
+            <div class="d-flex gap-2">
+                @if (Model.PersonId.HasValue && !string.IsNullOrEmpty(Model.WebBaseUrl))
+                {
+                    string personLabel = string.IsNullOrEmpty(Model.PersonName)
+                        ? "Open person in Immich"
+                        : $"Open {Model.PersonName} in Immich";
+                    <a href="@($"{Model.WebBaseUrl}/people/{Model.PersonId}")"
+                       target="_blank" rel="noopener"
+                       class="crm-btn-secondary btn-sm"
+                       title="@personLabel"
+                       aria-label="@personLabel">
+                        <i class="bi bi-person" aria-hidden="true"></i> Person
+                    </a>
+                }
+                @if (Model.TagId.HasValue && !string.IsNullOrEmpty(Model.WebBaseUrl) && !string.IsNullOrEmpty(Model.TagValue))
+                {
+                    <a href="@($"{Model.WebBaseUrl}/tags?path={Uri.EscapeDataString(Model.TagValue)}")"
+                       target="_blank" rel="noopener"
+                       class="crm-btn-secondary btn-sm"
+                       title="Open tag @Model.TagValue in Immich"
+                       aria-label="Open tag @Model.TagValue in Immich">
+                        <i class="bi bi-tag" aria-hidden="true"></i> Tag
+                    </a>
+                }
+            </div>
         </div>
         <div class="crm-card-body">
             <div class="row masonry-grid" data-masonry='{"percentPosition": true }'>
-                @foreach (ImmichAssetDto asset in Model)
+                @foreach (ImmichAssetDto asset in Model.Assets)
                 {
                     <div class="col-12 col-sm-6 col-md-4 mb-3 masonry-item">
                         <div class="attachment-card overflow-hidden position-relative" style="background: var(--crm-surface-elevated); border: 1px solid var(--crm-border-subtle);">
@@ -25,6 +56,36 @@
                                      alt="@asset.FileName"
                                      loading="lazy"
                                      style="object-fit: cover;"/>
+                            </div>
+                            <div class="p-2 position-relative">
+                                <div class="attachment-filename d-flex align-items-center">
+                                    <i class="bi bi-image me-2" style="font-size: 0.875rem; color: var(--crm-text-tertiary);" aria-hidden="true"></i>
+                                    <span class="text-truncate flex-grow-1" style="font-size: 0.875rem; color: var(--crm-text-primary);" title="@asset.FileName">
+                                        @asset.FileName
+                                    </span>
+                                </div>
+                                <div class="attachment-actions btn-group w-100">
+                                    <a href="@Url.Action("Original", "Immich", new { assetId = asset.Id })"
+                                       download="@asset.FileName"
+                                       class="crm-btn-secondary btn-sm"
+                                       style="flex: 1; justify-content: center;"
+                                       title="Download"
+                                       aria-label="Download @asset.FileName">
+                                        <i class="bi bi-download" aria-hidden="true"></i>
+                                    </a>
+                                    <form method="post" action="@setAsProfileUrl" class="d-inline flex-grow-1">
+                                        <input type="hidden" name="contactId" value="@Model.ContactId"/>
+                                        <input type="hidden" name="assetId" value="@asset.Id"/>
+                                        <input type="hidden" name="fileName" value="@asset.FileName"/>
+                                        @antiForgery
+                                        <button type="submit"
+                                                class="crm-btn-secondary btn-sm w-100"
+                                                title="Set as profile photo"
+                                                aria-label="Set @asset.FileName as profile photo">
+                                            <i class="bi bi-person-circle" aria-hidden="true"></i>
+                                        </button>
+                                    </form>
+                                </div>
                             </div>
                         </div>
                     </div>

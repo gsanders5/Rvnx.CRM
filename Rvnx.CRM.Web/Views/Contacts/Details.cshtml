@@ -817,8 +817,8 @@
                                     </div>
                                 }
 
-                                <div class="p-2 d-flex flex-column justify-content-between">
-                                    <div class="d-flex align-items-center mb-2">
+                                <div class="p-2 position-relative">
+                                    <div class="attachment-filename d-flex align-items-center">
                                         <i class="bi @(isImage ? "bi-image" : iconClass) me-2" style="font-size: 0.875rem; color: var(--crm-text-tertiary);" aria-hidden="true"></i>
                                         <a asp-controller="Attachments" asp-action="Download" asp-route-id="@attachment.Id" class="text-truncate text-decoration-none flex-grow-1" style="font-size: 0.875rem; color: var(--crm-text-primary);" title="@attachment.FileName" aria-label="Download @attachment.FileName">
                                             @attachment.FileName
@@ -826,19 +826,19 @@
                                     </div>
 
                                     <div class="attachment-actions btn-group w-100">
-                                        <a asp-controller="Attachments" asp-action="Download" asp-route-id="@attachment.Id" class="crm-btn-secondary btn-sm" style="flex: 1; justify-content: center; border-radius: var(--crm-radius-sm) 0 0 var(--crm-radius-sm);" title="Download" aria-label="Download @attachment.FileName">
+                                        <a asp-controller="Attachments" asp-action="Download" asp-route-id="@attachment.Id" class="crm-btn-secondary btn-sm" style="flex: 1; justify-content: center;" title="Download" aria-label="Download @attachment.FileName">
                                             <i class="bi bi-download" aria-hidden="true"></i>
                                         </a>
                                         @if (isImage)
                                         {
                                             <form method="post" class="d-inline flex-grow-1" action="/Attachments/@attachment.Id/SetAsProfilePhoto?returnUrl=@(Context.Request.Path + Context.Request.QueryString)">
-                                                <button type="submit" class="crm-btn-secondary btn-sm w-100" style="border-radius: 0;" title="Set as profile photo" aria-label="Set @attachment.FileName as profile photo">
+                                                <button type="submit" class="crm-btn-secondary btn-sm w-100" title="Set as profile photo" aria-label="Set @attachment.FileName as profile photo">
                                                     <i class="bi bi-person-circle" aria-hidden="true"></i>
                                                 </button>
                                                 <input name="__RequestVerificationToken" type="hidden" value="@GetAntiXsrfRequestToken()"/>
                                             </form>
                                         }
-                                        <button type="button" class="crm-btn-danger btn-sm flex-grow-1" style="border-radius: 0 var(--crm-radius-sm) var(--crm-radius-sm) 0;"
+                                        <button type="button" class="crm-btn-danger btn-sm flex-grow-1"
                                                 data-confirm-action="@Url.Action("Delete", "Attachments", new { id = attachment.Id, returnUrl = Context.Request.Path + Context.Request.QueryString })"
                                                 data-confirm-title="Delete Attachment"
                                                 data-confirm-body="Are you sure you want to delete @attachment.FileName?"
@@ -866,8 +866,11 @@
     @if (Model.ImmichPersonId.HasValue || Model.ImmichTagId.HasValue)
     {
         <div id="immich-mount"
+             data-contact-id="@Model.Id"
              data-immich-person-id="@Model.ImmichPersonId"
-             data-immich-tag-id="@Model.ImmichTagId"></div>
+             data-immich-person-name="@Model.ImmichPersonName"
+             data-immich-tag-id="@Model.ImmichTagId"
+             data-immich-tag-value="@Model.ImmichTagValue"></div>
     }
 
     <!-- Social Media Embeds -->
@@ -952,10 +955,15 @@
             const immichMount = document.getElementById('immich-mount');
             if (immichMount) {
                 const params = new URLSearchParams();
+                params.set('contactId', immichMount.getAttribute('data-contact-id'));
                 const personId = immichMount.getAttribute('data-immich-person-id');
+                const personName = immichMount.getAttribute('data-immich-person-name');
                 const tagId = immichMount.getAttribute('data-immich-tag-id');
+                const tagValue = immichMount.getAttribute('data-immich-tag-value');
                 if (personId) params.set('personId', personId);
+                if (personName) params.set('personName', personName);
                 if (tagId) params.set('tagId', tagId);
+                if (tagValue) params.set('tagValue', tagValue);
 
                 fetch('/Immich/Gallery?' + params.toString(), { credentials: 'same-origin' })
                     .then(function (r) { return r.ok ? r.text() : ''; })

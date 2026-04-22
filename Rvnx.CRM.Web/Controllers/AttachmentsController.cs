@@ -87,20 +87,6 @@ public class AttachmentsController(
             result.IsNotFound ? NotFound() : BadRequest(string.Join("; ", result.Errors));
     }
 
-    private IActionResult SafeRedirect(string? returnUrl)
-    {
-        if (Url.IsLocalUrl(returnUrl))
-        {
-            return LocalRedirect(returnUrl);
-        }
-
-        string referer = Request.Headers.Referer.ToString();
-        return Uri.TryCreate(referer, UriKind.Absolute, out Uri? uri) &&
-               string.Equals(uri.Host, Request.Host.Host, StringComparison.OrdinalIgnoreCase)
-            ? LocalRedirect(uri.PathAndQuery)
-            : RedirectToAction("Index", "Home");
-    }
-
     [HttpGet]
     public async Task<IActionResult> Download(Guid id)
     {
