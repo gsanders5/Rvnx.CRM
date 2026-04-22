@@ -1,11 +1,8 @@
 namespace Rvnx.CRM.Core.DTOs.Base;
 
-public class AttachmentOperationResult
+public class AttachmentOperationResult : EntityOperationResult
 {
-    public bool Success { get; set; }
     public Guid? AttachmentId { get; set; }
-    public List<string> Errors { get; set; } = [];
-    public bool IsNotFound { get; set; }
 
     public static AttachmentOperationResult Failure(params string[] errors)
     {
