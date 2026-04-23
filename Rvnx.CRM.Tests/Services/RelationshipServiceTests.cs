@@ -638,4 +638,126 @@ public class RelationshipServiceTests
         _repositoryMock.Verify(r => r.DeleteAsync(It.IsAny<Expression<Func<Relationship, bool>>>(), It.IsAny<CancellationToken>()), Times.Never);
         _repositoryMock.Verify(r => r.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
     }
+
+    [Fact]
+    public async Task CreateRelationshipAsyncSymmetricTypeForwardDoesNotSwapEntities()
+    {
+        Guid typeId = RelationshipTypeIds.Spouse;
+        Guid entityIdA = Guid.NewGuid();
+        Guid entityIdB = Guid.NewGuid();
+
+        Relationship relationship = new()
+        {
+            EntityId = entityIdA,
+            RelatedEntityId = entityIdB,
+            EntityType = EntityType.Person
+        };
+
+        RelationshipOperationResult result =
+            await _service.CreateRelationshipAsync(relationship, $"{typeId}_Fwd");
+
+        Assert.True(result.Success);
+        Assert.Equal(typeId, relationship.RelationshipTypeId);
+        Assert.Equal(entityIdA, relationship.EntityId);
+        Assert.Equal(entityIdB, relationship.RelatedEntityId);
+
+        _repositoryMock.Verify(r => r.AddAsync(relationship, It.IsAny<CancellationToken>()), Times.Once);
+        _repositoryMock.Verify(r => r.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task CreateRelationshipAsyncSymmetricTypeReverseSwapsToCanonicalDirection()
+    {
+        // Spouse is symmetric — _Rev still swaps EntityId/RelatedEntityId so canonical storage is consistent
+        Guid typeId = RelationshipTypeIds.Spouse;
+        Guid entityIdA = Guid.NewGuid();
+        Guid entityIdB = Guid.NewGuid();
+
+        Relationship relationship = new()
+        {
+            EntityId = entityIdB,
+            RelatedEntityId = entityIdA,
+            EntityType = EntityType.Person
+        };
+
+        RelationshipOperationResult result =
+            await _service.CreateRelationshipAsync(relationship, $"{typeId}_Rev");
+
+        Assert.True(result.Success);
+        Assert.Equal(typeId, relationship.RelationshipTypeId);
+        Assert.Equal(entityIdA, relationship.EntityId);
+        Assert.Equal(entityIdB, relationship.RelatedEntityId);
+
+        _repositoryMock.Verify(r => r.AddAsync(relationship, It.IsAny<CancellationToken>()), Times.Once);
+        _repositoryMock.Verify(r => r.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task CreatePartialContactRelationshipAsyncValidatesPartialContactIdReplacement()
+    {
+        Guid parentEntityId = Guid.NewGuid();
+        Guid typeId = Guid.NewGuid();
+        string selection = $"{typeId}_Fwd";
+
+        string suggestionPayload = $"{Guid.Empty}_{Guid.NewGuid()}_False";
+
+        CreatePartialContactRelationshipDto dto = new()
+        {
+            PartialContactFirstName = "Tom",
+            PartialContactLastName = "Smith",
+            Description = "Partial contact suggestion test",
+            SuggestedRelationships = [suggestionPayload]
+        };
+
+        Guid capturedSuggestedEntityId = Guid.Empty;
+        _repositoryMock.Setup(r => r.AddAsync(It.IsAny<Relationship>(), It.IsAny<CancellationToken>()))
+            .Callback<Relationship, CancellationToken>((rel, _) =>
+            {
+                if (rel.Description == "Automatically added from suggested relationship.")
+                {
+                    capturedSuggestedEntityId = rel.EntityId;
+                }
+            })
+            .ReturnsAsync((Relationship rel, CancellationToken _) => rel);
+
+        _repositoryMock.Setup(r => r.ListAsNoTrackingAsync<Relationship>(
+                It.IsAny<Expression<Func<Relationship, bool>>>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync([]);
+
+        RelationshipOperationResult result =
+            await _service.CreatePartialContactRelationshipAsync(parentEntityId, selection, dto);
+
+        Assert.True(result.Success);
+        Assert.NotEqual(Guid.Empty, capturedSuggestedEntityId);
+    }
+
+    [Fact]
+    public async Task CreateRelationshipAsyncWithDuplicateRejectsBeforePersistence()
+    {
+        Guid typeId = Guid.NewGuid();
+        string selection = $"{typeId}_Fwd";
+        Guid entityId = Guid.NewGuid();
+        Guid relatedEntityId = Guid.NewGuid();
+
+        Relationship relationship = new()
+        {
+            EntityId = entityId,
+            RelatedEntityId = relatedEntityId,
+            EntityType = EntityType.Person
+        };
+
+        _repositoryMock.Setup(r => r.CountAsync<Relationship>(
+                It.IsAny<Expression<Func<Relationship, bool>>>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(1);
+
+        RelationshipOperationResult result = await _service.CreateRelationshipAsync(relationship, selection);
+
+        Assert.False(result.Success);
+        Assert.Contains("already exists", result.ErrorMessage);
+
+        _repositoryMock.Verify(r => r.AddAsync(It.IsAny<Relationship>(), It.IsAny<CancellationToken>()), Times.Never);
+        _repositoryMock.Verify(r => r.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
+    }
 }
