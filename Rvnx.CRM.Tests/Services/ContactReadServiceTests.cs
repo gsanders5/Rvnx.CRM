@@ -134,6 +134,55 @@ public class ContactReadServiceTests
 
             Assert.Null(result);
         }
+
+        [Fact]
+        public async Task GetContactDetailsAsyncReturnsNullForPartialContact()
+        {
+            Guid contactId = Guid.NewGuid();
+            Expression<Func<Contact, bool>>? capturedFilter = null;
+
+            RepositoryMock.Setup(r => r.ListAsNoTrackingAsync<Contact>(
+                It.IsAny<Expression<Func<Contact, bool>>>(),
+                It.IsAny<CancellationToken>(),
+                It.IsAny<string[]>()))
+                .Callback<Expression<Func<Contact, bool>>, CancellationToken, string[]>(
+                    (filter, ct, includes) => capturedFilter = filter)
+                .ReturnsAsync([]);
+
+            ContactDetailDto? result = await Service.GetContactDetailsAsync(contactId);
+
+            Assert.Null(result);
+            Assert.NotNull(capturedFilter);
+
+            Func<Contact, bool> filterFunc = capturedFilter.Compile();
+            Assert.False(filterFunc(new Contact { Id = contactId, FirstName = "Partial", IsPartial = true }));
+            Assert.True(filterFunc(new Contact { Id = contactId, FirstName = "Full", IsPartial = false }));
+        }
+
+        [Fact]
+        public async Task GetContactDetailsAsyncHandlesContactWithNoRelationships()
+        {
+            Guid contactId = Guid.NewGuid();
+            Contact contact = new() { Id = contactId, FirstName = "Solo", LastName = "User" };
+
+            RepositoryMock.Setup(r => r.ListAsNoTrackingAsync<Contact>(
+                It.IsAny<Expression<Func<Contact, bool>>>(),
+                It.IsAny<CancellationToken>(),
+                It.IsAny<string[]>()))
+                .ReturnsAsync([contact]);
+
+            RepositoryMock.Setup(r => r.ListAsNoTrackingAsync<Relationship>(
+                It.IsAny<Expression<Func<Relationship, bool>>>(),
+                It.IsAny<CancellationToken>(),
+                It.IsAny<string[]>()))
+                .ReturnsAsync([]);
+
+            ContactDetailDto? result = await Service.GetContactDetailsAsync(contactId);
+
+            Assert.NotNull(result);
+            Assert.Empty(result.Relationships);
+            Assert.Empty(result.RelatedTo);
+        }
     }
 
     public class ContactReadServiceGetContactFormTests : ContactReadServiceTestBase
@@ -450,6 +499,48 @@ public class ContactReadServiceTests
             Assert.Equal("Friend", bob.Labels.First().Name);
             Assert.Equal("Blue", bob.Labels.First().Color);
             Assert.Null(bob.Birthday);
+        }
+
+        [Fact]
+        public async Task GetIndexDataAsyncReturnsOnlyHiddenContactsWhenShowHiddenTrue()
+        {
+            Guid hiddenId = Guid.NewGuid();
+
+            List<ContactDto> hiddenContacts =
+            [
+                new ContactDto { Id = hiddenId, FirstName = "Hidden", IsHidden = true }
+            ];
+
+            RepositoryMock.Setup(x => x.ListProjectedAsync<Contact, ContactDto>(
+                It.IsAny<Expression<Func<Contact, bool>>>(),
+                It.IsAny<Expression<Func<Contact, ContactDto>>>(),
+                It.IsAny<CancellationToken>()))
+                .ReturnsAsync(hiddenContacts);
+
+            RepositoryMock.Setup(x => x.ListProjectedAsync<Attachment, (Guid, Guid)>(
+                It.IsAny<Expression<Func<Attachment, bool>>>(),
+                It.IsAny<Expression<Func<Attachment, (Guid, Guid)>>>(),
+                It.IsAny<CancellationToken>()))
+                .ReturnsAsync([]);
+
+            RepositoryMock.Setup(x => x.ListProjectedAsync<ContactLabel, (Guid, Guid, string, string?)>(
+                It.IsAny<Expression<Func<ContactLabel, bool>>>(),
+                It.IsAny<Expression<Func<ContactLabel, (Guid, Guid, string, string?)>>>(),
+                It.IsAny<CancellationToken>()))
+                .ReturnsAsync([]);
+
+            RepositoryMock.Setup(x => x.ListProjectedAsync<SignificantDate, (Guid, DateOnly)>(
+                It.IsAny<Expression<Func<SignificantDate, bool>>>(),
+                It.IsAny<Expression<Func<SignificantDate, (Guid, DateOnly)>>>(),
+                It.IsAny<CancellationToken>()))
+                .ReturnsAsync([]);
+
+            List<ContactDto> result = await Service.GetIndexDataAsync(showHidden: true);
+
+            Assert.NotNull(result);
+            Assert.Single(result);
+            Assert.Equal(hiddenId, result[0].Id);
+            Assert.True(result[0].IsHidden);
         }
 
         [Fact]
