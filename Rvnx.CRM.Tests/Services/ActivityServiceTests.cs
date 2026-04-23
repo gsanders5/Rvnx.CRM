@@ -382,6 +382,84 @@ public class ActivityServiceTests
     }
 
     [Fact]
+    public async Task QuickLogAsyncWhenSelfContactIsNullIncludesOnlyTargetContact()
+    {
+        Guid contactId = Guid.NewGuid();
+
+        _repositoryMock.Setup(r => r.CountAsync(It.IsAny<Expression<Func<Core.Models.Contact.Contact, bool>>>(), It.IsAny<CancellationToken>())).ReturnsAsync(1);
+        _selfContactServiceMock.Setup(s => s.GetSelfContactIdAsync()).ReturnsAsync((Guid?)null);
+
+        List<ActivityContact>? addedActivityContacts = null;
+        _repositoryMock.Setup(r => r.AddRangeAsync(It.IsAny<IEnumerable<ActivityContact>>(), It.IsAny<CancellationToken>()))
+            .Callback<IEnumerable<ActivityContact>, CancellationToken>((acs, _) => addedActivityContacts = acs.ToList())
+            .ReturnsAsync([]);
+
+        OperationResult result = await _service.QuickLogAsync(contactId, "Phone Call");
+
+        Assert.True(result.Success);
+        Assert.NotNull(addedActivityContacts);
+        Assert.Single(addedActivityContacts);
+        Assert.Equal(contactId, addedActivityContacts[0].ContactId);
+    }
+
+    [Fact]
+    public async Task UpdateAsyncWhenConcurrencyExceptionAndActivityStillExistsRethrows()
+    {
+        Guid activityId = Guid.NewGuid();
+        ActivityFormDto dto = new() { EntityId = Guid.NewGuid() };
+
+        _repositoryMock.Setup(r => r.GetByIdWithIncludesAsync<Activity>(activityId, It.IsAny<string[]>()))
+            .ReturnsAsync(new Activity { Id = activityId, ActivityContacts = [] });
+
+        _repositoryMock.Setup(r => r.SaveChangesAsync(It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new EntityConcurrencyException());
+
+        _repositoryMock.Setup(r => r.ExistsAsync<Activity>(activityId, It.IsAny<CancellationToken>())).ReturnsAsync(true);
+
+        await Assert.ThrowsAsync<EntityConcurrencyException>(() => _service.UpdateAsync(activityId, dto));
+    }
+
+    [Fact]
+    public async Task UpdateAsyncWhenNewContactsAddedIncludesThemInActivityContacts()
+    {
+        Guid activityId = Guid.NewGuid();
+        Guid entityId = Guid.NewGuid();
+        Guid existingContactId = Guid.NewGuid();
+        Guid newContactId = Guid.NewGuid();
+
+        Activity existingActivity = new()
+        {
+            Id = activityId,
+            ActivityContacts = [
+                new ActivityContact { ActivityId = activityId, ContactId = existingContactId }
+            ]
+        };
+
+        ActivityFormDto dto = new()
+        {
+            EntityId = entityId,
+            ContactIds = [entityId, existingContactId, newContactId]
+        };
+
+        _repositoryMock.Setup(r => r.GetByIdWithIncludesAsync<Activity>(activityId, It.IsAny<string[]>()))
+            .ReturnsAsync(existingActivity);
+
+        List<ActivityContact>? addedActivityContacts = null;
+        _repositoryMock.Setup(r => r.AddRangeAsync(It.IsAny<IEnumerable<ActivityContact>>(), It.IsAny<CancellationToken>()))
+            .Callback<IEnumerable<ActivityContact>, CancellationToken>((acs, _) => addedActivityContacts = acs.ToList())
+            .ReturnsAsync([]);
+
+        OperationResult result = await _service.UpdateAsync(activityId, dto);
+
+        Assert.True(result.Success);
+        Assert.NotNull(addedActivityContacts);
+        Assert.Equal(2, addedActivityContacts.Count);
+        Assert.Contains(addedActivityContacts, ac => ac.ContactId == newContactId);
+        Assert.Contains(addedActivityContacts, ac => ac.ContactId == entityId);
+        _repositoryMock.Verify(r => r.DeleteRangeAsync(It.IsAny<IEnumerable<ActivityContact>>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
     public async Task GetByContactAsyncReturnsMappedActivities()
     {
         Guid contactId = Guid.NewGuid();
