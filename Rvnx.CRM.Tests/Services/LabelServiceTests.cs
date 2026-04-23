@@ -272,6 +272,44 @@ public class LabelServiceTests
     }
 
     [Fact]
+    public async Task UpdateAsyncAllowsSameNameWhenUpdatingSelf()
+    {
+        Guid id = Guid.NewGuid();
+        Label label = new() { Id = id, Name = "TestLabel", Color = "#abc" };
+        _mockRepo.Setup(r => r.GetByIdAsync<Label>(id, It.IsAny<CancellationToken>())).ReturnsAsync(label);
+
+        _mockRepo.Setup(r => r.ListAsNoTrackingAsync(It.IsAny<Expression<Func<Label, bool>>>(),
+                It.IsAny<CancellationToken>(), It.IsAny<string[]>()))
+            .ReturnsAsync([]);
+
+        Core.DTOs.Contact.LabelOperationResult result = await _service.UpdateAsync(id, "TestLabel", "#abc");
+
+        Assert.True(result.Success);
+        _mockRepo.Verify(r => r.UpdateAsync(label, It.IsAny<CancellationToken>()), Times.Once);
+        _mockRepo.Verify(r => r.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task AssignLabelAsyncIdempotentWhenCalledMultipleTimes()
+    {
+        Guid contactId = Guid.NewGuid();
+        Guid labelId = Guid.NewGuid();
+
+        _mockRepo.SetupSequence(r =>
+                r.CountAsync(It.IsAny<Expression<Func<ContactLabel, bool>>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(0)
+            .ReturnsAsync(1);
+
+        _mockRepo.Setup(r => r.AddAsync(It.IsAny<ContactLabel>(), It.IsAny<CancellationToken>())).ReturnsAsync(new ContactLabel());
+
+        await _service.AssignLabelAsync(contactId, labelId);
+        await _service.AssignLabelAsync(contactId, labelId);
+
+        _mockRepo.Verify(r => r.AddAsync(It.IsAny<ContactLabel>(), It.IsAny<CancellationToken>()), Times.Once);
+        _mockRepo.Verify(r => r.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
     public async Task RemoveLabelAsyncRemovesContactLabelWhenExists()
     {
         await _service.RemoveLabelAsync(Guid.NewGuid(), Guid.NewGuid());
