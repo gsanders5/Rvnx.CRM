@@ -211,4 +211,11 @@ public class FileValidationServiceTests
         byte[] pngSignature = [0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A];
         Assert.False(_service.IsValidImageSignature(pngSignature, ".jpg"));
     }
+
+    [Fact]
+    public void IsValidFileSignatureShouldReturnFalseForDocxExtensionWithGifBytes()
+    {
+        byte[] gifBytes = [0x47, 0x49, 0x46, 0x38, 0x39, 0x61];
+        Assert.False(_service.IsValidFileSignature(gifBytes, ".docx"));
+    }
 }
