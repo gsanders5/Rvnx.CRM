@@ -90,4 +90,63 @@ public class UserSynchronizationTests
         Assert.Equal(result1.UserId, result2.UserId);
         Assert.Equal(result2.UserId, result3.UserId);
     }
+
+    [Fact]
+    public async Task SyncUserAsyncUpdatesGroupWhenMissingOnExistingUser()
+    {
+        using CRMDbContext context = GetInMemoryDbContext();
+        Repository repository = new(context);
+        UserSynchronizationService service = new(context, repository);
+
+        // Create user via the service so it starts with a proper group.
+        await service.SyncUserAsync("sub-nogroup", "nogroup@example.com", "No Group User");
+
+        // Simulate the user losing its group assignment (e.g. migration or data issue).
+        Core.Models.User? existingUser = await repository.QueryUnfiltered<Core.Models.User>()
+            .FirstOrDefaultAsync(u => u.SubjectId == "sub-nogroup");
+        Assert.NotNull(existingUser);
+        existingUser.GroupId = null;
+        await context.SaveChangesAsync();
+        context.ChangeTracker.Clear();
+
+        // SyncUserAsync should detect the missing group and create a new one.
+        UserSyncResult? result = await service.SyncUserAsync("sub-nogroup", "nogroup@example.com", "No Group User");
+
+        Assert.NotNull(result);
+        Assert.NotNull(result.GroupId);
+
+        context.ChangeTracker.Clear();
+        Core.Models.User? user = await repository.QueryUnfiltered<Core.Models.User>()
+            .FirstOrDefaultAsync(u => u.SubjectId == "sub-nogroup");
+        Assert.NotNull(user);
+        Assert.NotNull(user.GroupId);
+    }
+
+    [Fact]
+    public async Task SyncUserAsyncNoChangeWhenFieldsUnchanged()
+    {
+        using CRMDbContext context = GetInMemoryDbContext();
+        Repository repository = new(context);
+
+        Core.Models.UserGroup group = new() { Name = "Existing Group" };
+        Core.Models.User existingUser = new()
+        {
+            SubjectId = "sub-unchanged",
+            Email = "same@example.com",
+            DisplayName = "Same Name",
+            Group = group
+        };
+        context.Users!.Add(existingUser);
+        await context.SaveChangesAsync();
+
+        int saveCount = 0;
+        context.SavedChanges += (_, _) => saveCount++;
+        context.ChangeTracker.Clear();
+
+        UserSynchronizationService service = new(context, repository);
+        UserSyncResult? result = await service.SyncUserAsync("sub-unchanged", "same@example.com", "Same Name");
+
+        Assert.NotNull(result);
+        Assert.Equal(0, saveCount);
+    }
 }

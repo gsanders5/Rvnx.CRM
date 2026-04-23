@@ -269,6 +269,96 @@ public class MergeServiceTests : IDisposable
     }
 
     [Fact]
+    public async Task MergeContactsAsyncWhenBothContactsHaveNullFirstNameResultIsEmptyString()
+    {
+        // FirstName is [Required] in the DB, so whitespace-only stands in for "blank" inputs.
+        // MergeScalar treats whitespace-only as null; the ?? string.Empty fallback ensures
+        // the result is "" rather than null.
+        Contact primary = new() { Id = Guid.NewGuid(), FirstName = "   " };
+        Contact secondary = new() { Id = Guid.NewGuid(), FirstName = "   " };
+
+        await _context.Contacts!.AddRangeAsync(primary, secondary);
+        await _context.SaveChangesAsync();
+
+        await _sut.MergeContactsAsync(primary.Id, secondary.Id);
+
+        Contact? merged = await _context.Contacts.FindAsync(primary.Id);
+        Assert.NotNull(merged);
+        Assert.Empty(merged.FirstName);
+    }
+
+    [Fact]
+    public async Task MergeContactsAsyncWhenRelatedToSecondaryWithCircularRelationshipDeduplicates()
+    {
+        Contact primary = new() { Id = Guid.NewGuid(), FirstName = "Primary" };
+        Contact secondary = new() { Id = Guid.NewGuid(), FirstName = "Secondary" };
+        Contact tertiary = new() { Id = Guid.NewGuid(), FirstName = "Tertiary" };
+        Guid typeId = Guid.NewGuid();
+
+        Relationship primaryToTertiary = new()
+        {
+            Id = Guid.NewGuid(),
+            EntityId = primary.Id,
+            RelatedEntityId = tertiary.Id,
+            RelationshipTypeId = typeId,
+            EntityType = EntityType.Person
+        };
+        Relationship secondaryToTertiary = new()
+        {
+            Id = Guid.NewGuid(),
+            EntityId = secondary.Id,
+            RelatedEntityId = tertiary.Id,
+            RelationshipTypeId = typeId,
+            EntityType = EntityType.Person
+        };
+
+        await _context.Contacts!.AddRangeAsync(primary, secondary, tertiary);
+        await _context.Set<Relationship>().AddRangeAsync(primaryToTertiary, secondaryToTertiary);
+        await _context.SaveChangesAsync();
+
+        await _sut.MergeContactsAsync(primary.Id, secondary.Id);
+
+        List<Relationship> relsFromPrimary = await _context.Set<Relationship>()
+            .Where(r => r.EntityId == primary.Id)
+            .ToListAsync();
+
+        Assert.Single(relsFromPrimary);
+        Assert.Equal(tertiary.Id, relsFromPrimary.First().RelatedEntityId);
+
+        bool selfReferential = await _context.Set<Relationship>()
+            .AnyAsync(r => r.EntityId == primary.Id && r.RelatedEntityId == primary.Id);
+        Assert.False(selfReferential);
+    }
+
+    [Fact]
+    public async Task MergeContactsAsyncWhenSecondaryPetContactSharesToPrimaryExistingPet()
+    {
+        Contact primary = new() { Id = Guid.NewGuid(), FirstName = "Primary" };
+        Contact secondary = new() { Id = Guid.NewGuid(), FirstName = "Secondary" };
+
+        Pet sharedPet = new() { Id = Guid.NewGuid(), Name = "Buddy" };
+
+        await _context.Contacts!.AddRangeAsync(primary, secondary);
+        await _context.Set<Pet>().AddAsync(sharedPet);
+        await _context.Set<PetContact>().AddRangeAsync(
+            new PetContact { PetId = sharedPet.Id, ContactId = primary.Id },
+            new PetContact { PetId = sharedPet.Id, ContactId = secondary.Id });
+        await _context.SaveChangesAsync();
+
+        await _sut.MergeContactsAsync(primary.Id, secondary.Id);
+
+        List<PetContact> petContacts = await _context.Set<PetContact>()
+            .Where(pc => pc.ContactId == primary.Id)
+            .ToListAsync();
+
+        Assert.Single(petContacts);
+        Assert.Equal(sharedPet.Id, petContacts.First().PetId);
+
+        int totalPetContacts = await _context.Set<PetContact>().CountAsync();
+        Assert.Equal(1, totalPetContacts);
+    }
+
+    [Fact]
     public async Task MergeContactsAsyncWhenTransactionFailsBothContactsRemainIntact()
     {
         Contact primary = new()

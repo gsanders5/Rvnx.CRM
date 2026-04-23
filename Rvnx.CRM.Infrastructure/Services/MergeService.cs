@@ -224,7 +224,10 @@ public class MergeService(CRMDbContext context, IRepository repository) : IMerge
                 }
                 else
                 {
-                    orphanPetsToDelete.Add(pc.Pet);
+                    if (!primaryPetIds.Contains(pc.PetId))
+                    {
+                        orphanPetsToDelete.Add(pc.Pet);
+                    }
                 }
                 petContactsToDelete.Add(pc);
             }
