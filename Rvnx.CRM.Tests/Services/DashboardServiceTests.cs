@@ -292,6 +292,71 @@ public class DashboardServiceTests
     }
 
     [Fact]
+    public async Task GetDashboardDataAsyncHiddenAndPartialContactsExcluded()
+    {
+        Guid normalId = Guid.NewGuid();
+        DateTime now = DateTime.UtcNow;
+
+        SetupContactSummaries([new ContactSummary(normalId, "Normal", "Contact", null, now, now)]);
+        SetupAttachments([]);
+        SetupSignificantDates([
+            new SignificantDate
+            {
+                ContactId = normalId,
+                Title = "Birthday",
+                EventDate = DateOnly.FromDateTime(DateTime.Today.AddDays(5)),
+                IsActive = true
+            }
+        ]);
+        SetupRelationships([]);
+
+        _repositoryMock
+            .Setup(r => r.CountAsync<SignificantDate>(It.IsAny<Expression<Func<SignificantDate, bool>>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(1);
+        _repositoryMock
+            .Setup(r => r.CountAsync<Contact>(It.IsAny<Expression<Func<Contact, bool>>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(2);
+
+        DashboardDto result = await _service.GetDashboardDataAsync();
+
+        Assert.Single(result.GraphNodes);
+        Assert.Equal(normalId.ToString(), result.GraphNodes[0].Id);
+        Assert.Equal(1, result.Stats.TotalContacts);
+    }
+
+    [Fact]
+    public async Task GetDashboardDataAsyncOrphanedSignificantDateFiltered()
+    {
+        Guid normalId = Guid.NewGuid();
+        Guid orphanedContactId = Guid.NewGuid();
+        DateTime now = DateTime.UtcNow;
+
+        SetupContactSummaries([new ContactSummary(normalId, "Normal", "Contact", null, now, now)]);
+        SetupAttachments([]);
+        SetupSignificantDates([
+            new SignificantDate
+            {
+                ContactId = orphanedContactId,
+                Title = "Birthday",
+                EventDate = DateOnly.FromDateTime(DateTime.Today.AddDays(3)),
+                IsActive = true
+            }
+        ]);
+        SetupRelationships([]);
+
+        _repositoryMock
+            .Setup(r => r.CountAsync<SignificantDate>(It.IsAny<Expression<Func<SignificantDate, bool>>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(0);
+        _repositoryMock
+            .Setup(r => r.CountAsync<Contact>(It.IsAny<Expression<Func<Contact, bool>>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(0);
+
+        DashboardDto result = await _service.GetDashboardDataAsync();
+
+        Assert.Empty(result.UpcomingEvents);
+    }
+
+    [Fact]
     [SuppressMessage("Naming", "CA1707:Identifiers should not contain underscores",
         Justification = "Test names can contain underscores for readability.")]
     public async Task GetDashboardDataAsync_CalculatesStatsAndRecentContactsCorrectly()
