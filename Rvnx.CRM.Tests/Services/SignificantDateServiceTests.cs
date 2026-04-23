@@ -147,4 +147,94 @@ public class SignificantDateServiceTests : IDisposable
         Assert.Contains(events, e => e.Start == eventDate.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture));
         Assert.Contains(events, e => e.Start == eventDate.AddYears(1).ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture));
     }
+
+    [Fact]
+    public async Task GetCalendarEventsAsyncWithLeapYearBirthdayReturnsCorrectEventInNonLeapYear()
+    {
+        Guid contactId = Guid.NewGuid();
+        _context.Contacts!.Add(new Contact { Id = contactId, FirstName = "Leap", LastName = "Day" });
+
+        _context.SignificantDates!.Add(new SignificantDate
+        {
+            Id = Guid.NewGuid(),
+            ContactId = contactId,
+            Title = SignificantDateTitles.Birthday,
+            EventDate = new DateOnly(2020, 2, 29),
+            RecurrenceType = Core.Enumerations.RecurrenceType.Annual,
+            IsActive = true
+        });
+
+        await _context.SaveChangesAsync();
+
+        List<CalendarEventDto> events = await _service.GetCalendarEventsAsync();
+
+        Assert.NotEmpty(events);
+
+        // In a non-leap year Feb 29 clamps to Feb 28; in a leap year it stays Feb 29
+        int currentYear = DateTime.Today.Year;
+        int expectedDay = DateTime.IsLeapYear(currentYear) ? 29 : 28;
+        Assert.All(events, e =>
+        {
+            DateOnly eventDate = DateOnly.ParseExact(e.Start, "yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture);
+            Assert.Equal(2, eventDate.Month);
+            Assert.Equal(expectedDay, eventDate.Day);
+        });
+    }
+
+    [Fact]
+    public async Task GetCalendarEventsAsyncWithInactiveReminderOffsetsStillGeneratesEvent()
+    {
+        Guid contactId = Guid.NewGuid();
+        _context.Contacts!.Add(new Contact { Id = contactId, FirstName = "Reminder", LastName = "Test" });
+
+        Guid significantDateId = Guid.NewGuid();
+        DateOnly today = DateOnly.FromDateTime(DateTime.Today);
+
+        _context.SignificantDates!.Add(new SignificantDate
+        {
+            Id = significantDateId,
+            ContactId = contactId,
+            Title = "Work Anniversary",
+            EventDate = today.AddDays(30),
+            RecurrenceType = Core.Enumerations.RecurrenceType.Annual,
+            IsActive = true,
+            ReminderOffsets =
+            [
+                new ReminderOffset { Id = Guid.NewGuid(), SignificantDateId = significantDateId, DaysBeforeEvent = 7, IsActive = false },
+                new ReminderOffset { Id = Guid.NewGuid(), SignificantDateId = significantDateId, DaysBeforeEvent = 1, IsActive = false }
+            ]
+        });
+
+        await _context.SaveChangesAsync();
+
+        List<CalendarEventDto> events = await _service.GetCalendarEventsAsync();
+
+        Assert.Single(events);
+        Assert.Equal("Reminder's Work Anniversary", events[0].Title);
+    }
+
+    [Fact]
+    public async Task GetCalendarEventsAsyncWithPartialContactExcludesTheirEvents()
+    {
+        Guid partialContactId = Guid.NewGuid();
+        _context.Contacts!.Add(new Contact { Id = partialContactId, FirstName = "Ghost", LastName = "User", IsPartial = true });
+
+        DateOnly today = DateOnly.FromDateTime(DateTime.Today);
+
+        _context.SignificantDates!.Add(new SignificantDate
+        {
+            Id = Guid.NewGuid(),
+            ContactId = partialContactId,
+            Title = SignificantDateTitles.Birthday,
+            EventDate = today.AddDays(5),
+            RecurrenceType = Core.Enumerations.RecurrenceType.Annual,
+            IsActive = true
+        });
+
+        await _context.SaveChangesAsync();
+
+        List<CalendarEventDto> events = await _service.GetCalendarEventsAsync();
+
+        Assert.Empty(events);
+    }
 }
