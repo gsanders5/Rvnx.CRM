@@ -65,7 +65,11 @@ public class UserSynchronizationService(CRMDbContext dbContext, IRepository repo
                     CreatedBy = "System",
                     LastChangedBy = "System"
                 };
-                user.Group = group;
+                _dbContext.UserGroups!.Add(group);
+                user.GroupId = group.Id;
+                // Explicit Update required: setting only a FK scalar on a tracked entity
+                // does not reliably mark it Modified in EF InMemory without this call.
+                _dbContext.Users!.Update(user);
                 changed = true;
             }
 
