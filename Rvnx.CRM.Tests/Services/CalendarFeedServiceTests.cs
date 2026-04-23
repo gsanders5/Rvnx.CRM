@@ -137,4 +137,60 @@ public class CalendarFeedServiceTests
         Assert.Single(parsed.Events);
         Assert.Equal("Valid", parsed.Events.First().Summary);
     }
+
+    [Fact]
+    public void BuildIcsFeedWithEmptyCollectionsProducesValidEmptyCalendar()
+    {
+        string ics = _service.BuildIcsFeed([], []);
+
+        Assert.NotEmpty(ics);
+        Assert.Contains("PRODID", ics);
+        Assert.DoesNotContain("BEGIN:VEVENT", ics);
+    }
+
+    [Fact]
+    public void BuildIcsFeedPreservesSpecialCharactersInEventTitles()
+    {
+        const string title = "Smith, John; re: meeting";
+
+        List<CalendarEventDto> dateEvents =
+        [
+            new CalendarEventDto
+            {
+                Title = title,
+                Start = "2026-08-10",
+                ContactId = Guid.NewGuid(),
+            },
+        ];
+
+        string ics = _service.BuildIcsFeed(dateEvents, []);
+
+        IcalCalendar? parsed = IcalCalendar.Load(ics);
+        Assert.NotNull(parsed);
+        Assert.Single(parsed.Events);
+        Assert.Equal(title, parsed.Events.First().Summary);
+    }
+
+    [Fact]
+    public void BuildIcsFeedInvalidUrlsAreSkippedAndDoNotCorruptEvent()
+    {
+        List<CalendarEventDto> dateEvents =
+        [
+            new CalendarEventDto
+            {
+                Title = "Meeting",
+                Start = "2026-09-01",
+                ContactId = Guid.NewGuid(),
+                Url = "not-a-valid-url",
+            },
+        ];
+
+        string ics = _service.BuildIcsFeed(dateEvents, []);
+
+        IcalCalendar? parsed = IcalCalendar.Load(ics);
+        Assert.NotNull(parsed);
+        Assert.Single(parsed.Events);
+        Assert.Equal("Meeting", parsed.Events.First().Summary);
+        Assert.Null(parsed.Events.First().Url);
+    }
 }

@@ -431,6 +431,61 @@ public class AttachmentServiceTests
         Assert.Null(result);
     }
 
+    [Fact]
+    public async Task GetAttachmentContentAsyncShouldHandleAttachmentWithoutContent()
+    {
+        using CRMDbContext context = GetInMemoryDbContext();
+        Repository repo = new(context);
+        Mock<IFileValidationService> fileServiceMock = new();
+        Mock<IEntityService> entityServiceMock = new();
+
+        AttachmentService service = new(repo, fileServiceMock.Object, entityServiceMock.Object);
+
+        Guid attachmentId = Guid.NewGuid();
+        context.Attachments!.Add(new Attachment
+        {
+            Id = attachmentId,
+            FileName = "test.png",
+            ContentType = "image/png"
+        });
+        context.SaveChanges();
+
+        AttachmentContentDto? result = await service.GetAttachmentContentAsync(attachmentId);
+
+        Assert.Null(result);
+    }
+
+    [Fact]
+    public async Task GetByContactAsyncShouldReturnAllAttachmentsForContact()
+    {
+        using CRMDbContext context = GetInMemoryDbContext();
+        Repository repo = new(context);
+        Mock<IFileValidationService> fileServiceMock = new();
+        Mock<IEntityService> entityServiceMock = new();
+
+        AttachmentService service = new(repo, fileServiceMock.Object, entityServiceMock.Object);
+
+        Guid contactId = Guid.NewGuid();
+        context.Contacts!.Add(new Contact { Id = contactId, FirstName = "Test", LastName = "User" });
+
+        Guid id1 = Guid.NewGuid();
+        Guid id2 = Guid.NewGuid();
+        Guid id3 = Guid.NewGuid();
+        context.Attachments!.AddRange(
+            new Attachment { Id = id1, ContactId = contactId, FileName = "file1.pdf", ContentType = "application/pdf", AttachmentType = AttachmentTypes.General },
+            new Attachment { Id = id2, ContactId = contactId, FileName = "file2.png", ContentType = "image/png", AttachmentType = AttachmentTypes.General },
+            new Attachment { Id = id3, ContactId = contactId, FileName = "file3.txt", ContentType = "text/plain", AttachmentType = AttachmentTypes.General }
+        );
+        context.SaveChanges();
+
+        List<AttachmentDto> result = await service.GetByContactAsync(contactId);
+
+        Assert.Equal(3, result.Count);
+        Assert.Contains(result, a => a.Id == id1 && a.FileName == "file1.pdf" && a.ContentType == "application/pdf");
+        Assert.Contains(result, a => a.Id == id2 && a.FileName == "file2.png" && a.ContentType == "image/png");
+        Assert.Contains(result, a => a.Id == id3 && a.FileName == "file3.txt" && a.ContentType == "text/plain");
+    }
+
     public class AttachmentContentTypeSecurityTests
     {
         private static CRMDbContext GetInMemoryDbContext() => TestDbContextFactory.CreateForDefaultUser();

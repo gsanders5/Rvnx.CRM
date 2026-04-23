@@ -33,6 +33,50 @@ public class ContactManagementServiceTests
 
     public class ContactManagementServiceDeleteTests : ContactManagementServiceTestBase
     {
+        [Fact]
+        public async Task DeleteContactAsyncPartialContactOrphanedAfterDeleteIsCascadeDeleted()
+        {
+            Guid fullContactId = Guid.NewGuid();
+            Guid partialContactId = Guid.NewGuid();
+
+            Contact partialContact = new() { Id = partialContactId, IsPartial = true };
+
+            Relationship relationship = new()
+            {
+                EntityId = fullContactId,
+                RelatedEntityId = partialContactId,
+                EntityType = EntityType.Person
+            };
+
+            RepositoryMock.Setup(r => r.ListAsync<Rvnx.CRM.Core.Models.User>(
+                It.IsAny<Expression<Func<Rvnx.CRM.Core.Models.User, bool>>>(),
+                It.IsAny<CancellationToken>()))
+                .ReturnsAsync([]);
+
+            RepositoryMock.Setup(r => r.ListAsync<Relationship>(
+                It.IsAny<Expression<Func<Relationship, bool>>>(),
+                It.IsAny<CancellationToken>()))
+                .ReturnsAsync([relationship]);
+
+            // ListByChunkedContainsAsync(asNoTracking:false) routes to ListAsync(3-arg)
+            RepositoryMock.Setup(r => r.ListAsync<Contact>(
+                It.IsAny<Expression<Func<Contact, bool>>>(),
+                It.IsAny<CancellationToken>(),
+                It.IsAny<string[]>()))
+                .ReturnsAsync((Expression<Func<Contact, bool>> predicate, CancellationToken ct, string[] includes) =>
+                    new List<Contact> { partialContact }.Where(predicate.Compile()).ToList());
+
+            // No remaining relationships after the full contact is deleted — partial is orphaned
+            RepositoryMock.Setup(r => r.ListAsync<Relationship>(
+                It.IsAny<Expression<Func<Relationship, bool>>>(),
+                It.IsAny<CancellationToken>(),
+                It.IsAny<string[]>()))
+                .ReturnsAsync([]);
+
+            await Service.DeleteContactAsync(fullContactId);
+
+            RepositoryMock.Verify(r => r.DeleteAsync<Contact>(partialContactId, It.IsAny<CancellationToken>()), Times.Once);
+        }
 
         [Fact]
         public async Task DeleteContactAsyncShouldNotUpdateUsersInLoop()
@@ -111,6 +155,32 @@ public class ContactManagementServiceTests
             RepositoryMock.Verify(r => r.UpdateRangeAsync(It.Is<IEnumerable<Attachment>>(list => list.Count() == 2), It.IsAny<CancellationToken>()), Times.Once());
             RepositoryMock.Verify(r => r.UpdateAsync(It.IsAny<Attachment>(), It.IsAny<CancellationToken>()), Times.Never());
             RepositoryMock.Verify(r => r.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once());
+        }
+
+        [Fact]
+        public async Task SetAttachmentAsProfilePhotoAsyncArchivesMultipleExistingProfilePhotos()
+        {
+            Guid contactId = Guid.NewGuid();
+            Guid attachmentId = Guid.NewGuid();
+
+            Attachment existingPhoto1 = new() { Id = Guid.NewGuid(), ContactId = contactId, AttachmentType = AttachmentTypes.ProfileImage };
+            Attachment existingPhoto2 = new() { Id = Guid.NewGuid(), ContactId = contactId, AttachmentType = AttachmentTypes.ProfileImage };
+            _attachments.Add(existingPhoto1);
+            _attachments.Add(existingPhoto2);
+
+            Attachment newAttachment = new() { Id = attachmentId, ContactId = contactId, FileName = "photo.jpg", ContentType = "image/jpeg", AttachmentType = AttachmentTypes.General };
+            RepositoryMock.Setup(r => r.GetByIdAsync<Attachment>(attachmentId, It.IsAny<CancellationToken>())).ReturnsAsync(newAttachment);
+            FileValidationServiceMock.Setup(f => f.IsImageExtension(".jpg")).Returns(true);
+
+            ContactOperationResult result = await Service.SetAttachmentAsProfilePhotoAsync(contactId, attachmentId);
+
+            Assert.True(result.Success);
+            RepositoryMock.Verify(
+                r => r.UpdateRangeAsync(
+                    It.Is<IEnumerable<Attachment>>(list => list.Count() == 2 && list.Contains(existingPhoto1) && list.Contains(existingPhoto2)),
+                    It.IsAny<CancellationToken>()),
+                Times.Once);
+            RepositoryMock.Verify(r => r.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
         }
 
         [Fact]
@@ -603,6 +673,24 @@ public class ContactManagementServiceTests
             RepositoryMock.Verify(r => r.AddAsync(It.IsAny<Contact>(), It.IsAny<CancellationToken>()), Times.Once);
             RepositoryMock.Verify(r => r.AddAsync(It.IsAny<ContactMethod>(), It.IsAny<CancellationToken>()), Times.Exactly(2)); // Email and Phone
             RepositoryMock.Verify(r => r.AddAsync(It.IsAny<SignificantDate>(), It.IsAny<CancellationToken>()), Times.Once); // Birthday
+        }
+    }
+
+    public class DemoteTests : ContactManagementServiceTestBase
+    {
+        [Fact]
+        public async Task DemoteToPartialAsyncReturnsNotFoundWhenContactDoesNotExist()
+        {
+            Guid nonExistentId = Guid.NewGuid();
+
+            RepositoryMock.Setup(r => r.GetByIdAsync<Contact>(nonExistentId, It.IsAny<CancellationToken>()))
+                .ReturnsAsync((Contact?)null);
+
+            ContactOperationResult result = await Service.DemoteToPartialAsync(nonExistentId);
+
+            Assert.False(result.Success);
+            Assert.True(result.IsNotFound);
+            RepositoryMock.Verify(r => r.UpdateAsync(It.IsAny<Contact>(), It.IsAny<CancellationToken>()), Times.Never);
         }
     }
 

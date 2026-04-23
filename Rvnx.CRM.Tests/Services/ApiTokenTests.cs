@@ -47,4 +47,36 @@ public class ApiTokenTests
         _repositoryMock.Verify(r => r.AddAsync(It.IsAny<ApiToken>(), default), Times.Once);
         _repositoryMock.Verify(r => r.SaveChangesAsync(default), Times.Once);
     }
+
+    [Fact]
+    public void IsActiveShouldReturnFalseWhenRevokedAtIsSet()
+    {
+        var token = new ApiToken { RevokedAt = DateTime.UtcNow.AddMinutes(-5), ExpiresAt = DateTime.UtcNow.AddDays(30) };
+
+        Assert.False(token.IsActive);
+    }
+
+    [Fact]
+    public void IsActiveShouldReturnFalseWhenExpiredAndNotRevoked()
+    {
+        var token = new ApiToken { RevokedAt = null, ExpiresAt = DateTime.UtcNow.AddMinutes(-5) };
+
+        Assert.False(token.IsActive);
+    }
+
+    [Fact]
+    public void IsActiveShouldReturnTrueWhenNoExpirationAndNotRevoked()
+    {
+        var token = new ApiToken { RevokedAt = null, ExpiresAt = null };
+
+        Assert.True(token.IsActive);
+    }
+
+    [Fact]
+    public void IsActiveShouldReturnFalseWhenJustExpiredByOneSecond()
+    {
+        var token = new ApiToken { RevokedAt = null, ExpiresAt = DateTime.UtcNow.AddSeconds(-1) };
+
+        Assert.False(token.IsActive);
+    }
 }
