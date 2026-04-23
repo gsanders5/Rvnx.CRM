@@ -31,6 +31,35 @@ public class VCardServiceTests
 
             Assert.Empty(result);
         }
+
+        [Fact]
+        public async Task ParseVCardAsyncHandlesMalformedVCardWithMissingNameFields()
+        {
+            string vcfContent = "BEGIN:VCARD\r\nVERSION:3.0\r\nEND:VCARD";
+            using MemoryStream stream = new(Encoding.UTF8.GetBytes(vcfContent));
+
+            IEnumerable<Contact> result = await _service.ParseVCardAsync(stream);
+            List<Contact> contacts = result.ToList();
+
+            Assert.Single(contacts);
+            Assert.Equal("Unknown", contacts[0].FirstName);
+        }
+
+        [Fact]
+        public async Task ParseVCardAsyncHandlesPhoneNormalizationFailureWithMultiplePhones()
+        {
+            string vcfContent = "BEGIN:VCARD\r\nVERSION:3.0\r\nFN:Test User\r\nN:User;Test;;;\r\nTEL:not-a-phone\r\nTEL:+12127365000\r\nEND:VCARD";
+            using MemoryStream stream = new(Encoding.UTF8.GetBytes(vcfContent));
+
+            IEnumerable<Contact> result = await _service.ParseVCardAsync(stream);
+            List<Contact> contacts = result.ToList();
+
+            Assert.Single(contacts);
+            List<ContactMethod> phones = contacts[0].ContactMethods
+                .Where(cm => cm.Type == ContactMethodType.Phone)
+                .ToList();
+            Assert.Single(phones);
+        }
     }
 
     public class ExportTests
