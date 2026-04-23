@@ -8,9 +8,9 @@ public static class ClaimsIdentityExtensions
 {
     public static async Task SyncUserAndEnrichClaimsAsync(this ClaimsIdentity identity, IUserSynchronizationService userSyncService)
     {
-        string? subjectId = identity.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? identity.FindFirst("sub")?.Value;
-        string? email = identity.FindFirst(ClaimTypes.Email)?.Value ?? identity.FindFirst("email")?.Value;
-        string? name = identity.FindFirst(ClaimTypes.Name)?.Value ?? identity.FindFirst("name")?.Value;
+        string? subjectId = identity.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? identity.FindFirst(ClaimConstants.OidcSubjectClaimType)?.Value;
+        string? email = identity.FindFirst(ClaimTypes.Email)?.Value ?? identity.FindFirst(ClaimConstants.OidcEmailClaimType)?.Value;
+        string? name = identity.FindFirst(ClaimTypes.Name)?.Value ?? identity.FindFirst(ClaimConstants.OidcNameClaimType)?.Value;
 
         if (!string.IsNullOrEmpty(subjectId))
         {

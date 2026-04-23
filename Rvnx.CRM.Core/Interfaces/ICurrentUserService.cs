@@ -21,6 +21,18 @@ public interface ICurrentUserService
     string? UserName { get; }
 
     /// <summary>
+    /// Gets the display name of the current user from OAuth claims.
+    /// Returns null if not authenticated or the claim is absent.
+    /// </summary>
+    string? DisplayName { get; }
+
+    /// <summary>
+    /// Gets the email address of the current user from OAuth claims.
+    /// Returns null if not authenticated or the claim is absent.
+    /// </summary>
+    string? Email { get; }
+
+    /// <summary>
     /// Indicates whether the current request is authenticated.
     /// </summary>
     bool IsAuthenticated { get; }

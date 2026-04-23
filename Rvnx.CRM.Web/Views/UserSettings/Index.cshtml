@@ -1,0 +1,296 @@
+@model Rvnx.CRM.Web.ViewModels.UserSettings.UserSettingsViewModel
+@{
+    ViewData["Title"] = "Settings";
+}
+
+<div class="row g-4">
+    <aside class="col-lg-3 col-md-4">
+        <nav class="crm-settings-toc" aria-label="Settings sections">
+            <ul class="list-unstyled mb-0">
+                <li><a class="nav-link px-0 py-2" href="#profile">Profile</a></li>
+                <li><a class="nav-link px-0 py-2" href="#api-tokens">API Tokens</a></li>
+                @if (Model.ShowDangerZone)
+                {
+                    <li><a class="nav-link px-0 py-2" href="#danger-zone" style="color: var(--crm-danger);">Danger Zone</a></li>
+                }
+            </ul>
+        </nav>
+    </aside>
+
+    <div class="col-lg-9 col-md-8">
+        <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
+            <h2 class="mb-0">Settings</h2>
+        </div>
+
+        <section id="profile" class="crm-card mb-4">
+            <div class="crm-card-body">
+                <h3 class="h5 mb-3">Profile</h3>
+                <dl class="row mb-0">
+                    <dt class="col-sm-3" style="color: var(--crm-text-secondary);">Display Name</dt>
+                    <dd class="col-sm-9">@(string.IsNullOrWhiteSpace(Model.DisplayName) ? "—" : Model.DisplayName)</dd>
+
+                    <dt class="col-sm-3" style="color: var(--crm-text-secondary);">Email</dt>
+                    <dd class="col-sm-9 mb-0">@(string.IsNullOrWhiteSpace(Model.Email) ? "—" : Model.Email)</dd>
+                </dl>
+                <small class="d-block mt-3" style="color: var(--crm-text-tertiary);">
+                    Profile information comes from your identity provider and is read-only here.
+                </small>
+            </div>
+        </section>
+
+        <section id="api-tokens" class="crm-card mb-4">
+            <div class="crm-card-body">
+                <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
+                    <h3 class="h5 mb-0">API Tokens</h3>
+                    <button type="button" class="crm-btn-primary" id="btn-create-token">
+                        <i class="bi bi-plus-lg" aria-hidden="true"></i> New Token
+                    </button>
+                </div>
+
+                @if (!string.IsNullOrEmpty(Model.NewlyCreatedRawToken))
+                {
+                    <div id="new-token-banner" class="alert alert-success d-flex flex-column gap-2" role="alert">
+                        <div>
+                            <strong>Token created: @Model.NewlyCreatedTokenName</strong>
+                            <div class="small">Copy this token now — it will not be shown again.</div>
+                        </div>
+                        <div class="d-flex align-items-center gap-2">
+                            <code id="new-token-value" class="flex-grow-1 p-2" style="word-break: break-all;">@Model.NewlyCreatedRawToken</code>
+                            <button type="button" class="crm-btn-tertiary" id="btn-copy-token" title="Copy to clipboard" aria-label="Copy token">
+                                <i class="bi bi-clipboard" aria-hidden="true"></i>
+                            </button>
+                        </div>
+                    </div>
+                }
+
+                @if (!Model.Tokens.Any())
+                {
+                    <p class="mb-0" style="color: var(--crm-text-tertiary);">No active API tokens. Create one to access the Rvnx CRM API programmatically.</p>
+                }
+                else
+                {
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Prefix</th>
+                                    <th>Expires</th>
+                                    <th>Last Used</th>
+                                    <th class="text-end" style="width: 100px;">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var token in Model.Tokens)
+                                {
+                                    <tr>
+                                        <td>@token.Name</td>
+                                        <td><code>@token.TokenPrefix…</code></td>
+                                        <td>@(token.ExpiresAt?.ToString("yyyy-MM-dd") ?? "Never")</td>
+                                        <td>@token.LastUsedAt.ToString("yyyy-MM-dd HH:mm")</td>
+                                        <td class="text-end">
+                                            <button type="button" class="crm-icon-btn icon-danger"
+                                                    data-confirm-action="@Url.Action("RevokeApiToken", "UserSettings", new { id = token.Id })"
+                                                    data-confirm-title="Revoke Token"
+                                                    data-confirm-body="Revoke token &quot;@token.Name&quot;? Any integrations using it will immediately stop working."
+                                                    data-confirm-btn-label="Revoke"
+                                                    data-confirm-btn-icon="bi-x-octagon"
+                                                    data-confirm-remove="tr"
+                                                    title="Revoke" aria-label="Revoke @token.Name">
+                                                <i class="bi bi-x-octagon" aria-hidden="true"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+            </div>
+        </section>
+
+        @if (Model.ShowDangerZone)
+        {
+            <section id="danger-zone" class="crm-card mb-4" style="border-color: rgba(239, 71, 111, 0.3);">
+                <div class="crm-card-body">
+                    <h3 class="h5 mb-3" style="color: var(--crm-danger);">
+                        <i class="bi bi-exclamation-triangle-fill" aria-hidden="true"></i> Danger Zone
+                    </h3>
+                    <p class="mb-4" style="color: var(--crm-text-secondary);">
+                        Administrator-only operations. Development-only utilities appear in development environments.
+                    </p>
+
+                    @if (!string.IsNullOrEmpty(Model.DangerZoneMessage))
+                    {
+                        <div class="crm-alert crm-alert-info" role="alert">@Model.DangerZoneMessage</div>
+                    }
+                    @if (!string.IsNullOrEmpty(Model.DangerZoneError))
+                    {
+                        <div class="crm-alert crm-alert-danger" role="alert">@Model.DangerZoneError</div>
+                    }
+
+                    <div class="d-flex flex-column gap-3">
+                        <div class="crm-danger-zone-row">
+                            <div>
+                                <div class="fw-semibold">Merge accounts</div>
+                                <small style="color: var(--crm-text-tertiary);">Combine two user accounts into a single shared group.</small>
+                            </div>
+                            <a asp-controller="DebugOperations" asp-action="MergeAccounts" class="crm-btn-secondary">
+                                <i class="bi bi-person-fill-gear" aria-hidden="true"></i> Merge Accounts
+                            </a>
+                        </div>
+
+                        @if (Model.ShowDevOperations)
+                        {
+                            <div class="crm-danger-zone-row">
+                                <div>
+                                    <div class="fw-semibold">Add test contacts</div>
+                                    <small style="color: var(--crm-text-tertiary);">Populate the database with 10 randomly-generated contacts.</small>
+                                </div>
+                                <button type="button" class="crm-btn-secondary"
+                                        data-confirm-action="@Url.Action("SeedTestData", "DebugOperations")"
+                                        data-confirm-title="Add Test Contacts"
+                                        data-confirm-body="Add 10 randomly-generated test contacts to the database?"
+                                        data-confirm-btn-label="Add Contacts"
+                                        data-confirm-btn-icon="bi-database-add">
+                                    <i class="bi bi-database-add" aria-hidden="true"></i> Add Test Contacts
+                                </button>
+                            </div>
+
+                            <div class="crm-danger-zone-row">
+                                <div>
+                                    <div class="fw-semibold">Add random relationships</div>
+                                    <small style="color: var(--crm-text-tertiary);">Create random relationships between existing contacts.</small>
+                                </div>
+                                <button type="button" class="crm-btn-secondary"
+                                        data-confirm-action="@Url.Action("AddRandomRelationships", "DebugOperations")"
+                                        data-confirm-title="Add Random Relationships"
+                                        data-confirm-body="Create random relationships between existing contacts?"
+                                        data-confirm-btn-label="Add Relationships"
+                                        data-confirm-btn-icon="bi-people-fill">
+                                    <i class="bi bi-people-fill" aria-hidden="true"></i> Add Random Relationships
+                                </button>
+                            </div>
+
+                            <div class="crm-danger-zone-row">
+                                <div>
+                                    <div class="fw-semibold" style="color: var(--crm-danger);">Reset database</div>
+                                    <small style="color: var(--crm-text-tertiary);">Permanently delete all data. This cannot be undone.</small>
+                                </div>
+                                <button type="button" class="crm-btn-danger"
+                                        data-confirm-action="@Url.Action("ResetDatabase", "DebugOperations")"
+                                        data-confirm-title="Reset Database"
+                                        data-confirm-body="This will permanently delete ALL data in the database. This cannot be undone. Continue?"
+                                        data-confirm-btn-label="Reset"
+                                        data-confirm-btn-icon="bi-trash">
+                                    <i class="bi bi-trash" aria-hidden="true"></i> Reset Database
+                                </button>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </section>
+        }
+    </div>
+</div>
+
+<div class="modal fade" id="tokenModal" tabindex="-1" aria-labelledby="tokenModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <form asp-controller="UserSettings" asp-action="CreateApiToken" method="post">
+                @Html.AntiForgeryToken()
+                <div class="modal-header">
+                    <h5 class="modal-title" id="tokenModalLabel">Create API Token</h5>
+                    <button type="button" class="btn-close" data-mdb-ripple-init data-mdb-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-floating mb-3">
+                        <input type="text" name="Name" id="tokenFormName" class="form-control" placeholder="Name" maxlength="256" required autofocus />
+                        <label for="tokenFormName">Name <span style="color: var(--crm-danger);">*</span></label>
+                    </div>
+                    <div class="form-floating">
+                        <input type="date" name="ExpiresAt" id="tokenFormExpiresAt" class="form-control" placeholder="Expiration date" />
+                        <label for="tokenFormExpiresAt">Expires (optional)</label>
+                    </div>
+                    <small class="d-block mt-2" style="color: var(--crm-text-tertiary);">
+                        Leave the expiration date blank for a token that never expires.
+                    </small>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="crm-btn-tertiary" data-mdb-ripple-init data-mdb-dismiss="modal">Cancel</button>
+                    <button type="submit" class="crm-btn-primary">
+                        <i class="bi bi-check-lg" aria-hidden="true"></i> Create Token
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            var modalEl = document.getElementById('tokenModal');
+            document.getElementById('btn-create-token').addEventListener('click', function () {
+                mdb.Modal.getOrCreateInstance(modalEl).show();
+            });
+
+            var confirmForm = document.getElementById('confirmModalForm');
+            if (confirmForm) {
+                confirmForm.addEventListener('submit', function () {
+                    var banner = document.getElementById('new-token-banner');
+                    if (banner) banner.remove();
+                });
+            }
+
+            var copyBtn = document.getElementById('btn-copy-token');
+            if (copyBtn) {
+                copyBtn.addEventListener('click', function () {
+                    var tokenEl = document.getElementById('new-token-value');
+                    if (!tokenEl) return;
+                    var icon = copyBtn.querySelector('i');
+                    navigator.clipboard.writeText(tokenEl.textContent.trim()).then(function () {
+                        icon.classList.remove('bi-clipboard');
+                        icon.classList.add('bi-clipboard-check');
+                        setTimeout(function () {
+                            icon.classList.remove('bi-clipboard-check');
+                            icon.classList.add('bi-clipboard');
+                        }, 2000);
+                    }).catch(function () {
+                        var range = document.createRange();
+                        range.selectNodeContents(tokenEl);
+                        var sel = window.getSelection();
+                        sel.removeAllRanges();
+                        sel.addRange(range);
+                    });
+                });
+            }
+
+            var tocLinks = document.querySelectorAll('.crm-settings-toc .nav-link');
+            var sections = Array.from(tocLinks).map(function (l) {
+                return document.querySelector(l.getAttribute('href'));
+            }).filter(Boolean);
+
+            function updateActive() {
+                var scrollPos = window.scrollY + 120;
+                var current = sections[0];
+                for (var i = 0; i < sections.length; i++) {
+                    if (sections[i].offsetTop <= scrollPos) current = sections[i];
+                }
+                tocLinks.forEach(function (l) {
+                    l.classList.toggle('active', l.getAttribute('href') === '#' + current.id);
+                });
+            }
+
+            var scrollRaf = 0;
+            window.addEventListener('scroll', function () {
+                if (scrollRaf) return;
+                scrollRaf = requestAnimationFrame(function () {
+                    scrollRaf = 0;
+                    updateActive();
+                });
+            }, { passive: true });
+            updateActive();
+        });
+    </script>
+}

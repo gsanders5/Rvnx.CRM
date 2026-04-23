@@ -57,14 +57,6 @@
                         <li class="nav-item">
                             <a class="nav-link" asp-area="" asp-controller="Calendar" asp-action="Index">Calendar</a>
                         </li>
-                        <environment include="Development">
-                            @if (CurrentUserService.UserId != null && await CurrentUserService.IsAdministratorAsync(CurrentUserService.UserId.Value))
-                            {
-                                <li class="nav-item">
-                                    <a class="nav-link" asp-area="" asp-controller="DebugOperations" asp-action="Index">Debug</a>
-                                </li>
-                            }
-                        </environment>
                     </ul>
                     <ul class="navbar-nav">
                         @if (Configuration.GetValue<bool>("Authentication:Enabled"))
@@ -92,6 +84,15 @@
                                 <i class="bi bi-moon-stars-fill" id="theme-icon" aria-hidden="true"></i>
                             </button>
                         </li>
+                        @if (Configuration.GetValue<bool>("Authentication:Enabled") && User.Identity?.IsAuthenticated == true)
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link" asp-area="" asp-controller="UserSettings" asp-action="Index"
+                                   aria-label="User Settings" title="Settings">
+                                    <i class="bi bi-gear-fill" aria-hidden="true"></i>
+                                </a>
+                            </li>
+                        }
                     </ul>
                 </div>
             </div>

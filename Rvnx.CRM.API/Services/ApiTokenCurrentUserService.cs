@@ -53,6 +53,10 @@ public class ApiTokenCurrentUserService : ICurrentUserService
         }
     }
 
+    public string? DisplayName => null;
+
+    public string? Email => null;
+
     public bool IsAuthenticated
     {
         get

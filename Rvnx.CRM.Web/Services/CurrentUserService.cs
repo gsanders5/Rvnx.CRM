@@ -68,6 +68,37 @@ public class CurrentUserService(IHttpContextAccessor httpContextAccessor, IConfi
     public string? UserName => !IsAuthEnabled() ? "System" :
         _httpContextAccessor.HttpContext?.User?.Identity?.Name ?? "System";
 
+    public string? DisplayName
+    {
+        get
+        {
+            if (!IsAuthEnabled())
+            {
+                return null;
+            }
+
+            ClaimsPrincipal? user = _httpContextAccessor.HttpContext?.User;
+            return user?.FindFirst(ClaimConstants.OidcNameClaimType)?.Value
+                ?? user?.FindFirst(ClaimTypes.Name)?.Value
+                ?? user?.Identity?.Name;
+        }
+    }
+
+    public string? Email
+    {
+        get
+        {
+            if (!IsAuthEnabled())
+            {
+                return null;
+            }
+
+            ClaimsPrincipal? user = _httpContextAccessor.HttpContext?.User;
+            return user?.FindFirst(ClaimTypes.Email)?.Value
+                ?? user?.FindFirst(ClaimConstants.OidcEmailClaimType)?.Value;
+        }
+    }
+
     public bool IsAuthenticated => IsAuthEnabled() &&
         (_httpContextAccessor.HttpContext?.User?.Identity?.IsAuthenticated ?? false);
 

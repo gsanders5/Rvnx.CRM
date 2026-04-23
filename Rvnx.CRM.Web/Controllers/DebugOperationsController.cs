@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Filters;
 using Rvnx.CRM.Core.DTOs.DebugOperations;
 using Rvnx.CRM.Core.Interfaces;
+using Rvnx.CRM.Web.Constants;
 using Rvnx.CRM.Web.Controllers.Base;
 using Rvnx.CRM.Web.Filters;
 using Rvnx.CRM.Web.ViewModels.DebugOperations;
@@ -13,56 +13,38 @@ namespace Rvnx.CRM.Web.Controllers;
 [TypeFilter(typeof(RequireAdministratorFilter))]
 public class DebugOperationsController(
     IDebugDataService debugDataService,
-    IDebugOperationsService debugOperationsService,
-    IHostEnvironment environment,
-    ICurrentUserService currentUserService) : AuthorizedController
+    IDebugOperationsService debugOperationsService) : AuthorizedController
 {
     private readonly IDebugDataService _debugDataService = debugDataService;
     private readonly IDebugOperationsService _debugOperationsService = debugOperationsService;
-    private readonly IHostEnvironment _environment = environment;
-    private readonly ICurrentUserService _currentUserService = currentUserService;
-
-    public override void OnActionExecuting(ActionExecutingContext context)
-    {
-        if (!_environment.IsDevelopment())
-        {
-            context.Result = new NotFoundResult();
-            return;
-        }
-
-        base.OnActionExecuting(context);
-    }
-
-    [HttpGet]
-    public IActionResult Index()
-    {
-        return View();
-    }
 
     [HttpPost]
+    [TypeFilter(typeof(RequireDevelopmentFilter), Order = -1)]
     public async Task<IActionResult> SeedTestData()
     {
         await _debugDataService.SeedTestDataAsync(10);
-        return RedirectToAction("Index");
+        return RedirectToAction("Index", "UserSettings");
     }
 
     [HttpPost]
+    [TypeFilter(typeof(RequireDevelopmentFilter), Order = -1)]
     public async Task<IActionResult> ResetDatabase()
     {
         await _debugDataService.ResetDatabaseAsync();
-        return RedirectToAction("Index");
+        return RedirectToAction("Index", "UserSettings");
     }
 
     [HttpPost]
+    [TypeFilter(typeof(RequireDevelopmentFilter), Order = -1)]
     public async Task<IActionResult> AddRandomRelationships()
     {
         int count = await _debugDataService.AddRandomRelationshipsAsync();
 
-        TempData["Message"] = count == 0
+        TempData[TempDataKeys.DangerZoneMessage] = count == 0
             ? "Created 0 relationships (Check if contacts exist and types are defined)."
             : $"Created {count} relationships.";
 
-        return RedirectToAction("Index");
+        return RedirectToAction("Index", "UserSettings");
     }
 
     [HttpGet]
@@ -78,7 +60,7 @@ public class DebugOperationsController(
     {
         if (confirmation != "MERGE")
         {
-            TempData["Error"] = "Confirmation must be 'MERGE'.";
+            TempData[TempDataKeys.DangerZoneError] = "Confirmation must be 'MERGE'.";
             return RedirectToAction(nameof(MergeAccounts));
         }
 
@@ -86,11 +68,11 @@ public class DebugOperationsController(
 
         if (!result.Success)
         {
-            TempData["Error"] = result.Error ?? "An error occurred during merge.";
+            TempData[TempDataKeys.DangerZoneError] = result.Error ?? "An error occurred during merge.";
             return RedirectToAction(nameof(MergeAccounts));
         }
 
-        TempData["Message"] = result.Message;
+        TempData[TempDataKeys.DangerZoneMessage] = result.Message;
         return RedirectToAction(nameof(MergeAccounts));
     }
 }

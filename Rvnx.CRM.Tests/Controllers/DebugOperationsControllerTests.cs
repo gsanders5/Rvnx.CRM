@@ -1,88 +1,75 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Controllers;
-using Microsoft.AspNetCore.Mvc.Filters;
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
+using Microsoft.AspNetCore.Mvc.ViewFeatures;
 using Moq;
+using Rvnx.CRM.Core.DTOs.DebugOperations;
 using Rvnx.CRM.Core.Interfaces;
-using Rvnx.CRM.Infrastructure.Data;
-using Rvnx.CRM.Tests.Helpers;
 using Rvnx.CRM.Web.Controllers;
+using Rvnx.CRM.Web.ViewModels.DebugOperations;
 
 namespace Rvnx.CRM.Tests.Controllers;
 
 public class DebugOperationsControllerTests : IDisposable
 {
-    private readonly CRMDbContext _dbContext;
-    private readonly Mock<ICurrentUserService> _currentUserServiceMock;
-    private readonly Mock<ILogger<DebugOperationsController>> _loggerMock;
+    private readonly Mock<IDebugDataService> _debugDataServiceMock = new();
+    private readonly Mock<IDebugOperationsService> _debugOperationsServiceMock = new();
+    private readonly DebugOperationsController _controller;
 
     public DebugOperationsControllerTests()
     {
-        _dbContext = TestDbContextFactory.Create(null, null, null, out _currentUserServiceMock);
-        _loggerMock = new Mock<ILogger<DebugOperationsController>>();
+        _controller = new DebugOperationsController(_debugDataServiceMock.Object, _debugOperationsServiceMock.Object)
+        {
+            TempData = new TempDataDictionary(new DefaultHttpContext(), Mock.Of<ITempDataProvider>())
+        };
     }
 
     public void Dispose()
     {
-        _dbContext.Dispose();
+        _controller.Dispose();
         GC.SuppressFinalize(this);
     }
 
     [Fact]
-    public void OnActionExecutingReturnsNotFoundWhenNotDevelopment()
+    public async Task SeedTestDataRedirectsToUserSettings()
     {
-        Mock<IDebugDataService> debugServiceMock = new();
-        Mock<IDebugOperationsService> debugOperationsServiceMock = new();
-        Mock<IHostEnvironment> environmentMock = new();
-        environmentMock.Setup(e => e.EnvironmentName).Returns("Production");
+        IActionResult result = await _controller.SeedTestData();
 
-        DebugOperationsController controller = new(debugServiceMock.Object, debugOperationsServiceMock.Object, environmentMock.Object, _currentUserServiceMock.Object);
-
-        ActionContext actionContext = new(
-            new DefaultHttpContext(),
-            new Microsoft.AspNetCore.Routing.RouteData(),
-            new ControllerActionDescriptor()
-        );
-
-        ActionExecutingContext context = new(
-            actionContext,
-            [],
-            new Dictionary<string, object?>(),
-            controller
-        );
-
-        controller.OnActionExecuting(context);
-
-        Assert.IsType<NotFoundResult>(context.Result);
+        RedirectToActionResult redirect = Assert.IsType<RedirectToActionResult>(result);
+        Assert.Equal("Index", redirect.ActionName);
+        Assert.Equal("UserSettings", redirect.ControllerName);
+        _debugDataServiceMock.Verify(s => s.SeedTestDataAsync(10), Times.Once);
     }
 
     [Fact]
-    public void OnActionExecutingAllowsExecutionWhenDevelopment()
+    public async Task ResetDatabaseRedirectsToUserSettings()
     {
-        Mock<IDebugDataService> debugServiceMock = new();
-        Mock<IDebugOperationsService> debugOperationsServiceMock = new();
-        Mock<IHostEnvironment> environmentMock = new();
-        environmentMock.Setup(e => e.EnvironmentName).Returns("Development");
+        IActionResult result = await _controller.ResetDatabase();
 
-        DebugOperationsController controller = new(debugServiceMock.Object, debugOperationsServiceMock.Object, environmentMock.Object, _currentUserServiceMock.Object);
+        RedirectToActionResult redirect = Assert.IsType<RedirectToActionResult>(result);
+        Assert.Equal("UserSettings", redirect.ControllerName);
+        _debugDataServiceMock.Verify(s => s.ResetDatabaseAsync(), Times.Once);
+    }
 
-        ActionContext actionContext = new(
-            new DefaultHttpContext(),
-            new Microsoft.AspNetCore.Routing.RouteData(),
-            new ControllerActionDescriptor()
-        );
+    [Fact]
+    public async Task MergeAccountsPostRejectsInvalidConfirmation()
+    {
+        IActionResult result = await _controller.MergeAccounts(Guid.NewGuid(), Guid.NewGuid(), "NOT_MERGE");
 
-        ActionExecutingContext context = new(
-            actionContext,
-            [],
-            new Dictionary<string, object?>(),
-            controller
-        );
+        RedirectToActionResult redirect = Assert.IsType<RedirectToActionResult>(result);
+        Assert.Equal(nameof(DebugOperationsController.MergeAccounts), redirect.ActionName);
+        _debugOperationsServiceMock.Verify(s => s.MergeAccountsAsync(It.IsAny<Guid>(), It.IsAny<Guid>()), Times.Never);
+    }
 
-        controller.OnActionExecuting(context);
+    [Fact]
+    public async Task MergeAccountsGetReturnsViewWithUsers()
+    {
+        List<MergeUserDto> users = [new() { Id = Guid.NewGuid(), Name = "User 1", GroupName = "G", GroupMemberCount = 1 }];
+        _debugOperationsServiceMock.Setup(s => s.GetAllUsersWithGroupsAsync()).ReturnsAsync(users);
 
-        Assert.Null(context.Result);
+        IActionResult result = await _controller.MergeAccounts();
+
+        ViewResult view = Assert.IsType<ViewResult>(result);
+        MergeAccountsViewModel model = Assert.IsType<MergeAccountsViewModel>(view.Model);
+        Assert.Same(users, model.Users);
     }
 }

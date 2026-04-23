@@ -62,17 +62,13 @@ public class MergeAccountsTests
         Repository repository = new(context);
 
         Mock<IDebugDataService> mockDebugService = new();
-        Mock<IHostEnvironment> mockEnv = new();
-        mockEnv.Setup(e => e.EnvironmentName).Returns("Development");
         Mock<ILogger<DebugOperationsService>> mockLogger = new();
 
         DebugOperationsService debugOperationsService = new(context, repository, mockUserService.Object, mockLogger.Object);
 
         DebugOperationsController controller = new(
             mockDebugService.Object,
-            debugOperationsService,
-            mockEnv.Object,
-            mockUserService.Object)
+            debugOperationsService)
         {
             TempData = new Microsoft.AspNetCore.Mvc.ViewFeatures.TempDataDictionary(new DefaultHttpContext(), Mock.Of<Microsoft.AspNetCore.Mvc.ViewFeatures.ITempDataProvider>())
         };

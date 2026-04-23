@@ -9,4 +9,8 @@ public static class ClaimConstants
     /// </summary>
     public const string InternalUserIdClaimType = "urn:crm:internal-user-id";
     public const string InternalGroupIdClaimType = "urn:crm:internal-group-id";
+
+    public const string OidcNameClaimType = "name";
+    public const string OidcEmailClaimType = "email";
+    public const string OidcSubjectClaimType = "sub";
 }

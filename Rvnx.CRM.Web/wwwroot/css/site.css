@@ -102,6 +102,7 @@ html {
   font-size: 16px;
   position: relative;
   min-height: 100%;
+  scroll-behavior: smooth;
 }
 
 body {
@@ -1441,4 +1442,41 @@ table.dataTable .crm-dtr-child-empty {
   color: white;
   font-size: 1.2rem;
   text-shadow: 1px 1px 3px rgba(0,0,0,0.8);
+}
+
+/* ==========================================================================
+   SETTINGS TOC
+   ========================================================================== */
+
+.crm-settings-toc {
+  position: sticky;
+  top: 1rem;
+}
+.crm-settings-toc .nav-link {
+  color: var(--crm-text-secondary);
+  border-left: 2px solid transparent;
+  padding-left: 0.75rem !important;
+}
+.crm-settings-toc .nav-link:hover {
+  color: var(--crm-text-primary);
+  border-left-color: var(--crm-border);
+}
+.crm-settings-toc .nav-link.active {
+  color: var(--crm-text-primary);
+  border-left-color: var(--crm-primary);
+  font-weight: 600;
+}
+
+.crm-danger-zone-row {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--crm-border-subtle);
+}
+.crm-danger-zone-row:last-child {
+  padding-bottom: 0;
+  border-bottom: none;
 }
