@@ -79,4 +79,15 @@ public static class RepositoryExtensions
     {
         return id != Guid.Empty && await repository.CountAsync<Contact>(c => c.Id == id && !c.IsPartial) > 0;
     }
+
+    /// <summary>
+    /// Checks if a contact exists, is full (not partial), and is not marked deceased.
+    /// Use this to guard forward-looking actions (creating tasks, scheduling activities)
+    /// that should not target a deceased contact.
+    /// </summary>
+    public static async Task<bool> IsLivingContactAsync(this IRepository repository, Guid id)
+    {
+        return id != Guid.Empty &&
+            await repository.CountAsync<Contact>(c => c.Id == id && !c.IsPartial && !c.IsDeceased) > 0;
+    }
 }

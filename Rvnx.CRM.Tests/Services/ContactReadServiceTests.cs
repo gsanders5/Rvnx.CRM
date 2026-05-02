@@ -752,6 +752,98 @@ public class ContactReadServiceTests
         }
 
         [Fact]
+        public async Task GetContactNamesAsyncWhenExcludeDeceasedFiltersDeceasedContacts()
+        {
+            // Arrange
+            Guid livingId = Guid.NewGuid();
+            Guid deceasedId = Guid.NewGuid();
+
+            Contact living = new() { Id = livingId, FirstName = "Alive", LastName = "Person", IsHidden = false, IsDeceased = false };
+            Contact deceased = new() { Id = deceasedId, FirstName = "Late", LastName = "Person", IsHidden = false, IsDeceased = true };
+            Contact hidden = new() { Id = Guid.NewGuid(), FirstName = "Hidden", IsHidden = true };
+
+            Expression<Func<Contact, bool>>? capturedFilter = null;
+
+            RepositoryMock.Setup(r => r.ListProjectedAsync(
+                It.IsAny<Expression<Func<Contact, bool>>>(),
+                It.IsAny<Expression<Func<Contact, (Guid, string)>>>(),
+                It.IsAny<CancellationToken>()))
+                .Callback<Expression<Func<Contact, bool>>, Expression<Func<Contact, (Guid, string)>>, CancellationToken>(
+                    (filter, _, _) => capturedFilter = filter)
+                .ReturnsAsync([]);
+
+            // Act
+            await Service.GetContactNamesAsync(excludeDeceased: true);
+
+            // Assert
+            Assert.NotNull(capturedFilter);
+            Func<Contact, bool> filterFunc = capturedFilter.Compile();
+
+            Assert.True(filterFunc(living));
+            Assert.False(filterFunc(deceased));
+            Assert.False(filterFunc(hidden));
+        }
+
+        [Fact]
+        public async Task GetContactNamesAsyncWhenExcludeDeceasedKeepsAlwaysIncludeIds()
+        {
+            // Arrange — used on edit forms so an already-attached deceased participant remains selectable.
+            Guid livingId = Guid.NewGuid();
+            Guid keepDeceasedId = Guid.NewGuid();
+            Guid otherDeceasedId = Guid.NewGuid();
+
+            Contact living = new() { Id = livingId, FirstName = "Alive", IsHidden = false, IsDeceased = false };
+            Contact keepDeceased = new() { Id = keepDeceasedId, FirstName = "Already", LastName = "Attached", IsHidden = false, IsDeceased = true };
+            Contact otherDeceased = new() { Id = otherDeceasedId, FirstName = "Different", IsHidden = false, IsDeceased = true };
+
+            Expression<Func<Contact, bool>>? capturedFilter = null;
+
+            RepositoryMock.Setup(r => r.ListProjectedAsync(
+                It.IsAny<Expression<Func<Contact, bool>>>(),
+                It.IsAny<Expression<Func<Contact, (Guid, string)>>>(),
+                It.IsAny<CancellationToken>()))
+                .Callback<Expression<Func<Contact, bool>>, Expression<Func<Contact, (Guid, string)>>, CancellationToken>(
+                    (filter, _, _) => capturedFilter = filter)
+                .ReturnsAsync([]);
+
+            // Act
+            await Service.GetContactNamesAsync(excludeDeceased: true, alwaysIncludeIds: [keepDeceasedId]);
+
+            // Assert
+            Assert.NotNull(capturedFilter);
+            Func<Contact, bool> filterFunc = capturedFilter.Compile();
+
+            Assert.True(filterFunc(living));
+            Assert.True(filterFunc(keepDeceased));   // already attached — kept visible
+            Assert.False(filterFunc(otherDeceased)); // unrelated deceased — filtered out
+        }
+
+        [Fact]
+        public async Task GetContactNamesAsyncDefaultsToIncludingDeceasedContacts()
+        {
+            // Arrange — historical / structural surfaces (merge, relationships) keep deceased visible.
+            Guid deceasedId = Guid.NewGuid();
+            Contact deceased = new() { Id = deceasedId, FirstName = "Late", IsHidden = false, IsDeceased = true };
+
+            Expression<Func<Contact, bool>>? capturedFilter = null;
+
+            RepositoryMock.Setup(r => r.ListProjectedAsync(
+                It.IsAny<Expression<Func<Contact, bool>>>(),
+                It.IsAny<Expression<Func<Contact, (Guid, string)>>>(),
+                It.IsAny<CancellationToken>()))
+                .Callback<Expression<Func<Contact, bool>>, Expression<Func<Contact, (Guid, string)>>, CancellationToken>(
+                    (filter, _, _) => capturedFilter = filter)
+                .ReturnsAsync([]);
+
+            // Act
+            await Service.GetContactNamesAsync();
+
+            // Assert
+            Assert.NotNull(capturedFilter);
+            Assert.True(capturedFilter.Compile()(deceased));
+        }
+
+        [Fact]
         public async Task HasRelationshipsAsyncEvaluatesFilterCorrectly()
         {
             // Arrange

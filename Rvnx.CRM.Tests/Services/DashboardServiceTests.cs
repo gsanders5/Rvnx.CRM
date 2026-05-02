@@ -69,7 +69,7 @@ public class DashboardServiceTests
         Guid contactId = Guid.NewGuid();
         DateTime now = DateTime.UtcNow;
 
-        SetupContactSummaries([new ContactSummary(contactId, "Test", "User", null, now, now)]);
+        SetupContactSummaries([new ContactSummary(contactId, "Test", "User", null, now, now, false)]);
         SetupAttachments([]);
         SetupSignificantDates([
             new SignificantDate
@@ -96,8 +96,8 @@ public class DashboardServiceTests
         DateTime now = DateTime.UtcNow;
 
         SetupContactSummaries([
-            new ContactSummary(contactId1, "Alice", "Smith", "Female", now, now),
-            new ContactSummary(contactId2, "Bob",   "Jones", "Male",   now, now)
+            new ContactSummary(contactId1, "Alice", "Smith", "Female", now, now, false),
+            new ContactSummary(contactId2, "Bob",   "Jones", "Male",   now, now, false)
         ]);
 
         DateTime today = DateTime.Today;
@@ -177,7 +177,7 @@ public class DashboardServiceTests
         Guid contactId = Guid.NewGuid();
         DateTime now = DateTime.UtcNow;
 
-        SetupContactSummaries([new ContactSummary(contactId, "Jane", "Doe", "Female", now, now)]);
+        SetupContactSummaries([new ContactSummary(contactId, "Jane", "Doe", "Female", now, now, false)]);
         SetupAttachments([]);
         SetupSignificantDates([]);
         SetupRelationships([]);
@@ -197,7 +197,7 @@ public class DashboardServiceTests
         Guid contactId = Guid.NewGuid();
         DateTime now = DateTime.UtcNow;
 
-        SetupContactSummaries([new ContactSummary(contactId, "Max", "Events", "Male", now, now)]);
+        SetupContactSummaries([new ContactSummary(contactId, "Max", "Events", "Male", now, now, false)]);
         SetupAttachments([]);
 
         // 501 dates exceeds MaxEventsToProcess (500) and triggers the warning log.
@@ -297,7 +297,7 @@ public class DashboardServiceTests
         Guid normalId = Guid.NewGuid();
         DateTime now = DateTime.UtcNow;
 
-        SetupContactSummaries([new ContactSummary(normalId, "Normal", "Contact", null, now, now)]);
+        SetupContactSummaries([new ContactSummary(normalId, "Normal", "Contact", null, now, now, false)]);
         SetupAttachments([]);
         SetupSignificantDates([
             new SignificantDate
@@ -331,7 +331,7 @@ public class DashboardServiceTests
         Guid orphanedContactId = Guid.NewGuid();
         DateTime now = DateTime.UtcNow;
 
-        SetupContactSummaries([new ContactSummary(normalId, "Normal", "Contact", null, now, now)]);
+        SetupContactSummaries([new ContactSummary(normalId, "Normal", "Contact", null, now, now, false)]);
         SetupAttachments([]);
         SetupSignificantDates([
             new SignificantDate
@@ -368,9 +368,9 @@ public class DashboardServiceTests
         DateTime oldDate = now.AddDays(-10);
 
         SetupContactSummaries([
-            new ContactSummary(contactId1, "Alice", "Smith", "Female", now, now), // New contact
-            new ContactSummary(contactId2, "Bob", "Jones", "Male", oldDate, oldDate), // Old contact
-            new ContactSummary(contactId3, "Charlie", "Brown", "Male", oldDate, now.AddDays(-1)) // Old contact, recently changed
+            new ContactSummary(contactId1, "Alice", "Smith", "Female", now, now, false), // New contact
+            new ContactSummary(contactId2, "Bob", "Jones", "Male", oldDate, oldDate, false), // Old contact
+            new ContactSummary(contactId3, "Charlie", "Brown", "Male", oldDate, now.AddDays(-1), false) // Old contact, recently changed
         ]);
 
         SetupAttachments([]);
@@ -406,5 +406,47 @@ public class DashboardServiceTests
         Assert.True(result.RecentContacts[0].IsNew);
         Assert.False(result.RecentContacts[1].IsNew);
         Assert.False(result.RecentContacts[2].IsNew);
+    }
+
+    [Fact]
+    public async Task GetDashboardDataAsyncSuppressesUpcomingEventsForDeceasedContact()
+    {
+        // Arrange — deceased contacts remain in the network graph (structural) but their
+        // birthdays/anniversaries should not appear under "upcoming events".
+        Guid livingId = Guid.NewGuid();
+        Guid deceasedId = Guid.NewGuid();
+        DateTime now = DateTime.UtcNow;
+        DateOnly soonBirthday = DateOnly.FromDateTime(DateTime.Today.AddDays(3));
+
+        SetupContactSummaries([
+            new ContactSummary(livingId, "Alive", "Person", null, now, now, false),
+            new ContactSummary(deceasedId, "Late", "Person", null, now, now, true)
+        ]);
+        SetupAttachments([]);
+        SetupSignificantDates([
+            new SignificantDate
+            {
+                ContactId = livingId,
+                Title = "Birthday",
+                EventDate = soonBirthday,
+                IsActive = true
+            },
+            new SignificantDate
+            {
+                ContactId = deceasedId,
+                Title = "Birthday",
+                EventDate = soonBirthday,
+                IsActive = true
+            }
+        ]);
+        SetupRelationships([]);
+
+        // Act
+        DashboardDto result = await _service.GetDashboardDataAsync();
+
+        // Assert — deceased contact still appears as a node, but no upcoming event for them.
+        Assert.Equal(2, result.GraphNodes.Count);
+        Assert.Single(result.UpcomingEvents);
+        Assert.Equal(livingId, result.UpcomingEvents[0].RelatedEntityId);
     }
 }

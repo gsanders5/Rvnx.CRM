@@ -59,4 +59,22 @@ public abstract class RepositoryController : AuthorizedController
             "FullName",
             selectedIds);
     }
+
+    /// <summary>
+    /// Variant of <see cref="PopulateContactsSelectList"/> that hides deceased contacts —
+    /// appropriate for forward-looking pickers (activities, future tasks, new pet ownership).
+    /// Already-selected deceased contacts remain in the list so editing existing data does not
+    /// silently drop participants who have since died.
+    /// </summary>
+    protected async Task PopulateContactsSelectListExcludeDeceased(IContactReadService contactReadService, List<Guid> selectedIds)
+    {
+        List<(Guid Id, string FullName)> contacts = await contactReadService.GetContactNamesAsync(
+            excludeDeceased: true,
+            alwaysIncludeIds: selectedIds);
+        ViewBag.ContactsList = new MultiSelectList(
+            contacts.OrderBy(c => c.FullName).Select(c => new { c.Id, c.FullName }),
+            "Id",
+            "FullName",
+            selectedIds);
+    }
 }

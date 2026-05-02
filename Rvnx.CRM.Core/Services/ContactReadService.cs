@@ -414,10 +414,15 @@ public class ContactReadService(IRepository repository, IFavoriteService favorit
         return count > 0;
     }
 
-    public async Task<List<(Guid Id, string FullName)>> GetContactNamesAsync()
+    public async Task<List<(Guid Id, string FullName)>> GetContactNamesAsync(
+        bool excludeDeceased = false,
+        IEnumerable<Guid>? alwaysIncludeIds = null)
     {
+        // Materialize to a HashSet so the predicate captures a stable, EF-translatable closure.
+        HashSet<Guid> includeIds = alwaysIncludeIds is null ? [] : [.. alwaysIncludeIds];
+
         return await _repository.ListProjectedAsync<Contact, (Guid, string)>(
-            c => !c.IsHidden,
+            c => !c.IsHidden && (!excludeDeceased || !c.IsDeceased || includeIds.Contains(c.Id)),
             c => new ValueTuple<Guid, string>(c.Id,
                 c.IsPartial
                     ? (c.FirstName + " " + (c.LastName ?? "")).Trim() + " (partial contact)"

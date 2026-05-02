@@ -1,6 +1,7 @@
 using Moq;
 using Rvnx.CRM.Core.Constants;
 using Rvnx.CRM.Core.DTOs.Calendar;
+using Rvnx.CRM.Core.DTOs.Contact;
 using Rvnx.CRM.Core.Interfaces;
 using Rvnx.CRM.Core.Models;
 using Rvnx.CRM.Core.Models.Contact;
@@ -178,5 +179,114 @@ public class ContactTaskServiceTests : IDisposable
         Assert.True(ev.AllDay);
         Assert.Equal(contactId, ev.ContactId);
         Assert.Equal(futureDate.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture), ev.Start);
+    }
+
+    [Fact]
+    public async Task GetCalendarEventsAsyncSuppressesTasksAttachedToDeceasedContact()
+    {
+        // Arrange — symmetrical to SignificantDate calendar filter: tasks for a deceased
+        // contact should not appear in upcoming-event surfaces (calendar feed).
+        Guid livingId = Guid.NewGuid();
+        Guid deceasedId = Guid.NewGuid();
+
+        _context.Contacts!.AddRange(
+            new Contact { Id = livingId, FirstName = "Alive", LastName = "Person" },
+            new Contact
+            {
+                Id = deceasedId,
+                FirstName = "Late",
+                LastName = "Person",
+                IsDeceased = true,
+                DateOfDeath = new DateOnly(2024, 1, 15)
+            }
+        );
+
+        DateOnly futureDate = DateOnly.FromDateTime(DateTime.Today.AddDays(3));
+
+        _context.ContactTasks!.AddRange(
+            new ContactTask
+            {
+                Id = Guid.NewGuid(),
+                ContactId = livingId,
+                Title = "Living Task",
+                DueDate = futureDate,
+                IsCompleted = false
+            },
+            new ContactTask
+            {
+                Id = Guid.NewGuid(),
+                ContactId = deceasedId,
+                Title = "Deceased Task",
+                DueDate = futureDate,
+                IsCompleted = false
+            }
+        );
+
+        await _context.SaveChangesAsync();
+
+        // Act
+        List<CalendarEventDto> events = await _serviceWithDb.GetCalendarEventsAsync();
+
+        // Assert
+        Assert.Single(events);
+        Assert.Contains("Living Task", events[0].Title);
+    }
+
+    [Fact]
+    public async Task CreateAsyncWhenContactIsDeceasedReturnsFailure()
+    {
+        // Arrange
+        Guid contactId = Guid.NewGuid();
+        ContactTaskFormDto dto = new()
+        {
+            EntityId = contactId,
+            Title = "Send a card",
+            DueDate = DateOnly.FromDateTime(DateTime.Today.AddDays(7))
+        };
+
+        Contact deceased = new()
+        {
+            Id = contactId,
+            FirstName = "Late",
+            IsPartial = false,
+            IsDeceased = true
+        };
+
+        _repositoryMock.Setup(r => r.CountAsync(It.IsAny<System.Linq.Expressions.Expression<Func<Contact, bool>>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((System.Linq.Expressions.Expression<Func<Contact, bool>> filter, CancellationToken _) =>
+                filter.Compile()(deceased) ? 1 : 0);
+
+        // Act
+        OperationResult result = await _serviceWithMock.CreateAsync(dto);
+
+        // Assert
+        Assert.False(result.Success);
+        Assert.Contains("deceased", result.ErrorMessage, StringComparison.OrdinalIgnoreCase);
+        _repositoryMock.Verify(r => r.AddAsync(It.IsAny<ContactTask>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task GetFormForCreateAsyncWhenContactIsDeceasedReturnsNull()
+    {
+        // Arrange — forward-looking guard at the form-render level.
+        Guid contactId = Guid.NewGuid();
+
+        Contact deceased = new()
+        {
+            Id = contactId,
+            FirstName = "Late",
+            IsPartial = false,
+            IsDeceased = true
+        };
+
+        _repositoryMock.Setup(r => r.CountAsync(It.IsAny<System.Linq.Expressions.Expression<Func<Contact, bool>>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((System.Linq.Expressions.Expression<Func<Contact, bool>> filter, CancellationToken _) =>
+                filter.Compile()(deceased) ? 1 : 0);
+
+        // Act
+        ContactTaskFormDto? result = await _serviceWithMock.GetFormForCreateAsync(contactId);
+
+        // Assert
+        Assert.Null(result);
     }
 }

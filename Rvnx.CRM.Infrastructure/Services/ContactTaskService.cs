@@ -29,6 +29,12 @@ public class ContactTaskService(IRepository repository) : IContactTaskService
             return OperationResult.NotFound("Contact not found.");
         }
 
+        // Tasks are forward-looking — refuse to attach a new follow-up to a deceased contact.
+        if (!await _repository.IsLivingContactAsync(dto.EntityId))
+        {
+            return OperationResult.Failure("Cannot create a task for a deceased contact.");
+        }
+
         ContactTask task = dto.ToEntity();
         await _repository.AddAsync(task);
         await _repository.SaveChangesAsync();
@@ -97,7 +103,8 @@ public class ContactTaskService(IRepository repository) : IContactTaskService
 
     public async Task<ContactTaskFormDto?> GetFormForCreateAsync(Guid entityId)
     {
-        return !await _repository.IsValidContactAsync(entityId)
+        // Forward-looking: refuse to render the create form for a deceased contact.
+        return !await _repository.IsLivingContactAsync(entityId)
             ? null
             : new ContactTaskFormDto
             {
@@ -143,10 +150,12 @@ public class ContactTaskService(IRepository repository) : IContactTaskService
 
         List<Guid> contactIds = [.. tasks.Where(t => t.ContactId.HasValue).Select(t => t.ContactId!.Value).Distinct()];
 
+        // Skip deceased contacts so their open tasks don't bleed into upcoming-event surfaces
+        // (calendar feed / dashboard) — symmetric with the SignificantDate calendar filter.
         List<(Guid Id, string FirstName)> contacts =
             await _repository.ListProjectedByChunkedContainsAsync<Contact, (Guid, string), Guid>(
                 contactIds,
-                chunk => c => chunk.Contains(c.Id),
+                chunk => c => chunk.Contains(c.Id) && !c.IsPartial && !c.IsDeceased,
                 c => new ValueTuple<Guid, string>(c.Id, c.FirstName));
 
         Dictionary<Guid, string> contactNames = contacts.ToDictionary(c => c.Id, c => c.FirstName);
