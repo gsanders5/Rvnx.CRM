@@ -113,7 +113,7 @@
         </div>
     </div>
 
-    @if (!string.IsNullOrEmpty(Model.HowWeMet) || Model.FirstMetOn.HasValue || Model.IntroducedByContactId.HasValue)
+    @if (!string.IsNullOrEmpty(Model.HowWeMet) || Model.FirstMetOn.HasValue || (Model.IntroducedByContactId.HasValue && !string.IsNullOrEmpty(Model.IntroducedByContactName)))
     {
         <!-- How We Met -->
         <div class="crm-card">
