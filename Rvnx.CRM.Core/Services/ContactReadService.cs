@@ -427,9 +427,9 @@ public class ContactReadService(IRepository repository, IFavoriteService favorit
             c => !c.IsHidden && (!excludeDeceased || !c.IsDeceased || includeIds.Contains(c.Id)),
             c => new ValueTuple<Guid, string>(c.Id,
                 c.IsPartial && c.IsDeceased
-                    ? (c.FirstName + " " + (c.LastName ?? "")).Trim() + " (Partial contact, Deceased)"
+                    ? (c.FirstName + " " + (c.LastName ?? "")).Trim() + " (Partial Contact, Deceased)"
                     : c.IsPartial
-                        ? (c.FirstName + " " + (c.LastName ?? "")).Trim() + " (Partial contact)"
+                        ? (c.FirstName + " " + (c.LastName ?? "")).Trim() + " (Partial Contact)"
                         : c.IsDeceased
                             ? (c.FirstName + " " + (c.LastName ?? "")).Trim() + " (Deceased)"
                             : (c.FirstName + " " + (c.LastName ?? "")).Trim()));

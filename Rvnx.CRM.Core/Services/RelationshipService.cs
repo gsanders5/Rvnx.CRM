@@ -214,9 +214,9 @@ public class RelationshipService(IRepository repository, IRelationshipSuggestion
             {
                 Value = p.Id.ToString(),
                 Text = p.IsPartial && p.IsDeceased
-                    ? p.FirstName + " " + (p.LastName ?? "") + " (Partial contact, Deceased)"
+                    ? p.FirstName + " " + (p.LastName ?? "") + " (Partial Contact, Deceased)"
                     : p.IsPartial
-                        ? p.FirstName + " " + (p.LastName ?? "") + " (Partial contact)"
+                        ? p.FirstName + " " + (p.LastName ?? "") + " (Partial Contact)"
                         : p.IsDeceased
                             ? p.FirstName + " " + (p.LastName ?? "") + " (Deceased)"
                             : p.FirstName + " " + (p.LastName ?? ""),

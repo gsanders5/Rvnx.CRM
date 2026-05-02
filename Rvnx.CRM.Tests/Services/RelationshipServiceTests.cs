@@ -84,9 +84,9 @@ public class RelationshipServiceTests
         Contact partialDeceased = new() { Id = Guid.NewGuid(), FirstName = "Ghost", LastName = "Soul", IsPartial = true, IsDeceased = true };
 
         Assert.Equal("John Doe", projectionFunc(full).Text);
-        Assert.Equal("Jane Smith (Partial contact)", projectionFunc(partial).Text);
+        Assert.Equal("Jane Smith (Partial Contact)", projectionFunc(partial).Text);
         Assert.Equal("Late Person (Deceased)", projectionFunc(deceased).Text);
-        Assert.Equal("Ghost Soul (Partial contact, Deceased)", projectionFunc(partialDeceased).Text);
+        Assert.Equal("Ghost Soul (Partial Contact, Deceased)", projectionFunc(partialDeceased).Text);
     }
 
     [Fact]
