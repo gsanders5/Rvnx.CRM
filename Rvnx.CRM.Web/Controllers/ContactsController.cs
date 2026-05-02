@@ -207,7 +207,8 @@ public class ContactsController(
 
         bool hasRelationships = await _contactReadService.HasRelationshipsAsync(id.Value);
         (IReadOnlyList<ImmichOptionDto> people, IReadOnlyList<ImmichOptionDto> tags) = await LoadImmichOptionsAsync();
-        ContactEditViewModel viewModel = MapToEditViewModel(dto, dto.ProfileImageId, hasRelationships, _immichService.IsEnabled, people, tags);
+        bool isSelf = await IsSelfContactAsync(id.Value);
+        ContactEditViewModel viewModel = MapToEditViewModel(dto, dto.ProfileImageId, hasRelationships, _immichService.IsEnabled, people, tags, isSelf);
 
         return View(viewModel);
     }
@@ -231,6 +232,16 @@ public class ContactsController(
         }
 
         NormalizeContactForm(contactDto);
+
+        // Defense-in-depth: a user must never be able to mark their own self-contact deceased,
+        // even by tampering with the form post. Doing so would silently disable their reminders,
+        // dashboard, and calendar entries. Coerce the deceased fields back to a safe default.
+        bool isSelf = await IsSelfContactAsync(id);
+        if (isSelf)
+        {
+            contactDto.IsDeceased = false;
+            contactDto.DateOfDeath = null;
+        }
 
         if (ModelState.IsValid)
         {
@@ -271,9 +282,15 @@ public class ContactsController(
 
         bool hasRelationships = await _contactReadService.HasRelationshipsAsync(id);
         (IReadOnlyList<ImmichOptionDto> people, IReadOnlyList<ImmichOptionDto> tags) = await LoadImmichOptionsAsync();
-        ContactEditViewModel viewModel = MapToEditViewModel(contactDto, formConfig?.ProfileImageId, hasRelationships, _immichService.IsEnabled, people, tags);
+        ContactEditViewModel viewModel = MapToEditViewModel(contactDto, formConfig?.ProfileImageId, hasRelationships, _immichService.IsEnabled, people, tags, isSelf);
 
         return View(viewModel);
+    }
+
+    private async Task<bool> IsSelfContactAsync(Guid contactId)
+    {
+        Guid? selfContactId = await _selfContactService.GetSelfContactIdAsync();
+        return selfContactId.HasValue && selfContactId.Value == contactId;
     }
 
     private async Task<(IReadOnlyList<ImmichOptionDto> People, IReadOnlyList<ImmichOptionDto> Tags)> LoadImmichOptionsAsync()
@@ -447,7 +464,8 @@ public class ContactsController(
         bool hasRelationships = false,
         bool immichEnabled = false,
         IReadOnlyList<ImmichOptionDto>? allImmichPeople = null,
-        IReadOnlyList<ImmichOptionDto>? allImmichTags = null)
+        IReadOnlyList<ImmichOptionDto>? allImmichTags = null,
+        bool isSelf = false)
     {
         return new ContactEditViewModel
         {
@@ -479,7 +497,8 @@ public class ContactsController(
             HasRelationships = hasRelationships,
             ImmichEnabled = immichEnabled,
             AllImmichPeople = allImmichPeople ?? [],
-            AllImmichTags = allImmichTags ?? []
+            AllImmichTags = allImmichTags ?? [],
+            IsSelf = isSelf
         };
     }
 

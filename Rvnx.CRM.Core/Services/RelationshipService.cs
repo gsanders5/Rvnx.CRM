@@ -213,9 +213,13 @@ public class RelationshipService(IRepository repository, IRelationshipSuggestion
             p => new SelectOptionDto
             {
                 Value = p.Id.ToString(),
-                Text = p.IsPartial
-                    ? p.FirstName + " " + (p.LastName ?? "") + " (partial contact)"
-                    : p.FirstName + " " + (p.LastName ?? ""),
+                Text = p.IsPartial && p.IsDeceased
+                    ? p.FirstName + " " + (p.LastName ?? "") + " (partial contact, Deceased)"
+                    : p.IsPartial
+                        ? p.FirstName + " " + (p.LastName ?? "") + " (partial contact)"
+                        : p.IsDeceased
+                            ? p.FirstName + " " + (p.LastName ?? "") + " (Deceased)"
+                            : p.FirstName + " " + (p.LastName ?? ""),
                 Selected = selectedId == p.Id
             },
             p => p.FirstName + " " + (p.LastName ?? ""));

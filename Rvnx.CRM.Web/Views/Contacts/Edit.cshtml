@@ -175,13 +175,36 @@
             </div>
 
             <div class="mb-3 form-check form-switch">
-                <input asp-for="IsDeceased" class="form-check-input" id="IsDeceasedField"/>
+                @if (Model.IsSelf)
+                {
+                    <input asp-for="IsDeceased" class="form-check-input" id="IsDeceasedField" disabled/>
+                }
+                else
+                {
+                    <input asp-for="IsDeceased" class="form-check-input" id="IsDeceasedField"/>
+                }
                 <label asp-for="IsDeceased" class="form-check-label"></label>
-                <div class="form-text">Suppresses birthday and anniversary reminders.</div>
+                <div class="form-text">
+                    @if (Model.IsSelf)
+                    {
+                        <span>You cannot mark your own contact as deceased.</span>
+                    }
+                    else
+                    {
+                        <span>Suppresses birthday and anniversary reminders.</span>
+                    }
+                </div>
             </div>
 
             <div class="form-floating mb-3" id="DateOfDeathGroup">
-                <input asp-for="DateOfDeath" class="form-control" type="date" placeholder="Date of Death"/>
+                @if (Model.IsSelf)
+                {
+                    <input asp-for="DateOfDeath" class="form-control" type="date" placeholder="Date of Death" disabled/>
+                }
+                else
+                {
+                    <input asp-for="DateOfDeath" class="form-control" type="date" placeholder="Date of Death"/>
+                }
                 <label asp-for="DateOfDeath"></label>
                 <span asp-validation-for="DateOfDeath" class="text-danger"></span>
             </div>

@@ -393,6 +393,103 @@ public class ContactsControllerTests
         }
 
         [Fact]
+        public async Task EditGetSetsIsSelfFlagWhenContactIsCurrentUserSelfContact()
+        {
+            Guid contactId = Guid.NewGuid();
+            ContactFormDto formDto = new() { Id = contactId, FirstName = "Me", LastName = "Self" };
+
+            _contactReadServiceMock.Setup(s => s.GetContactFormAsync(contactId)).ReturnsAsync(formDto);
+            _contactReadServiceMock.Setup(s => s.HasRelationshipsAsync(contactId)).ReturnsAsync(false);
+            _selfContactServiceMock.Setup(s => s.GetSelfContactIdAsync()).ReturnsAsync(contactId);
+
+            IActionResult result = await _controller.Edit(contactId);
+
+            ViewResult viewResult = Assert.IsType<ViewResult>(result);
+            ContactEditViewModel model = Assert.IsAssignableFrom<ContactEditViewModel>(viewResult.Model);
+            Assert.True(model.IsSelf);
+        }
+
+        [Fact]
+        public async Task EditGetLeavesIsSelfFalseWhenContactIsNotCurrentUserSelfContact()
+        {
+            Guid contactId = Guid.NewGuid();
+            Guid otherSelfId = Guid.NewGuid();
+            ContactFormDto formDto = new() { Id = contactId, FirstName = "Some", LastName = "Body" };
+
+            _contactReadServiceMock.Setup(s => s.GetContactFormAsync(contactId)).ReturnsAsync(formDto);
+            _contactReadServiceMock.Setup(s => s.HasRelationshipsAsync(contactId)).ReturnsAsync(false);
+            _selfContactServiceMock.Setup(s => s.GetSelfContactIdAsync()).ReturnsAsync(otherSelfId);
+
+            IActionResult result = await _controller.Edit(contactId);
+
+            ViewResult viewResult = Assert.IsType<ViewResult>(result);
+            ContactEditViewModel model = Assert.IsAssignableFrom<ContactEditViewModel>(viewResult.Model);
+            Assert.False(model.IsSelf);
+        }
+
+        [Fact]
+        public async Task EditPostCoercesDeceasedFieldsToFalseWhenContactIsSelf()
+        {
+            Guid contactId = Guid.NewGuid();
+            ContactFormDto dto = new()
+            {
+                Id = contactId,
+                FirstName = "Me",
+                LastName = "Self",
+                IsDeceased = true,
+                DateOfDeath = new DateOnly(2030, 1, 1)
+            };
+
+            _contactReadServiceMock.Setup(s => s.ContactExistsAsync(contactId)).ReturnsAsync(true);
+            _selfContactServiceMock.Setup(s => s.GetSelfContactIdAsync()).ReturnsAsync(contactId);
+
+            ContactFormDto? capturedDto = null;
+            _contactManagementServiceMock.Setup(s => s.UpdateContactAsync(
+                    contactId, It.IsAny<ContactFormDto>(), It.IsAny<Stream>(), It.IsAny<string>(), It.IsAny<string>()))
+                .Callback<Guid, ContactFormDto, Stream?, string?, string?>((_, formDto, _, _, _) => capturedDto = formDto)
+                .ReturnsAsync(ContactOperationResult.Ok(contactId));
+
+            IActionResult result = await _controller.Edit(contactId, dto, null);
+
+            Assert.IsType<RedirectToActionResult>(result);
+            Assert.NotNull(capturedDto);
+            Assert.False(capturedDto.IsDeceased);
+            Assert.Null(capturedDto.DateOfDeath);
+        }
+
+        [Fact]
+        public async Task EditPostKeepsDeceasedFieldsForNonSelfContact()
+        {
+            Guid contactId = Guid.NewGuid();
+            Guid otherSelfId = Guid.NewGuid();
+            DateOnly dod = new(2024, 6, 15);
+            ContactFormDto dto = new()
+            {
+                Id = contactId,
+                FirstName = "Late",
+                LastName = "Friend",
+                IsDeceased = true,
+                DateOfDeath = dod
+            };
+
+            _contactReadServiceMock.Setup(s => s.ContactExistsAsync(contactId)).ReturnsAsync(true);
+            _selfContactServiceMock.Setup(s => s.GetSelfContactIdAsync()).ReturnsAsync(otherSelfId);
+
+            ContactFormDto? capturedDto = null;
+            _contactManagementServiceMock.Setup(s => s.UpdateContactAsync(
+                    contactId, It.IsAny<ContactFormDto>(), It.IsAny<Stream>(), It.IsAny<string>(), It.IsAny<string>()))
+                .Callback<Guid, ContactFormDto, Stream?, string?, string?>((_, formDto, _, _, _) => capturedDto = formDto)
+                .ReturnsAsync(ContactOperationResult.Ok(contactId));
+
+            IActionResult result = await _controller.Edit(contactId, dto, null);
+
+            Assert.IsType<RedirectToActionResult>(result);
+            Assert.NotNull(capturedDto);
+            Assert.True(capturedDto.IsDeceased);
+            Assert.Equal(dod, capturedDto.DateOfDeath);
+        }
+
+        [Fact]
         public async Task AssignLabelRedirectsToEdit()
         {
             Guid contactId = Guid.NewGuid();

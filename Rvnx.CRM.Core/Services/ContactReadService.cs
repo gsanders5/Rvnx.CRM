@@ -39,7 +39,9 @@ public class ContactReadService(IRepository repository, IFavoriteService favorit
                 Pronouns = c.Pronouns,
                 Gender = c.Gender,
                 Religion = c.Religion,
-                IsPartial = c.IsPartial
+                IsPartial = c.IsPartial,
+                IsDeceased = c.IsDeceased,
+                DateOfDeath = c.DateOfDeath
             });
 
         List<Guid> contactIds = [.. contactDtos.Select(c => c.Id)];
@@ -424,8 +426,12 @@ public class ContactReadService(IRepository repository, IFavoriteService favorit
         return await _repository.ListProjectedAsync<Contact, (Guid, string)>(
             c => !c.IsHidden && (!excludeDeceased || !c.IsDeceased || includeIds.Contains(c.Id)),
             c => new ValueTuple<Guid, string>(c.Id,
-                c.IsPartial
-                    ? (c.FirstName + " " + (c.LastName ?? "")).Trim() + " (partial contact)"
-                    : (c.FirstName + " " + (c.LastName ?? "")).Trim()));
+                c.IsPartial && c.IsDeceased
+                    ? (c.FirstName + " " + (c.LastName ?? "")).Trim() + " (partial contact, Deceased)"
+                    : c.IsPartial
+                        ? (c.FirstName + " " + (c.LastName ?? "")).Trim() + " (partial contact)"
+                        : c.IsDeceased
+                            ? (c.FirstName + " " + (c.LastName ?? "")).Trim() + " (Deceased)"
+                            : (c.FirstName + " " + (c.LastName ?? "")).Trim()));
     }
 }

@@ -57,6 +57,39 @@ public class RelationshipServiceTests
     }
 
     [Fact]
+    public async Task GetRelatedEntityOptionsAsyncPersonProjectionAppendsPartialAndDeceasedSuffixes()
+    {
+        Guid entityId = Guid.NewGuid();
+
+        Expression<Func<Contact, SelectOptionDto>>? capturedProjection = null;
+
+        _repositoryMock.Setup(r => r.ListProjectedAsync<Contact, SelectOptionDto, string>(
+                It.IsAny<Expression<Func<Contact, bool>>>(),
+                It.IsAny<Expression<Func<Contact, SelectOptionDto>>>(),
+                It.IsAny<Expression<Func<Contact, string>>>(),
+                It.IsAny<bool>(),
+                It.IsAny<CancellationToken>()))
+            .Callback<Expression<Func<Contact, bool>>, Expression<Func<Contact, SelectOptionDto>>, Expression<Func<Contact, string>>, bool, CancellationToken>(
+                (_, projection, _, _, _) => capturedProjection = projection)
+            .ReturnsAsync([]);
+
+        await _service.GetRelatedEntityOptionsAsync(entityId, EntityType.Person);
+
+        Assert.NotNull(capturedProjection);
+        Func<Contact, SelectOptionDto> projectionFunc = capturedProjection.Compile();
+
+        Contact full = new() { Id = Guid.NewGuid(), FirstName = "John", LastName = "Doe" };
+        Contact partial = new() { Id = Guid.NewGuid(), FirstName = "Jane", LastName = "Smith", IsPartial = true };
+        Contact deceased = new() { Id = Guid.NewGuid(), FirstName = "Late", LastName = "Person", IsDeceased = true };
+        Contact partialDeceased = new() { Id = Guid.NewGuid(), FirstName = "Ghost", LastName = "Soul", IsPartial = true, IsDeceased = true };
+
+        Assert.Equal("John Doe", projectionFunc(full).Text);
+        Assert.Equal("Jane Smith (partial contact)", projectionFunc(partial).Text);
+        Assert.Equal("Late Person (Deceased)", projectionFunc(deceased).Text);
+        Assert.Equal("Ghost Soul (partial contact, Deceased)", projectionFunc(partialDeceased).Text);
+    }
+
+    [Fact]
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Naming", "CA1707:Identifiers should not contain underscores", Justification = "Test names follow standard convention")]
     public void GetRelationshipTypeOptions_Symmetric_ReturnsOneOption()
     {
