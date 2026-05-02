@@ -532,7 +532,7 @@
         <div class="crm-card-body">
             @if (Model.Notes != null && Model.Notes.Any())
             {
-                @foreach (var note in Model.Notes.OrderByDescending(n => n.CreatedDate))
+                @foreach (var note in Model.Notes.OrderByDescending(n => n.IsFavorite).ThenByDescending(n => n.CreatedDate))
                 {
                     <div class="mb-2 p-3" style="background: var(--crm-surface-secondary); border-radius: var(--crm-radius-sm); border: 1px solid var(--crm-border-subtle);">
                         <div class="d-flex justify-content-between">
@@ -540,6 +540,14 @@
                                 @note.Title <span class="crm-meta">@note.CreatedDate.ToShortDateString()</span>
                             </h6>
                             <div class="crm-icon-actions">
+                                <form method="post" asp-controller="Notes" asp-action="ToggleFavorite" asp-route-id="@note.Id" class="d-inline">
+                                    <button type="submit" class="crm-icon-btn"
+                                            style="color: @(note.IsFavorite ? "var(--crm-warning)" : "var(--crm-text-tertiary)");"
+                                            title="@(note.IsFavorite ? "Unpin note" : "Pin note")"
+                                            aria-label="@(note.IsFavorite ? "Unpin" : "Pin") @note.Title">
+                                        <i class="bi @(note.IsFavorite ? "bi-star-fill" : "bi-star")" aria-hidden="true"></i>
+                                    </button>
+                                </form>
                                 <a asp-controller="Notes" asp-action="Edit" asp-route-id="@note.Id" class="crm-icon-btn icon-edit" title="Edit" aria-label="Edit @note.Title">
                                     <i class="bi bi-pencil-square" aria-hidden="true"></i>
                                 </a>

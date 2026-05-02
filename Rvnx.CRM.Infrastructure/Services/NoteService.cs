@@ -94,6 +94,7 @@ public class NoteService(IRepository repository, IEntityService entityService) :
                 Id = note.Id,
                 Title = note.Title,
                 Value = note.Value,
+                IsFavorite = note.IsFavorite,
                 EntityId = note.ContactId ?? Guid.Empty,
                 EntityType = EntityType.Person,
                 EntityName = await _entityService.GetEntityNameAsync(EntityType.Person, note.ContactId ?? Guid.Empty)
@@ -118,5 +119,20 @@ public class NoteService(IRepository repository, IEntityService entityService) :
     {
         Note? note = await _repository.GetByIdAsync<Note>(id);
         return note == null || !await _repository.IsValidContactAsync(note.ContactId ?? Guid.Empty) ? null : note;
+    }
+
+    public async Task<OperationResult> ToggleFavoriteAsync(Guid id)
+    {
+        Note? note = await _repository.GetByIdAsync<Note>(id);
+        if (note == null || !await _repository.IsValidContactAsync(note.ContactId ?? Guid.Empty))
+        {
+            return OperationResult.NotFound("Note not found.");
+        }
+
+        note.IsFavorite = !note.IsFavorite;
+        await _repository.UpdateAsync(note);
+        await _repository.SaveChangesAsync();
+
+        return OperationResult.Ok(note.ContactId ?? Guid.Empty, EntityType.Person);
     }
 }

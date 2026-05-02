@@ -53,6 +53,7 @@ public class NotesController(INoteService noteService) : ControllerBase
         {
             Title = model.Title,
             Value = model.Value,
+            IsFavorite = model.IsFavorite,
             EntityId = model.EntityId
         };
         OperationResult result = await _noteService.CreateAsync(vm);

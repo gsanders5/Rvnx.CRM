@@ -15,5 +15,7 @@ public class NoteFormDto
     [Display(Name = "Content")]
     public string Value { get; set; } = string.Empty;
 
+    public bool IsFavorite { get; set; }
+
     public Guid EntityId { get; set; }
 }
