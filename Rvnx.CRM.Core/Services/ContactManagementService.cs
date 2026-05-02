@@ -10,10 +10,11 @@ using Rvnx.CRM.Core.Models.Dates;
 
 namespace Rvnx.CRM.Core.Services;
 
-public class ContactManagementService(IRepository repository, IFileValidationService fileValidationService) : IContactManagementService
+public class ContactManagementService(IRepository repository, IFileValidationService fileValidationService, ISelfContactService selfContactService) : IContactManagementService
 {
     private readonly IRepository _repository = repository;
     private readonly IFileValidationService _fileValidationService = fileValidationService;
+    private readonly ISelfContactService _selfContactService = selfContactService;
 
     public async Task DeleteContactAsync(Guid contactId)
     {
@@ -142,6 +143,18 @@ public class ContactManagementService(IRepository repository, IFileValidationSer
         if (existingContact == null)
         {
             return ContactOperationResult.Failure($"Contact with ID {id} not found.");
+        }
+
+        // Defense-in-depth: a user must never be able to mark their own self-contact deceased,
+        // even by tampering with the form post or hitting the API directly. Doing so would
+        // silently disable their reminders, dashboard, and calendar entries. Coerce the
+        // deceased fields back to a safe default for the self-contact at the service boundary
+        // so every caller (MVC, API PUT/PATCH, future jobs) is protected.
+        Guid? selfContactId = await _selfContactService.GetSelfContactIdAsync();
+        if (selfContactId.HasValue && selfContactId.Value == id)
+        {
+            contactDto.IsDeceased = false;
+            contactDto.DateOfDeath = null;
         }
 
         existingContact.UpdateEntity(contactDto);
