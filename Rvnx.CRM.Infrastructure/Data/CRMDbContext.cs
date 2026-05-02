@@ -214,6 +214,15 @@ public class CRMDbContext(DbContextOptions<CRMDbContext> options, ICurrentUserSe
             .HasIndex(e => e.ContactId)
             .IsUnique();
 
+        // Self-referencing FK so a contact can record who introduced them.
+        // SetNull (instead of Cascade) so deleting an introducer does not delete contacts that referenced them.
+        modelBuilder.Entity<Contact>()
+            .HasOne<Contact>()
+            .WithMany()
+            .HasForeignKey(c => c.IntroducedByContactId)
+            .OnDelete(DeleteBehavior.SetNull)
+            .IsRequired(false);
+
         IEnumerable<IMutableEntityType> entityTypes = modelBuilder.Model.GetEntityTypes()
             .Where(e => typeof(BaseEntity).IsAssignableFrom(e.ClrType));
 

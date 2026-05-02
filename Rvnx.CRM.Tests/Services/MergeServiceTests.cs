@@ -359,6 +359,149 @@ public class MergeServiceTests : IDisposable
     }
 
     [Fact]
+    public async Task MergeContactsAsyncWhenHowWeMetFieldsSecondaryFillsBlankPrimary()
+    {
+        Contact primary = new()
+        { Id = Guid.NewGuid(), FirstName = "Primary" };
+        Contact secondary = new()
+        {
+            Id = Guid.NewGuid(),
+            FirstName = "Secondary",
+            HowWeMet = "Conference 2024",
+            FirstMetOn = new DateOnly(2024, 6, 15)
+        };
+
+        await _context.Contacts!.AddRangeAsync(primary, secondary);
+        await _context.SaveChangesAsync();
+
+        await _sut.MergeContactsAsync(primary.Id, secondary.Id);
+
+        Contact? merged = await _context.Contacts.FindAsync(primary.Id);
+        Assert.NotNull(merged);
+        Assert.Equal("Conference 2024", merged.HowWeMet);
+        Assert.Equal(new DateOnly(2024, 6, 15), merged.FirstMetOn);
+    }
+
+    [Fact]
+    public async Task MergeContactsAsyncWhenHowWeMetFieldsPrimaryWinsWhenBothSet()
+    {
+        Contact primary = new()
+        {
+            Id = Guid.NewGuid(),
+            FirstName = "Primary",
+            HowWeMet = "Primary story",
+            FirstMetOn = new DateOnly(2020, 1, 1)
+        };
+        Contact secondary = new()
+        {
+            Id = Guid.NewGuid(),
+            FirstName = "Secondary",
+            HowWeMet = "Secondary story",
+            FirstMetOn = new DateOnly(2024, 6, 15)
+        };
+
+        await _context.Contacts!.AddRangeAsync(primary, secondary);
+        await _context.SaveChangesAsync();
+
+        await _sut.MergeContactsAsync(primary.Id, secondary.Id);
+
+        Contact? merged = await _context.Contacts.FindAsync(primary.Id);
+        Assert.NotNull(merged);
+        Assert.Equal("Primary story", merged.HowWeMet);
+        Assert.Equal(new DateOnly(2020, 1, 1), merged.FirstMetOn);
+    }
+
+    [Fact]
+    public async Task MergeContactsAsyncWhenIntroducedByOnSecondaryCarriesToPrimary()
+    {
+        Contact introducer = new() { Id = Guid.NewGuid(), FirstName = "Introducer" };
+        Contact primary = new() { Id = Guid.NewGuid(), FirstName = "Primary" };
+        Contact secondary = new()
+        {
+            Id = Guid.NewGuid(),
+            FirstName = "Secondary",
+            IntroducedByContactId = introducer.Id
+        };
+
+        await _context.Contacts!.AddRangeAsync(introducer, primary, secondary);
+        await _context.SaveChangesAsync();
+
+        await _sut.MergeContactsAsync(primary.Id, secondary.Id);
+
+        Contact? merged = await _context.Contacts.FindAsync(primary.Id);
+        Assert.NotNull(merged);
+        Assert.Equal(introducer.Id, merged.IntroducedByContactId);
+    }
+
+    [Fact]
+    public async Task MergeContactsAsyncWhenPrimaryIntroducedBySecondaryClearsField()
+    {
+        Contact primary = new() { Id = Guid.NewGuid(), FirstName = "Primary" };
+        Contact secondary = new() { Id = Guid.NewGuid(), FirstName = "Secondary" };
+
+        // Primary is introduced by the very contact being merged in. After the merge, this reference must
+        // not point at the primary itself, and the dangling reference to the soon-to-be-deleted secondary
+        // must be cleared explicitly so EF does not race the SetNull cascade.
+        primary.IntroducedByContactId = secondary.Id;
+
+        await _context.Contacts!.AddRangeAsync(primary, secondary);
+        await _context.SaveChangesAsync();
+
+        await _sut.MergeContactsAsync(primary.Id, secondary.Id);
+
+        Contact? merged = await _context.Contacts.FindAsync(primary.Id);
+        Assert.NotNull(merged);
+        Assert.Null(merged.IntroducedByContactId);
+    }
+
+    [Fact]
+    public async Task MergeContactsAsyncWhenSecondaryIsIntroducerForOtherContactsRedirectsToPrimary()
+    {
+        Contact primary = new() { Id = Guid.NewGuid(), FirstName = "Primary" };
+        Contact secondary = new() { Id = Guid.NewGuid(), FirstName = "Secondary" };
+        Contact dependent = new()
+        {
+            Id = Guid.NewGuid(),
+            FirstName = "Dependent",
+            IntroducedByContactId = secondary.Id
+        };
+
+        await _context.Contacts!.AddRangeAsync(primary, secondary, dependent);
+        await _context.SaveChangesAsync();
+
+        await _sut.MergeContactsAsync(primary.Id, secondary.Id);
+
+        Contact? after = await _context.Contacts.FindAsync(dependent.Id);
+        Assert.NotNull(after);
+        Assert.Equal(primary.Id, after.IntroducedByContactId);
+    }
+
+    [Fact]
+    public async Task MergeContactsAsyncWhenSecondaryIntroducedByPrimaryDoesNotCreateSelfReference()
+    {
+        Contact primary = new() { Id = Guid.NewGuid(), FirstName = "Primary" };
+        Contact secondary = new()
+        {
+            Id = Guid.NewGuid(),
+            FirstName = "Secondary",
+            IntroducedByContactId = null
+        };
+
+        // Edge case: secondary's introducer is primary itself. Carrying that reference forward would make
+        // primary its own introducer.
+        secondary.IntroducedByContactId = primary.Id;
+
+        await _context.Contacts!.AddRangeAsync(primary, secondary);
+        await _context.SaveChangesAsync();
+
+        await _sut.MergeContactsAsync(primary.Id, secondary.Id);
+
+        Contact? merged = await _context.Contacts.FindAsync(primary.Id);
+        Assert.NotNull(merged);
+        Assert.Null(merged.IntroducedByContactId);
+    }
+
+    [Fact]
     public async Task MergeContactsAsyncWhenTransactionFailsBothContactsRemainIntact()
     {
         Contact primary = new()
@@ -386,6 +529,7 @@ public class MergeServiceTests : IDisposable
         mockRepo.Setup(r => r.ListAsync(It.IsAny<System.Linq.Expressions.Expression<Func<Relationship, bool>>>(), It.IsAny<CancellationToken>())).ReturnsAsync([]);
         mockRepo.Setup(r => r.ListAsync(It.IsAny<System.Linq.Expressions.Expression<Func<Pet, bool>>>(), It.IsAny<CancellationToken>())).ReturnsAsync([]);
         mockRepo.Setup(r => r.ListAsync(It.IsAny<System.Linq.Expressions.Expression<Func<PetContact, bool>>>(), It.IsAny<CancellationToken>(), It.IsAny<string[]>())).ReturnsAsync([]);
+        mockRepo.Setup(r => r.ListAsync(It.IsAny<System.Linq.Expressions.Expression<Func<Contact, bool>>>(), It.IsAny<CancellationToken>())).ReturnsAsync([]);
 
         mockRepo.Setup(r => r.UpdateAsync(It.IsAny<Contact>(), It.IsAny<CancellationToken>())).ThrowsAsync(new InvalidOperationException("Forced failure"));
 

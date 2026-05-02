@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Rvnx.CRM.Infrastructure.Data;
 
@@ -10,9 +11,11 @@ using Rvnx.CRM.Infrastructure.Data;
 namespace Rvnx.CRM.Infrastructure.Migrations
 {
     [DbContext(typeof(CRMDbContext))]
-    partial class CRMDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260502171656_AddHowWeMetFields")]
+    partial class AddHowWeMetFields
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "9.0.15");
@@ -307,9 +310,6 @@ namespace Rvnx.CRM.Infrastructure.Migrations
 
                     b.Property<Guid?>("GroupId")
                         .HasColumnType("TEXT");
-
-                    b.Property<bool>("IsFavorite")
-                        .HasColumnType("INTEGER");
 
                     b.Property<string>("LastChangedBy")
                         .IsRequired()

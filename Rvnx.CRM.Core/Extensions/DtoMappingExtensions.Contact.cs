@@ -26,7 +26,10 @@ public static partial class DtoMappingExtensions
             Pronouns = entity.Pronouns,
             Gender = entity.Gender,
             Religion = entity.Religion,
-            IsPartial = entity.IsPartial
+            IsPartial = entity.IsPartial,
+            HowWeMet = entity.HowWeMet,
+            FirstMetOn = entity.FirstMetOn,
+            IntroducedByContactId = entity.IntroducedByContactId
         };
     }
 
@@ -46,6 +49,9 @@ public static partial class DtoMappingExtensions
             Pronouns = entity.Pronouns,
             Gender = entity.Gender,
             Religion = entity.Religion,
+            HowWeMet = entity.HowWeMet,
+            FirstMetOn = entity.FirstMetOn,
+            IntroducedByContactId = entity.IntroducedByContactId,
 
             // Lists will be populated separately or via mapping if loaded
             Notes = entity.Notes?.Select(n => n.ToDto()) ?? [],
@@ -79,7 +85,10 @@ public static partial class DtoMappingExtensions
             IsHidden = dto.IsHidden,
             Pronouns = dto.Pronouns,
             Gender = dto.Gender,
-            Religion = dto.Religion
+            Religion = dto.Religion,
+            HowWeMet = dto.HowWeMet,
+            FirstMetOn = dto.FirstMetOn,
+            IntroducedByContactId = dto.IntroducedByContactId
         };
     }
 
@@ -95,5 +104,8 @@ public static partial class DtoMappingExtensions
         entity.Pronouns = dto.Pronouns;
         entity.Gender = dto.Gender;
         entity.Religion = dto.Religion;
+        entity.HowWeMet = dto.HowWeMet;
+        entity.FirstMetOn = dto.FirstMetOn;
+        entity.IntroducedByContactId = entity.Id == dto.IntroducedByContactId ? null : dto.IntroducedByContactId;
     }
 }
