@@ -51,7 +51,7 @@ public class PetsController(IPetService petService, IRepository repository, ICon
             return NotFound();
         }
 
-        await PopulateContactsSelectList(_contactReadService, dto.ContactIds);
+        await PopulateContactsSelectListExcludeDeceased(_contactReadService, dto.ContactIds);
         return View(dto);
     }
 
@@ -72,7 +72,7 @@ public class PetsController(IPetService petService, IRepository repository, ICon
             }
         }
 
-        await PopulateContactsSelectList(_contactReadService, petDto.ContactIds);
+        await PopulateContactsSelectListExcludeDeceased(_contactReadService, petDto.ContactIds);
         return View(petDto);
     }
 

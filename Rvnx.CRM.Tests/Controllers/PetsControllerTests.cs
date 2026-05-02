@@ -16,6 +16,7 @@ public class PetsControllerTests : IDisposable
 {
     private readonly CRMDbContext _context;
     private readonly PetsController _controller;
+    private readonly Mock<IContactReadService> _mockContactReadService;
 
     public PetsControllerTests()
     {
@@ -23,12 +24,12 @@ public class PetsControllerTests : IDisposable
         Repository repository = new(_context);
         IPetService petService = new PetService(repository);
 
-        Mock<IContactReadService> mockContactReadService = new();
-        mockContactReadService
+        _mockContactReadService = new Mock<IContactReadService>();
+        _mockContactReadService
             .Setup(s => s.GetContactNamesAsync(It.IsAny<bool>(), It.IsAny<IEnumerable<Guid>?>()))
             .ReturnsAsync([]);
 
-        _controller = new PetsController(petService, repository, mockContactReadService.Object);
+        _controller = new PetsController(petService, repository, _mockContactReadService.Object);
     }
 
     public void Dispose()
@@ -244,6 +245,52 @@ public class PetsControllerTests : IDisposable
         RedirectToActionResult redirectResult = Assert.IsType<RedirectToActionResult>(result);
         Assert.Equal("Index", redirectResult.ActionName);
         Assert.Equal("Contacts", redirectResult.ControllerName);
+    }
+
+    [Fact]
+    public async Task EditGetExcludesDeceasedContactsFromOwnerPicker()
+    {
+        // Editing a pet's owners is a forward-looking action (assigning ownership going
+        // forward). Symmetric with ActivitiesController.Edit and PetsController.Create,
+        // the picker must filter out deceased contacts so a user cannot accidentally
+        // assign a new owner who has died — while still keeping any already-attached
+        // deceased contact selectable via alwaysIncludeIds.
+        Guid petId = Guid.NewGuid();
+        Guid contactId = Guid.NewGuid();
+        _context.Contacts!.Add(new Contact { Id = contactId, FirstName = "Test" });
+        _context.Set<Pet>().Add(new Pet { Id = petId, Name = "Whiskers", Species = "Cat" });
+        _context.Set<PetContact>().Add(new PetContact { PetId = petId, ContactId = contactId });
+        await _context.SaveChangesAsync();
+
+        await _controller.Edit(petId);
+
+        _mockContactReadService.Verify(
+            s => s.GetContactNamesAsync(true, It.IsAny<IEnumerable<Guid>?>()),
+            Times.Once);
+    }
+
+    [Fact]
+    public async Task EditPostExcludesDeceasedContactsFromOwnerPickerOnRedisplay()
+    {
+        // When validation fails on POST and the form is re-rendered, the picker rebuilt
+        // for the redisplayed view must use the same exclude-deceased filter as GET.
+        Guid petId = Guid.NewGuid();
+        Guid contactId = Guid.NewGuid();
+        _context.Contacts!.Add(new Contact { Id = contactId, FirstName = "Test" });
+        _context.Set<Pet>().Add(new Pet { Id = petId, Name = "Existing Pet", Species = "Dog" });
+        _context.Set<PetContact>().Add(new PetContact { PetId = petId, ContactId = contactId });
+        await _context.SaveChangesAsync();
+        _context.ChangeTracker.Clear();
+
+        // Force the POST path that re-renders the view by submitting an invalid model.
+        _controller.ModelState.AddModelError("Name", "required");
+        PetFormDto dto = new() { Id = petId, EntityId = contactId, ContactIds = [contactId] };
+
+        await _controller.Edit(petId, dto);
+
+        _mockContactReadService.Verify(
+            s => s.GetContactNamesAsync(true, It.IsAny<IEnumerable<Guid>?>()),
+            Times.Once);
     }
 
 }
