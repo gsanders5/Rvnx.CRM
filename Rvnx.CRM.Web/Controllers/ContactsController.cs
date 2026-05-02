@@ -462,6 +462,8 @@ public class ContactsController(
             Birthday = dto.Birthday,
             RemindOnBirthday = dto.RemindOnBirthday,
             IsHidden = dto.IsHidden,
+            IsDeceased = dto.IsDeceased,
+            DateOfDeath = dto.DateOfDeath,
             Pronouns = dto.Pronouns,
             Gender = dto.Gender,
             Religion = dto.Religion,

@@ -368,6 +368,31 @@ public class ContactsControllerTests
         }
 
         [Fact]
+        public async Task EditGetShouldPreserveDeceasedFieldsInViewModel()
+        {
+            Guid contactId = Guid.NewGuid();
+            DateOnly dateOfDeath = new(2024, 3, 14);
+            ContactFormDto formDto = new()
+            {
+                Id = contactId,
+                FirstName = "Late",
+                LastName = "Person",
+                IsDeceased = true,
+                DateOfDeath = dateOfDeath
+            };
+
+            _contactReadServiceMock.Setup(s => s.GetContactFormAsync(contactId)).ReturnsAsync(formDto);
+            _contactReadServiceMock.Setup(s => s.HasRelationshipsAsync(contactId)).ReturnsAsync(false);
+
+            IActionResult result = await _controller.Edit(contactId);
+
+            ViewResult viewResult = Assert.IsType<ViewResult>(result);
+            ContactEditViewModel model = Assert.IsAssignableFrom<ContactEditViewModel>(viewResult.Model);
+            Assert.True(model.IsDeceased);
+            Assert.Equal(dateOfDeath, model.DateOfDeath);
+        }
+
+        [Fact]
         public async Task AssignLabelRedirectsToEdit()
         {
             Guid contactId = Guid.NewGuid();
