@@ -17,9 +17,10 @@ public class ContactReadService(IRepository repository, IFavoriteService favorit
 
     public async Task<List<ContactDto>> GetIndexDataAsync(bool showHidden)
     {
-        // Optimization: Project directly to DTO to avoid fetching all columns and instantiating Contact entities
+        // Optimization: Project directly to DTO to avoid fetching all columns and instantiating Contact entities.
+        // showHidden=true also surfaces deceased — the toggle is a single "include hidden + deceased" gate.
         List<ContactDto> contactDtos = await _repository.ListProjectedAsync<Contact, ContactDto>(
-            x => x.IsHidden == showHidden && !x.IsPartial,
+            x => !x.IsPartial && (showHidden || (!x.IsHidden && !x.IsDeceased)),
             c => new ContactDto
             {
                 Id = c.Id,
@@ -205,7 +206,7 @@ public class ContactReadService(IRepository repository, IFavoriteService favorit
         List<Contact> relatedContacts = [];
         if (contactLookupIds.Count > 0)
         {
-            // Optimization: Project only necessary fields for relationships display (Id, Name, Gender, IsPartial)
+            // Optimization: Project only necessary fields for relationships display (Id, Name, Gender, IsPartial, IsDeceased)
             // This avoids fetching all columns (including large text fields) for every related contact.
             relatedContacts = await _repository.ListProjectedByChunkedContainsAsync<Contact, Contact, Guid>(
                 contactLookupIds,
@@ -217,7 +218,8 @@ public class ContactReadService(IRepository repository, IFavoriteService favorit
                     LastName = c.LastName,
                     MaidenName = c.MaidenName,
                     Gender = c.Gender,
-                    IsPartial = c.IsPartial
+                    IsPartial = c.IsPartial,
+                    IsDeceased = c.IsDeceased
                 });
         }
 

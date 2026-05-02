@@ -160,6 +160,60 @@ public class ContactReadServiceTests
         }
 
         [Fact]
+        public async Task GetContactDetailsAsyncProjectsIsDeceasedOnRelatedContacts()
+        {
+            // The Relationships panel needs IsDeceased on each related contact so it can render the
+            // deceased badge next to the name without re-querying.
+            Guid contactId = Guid.NewGuid();
+            Guid livingId = Guid.NewGuid();
+            Guid deceasedId = Guid.NewGuid();
+
+            Contact living = new() { Id = livingId, FirstName = "Alive", IsDeceased = false };
+            Contact deceased = new() { Id = deceasedId, FirstName = "Late", IsDeceased = true };
+
+            Expression<Func<Contact, Contact>>? capturedProjection = null;
+
+            RepositoryMock.Setup(r => r.ListAsNoTrackingAsync<Contact>(
+                It.IsAny<Expression<Func<Contact, bool>>>(),
+                It.IsAny<CancellationToken>(),
+                It.IsAny<string[]>()))
+                .ReturnsAsync([new Contact { Id = contactId, FirstName = "Main" }]);
+
+            RepositoryMock.Setup(r => r.ListAsNoTrackingAsync<Relationship>(
+                It.IsAny<Expression<Func<Relationship, bool>>>(),
+                It.IsAny<CancellationToken>(),
+                It.IsAny<string[]>()))
+                .ReturnsAsync([
+                    new Relationship { Id = Guid.NewGuid(), EntityId = contactId, RelatedEntityId = livingId, EntityType = EntityType.Person, RelationshipTypeId = Guid.NewGuid() },
+                    new Relationship { Id = Guid.NewGuid(), EntityId = contactId, RelatedEntityId = deceasedId, EntityType = EntityType.Person, RelationshipTypeId = Guid.NewGuid() }
+                ]);
+
+            RepositoryMock.Setup(r => r.ListProjectedAsync(
+                It.IsAny<Expression<Func<Contact, bool>>>(),
+                It.IsAny<Expression<Func<Contact, Contact>>>(),
+                It.IsAny<CancellationToken>()))
+                .Callback<Expression<Func<Contact, bool>>, Expression<Func<Contact, Contact>>, CancellationToken>(
+                    (_, projection, _) => capturedProjection = projection)
+                .ReturnsAsync([living, deceased]);
+
+            ContactDetailDto? result = await Service.GetContactDetailsAsync(contactId);
+
+            // Confirm the projection itself carries IsDeceased through.
+            Assert.NotNull(capturedProjection);
+            Func<Contact, Contact> projectionFunc = capturedProjection.Compile();
+            Assert.False(projectionFunc(living).IsDeceased);
+            Assert.True(projectionFunc(deceased).IsDeceased);
+
+            // And confirm the flag rides into the per-relationship DTO surface used by the view.
+            Assert.NotNull(result);
+            Assert.Equal(2, result.Relationships.Count());
+            RelationshipDto livingRel = result.Relationships.Single(r => r.RelatedEntityId == livingId);
+            RelationshipDto deceasedRel = result.Relationships.Single(r => r.RelatedEntityId == deceasedId);
+            Assert.False(livingRel.IsRelatedEntityDeceased);
+            Assert.True(deceasedRel.IsRelatedEntityDeceased);
+        }
+
+        [Fact]
         public async Task GetContactDetailsAsyncHandlesContactWithNoRelationships()
         {
             Guid contactId = Guid.NewGuid();
@@ -502,20 +556,18 @@ public class ContactReadServiceTests
         }
 
         [Fact]
-        public async Task GetIndexDataAsyncReturnsOnlyHiddenContactsWhenShowHiddenTrue()
+        public async Task GetIndexDataAsyncWhenShowHiddenIncludesDeceased()
         {
-            Guid hiddenId = Guid.NewGuid();
-
-            List<ContactDto> hiddenContacts =
-            [
-                new ContactDto { Id = hiddenId, FirstName = "Hidden", IsHidden = true }
-            ];
+            // The "View Hidden / Deceased" toggle surfaces hidden and deceased contacts alongside everyone else.
+            Expression<Func<Contact, bool>>? capturedFilter = null;
 
             RepositoryMock.Setup(x => x.ListProjectedAsync<Contact, ContactDto>(
                 It.IsAny<Expression<Func<Contact, bool>>>(),
                 It.IsAny<Expression<Func<Contact, ContactDto>>>(),
                 It.IsAny<CancellationToken>()))
-                .ReturnsAsync(hiddenContacts);
+                .Callback<Expression<Func<Contact, bool>>, Expression<Func<Contact, ContactDto>>, CancellationToken>(
+                    (filter, _, _) => capturedFilter = filter)
+                .ReturnsAsync([]);
 
             RepositoryMock.Setup(x => x.ListProjectedAsync<Attachment, (Guid, Guid)>(
                 It.IsAny<Expression<Func<Attachment, bool>>>(),
@@ -535,12 +587,62 @@ public class ContactReadServiceTests
                 It.IsAny<CancellationToken>()))
                 .ReturnsAsync([]);
 
-            List<ContactDto> result = await Service.GetIndexDataAsync(showHidden: true);
+            await Service.GetIndexDataAsync(showHidden: true);
 
-            Assert.NotNull(result);
-            Assert.Single(result);
-            Assert.Equal(hiddenId, result[0].Id);
-            Assert.True(result[0].IsHidden);
+            Assert.NotNull(capturedFilter);
+            Func<Contact, bool> filter = capturedFilter.Compile();
+
+            // Visible: living, hidden, deceased — anything not partial.
+            Assert.True(filter(new Contact { FirstName = "Alive", IsHidden = false, IsDeceased = false, IsPartial = false }));
+            Assert.True(filter(new Contact { FirstName = "Hidden", IsHidden = true, IsDeceased = false, IsPartial = false }));
+            Assert.True(filter(new Contact { FirstName = "Late", IsHidden = false, IsDeceased = true, IsPartial = false }));
+            Assert.True(filter(new Contact { FirstName = "HiddenAndLate", IsHidden = true, IsDeceased = true, IsPartial = false }));
+
+            // Partial contacts are still excluded from the index regardless of the toggle.
+            Assert.False(filter(new Contact { FirstName = "Partial", IsPartial = true }));
+        }
+
+        [Fact]
+        public async Task GetIndexDataAsyncExcludesDeceasedByDefault()
+        {
+            Expression<Func<Contact, bool>>? capturedFilter = null;
+
+            RepositoryMock.Setup(x => x.ListProjectedAsync<Contact, ContactDto>(
+                It.IsAny<Expression<Func<Contact, bool>>>(),
+                It.IsAny<Expression<Func<Contact, ContactDto>>>(),
+                It.IsAny<CancellationToken>()))
+                .Callback<Expression<Func<Contact, bool>>, Expression<Func<Contact, ContactDto>>, CancellationToken>(
+                    (filter, _, _) => capturedFilter = filter)
+                .ReturnsAsync([]);
+
+            RepositoryMock.Setup(x => x.ListProjectedAsync<Attachment, (Guid, Guid)>(
+                It.IsAny<Expression<Func<Attachment, bool>>>(),
+                It.IsAny<Expression<Func<Attachment, (Guid, Guid)>>>(),
+                It.IsAny<CancellationToken>()))
+                .ReturnsAsync([]);
+
+            RepositoryMock.Setup(x => x.ListProjectedAsync<ContactLabel, (Guid, Guid, string, string?)>(
+                It.IsAny<Expression<Func<ContactLabel, bool>>>(),
+                It.IsAny<Expression<Func<ContactLabel, (Guid, Guid, string, string?)>>>(),
+                It.IsAny<CancellationToken>()))
+                .ReturnsAsync([]);
+
+            RepositoryMock.Setup(x => x.ListProjectedAsync<SignificantDate, (Guid, DateOnly)>(
+                It.IsAny<Expression<Func<SignificantDate, bool>>>(),
+                It.IsAny<Expression<Func<SignificantDate, (Guid, DateOnly)>>>(),
+                It.IsAny<CancellationToken>()))
+                .ReturnsAsync([]);
+
+            await Service.GetIndexDataAsync(showHidden: false);
+
+            Assert.NotNull(capturedFilter);
+            Func<Contact, bool> filter = capturedFilter.Compile();
+
+            Assert.True(filter(new Contact { FirstName = "Alive", IsHidden = false, IsDeceased = false, IsPartial = false }));
+            Assert.False(filter(new Contact { FirstName = "Hidden", IsHidden = true, IsDeceased = false, IsPartial = false }));
+            Assert.False(filter(new Contact { FirstName = "Late", IsHidden = false, IsDeceased = true, IsPartial = false }));
+            Assert.False(filter(new Contact { FirstName = "HiddenAndLate", IsHidden = true, IsDeceased = true, IsPartial = false }));
+            Assert.False(filter(new Contact { FirstName = "Partial", IsPartial = true }));
         }
 
         [Fact]

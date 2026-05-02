@@ -20,6 +20,9 @@ public class RelationshipDto : BaseDto
     public bool IsEntityPartial { get; set; }
     public bool IsRelatedEntityPartial { get; set; }
 
+    public bool IsEntityDeceased { get; set; }
+    public bool IsRelatedEntityDeceased { get; set; }
+
     public string? Description { get; set; }
     public DateTime? StartDate { get; set; }
     public DateTime? EndDate { get; set; }

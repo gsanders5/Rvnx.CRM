@@ -9,11 +9,11 @@
     <div class="d-flex flex-wrap gap-2 mt-3 mt-md-0">
         @if (Context.Request.Query["showHidden"] == "True")
         {
-            <a asp-action="Index" asp-route-showHidden="False" class="crm-btn-tertiary btn-sm">Hide Hidden</a>
+            <a asp-action="Index" asp-route-showHidden="False" class="crm-btn-tertiary btn-sm" title="Hide hidden and deceased contacts">Hide Hidden / Deceased</a>
         }
         else
         {
-            <a asp-action="Index" asp-route-showHidden="True" class="crm-btn-tertiary btn-sm">View Hidden</a>
+            <a asp-action="Index" asp-route-showHidden="True" class="crm-btn-tertiary btn-sm" title="Show hidden and deceased contacts">View Hidden / Deceased</a>
         }
         <div class="dropdown">
             <button class="crm-btn-secondary btn-sm dropdown-toggle" type="button" data-mdb-dropdown-init data-mdb-toggle="dropdown" aria-expanded="false">
@@ -159,7 +159,7 @@ else
         <h3 class="h4 mt-3" style="color: var(--crm-text-secondary);">No contacts found</h3>
         <p class="mb-4" style="color: var(--crm-text-tertiary);">
             @(Context.Request.Query["showHidden"] == "True"
-                ? "There are no hidden contacts at the moment."
+                ? "There are no contacts at the moment."
                 : "Get started by adding your first contact to the system.")
         </p>
         <a asp-action="Create" class="crm-btn-primary" style="padding: 0.5rem 1.25rem;">
