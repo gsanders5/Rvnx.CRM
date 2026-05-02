@@ -193,15 +193,20 @@ public class ContactReadService(IRepository repository, IFavoriteService favorit
             relatedIdsSet.Add(r.EntityId);
         }
 
-        List<Guid> relatedIds = [.. relatedIdsSet];
+        // Co-fetch the introducer with related contacts so a single round-trip fills both lookups.
+        if (contact.IntroducedByContactId.HasValue)
+        {
+            relatedIdsSet.Add(contact.IntroducedByContactId.Value);
+        }
+        List<Guid> contactLookupIds = [.. relatedIdsSet];
 
         List<Contact> relatedContacts = [];
-        if (relatedIds.Count > 0)
+        if (contactLookupIds.Count > 0)
         {
             // Optimization: Project only necessary fields for relationships display (Id, Name, Gender, IsPartial)
             // This avoids fetching all columns (including large text fields) for every related contact.
             relatedContacts = await _repository.ListProjectedByChunkedContainsAsync<Contact, Contact, Guid>(
-                relatedIds,
+                contactLookupIds,
                 chunk => c => chunk.Contains(c.Id),
                 c => new Contact
                 {
@@ -214,24 +219,21 @@ public class ContactReadService(IRepository repository, IFavoriteService favorit
                 });
         }
 
-        if (relatedContacts.Count > 0)
+        Dictionary<Guid, Contact> relatedMap = relatedContacts.ToDictionary(c => c.Id);
+
+        foreach (Relationship rel in relationships)
         {
-            Dictionary<Guid, Contact> relatedMap = relatedContacts.ToDictionary(c => c.Id);
-
-            foreach (Relationship rel in relationships)
+            if (relatedMap.TryGetValue(rel.RelatedEntityId, out Contact? related))
             {
-                if (relatedMap.TryGetValue(rel.RelatedEntityId, out Contact? related))
-                {
-                    rel.RelatedPerson = related;
-                }
+                rel.RelatedPerson = related;
             }
+        }
 
-            foreach (Relationship rel in relatedTo)
+        foreach (Relationship rel in relatedTo)
+        {
+            if (relatedMap.TryGetValue(rel.EntityId, out Contact? person))
             {
-                if (relatedMap.TryGetValue(rel.EntityId, out Contact? person))
-                {
-                    rel.Person = person;
-                }
+                rel.Person = person;
             }
         }
 
@@ -321,6 +323,12 @@ public class ContactReadService(IRepository repository, IFavoriteService favorit
 
         contactDto.Activities = activityDtos;
 
+        if (contact.IntroducedByContactId.HasValue
+            && relatedMap.TryGetValue(contact.IntroducedByContactId.Value, out Contact? introducer))
+        {
+            contactDto.IntroducedByContactName = introducer.FullName;
+        }
+
         return contactDto;
     }
 
@@ -354,6 +362,9 @@ public class ContactReadService(IRepository repository, IFavoriteService favorit
             Pronouns = contact.Pronouns,
             Gender = contact.Gender,
             Religion = contact.Religion,
+            HowWeMet = contact.HowWeMet,
+            FirstMetOn = contact.FirstMetOn,
+            IntroducedByContactId = contact.IntroducedByContactId,
             ImmichPersonId = contact.ImmichLink?.ImmichPersonId,
             ImmichPersonName = contact.ImmichLink?.ImmichPersonName,
             ImmichTagId = contact.ImmichLink?.ImmichTagId,
@@ -396,6 +407,16 @@ public class ContactReadService(IRepository repository, IFavoriteService favorit
         dto.AllLabels = allLabels.OrderBy(l => l.Name)
             .Select(l => new LabelDto { Id = l.Id, Name = l.Name, Color = l.Color }).ToList();
         dto.AssignedLabelIds = contact.ContactLabels.Select(cl => cl.LabelId).ToList();
+
+        // Tenancy is enforced by the global query filter; we only need to exclude self to prevent self-reference.
+        List<ContactSelectItemDto> candidates = await _repository.ListProjectedAsync<Contact, ContactSelectItemDto>(
+            c => c.Id != id && !c.IsPartial,
+            c => new ContactSelectItemDto
+            {
+                Id = c.Id,
+                FullName = (c.FirstName + " " + (c.LastName ?? "")).Trim()
+            }) ?? [];
+        dto.IntroducerCandidates = [.. candidates.OrderBy(x => x.FullName)];
 
         return dto;
     }

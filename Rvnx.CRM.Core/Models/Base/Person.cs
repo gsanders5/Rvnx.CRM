@@ -32,6 +32,16 @@ public abstract class Person : BaseEntity
     [Display(Name = "Company")]
     public string? Company { get; set; }
 
+    [MaxLength(1000)]
+    [Display(Name = "How We Met")]
+    public string? HowWeMet { get; set; }
+
+    [Display(Name = "First Met On")]
+    public DateOnly? FirstMetOn { get; set; }
+
+    [Display(Name = "Introduced By")]
+    public Guid? IntroducedByContactId { get; set; }
+
     [NotMapped]
     [Display(Name = "Full Name")]
     public string FullName => $"{FirstName} {LastName}".Trim();

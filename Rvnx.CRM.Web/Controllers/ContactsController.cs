@@ -91,7 +91,8 @@ public class ContactsController(
             Religion = formDto.Religion,
             IsSelfCreate = true,
             PronounOptions = PersonalAttributeOptions.Pronouns,
-            GenderOptions = PersonalAttributeOptions.Gender
+            GenderOptions = PersonalAttributeOptions.Gender,
+            IntroducerCandidates = await GetIntroducerCandidatesAsync(null)
         };
 
         return View("Create", viewModel);
@@ -126,6 +127,7 @@ public class ContactsController(
         contactDto.IsSelfCreate = true;
         contactDto.PronounOptions = PersonalAttributeOptions.Pronouns;
         contactDto.GenderOptions = PersonalAttributeOptions.Gender;
+        contactDto.IntroducerCandidates = await GetIntroducerCandidatesAsync(null);
         return View("Create", contactDto);
     }
 
@@ -156,14 +158,16 @@ public class ContactsController(
     }
 
     [HttpGet]
-    public IActionResult Create()
+    public async Task<IActionResult> Create()
     {
-        return View(new ContactCreateViewModel
+        ContactCreateViewModel viewModel = new()
         {
             IsSelfCreate = false,
             PronounOptions = PersonalAttributeOptions.Pronouns,
-            GenderOptions = PersonalAttributeOptions.Gender
-        });
+            GenderOptions = PersonalAttributeOptions.Gender,
+            IntroducerCandidates = await GetIntroducerCandidatesAsync(null)
+        };
+        return View(viewModel);
     }
 
     [HttpPost]
@@ -188,6 +192,7 @@ public class ContactsController(
         contactDto.IsSelfCreate = false;
         contactDto.PronounOptions = PersonalAttributeOptions.Pronouns;
         contactDto.GenderOptions = PersonalAttributeOptions.Gender;
+        contactDto.IntroducerCandidates = await GetIntroducerCandidatesAsync(null);
         return View(contactDto);
     }
 
@@ -267,6 +272,7 @@ public class ContactsController(
         {
             contactDto.AllLabels = formConfig.AllLabels;
             contactDto.AssignedLabelIds = formConfig.AssignedLabelIds;
+            contactDto.IntroducerCandidates = formConfig.IntroducerCandidates;
         }
 
         bool hasRelationships = await _contactReadService.HasRelationshipsAsync(id);
@@ -439,6 +445,21 @@ public class ContactsController(
         dto.Pronouns = dto.Pronouns == PersonalAttributeOptions.Unspecified ? null : dto.Pronouns;
         dto.Gender = dto.Gender == PersonalAttributeOptions.Unspecified ? null : dto.Gender;
         dto.Religion = string.IsNullOrWhiteSpace(dto.Religion) ? null : dto.Religion;
+        dto.HowWeMet = string.IsNullOrWhiteSpace(dto.HowWeMet) ? null : dto.HowWeMet;
+        // Prevent self-reference even if a tampered form posts the contact's own Id.
+        if (dto.IntroducedByContactId.HasValue && dto.Id.HasValue && dto.IntroducedByContactId == dto.Id)
+        {
+            dto.IntroducedByContactId = null;
+        }
+    }
+
+    private async Task<List<ContactSelectItemDto>> GetIntroducerCandidatesAsync(Guid? excludeContactId)
+    {
+        List<(Guid Id, string FullName)> names = await _contactReadService.GetContactNamesAsync() ?? [];
+        return [.. names
+            .Where(n => !excludeContactId.HasValue || n.Id != excludeContactId.Value)
+            .OrderBy(n => n.FullName)
+            .Select(n => new ContactSelectItemDto { Id = n.Id, FullName = n.FullName })];
     }
 
     private static ContactEditViewModel MapToEditViewModel(
@@ -454,6 +475,7 @@ public class ContactsController(
             Id = dto.Id,
             FirstName = dto.FirstName,
             LastName = dto.LastName,
+            MaidenName = dto.MaidenName,
             Nickname = dto.Nickname,
             Email = dto.Email,
             Phone = dto.Phone,
@@ -465,6 +487,9 @@ public class ContactsController(
             Pronouns = dto.Pronouns,
             Gender = dto.Gender,
             Religion = dto.Religion,
+            HowWeMet = dto.HowWeMet,
+            FirstMetOn = dto.FirstMetOn,
+            IntroducedByContactId = dto.IntroducedByContactId,
             ProfileImageId = profileImageId,
             ImmichPersonId = dto.ImmichPersonId,
             ImmichPersonName = dto.ImmichPersonName,
@@ -474,6 +499,7 @@ public class ContactsController(
             GenderOptions = PersonalAttributeOptions.Gender,
             AllLabels = dto.AllLabels,
             AssignedLabelIds = dto.AssignedLabelIds,
+            IntroducerCandidates = dto.IntroducerCandidates,
             HasRelationships = hasRelationships,
             ImmichEnabled = immichEnabled,
             AllImmichPeople = allImmichPeople ?? [],

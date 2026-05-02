@@ -113,6 +113,35 @@
         </div>
     </div>
 
+    @if (!string.IsNullOrEmpty(Model.HowWeMet) || Model.FirstMetOn.HasValue || Model.IntroducedByContactId.HasValue)
+    {
+        <!-- How We Met -->
+        <div class="crm-card">
+            <div class="crm-card-header">
+                <h5 class="card-title mb-0"><i class="bi bi-people-fill" aria-hidden="true"></i> How We Met</h5>
+            </div>
+            <div class="crm-card-body">
+                <dl class="row mb-0" style="font-size: 0.875rem; line-height: 1.5;">
+                    @if (Model.FirstMetOn.HasValue)
+                    {
+                        <dt class="col-sm-4" style="color: var(--crm-text-secondary);">First Met</dt>
+                        <dd class="col-sm-8">@Model.FirstMetOn.Value.ToString("MMM d, yyyy")</dd>
+                    }
+                    @if (Model.IntroducedByContactId.HasValue && !string.IsNullOrEmpty(Model.IntroducedByContactName))
+                    {
+                        <dt class="col-sm-4" style="color: var(--crm-text-secondary);">Introduced By</dt>
+                        <dd class="col-sm-8"><a asp-action="Details" asp-route-id="@Model.IntroducedByContactId" style="color: var(--crm-brand);">@Model.IntroducedByContactName</a></dd>
+                    }
+                    @if (!string.IsNullOrEmpty(Model.HowWeMet))
+                    {
+                        <dt class="col-sm-12" style="color: var(--crm-text-secondary);">Story</dt>
+                        <dd class="col-sm-12" style="white-space: pre-wrap;">@Model.HowWeMet</dd>
+                    }
+                </dl>
+            </div>
+        </div>
+    }
+
     <!-- Contact Info -->
     <div class="crm-card">
         <div class="crm-card-header">
