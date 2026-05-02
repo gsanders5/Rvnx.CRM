@@ -26,7 +26,7 @@
         @if (Model.IsDeceased)
         {
             <span class="crm-badge crm-badge-muted mt-1" title="This contact is marked as deceased">
-                <i class="bi bi-flower1 me-1" aria-hidden="true"></i>
+                <i class="fa-solid fa-book-skull me-1" aria-hidden="true"></i>
                 @if (Model.DateOfDeath.HasValue)
                 {
                     <text>Deceased on @Model.DateOfDeath.Value.ToString("yyyy-MM-dd")</text>
@@ -418,7 +418,7 @@
                                                 @if (rel.IsDeceased)
                                                 {
                                                     <span class="crm-badge crm-badge-muted me-2" title="Deceased">
-                                                        <i class="bi bi-flower1" aria-hidden="true"></i>
+                                                        <i class="fa-solid fa-book-skull" aria-hidden="true"></i>
                                                     </span>
                                                 }
                                                 <span class="crm-role-badge">@rel.Badge</span>
@@ -493,7 +493,7 @@
                                         <a asp-controller="Contacts" asp-action="Details" asp-route-id="@owner.Id">@owner.FullName</a>
                                         if (owner.IsDeceased)
                                         {
-                                            <i class="bi bi-flower1 ms-1" aria-hidden="true" title="Deceased"></i>
+                                            <i class="fa-solid fa-book-skull ms-1" aria-hidden="true" title="Deceased"></i>
                                         }
                                     }
                                 </div>
@@ -720,7 +720,7 @@
                                                 <a asp-controller="Contacts" asp-action="Details" asp-route-id="@activity.ContactIds[ci]">@activity.ContactNames[ci]</a>
                                                 if (ci < activity.ContactIsDeceased.Count && activity.ContactIsDeceased[ci])
                                                 {
-                                                    <i class="bi bi-flower1 ms-1" aria-hidden="true" title="Deceased"></i>
+                                                    <i class="fa-solid fa-book-skull ms-1" aria-hidden="true" title="Deceased"></i>
                                                 }
                                             }
                                         </div>

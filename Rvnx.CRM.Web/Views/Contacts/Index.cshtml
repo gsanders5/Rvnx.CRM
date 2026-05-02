@@ -90,7 +90,7 @@
                         @if (item.IsDeceased)
                         {
                             <span class="crm-badge crm-badge-muted ms-2" title="Deceased@(item.DateOfDeath.HasValue ? " (" + item.DateOfDeath.Value.ToShortDateString() + ")" : "")">
-                                <i class="bi bi-flower1" aria-hidden="true"></i>
+                                <i class="fa-solid fa-book-skull" aria-hidden="true"></i>
                             </span>
                         }
                         @if (item.Labels != null && item.Labels.Any())

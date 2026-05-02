@@ -300,7 +300,7 @@ function initializeNetworkGraph(nodes, links) {
     g.style.cursor = "grab";
 
     if (node.isDeceased) {
-      // Subdued treatment matches the bi-flower1 indicator used elsewhere — lower
+      // Subdued treatment matches the fa-book-skull indicator used elsewhere — lower
       // opacity on the whole node group plus a tooltip title element accessible to
       // both pointer hover and assistive tech.
       g.setAttribute("opacity", "0.55");
