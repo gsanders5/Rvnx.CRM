@@ -26,5 +26,13 @@ public class ContactDto : BaseDto
 
     public bool IsFavorite { get; set; }
 
+    public string? HowWeMet { get; set; }
+
+    public DateOnly? FirstMetOn { get; set; }
+
+    public Guid? IntroducedByContactId { get; set; }
+
+    public string? IntroducedByContactName { get; set; }
+
     public IEnumerable<LabelDto> Labels { get; set; } = [];
 }

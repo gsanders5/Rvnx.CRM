@@ -966,4 +966,203 @@ public class ContactReadServiceTests
             Assert.False(filterFunc(new Relationship { EntityId = queryId, RelatedEntityId = otherId, EntityType = EntityType.Company }));
         }
     }
+
+    public class ContactReadServiceHowWeMetTests : ContactReadServiceTestBase
+    {
+        [Fact]
+        public async Task GetContactFormAsyncRoundTripsHowWeMetFields()
+        {
+            Guid contactId = Guid.NewGuid();
+            Guid introducerId = Guid.NewGuid();
+            DateOnly firstMet = new(2024, 6, 15);
+            Contact contact = new()
+            {
+                Id = contactId,
+                FirstName = "Jane",
+                LastName = "Doe",
+                HowWeMet = "Met at a conference in Berlin.",
+                FirstMetOn = firstMet,
+                IntroducedByContactId = introducerId
+            };
+
+            RepositoryMock.Setup(r => r.ListAsNoTrackingAsync<Contact>(
+                It.IsAny<Expression<Func<Contact, bool>>>(),
+                It.IsAny<CancellationToken>(),
+                It.IsAny<string[]>()))
+                .ReturnsAsync([contact]);
+
+            RepositoryMock.Setup(r => r.ListAsync<Attachment>(
+                It.IsAny<Expression<Func<Attachment, bool>>>(),
+                It.IsAny<CancellationToken>()))
+                .ReturnsAsync([]);
+
+            RepositoryMock.Setup(r => r.ListAsNoTrackingAsync<Label>(
+                It.IsAny<Expression<Func<Label, bool>>>(),
+                It.IsAny<CancellationToken>(),
+                It.IsAny<string[]>()))
+                .ReturnsAsync([]);
+
+            RepositoryMock.Setup(r => r.ListProjectedAsync<Contact, ContactSelectItemDto>(
+                It.IsAny<Expression<Func<Contact, bool>>>(),
+                It.IsAny<Expression<Func<Contact, ContactSelectItemDto>>>(),
+                It.IsAny<CancellationToken>()))
+                .ReturnsAsync([]);
+
+            ContactFormDto? result = await Service.GetContactFormAsync(contactId);
+
+            Assert.NotNull(result);
+            Assert.Equal("Met at a conference in Berlin.", result.HowWeMet);
+            Assert.Equal(firstMet, result.FirstMetOn);
+            Assert.Equal(introducerId, result.IntroducedByContactId);
+        }
+
+        [Fact]
+        public async Task GetContactFormAsyncExcludesCurrentContactFromIntroducerCandidates()
+        {
+            Guid contactId = Guid.NewGuid();
+            Contact contact = new() { Id = contactId, FirstName = "Self", LastName = "Person" };
+
+            RepositoryMock.Setup(r => r.ListAsNoTrackingAsync<Contact>(
+                It.IsAny<Expression<Func<Contact, bool>>>(),
+                It.IsAny<CancellationToken>(),
+                It.IsAny<string[]>()))
+                .ReturnsAsync([contact]);
+
+            RepositoryMock.Setup(r => r.ListAsync<Attachment>(
+                It.IsAny<Expression<Func<Attachment, bool>>>(),
+                It.IsAny<CancellationToken>()))
+                .ReturnsAsync([]);
+
+            RepositoryMock.Setup(r => r.ListAsNoTrackingAsync<Label>(
+                It.IsAny<Expression<Func<Label, bool>>>(),
+                It.IsAny<CancellationToken>(),
+                It.IsAny<string[]>()))
+                .ReturnsAsync([]);
+
+            Expression<Func<Contact, bool>>? capturedFilter = null;
+            RepositoryMock.Setup(r => r.ListProjectedAsync<Contact, ContactSelectItemDto>(
+                It.IsAny<Expression<Func<Contact, bool>>>(),
+                It.IsAny<Expression<Func<Contact, ContactSelectItemDto>>>(),
+                It.IsAny<CancellationToken>()))
+                .Callback<Expression<Func<Contact, bool>>, Expression<Func<Contact, ContactSelectItemDto>>, CancellationToken>(
+                    (filter, _, _) => capturedFilter = filter)
+                .ReturnsAsync([]);
+
+            await Service.GetContactFormAsync(contactId);
+
+            Assert.NotNull(capturedFilter);
+            Func<Contact, bool> filterFunc = capturedFilter.Compile();
+            Assert.False(filterFunc(new Contact { Id = contactId, IsPartial = false }));
+            Assert.True(filterFunc(new Contact { Id = Guid.NewGuid(), IsPartial = false }));
+            Assert.False(filterFunc(new Contact { Id = Guid.NewGuid(), IsPartial = true }));
+        }
+
+        [Fact]
+        public async Task GetContactDetailsAsyncPopulatesIntroducedByContactNameWhenIntroducerExists()
+        {
+            Guid contactId = Guid.NewGuid();
+            Guid introducerId = Guid.NewGuid();
+            Contact contact = new()
+            {
+                Id = contactId,
+                FirstName = "Bob",
+                LastName = "Newcomer",
+                IntroducedByContactId = introducerId
+            };
+
+            RepositoryMock.Setup(r => r.ListAsNoTrackingAsync<Contact>(
+                It.IsAny<Expression<Func<Contact, bool>>>(),
+                It.IsAny<CancellationToken>(),
+                It.IsAny<string[]>()))
+                .ReturnsAsync([contact]);
+
+            RepositoryMock.Setup(r => r.ListAsNoTrackingAsync<Relationship>(
+                It.IsAny<Expression<Func<Relationship, bool>>>(),
+                It.IsAny<CancellationToken>(),
+                It.IsAny<string[]>()))
+                .ReturnsAsync([]);
+
+            // Co-fetch lookup returns the introducer's projected entity.
+            RepositoryMock.Setup(r => r.ListProjectedAsync<Contact, Contact>(
+                It.IsAny<Expression<Func<Contact, bool>>>(),
+                It.IsAny<Expression<Func<Contact, Contact>>>(),
+                It.IsAny<CancellationToken>()))
+                .ReturnsAsync([new Contact { Id = introducerId, FirstName = "Alice", LastName = "Mentor" }]);
+
+            ContactDetailDto? result = await Service.GetContactDetailsAsync(contactId);
+
+            Assert.NotNull(result);
+            Assert.Equal(introducerId, result.IntroducedByContactId);
+            Assert.Equal("Alice Mentor", result.IntroducedByContactName);
+        }
+
+        [Fact]
+        public async Task GetContactDetailsAsyncLeavesIntroducedByContactNameNullWhenIntroducerMissing()
+        {
+            Guid contactId = Guid.NewGuid();
+            Guid introducerId = Guid.NewGuid();
+            Contact contact = new()
+            {
+                Id = contactId,
+                FirstName = "Carol",
+                LastName = "Orphan",
+                IntroducedByContactId = introducerId
+            };
+
+            RepositoryMock.Setup(r => r.ListAsNoTrackingAsync<Contact>(
+                It.IsAny<Expression<Func<Contact, bool>>>(),
+                It.IsAny<CancellationToken>(),
+                It.IsAny<string[]>()))
+                .ReturnsAsync([contact]);
+
+            RepositoryMock.Setup(r => r.ListAsNoTrackingAsync<Relationship>(
+                It.IsAny<Expression<Func<Relationship, bool>>>(),
+                It.IsAny<CancellationToken>(),
+                It.IsAny<string[]>()))
+                .ReturnsAsync([]);
+
+            // Co-fetch lookup returns nothing — referenced contact does not exist (e.g. deleted).
+            RepositoryMock.Setup(r => r.ListProjectedAsync<Contact, Contact>(
+                It.IsAny<Expression<Func<Contact, bool>>>(),
+                It.IsAny<Expression<Func<Contact, Contact>>>(),
+                It.IsAny<CancellationToken>()))
+                .ReturnsAsync([]);
+
+            ContactDetailDto? result = await Service.GetContactDetailsAsync(contactId);
+
+            Assert.NotNull(result);
+            Assert.Equal(introducerId, result.IntroducedByContactId);
+            Assert.Null(result.IntroducedByContactName);
+        }
+
+        [Fact]
+        public async Task GetContactDetailsAsyncLeavesIntroducedByContactNameNullWhenNoneSet()
+        {
+            Guid contactId = Guid.NewGuid();
+            Contact contact = new()
+            {
+                Id = contactId,
+                FirstName = "Lone",
+                LastName = "Contact",
+                IntroducedByContactId = null
+            };
+
+            RepositoryMock.Setup(r => r.ListAsNoTrackingAsync<Contact>(
+                It.IsAny<Expression<Func<Contact, bool>>>(),
+                It.IsAny<CancellationToken>(),
+                It.IsAny<string[]>()))
+                .ReturnsAsync([contact]);
+
+            RepositoryMock.Setup(r => r.ListAsNoTrackingAsync<Relationship>(
+                It.IsAny<Expression<Func<Relationship, bool>>>(),
+                It.IsAny<CancellationToken>(),
+                It.IsAny<string[]>()))
+                .ReturnsAsync([]);
+
+            ContactDetailDto? result = await Service.GetContactDetailsAsync(contactId);
+
+            Assert.NotNull(result);
+            Assert.Null(result.IntroducedByContactName);
+        }
+    }
 }

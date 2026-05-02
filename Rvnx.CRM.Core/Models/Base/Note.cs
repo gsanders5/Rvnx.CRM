@@ -19,4 +19,6 @@ public class Note : BaseEntity
     [Required]
     [Display(Name = "Note")]
     public string Value { get; set; } = string.Empty;
+
+    public bool IsFavorite { get; set; }
 }

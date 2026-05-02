@@ -73,6 +73,24 @@ public class ContactFormDto
     [MaxLength(256)]
     public string? ImmichTagValue { get; set; }
 
+    [MaxLength(1000)]
+    [Display(Name = "How We Met")]
+    [DataType(DataType.MultilineText)]
+    public string? HowWeMet { get; set; }
+
+    [DataType(DataType.Date)]
+    [Display(Name = "First Met On")]
+    public DateOnly? FirstMetOn { get; set; }
+
+    [Display(Name = "Introduced By")]
+    public Guid? IntroducedByContactId { get; set; }
+
     public List<LabelDto> AllLabels { get; set; } = [];
     public List<Guid> AssignedLabelIds { get; set; } = [];
+
+    /// <summary>
+    /// Candidates available to be selected as the "introduced by" contact.
+    /// Excludes the current contact to prevent self-reference.
+    /// </summary>
+    public List<ContactSelectItemDto> IntroducerCandidates { get; set; } = [];
 }

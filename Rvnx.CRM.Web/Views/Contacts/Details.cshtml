@@ -129,6 +129,35 @@
         </div>
     </div>
 
+    @if (!string.IsNullOrEmpty(Model.HowWeMet) || Model.FirstMetOn.HasValue || (Model.IntroducedByContactId.HasValue && !string.IsNullOrEmpty(Model.IntroducedByContactName)))
+    {
+        <!-- How We Met -->
+        <div class="crm-card">
+            <div class="crm-card-header">
+                <h5 class="card-title mb-0"><i class="bi bi-people-fill" aria-hidden="true"></i> How We Met</h5>
+            </div>
+            <div class="crm-card-body">
+                <dl class="row mb-0" style="font-size: 0.875rem; line-height: 1.5;">
+                    @if (Model.FirstMetOn.HasValue)
+                    {
+                        <dt class="col-sm-4" style="color: var(--crm-text-secondary);">First Met</dt>
+                        <dd class="col-sm-8">@Model.FirstMetOn.Value.ToString("MMM d, yyyy")</dd>
+                    }
+                    @if (Model.IntroducedByContactId.HasValue && !string.IsNullOrEmpty(Model.IntroducedByContactName))
+                    {
+                        <dt class="col-sm-4" style="color: var(--crm-text-secondary);">Introduced By</dt>
+                        <dd class="col-sm-8"><a asp-action="Details" asp-route-id="@Model.IntroducedByContactId" style="color: var(--crm-brand);">@Model.IntroducedByContactName</a></dd>
+                    }
+                    @if (!string.IsNullOrEmpty(Model.HowWeMet))
+                    {
+                        <dt class="col-sm-12" style="color: var(--crm-text-secondary);">Story</dt>
+                        <dd class="col-sm-12" style="white-space: pre-wrap;">@Model.HowWeMet</dd>
+                    }
+                </dl>
+            </div>
+        </div>
+    }
+
     <!-- Contact Info -->
     <div class="crm-card">
         <div class="crm-card-header">
@@ -552,7 +581,7 @@
         <div class="crm-card-body">
             @if (Model.Notes != null && Model.Notes.Any())
             {
-                @foreach (var note in Model.Notes.OrderByDescending(n => n.CreatedDate))
+                @foreach (var note in Model.Notes.OrderByDescending(n => n.IsFavorite).ThenByDescending(n => n.CreatedDate))
                 {
                     <div class="mb-2 p-3" style="background: var(--crm-surface-secondary); border-radius: var(--crm-radius-sm); border: 1px solid var(--crm-border-subtle);">
                         <div class="d-flex justify-content-between">
@@ -560,6 +589,14 @@
                                 @note.Title <span class="crm-meta">@note.CreatedDate.ToShortDateString()</span>
                             </h6>
                             <div class="crm-icon-actions">
+                                <form method="post" asp-controller="Notes" asp-action="ToggleFavorite" asp-route-id="@note.Id" class="d-inline">
+                                    <button type="submit" class="crm-icon-btn"
+                                            style="color: @(note.IsFavorite ? "var(--crm-warning)" : "var(--crm-text-tertiary)");"
+                                            title="@(note.IsFavorite ? "Unpin note" : "Pin note")"
+                                            aria-label="@(note.IsFavorite ? "Unpin" : "Pin") @note.Title">
+                                        <i class="bi @(note.IsFavorite ? "bi-star-fill" : "bi-star")" aria-hidden="true"></i>
+                                    </button>
+                                </form>
                                 <a asp-controller="Notes" asp-action="Edit" asp-route-id="@note.Id" class="crm-icon-btn icon-edit" title="Edit" aria-label="Edit @note.Title">
                                     <i class="bi bi-pencil-square" aria-hidden="true"></i>
                                 </a>

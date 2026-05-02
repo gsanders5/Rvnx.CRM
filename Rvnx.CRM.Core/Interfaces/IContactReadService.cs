@@ -54,4 +54,10 @@ public interface IContactReadService
     Task<List<(Guid Id, string FullName)>> GetContactNamesAsync(
         bool excludeDeceased = false,
         IEnumerable<Guid>? alwaysIncludeIds = null);
+
+    /// <summary>
+    /// Retrieves contacts eligible to be selected as an "introduced by" contact, ordered by full name.
+    /// Excludes partial contacts and (if provided) the contact identified by <paramref name="excludeContactId"/>.
+    /// </summary>
+    Task<List<ContactSelectItemDto>> GetIntroducerCandidatesAsync(Guid? excludeContactId);
 }

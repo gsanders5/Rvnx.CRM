@@ -109,6 +109,30 @@
                 <span asp-validation-for="Religion" class="text-danger"></span>
             </div>
 
+            <div class="mb-3">
+                <label asp-for="HowWeMet" class="form-label">How We Met</label>
+                <textarea asp-for="HowWeMet" class="form-control" rows="3" maxlength="1000" placeholder="Describe how you met this person..."></textarea>
+                <span asp-validation-for="HowWeMet" class="text-danger"></span>
+            </div>
+
+            <div class="form-floating mb-3">
+                <input asp-for="FirstMetOn" class="form-control" type="date" placeholder="First Met On"/>
+                <label asp-for="FirstMetOn"></label>
+                <span asp-validation-for="FirstMetOn" class="text-danger"></span>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="IntroducedByContactId" class="form-label">Introduced By</label>
+                <select asp-for="IntroducedByContactId" id="introduced-by-select" class="form-select">
+                    <option value=""></option>
+                    @foreach (var candidate in Model.IntroducerCandidates)
+                    {
+                        <option value="@candidate.Id">@candidate.FullName</option>
+                    }
+                </select>
+                <span asp-validation-for="IntroducedByContactId" class="text-danger"></span>
+            </div>
+
             <div class="mb-3 form-check form-switch">
                 <input asp-for="IsHidden" class="form-check-input"/>
                 <label asp-for="IsHidden" class="form-check-label"></label>
@@ -141,6 +165,7 @@
         (function () {
             $('#pronouns-select').select2({ width: '100%', tags: true, placeholder: 'Select or enter pronouns...', allowClear: true });
             $('#gender-select').select2({ width: '100%', tags: true, placeholder: 'Select or enter gender...', allowClear: true });
+            $('#introduced-by-select').select2({ width: '100%', placeholder: 'Search for a contact...', allowClear: true });
 
             const birthdayField = document.getElementById('BirthdayField');
             const birthdayYearUnknownField = document.getElementById('BirthdayYearUnknownField');

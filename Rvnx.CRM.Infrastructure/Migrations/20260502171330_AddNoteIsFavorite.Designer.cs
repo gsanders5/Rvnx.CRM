@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Rvnx.CRM.Infrastructure.Data;
 
@@ -10,9 +11,11 @@ using Rvnx.CRM.Infrastructure.Data;
 namespace Rvnx.CRM.Infrastructure.Migrations
 {
     [DbContext(typeof(CRMDbContext))]
-    partial class CRMDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260502171330_AddNoteIsFavorite")]
+    partial class AddNoteIsFavorite
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "9.0.15");
@@ -62,6 +65,7 @@ namespace Rvnx.CRM.Infrastructure.Migrations
                         .HasColumnType("TEXT");
 
                     b.Property<Guid?>("UserId")
+                        .HasMaxLength(450)
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");
@@ -105,6 +109,7 @@ namespace Rvnx.CRM.Infrastructure.Migrations
                         .HasColumnType("TEXT");
 
                     b.Property<Guid?>("UserId")
+                        .HasMaxLength(450)
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");
@@ -225,6 +230,7 @@ namespace Rvnx.CRM.Infrastructure.Migrations
                         .HasColumnType("TEXT");
 
                     b.Property<Guid?>("UserId")
+                        .HasMaxLength(450)
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");
@@ -274,6 +280,7 @@ namespace Rvnx.CRM.Infrastructure.Migrations
                         .HasColumnType("TEXT");
 
                     b.Property<Guid?>("UserId")
+                        .HasMaxLength(450)
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");
@@ -325,6 +332,7 @@ namespace Rvnx.CRM.Infrastructure.Migrations
                         .HasColumnType("TEXT");
 
                     b.Property<Guid?>("UserId")
+                        .HasMaxLength(450)
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Value")
@@ -388,6 +396,7 @@ namespace Rvnx.CRM.Infrastructure.Migrations
                         .HasColumnType("TEXT");
 
                     b.Property<Guid?>("UserId")
+                        .HasMaxLength(450)
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Website")
@@ -462,6 +471,7 @@ namespace Rvnx.CRM.Infrastructure.Migrations
                         .HasColumnType("TEXT");
 
                     b.Property<Guid?>("UserId")
+                        .HasMaxLength(450)
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Zip")
@@ -501,12 +511,6 @@ namespace Rvnx.CRM.Infrastructure.Migrations
                     b.Property<DateTime>("CreatedDate")
                         .HasColumnType("TEXT");
 
-                    b.Property<DateOnly?>("DateOfDeath")
-                        .HasColumnType("TEXT");
-
-                    b.Property<DateOnly?>("FirstMetOn")
-                        .HasColumnType("TEXT");
-
                     b.Property<string>("FirstName")
                         .IsRequired()
                         .HasMaxLength(100)
@@ -518,16 +522,6 @@ namespace Rvnx.CRM.Infrastructure.Migrations
 
                     b.Property<Guid?>("GroupId")
                         .HasColumnType("TEXT");
-
-                    b.Property<string>("HowWeMet")
-                        .HasMaxLength(1000)
-                        .HasColumnType("TEXT");
-
-                    b.Property<Guid?>("IntroducedByContactId")
-                        .HasColumnType("TEXT");
-
-                    b.Property<bool>("IsDeceased")
-                        .HasColumnType("INTEGER");
 
                     b.Property<bool>("IsHidden")
                         .HasColumnType("INTEGER");
@@ -568,13 +562,12 @@ namespace Rvnx.CRM.Infrastructure.Migrations
                         .HasColumnType("TEXT");
 
                     b.Property<Guid?>("UserId")
+                        .HasMaxLength(450)
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");
 
                     b.HasIndex("GroupId");
-
-                    b.HasIndex("IntroducedByContactId");
 
                     b.HasIndex("UserId");
 
@@ -610,6 +603,7 @@ namespace Rvnx.CRM.Infrastructure.Migrations
                         .HasColumnType("TEXT");
 
                     b.Property<Guid?>("UserId")
+                        .HasMaxLength(450)
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");
@@ -669,6 +663,7 @@ namespace Rvnx.CRM.Infrastructure.Migrations
                         .HasColumnType("TEXT");
 
                     b.Property<Guid?>("UserId")
+                        .HasMaxLength(450)
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");
@@ -715,6 +710,7 @@ namespace Rvnx.CRM.Infrastructure.Migrations
                         .HasColumnType("TEXT");
 
                     b.Property<Guid?>("UserId")
+                        .HasMaxLength(450)
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");
@@ -767,6 +763,7 @@ namespace Rvnx.CRM.Infrastructure.Migrations
                         .HasColumnType("INTEGER");
 
                     b.Property<Guid?>("UserId")
+                        .HasMaxLength(450)
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Value")
@@ -834,6 +831,7 @@ namespace Rvnx.CRM.Infrastructure.Migrations
                         .HasColumnType("TEXT");
 
                     b.Property<Guid?>("UserId")
+                        .HasMaxLength(450)
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");
@@ -884,6 +882,7 @@ namespace Rvnx.CRM.Infrastructure.Migrations
                         .HasColumnType("TEXT");
 
                     b.Property<Guid?>("UserId")
+                        .HasMaxLength(450)
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Value")
@@ -940,6 +939,7 @@ namespace Rvnx.CRM.Infrastructure.Migrations
                         .HasColumnType("TEXT");
 
                     b.Property<Guid?>("UserId")
+                        .HasMaxLength(450)
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");
@@ -996,6 +996,7 @@ namespace Rvnx.CRM.Infrastructure.Migrations
                         .HasColumnType("TEXT");
 
                     b.Property<Guid?>("UserId")
+                        .HasMaxLength(450)
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");
@@ -1039,6 +1040,7 @@ namespace Rvnx.CRM.Infrastructure.Migrations
                         .HasColumnType("TEXT");
 
                     b.Property<Guid?>("UserId")
+                        .HasMaxLength(450)
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");
@@ -1104,6 +1106,7 @@ namespace Rvnx.CRM.Infrastructure.Migrations
                         .HasColumnType("TEXT");
 
                     b.Property<Guid?>("UserId")
+                        .HasMaxLength(450)
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");
@@ -1167,6 +1170,7 @@ namespace Rvnx.CRM.Infrastructure.Migrations
                         .HasColumnType("INTEGER");
 
                     b.Property<Guid?>("UserId")
+                        .HasMaxLength(450)
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");
@@ -1216,6 +1220,7 @@ namespace Rvnx.CRM.Infrastructure.Migrations
                         .HasColumnType("TEXT");
 
                     b.Property<Guid?>("UserId")
+                        .HasMaxLength(450)
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");
@@ -1277,6 +1282,7 @@ namespace Rvnx.CRM.Infrastructure.Migrations
                         .HasColumnType("TEXT");
 
                     b.Property<Guid?>("UserId")
+                        .HasMaxLength(450)
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");
@@ -1339,6 +1345,7 @@ namespace Rvnx.CRM.Infrastructure.Migrations
                         .HasColumnType("TEXT");
 
                     b.Property<Guid?>("UserId")
+                        .HasMaxLength(450)
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");
@@ -1384,6 +1391,7 @@ namespace Rvnx.CRM.Infrastructure.Migrations
                         .HasColumnType("TEXT");
 
                     b.Property<Guid?>("UserId")
+                        .HasMaxLength(450)
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");
@@ -1464,14 +1472,6 @@ namespace Rvnx.CRM.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Cascade);
 
                     b.Navigation("Contact");
-                });
-
-            modelBuilder.Entity("Rvnx.CRM.Core.Models.Contact.Contact", b =>
-                {
-                    b.HasOne("Rvnx.CRM.Core.Models.Contact.Contact", null)
-                        .WithMany()
-                        .HasForeignKey("IntroducedByContactId")
-                        .OnDelete(DeleteBehavior.SetNull);
                 });
 
             modelBuilder.Entity("Rvnx.CRM.Core.Models.Contact.ContactFavorite", b =>

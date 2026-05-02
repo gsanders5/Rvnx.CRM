@@ -47,6 +47,36 @@ public class MergeService(CRMDbContext context, IRepository repository) : IMerge
             primary.Pronouns = MergeScalar(primary.Pronouns, secondary.Pronouns);
             primary.Gender = MergeScalar(primary.Gender, secondary.Gender);
             primary.Religion = MergeScalar(primary.Religion, secondary.Religion);
+            primary.HowWeMet = MergeScalar(primary.HowWeMet, secondary.HowWeMet);
+            primary.FirstMetOn ??= secondary.FirstMetOn;
+
+            // Carry secondary's introducer forward when primary lacks one. Skip if it would point at the
+            // primary itself (self-reference) or at the secondary (about to be deleted).
+            if (!primary.IntroducedByContactId.HasValue
+                && secondary.IntroducedByContactId.HasValue
+                && secondary.IntroducedByContactId.Value != primaryId
+                && secondary.IntroducedByContactId.Value != secondaryId)
+            {
+                primary.IntroducedByContactId = secondary.IntroducedByContactId;
+            }
+            else if (primary.IntroducedByContactId == secondaryId)
+            {
+                // Primary was introduced by the contact being merged in; clear to avoid SetNull cascade race.
+                primary.IntroducedByContactId = null;
+            }
+
+            // Redirect any contact that was introduced by the secondary to point at the primary instead;
+            // otherwise the FK SetNull cascade would silently lose those references when secondary is deleted.
+            List<Contact> introducedBySecondary = await _repository.ListAsync<Contact>(c => c.IntroducedByContactId == secondaryId);
+            foreach (Contact dependent in introducedBySecondary)
+            {
+                if (dependent.Id == primaryId)
+                {
+                    // Primary was already updated above; skip.
+                    continue;
+                }
+                dependent.IntroducedByContactId = primaryId;
+            }
 
             // Deceased status / date of death: deceased is a one-way truth. If either record
             // is marked deceased, the merged primary must be too — otherwise merging a deceased

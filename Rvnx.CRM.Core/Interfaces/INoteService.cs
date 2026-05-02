@@ -52,4 +52,11 @@ public interface INoteService
     /// <param name="id">The ID of the note.</param>
     /// <returns>The <see cref="Note"/> entity if found, otherwise null.</returns>
     Task<Note?> GetByIdAsync(Guid id);
+
+    /// <summary>
+    /// Toggles the favorite (pinned) flag on a note.
+    /// </summary>
+    /// <param name="id">The ID of the note.</param>
+    /// <returns>An <see cref="OperationResult"/> indicating success or failure.</returns>
+    Task<OperationResult> ToggleFavoriteAsync(Guid id);
 }
