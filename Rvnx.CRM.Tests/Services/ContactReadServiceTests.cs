@@ -800,7 +800,7 @@ public class ContactReadServiceTests
 
             (Guid, string) projectedPartial = projectionFunc(testContacts[1]);
             Assert.Equal(id2, projectedPartial.Item1);
-            Assert.Equal("Jane Smith (partial contact)", projectedPartial.Item2);
+            Assert.Equal("Jane Smith (Partial contact)", projectedPartial.Item2);
         }
 
         [Fact]
@@ -839,7 +839,7 @@ public class ContactReadServiceTests
 
             (Guid, string) projectedPartialDeceased = projectionFunc(testContacts[1]);
             Assert.Equal(partialDeceasedId, projectedPartialDeceased.Item1);
-            Assert.Equal("Ghost Soul (partial contact, Deceased)", projectedPartialDeceased.Item2);
+            Assert.Equal("Ghost Soul (Partial contact, Deceased)", projectedPartialDeceased.Item2);
         }
 
         [Fact]
