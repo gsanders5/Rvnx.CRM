@@ -311,6 +311,9 @@ namespace Rvnx.CRM.Infrastructure.Migrations
                     b.Property<Guid?>("GroupId")
                         .HasColumnType("TEXT");
 
+                    b.Property<bool>("IsFavorite")
+                        .HasColumnType("INTEGER");
+
                     b.Property<string>("LastChangedBy")
                         .IsRequired()
                         .HasMaxLength(256)
@@ -501,6 +504,9 @@ namespace Rvnx.CRM.Infrastructure.Migrations
                     b.Property<DateTime>("CreatedDate")
                         .HasColumnType("TEXT");
 
+                    b.Property<DateOnly?>("DateOfDeath")
+                        .HasColumnType("TEXT");
+
                     b.Property<DateOnly?>("FirstMetOn")
                         .HasColumnType("TEXT");
 
@@ -522,6 +528,9 @@ namespace Rvnx.CRM.Infrastructure.Migrations
 
                     b.Property<Guid?>("IntroducedByContactId")
                         .HasColumnType("TEXT");
+
+                    b.Property<bool>("IsDeceased")
+                        .HasColumnType("INTEGER");
 
                     b.Property<bool>("IsHidden")
                         .HasColumnType("INTEGER");

@@ -511,6 +511,9 @@ namespace Rvnx.CRM.Infrastructure.Migrations
                     b.Property<DateTime>("CreatedDate")
                         .HasColumnType("TEXT");
 
+                    b.Property<DateOnly?>("DateOfDeath")
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("FirstName")
                         .IsRequired()
                         .HasMaxLength(100)
@@ -522,6 +525,9 @@ namespace Rvnx.CRM.Infrastructure.Migrations
 
                     b.Property<Guid?>("GroupId")
                         .HasColumnType("TEXT");
+
+                    b.Property<bool>("IsDeceased")
+                        .HasColumnType("INTEGER");
 
                     b.Property<bool>("IsHidden")
                         .HasColumnType("INTEGER");
