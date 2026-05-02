@@ -92,7 +92,7 @@ public class ContactsController(
             IsSelfCreate = true,
             PronounOptions = PersonalAttributeOptions.Pronouns,
             GenderOptions = PersonalAttributeOptions.Gender,
-            IntroducerCandidates = await GetIntroducerCandidatesAsync(null)
+            IntroducerCandidates = await _contactReadService.GetIntroducerCandidatesAsync(null)
         };
 
         return View("Create", viewModel);
@@ -127,7 +127,7 @@ public class ContactsController(
         contactDto.IsSelfCreate = true;
         contactDto.PronounOptions = PersonalAttributeOptions.Pronouns;
         contactDto.GenderOptions = PersonalAttributeOptions.Gender;
-        contactDto.IntroducerCandidates = await GetIntroducerCandidatesAsync(null);
+        contactDto.IntroducerCandidates = await _contactReadService.GetIntroducerCandidatesAsync(null);
         return View("Create", contactDto);
     }
 
@@ -165,7 +165,7 @@ public class ContactsController(
             IsSelfCreate = false,
             PronounOptions = PersonalAttributeOptions.Pronouns,
             GenderOptions = PersonalAttributeOptions.Gender,
-            IntroducerCandidates = await GetIntroducerCandidatesAsync(null)
+            IntroducerCandidates = await _contactReadService.GetIntroducerCandidatesAsync(null)
         };
         return View(viewModel);
     }
@@ -192,7 +192,7 @@ public class ContactsController(
         contactDto.IsSelfCreate = false;
         contactDto.PronounOptions = PersonalAttributeOptions.Pronouns;
         contactDto.GenderOptions = PersonalAttributeOptions.Gender;
-        contactDto.IntroducerCandidates = await GetIntroducerCandidatesAsync(null);
+        contactDto.IntroducerCandidates = await _contactReadService.GetIntroducerCandidatesAsync(null);
         return View(contactDto);
     }
 
@@ -446,20 +446,6 @@ public class ContactsController(
         dto.Gender = dto.Gender == PersonalAttributeOptions.Unspecified ? null : dto.Gender;
         dto.Religion = string.IsNullOrWhiteSpace(dto.Religion) ? null : dto.Religion;
         dto.HowWeMet = string.IsNullOrWhiteSpace(dto.HowWeMet) ? null : dto.HowWeMet;
-        // Prevent self-reference even if a tampered form posts the contact's own Id.
-        if (dto.IntroducedByContactId.HasValue && dto.Id.HasValue && dto.IntroducedByContactId == dto.Id)
-        {
-            dto.IntroducedByContactId = null;
-        }
-    }
-
-    private async Task<List<ContactSelectItemDto>> GetIntroducerCandidatesAsync(Guid? excludeContactId)
-    {
-        List<(Guid Id, string FullName)> names = await _contactReadService.GetContactNamesAsync() ?? [];
-        return [.. names
-            .Where(n => !excludeContactId.HasValue || n.Id != excludeContactId.Value)
-            .OrderBy(n => n.FullName)
-            .Select(n => new ContactSelectItemDto { Id = n.Id, FullName = n.FullName })];
     }
 
     private static ContactEditViewModel MapToEditViewModel(

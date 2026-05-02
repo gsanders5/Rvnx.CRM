@@ -408,15 +408,7 @@ public class ContactReadService(IRepository repository, IFavoriteService favorit
             .Select(l => new LabelDto { Id = l.Id, Name = l.Name, Color = l.Color }).ToList();
         dto.AssignedLabelIds = contact.ContactLabels.Select(cl => cl.LabelId).ToList();
 
-        // Tenancy is enforced by the global query filter; we only need to exclude self to prevent self-reference.
-        List<ContactSelectItemDto> candidates = await _repository.ListProjectedAsync<Contact, ContactSelectItemDto>(
-            c => c.Id != id && !c.IsPartial,
-            c => new ContactSelectItemDto
-            {
-                Id = c.Id,
-                FullName = (c.FirstName + " " + (c.LastName ?? "")).Trim()
-            }) ?? [];
-        dto.IntroducerCandidates = [.. candidates.OrderBy(x => x.FullName)];
+        dto.IntroducerCandidates = await GetIntroducerCandidatesAsync(id);
 
         return dto;
     }
@@ -441,5 +433,18 @@ public class ContactReadService(IRepository repository, IFavoriteService favorit
                 c.IsPartial
                     ? (c.FirstName + " " + (c.LastName ?? "")).Trim() + " (partial contact)"
                     : (c.FirstName + " " + (c.LastName ?? "")).Trim()));
+    }
+
+    public async Task<List<ContactSelectItemDto>> GetIntroducerCandidatesAsync(Guid? excludeContactId)
+    {
+        // Tenancy is enforced by the global query filter; only exclude self (when known) and partial contacts.
+        List<ContactSelectItemDto> candidates = await _repository.ListProjectedAsync<Contact, ContactSelectItemDto>(
+            c => !c.IsPartial && (excludeContactId == null || c.Id != excludeContactId),
+            c => new ContactSelectItemDto
+            {
+                Id = c.Id,
+                FullName = (c.FirstName + " " + (c.LastName ?? "")).Trim()
+            }) ?? [];
+        return [.. candidates.OrderBy(x => x.FullName)];
     }
 }

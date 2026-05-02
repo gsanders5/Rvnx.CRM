@@ -42,4 +42,10 @@ public interface IContactReadService
     /// Retrieves a lightweight list of contact Id and FullName pairs for use in select lists.
     /// </summary>
     Task<List<(Guid Id, string FullName)>> GetContactNamesAsync();
+
+    /// <summary>
+    /// Retrieves contacts eligible to be selected as an "introduced by" contact, ordered by full name.
+    /// Excludes partial contacts and (if provided) the contact identified by <paramref name="excludeContactId"/>.
+    /// </summary>
+    Task<List<ContactSelectItemDto>> GetIntroducerCandidatesAsync(Guid? excludeContactId);
 }
