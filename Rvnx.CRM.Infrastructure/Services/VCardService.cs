@@ -76,31 +76,22 @@ public class VCardService : IVCardService
             contact.FirstName = n.Given.Count > 0 ? n.Given[0] : "";
         }
 
-        FolkerKinzel.VCards.Models.Properties.NonStandardProperty? maidenNameProp =
-            vc.NonStandards?.FirstOrDefault(p =>
-                p is not null && MaidenNameKey.Equals(p.Key, StringComparison.OrdinalIgnoreCase));
-
-        if (!string.IsNullOrWhiteSpace(maidenNameProp?.Value))
+        string? maidenNameValue = GetNonStandardValue(vc, MaidenNameKey);
+        if (!string.IsNullOrWhiteSpace(maidenNameValue))
         {
-            contact.MaidenName = maidenNameProp.Value;
+            contact.MaidenName = maidenNameValue;
         }
 
-        FolkerKinzel.VCards.Models.Properties.NonStandardProperty? deceasedProp =
-            vc.NonStandards?.FirstOrDefault(p =>
-                p is not null && DeceasedKey.Equals(p.Key, StringComparison.OrdinalIgnoreCase));
-
-        if (!string.IsNullOrWhiteSpace(deceasedProp?.Value)
-            && bool.TryParse(deceasedProp.Value, out bool isDeceased))
+        string? deceasedValue = GetNonStandardValue(vc, DeceasedKey);
+        if (!string.IsNullOrWhiteSpace(deceasedValue)
+            && bool.TryParse(deceasedValue, out bool isDeceased))
         {
             contact.IsDeceased = isDeceased;
         }
 
-        FolkerKinzel.VCards.Models.Properties.NonStandardProperty? dateOfDeathProp =
-            vc.NonStandards?.FirstOrDefault(p =>
-                p is not null && DateOfDeathKey.Equals(p.Key, StringComparison.OrdinalIgnoreCase));
-
-        if (!string.IsNullOrWhiteSpace(dateOfDeathProp?.Value)
-            && DateOnly.TryParse(dateOfDeathProp.Value, System.Globalization.CultureInfo.InvariantCulture,
+        string? dateOfDeathValue = GetNonStandardValue(vc, DateOfDeathKey);
+        if (!string.IsNullOrWhiteSpace(dateOfDeathValue)
+            && DateOnly.TryParse(dateOfDeathValue, System.Globalization.CultureInfo.InvariantCulture,
                 System.Globalization.DateTimeStyles.None, out DateOnly parsedDateOfDeath))
         {
             contact.DateOfDeath = parsedDateOfDeath;
@@ -277,13 +268,10 @@ public class VCardService : IVCardService
         else
         {
             // X-GENDER is the widely-used v3.0 extension for gender
-            FolkerKinzel.VCards.Models.Properties.NonStandardProperty? xGenderProp =
-                vc.NonStandards?.FirstOrDefault(p =>
-                    p is not null && GenderKey.Equals(p.Key, StringComparison.OrdinalIgnoreCase));
-
-            if (!string.IsNullOrWhiteSpace(xGenderProp?.Value))
+            string? xGenderValue = GetNonStandardValue(vc, GenderKey);
+            if (!string.IsNullOrWhiteSpace(xGenderValue))
             {
-                contact.Gender = xGenderProp.Value;
+                contact.Gender = xGenderValue;
             }
         }
 
@@ -313,6 +301,12 @@ public class VCardService : IVCardService
         }
 
         return contact;
+    }
+
+    private static string? GetNonStandardValue(VCard vc, string key)
+    {
+        return vc.NonStandards?.FirstOrDefault(p =>
+            p is not null && key.Equals(p.Key, StringComparison.OrdinalIgnoreCase))?.Value;
     }
 
     private static (string Extension, string ContentType) ResolvePhotoType(string? mediaType)
