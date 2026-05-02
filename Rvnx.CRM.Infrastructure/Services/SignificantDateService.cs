@@ -219,7 +219,7 @@ public class SignificantDateService(IRepository repository) : ISignificantDateSe
 
         List<(Guid Id, string FirstName, string? LastName)> contacts =
             await _repository.ListProjectedByChunkedContainsAsync<Contact, (Guid, string, string?), Guid>(contactIds,
-                chunk => c => chunk.Contains(c.Id) && !c.IsPartial,
+                chunk => c => chunk.Contains(c.Id) && !c.IsPartial && !c.IsDeceased,
                 c => new ValueTuple<Guid, string, string?>(c.Id, c.FirstName, c.LastName));
 
         Dictionary<Guid, string> contactNames = contacts.ToDictionary(c => c.Id, c => $"{c.FirstName} {c.LastName}".Trim());
