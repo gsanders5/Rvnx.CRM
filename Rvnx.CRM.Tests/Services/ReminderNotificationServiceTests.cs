@@ -175,6 +175,56 @@ public class ReminderNotificationServiceTests
     [Fact]
     [SuppressMessage("Naming", "CA1707:Identifiers should not contain underscores",
         Justification = "Test names can contain underscores for readability.")]
+    public async Task SendDueRemindersAsync_WhenContactIsDeceased_SkipsBirthdayReminder()
+    {
+        (CRMDbContext context, Repository repository) = CreateInMemoryDb();
+
+        DateOnly today = new(2025, 6, 1);
+
+        Guid groupId = Guid.NewGuid();
+        UserGroup group = new() { Id = groupId, Name = "TestGroup" };
+        context.UserGroups!.Add(group);
+
+        User user = new() { Id = Guid.NewGuid(), Email = "testuser@example.com", GroupId = groupId };
+        context.Users!.Add(user);
+
+        Contact contact = new()
+        {
+            FirstName = "Departed",
+            LastName = "Soul",
+            GroupId = groupId,
+            IsDeceased = true,
+            DateOfDeath = new DateOnly(2024, 1, 15)
+        };
+        context.Contacts!.Add(contact);
+
+        SignificantDate sd = new()
+        {
+            Contact = contact,
+            Title = "Birthday",
+            EventDate = today, // Due today
+            RecurrenceType = RecurrenceType.Annual,
+            IsActive = true
+        };
+        context.SignificantDates!.Add(sd);
+
+        ReminderOffset offset = new() { SignificantDate = sd, DaysBeforeEvent = 0, IsActive = true };
+        context.ReminderOffsets!.Add(offset);
+
+        await context.SaveChangesAsync();
+
+        ReminderNotificationService service = new(repository, BuildEnabledConfig());
+        string result = await service.SendDueRemindersAsync(today);
+
+        // Deceased contact's reminder should not be processed at all — no logs, no sends
+        Assert.Contains("0 sent, 0 failed", result);
+        int logCount = await context.Set<ReminderLog>().CountAsync();
+        Assert.Equal(0, logCount);
+    }
+
+    [Fact]
+    [SuppressMessage("Naming", "CA1707:Identifiers should not contain underscores",
+        Justification = "Test names can contain underscores for readability.")]
     public async Task SendDueRemindersAsync_WhenLogAlreadyExistsAndIsSuccessful_SkipsSending()
     {
         (CRMDbContext context, Repository repository) = CreateInMemoryDb();

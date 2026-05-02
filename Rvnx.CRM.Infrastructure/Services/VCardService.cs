@@ -20,6 +20,8 @@ public class VCardService : IVCardService
 {
     private const string MaidenNameKey = "X-MAIDENNAME";
     private const string GenderKey = "X-GENDER";
+    private const string DeceasedKey = "X-DECEASED";
+    private const string DateOfDeathKey = "X-DATE-OF-DEATH";
 
     private readonly HttpClient? _httpClient;
     private readonly ILogger<VCardService>? _logger;
@@ -81,6 +83,27 @@ public class VCardService : IVCardService
         if (!string.IsNullOrWhiteSpace(maidenNameProp?.Value))
         {
             contact.MaidenName = maidenNameProp.Value;
+        }
+
+        FolkerKinzel.VCards.Models.Properties.NonStandardProperty? deceasedProp =
+            vc.NonStandards?.FirstOrDefault(p =>
+                p is not null && DeceasedKey.Equals(p.Key, StringComparison.OrdinalIgnoreCase));
+
+        if (!string.IsNullOrWhiteSpace(deceasedProp?.Value)
+            && bool.TryParse(deceasedProp.Value, out bool isDeceased))
+        {
+            contact.IsDeceased = isDeceased;
+        }
+
+        FolkerKinzel.VCards.Models.Properties.NonStandardProperty? dateOfDeathProp =
+            vc.NonStandards?.FirstOrDefault(p =>
+                p is not null && DateOfDeathKey.Equals(p.Key, StringComparison.OrdinalIgnoreCase));
+
+        if (!string.IsNullOrWhiteSpace(dateOfDeathProp?.Value)
+            && DateOnly.TryParse(dateOfDeathProp.Value, System.Globalization.CultureInfo.InvariantCulture,
+                System.Globalization.DateTimeStyles.None, out DateOnly parsedDateOfDeath))
+        {
+            contact.DateOfDeath = parsedDateOfDeath;
         }
 
         if (string.IsNullOrEmpty(contact.FirstName) && string.IsNullOrEmpty(contact.LastName))
@@ -493,9 +516,9 @@ public class VCardService : IVCardService
         // (including Google Contacts) only recognize the full "BASE64" form
         vcfString = vcfString.Replace("ENCODING=b", "ENCODING=BASE64", StringComparison.OrdinalIgnoreCase);
 
-        // X-MAIDENNAME and X-GENDER have no standard vCard 3.0 fields and are silently
-        // dropped by FolkerKinzel during v3.0 serialization. Inject them manually before
-        // END:VCARD so they round-trip correctly through import/export.
+        // X-MAIDENNAME, X-GENDER, X-DECEASED, and X-DATE-OF-DEATH have no standard vCard 3.0
+        // fields and are silently dropped by FolkerKinzel during v3.0 serialization. Inject
+        // them manually before END:VCARD so they round-trip correctly through import/export.
         System.Text.StringBuilder extensions = new();
 
         if (!string.IsNullOrEmpty(contact.MaidenName))
@@ -506,6 +529,17 @@ public class VCardService : IVCardService
         if (!string.IsNullOrEmpty(contact.Gender))
         {
             extensions.AppendLine(System.Globalization.CultureInfo.InvariantCulture, $"{GenderKey}:{contact.Gender}");
+        }
+
+        if (contact.IsDeceased)
+        {
+            extensions.AppendLine(System.Globalization.CultureInfo.InvariantCulture, $"{DeceasedKey}:true");
+        }
+
+        if (contact.DateOfDeath.HasValue)
+        {
+            extensions.AppendLine(System.Globalization.CultureInfo.InvariantCulture,
+                $"{DateOfDeathKey}:{contact.DateOfDeath.Value.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture)}");
         }
 
         if (extensions.Length > 0)

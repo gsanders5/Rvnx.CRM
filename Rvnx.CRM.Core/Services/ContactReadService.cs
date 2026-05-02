@@ -351,6 +351,8 @@ public class ContactReadService(IRepository repository, IFavoriteService favorit
             JobTitle = contact.JobTitle,
             Company = contact.Company,
             IsHidden = contact.IsHidden,
+            IsDeceased = contact.IsDeceased,
+            DateOfDeath = contact.DateOfDeath,
             Pronouns = contact.Pronouns,
             Gender = contact.Gender,
             Religion = contact.Religion,

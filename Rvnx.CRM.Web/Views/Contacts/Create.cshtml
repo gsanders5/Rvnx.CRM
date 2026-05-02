@@ -115,6 +115,18 @@
                 <div class="form-text">Hidden contacts are excluded from the main list by default.</div>
             </div>
 
+            <div class="mb-3 form-check form-switch">
+                <input asp-for="IsDeceased" class="form-check-input" id="IsDeceasedField"/>
+                <label asp-for="IsDeceased" class="form-check-label"></label>
+                <div class="form-text">Suppresses birthday and anniversary reminders.</div>
+            </div>
+
+            <div class="form-floating mb-3" id="DateOfDeathGroup">
+                <input asp-for="DateOfDeath" class="form-control" type="date" placeholder="Date of Death"/>
+                <label asp-for="DateOfDeath"></label>
+                <span asp-validation-for="DateOfDeath" class="text-danger"></span>
+            </div>
+
             <div class="d-grid gap-2 d-md-flex justify-content-md-start mt-4">
                 <button type="submit" class="crm-btn-primary"><i class="bi bi-plus-lg" aria-hidden="true"></i> Create</button>
                 <a asp-action="Index" class="crm-btn-tertiary"><i class="bi bi-arrow-left" aria-hidden="true"></i> Back to List</a>
@@ -155,6 +167,19 @@
             if (birthdayYearUnknownField) {
                 birthdayYearUnknownField.addEventListener('change', toggleBirthdayYear);
                 toggleBirthdayYear();
+            }
+
+            const isDeceasedField = document.getElementById('IsDeceasedField');
+            const dateOfDeathGroup = document.getElementById('DateOfDeathGroup');
+
+            function toggleDateOfDeathVisibility() {
+                if (!isDeceasedField || !dateOfDeathGroup) return;
+                dateOfDeathGroup.style.display = isDeceasedField.checked ? '' : 'none';
+            }
+
+            if (isDeceasedField && dateOfDeathGroup) {
+                isDeceasedField.addEventListener('change', toggleDateOfDeathVisibility);
+                toggleDateOfDeathVisibility();
             }
         })();
     </script>

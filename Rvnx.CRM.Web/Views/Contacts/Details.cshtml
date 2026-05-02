@@ -21,7 +21,23 @@
 
 <div class="container">
 <div class="d-flex flex-column flex-md-row justify-content-between align-items-center mb-4 gap-3 crm-action-bar">
-    <h1 class="mb-0 text-center text-md-start">@Model.FullName</h1>
+    <div class="d-flex flex-column align-items-center align-items-md-start">
+        <h1 class="mb-0 text-center text-md-start">@Model.FullName</h1>
+        @if (Model.IsDeceased)
+        {
+            <span class="crm-badge crm-badge-muted mt-1" title="This contact is marked as deceased">
+                <i class="bi bi-flower1 me-1" aria-hidden="true"></i>
+                @if (Model.DateOfDeath.HasValue)
+                {
+                    <text>Deceased on @Model.DateOfDeath.Value.ToString("yyyy-MM-dd")</text>
+                }
+                else
+                {
+                    <text>Deceased</text>
+                }
+            </span>
+        }
+    </div>
 
     @* Desktop action buttons *@
     <div class="d-none d-md-flex gap-2 flex-wrap justify-content-center crm-action-bar-full">

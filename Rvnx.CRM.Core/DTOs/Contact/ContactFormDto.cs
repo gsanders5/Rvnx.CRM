@@ -45,6 +45,13 @@ public class ContactFormDto
 
     public bool IsHidden { get; set; }
 
+    [Display(Name = "Deceased")]
+    public bool IsDeceased { get; set; }
+
+    [DataType(DataType.Date)]
+    [Display(Name = "Date of Death")]
+    public DateOnly? DateOfDeath { get; set; }
+
     [MaxLength(100)]
     public string? Pronouns { get; set; }
 
