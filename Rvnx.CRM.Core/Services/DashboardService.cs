@@ -86,7 +86,8 @@ public class DashboardService(IRepository repository, ILogger<DashboardService> 
                 Name = contact.FullName,
                 Group = 1,
                 PhotoUrl = photoUrl,
-                Gender = contact.Gender
+                Gender = contact.Gender,
+                IsDeceased = contact.IsDeceased
             });
         }
 

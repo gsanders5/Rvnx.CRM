@@ -245,12 +245,77 @@ public class ContactReadService(IRepository repository, IFavoriteService favorit
         contact.RelatedTo = relatedTo;
 
         ContactDetailDto contactDto = contact.ToDetailDto();
-        contactDto.Pets = contact.PetContacts.Select(pc =>
+        List<PetDto> petDtos = contact.PetContacts.Select(pc =>
         {
             PetDto petDto = pc.Pet.ToDto();
             petDto.EntityId = contact.Id;
             return petDto;
         }).ToList();
+
+        // Enrich each pet with its co-owner list (excluding the contact being viewed) so the
+        // Pets card can render a deceased indicator next to any deceased co-owner.
+        // The PetContact include only loads the viewed contact's join rows, so a separate
+        // query is needed to discover the other owners.
+        List<Guid> petIds = petDtos.Select(p => p.Id).ToList();
+        if (petIds.Count > 0)
+        {
+            List<(Guid PetId, Guid OwnerId)> ownerLinks =
+                await _repository.ListProjectedByChunkedContainsAsync<PetContact, (Guid, Guid), Guid>(
+                    petIds,
+                    chunk => pc => chunk.Contains(pc.PetId),
+                    pc => new ValueTuple<Guid, Guid>(pc.PetId, pc.ContactId));
+
+            HashSet<Guid> ownerIds = [.. ownerLinks.Select(o => o.OwnerId).Where(oid => oid != id)];
+
+            Dictionary<Guid, (string Name, bool IsDeceased)> ownerInfoMap = [];
+            if (ownerIds.Count > 0)
+            {
+                List<(Guid Id, string Name, bool IsDeceased)> ownerInfos =
+                    await _repository.ListProjectedByChunkedContainsAsync<Contact, (Guid, string, bool), Guid>(
+                        [.. ownerIds],
+                        chunk => c => chunk.Contains(c.Id),
+                        c => new ValueTuple<Guid, string, bool>(
+                            c.Id,
+                            (c.FirstName + " " + (c.LastName ?? "")).Trim(),
+                            c.IsDeceased));
+
+                foreach ((Guid oId, string name, bool isDeceased) in ownerInfos)
+                {
+                    ownerInfoMap.TryAdd(oId, (name, isDeceased));
+                }
+            }
+
+            Dictionary<Guid, List<PetOwnerDto>> ownersByPet = [];
+            foreach ((Guid petId, Guid ownerId) in ownerLinks)
+            {
+                if (ownerId == id || !ownerInfoMap.TryGetValue(ownerId, out (string Name, bool IsDeceased) info))
+                {
+                    continue;
+                }
+
+                if (!ownersByPet.TryGetValue(petId, out List<PetOwnerDto>? owners))
+                {
+                    owners = [];
+                    ownersByPet[petId] = owners;
+                }
+                owners.Add(new PetOwnerDto
+                {
+                    Id = ownerId,
+                    FullName = info.Name,
+                    IsDeceased = info.IsDeceased
+                });
+            }
+
+            foreach (PetDto petDto in petDtos)
+            {
+                if (ownersByPet.TryGetValue(petDto.Id, out List<PetOwnerDto>? owners))
+                {
+                    petDto.Owners = [.. owners.OrderBy(o => o.FullName, StringComparer.Ordinal)];
+                }
+            }
+        }
+
+        contactDto.Pets = petDtos;
 
         Attachment? profileAttachment = contact.Attachments
             .FirstOrDefault(a => a.AttachmentType == AttachmentTypes.ProfileImage);
@@ -288,18 +353,24 @@ public class ContactReadService(IRepository repository, IFavoriteService favorit
                 .Select(p => p.ContactId)
                 .Where(cid => cid != id)];
 
-            Dictionary<Guid, string> contactNameMap = [];
+            // Project name + deceased flag for each participant so the Activities card can render
+            // a deceased indicator inline without a second query. The chunked-Contains predicate
+            // still rides on the same global tenancy filter as the rest of the repository.
+            Dictionary<Guid, (string Name, bool IsDeceased)> contactInfoMap = [];
             if (otherContactIds.Count > 0)
             {
-                List<(Guid Id, string Name)> names =
-                    await _repository.ListProjectedByChunkedContainsAsync<Contact, (Guid, string), Guid>(
+                List<(Guid Id, string Name, bool IsDeceased)> infos =
+                    await _repository.ListProjectedByChunkedContainsAsync<Contact, (Guid, string, bool), Guid>(
                         [.. otherContactIds],
                         chunk => c => chunk.Contains(c.Id),
-                        c => new ValueTuple<Guid, string>(c.Id, (c.FirstName + " " + (c.LastName ?? "")).Trim()));
+                        c => new ValueTuple<Guid, string, bool>(
+                            c.Id,
+                            (c.FirstName + " " + (c.LastName ?? "")).Trim(),
+                            c.IsDeceased));
 
-                foreach ((Guid cId, string name) in names)
+                foreach ((Guid cId, string name, bool isDeceased) in infos)
                 {
-                    contactNameMap.TryAdd(cId, name);
+                    contactInfoMap.TryAdd(cId, (name, isDeceased));
                 }
             }
 
@@ -318,9 +389,10 @@ public class ContactReadService(IRepository repository, IFavoriteService favorit
             {
                 if (participantsByActivity.TryGetValue(actDto.Id, out List<Guid>? pIds))
                 {
-                    List<Guid> others = pIds.Where(pid => pid != id && contactNameMap.ContainsKey(pid)).ToList();
+                    List<Guid> others = pIds.Where(pid => pid != id && contactInfoMap.ContainsKey(pid)).ToList();
                     actDto.ContactIds = others;
-                    actDto.ContactNames = others.Select(pid => contactNameMap[pid]).ToList();
+                    actDto.ContactNames = others.Select(pid => contactInfoMap[pid].Name).ToList();
+                    actDto.ContactIsDeceased = others.Select(pid => contactInfoMap[pid].IsDeceased).ToList();
                 }
             }
         }

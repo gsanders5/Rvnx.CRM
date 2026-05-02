@@ -3,6 +3,7 @@ using Rvnx.CRM.Core.Constants;
 using Rvnx.CRM.Core.DTOs.Contact;
 using Rvnx.CRM.Core.Enumerations;
 using Rvnx.CRM.Core.Interfaces;
+using Rvnx.CRM.Core.Models.Activity;
 using Rvnx.CRM.Core.Models.Base;
 using Rvnx.CRM.Core.Models.Contact;
 using Rvnx.CRM.Core.Models.Dates;
@@ -236,6 +237,165 @@ public class ContactReadServiceTests
             Assert.NotNull(result);
             Assert.Empty(result.Relationships);
             Assert.Empty(result.RelatedTo);
+        }
+
+        [Fact]
+        public async Task GetContactDetailsAsyncProjectsIsDeceasedOnActivityParticipants()
+        {
+            // The Activities card lists multi-contact attendees; each participant needs a deceased flag
+            // so the view can render the bi-flower1 indicator inline without re-querying.
+            Guid contactId = Guid.NewGuid();
+            Guid activityId = Guid.NewGuid();
+            Guid livingId = Guid.NewGuid();
+            Guid deceasedId = Guid.NewGuid();
+
+            Contact self = new()
+            {
+                Id = contactId,
+                FirstName = "Main",
+                LastName = "User"
+            };
+            Activity activity = new()
+            {
+                Id = activityId,
+                Title = "Dinner",
+                ActivityDate = DateTime.UtcNow
+            };
+            self.ActivityContacts.Add(new ActivityContact { ActivityId = activityId, ContactId = contactId, Activity = activity });
+
+            RepositoryMock.Setup(r => r.ListAsNoTrackingAsync<Contact>(
+                It.IsAny<Expression<Func<Contact, bool>>>(),
+                It.IsAny<CancellationToken>(),
+                It.IsAny<string[]>()))
+                .ReturnsAsync([self]);
+
+            RepositoryMock.Setup(r => r.ListAsNoTrackingAsync<Relationship>(
+                It.IsAny<Expression<Func<Relationship, bool>>>(),
+                It.IsAny<CancellationToken>(),
+                It.IsAny<string[]>()))
+                .ReturnsAsync([]);
+
+            // Participant rows: self + two other attendees.
+            RepositoryMock.Setup(r => r.ListProjectedAsync<ActivityContact, (Guid, Guid)>(
+                It.IsAny<Expression<Func<ActivityContact, bool>>>(),
+                It.IsAny<Expression<Func<ActivityContact, (Guid, Guid)>>>(),
+                It.IsAny<CancellationToken>()))
+                .ReturnsAsync([
+                    (activityId, contactId),
+                    (activityId, livingId),
+                    (activityId, deceasedId)
+                ]);
+
+            // The participant info projection now carries (Id, Name, IsDeceased).
+            Expression<Func<Contact, (Guid, string, bool)>>? capturedProjection = null;
+            RepositoryMock.Setup(r => r.ListProjectedAsync<Contact, (Guid, string, bool)>(
+                It.IsAny<Expression<Func<Contact, bool>>>(),
+                It.IsAny<Expression<Func<Contact, (Guid, string, bool)>>>(),
+                It.IsAny<CancellationToken>()))
+                .Callback<Expression<Func<Contact, bool>>, Expression<Func<Contact, (Guid, string, bool)>>, CancellationToken>(
+                    (_, projection, _) => capturedProjection = projection)
+                .ReturnsAsync([
+                    (livingId, "Liv Ing", false),
+                    (deceasedId, "Late Friend", true)
+                ]);
+
+            ContactDetailDto? result = await Service.GetContactDetailsAsync(contactId);
+
+            // The projection itself must lift IsDeceased from the entity.
+            Assert.NotNull(capturedProjection);
+            Func<Contact, (Guid, string, bool)> projectionFunc = capturedProjection.Compile();
+            Assert.False(projectionFunc(new Contact { Id = livingId, FirstName = "Liv", IsDeceased = false }).Item3);
+            Assert.True(projectionFunc(new Contact { Id = deceasedId, FirstName = "Late", IsDeceased = true }).Item3);
+
+            // And the per-participant deceased flag rides into the ActivityDto, parallel to ContactNames/ContactIds.
+            Assert.NotNull(result);
+            ActivityDto activityDto = Assert.Single(result.Activities);
+            Assert.Equal(2, activityDto.ContactIds.Count);
+            Assert.Equal(activityDto.ContactIds.Count, activityDto.ContactIsDeceased.Count);
+
+            int livingIdx = activityDto.ContactIds.IndexOf(livingId);
+            int deceasedIdx = activityDto.ContactIds.IndexOf(deceasedId);
+            Assert.False(activityDto.ContactIsDeceased[livingIdx]);
+            Assert.True(activityDto.ContactIsDeceased[deceasedIdx]);
+        }
+
+        [Fact]
+        public async Task GetContactDetailsAsyncProjectsIsDeceasedOnPetCoOwners()
+        {
+            // The Pets card lists co-owners; each owner needs a deceased flag so the view can render
+            // the bi-flower1 indicator next to a deceased co-owner without re-querying.
+            Guid contactId = Guid.NewGuid();
+            Guid petId = Guid.NewGuid();
+            Guid livingOwnerId = Guid.NewGuid();
+            Guid deceasedOwnerId = Guid.NewGuid();
+
+            Contact self = new()
+            {
+                Id = contactId,
+                FirstName = "Main",
+                LastName = "User"
+            };
+            Pet pet = new()
+            {
+                Id = petId,
+                Name = "Rex",
+                Species = "Dog"
+            };
+            self.PetContacts.Add(new PetContact { PetId = petId, ContactId = contactId, Pet = pet });
+
+            RepositoryMock.Setup(r => r.ListAsNoTrackingAsync<Contact>(
+                It.IsAny<Expression<Func<Contact, bool>>>(),
+                It.IsAny<CancellationToken>(),
+                It.IsAny<string[]>()))
+                .ReturnsAsync([self]);
+
+            RepositoryMock.Setup(r => r.ListAsNoTrackingAsync<Relationship>(
+                It.IsAny<Expression<Func<Relationship, bool>>>(),
+                It.IsAny<CancellationToken>(),
+                It.IsAny<string[]>()))
+                .ReturnsAsync([]);
+
+            // PetContact rows: self + two co-owners.
+            RepositoryMock.Setup(r => r.ListProjectedAsync<PetContact, (Guid, Guid)>(
+                It.IsAny<Expression<Func<PetContact, bool>>>(),
+                It.IsAny<Expression<Func<PetContact, (Guid, Guid)>>>(),
+                It.IsAny<CancellationToken>()))
+                .ReturnsAsync([
+                    (petId, contactId),
+                    (petId, livingOwnerId),
+                    (petId, deceasedOwnerId)
+                ]);
+
+            Expression<Func<Contact, (Guid, string, bool)>>? capturedProjection = null;
+            RepositoryMock.Setup(r => r.ListProjectedAsync<Contact, (Guid, string, bool)>(
+                It.IsAny<Expression<Func<Contact, bool>>>(),
+                It.IsAny<Expression<Func<Contact, (Guid, string, bool)>>>(),
+                It.IsAny<CancellationToken>()))
+                .Callback<Expression<Func<Contact, bool>>, Expression<Func<Contact, (Guid, string, bool)>>, CancellationToken>(
+                    (_, projection, _) => capturedProjection = projection)
+                .ReturnsAsync([
+                    (livingOwnerId, "Co Owner", false),
+                    (deceasedOwnerId, "Late Owner", true)
+                ]);
+
+            ContactDetailDto? result = await Service.GetContactDetailsAsync(contactId);
+
+            Assert.NotNull(capturedProjection);
+            Func<Contact, (Guid, string, bool)> projectionFunc = capturedProjection.Compile();
+            Assert.False(projectionFunc(new Contact { Id = livingOwnerId, FirstName = "Co", IsDeceased = false }).Item3);
+            Assert.True(projectionFunc(new Contact { Id = deceasedOwnerId, FirstName = "Late", IsDeceased = true }).Item3);
+
+            Assert.NotNull(result);
+            PetDto petDto = Assert.Single(result.Pets);
+
+            // Self should be excluded; only the two co-owners remain — one each living/deceased.
+            Assert.Equal(2, petDto.Owners.Count);
+            Assert.DoesNotContain(petDto.Owners, o => o.Id == contactId);
+
+            PetOwnerDto livingOwner = petDto.Owners.Single(o => o.Id == livingOwnerId);
+            PetOwnerDto deceasedOwner = petDto.Owners.Single(o => o.Id == deceasedOwnerId);
+            Assert.False(livingOwner.IsDeceased);
+            Assert.True(deceasedOwner.IsDeceased);
         }
     }
 

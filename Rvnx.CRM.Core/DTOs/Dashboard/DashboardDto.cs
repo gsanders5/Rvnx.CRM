@@ -47,6 +47,9 @@ public class GraphNodeDto
     public int Group { get; set; }
     public string? PhotoUrl { get; set; }
     public string? Gender { get; set; }
+
+    /// <summary>True when the contact is marked deceased; rendered as a flower glyph in the network graph.</summary>
+    public bool IsDeceased { get; set; }
 }
 
 public class GraphLinkDto

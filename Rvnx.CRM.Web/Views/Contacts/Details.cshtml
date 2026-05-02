@@ -482,6 +482,22 @@
                         <div>
                             <div class="fw-semibold" style="font-size: 0.875rem;">@pet.Name</div>
                             <small class="crm-meta">@pet.Species @(string.IsNullOrEmpty(pet.Breed) ? "" : $"({pet.Breed})")</small>
+                            @if (pet.Owners != null && pet.Owners.Any())
+                            {
+                                <div class="crm-meta mt-1">
+                                    <i class="bi bi-people" aria-hidden="true"></i>
+                                    with @for (int oi = 0; oi < pet.Owners.Count; oi++)
+                                    {
+                                        var owner = pet.Owners[oi];
+                                        if (oi > 0) { <text>, </text> }
+                                        <a asp-controller="Contacts" asp-action="Details" asp-route-id="@owner.Id">@owner.FullName</a>
+                                        if (owner.IsDeceased)
+                                        {
+                                            <i class="bi bi-flower1 ms-1" aria-hidden="true" title="Deceased"></i>
+                                        }
+                                    }
+                                </div>
+                            }
                         </div>
                         <div class="crm-icon-actions">
                             <a asp-controller="Pets" asp-action="Edit" asp-route-id="@pet.Id" class="crm-icon-btn icon-edit" title="Edit" aria-label="Edit @pet.Name">
@@ -689,6 +705,10 @@
                                             {
                                                 if (ci > 0) { <text>, </text> }
                                                 <a asp-controller="Contacts" asp-action="Details" asp-route-id="@activity.ContactIds[ci]">@activity.ContactNames[ci]</a>
+                                                if (ci < activity.ContactIsDeceased.Count && activity.ContactIsDeceased[ci])
+                                                {
+                                                    <i class="bi bi-flower1 ms-1" aria-hidden="true" title="Deceased"></i>
+                                                }
                                             }
                                         </div>
                                     }

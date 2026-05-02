@@ -299,6 +299,16 @@ function initializeNetworkGraph(nodes, links) {
     const g = document.createElementNS(svgNS, "g");
     g.style.cursor = "grab";
 
+    if (node.isDeceased) {
+      // Subdued treatment matches the bi-flower1 indicator used elsewhere — lower
+      // opacity on the whole node group plus a tooltip title element accessible to
+      // both pointer hover and assistive tech.
+      g.setAttribute("opacity", "0.55");
+      const groupTitle = document.createElementNS(svgNS, "title");
+      groupTitle.textContent = `${node.name} (Deceased)`;
+      g.appendChild(groupTitle);
+    }
+
     const circle = document.createElementNS(svgNS, "circle");
     circle.setAttribute("r", "20");
     circle.setAttribute("fill", getGenderColor(node.gender));
@@ -441,8 +451,8 @@ function initializeNetworkGraph(nodes, links) {
     const k = 2500 * simulationAlpha; // Repulsion constant
     const linkForceWeight = 0.05 * simulationAlpha;
     const centerForce = 0.008 * simulationAlpha;
-    
-    const damping = 0.85; 
+
+    const damping = 0.85;
     const linkDistance = 180;
 
     for (let i = 0; i < nodes.length; i++) {
