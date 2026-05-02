@@ -120,4 +120,11 @@ public class NotesController(INoteService noteService, IRepository repository, I
             ? RedirectToEntity(result.RedirectId, result.RedirectType)
             : RedirectToAction("Index", "Home");
     }
+
+    [HttpPost]
+    public async Task<IActionResult> ToggleFavorite(Guid id)
+    {
+        OperationResult result = await _noteService.ToggleFavoriteAsync(id);
+        return HandleOperationResult(result) ?? RedirectToAction("Index", "Home");
+    }
 }
