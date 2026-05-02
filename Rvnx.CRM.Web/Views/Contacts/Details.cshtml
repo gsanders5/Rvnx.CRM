@@ -21,7 +21,23 @@
 
 <div class="container">
 <div class="d-flex flex-column flex-md-row justify-content-between align-items-center mb-4 gap-3 crm-action-bar">
-    <h1 class="mb-0 text-center text-md-start">@Model.FullName</h1>
+    <div class="d-flex flex-column align-items-center align-items-md-start">
+        <h1 class="mb-0 text-center text-md-start">@Model.FullName</h1>
+        @if (Model.IsDeceased)
+        {
+            <span class="crm-badge crm-badge-muted mt-1" title="This contact is marked as deceased">
+                <i class="bi bi-flower1 me-1" aria-hidden="true"></i>
+                @if (Model.DateOfDeath.HasValue)
+                {
+                    <text>Deceased on @Model.DateOfDeath.Value.ToString("yyyy-MM-dd")</text>
+                }
+                else
+                {
+                    <text>Deceased</text>
+                }
+            </span>
+        }
+    </div>
 
     @* Desktop action buttons *@
     <div class="d-none d-md-flex gap-2 flex-wrap justify-content-center crm-action-bar-full">
@@ -443,7 +459,11 @@
     <div class="crm-card">
         <div class="crm-card-header">
             <h5 class="card-title mb-0"><i class="bi bi-emoji-smile" aria-hidden="true"></i> Pets</h5>
-            <a asp-controller="Pets" asp-action="Create" asp-route-entityId="@Model.Id" class="crm-btn-secondary btn-sm" aria-label="Add Pet"><i class="bi bi-plus-lg" aria-hidden="true"></i> Add</a>
+            @* New pet ownership is forward-looking — hide the entry point for a deceased contact. *@
+            @if (!Model.IsDeceased)
+            {
+                <a asp-controller="Pets" asp-action="Create" asp-route-entityId="@Model.Id" class="crm-btn-secondary btn-sm" aria-label="Add Pet"><i class="bi bi-plus-lg" aria-hidden="true"></i> Add</a>
+            }
         </div>
         <div class="crm-card-body">
             @if (Model.Pets != null && Model.Pets.Any())
@@ -609,21 +629,25 @@
     <div class="crm-card">
         <div class="crm-card-header">
             <h5 class="card-title mb-0"><i class="bi bi-calendar-check" aria-hidden="true"></i> Activities</h5>
-            <div class="d-flex gap-1 flex-wrap align-items-center">
-                @foreach (var option in ActivityTypeSuggestions.QuickLog)
-                {
-                    <form method="post" asp-controller="Activities" asp-action="QuickLog">
-                        <input type="hidden" name="contactId" value="@Model.Id"/>
-                        <input type="hidden" name="activityType" value="@option.Type"/>
-                        <button type="submit" class="crm-btn-secondary btn-sm" title="Log @option.Label today">
-                            <i class="@option.Icon" aria-hidden="true"></i> @option.Label
-                        </button>
-                    </form>
-                }
-                <a asp-controller="Activities" asp-action="Create" asp-route-entityId="@Model.Id" class="crm-btn-secondary btn-sm" aria-label="Add Activity">
-                    <i class="bi bi-plus-lg" aria-hidden="true"></i> Add
-                </a>
-            </div>
+            @* Activities are present-tense — hide forward-looking entry points for a deceased contact. *@
+            @if (!Model.IsDeceased)
+            {
+                <div class="d-flex gap-1 flex-wrap align-items-center">
+                    @foreach (var option in ActivityTypeSuggestions.QuickLog)
+                    {
+                        <form method="post" asp-controller="Activities" asp-action="QuickLog">
+                            <input type="hidden" name="contactId" value="@Model.Id"/>
+                            <input type="hidden" name="activityType" value="@option.Type"/>
+                            <button type="submit" class="crm-btn-secondary btn-sm" title="Log @option.Label today">
+                                <i class="@option.Icon" aria-hidden="true"></i> @option.Label
+                            </button>
+                        </form>
+                    }
+                    <a asp-controller="Activities" asp-action="Create" asp-route-entityId="@Model.Id" class="crm-btn-secondary btn-sm" aria-label="Add Activity">
+                        <i class="bi bi-plus-lg" aria-hidden="true"></i> Add
+                    </a>
+                </div>
+            }
         </div>
         <div class="crm-card-body">
             @if (Model.Activities != null && Model.Activities.Any())
@@ -710,9 +734,13 @@
     <div class="crm-card">
         <div class="crm-card-header">
             <h5 class="card-title mb-0"><i class="bi bi-check2-square" aria-hidden="true"></i> Tasks / Follow-ups</h5>
-            <a asp-controller="ContactTasks" asp-action="Create" asp-route-entityId="@Model.Id" class="crm-btn-secondary btn-sm" aria-label="Add Task">
-                <i class="bi bi-plus-lg" aria-hidden="true"></i> Add
-            </a>
+            @* Tasks are forward-looking — hide the entry point for a deceased contact. *@
+            @if (!Model.IsDeceased)
+            {
+                <a asp-controller="ContactTasks" asp-action="Create" asp-route-entityId="@Model.Id" class="crm-btn-secondary btn-sm" aria-label="Add Task">
+                    <i class="bi bi-plus-lg" aria-hidden="true"></i> Add
+                </a>
+            }
         </div>
         <div class="crm-card-body">
             @if (Model.ContactTasks != null && Model.ContactTasks.Any())

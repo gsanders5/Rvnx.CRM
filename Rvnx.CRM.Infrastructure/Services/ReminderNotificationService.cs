@@ -32,7 +32,10 @@ public class ReminderNotificationService(
             .Include(ro => ro.SignificantDate)
             .ThenInclude(sd => sd!.Contact)
             .Include(ro => ro.ReminderLogs)
-            .Where(ro => ro.IsActive && ro.SignificantDate != null && ro.SignificantDate.IsActive)
+            .Where(ro => ro.IsActive
+                && ro.SignificantDate != null
+                && ro.SignificantDate.IsActive
+                && (ro.SignificantDate.Contact == null || !ro.SignificantDate.Contact.IsDeceased))
             .AsSplitQuery()
             .ToListAsync();
 

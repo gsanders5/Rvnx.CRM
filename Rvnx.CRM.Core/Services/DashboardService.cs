@@ -24,7 +24,7 @@ public class DashboardService(IRepository repository, ILogger<DashboardService> 
             new EventId(2, nameof(LogSignificantDateProcessingLimitReached)),
             "Significant date processing limit reached ({Limit}). Some dates may not appear in dashboard.");
 
-    internal sealed record ContactSummary(Guid Id, string FirstName, string? LastName, string? Gender, DateTime CreatedDate, DateTime LastChangedDate)
+    internal sealed record ContactSummary(Guid Id, string FirstName, string? LastName, string? Gender, DateTime CreatedDate, DateTime LastChangedDate, bool IsDeceased)
     {
         public string FullName => $"{FirstName} {LastName}".Trim();
     }
@@ -42,7 +42,8 @@ public class DashboardService(IRepository repository, ILogger<DashboardService> 
                 c.LastName,
                 c.Gender,
                 c.CreatedDate,
-                c.LastChangedDate));
+                c.LastChangedDate,
+                c.IsDeceased));
 
         Dictionary<Guid, ContactSummary> contactDict = contacts.ToDictionary(c => c.Id);
 
@@ -168,6 +169,13 @@ public class DashboardService(IRepository repository, ILogger<DashboardService> 
         foreach (SignificantDate date in importantDates)
         {
             if (!contactDict.TryGetValue(date.ContactId ?? Guid.Empty, out ContactSummary? contact))
+            {
+                continue;
+            }
+
+            // Upcoming events are forward-looking — suppress deceased contacts so a
+            // deceased person's birthday/anniversary doesn't surface as a reminder.
+            if (contact.IsDeceased)
             {
                 continue;
             }

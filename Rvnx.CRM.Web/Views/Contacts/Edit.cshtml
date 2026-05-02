@@ -198,6 +198,41 @@
                 <div class="form-text">Hidden contacts are excluded from the main list by default.</div>
             </div>
 
+            <div class="mb-3 form-check form-switch">
+                @if (Model.IsSelf)
+                {
+                    <input asp-for="IsDeceased" class="form-check-input" id="IsDeceasedField" disabled/>
+                }
+                else
+                {
+                    <input asp-for="IsDeceased" class="form-check-input" id="IsDeceasedField"/>
+                }
+                <label asp-for="IsDeceased" class="form-check-label"></label>
+                <div class="form-text">
+                    @if (Model.IsSelf)
+                    {
+                        <span>You cannot mark your own contact as deceased.</span>
+                    }
+                    else
+                    {
+                        <span>Suppresses birthday and anniversary reminders.</span>
+                    }
+                </div>
+            </div>
+
+            <div class="form-floating mb-3" id="DateOfDeathGroup">
+                @if (Model.IsSelf)
+                {
+                    <input asp-for="DateOfDeath" class="form-control" type="date" placeholder="Date of Death" disabled/>
+                }
+                else
+                {
+                    <input asp-for="DateOfDeath" class="form-control" type="date" placeholder="Date of Death"/>
+                }
+                <label asp-for="DateOfDeath"></label>
+                <span asp-validation-for="DateOfDeath" class="text-danger"></span>
+            </div>
+
             <div class="d-flex justify-content-between align-items-center mt-4">
                 <div class="d-grid gap-2 d-md-flex">
                     <button type="submit" class="crm-btn-primary"><i class="bi bi-save" aria-hidden="true"></i> Save</button>
@@ -350,6 +385,19 @@
             if (birthdayYearUnknownField) {
                 birthdayYearUnknownField.addEventListener('change', toggleBirthdayYear);
                 toggleBirthdayYear();
+            }
+
+            const isDeceasedField = document.getElementById('IsDeceasedField');
+            const dateOfDeathGroup = document.getElementById('DateOfDeathGroup');
+
+            function toggleDateOfDeathVisibility() {
+                if (!isDeceasedField || !dateOfDeathGroup) return;
+                dateOfDeathGroup.style.display = isDeceasedField.checked ? '' : 'none';
+            }
+
+            if (isDeceasedField && dateOfDeathGroup) {
+                isDeceasedField.addEventListener('change', toggleDateOfDeathVisibility);
+                toggleDateOfDeathVisibility();
             }
         })();
     </script>

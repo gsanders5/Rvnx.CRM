@@ -31,6 +31,12 @@ public class ActivityService(IRepository repository, ISelfContactService selfCon
             return OperationResult.NotFound("Contact not found.");
         }
 
+        // Activities are present-tense — refuse to log against a deceased primary contact.
+        if (!await _repository.IsLivingContactAsync(dto.EntityId))
+        {
+            return OperationResult.Failure("Cannot log an activity for a deceased contact.");
+        }
+
         List<Guid> contactIds = dto.ContactIds.Count > 0 ? dto.ContactIds : [dto.EntityId];
         if (!contactIds.Contains(dto.EntityId))
         {
@@ -57,6 +63,17 @@ public class ActivityService(IRepository repository, ISelfContactService selfCon
         if (!ActivityTypeSuggestions.QuickLog.Any(q => q.Type == activityType))
         {
             return OperationResult.Failure("Invalid activity type.");
+        }
+
+        if (!await _repository.IsValidContactAsync(contactId))
+        {
+            return OperationResult.NotFound("Contact not found.");
+        }
+
+        // Activities are present-tense ("had lunch") — refuse to log against a deceased contact.
+        if (!await _repository.IsLivingContactAsync(contactId))
+        {
+            return OperationResult.Failure("Cannot log an activity for a deceased contact.");
         }
 
         ActivityFormDto dto = new()
@@ -179,7 +196,8 @@ public class ActivityService(IRepository repository, ISelfContactService selfCon
 
     public async Task<ActivityFormDto?> GetFormForCreateAsync(Guid entityId)
     {
-        return !await _repository.IsValidContactAsync(entityId)
+        // Forward-looking: refuse to render the create form for a deceased contact.
+        return !await _repository.IsLivingContactAsync(entityId)
             ? null
             : new ActivityFormDto { EntityId = entityId, ContactIds = await BuildContactIdsWithSelfAsync(entityId) };
     }

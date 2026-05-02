@@ -29,6 +29,12 @@ public class PetService(IRepository repository) : IPetService
             return OperationResult.NotFound("Contact not found.");
         }
 
+        // New pet ownership is forward-looking — refuse if the primary owner is deceased.
+        if (!await _repository.IsLivingContactAsync(dto.EntityId))
+        {
+            return OperationResult.Failure("Cannot register a new pet for a deceased contact.");
+        }
+
         List<Guid> contactIds = dto.ContactIds.Count > 0 ? dto.ContactIds : [dto.EntityId];
         if (!contactIds.Contains(dto.EntityId))
         {
@@ -149,7 +155,8 @@ public class PetService(IRepository repository) : IPetService
 
     public async Task<PetFormDto?> GetFormForCreateAsync(Guid entityId)
     {
-        return !await _repository.IsValidContactAsync(entityId)
+        // Forward-looking: refuse to render the create form when the primary owner is deceased.
+        return !await _repository.IsLivingContactAsync(entityId)
             ? null
             : new PetFormDto { EntityId = entityId, ContactIds = [entityId] };
     }

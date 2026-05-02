@@ -604,6 +604,58 @@ public class ContactReadServiceTests
 
             // Ensure no exception was thrown by the missingContactId
         }
+
+        [Fact]
+        public async Task GetIndexDataAsyncProjectsIsDeceasedAndDateOfDeath()
+        {
+            Guid livingId = Guid.NewGuid();
+            Guid deceasedId = Guid.NewGuid();
+            DateOnly dateOfDeath = new(2024, 5, 1);
+
+            Contact living = new() { Id = livingId, FirstName = "Alive", LastName = "One", IsHidden = false };
+            Contact deceased = new() { Id = deceasedId, FirstName = "Late", LastName = "Two", IsHidden = false, IsDeceased = true, DateOfDeath = dateOfDeath };
+
+            Expression<Func<Contact, ContactDto>>? capturedProjection = null;
+
+            RepositoryMock.Setup(x => x.ListProjectedAsync<Contact, ContactDto>(
+                It.IsAny<Expression<Func<Contact, bool>>>(),
+                It.IsAny<Expression<Func<Contact, ContactDto>>>(),
+                It.IsAny<CancellationToken>()))
+                .Callback<Expression<Func<Contact, bool>>, Expression<Func<Contact, ContactDto>>, CancellationToken>(
+                    (_, projection, _) => capturedProjection = projection)
+                .ReturnsAsync([]);
+
+            RepositoryMock.Setup(x => x.ListProjectedAsync<Attachment, (Guid, Guid)>(
+                It.IsAny<Expression<Func<Attachment, bool>>>(),
+                It.IsAny<Expression<Func<Attachment, (Guid, Guid)>>>(),
+                It.IsAny<CancellationToken>()))
+                .ReturnsAsync([]);
+
+            RepositoryMock.Setup(x => x.ListProjectedAsync<ContactLabel, (Guid, Guid, string, string?)>(
+                It.IsAny<Expression<Func<ContactLabel, bool>>>(),
+                It.IsAny<Expression<Func<ContactLabel, (Guid, Guid, string, string?)>>>(),
+                It.IsAny<CancellationToken>()))
+                .ReturnsAsync([]);
+
+            RepositoryMock.Setup(x => x.ListProjectedAsync<SignificantDate, (Guid, DateOnly)>(
+                It.IsAny<Expression<Func<SignificantDate, bool>>>(),
+                It.IsAny<Expression<Func<SignificantDate, (Guid, DateOnly)>>>(),
+                It.IsAny<CancellationToken>()))
+                .ReturnsAsync([]);
+
+            await Service.GetIndexDataAsync(false);
+
+            Assert.NotNull(capturedProjection);
+            Func<Contact, ContactDto> projectionFunc = capturedProjection.Compile();
+
+            ContactDto livingDto = projectionFunc(living);
+            Assert.False(livingDto.IsDeceased);
+            Assert.Null(livingDto.DateOfDeath);
+
+            ContactDto deceasedDto = projectionFunc(deceased);
+            Assert.True(deceasedDto.IsDeceased);
+            Assert.Equal(dateOfDeath, deceasedDto.DateOfDeath);
+        }
     }
 
     public class ContactReadServiceLabelOptimizationTests : ContactReadServiceTestBase
@@ -748,7 +800,138 @@ public class ContactReadServiceTests
 
             (Guid, string) projectedPartial = projectionFunc(testContacts[1]);
             Assert.Equal(id2, projectedPartial.Item1);
-            Assert.Equal("Jane Smith (partial contact)", projectedPartial.Item2);
+            Assert.Equal("Jane Smith (Partial Contact)", projectedPartial.Item2);
+        }
+
+        [Fact]
+        public async Task GetContactNamesAsyncProjectionAppendsDeceasedSuffix()
+        {
+            // Arrange
+            Guid deceasedId = Guid.NewGuid();
+            Guid partialDeceasedId = Guid.NewGuid();
+
+            List<Contact> testContacts =
+            [
+                new Contact { Id = deceasedId, FirstName = "Late", LastName = "Person", IsPartial = false, IsDeceased = true, IsHidden = false },
+                new Contact { Id = partialDeceasedId, FirstName = "Ghost", LastName = "Soul", IsPartial = true, IsDeceased = true, IsHidden = false }
+            ];
+
+            Expression<Func<Contact, (Guid, string)>>? capturedProjection = null;
+
+            RepositoryMock.Setup(r => r.ListProjectedAsync(
+                It.IsAny<Expression<Func<Contact, bool>>>(),
+                It.IsAny<Expression<Func<Contact, (Guid, string)>>>(),
+                It.IsAny<CancellationToken>()))
+                .Callback<Expression<Func<Contact, bool>>, Expression<Func<Contact, (Guid, string)>>, CancellationToken>(
+                    (_, projection, _) => capturedProjection = projection)
+                .ReturnsAsync([]);
+
+            // Act
+            await Service.GetContactNamesAsync();
+
+            // Assert
+            Assert.NotNull(capturedProjection);
+            Func<Contact, (Guid, string)> projectionFunc = capturedProjection.Compile();
+
+            (Guid, string) projectedDeceased = projectionFunc(testContacts[0]);
+            Assert.Equal(deceasedId, projectedDeceased.Item1);
+            Assert.Equal("Late Person (Deceased)", projectedDeceased.Item2);
+
+            (Guid, string) projectedPartialDeceased = projectionFunc(testContacts[1]);
+            Assert.Equal(partialDeceasedId, projectedPartialDeceased.Item1);
+            Assert.Equal("Ghost Soul (Partial Contact, Deceased)", projectedPartialDeceased.Item2);
+        }
+
+        [Fact]
+        public async Task GetContactNamesAsyncWhenExcludeDeceasedFiltersDeceasedContacts()
+        {
+            // Arrange
+            Guid livingId = Guid.NewGuid();
+            Guid deceasedId = Guid.NewGuid();
+
+            Contact living = new() { Id = livingId, FirstName = "Alive", LastName = "Person", IsHidden = false, IsDeceased = false };
+            Contact deceased = new() { Id = deceasedId, FirstName = "Late", LastName = "Person", IsHidden = false, IsDeceased = true };
+            Contact hidden = new() { Id = Guid.NewGuid(), FirstName = "Hidden", IsHidden = true };
+
+            Expression<Func<Contact, bool>>? capturedFilter = null;
+
+            RepositoryMock.Setup(r => r.ListProjectedAsync(
+                It.IsAny<Expression<Func<Contact, bool>>>(),
+                It.IsAny<Expression<Func<Contact, (Guid, string)>>>(),
+                It.IsAny<CancellationToken>()))
+                .Callback<Expression<Func<Contact, bool>>, Expression<Func<Contact, (Guid, string)>>, CancellationToken>(
+                    (filter, _, _) => capturedFilter = filter)
+                .ReturnsAsync([]);
+
+            // Act
+            await Service.GetContactNamesAsync(excludeDeceased: true);
+
+            // Assert
+            Assert.NotNull(capturedFilter);
+            Func<Contact, bool> filterFunc = capturedFilter.Compile();
+
+            Assert.True(filterFunc(living));
+            Assert.False(filterFunc(deceased));
+            Assert.False(filterFunc(hidden));
+        }
+
+        [Fact]
+        public async Task GetContactNamesAsyncWhenExcludeDeceasedKeepsAlwaysIncludeIds()
+        {
+            // Arrange — used on edit forms so an already-attached deceased participant remains selectable.
+            Guid livingId = Guid.NewGuid();
+            Guid keepDeceasedId = Guid.NewGuid();
+            Guid otherDeceasedId = Guid.NewGuid();
+
+            Contact living = new() { Id = livingId, FirstName = "Alive", IsHidden = false, IsDeceased = false };
+            Contact keepDeceased = new() { Id = keepDeceasedId, FirstName = "Already", LastName = "Attached", IsHidden = false, IsDeceased = true };
+            Contact otherDeceased = new() { Id = otherDeceasedId, FirstName = "Different", IsHidden = false, IsDeceased = true };
+
+            Expression<Func<Contact, bool>>? capturedFilter = null;
+
+            RepositoryMock.Setup(r => r.ListProjectedAsync(
+                It.IsAny<Expression<Func<Contact, bool>>>(),
+                It.IsAny<Expression<Func<Contact, (Guid, string)>>>(),
+                It.IsAny<CancellationToken>()))
+                .Callback<Expression<Func<Contact, bool>>, Expression<Func<Contact, (Guid, string)>>, CancellationToken>(
+                    (filter, _, _) => capturedFilter = filter)
+                .ReturnsAsync([]);
+
+            // Act
+            await Service.GetContactNamesAsync(excludeDeceased: true, alwaysIncludeIds: [keepDeceasedId]);
+
+            // Assert
+            Assert.NotNull(capturedFilter);
+            Func<Contact, bool> filterFunc = capturedFilter.Compile();
+
+            Assert.True(filterFunc(living));
+            Assert.True(filterFunc(keepDeceased));   // already attached — kept visible
+            Assert.False(filterFunc(otherDeceased)); // unrelated deceased — filtered out
+        }
+
+        [Fact]
+        public async Task GetContactNamesAsyncDefaultsToIncludingDeceasedContacts()
+        {
+            // Arrange — historical / structural surfaces (merge, relationships) keep deceased visible.
+            Guid deceasedId = Guid.NewGuid();
+            Contact deceased = new() { Id = deceasedId, FirstName = "Late", IsHidden = false, IsDeceased = true };
+
+            Expression<Func<Contact, bool>>? capturedFilter = null;
+
+            RepositoryMock.Setup(r => r.ListProjectedAsync(
+                It.IsAny<Expression<Func<Contact, bool>>>(),
+                It.IsAny<Expression<Func<Contact, (Guid, string)>>>(),
+                It.IsAny<CancellationToken>()))
+                .Callback<Expression<Func<Contact, bool>>, Expression<Func<Contact, (Guid, string)>>, CancellationToken>(
+                    (filter, _, _) => capturedFilter = filter)
+                .ReturnsAsync([]);
+
+            // Act
+            await Service.GetContactNamesAsync();
+
+            // Assert
+            Assert.NotNull(capturedFilter);
+            Assert.True(capturedFilter.Compile()(deceased));
         }
 
         [Fact]

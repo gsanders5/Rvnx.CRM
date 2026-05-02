@@ -19,6 +19,9 @@ public class ContactDto : BaseDto
 
     public DateTime? Birthday { get; set; }
 
+    public bool IsDeceased { get; set; }
+    public DateOnly? DateOfDeath { get; set; }
+
     public bool IsPartial { get; set; }
 
     public bool IsFavorite { get; set; }

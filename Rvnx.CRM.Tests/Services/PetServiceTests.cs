@@ -123,4 +123,57 @@ public class PetServiceTests
         Assert.Contains(result, p => p.Name == "Mittens");
         Assert.Contains(result, p => p.Name == "Goldie");
     }
+
+    [Fact]
+    public async Task CreateAsyncWhenPrimaryOwnerIsDeceasedReturnsFailure()
+    {
+        // Arrange — registering a NEW pet against a deceased owner is forward-looking and refused.
+        Guid contactId = Guid.NewGuid();
+        PetFormDto dto = new() { EntityId = contactId, Name = "Rex", Species = "Dog" };
+
+        Contact deceased = new()
+        {
+            Id = contactId,
+            FirstName = "Late",
+            IsPartial = false,
+            IsDeceased = true
+        };
+
+        _repositoryMock.Setup(r => r.CountAsync(It.IsAny<System.Linq.Expressions.Expression<Func<Contact, bool>>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((System.Linq.Expressions.Expression<Func<Contact, bool>> filter, CancellationToken _) =>
+                filter.Compile()(deceased) ? 1 : 0);
+
+        // Act
+        OperationResult result = await _service.CreateAsync(dto);
+
+        // Assert
+        Assert.False(result.Success);
+        Assert.Contains("deceased", result.ErrorMessage, StringComparison.OrdinalIgnoreCase);
+        _repositoryMock.Verify(r => r.AddAsync(It.IsAny<Pet>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task GetFormForCreateAsyncWhenPrimaryOwnerIsDeceasedReturnsNull()
+    {
+        // Arrange
+        Guid contactId = Guid.NewGuid();
+
+        Contact deceased = new()
+        {
+            Id = contactId,
+            FirstName = "Late",
+            IsPartial = false,
+            IsDeceased = true
+        };
+
+        _repositoryMock.Setup(r => r.CountAsync(It.IsAny<System.Linq.Expressions.Expression<Func<Contact, bool>>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((System.Linq.Expressions.Expression<Func<Contact, bool>> filter, CancellationToken _) =>
+                filter.Compile()(deceased) ? 1 : 0);
+
+        // Act
+        PetFormDto? result = await _service.GetFormForCreateAsync(contactId);
+
+        // Assert
+        Assert.Null(result);
+    }
 }

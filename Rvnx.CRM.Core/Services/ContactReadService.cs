@@ -39,7 +39,9 @@ public class ContactReadService(IRepository repository, IFavoriteService favorit
                 Pronouns = c.Pronouns,
                 Gender = c.Gender,
                 Religion = c.Religion,
-                IsPartial = c.IsPartial
+                IsPartial = c.IsPartial,
+                IsDeceased = c.IsDeceased,
+                DateOfDeath = c.DateOfDeath
             });
 
         List<Guid> contactIds = [.. contactDtos.Select(c => c.Id)];
@@ -359,6 +361,8 @@ public class ContactReadService(IRepository repository, IFavoriteService favorit
             JobTitle = contact.JobTitle,
             Company = contact.Company,
             IsHidden = contact.IsHidden,
+            IsDeceased = contact.IsDeceased,
+            DateOfDeath = contact.DateOfDeath,
             Pronouns = contact.Pronouns,
             Gender = contact.Gender,
             Religion = contact.Religion,
@@ -425,14 +429,23 @@ public class ContactReadService(IRepository repository, IFavoriteService favorit
         return count > 0;
     }
 
-    public async Task<List<(Guid Id, string FullName)>> GetContactNamesAsync()
+    public async Task<List<(Guid Id, string FullName)>> GetContactNamesAsync(
+        bool excludeDeceased = false,
+        IEnumerable<Guid>? alwaysIncludeIds = null)
     {
+        // Materialize to a HashSet so the predicate captures a stable, EF-translatable closure.
+        HashSet<Guid> includeIds = alwaysIncludeIds is null ? [] : [.. alwaysIncludeIds];
+
         return await _repository.ListProjectedAsync<Contact, (Guid, string)>(
-            c => !c.IsHidden,
+            c => !c.IsHidden && (!excludeDeceased || !c.IsDeceased || includeIds.Contains(c.Id)),
             c => new ValueTuple<Guid, string>(c.Id,
-                c.IsPartial
-                    ? (c.FirstName + " " + (c.LastName ?? "")).Trim() + " (partial contact)"
-                    : (c.FirstName + " " + (c.LastName ?? "")).Trim()));
+                c.IsPartial && c.IsDeceased
+                    ? (c.FirstName + " " + (c.LastName ?? "")).Trim() + " (Partial Contact, Deceased)"
+                    : c.IsPartial
+                        ? (c.FirstName + " " + (c.LastName ?? "")).Trim() + " (Partial Contact)"
+                        : c.IsDeceased
+                            ? (c.FirstName + " " + (c.LastName ?? "")).Trim() + " (Deceased)"
+                            : (c.FirstName + " " + (c.LastName ?? "")).Trim()));
     }
 
     public async Task<List<ContactSelectItemDto>> GetIntroducerCandidatesAsync(Guid? excludeContactId)

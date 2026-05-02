@@ -21,13 +21,16 @@ public class ContactManagementServiceTests
     {
         protected Mock<IRepository> RepositoryMock { get; }
         protected Mock<IFileValidationService> FileValidationServiceMock { get; }
+        protected Mock<ISelfContactService> SelfContactServiceMock { get; }
         protected ContactManagementService Service { get; }
 
         protected ContactManagementServiceTestBase()
         {
             RepositoryMock = new Mock<IRepository>();
             FileValidationServiceMock = new Mock<IFileValidationService>();
-            Service = new ContactManagementService(RepositoryMock.Object, FileValidationServiceMock.Object);
+            SelfContactServiceMock = new Mock<ISelfContactService>();
+            SelfContactServiceMock.Setup(s => s.GetSelfContactIdAsync()).ReturnsAsync((Guid?)null);
+            Service = new ContactManagementService(RepositoryMock.Object, FileValidationServiceMock.Object, SelfContactServiceMock.Object);
         }
     }
 
@@ -673,6 +676,103 @@ public class ContactManagementServiceTests
             RepositoryMock.Verify(r => r.AddAsync(It.IsAny<Contact>(), It.IsAny<CancellationToken>()), Times.Once);
             RepositoryMock.Verify(r => r.AddAsync(It.IsAny<ContactMethod>(), It.IsAny<CancellationToken>()), Times.Exactly(2)); // Email and Phone
             RepositoryMock.Verify(r => r.AddAsync(It.IsAny<SignificantDate>(), It.IsAny<CancellationToken>()), Times.Once); // Birthday
+        }
+    }
+
+    public class SelfContactDeceasedGuardTests : ContactManagementServiceTestBase
+    {
+        [Fact]
+        public async Task UpdateContactAsyncWhenContactIsSelfContactCoercesDeceasedFieldsToFalse()
+        {
+            // Defense-in-depth at the service boundary so the API PUT/PATCH paths
+            // (which don't run the MVC controller's coercion) cannot mark the user's
+            // own self-contact deceased.
+            Guid contactId = Guid.NewGuid();
+            Contact existingContact = new() { Id = contactId, IsDeceased = false };
+            ContactFormDto dto = new()
+            {
+                FirstName = "Me",
+                IsDeceased = true,
+                DateOfDeath = new DateOnly(2030, 1, 1)
+            };
+
+            SelfContactServiceMock.Setup(s => s.GetSelfContactIdAsync()).ReturnsAsync(contactId);
+
+            RepositoryMock.Setup(r => r.GetByIdAsync<Contact>(contactId, It.IsAny<CancellationToken>()))
+                .ReturnsAsync(existingContact);
+            RepositoryMock.Setup(r => r.ListAsync<ContactMethod>(It.IsAny<Expression<Func<ContactMethod, bool>>>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync([]);
+            RepositoryMock.Setup(r => r.ListAsync<SignificantDate>(It.IsAny<Expression<Func<SignificantDate, bool>>>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync([]);
+
+            ContactOperationResult result = await Service.UpdateContactAsync(contactId, dto, null, null, null);
+
+            Assert.True(result.Success);
+            Assert.False(existingContact.IsDeceased);
+            Assert.Null(existingContact.DateOfDeath);
+            Assert.False(dto.IsDeceased);
+            Assert.Null(dto.DateOfDeath);
+        }
+
+        [Fact]
+        public async Task UpdateContactAsyncWhenContactIsNotSelfContactKeepsDeceasedFields()
+        {
+            Guid contactId = Guid.NewGuid();
+            Guid otherSelfId = Guid.NewGuid();
+            DateOnly dod = new(2024, 6, 15);
+            Contact existingContact = new() { Id = contactId };
+            ContactFormDto dto = new()
+            {
+                FirstName = "Friend",
+                IsDeceased = true,
+                DateOfDeath = dod
+            };
+
+            SelfContactServiceMock.Setup(s => s.GetSelfContactIdAsync()).ReturnsAsync(otherSelfId);
+
+            RepositoryMock.Setup(r => r.GetByIdAsync<Contact>(contactId, It.IsAny<CancellationToken>()))
+                .ReturnsAsync(existingContact);
+            RepositoryMock.Setup(r => r.ListAsync<ContactMethod>(It.IsAny<Expression<Func<ContactMethod, bool>>>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync([]);
+            RepositoryMock.Setup(r => r.ListAsync<SignificantDate>(It.IsAny<Expression<Func<SignificantDate, bool>>>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync([]);
+
+            ContactOperationResult result = await Service.UpdateContactAsync(contactId, dto, null, null, null);
+
+            Assert.True(result.Success);
+            Assert.True(existingContact.IsDeceased);
+            Assert.Equal(dod, existingContact.DateOfDeath);
+        }
+
+        [Fact]
+        public async Task UpdateContactAsyncWhenNoSelfContactSetDoesNotCoerceDeceasedFields()
+        {
+            // If the user has no self-contact, GetSelfContactIdAsync returns null and the
+            // coercion must NOT silently match every contact (Guid.Empty vs default).
+            Guid contactId = Guid.NewGuid();
+            DateOnly dod = new(2024, 6, 15);
+            Contact existingContact = new() { Id = contactId };
+            ContactFormDto dto = new()
+            {
+                FirstName = "Friend",
+                IsDeceased = true,
+                DateOfDeath = dod
+            };
+
+            SelfContactServiceMock.Setup(s => s.GetSelfContactIdAsync()).ReturnsAsync((Guid?)null);
+
+            RepositoryMock.Setup(r => r.GetByIdAsync<Contact>(contactId, It.IsAny<CancellationToken>()))
+                .ReturnsAsync(existingContact);
+            RepositoryMock.Setup(r => r.ListAsync<ContactMethod>(It.IsAny<Expression<Func<ContactMethod, bool>>>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync([]);
+            RepositoryMock.Setup(r => r.ListAsync<SignificantDate>(It.IsAny<Expression<Func<SignificantDate, bool>>>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync([]);
+
+            ContactOperationResult result = await Service.UpdateContactAsync(contactId, dto, null, null, null);
+
+            Assert.True(result.Success);
+            Assert.True(existingContact.IsDeceased);
+            Assert.Equal(dod, existingContact.DateOfDeath);
         }
     }
 

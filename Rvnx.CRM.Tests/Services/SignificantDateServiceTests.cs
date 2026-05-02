@@ -237,4 +237,36 @@ public class SignificantDateServiceTests : IDisposable
 
         Assert.Empty(events);
     }
+
+    [Fact]
+    public async Task GetCalendarEventsAsyncWithDeceasedContactExcludesTheirEvents()
+    {
+        Guid deceasedContactId = Guid.NewGuid();
+        _context.Contacts!.Add(new Contact
+        {
+            Id = deceasedContactId,
+            FirstName = "Memorial",
+            LastName = "Soul",
+            IsDeceased = true,
+            DateOfDeath = new DateOnly(2024, 1, 15)
+        });
+
+        DateOnly today = DateOnly.FromDateTime(DateTime.Today);
+
+        _context.SignificantDates!.Add(new SignificantDate
+        {
+            Id = Guid.NewGuid(),
+            ContactId = deceasedContactId,
+            Title = SignificantDateTitles.Birthday,
+            EventDate = today.AddDays(5),
+            RecurrenceType = Core.Enumerations.RecurrenceType.Annual,
+            IsActive = true
+        });
+
+        await _context.SaveChangesAsync();
+
+        List<CalendarEventDto> events = await _service.GetCalendarEventsAsync();
+
+        Assert.Empty(events);
+    }
 }

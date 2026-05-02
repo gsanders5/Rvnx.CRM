@@ -545,4 +545,101 @@ public class MergeServiceTests : IDisposable
         Assert.NotNull(pCheck);
         Assert.NotNull(sCheck);
     }
+
+    [Fact]
+    public async Task MergeContactsAsyncWhenSecondaryIsDeceasedPropagatesToPrimary()
+    {
+        // Deceased status is a one-way truth — merging a deceased duplicate into an
+        // alive primary must mark the primary deceased and preserve the date of death,
+        // otherwise reminders / dashboard / calendar would silently re-enable for a
+        // person who has died.
+        DateOnly dateOfDeath = new(2024, 6, 15);
+
+        Contact primary = new()
+        { Id = Guid.NewGuid(), FirstName = "Alive", LastName = "Record" };
+        Contact secondary = new()
+        {
+            Id = Guid.NewGuid(),
+            FirstName = "Deceased",
+            LastName = "Record",
+            IsDeceased = true,
+            DateOfDeath = dateOfDeath
+        };
+
+        await _context.Contacts!.AddRangeAsync(primary, secondary);
+        await _context.SaveChangesAsync();
+
+        await _sut.MergeContactsAsync(primary.Id, secondary.Id);
+
+        Contact? merged = await _context.Contacts.FindAsync(primary.Id);
+        Assert.NotNull(merged);
+        Assert.True(merged.IsDeceased);
+        Assert.Equal(dateOfDeath, merged.DateOfDeath);
+    }
+
+    [Fact]
+    public async Task MergeContactsAsyncWhenPrimaryIsDeceasedKeepsPrimaryDateOfDeath()
+    {
+        // When primary is deceased with a known date of death, prefer the primary's value.
+        DateOnly primaryDod = new(2024, 6, 15);
+        DateOnly secondaryDod = new(2023, 1, 1);
+
+        Contact primary = new()
+        {
+            Id = Guid.NewGuid(),
+            FirstName = "Primary",
+            IsDeceased = true,
+            DateOfDeath = primaryDod
+        };
+        Contact secondary = new()
+        {
+            Id = Guid.NewGuid(),
+            FirstName = "Secondary",
+            IsDeceased = true,
+            DateOfDeath = secondaryDod
+        };
+
+        await _context.Contacts!.AddRangeAsync(primary, secondary);
+        await _context.SaveChangesAsync();
+
+        await _sut.MergeContactsAsync(primary.Id, secondary.Id);
+
+        Contact? merged = await _context.Contacts.FindAsync(primary.Id);
+        Assert.NotNull(merged);
+        Assert.True(merged.IsDeceased);
+        Assert.Equal(primaryDod, merged.DateOfDeath);
+    }
+
+    [Fact]
+    public async Task MergeContactsAsyncWhenPrimaryIsDeceasedWithoutDateAdoptsSecondaryDate()
+    {
+        // If the primary is already marked deceased but has no date of death,
+        // take the secondary's known date so the information isn't lost.
+        DateOnly secondaryDod = new(2024, 3, 14);
+
+        Contact primary = new()
+        {
+            Id = Guid.NewGuid(),
+            FirstName = "Primary",
+            IsDeceased = true,
+            DateOfDeath = null
+        };
+        Contact secondary = new()
+        {
+            Id = Guid.NewGuid(),
+            FirstName = "Secondary",
+            IsDeceased = true,
+            DateOfDeath = secondaryDod
+        };
+
+        await _context.Contacts!.AddRangeAsync(primary, secondary);
+        await _context.SaveChangesAsync();
+
+        await _sut.MergeContactsAsync(primary.Id, secondary.Id);
+
+        Contact? merged = await _context.Contacts.FindAsync(primary.Id);
+        Assert.NotNull(merged);
+        Assert.True(merged.IsDeceased);
+        Assert.Equal(secondaryDod, merged.DateOfDeath);
+    }
 }

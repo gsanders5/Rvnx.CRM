@@ -78,6 +78,14 @@ public class MergeService(CRMDbContext context, IRepository repository) : IMerge
                 dependent.IntroducedByContactId = primaryId;
             }
 
+            // Deceased status / date of death: deceased is a one-way truth. If either record
+            // is marked deceased, the merged primary must be too — otherwise merging a deceased
+            // duplicate into a stale alive record silently loses the death information (and
+            // re-enables reminders for someone who has died). For DateOfDeath, prefer the
+            // primary's value if set, else take the secondary's so the date is preserved.
+            primary.IsDeceased = primary.IsDeceased || secondary.IsDeceased;
+            primary.DateOfDeath ??= secondary.DateOfDeath;
+
             List<Attachment> attachments = await _repository.ListAsync<Attachment>(a => a.ContactId == secondaryId);
             foreach (Attachment att in attachments)
             {

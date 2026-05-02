@@ -169,6 +169,44 @@ public class VCardServiceTests
         }
 
         [Fact]
+        public void ExportVCardShouldIncludeDeceasedAndDateOfDeath()
+        {
+            Contact contact = new()
+            {
+                FirstName = "Late",
+                LastName = "Person",
+                IsDeceased = true,
+                DateOfDeath = new DateOnly(2024, 3, 14)
+            };
+
+            byte[] result = _service.ExportVCard(contact);
+            string output = Encoding.UTF8.GetString(result);
+
+            Assert.Contains("X-DECEASED:true", output);
+            Assert.Contains("X-DATE-OF-DEATH:2024-03-14", output);
+        }
+
+        [Fact]
+        public async Task RoundTripShouldPreserveDeceasedAndDateOfDeath()
+        {
+            Contact original = new()
+            {
+                FirstName = "Late",
+                LastName = "Person",
+                IsDeceased = true,
+                DateOfDeath = new DateOnly(2024, 3, 14)
+            };
+
+            byte[] exported = _service.ExportVCard(original);
+            using MemoryStream stream = new(exported);
+            IEnumerable<Contact> parsed = await _service.ParseVCardAsync(stream);
+            Contact roundTripped = parsed.Single();
+
+            Assert.True(roundTripped.IsDeceased);
+            Assert.Equal(new DateOnly(2024, 3, 14), roundTripped.DateOfDeath);
+        }
+
+        [Fact]
         public void ExportVCardShouldReturnValidUtf8Bytes()
         {
             Contact contact = new()

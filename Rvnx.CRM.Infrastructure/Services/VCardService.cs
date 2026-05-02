@@ -20,6 +20,8 @@ public class VCardService : IVCardService
 {
     private const string MaidenNameKey = "X-MAIDENNAME";
     private const string GenderKey = "X-GENDER";
+    private const string DeceasedKey = "X-DECEASED";
+    private const string DateOfDeathKey = "X-DATE-OF-DEATH";
 
     private readonly HttpClient? _httpClient;
     private readonly ILogger<VCardService>? _logger;
@@ -74,13 +76,25 @@ public class VCardService : IVCardService
             contact.FirstName = n.Given.Count > 0 ? n.Given[0] : "";
         }
 
-        FolkerKinzel.VCards.Models.Properties.NonStandardProperty? maidenNameProp =
-            vc.NonStandards?.FirstOrDefault(p =>
-                p is not null && MaidenNameKey.Equals(p.Key, StringComparison.OrdinalIgnoreCase));
-
-        if (!string.IsNullOrWhiteSpace(maidenNameProp?.Value))
+        string? maidenNameValue = GetNonStandardValue(vc, MaidenNameKey);
+        if (!string.IsNullOrWhiteSpace(maidenNameValue))
         {
-            contact.MaidenName = maidenNameProp.Value;
+            contact.MaidenName = maidenNameValue;
+        }
+
+        string? deceasedValue = GetNonStandardValue(vc, DeceasedKey);
+        if (!string.IsNullOrWhiteSpace(deceasedValue)
+            && bool.TryParse(deceasedValue, out bool isDeceased))
+        {
+            contact.IsDeceased = isDeceased;
+        }
+
+        string? dateOfDeathValue = GetNonStandardValue(vc, DateOfDeathKey);
+        if (!string.IsNullOrWhiteSpace(dateOfDeathValue)
+            && DateOnly.TryParse(dateOfDeathValue, System.Globalization.CultureInfo.InvariantCulture,
+                System.Globalization.DateTimeStyles.None, out DateOnly parsedDateOfDeath))
+        {
+            contact.DateOfDeath = parsedDateOfDeath;
         }
 
         if (string.IsNullOrEmpty(contact.FirstName) && string.IsNullOrEmpty(contact.LastName))
@@ -254,13 +268,10 @@ public class VCardService : IVCardService
         else
         {
             // X-GENDER is the widely-used v3.0 extension for gender
-            FolkerKinzel.VCards.Models.Properties.NonStandardProperty? xGenderProp =
-                vc.NonStandards?.FirstOrDefault(p =>
-                    p is not null && GenderKey.Equals(p.Key, StringComparison.OrdinalIgnoreCase));
-
-            if (!string.IsNullOrWhiteSpace(xGenderProp?.Value))
+            string? xGenderValue = GetNonStandardValue(vc, GenderKey);
+            if (!string.IsNullOrWhiteSpace(xGenderValue))
             {
-                contact.Gender = xGenderProp.Value;
+                contact.Gender = xGenderValue;
             }
         }
 
@@ -290,6 +301,12 @@ public class VCardService : IVCardService
         }
 
         return contact;
+    }
+
+    private static string? GetNonStandardValue(VCard vc, string key)
+    {
+        return vc.NonStandards?.FirstOrDefault(p =>
+            p is not null && key.Equals(p.Key, StringComparison.OrdinalIgnoreCase))?.Value;
     }
 
     private static (string Extension, string ContentType) ResolvePhotoType(string? mediaType)
@@ -493,9 +510,9 @@ public class VCardService : IVCardService
         // (including Google Contacts) only recognize the full "BASE64" form
         vcfString = vcfString.Replace("ENCODING=b", "ENCODING=BASE64", StringComparison.OrdinalIgnoreCase);
 
-        // X-MAIDENNAME and X-GENDER have no standard vCard 3.0 fields and are silently
-        // dropped by FolkerKinzel during v3.0 serialization. Inject them manually before
-        // END:VCARD so they round-trip correctly through import/export.
+        // X-MAIDENNAME, X-GENDER, X-DECEASED, and X-DATE-OF-DEATH have no standard vCard 3.0
+        // fields and are silently dropped by FolkerKinzel during v3.0 serialization. Inject
+        // them manually before END:VCARD so they round-trip correctly through import/export.
         System.Text.StringBuilder extensions = new();
 
         if (!string.IsNullOrEmpty(contact.MaidenName))
@@ -506,6 +523,17 @@ public class VCardService : IVCardService
         if (!string.IsNullOrEmpty(contact.Gender))
         {
             extensions.AppendLine(System.Globalization.CultureInfo.InvariantCulture, $"{GenderKey}:{contact.Gender}");
+        }
+
+        if (contact.IsDeceased)
+        {
+            extensions.AppendLine(System.Globalization.CultureInfo.InvariantCulture, $"{DeceasedKey}:true");
+        }
+
+        if (contact.DateOfDeath.HasValue)
+        {
+            extensions.AppendLine(System.Globalization.CultureInfo.InvariantCulture,
+                $"{DateOfDeathKey}:{contact.DateOfDeath.Value.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture)}");
         }
 
         if (extensions.Length > 0)

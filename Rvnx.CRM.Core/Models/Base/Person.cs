@@ -49,6 +49,13 @@ public abstract class Person : BaseEntity
     [Display(Name = "Is Hidden")]
     public bool IsHidden { get; set; } = false;
 
+    [Display(Name = "Deceased")]
+    public bool IsDeceased { get; set; }
+
+    [DataType(DataType.Date)]
+    [Display(Name = "Date of Death")]
+    public DateOnly? DateOfDeath { get; set; }
+
     [NotMapped]
     public Guid? ProfileImageId { get; set; }
 

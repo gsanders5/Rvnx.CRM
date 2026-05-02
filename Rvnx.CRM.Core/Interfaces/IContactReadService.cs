@@ -41,7 +41,19 @@ public interface IContactReadService
     /// <summary>
     /// Retrieves a lightweight list of contact Id and FullName pairs for use in select lists.
     /// </summary>
-    Task<List<(Guid Id, string FullName)>> GetContactNamesAsync();
+    /// <param name="excludeDeceased">
+    /// When true, omits contacts marked as deceased — appropriate for forward-looking pickers
+    /// (e.g. logging an activity, scheduling a task). Defaults to false so historical / structural
+    /// surfaces (merge, relationships) keep deceased contacts visible.
+    /// </param>
+    /// <param name="alwaysIncludeIds">
+    /// Optional set of contact IDs that must remain in the list even when
+    /// <paramref name="excludeDeceased"/> is true. Used on edit forms so an already-attached
+    /// deceased contact is still selectable.
+    /// </param>
+    Task<List<(Guid Id, string FullName)>> GetContactNamesAsync(
+        bool excludeDeceased = false,
+        IEnumerable<Guid>? alwaysIncludeIds = null);
 
     /// <summary>
     /// Retrieves contacts eligible to be selected as an "introduced by" contact, ordered by full name.

@@ -26,6 +26,8 @@ public static partial class DtoMappingExtensions
             Pronouns = entity.Pronouns,
             Gender = entity.Gender,
             Religion = entity.Religion,
+            IsDeceased = entity.IsDeceased,
+            DateOfDeath = entity.DateOfDeath,
             IsPartial = entity.IsPartial,
             HowWeMet = entity.HowWeMet,
             FirstMetOn = entity.FirstMetOn,
@@ -49,6 +51,8 @@ public static partial class DtoMappingExtensions
             Pronouns = entity.Pronouns,
             Gender = entity.Gender,
             Religion = entity.Religion,
+            IsDeceased = entity.IsDeceased,
+            DateOfDeath = entity.DateOfDeath,
             HowWeMet = entity.HowWeMet,
             FirstMetOn = entity.FirstMetOn,
             IntroducedByContactId = entity.IntroducedByContactId,
@@ -83,6 +87,8 @@ public static partial class DtoMappingExtensions
             JobTitle = dto.JobTitle,
             Company = dto.Company,
             IsHidden = dto.IsHidden,
+            IsDeceased = dto.IsDeceased,
+            DateOfDeath = dto.DateOfDeath,
             Pronouns = dto.Pronouns,
             Gender = dto.Gender,
             Religion = dto.Religion,
@@ -101,6 +107,8 @@ public static partial class DtoMappingExtensions
         entity.JobTitle = dto.JobTitle;
         entity.Company = dto.Company;
         entity.IsHidden = dto.IsHidden;
+        entity.IsDeceased = dto.IsDeceased;
+        entity.DateOfDeath = dto.DateOfDeath;
         entity.Pronouns = dto.Pronouns;
         entity.Gender = dto.Gender;
         entity.Religion = dto.Religion;

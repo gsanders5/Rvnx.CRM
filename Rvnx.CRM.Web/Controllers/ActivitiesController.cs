@@ -22,7 +22,7 @@ public class ActivitiesController(IActivityService activityService, IRepository 
             return NotFound();
         }
 
-        await PopulateContactsSelectList(_contactReadService, dto.ContactIds);
+        await PopulateContactsSelectListExcludeDeceased(_contactReadService, dto.ContactIds);
         return View(dto);
     }
 
@@ -38,7 +38,7 @@ public class ActivitiesController(IActivityService activityService, IRepository 
             }
         }
 
-        await PopulateContactsSelectList(_contactReadService, dto.ContactIds);
+        await PopulateContactsSelectListExcludeDeceased(_contactReadService, dto.ContactIds);
         return View(dto);
     }
 
@@ -60,7 +60,7 @@ public class ActivitiesController(IActivityService activityService, IRepository 
             return NotFound();
         }
 
-        await PopulateContactsSelectList(_contactReadService, dto.ContactIds);
+        await PopulateContactsSelectListExcludeDeceased(_contactReadService, dto.ContactIds);
         return View(dto);
     }
 
@@ -81,7 +81,7 @@ public class ActivitiesController(IActivityService activityService, IRepository 
             }
         }
 
-        await PopulateContactsSelectList(_contactReadService, dto.ContactIds);
+        await PopulateContactsSelectListExcludeDeceased(_contactReadService, dto.ContactIds);
         return View(dto);
     }
 
