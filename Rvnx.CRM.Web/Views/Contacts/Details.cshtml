@@ -548,10 +548,23 @@
                             {
                                 @if (date.EventDate.Year != 1)
                                 {
-                                    var today = DateTime.Today;
-                                    var age = today.Year - date.EventDate.Year;
-                                    if (date.EventDate.ToDateTime(TimeOnly.MinValue).Date > today.AddYears(-age)) age--;
-                                    <span class="crm-date-badge crm-date-badge-age">@age years old</span>
+                                    @if (Model.IsDeceased)
+                                    {
+                                        @if (Model.DateOfDeath.HasValue)
+                                        {
+                                            var deathDate = Model.DateOfDeath.Value.ToDateTime(TimeOnly.MinValue).Date;
+                                            var ageAtDeath = deathDate.Year - date.EventDate.Year;
+                                            if (date.EventDate.ToDateTime(TimeOnly.MinValue).Date > deathDate.AddYears(-ageAtDeath)) ageAtDeath--;
+                                            <span class="crm-date-badge crm-date-badge-age">Age at death: @ageAtDeath</span>
+                                        }
+                                    }
+                                    else
+                                    {
+                                        var today = DateTime.Today;
+                                        var age = today.Year - date.EventDate.Year;
+                                        if (date.EventDate.ToDateTime(TimeOnly.MinValue).Date > today.AddYears(-age)) age--;
+                                        <span class="crm-date-badge crm-date-badge-age">@age years old</span>
+                                    }
                                 }
                             }
 
