@@ -27,6 +27,8 @@ public static partial class DtoMappingExtensions
             EntityName = entity.Person?.FullName ?? "Unknown",
             IsEntityPartial = (entity.Person as Contact)?.IsPartial == true,
             IsRelatedEntityPartial = (entity.RelatedPerson as Contact)?.IsPartial == true,
+            IsEntityDeceased = entity.Person?.IsDeceased == true,
+            IsRelatedEntityDeceased = entity.RelatedPerson?.IsDeceased == true,
             Description = entity.Description,
             StartDate = entity.StartDate,
             EndDate = entity.EndDate

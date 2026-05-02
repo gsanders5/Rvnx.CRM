@@ -354,6 +354,7 @@
                         Name = r.RelatedEntityName,
                         LinkId = r.RelatedEntityId,
                         IsPartial = r.IsRelatedEntityPartial,
+                        IsDeceased = r.IsRelatedEntityDeceased,
                         Badge = r.RelationshipTypeOppositeName,
                         Category = r.RelationshipTypeCategory,
                         r.Id
@@ -364,6 +365,7 @@
                             Name = r.EntityName,
                             LinkId = r.EntityId,
                             IsPartial = r.IsEntityPartial,
+                            IsDeceased = r.IsEntityDeceased,
                             Badge = r.RelationshipTypeName,
                             Category = r.RelationshipTypeCategory,
                             r.Id
@@ -412,6 +414,12 @@
                                                 else
                                                 {
                                                     <a asp-action="Details" asp-route-id="@rel.LinkId" class="text-decoration-none fw-semibold me-2" style="color: var(--crm-text-primary);">@rel.Name</a>
+                                                }
+                                                @if (rel.IsDeceased)
+                                                {
+                                                    <span class="crm-badge crm-badge-muted me-2" title="Deceased">
+                                                        <i class="bi bi-flower1" aria-hidden="true"></i>
+                                                    </span>
                                                 }
                                                 <span class="crm-role-badge">@rel.Badge</span>
                                             </div>
@@ -474,6 +482,22 @@
                         <div>
                             <div class="fw-semibold" style="font-size: 0.875rem;">@pet.Name</div>
                             <small class="crm-meta">@pet.Species @(string.IsNullOrEmpty(pet.Breed) ? "" : $"({pet.Breed})")</small>
+                            @if (pet.Owners != null && pet.Owners.Any())
+                            {
+                                <div class="crm-meta mt-1">
+                                    <i class="bi bi-people" aria-hidden="true"></i>
+                                    with @for (int oi = 0; oi < pet.Owners.Count; oi++)
+                                    {
+                                        var owner = pet.Owners[oi];
+                                        if (oi > 0) { <text>, </text> }
+                                        <a asp-controller="Contacts" asp-action="Details" asp-route-id="@owner.Id">@owner.FullName</a>
+                                        if (owner.IsDeceased)
+                                        {
+                                            <i class="bi bi-flower1 ms-1" aria-hidden="true" title="Deceased"></i>
+                                        }
+                                    }
+                                </div>
+                            }
                         </div>
                         <div class="crm-icon-actions">
                             <a asp-controller="Pets" asp-action="Edit" asp-route-id="@pet.Id" class="crm-icon-btn icon-edit" title="Edit" aria-label="Edit @pet.Name">
@@ -681,6 +705,10 @@
                                             {
                                                 if (ci > 0) { <text>, </text> }
                                                 <a asp-controller="Contacts" asp-action="Details" asp-route-id="@activity.ContactIds[ci]">@activity.ContactNames[ci]</a>
+                                                if (ci < activity.ContactIsDeceased.Count && activity.ContactIsDeceased[ci])
+                                                {
+                                                    <i class="bi bi-flower1 ms-1" aria-hidden="true" title="Deceased"></i>
+                                                }
                                             }
                                         </div>
                                     }

@@ -449,4 +449,30 @@ public class DashboardServiceTests
         Assert.Single(result.UpcomingEvents);
         Assert.Equal(livingId, result.UpcomingEvents[0].RelatedEntityId);
     }
+
+    [Fact]
+    public async Task GetDashboardDataAsyncCarriesIsDeceasedThroughToGraphNodes()
+    {
+        // The network graph dims deceased contacts. The flag must round-trip from the
+        // ContactSummary projection into the GraphNodeDto consumed by the front-end.
+        Guid livingId = Guid.NewGuid();
+        Guid deceasedId = Guid.NewGuid();
+        DateTime now = DateTime.UtcNow;
+
+        SetupContactSummaries([
+            new ContactSummary(livingId, "Alive", "Person", null, now, now, false),
+            new ContactSummary(deceasedId, "Late", "Person", null, now, now, true)
+        ]);
+        SetupAttachments([]);
+        SetupSignificantDates([]);
+        SetupRelationships([]);
+
+        DashboardDto result = await _service.GetDashboardDataAsync();
+
+        Assert.Equal(2, result.GraphNodes.Count);
+        GraphNodeDto livingNode = result.GraphNodes.Single(n => n.Id == livingId.ToString());
+        GraphNodeDto deceasedNode = result.GraphNodes.Single(n => n.Id == deceasedId.ToString());
+        Assert.False(livingNode.IsDeceased);
+        Assert.True(deceasedNode.IsDeceased);
+    }
 }
