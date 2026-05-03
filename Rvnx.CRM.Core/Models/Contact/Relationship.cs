@@ -6,10 +6,13 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace Rvnx.CRM.Core.Models.Contact;
 
 [Table("Relationship")]
-public class Relationship : PolymorphicEntity
+public class Relationship : BaseEntity
 {
-    [Display(Name = "Related Entity ID")]
-    public Guid RelatedEntityId { get; set; }
+    [Display(Name = "Contact ID")]
+    public Guid ContactId { get; set; }
+
+    [Display(Name = "Related Contact ID")]
+    public Guid RelatedContactId { get; set; }
 
     [Display(Name = "Relationship Type")]
     public Guid RelationshipTypeId { get; set; }
@@ -18,13 +21,13 @@ public class Relationship : PolymorphicEntity
     public string? Description { get; set; }
 
     [Display(Name = "Start Date")]
-    public DateTime? StartDate { get; set; }
+    public DateOnly? StartDate { get; set; }
 
     [Display(Name = "End Date")]
-    public DateTime? EndDate { get; set; }
+    public DateOnly? EndDate { get; set; }
 
     /// <summary>
-    /// Gets or sets the source person. 
+    /// Gets or sets the source person.
     /// This property is [NotMapped] and MUST be populated manually by a service.
     /// </summary>
     [NotMapped]

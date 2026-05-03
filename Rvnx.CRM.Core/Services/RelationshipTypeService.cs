@@ -29,8 +29,6 @@ public static class RelationshipTypeIds
     public static readonly Guid Friend = Guid.Parse("a5b6c7d8-9e0f-1a2b-3c4d-5e6f7a8b9c0d");
     public static readonly Guid BestFriend = Guid.Parse("a5b6c7d8-9e0f-1a2b-3c4d-5e6f7a8b9c0e");
     public static readonly Guid Acquaintance = Guid.Parse("71186e94-7048-4b3c-a854-5482328ab505");
-
-    public static readonly Guid ParentCompany = Guid.Parse("fedcba98-7654-3210-fedc-ba9876543210");
 }
 
 public static class RelationshipTypeService
@@ -100,8 +98,6 @@ public static class RelationshipTypeService
         new(RelationshipTypeIds.Friend, "Friend", "Friend", "Social", EntityType.Person),
         new(RelationshipTypeIds.BestFriend, "Best Friend", "Best Friend", "Social", EntityType.Person),
         new(RelationshipTypeIds.Acquaintance, "Acquaintance", "Acquaintance", "Social", EntityType.Person),
-
-        new(RelationshipTypeIds.ParentCompany, "Parent Company", "Subsidiary", "Company", EntityType.Company)
     ]);
 
     private static readonly Lazy<Dictionary<Guid, RelationshipTypeDefinition>> _byId =

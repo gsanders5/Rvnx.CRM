@@ -93,8 +93,8 @@ public class DashboardService(IRepository repository, ILogger<DashboardService> 
 
         List<(Guid EntityId, Guid RelatedEntityId)> relationships =
             await _repository.ListProjectedAsync<Relationship, (Guid EntityId, Guid RelatedEntityId)>(
-                r => r.EntityType == EntityType.Person,
-                r => new ValueTuple<Guid, Guid>(r.EntityId, r.RelatedEntityId));
+                r => true,
+                r => new ValueTuple<Guid, Guid>(r.ContactId, r.RelatedContactId));
 
         foreach ((Guid entityId, Guid relatedEntityId) in relationships)
         {

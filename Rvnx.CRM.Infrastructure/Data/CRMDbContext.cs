@@ -5,7 +5,6 @@ using Rvnx.CRM.Core.Interfaces;
 using Rvnx.CRM.Core.Models;
 using Rvnx.CRM.Core.Models.Activity;
 using Rvnx.CRM.Core.Models.Base;
-using Rvnx.CRM.Core.Models.Business;
 using Rvnx.CRM.Core.Models.Contact;
 using Rvnx.CRM.Core.Models.Dates;
 using System.Reflection;
@@ -17,7 +16,6 @@ public class CRMDbContext(DbContextOptions<CRMDbContext> options, ICurrentUserSe
     private readonly ICurrentUserService _currentUserService = currentUserService;
 
     public DbSet<Contact>? Contacts { get; set; }
-    public DbSet<Employer>? Employers { get; set; }
     public DbSet<Note>? Notes { get; set; }
     public DbSet<Attachment>? Attachments { get; set; }
     public DbSet<AttachmentContent>? AttachmentContents { get; set; }
@@ -60,13 +58,8 @@ public class CRMDbContext(DbContextOptions<CRMDbContext> options, ICurrentUserSe
             .HasIndex(u => u.SelfContactId)
             .IsUnique();
 
-        modelBuilder.Entity<Relationship>()
-            .Property(e => e.EntityType)
-            .HasConversion<string>()
-            .HasMaxLength(50);
-
-        modelBuilder.Entity<Relationship>().HasIndex(e => new { e.EntityId, e.EntityType });
-        modelBuilder.Entity<Relationship>().HasIndex(e => new { e.RelatedEntityId, e.EntityType });
+        modelBuilder.Entity<Relationship>().HasIndex(e => e.ContactId);
+        modelBuilder.Entity<Relationship>().HasIndex(e => e.RelatedContactId);
 
         modelBuilder.Entity<PetContact>()
             .HasOne(pc => pc.Pet)

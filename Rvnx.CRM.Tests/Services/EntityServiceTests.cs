@@ -1,7 +1,6 @@
 using Moq;
 using Rvnx.CRM.Core.Enumerations;
 using Rvnx.CRM.Core.Interfaces;
-using Rvnx.CRM.Core.Models.Business;
 using Rvnx.CRM.Core.Models.Contact;
 using Rvnx.CRM.Core.Services;
 
@@ -31,8 +30,7 @@ public class EntityServiceTests
     }
 
     [Theory]
-    [InlineData(EntityType.Company)]
-    [InlineData(EntityType.Opportunity)]
+    [InlineData((EntityType)99)]
     public async Task ExistsAsyncUnsupportedTypeReturnsFalse(EntityType entityType)
     {
         Guid id = Guid.NewGuid();
@@ -71,36 +69,6 @@ public class EntityServiceTests
         string result = await _service.GetEntityNameAsync(EntityType.Person, id);
 
         Assert.Equal("Unknown Person", result);
-    }
-
-    [Fact]
-    public async Task GetEntityNameAsyncCompanyReturnsCompanyName()
-    {
-        Guid id = Guid.NewGuid();
-        _repositoryMock.Setup(r => r.ListProjectedAsync(
-                It.IsAny<System.Linq.Expressions.Expression<Func<Employer, bool>>>(),
-                It.IsAny<System.Linq.Expressions.Expression<Func<Employer, string>>>(),
-                It.IsAny<CancellationToken>()))
-            .ReturnsAsync(["Acme Corp"]);
-
-        string result = await _service.GetEntityNameAsync(EntityType.Company, id);
-
-        Assert.Equal("Acme Corp", result);
-    }
-
-    [Fact]
-    public async Task GetEntityNameAsyncCompanyWhenNotFoundReturnsUnknownCompany()
-    {
-        Guid id = Guid.NewGuid();
-        _repositoryMock.Setup(r => r.ListProjectedAsync(
-                It.IsAny<System.Linq.Expressions.Expression<Func<Employer, bool>>>(),
-                It.IsAny<System.Linq.Expressions.Expression<Func<Employer, string>>>(),
-                It.IsAny<CancellationToken>()))
-            .ReturnsAsync([]);
-
-        string result = await _service.GetEntityNameAsync(EntityType.Company, id);
-
-        Assert.Equal("Unknown Company", result);
     }
 
     [Fact]
@@ -153,7 +121,7 @@ public class EntityServiceTests
     {
         Guid id = Guid.NewGuid();
 
-        bool result = await _service.IsPartialAsync(EntityType.Company, id);
+        bool result = await _service.IsPartialAsync((EntityType)99, id);
 
         Assert.False(result);
     }

@@ -4,7 +4,6 @@ using Rvnx.CRM.Core.DTOs.Contact;
 using Rvnx.CRM.Core.Enumerations;
 using Rvnx.CRM.Core.Interfaces;
 using Rvnx.CRM.Core.Models;
-using Rvnx.CRM.Core.Models.Business;
 using Rvnx.CRM.Core.Models.Contact;
 using Rvnx.CRM.Core.Models.Dates;
 
@@ -28,7 +27,7 @@ public class RelationshipService(IRepository repository, IRelationshipSuggestion
             SwapRelationshipEntities(relationship);
         }
 
-        if (await suggestionService.RelationshipDuplicateExistsAsync(relationship.EntityId, relationship.RelatedEntityId, typeId))
+        if (await suggestionService.RelationshipDuplicateExistsAsync(relationship.ContactId, relationship.RelatedContactId, typeId))
         {
             return RelationshipOperationResult.Failure(
                 "This exact relationship already exists between these two contacts.");
@@ -40,8 +39,8 @@ public class RelationshipService(IRepository repository, IRelationshipSuggestion
 
         await repository.SaveChangesAsync();
 
-        Guid redirectId = isReverse ? relationship.RelatedEntityId : relationship.EntityId;
-        return RelationshipOperationResult.Ok(redirectId, relationship.EntityType);
+        Guid redirectId = isReverse ? relationship.RelatedContactId : relationship.ContactId;
+        return RelationshipOperationResult.Ok(redirectId, EntityType.Person);
     }
 
     private async Task AddSuggestedRelationshipsAsync(
@@ -90,29 +89,28 @@ public class RelationshipService(IRepository repository, IRelationshipSuggestion
 
         List<Relationship> existingRels = await repository.ListAsNoTrackingAsync<Relationship>(r =>
             r.RelationshipTypeId == typeId &&
-            allNodeIds.Contains(r.EntityId) &&
-            allNodeIds.Contains(r.RelatedEntityId));
+            allNodeIds.Contains(r.ContactId) &&
+            allNodeIds.Contains(r.RelatedContactId));
 
         // Include the primary relationship being added in this transaction to avoid duplicates
         HashSet<(Guid, Guid)> existingEdges =
         [
-            (primaryRelationship.EntityId, primaryRelationship.RelatedEntityId),
-            (primaryRelationship.RelatedEntityId, primaryRelationship.EntityId),
+            (primaryRelationship.ContactId, primaryRelationship.RelatedContactId),
+            (primaryRelationship.RelatedContactId, primaryRelationship.ContactId),
         ];
 
         foreach (Relationship r in existingRels)
         {
-            existingEdges.Add((r.EntityId, r.RelatedEntityId));
-            existingEdges.Add((r.RelatedEntityId, r.EntityId));
+            existingEdges.Add((r.ContactId, r.RelatedContactId));
+            existingEdges.Add((r.RelatedContactId, r.ContactId));
         }
 
         foreach ((Guid sId, Guid tId, bool reverse) in parsedSuggestions)
         {
             Relationship newRel = new()
             {
-                EntityId = sId,
-                RelatedEntityId = tId,
-                EntityType = primaryRelationship.EntityType,
+                ContactId = sId,
+                RelatedContactId = tId,
                 RelationshipTypeId = typeId,
                 Description = "Automatically added from suggested relationship."
             };
@@ -122,10 +120,10 @@ public class RelationshipService(IRepository repository, IRelationshipSuggestion
                 SwapRelationshipEntities(newRel);
             }
 
-            if (existingEdges.Add((newRel.EntityId, newRel.RelatedEntityId)))
+            if (existingEdges.Add((newRel.ContactId, newRel.RelatedContactId)))
             {
                 await repository.AddAsync(newRel);
-                existingEdges.Add((newRel.RelatedEntityId, newRel.EntityId));
+                existingEdges.Add((newRel.RelatedContactId, newRel.ContactId));
             }
         }
     }
@@ -146,9 +144,8 @@ public class RelationshipService(IRepository repository, IRelationshipSuggestion
             return RelationshipOperationResult.Failure("Relationship not found.");
         }
 
-        existingRelationship.EntityId = updatedRelationship.EntityId;
-        existingRelationship.RelatedEntityId = updatedRelationship.RelatedEntityId;
-        existingRelationship.EntityType = updatedRelationship.EntityType;
+        existingRelationship.ContactId = updatedRelationship.ContactId;
+        existingRelationship.RelatedContactId = updatedRelationship.RelatedContactId;
         existingRelationship.Description = updatedRelationship.Description;
         existingRelationship.StartDate = updatedRelationship.StartDate;
         existingRelationship.EndDate = updatedRelationship.EndDate;
@@ -160,7 +157,7 @@ public class RelationshipService(IRepository repository, IRelationshipSuggestion
         }
 
         if (await suggestionService.RelationshipDuplicateExistsAsync(
-                existingRelationship.EntityId, existingRelationship.RelatedEntityId, typeId, excludeId: id))
+                existingRelationship.ContactId, existingRelationship.RelatedContactId, typeId, excludeId: id))
         {
             return RelationshipOperationResult.Failure(
                 "This exact relationship already exists between these two contacts.");
@@ -169,8 +166,8 @@ public class RelationshipService(IRepository repository, IRelationshipSuggestion
         await repository.UpdateAsync(existingRelationship);
         await repository.SaveChangesAsync();
 
-        Guid redirectId = isReverse ? existingRelationship.RelatedEntityId : existingRelationship.EntityId;
-        return RelationshipOperationResult.Ok(redirectId, existingRelationship.EntityType);
+        Guid redirectId = isReverse ? existingRelationship.RelatedContactId : existingRelationship.ContactId;
+        return RelationshipOperationResult.Ok(redirectId, EntityType.Person);
     }
 
     private static (Guid TypeId, bool IsReverse, string? Error) ParseRelationshipSelection(string selection)
@@ -191,8 +188,8 @@ public class RelationshipService(IRepository repository, IRelationshipSuggestion
 
     private static void SwapRelationshipEntities(Relationship relationship)
     {
-        (relationship.EntityId, relationship.RelatedEntityId) =
-            (relationship.RelatedEntityId, relationship.EntityId);
+        (relationship.ContactId, relationship.RelatedContactId) =
+            (relationship.RelatedContactId, relationship.ContactId);
     }
 
     public async Task<List<SelectOptionDto>> GetRelatedEntityOptionsAsync(Guid entityId, EntityType entityType,
@@ -201,7 +198,6 @@ public class RelationshipService(IRepository repository, IRelationshipSuggestion
         return entityType switch
         {
             EntityType.Person => await GetPersonOptionsAsync(entityId, selectedId),
-            EntityType.Company => await GetCompanyOptionsAsync(entityId, selectedId),
             _ => []
         };
     }
@@ -223,19 +219,6 @@ public class RelationshipService(IRepository repository, IRelationshipSuggestion
                 Selected = selectedId == p.Id
             },
             p => p.FirstName + " " + (p.LastName ?? ""));
-    }
-
-    private async Task<List<SelectOptionDto>> GetCompanyOptionsAsync(Guid entityId, Guid? selectedId)
-    {
-        return await repository.ListProjectedAsync<Employer, SelectOptionDto, string>(
-            c => c.Id != entityId,
-            c => new SelectOptionDto
-            {
-                Value = c.Id.ToString(),
-                Text = c.CompanyName,
-                Selected = selectedId == c.Id
-            },
-            c => c.CompanyName);
     }
 
     public List<SelectOptionDto> GetRelationshipTypeOptions(EntityType entityType, string? selectedValue = null)
@@ -323,9 +306,8 @@ public class RelationshipService(IRepository repository, IRelationshipSuggestion
         Relationship relationship = new()
         {
             Id = Guid.NewGuid(),
-            EntityId = parentEntityId,
-            RelatedEntityId = partialContact.Id,
-            EntityType = EntityType.Person,
+            ContactId = parentEntityId,
+            RelatedContactId = partialContact.Id,
             RelationshipTypeId = typeId,
             Description = dto.Description
         };
@@ -377,8 +359,8 @@ public class RelationshipService(IRepository repository, IRelationshipSuggestion
             return null;
         }
 
-        Guid p1Id = relationship.EntityId;
-        Guid p2Id = relationship.RelatedEntityId;
+        Guid p1Id = relationship.ContactId;
+        Guid p2Id = relationship.RelatedContactId;
         List<Contact> contacts = await repository.ListAsync<Contact>(c => c.Id == p1Id || c.Id == p2Id);
 
         relationship.Person = contacts.FirstOrDefault(c => c.Id == p1Id);
@@ -389,16 +371,15 @@ public class RelationshipService(IRepository repository, IRelationshipSuggestion
 
     public async Task<OperationResult> DeleteRelationshipAsync(Guid id)
     {
-        List<(Guid EntityId, EntityType EntityType)> relationshipInfos = await repository.ListProjectedAsync<Relationship, (Guid EntityId, EntityType EntityType)>(
+        List<Guid> contactIds = await repository.ListProjectedAsync<Relationship, Guid>(
             r => r.Id == id,
-            r => new ValueTuple<Guid, EntityType>(r.EntityId, r.EntityType));
+            r => r.ContactId);
 
-        if (relationshipInfos.Count > 0)
+        if (contactIds.Count > 0)
         {
-            (Guid entityId, EntityType entityType) = relationshipInfos[0];
             await repository.DeleteAsync<Relationship>(r => r.Id == id);
             await repository.SaveChangesAsync();
-            return OperationResult.Ok(entityId, entityType);
+            return OperationResult.Ok(contactIds[0], EntityType.Person);
         }
 
         return OperationResult.Failure("Relationship not found.");

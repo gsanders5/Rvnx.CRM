@@ -110,7 +110,7 @@ public class RelationshipsController(
                 result.ErrorMessage ?? "Failed to create partial contact relationship.");
         }
 
-        // If we fail, we need to redirect back to the Create view to show errors, 
+        // If we fail, we need to redirect back to the Create view to show errors,
         // but since it's a different action we'll pass an error in TempData and redirect.
         TempData["ErrorMessage"] =
             string.Join("; ", ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage));
@@ -169,7 +169,7 @@ public class RelationshipsController(
             return NotFound();
         }
 
-        if (!await _entityService.ExistsAsync(relationship.EntityType, relationship.EntityId))
+        if (!await _entityService.ExistsAsync(EntityType.Person, relationship.ContactId))
         {
             return NotFound();
         }
@@ -179,23 +179,23 @@ public class RelationshipsController(
         RelationshipFormViewModel viewModel = new()
         {
             Id = relationship.Id,
-            EntityId = relationship.EntityId,
-            RelatedEntityId = relationship.RelatedEntityId,
-            EntityType = relationship.EntityType,
+            EntityId = relationship.ContactId,
+            RelatedEntityId = relationship.RelatedContactId,
+            EntityType = EntityType.Person,
             RelationshipTypeId = relationship.RelationshipTypeId,
             Description = relationship.Description,
             StartDate = relationship.StartDate,
             EndDate = relationship.EndDate,
-            EntityName = await _entityService.GetEntityNameAsync(relationship.EntityType, relationship.EntityId),
+            EntityName = await _entityService.GetEntityNameAsync(EntityType.Person, relationship.ContactId),
             RelatedEntityOptions =
-                await _relationshipService.GetRelatedEntityOptionsAsync(relationship.EntityId,
-                    relationship.EntityType, relationship.RelatedEntityId),
+                await _relationshipService.GetRelatedEntityOptionsAsync(relationship.ContactId,
+                    EntityType.Person, relationship.RelatedContactId),
             RelationshipTypeOptions =
-                _relationshipService.GetRelationshipTypeOptions(relationship.EntityType, currentSelection),
-            RelationshipTypes = _relationshipService.GetRelationshipTypes(relationship.EntityType),
+                _relationshipService.GetRelationshipTypeOptions(EntityType.Person, currentSelection),
+            RelationshipTypes = _relationshipService.GetRelationshipTypes(EntityType.Person),
             SelectedRelationshipType = currentSelection,
-            IsEntityPartial = await _entityService.IsPartialAsync(EntityType.Person, relationship.EntityId),
-            IsRelatedEntityPartial = await _entityService.IsPartialAsync(EntityType.Person, relationship.RelatedEntityId)
+            IsEntityPartial = await _entityService.IsPartialAsync(EntityType.Person, relationship.ContactId),
+            IsRelatedEntityPartial = await _entityService.IsPartialAsync(EntityType.Person, relationship.RelatedContactId)
         };
 
         return View(viewModel);
@@ -252,7 +252,7 @@ public class RelationshipsController(
             return NotFound();
         }
 
-        if (!await _entityService.ExistsAsync(relationship.EntityType, relationship.EntityId))
+        if (!await _entityService.ExistsAsync(EntityType.Person, relationship.ContactId))
         {
             return NotFound();
         }

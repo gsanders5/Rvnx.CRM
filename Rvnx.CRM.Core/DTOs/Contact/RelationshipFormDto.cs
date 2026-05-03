@@ -17,10 +17,10 @@ public class RelationshipFormDto
     public string? Description { get; set; }
 
     [DataType(DataType.Date)]
-    public DateTime? StartDate { get; set; }
+    public DateOnly? StartDate { get; set; }
 
     [DataType(DataType.Date)]
-    public DateTime? EndDate { get; set; }
+    public DateOnly? EndDate { get; set; }
 
     public List<string> SuggestedRelationships { get; set; } = [];
 }

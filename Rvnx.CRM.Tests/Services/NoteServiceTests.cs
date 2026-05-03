@@ -63,7 +63,7 @@ public class NoteServiceTests
         NoteFormViewModel dto = new()
         {
             EntityId = Guid.NewGuid(),
-            EntityType = EntityType.Company,
+            EntityType = (EntityType)99,
             Title = "New Note",
             Value = "Note content"
         };

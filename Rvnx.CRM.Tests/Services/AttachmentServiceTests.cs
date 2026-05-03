@@ -97,7 +97,7 @@ public class AttachmentServiceTests
 
         AttachmentService service = new(repo, fileServiceMock.Object, entityServiceMock.Object);
 
-        AttachmentOperationResult result = await service.UploadAttachmentAsync(Guid.NewGuid(), EntityType.Company, [1, 2, 3], "test.txt");
+        AttachmentOperationResult result = await service.UploadAttachmentAsync(Guid.NewGuid(), (EntityType)99, [1, 2, 3], "test.txt");
 
         Assert.False(result.Success);
         Assert.Contains("not currently supported", result.Errors[0]);

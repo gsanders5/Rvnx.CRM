@@ -139,9 +139,9 @@ public class DebugDataService(IRepository repository) : IDebugDataService
             RelationshipTypeDefinition type = types[random.Next(types.Count)];
 
             List<Relationship> existing = await _repository.ListAsNoTrackingAsync<Relationship>(r =>
-                r.EntityId == c1.Id && r.RelatedEntityId == c2.Id && r.RelationshipTypeId == type.Id);
+                r.ContactId == c1.Id && r.RelatedContactId == c2.Id && r.RelationshipTypeId == type.Id);
 
-            if (existing.Count > 0 || relationshipsToAdd.Any(r => r.EntityId == c1.Id && r.RelatedEntityId == c2.Id && r.RelationshipTypeId == type.Id))
+            if (existing.Count > 0 || relationshipsToAdd.Any(r => r.ContactId == c1.Id && r.RelatedContactId == c2.Id && r.RelationshipTypeId == type.Id))
             {
                 continue;
             }
@@ -149,9 +149,8 @@ public class DebugDataService(IRepository repository) : IDebugDataService
             Relationship rel = new()
             {
                 Id = Guid.NewGuid(),
-                EntityId = c1.Id,
-                RelatedEntityId = c2.Id,
-                EntityType = EntityType.Person,
+                ContactId = c1.Id,
+                RelatedContactId = c2.Id,
                 RelationshipTypeId = type.Id,
                 Description = "Randomly generated"
             };

@@ -17,9 +17,6 @@ public class CreateRelationshipRequest
     [Required]
     public Guid RelatedEntityId { get; set; }
 
-    /// <summary>Entity type. Always <c>Person</c> for contact-to-contact relationships.</summary>
-    public EntityType EntityType { get; set; } = EntityType.Person;
-
     /// <summary>
     /// The relationship type GUID. Use GET /api/relationships/types to list all types with their IDs,
     /// names, opposite names, and whether they are symmetric.
@@ -39,8 +36,8 @@ public class CreateRelationshipRequest
     public string? Description { get; set; }
 
     /// <summary>Optional date when the relationship began.</summary>
-    public DateTime? StartDate { get; set; }
+    public DateOnly? StartDate { get; set; }
 
     /// <summary>Optional date when the relationship ended.</summary>
-    public DateTime? EndDate { get; set; }
+    public DateOnly? EndDate { get; set; }
 }

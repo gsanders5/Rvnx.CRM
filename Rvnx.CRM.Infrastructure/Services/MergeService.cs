@@ -176,21 +176,21 @@ public class MergeService(CRMDbContext context, IRepository repository) : IMerge
                 fact.ContactId = primaryId;
             }
 
-            List<Relationship> primaryRels = await _repository.ListAsync<Relationship>(r => r.EntityId == primaryId);
-            List<Relationship> secondaryRels = await _repository.ListAsync<Relationship>(r => r.EntityId == secondaryId);
+            List<Relationship> primaryRels = await _repository.ListAsync<Relationship>(r => r.ContactId == primaryId);
+            List<Relationship> secondaryRels = await _repository.ListAsync<Relationship>(r => r.ContactId == secondaryId);
 
-            HashSet<(Guid RelatedEntityId, Guid RelationshipTypeId)> existingRels = new(primaryRels.Count);
+            HashSet<(Guid RelatedContactId, Guid RelationshipTypeId)> existingRels = new(primaryRels.Count);
             foreach (Relationship r in primaryRels)
             {
-                existingRels.Add((r.RelatedEntityId, r.RelationshipTypeId));
+                existingRels.Add((r.RelatedContactId, r.RelationshipTypeId));
             }
 
             List<Relationship> relsToDelete = [];
             foreach (Relationship rel in secondaryRels)
             {
-                if (existingRels.Add((rel.RelatedEntityId, rel.RelationshipTypeId)))
+                if (existingRels.Add((rel.RelatedContactId, rel.RelationshipTypeId)))
                 {
-                    rel.EntityId = primaryId;
+                    rel.ContactId = primaryId;
                 }
                 else
                 {
@@ -198,28 +198,28 @@ public class MergeService(CRMDbContext context, IRepository repository) : IMerge
                 }
             }
 
-            List<Relationship> relatedToSecondary = await _repository.ListAsync<Relationship>(r => r.RelatedEntityId == secondaryId);
+            List<Relationship> relatedToSecondary = await _repository.ListAsync<Relationship>(r => r.RelatedContactId == secondaryId);
 
             // Pre-fetch all relationships pointing to primary to avoid N+1 queries
-            List<Relationship> relatedToPrimary = await _repository.ListAsync<Relationship>(r => r.RelatedEntityId == primaryId);
-            HashSet<(Guid EntityId, Guid RelationshipTypeId)> existingInverseRels = new(relatedToPrimary.Count);
+            List<Relationship> relatedToPrimary = await _repository.ListAsync<Relationship>(r => r.RelatedContactId == primaryId);
+            HashSet<(Guid ContactId, Guid RelationshipTypeId)> existingInverseRels = new(relatedToPrimary.Count);
             foreach (Relationship r in relatedToPrimary)
             {
-                existingInverseRels.Add((r.EntityId, r.RelationshipTypeId));
+                existingInverseRels.Add((r.ContactId, r.RelationshipTypeId));
             }
 
             foreach (Relationship rel in relatedToSecondary)
             {
-                if (rel.EntityId == primaryId)
+                if (rel.ContactId == primaryId)
                 {
                     // Primary is already related to Secondary, delete this duplicate connection
                     relsToDelete.Add(rel);
                 }
                 else
                 {
-                    if (existingInverseRels.Add((rel.EntityId, rel.RelationshipTypeId)))
+                    if (existingInverseRels.Add((rel.ContactId, rel.RelationshipTypeId)))
                     {
-                        rel.RelatedEntityId = primaryId;
+                        rel.RelatedContactId = primaryId;
                     }
                     else
                     {

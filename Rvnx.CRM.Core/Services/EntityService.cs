@@ -1,6 +1,5 @@
 using Rvnx.CRM.Core.Enumerations;
 using Rvnx.CRM.Core.Interfaces;
-using Rvnx.CRM.Core.Models.Business;
 using Rvnx.CRM.Core.Models.Contact;
 
 namespace Rvnx.CRM.Core.Services;
@@ -33,13 +32,6 @@ public class EntityService : IEntityService
                 c => c.Id == id,
                 c => c.FirstName + " " + (c.LastName ?? ""));
             return names.FirstOrDefault()?.Trim() ?? "Unknown Person";
-        }
-        else if (entityType == EntityType.Company)
-        {
-            List<string> names = await _repository.ListProjectedAsync<Employer, string>(
-                c => c.Id == id,
-                c => c.CompanyName);
-            return names.FirstOrDefault() ?? "Unknown Company";
         }
         return "Unknown Entity";
     }

@@ -12,8 +12,8 @@ public class RelationshipSuggestionService(IRepository repository) : IRelationsh
         return await repository.CountAsync<Relationship>(r =>
             (excludeId == null || r.Id != excludeId) &&
             r.RelationshipTypeId == typeId &&
-            ((r.EntityId == entityId && r.RelatedEntityId == relatedEntityId) ||
-             (r.EntityId == relatedEntityId && r.RelatedEntityId == entityId))) > 0;
+            ((r.ContactId == entityId && r.RelatedContactId == relatedEntityId) ||
+             (r.ContactId == relatedEntityId && r.RelatedContactId == entityId))) > 0;
     }
 
     public async Task<List<SuggestedRelationshipDto>> GetSuggestedRelationshipsAsync(Guid entityId,
@@ -67,11 +67,11 @@ public class RelationshipSuggestionService(IRepository repository) : IRelationsh
             {
                 Guid curr = q.Dequeue();
                 List<Relationship> edges = await repository.ListAsNoTrackingAsync<Relationship>(r =>
-                    r.RelationshipTypeId == typeIdToSearch && (r.EntityId == curr || r.RelatedEntityId == curr));
+                    r.RelationshipTypeId == typeIdToSearch && (r.ContactId == curr || r.RelatedContactId == curr));
 
                 foreach (Relationship edge in edges)
                 {
-                    Guid nbr = edge.EntityId == curr ? edge.RelatedEntityId : edge.EntityId;
+                    Guid nbr = edge.ContactId == curr ? edge.RelatedContactId : edge.ContactId;
                     if (comp.Add(nbr))
                     {
                         q.Enqueue(nbr);
@@ -126,9 +126,9 @@ public class RelationshipSuggestionService(IRepository repository) : IRelationsh
             Guid tIdQuery = relatedEntityId ?? Guid.Empty;
             List<Relationship> existingRels = await repository.ListAsNoTrackingAsync<Relationship>(r =>
                 r.RelationshipTypeId == relationshipTypeId &&
-                (r.EntityId == entityId || r.RelatedEntityId == entityId ||
-                 r.EntityId == tIdQuery || r.RelatedEntityId == tIdQuery));
-            HashSet<(Guid, Guid)> existingEdges = existingRels.Select(r => (r.EntityId, r.RelatedEntityId)).ToHashSet();
+                (r.ContactId == entityId || r.RelatedContactId == entityId ||
+                 r.ContactId == tIdQuery || r.RelatedContactId == tIdQuery));
+            HashSet<(Guid, Guid)> existingEdges = existingRels.Select(r => (r.ContactId, r.RelatedContactId)).ToHashSet();
 
             foreach (Guid x in compEIds)
             {
@@ -167,8 +167,8 @@ public class RelationshipSuggestionService(IRepository repository) : IRelationsh
 
                 List<Relationship> existingRels = await repository.ListAsNoTrackingAsync<Relationship>(r =>
                     r.RelationshipTypeId == relationshipTypeId &&
-                    (r.EntityId == adultId || r.RelatedEntityId == adultId));
-                HashSet<(Guid, Guid)> existingEdges = existingRels.Select(r => (r.EntityId, r.RelatedEntityId)).ToHashSet();
+                    (r.ContactId == adultId || r.RelatedContactId == adultId));
+                HashSet<(Guid, Guid)> existingEdges = existingRels.Select(r => (r.ContactId, r.RelatedContactId)).ToHashSet();
 
                 foreach (Contact sibContact in sibContacts)
                 {

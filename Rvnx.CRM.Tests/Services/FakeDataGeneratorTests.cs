@@ -40,11 +40,10 @@ public class FakeDataGeneratorTests
 
         foreach (Relationship rel in relationships)
         {
-            Assert.Equal(EntityType.Person, rel.EntityType);
             Assert.Contains(rel.RelationshipTypeId, validTypes);
-            Assert.NotEqual(rel.EntityId, rel.RelatedEntityId);
-            Assert.Contains(rel.EntityId, contacts.Select(c => c.Id));
-            Assert.Contains(rel.RelatedEntityId, contacts.Select(c => c.Id));
+            Assert.NotEqual(rel.ContactId, rel.RelatedContactId);
+            Assert.Contains(rel.ContactId, contacts.Select(c => c.Id));
+            Assert.Contains(rel.RelatedContactId, contacts.Select(c => c.Id));
         }
     }
 }

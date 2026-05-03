@@ -214,8 +214,8 @@ public class DtoMappingExtensionsTests
                 LastName = "Contact",
                 Notes = [new Note { Id = Guid.NewGuid(), Title = "Note1", Value = "Content1", ContactId = contactId }],
                 SignificantDates = [new SignificantDate { Id = Guid.NewGuid(), Title = "Birthday", ContactId = contactId }],
-                Relationships = [new Relationship { Id = Guid.NewGuid(), EntityId = contactId, RelatedEntityId = Guid.NewGuid() }],
-                RelatedTo = [new Relationship { Id = Guid.NewGuid(), EntityId = Guid.NewGuid(), RelatedEntityId = contactId }],
+                Relationships = [new Relationship { Id = Guid.NewGuid(), ContactId = contactId, RelatedContactId = Guid.NewGuid() }],
+                RelatedTo = [new Relationship { Id = Guid.NewGuid(), ContactId = Guid.NewGuid(), RelatedContactId = contactId }],
                 ContactMethods = [new ContactMethod { Id = Guid.NewGuid(), Label = "Email", Value = "test@example.com", ContactId = contactId }],
                 Facts = [new Fact { Id = Guid.NewGuid(), Category = "Fun Fact", Value = "Likes testing", ContactId = contactId }],
                 Attachments = [new Attachment { Id = Guid.NewGuid(), FileName = "test.pdf", ContactId = contactId }]
@@ -630,7 +630,7 @@ public class DtoMappingExtensionsTests
                 Name = "Buddy",
                 Species = "Dog",
                 Breed = "Golden Retriever",
-                Birthday = new DateTime(2020, 1, 1),
+                Birthday = new DateOnly(2020, 1, 1),
                 Notes = "Loves tennis balls",
                 PetContacts =
                 [
@@ -677,7 +677,7 @@ public class DtoMappingExtensionsTests
                 Name = "Mittens",
                 Species = "Cat",
                 Breed = "Siamese",
-                Birthday = new DateTime(2019, 5, 15),
+                Birthday = new DateOnly(2019, 5, 15),
                 Notes = "Hates water",
                 EntityId = Guid.NewGuid(),
                 ContactIds = [Guid.NewGuid(), Guid.NewGuid()]
@@ -702,7 +702,7 @@ public class DtoMappingExtensionsTests
                 Name = "Old Name",
                 Species = "Old Species",
                 Breed = "Old Breed",
-                Birthday = DateTime.MinValue,
+                Birthday = DateOnly.MinValue,
                 Notes = "Old Notes"
             };
 
@@ -711,7 +711,7 @@ public class DtoMappingExtensionsTests
                 Name = "New Name",
                 Species = "New Species",
                 Breed = "New Breed",
-                Birthday = DateTime.UtcNow,
+                Birthday = DateOnly.FromDateTime(DateTime.UtcNow),
                 Notes = "New Notes",
                 EntityId = Guid.NewGuid()
             };

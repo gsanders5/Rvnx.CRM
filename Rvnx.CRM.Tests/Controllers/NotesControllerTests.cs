@@ -117,7 +117,7 @@ public class NotesControllerTests
         {
             Guid entityId = Guid.NewGuid();
 
-            IActionResult result = await _controller.Create(entityId, EntityType.Company);
+            IActionResult result = await _controller.Create(entityId, (EntityType)99);
 
             BadRequestObjectResult badRequest = Assert.IsType<BadRequestObjectResult>(result);
             Assert.Equal("Only Person entities are supported.", badRequest.Value);
@@ -193,7 +193,7 @@ public class NotesControllerTests
             NoteFormViewModel note = new()
             {
                 EntityId = Guid.NewGuid(),
-                EntityType = EntityType.Company,
+                EntityType = (EntityType)99,
                 Title = "Test Note",
                 Value = "Content"
             };

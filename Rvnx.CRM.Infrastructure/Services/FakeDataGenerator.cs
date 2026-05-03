@@ -156,9 +156,8 @@ public class FakeDataGenerator
             relationships.Add(new Relationship
             {
                 Id = Guid.NewGuid(),
-                EntityId = contact1.Id,
-                EntityType = EntityType.Person,
-                RelatedEntityId = contact2.Id,
+                ContactId = contact1.Id,
+                RelatedContactId = contact2.Id,
                 RelationshipTypeId = type.Id,
                 Description = "Generated relationship"
             });

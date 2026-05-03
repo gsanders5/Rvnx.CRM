@@ -131,9 +131,8 @@ public class RelationshipsController(IRelationshipService relationshipService, I
     {
         return new()
         {
-            EntityId = r.EntityId,
-            RelatedEntityId = r.RelatedEntityId,
-            EntityType = r.EntityType,
+            ContactId = r.EntityId,
+            RelatedContactId = r.RelatedEntityId,
             Description = r.Description,
             StartDate = r.StartDate,
             EndDate = r.EndDate

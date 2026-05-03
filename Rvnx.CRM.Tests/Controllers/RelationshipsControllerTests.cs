@@ -97,9 +97,8 @@ public class RelationshipsControllerTests
             _context.Relationships!.Add(new Core.Models.Contact.Relationship
             {
                 Id = relId,
-                EntityId = Guid.NewGuid(),
-                RelatedEntityId = Guid.NewGuid(),
-                EntityType = EntityType.Person
+                ContactId = Guid.NewGuid(),
+                RelatedContactId = Guid.NewGuid()
             });
             await _context.SaveChangesAsync();
 
@@ -119,9 +118,8 @@ public class RelationshipsControllerTests
             _context.Relationships!.Add(new Core.Models.Contact.Relationship
             {
                 Id = relId,
-                EntityId = entityId,
-                RelatedEntityId = Guid.NewGuid(),
-                EntityType = EntityType.Person
+                ContactId = entityId,
+                RelatedContactId = Guid.NewGuid()
             });
             await _context.SaveChangesAsync();
 
@@ -185,9 +183,8 @@ public class RelationshipsControllerTests
             _context.Relationships!.Add(new Core.Models.Contact.Relationship
             {
                 Id = relId,
-                EntityId = Guid.NewGuid(),
-                RelatedEntityId = Guid.NewGuid(),
-                EntityType = EntityType.Person
+                ContactId = Guid.NewGuid(),
+                RelatedContactId = Guid.NewGuid()
             });
             await _context.SaveChangesAsync();
 
@@ -268,8 +265,8 @@ public class RelationshipsControllerTests
 
             Relationship? created = await _context.Set<Relationship>().FirstOrDefaultAsync();
             Assert.NotNull(created);
-            Assert.Equal(p1Id, created.EntityId);
-            Assert.Equal(p2Id, created.RelatedEntityId);
+            Assert.Equal(p1Id, created.ContactId);
+            Assert.Equal(p2Id, created.RelatedContactId);
             Assert.Equal(typeId, created.RelationshipTypeId);
         }
 
@@ -300,8 +297,8 @@ public class RelationshipsControllerTests
 
             Relationship? created = await _context.Set<Relationship>().FirstOrDefaultAsync();
             Assert.NotNull(created);
-            Assert.Equal(p2Id, created.EntityId);
-            Assert.Equal(p1Id, created.RelatedEntityId);
+            Assert.Equal(p2Id, created.ContactId);
+            Assert.Equal(p1Id, created.RelatedContactId);
             Assert.Equal(typeId, created.RelationshipTypeId);
         }
 
@@ -313,9 +310,8 @@ public class RelationshipsControllerTests
             _context.Set<Relationship>().Add(new Relationship
             {
                 Id = relId,
-                EntityId = p1Id,
-                RelatedEntityId = Guid.NewGuid(),
-                EntityType = EntityType.Person,
+                ContactId = p1Id,
+                RelatedContactId = Guid.NewGuid(),
                 RelationshipTypeId = Guid.Parse("7c1f8d22-1b6a-4c28-9c1e-3f5a2b8e9d1a")
             });
             await _context.SaveChangesAsync();
@@ -408,7 +404,7 @@ public class RelationshipsControllerTests
 
             Relationship? created = await _context.Set<Relationship>().FirstOrDefaultAsync();
             Assert.NotNull(created);
-            Assert.Equal(p1Id, created.EntityId);
+            Assert.Equal(p1Id, created.ContactId);
         }
 
         [Fact]
@@ -442,9 +438,8 @@ public class RelationshipsControllerTests
             _context.Relationships!.Add(new Relationship
             {
                 Id = relId,
-                EntityId = p1Id,
-                RelatedEntityId = p2Id,
-                EntityType = EntityType.Person,
+                ContactId = p1Id,
+                RelatedContactId = p2Id,
                 RelationshipTypeId = Guid.NewGuid()
             });
             await _context.SaveChangesAsync();

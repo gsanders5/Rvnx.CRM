@@ -70,7 +70,7 @@ public class PetsControllerTests : IDisposable
             Name = "Buddy",
             Species = "Dog",
             Breed = "Golden Retriever",
-            Birthday = new DateTime(2020, 5, 15),
+            Birthday = new DateOnly(2020, 5, 15),
             Notes = "Loves to fetch"
         };
 

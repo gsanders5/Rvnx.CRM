@@ -27,13 +27,12 @@ public class RelationshipTypeServiceTests
     }
 
     [Fact]
-    public void GetByEntityTypeCompanyReturnsOnlyCompanyTypes()
+    public void GetByEntityTypeUnknownTypeReturnsEmpty()
     {
-        List<RelationshipTypeDefinition> result = RelationshipTypeService.GetByEntityType(EntityType.Company);
+        List<RelationshipTypeDefinition> result = RelationshipTypeService.GetByEntityType((EntityType)99);
 
         Assert.NotNull(result);
-        Assert.NotEmpty(result);
-        Assert.All(result, t => Assert.Equal(EntityType.Company, t.EntityType));
+        Assert.Empty(result);
     }
 
     [Fact]

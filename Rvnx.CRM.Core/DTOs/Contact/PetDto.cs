@@ -8,7 +8,7 @@ public class PetDto : BaseDto
     public string Name { get; set; } = string.Empty;
     public string? Species { get; set; }
     public string? Breed { get; set; }
-    public DateTime? Birthday { get; set; }
+    public DateOnly? Birthday { get; set; }
     public string? Notes { get; set; }
     public Guid EntityId { get; set; }
     public EntityType EntityType { get; set; } = EntityType.Person;

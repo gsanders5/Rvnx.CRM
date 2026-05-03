@@ -59,7 +59,7 @@ public class EntityStateTamperingTests
         {
             Id = noteId,
             EntityId = attackerContactId, // Attempting to move note to different contact
-            EntityType = EntityType.Company, // Attempting to change entity type
+            EntityType = (EntityType)99, // Attempting to change entity type
             Title = "Updated Title",
             Value = "Updated Content"
         };

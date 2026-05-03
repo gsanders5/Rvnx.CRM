@@ -1,4 +1,5 @@
 using Rvnx.CRM.Core.DTOs.Contact;
+using Rvnx.CRM.Core.Enumerations;
 using Rvnx.CRM.Core.Models.Contact;
 using Rvnx.CRM.Core.Services;
 
@@ -16,9 +17,9 @@ public static partial class DtoMappingExtensions
         return new RelationshipDto
         {
             Id = entity.Id,
-            EntityId = entity.EntityId,
-            EntityType = entity.EntityType,
-            RelatedEntityId = entity.RelatedEntityId,
+            EntityId = entity.ContactId,
+            EntityType = EntityType.Person,
+            RelatedEntityId = entity.RelatedContactId,
             RelationshipTypeId = entity.RelationshipTypeId,
             RelationshipTypeName = typeName,
             RelationshipTypeOppositeName = oppositeName,
@@ -40,9 +41,8 @@ public static partial class DtoMappingExtensions
         return new Relationship
         {
             Id = Guid.NewGuid(),
-            EntityId = dto.EntityId,
-            RelatedEntityId = dto.RelatedEntityId,
-            EntityType = dto.EntityType,
+            ContactId = dto.EntityId,
+            RelatedContactId = dto.RelatedEntityId,
             RelationshipTypeId = dto.RelationshipTypeId,
             Description = dto.Description,
             StartDate = dto.StartDate,
@@ -52,8 +52,8 @@ public static partial class DtoMappingExtensions
 
     public static void UpdateEntity(this Relationship entity, RelationshipFormDto dto)
     {
-        entity.EntityId = dto.EntityId;
-        entity.RelatedEntityId = dto.RelatedEntityId;
+        entity.ContactId = dto.EntityId;
+        entity.RelatedContactId = dto.RelatedEntityId;
         entity.RelationshipTypeId = dto.RelationshipTypeId;
         entity.Description = dto.Description;
         entity.StartDate = dto.StartDate;
