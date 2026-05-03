@@ -79,7 +79,6 @@ public class RelationshipsController(IRelationshipService relationshipService, I
     ///     {
     ///       "entityId": "&lt;alice-id&gt;",
     ///       "relatedEntityId": "&lt;bob-id&gt;",
-    ///       "entityType": "Person",
     ///       "relationshipTypeId": "7c1f8d22-1b6a-4c28-9c1e-3f5a2b8e9d1a",
     ///       "direction": "Forward"
     ///     }
