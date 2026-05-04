@@ -28,14 +28,14 @@ public class SignificantDateService(IRepository repository) : ISignificantDateSe
 
     public async Task<OperationResult> CreateAsync(SignificantDateDto dto)
     {
-        if (!await _repository.IsValidContactAsync(dto.EntityId))
+        if (!await _repository.IsValidContactAsync(dto.ContactId))
         {
             return OperationResult.NotFound("Contact not found.");
         }
 
         if (string.Equals(dto.Title, SignificantDateTitles.Birthday, StringComparison.OrdinalIgnoreCase))
         {
-            if (await IsBirthdayAlreadySetAsync(dto.EntityId))
+            if (await IsBirthdayAlreadySetAsync(dto.ContactId))
             {
                 return OperationResult.Conflict("A birthday is already set for this contact.");
             }
@@ -49,7 +49,7 @@ public class SignificantDateService(IRepository repository) : ISignificantDateSe
             Title = dto.Title,
             Description = dto.Description,
             EventDate = dto.EventDate,
-            ContactId = dto.EntityId,
+            ContactId = dto.ContactId,
             RecurrenceType = dto.RecurrenceType,
             CustomIntervalDays = dto.CustomIntervalDays,
             IsActive = dto.IsActive,
@@ -64,7 +64,7 @@ public class SignificantDateService(IRepository repository) : ISignificantDateSe
         await _repository.AddAsync(importantDate);
         await _repository.SaveChangesAsync();
 
-        return OperationResult.Ok(dto.EntityId, dto.EntityType);
+        return OperationResult.Ok(dto.ContactId);
     }
 
     public async Task<OperationResult> UpdateAsync(Guid id, SignificantDateDto dto)
@@ -79,7 +79,7 @@ public class SignificantDateService(IRepository repository) : ISignificantDateSe
 
             if (string.Equals(dto.Title, SignificantDateTitles.Birthday, StringComparison.OrdinalIgnoreCase))
             {
-                if (await IsBirthdayAlreadySetAsync(dto.EntityId, dto.Id))
+                if (await IsBirthdayAlreadySetAsync(dto.ContactId, dto.Id))
                 {
                     return OperationResult.Conflict("A birthday is already set for this contact.");
                 }
@@ -97,7 +97,7 @@ public class SignificantDateService(IRepository repository) : ISignificantDateSe
             await _repository.UpdateAsync(importantDate);
             await _repository.SaveChangesAsync();
 
-            return OperationResult.Ok(dto.EntityId, dto.EntityType);
+            return OperationResult.Ok(dto.ContactId);
         }
         catch (EntityConcurrencyException)
         {
@@ -128,7 +128,7 @@ public class SignificantDateService(IRepository repository) : ISignificantDateSe
         await _repository.AddAsync(offset);
         await _repository.SaveChangesAsync();
 
-        return OperationResult.Ok(importantDate.ContactId ?? Guid.Empty, EntityType.Person);
+        return OperationResult.Ok(importantDate.ContactId ?? Guid.Empty);
     }
 
     public async Task<OperationResult> DeleteReminderOffsetAsync(Guid offsetId)
@@ -155,7 +155,7 @@ public class SignificantDateService(IRepository repository) : ISignificantDateSe
         await _repository.DeleteAsync<ReminderOffset>(ro => ro.Id == offsetId);
         await _repository.SaveChangesAsync();
 
-        return OperationResult.Ok(contactIds.FirstOrDefault() ?? Guid.Empty, EntityType.Person);
+        return OperationResult.Ok(contactIds.FirstOrDefault() ?? Guid.Empty);
     }
 
     public async Task<OperationResult> DeleteAsync(Guid id)
@@ -171,7 +171,7 @@ public class SignificantDateService(IRepository repository) : ISignificantDateSe
             await _repository.DeleteAsync<SignificantDate>(sd => sd.Id == id);
             await _repository.SaveChangesAsync();
 
-            return OperationResult.Ok(entityId, EntityType.Person);
+            return OperationResult.Ok(entityId);
         }
         return OperationResult.NotFound("Significant date not found.");
     }

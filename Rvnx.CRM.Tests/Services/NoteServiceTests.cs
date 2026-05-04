@@ -1,6 +1,5 @@
 using Moq;
 using Rvnx.CRM.Core.DTOs.Base;
-using Rvnx.CRM.Core.Enumerations;
 using Rvnx.CRM.Core.Exceptions;
 using Rvnx.CRM.Core.Interfaces;
 using Rvnx.CRM.Core.Models;
@@ -13,14 +12,14 @@ namespace Rvnx.CRM.Tests.Services;
 public class NoteServiceTests
 {
     private readonly Mock<IRepository> _repositoryMock;
-    private readonly Mock<IEntityService> _entityServiceMock;
+    private readonly Mock<IContactLookupService> _contactLookupServiceMock;
     private readonly NoteService _service;
 
     public NoteServiceTests()
     {
         _repositoryMock = new Mock<IRepository>();
-        _entityServiceMock = new Mock<IEntityService>();
-        _service = new NoteService(_repositoryMock.Object, _entityServiceMock.Object);
+        _contactLookupServiceMock = new Mock<IContactLookupService>();
+        _service = new NoteService(_repositoryMock.Object, _contactLookupServiceMock.Object);
     }
 
     [Fact]
@@ -30,8 +29,7 @@ public class NoteServiceTests
         Guid contactId = Guid.NewGuid();
         NoteFormViewModel dto = new()
         {
-            EntityId = contactId,
-            EntityType = EntityType.Person,
+            ContactId = contactId,
             Title = "New Note",
             Value = "Note content"
         };
@@ -51,31 +49,8 @@ public class NoteServiceTests
         // Assert
         Assert.True(result.Success);
         Assert.Equal(contactId, result.RedirectId);
-        Assert.Equal(EntityType.Person, result.RedirectType);
         _repositoryMock.Verify(r => r.AddAsync(It.IsAny<Note>(), It.IsAny<CancellationToken>()), Times.Once);
         _repositoryMock.Verify(r => r.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
-    }
-
-    [Fact]
-    public async Task CreateAsyncWithInvalidEntityTypeReturnsFailure()
-    {
-        // Arrange
-        NoteFormViewModel dto = new()
-        {
-            EntityId = Guid.NewGuid(),
-            EntityType = EntityType.Company,
-            Title = "New Note",
-            Value = "Note content"
-        };
-
-        // Act
-        OperationResult result = await _service.CreateAsync(dto);
-
-        // Assert
-        Assert.False(result.Success);
-        Assert.Equal("Only Person entities are supported.", result.ErrorMessage);
-        _repositoryMock.Verify(r => r.AddAsync(It.IsAny<Note>(), It.IsAny<CancellationToken>()), Times.Never);
-        _repositoryMock.Verify(r => r.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]
@@ -84,8 +59,7 @@ public class NoteServiceTests
         // Arrange
         NoteFormViewModel dto = new()
         {
-            EntityId = Guid.NewGuid(),
-            EntityType = EntityType.Person,
+            ContactId = Guid.NewGuid(),
             Title = "New Note",
             Value = "Note content"
         };
@@ -112,7 +86,7 @@ public class NoteServiceTests
         Note existingNote = new()
         { Id = noteId, ContactId = contactId, Title = "Old Title" };
         NoteFormViewModel dto = new()
-        { Id = noteId, EntityId = contactId, EntityType = EntityType.Person, Title = "New Title" };
+        { Id = noteId, ContactId = contactId, Title = "New Title" };
 
         _repositoryMock.Setup(r => r.GetByIdAsync<Note>(noteId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(existingNote);
@@ -132,7 +106,6 @@ public class NoteServiceTests
         // Assert
         Assert.True(result.Success);
         Assert.Equal(contactId, result.RedirectId);
-        Assert.Equal(EntityType.Person, result.RedirectType);
         _repositoryMock.Verify(r => r.UpdateAsync(It.IsAny<Note>(), It.IsAny<CancellationToken>()), Times.Once);
         _repositoryMock.Verify(r => r.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
     }
@@ -162,7 +135,6 @@ public class NoteServiceTests
         // Assert
         Assert.True(result.Success);
         Assert.Equal(contactId, result.RedirectId);
-        Assert.Equal(EntityType.Person, result.RedirectType);
         _repositoryMock.Verify(r => r.DeleteAsync<Note>(It.IsAny<System.Linq.Expressions.Expression<Func<Note, bool>>>(), It.IsAny<CancellationToken>()), Times.Once);
         _repositoryMock.Verify(r => r.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
     }
@@ -197,7 +169,7 @@ public class NoteServiceTests
         Note existingNote = new()
         { Id = noteId, ContactId = contactId, Title = "Test Note" };
         NoteFormViewModel dto = new()
-        { Id = noteId, EntityId = contactId, EntityType = EntityType.Person, Title = "Updated Note" };
+        { Id = noteId, ContactId = contactId, Title = "Updated Note" };
 
         _repositoryMock.Setup(r => r.GetByIdAsync<Note>(noteId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(existingNote);
@@ -222,7 +194,7 @@ public class NoteServiceTests
         Note existingNote = new()
         { Id = noteId, ContactId = contactId, Title = "Test Note" };
         NoteFormViewModel dto = new()
-        { Id = noteId, EntityId = contactId, EntityType = EntityType.Person, Title = "Updated Note" };
+        { Id = noteId, ContactId = contactId, Title = "Updated Note" };
 
         _repositoryMock.Setup(r => r.GetByIdAsync<Note>(noteId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(existingNote);
@@ -249,8 +221,7 @@ public class NoteServiceTests
         Guid contactId = Guid.NewGuid();
         NoteFormViewModel dto = new()
         {
-            EntityId = contactId,
-            EntityType = EntityType.Person,
+            ContactId = contactId,
             Title = "Pinned Note",
             Value = "Important content",
             IsFavorite = true
@@ -294,8 +265,7 @@ public class NoteServiceTests
         NoteFormViewModel dto = new()
         {
             Id = noteId,
-            EntityId = contactId,
-            EntityType = EntityType.Person,
+            ContactId = contactId,
             Title = "Existing",
             Value = "Body",
             IsFavorite = true

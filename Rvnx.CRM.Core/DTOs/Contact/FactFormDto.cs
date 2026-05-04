@@ -16,5 +16,5 @@ public class FactFormDto
     [Display(Name = "Value")]
     public string Value { get; set; } = string.Empty;
 
-    public Guid EntityId { get; set; }
+    public Guid ContactId { get; set; }
 }

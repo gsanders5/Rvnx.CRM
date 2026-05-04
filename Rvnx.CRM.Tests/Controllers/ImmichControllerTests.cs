@@ -4,7 +4,6 @@ using Microsoft.AspNetCore.Mvc;
 using Moq;
 using Rvnx.CRM.Core.DTOs.Base;
 using Rvnx.CRM.Core.DTOs.Contact;
-using Rvnx.CRM.Core.Enumerations;
 using Rvnx.CRM.Core.Interfaces;
 using Rvnx.CRM.Web.Controllers;
 using System.Reflection;
@@ -162,7 +161,7 @@ public class ImmichControllerTests
             .ReturnsAsync(new ImmichMediaPayload(response, content, "image/jpeg"));
 
         Mock<IAttachmentService> attachmentMock = new();
-        attachmentMock.Setup(s => s.UploadAttachmentAsync(contactId, EntityType.Person, It.IsAny<byte[]>(), "photo.jpg"))
+        attachmentMock.Setup(s => s.UploadAttachmentAsync(contactId, It.IsAny<byte[]>(), "photo.jpg"))
             .ReturnsAsync(AttachmentOperationResult.Ok(newAttachmentId));
 
         Mock<IContactManagementService> mgmtMock = new();
@@ -173,7 +172,7 @@ public class ImmichControllerTests
 
         IActionResult result = await controller.SetAsProfilePhoto(contactId, assetId, "photo.jpg", "/Contacts/Details/" + contactId, CancellationToken.None);
 
-        attachmentMock.Verify(s => s.UploadAttachmentAsync(contactId, EntityType.Person, It.IsAny<byte[]>(), "photo.jpg"), Times.Once);
+        attachmentMock.Verify(s => s.UploadAttachmentAsync(contactId, It.IsAny<byte[]>(), "photo.jpg"), Times.Once);
         mgmtMock.Verify(s => s.SetAttachmentAsProfilePhotoAsync(contactId, newAttachmentId), Times.Once);
         Assert.IsType<LocalRedirectResult>(result);
     }
@@ -191,8 +190,8 @@ public class ImmichControllerTests
 
         string? capturedFileName = null;
         Mock<IAttachmentService> attachmentMock = new();
-        attachmentMock.Setup(s => s.UploadAttachmentAsync(contactId, EntityType.Person, It.IsAny<byte[]>(), It.IsAny<string>()))
-            .Callback<Guid, EntityType, byte[], string>((_, _, _, fn) => capturedFileName = fn)
+        attachmentMock.Setup(s => s.UploadAttachmentAsync(contactId, It.IsAny<byte[]>(), It.IsAny<string>()))
+            .Callback<Guid, byte[], string>((_, _, fn) => capturedFileName = fn)
             .ReturnsAsync(AttachmentOperationResult.Ok(Guid.NewGuid()));
 
         Mock<IContactManagementService> mgmtMock = new();
@@ -227,7 +226,7 @@ public class ImmichControllerTests
         IActionResult result = await controller.SetAsProfilePhoto(contactId, assetId, "x.jpg", null, CancellationToken.None);
 
         Assert.IsType<BadRequestObjectResult>(result);
-        attachmentMock.Verify(s => s.UploadAttachmentAsync(It.IsAny<Guid>(), It.IsAny<EntityType>(), It.IsAny<byte[]>(), It.IsAny<string>()), Times.Never);
+        attachmentMock.Verify(s => s.UploadAttachmentAsync(It.IsAny<Guid>(), It.IsAny<byte[]>(), It.IsAny<string>()), Times.Never);
     }
 
     [Fact]
@@ -242,7 +241,7 @@ public class ImmichControllerTests
             .ReturnsAsync(new ImmichMediaPayload(response, new MemoryStream([1]), "image/jpeg"));
 
         Mock<IAttachmentService> attachmentMock = new();
-        attachmentMock.Setup(s => s.UploadAttachmentAsync(It.IsAny<Guid>(), It.IsAny<EntityType>(), It.IsAny<byte[]>(), It.IsAny<string>()))
+        attachmentMock.Setup(s => s.UploadAttachmentAsync(It.IsAny<Guid>(), It.IsAny<byte[]>(), It.IsAny<string>()))
             .ReturnsAsync(AttachmentOperationResult.Failure("Invalid file signature."));
 
         ImmichController controller = CreateController(immichMock, attachmentMock);

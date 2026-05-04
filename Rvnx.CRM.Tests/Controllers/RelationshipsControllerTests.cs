@@ -5,7 +5,6 @@ using Microsoft.EntityFrameworkCore;
 using Moq;
 using Rvnx.CRM.Core.DTOs.Common;
 using Rvnx.CRM.Core.DTOs.Contact;
-using Rvnx.CRM.Core.Enumerations;
 using Rvnx.CRM.Core.Interfaces;
 using Rvnx.CRM.Core.Models.Contact;
 using Rvnx.CRM.Core.Services;
@@ -28,11 +27,11 @@ public class RelationshipsControllerTests
             Mock<IRelationshipService> relationshipServiceMock = new();
 
             // Setup mocks to return empty lists to avoid null ref in view model construction
-            relationshipServiceMock.Setup(s => s.GetRelatedEntityOptionsAsync(It.IsAny<Guid>(), It.IsAny<EntityType>(), It.IsAny<Guid?>()))
+            relationshipServiceMock.Setup(s => s.GetRelatedContactOptionsAsync(It.IsAny<Guid>(), It.IsAny<Guid?>()))
                 .ReturnsAsync([]);
-            relationshipServiceMock.Setup(s => s.GetRelationshipTypeOptions(It.IsAny<EntityType>(), It.IsAny<string?>()))
+            relationshipServiceMock.Setup(s => s.GetRelationshipTypeOptions(It.IsAny<string?>()))
                 .Returns([]);
-            relationshipServiceMock.Setup(s => s.GetRelationshipTypes(It.IsAny<EntityType>()))
+            relationshipServiceMock.Setup(s => s.GetRelationshipTypes())
                 .Returns([]);
 
             repositoryMock.Setup(r => r.CountAsync<Contact>(It.IsAny<System.Linq.Expressions.Expression<Func<Contact, bool>>>(), default))
@@ -44,16 +43,16 @@ public class RelationshipsControllerTests
                     default))
                 .ReturnsAsync(["Test Contact"]);
 
-            Mock<IEntityService> mockEntityService = new();
-            mockEntityService.Setup(s => s.ExistsAsync(It.IsAny<EntityType>(), It.IsAny<Guid>())).ReturnsAsync(true);
+            Mock<IContactLookupService> mockContactLookupService = new();
+            mockContactLookupService.Setup(s => s.ExistsAsync(It.IsAny<Guid>())).ReturnsAsync(true);
             Mock<IRelationshipSuggestionService> suggestionServiceMock = new();
-            RelationshipsController controller = new(relationshipServiceMock.Object, suggestionServiceMock.Object, repositoryMock.Object, mockEntityService.Object);
+            RelationshipsController controller = new(relationshipServiceMock.Object, suggestionServiceMock.Object, repositoryMock.Object, mockContactLookupService.Object);
 
             Guid entityId = Guid.NewGuid();
 
-            await controller.Create(entityId, EntityType.Person);
+            await controller.Create(entityId);
 
-            relationshipServiceMock.Verify(s => s.GetRelatedEntityOptionsAsync(entityId, EntityType.Person, null), Times.Once);
+            relationshipServiceMock.Verify(s => s.GetRelatedContactOptionsAsync(entityId, null), Times.Once);
         }
 
     }
@@ -72,9 +71,9 @@ public class RelationshipsControllerTests
             Mock<IUrlHelper> mockUrlHelper = new();
             mockUrlHelper.Setup(x => x.IsLocalUrl(It.IsAny<string>())).Returns((string url) => url.StartsWith('/'));
 
-            Mock<IEntityService> mockEntityService = new();
-            mockEntityService.Setup(s => s.ExistsAsync(It.IsAny<EntityType>(), It.IsAny<Guid>())).ReturnsAsync(true);
-            _controller = new RelationshipsController(relationshipService, suggestionService, repository, mockEntityService.Object)
+            Mock<IContactLookupService> mockContactLookupService = new();
+            mockContactLookupService.Setup(s => s.ExistsAsync(It.IsAny<Guid>())).ReturnsAsync(true);
+            _controller = new RelationshipsController(relationshipService, suggestionService, repository, mockContactLookupService.Object)
             {
                 ControllerContext = new ControllerContext { HttpContext = new DefaultHttpContext() },
                 Url = mockUrlHelper.Object
@@ -97,9 +96,8 @@ public class RelationshipsControllerTests
             _context.Relationships!.Add(new Core.Models.Contact.Relationship
             {
                 Id = relId,
-                EntityId = Guid.NewGuid(),
-                RelatedEntityId = Guid.NewGuid(),
-                EntityType = EntityType.Person
+                ContactId = Guid.NewGuid(),
+                RelatedContactId = Guid.NewGuid()
             });
             await _context.SaveChangesAsync();
 
@@ -119,9 +117,8 @@ public class RelationshipsControllerTests
             _context.Relationships!.Add(new Core.Models.Contact.Relationship
             {
                 Id = relId,
-                EntityId = entityId,
-                RelatedEntityId = Guid.NewGuid(),
-                EntityType = EntityType.Person
+                ContactId = entityId,
+                RelatedContactId = Guid.NewGuid()
             });
             await _context.SaveChangesAsync();
 
@@ -159,9 +156,9 @@ public class RelationshipsControllerTests
             Mock<IUrlHelper> mockUrlHelper = new();
             mockUrlHelper.Setup(x => x.IsLocalUrl(It.IsAny<string>())).Returns((string url) => url.StartsWith('/'));
 
-            Mock<IEntityService> mockEntityService = new();
-            mockEntityService.Setup(s => s.ExistsAsync(It.IsAny<EntityType>(), It.IsAny<Guid>())).ReturnsAsync(true);
-            _controller = new RelationshipsController(relationshipService, suggestionService, repository, mockEntityService.Object)
+            Mock<IContactLookupService> mockContactLookupService = new();
+            mockContactLookupService.Setup(s => s.ExistsAsync(It.IsAny<Guid>())).ReturnsAsync(true);
+            _controller = new RelationshipsController(relationshipService, suggestionService, repository, mockContactLookupService.Object)
             {
                 ControllerContext = new ControllerContext { HttpContext = new DefaultHttpContext() },
                 Url = mockUrlHelper.Object
@@ -185,9 +182,8 @@ public class RelationshipsControllerTests
             _context.Relationships!.Add(new Core.Models.Contact.Relationship
             {
                 Id = relId,
-                EntityId = Guid.NewGuid(),
-                RelatedEntityId = Guid.NewGuid(),
-                EntityType = EntityType.Person
+                ContactId = Guid.NewGuid(),
+                RelatedContactId = Guid.NewGuid()
             });
             await _context.SaveChangesAsync();
 
@@ -226,9 +222,9 @@ public class RelationshipsControllerTests
             Repository repository = new(_context);
             RelationshipSuggestionService suggestionService = new(repository);
             RelationshipService relationshipService = new(repository, suggestionService);
-            Mock<IEntityService> mockEntityService = new();
-            mockEntityService.Setup(s => s.ExistsAsync(It.IsAny<EntityType>(), It.IsAny<Guid>())).ReturnsAsync(true);
-            _controller = new RelationshipsController(relationshipService, suggestionService, repository, mockEntityService.Object);
+            Mock<IContactLookupService> mockContactLookupService = new();
+            mockContactLookupService.Setup(s => s.ExistsAsync(It.IsAny<Guid>())).ReturnsAsync(true);
+            _controller = new RelationshipsController(relationshipService, suggestionService, repository, mockContactLookupService.Object);
         }
 
         public void Dispose()
@@ -253,9 +249,8 @@ public class RelationshipsControllerTests
             string selection = $"{typeId}_Fwd";
             RelationshipFormViewModel viewModel = new()
             {
-                EntityId = p1Id,
-                RelatedEntityId = p2Id,
-                EntityType = EntityType.Person,
+                ContactId = p1Id,
+                RelatedContactId = p2Id,
                 SelectedRelationshipType = selection
             };
 
@@ -268,8 +263,8 @@ public class RelationshipsControllerTests
 
             Relationship? created = await _context.Set<Relationship>().FirstOrDefaultAsync();
             Assert.NotNull(created);
-            Assert.Equal(p1Id, created.EntityId);
-            Assert.Equal(p2Id, created.RelatedEntityId);
+            Assert.Equal(p1Id, created.ContactId);
+            Assert.Equal(p2Id, created.RelatedContactId);
             Assert.Equal(typeId, created.RelationshipTypeId);
         }
 
@@ -287,9 +282,8 @@ public class RelationshipsControllerTests
             string selection = $"{typeId}_Rev";
             RelationshipFormViewModel viewModel = new()
             {
-                EntityId = p1Id,
-                RelatedEntityId = p2Id,
-                EntityType = EntityType.Person,
+                ContactId = p1Id,
+                RelatedContactId = p2Id,
                 SelectedRelationshipType = selection
             };
 
@@ -300,8 +294,8 @@ public class RelationshipsControllerTests
 
             Relationship? created = await _context.Set<Relationship>().FirstOrDefaultAsync();
             Assert.NotNull(created);
-            Assert.Equal(p2Id, created.EntityId);
-            Assert.Equal(p1Id, created.RelatedEntityId);
+            Assert.Equal(p2Id, created.ContactId);
+            Assert.Equal(p1Id, created.RelatedContactId);
             Assert.Equal(typeId, created.RelationshipTypeId);
         }
 
@@ -313,9 +307,8 @@ public class RelationshipsControllerTests
             _context.Set<Relationship>().Add(new Relationship
             {
                 Id = relId,
-                EntityId = p1Id,
-                RelatedEntityId = Guid.NewGuid(),
-                EntityType = EntityType.Person,
+                ContactId = p1Id,
+                RelatedContactId = Guid.NewGuid(),
                 RelationshipTypeId = Guid.Parse("7c1f8d22-1b6a-4c28-9c1e-3f5a2b8e9d1a")
             });
             await _context.SaveChangesAsync();
@@ -333,7 +326,7 @@ public class RelationshipsControllerTests
             _context.Contacts!.Add(new Contact { Id = p1Id, FirstName = "P1" });
             await _context.SaveChangesAsync();
 
-            IActionResult result = await _controller.Create(p1Id, EntityType.Person);
+            IActionResult result = await _controller.Create(p1Id);
 
             ViewResult viewResult = Assert.IsType<ViewResult>(result);
             RelationshipFormViewModel viewModel = Assert.IsType<RelationshipFormViewModel>(viewResult.Model);
@@ -361,9 +354,8 @@ public class RelationshipsControllerTests
 
             RelationshipFormViewModel viewModel = new()
             {
-                EntityId = p1Id,
-                RelatedEntityId = Guid.NewGuid(),
-                EntityType = EntityType.Person,
+                ContactId = p1Id,
+                RelatedContactId = Guid.NewGuid(),
                 SelectedRelationshipType = string.Empty
             };
 
@@ -376,14 +368,13 @@ public class RelationshipsControllerTests
             Assert.True(_controller.ModelState.ContainsKey("SelectedRelationshipType"));
 
             // Verifying that options are repopulated so the View doesn't crash on render
-            Assert.NotNull(resultViewModel.RelatedEntityOptions);
-            Assert.NotEmpty(resultViewModel.RelatedEntityOptions);
+            Assert.NotNull(resultViewModel.RelatedContactOptions);
+            Assert.NotEmpty(resultViewModel.RelatedContactOptions);
 
             Assert.NotNull(resultViewModel.RelationshipTypeOptions);
             Assert.NotEmpty(resultViewModel.RelationshipTypeOptions);
 
-            Assert.Equal(p1Id, resultViewModel.EntityId);
-            Assert.Equal(EntityType.Person, resultViewModel.EntityType);
+            Assert.Equal(p1Id, resultViewModel.ContactId);
         }
 
         [Fact]
@@ -399,7 +390,7 @@ public class RelationshipsControllerTests
                 SelectedRelationshipType = $"{Guid.NewGuid()}_Fwd"
             };
 
-            IActionResult result = await _controller.CreatePartial(p1Id, EntityType.Person, dto);
+            IActionResult result = await _controller.CreatePartial(p1Id, dto);
 
             RedirectToActionResult redirectResult = Assert.IsType<RedirectToActionResult>(result);
             Assert.Equal("Details", redirectResult.ActionName);
@@ -408,7 +399,7 @@ public class RelationshipsControllerTests
 
             Relationship? created = await _context.Set<Relationship>().FirstOrDefaultAsync();
             Assert.NotNull(created);
-            Assert.Equal(p1Id, created.EntityId);
+            Assert.Equal(p1Id, created.ContactId);
         }
 
         [Fact]
@@ -442,9 +433,8 @@ public class RelationshipsControllerTests
             _context.Relationships!.Add(new Relationship
             {
                 Id = relId,
-                EntityId = p1Id,
-                RelatedEntityId = p2Id,
-                EntityType = EntityType.Person,
+                ContactId = p1Id,
+                RelatedContactId = p2Id,
                 RelationshipTypeId = Guid.NewGuid()
             });
             await _context.SaveChangesAsync();
@@ -452,9 +442,8 @@ public class RelationshipsControllerTests
             RelationshipFormViewModel viewModel = new()
             {
                 Id = relId,
-                EntityId = p1Id,
-                RelatedEntityId = p2Id,
-                EntityType = EntityType.Person,
+                ContactId = p1Id,
+                RelatedContactId = p2Id,
                 SelectedRelationshipType = string.Empty // Simulate validation error
             };
 
@@ -467,8 +456,8 @@ public class RelationshipsControllerTests
             Assert.True(_controller.ModelState.ContainsKey("SelectedRelationshipType"));
 
             // Verifying that options are repopulated so the View doesn't crash on render
-            Assert.NotNull(resultViewModel.RelatedEntityOptions);
-            Assert.NotEmpty(resultViewModel.RelatedEntityOptions);
+            Assert.NotNull(resultViewModel.RelatedContactOptions);
+            Assert.NotEmpty(resultViewModel.RelatedContactOptions);
 
             Assert.NotNull(resultViewModel.RelationshipTypeOptions);
             Assert.NotEmpty(resultViewModel.RelationshipTypeOptions);
@@ -477,8 +466,7 @@ public class RelationshipsControllerTests
             Assert.NotEmpty(resultViewModel.RelationshipTypes);
 
             Assert.Equal(relId, resultViewModel.Id);
-            Assert.Equal(p1Id, resultViewModel.EntityId);
-            Assert.Equal(EntityType.Person, resultViewModel.EntityType);
+            Assert.Equal(p1Id, resultViewModel.ContactId);
         }
 
     }

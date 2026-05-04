@@ -2,7 +2,7 @@ using Rvnx.CRM.Core.DTOs.Base;
 
 namespace Rvnx.CRM.Core.DTOs.Contact;
 
-public class ContactDto : BaseDto
+public record class ContactDto : BaseDto
 {
     public string FirstName { get; set; } = string.Empty;
     public string LastName { get; set; } = string.Empty;

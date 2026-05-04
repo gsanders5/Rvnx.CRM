@@ -1,5 +1,4 @@
 using Rvnx.CRM.Core.DTOs.Contact;
-using Rvnx.CRM.Core.Enumerations;
 using Rvnx.CRM.Core.Models.Contact;
 
 namespace Rvnx.CRM.Core.Extensions;
@@ -13,8 +12,7 @@ public static partial class DtoMappingExtensions
             Id = entity.Id,
             Category = entity.Category,
             Value = entity.Value,
-            EntityId = entity.ContactId ?? Guid.Empty,
-            EntityType = EntityType.Person,
+            ContactId = entity.ContactId ?? Guid.Empty,
             CreatedDate = entity.CreatedDate
         };
     }
@@ -26,7 +24,7 @@ public static partial class DtoMappingExtensions
             Id = Guid.NewGuid(),
             Category = dto.Category,
             Value = dto.Value,
-            ContactId = dto.EntityId
+            ContactId = dto.ContactId
         };
     }
 

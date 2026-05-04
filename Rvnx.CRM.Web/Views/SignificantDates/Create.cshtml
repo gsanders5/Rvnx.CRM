@@ -8,7 +8,7 @@
     <div class="col-md-8 col-lg-7">
         <form asp-action="Create">
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-            <input type="hidden" asp-for="EntityId"/>
+            <input type="hidden" asp-for="ContactId"/>
 
             <div class="crm-form-card">
                 <div class="crm-form-card-header">
@@ -79,7 +79,7 @@
 
                     <div class="d-grid gap-2 d-md-flex mt-4">
                         <button type="submit" class="crm-btn-primary"><i class="bi bi-plus-lg" aria-hidden="true"></i> Create</button>
-                        <a asp-action="Index" asp-route-contactId="@Model.EntityId" class="crm-btn-tertiary"><i class="bi bi-x-lg" aria-hidden="true"></i> Cancel</a>
+                        <a asp-action="Index" asp-route-contactId="@Model.ContactId" class="crm-btn-tertiary"><i class="bi bi-x-lg" aria-hidden="true"></i> Cancel</a>
                     </div>
                 </div>
             </div>

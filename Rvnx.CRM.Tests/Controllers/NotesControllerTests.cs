@@ -2,7 +2,6 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Moq;
 using Rvnx.CRM.Core.DTOs.Base;
-using Rvnx.CRM.Core.Enumerations;
 using Rvnx.CRM.Core.Interfaces;
 using Rvnx.CRM.Core.Models;
 using Rvnx.CRM.Core.Models.Base;
@@ -33,15 +32,15 @@ public class NotesControllerTests
             _context = TestDbContextFactory.Create(_currentUserId, "test-user", null, out _);
             Repository repository = new(_context);
 
-            Mock<IEntityService> mockEntityService = new();
-            mockEntityService.Setup(s => s.IsPartialAsync(It.IsAny<EntityType>(), It.IsAny<Guid>())).ReturnsAsync(false);
-            mockEntityService.Setup(s => s.GetEntityNameAsync(It.IsAny<EntityType>(), It.IsAny<Guid>())).ReturnsAsync("Test Entity");
+            Mock<IContactLookupService> mockContactLookupService = new();
+            mockContactLookupService.Setup(s => s.IsPartialAsync(It.IsAny<Guid>())).ReturnsAsync(false);
+            mockContactLookupService.Setup(s => s.GetContactNameAsync(It.IsAny<Guid>())).ReturnsAsync("Test Entity");
 
             Mock<INoteService> mockNoteService = new(); // Adding missing mock
             mockNoteService.Setup(s => s.CreateAsync(It.IsAny<NoteFormViewModel>()))
                 .ReturnsAsync(OperationResult.NotFound("Contact not found."));
 
-            _controller = new NotesController(mockNoteService.Object, repository, mockEntityService.Object);
+            _controller = new NotesController(mockNoteService.Object, repository, mockContactLookupService.Object);
         }
 
         public void Dispose()
@@ -80,8 +79,7 @@ public class NotesControllerTests
 
             NoteFormViewModel maliciousNote = new()
             {
-                EntityId = otherUserContactId,
-                EntityType = EntityType.Person,
+                ContactId = otherUserContactId,
                 Title = "Malicious Note",
                 Value = "I shouldn't be here"
             };
@@ -107,20 +105,9 @@ public class NotesControllerTests
             await _context.SaveChangesAsync();
             _context.ChangeTracker.Clear();
 
-            IActionResult result = await _controller.Create(otherUserContactId, EntityType.Person);
+            IActionResult result = await _controller.Create(otherUserContactId);
 
             Assert.IsType<NotFoundResult>(result);
-        }
-
-        [Fact]
-        public async Task CreateGetShouldReturnBadRequestWhenEntityTypeIsNotPerson()
-        {
-            Guid entityId = Guid.NewGuid();
-
-            IActionResult result = await _controller.Create(entityId, EntityType.Company);
-
-            BadRequestObjectResult badRequest = Assert.IsType<BadRequestObjectResult>(result);
-            Assert.Equal("Only Person entities are supported.", badRequest.Value);
         }
 
     }
@@ -143,13 +130,13 @@ public class NotesControllerTests
             _context = new CRMDbContext(options, mockCurrentUserService.Object);
             Repository repository = new(_context);
 
-            Mock<IEntityService> mockEntityService = new();
-            mockEntityService.Setup(s => s.IsPartialAsync(It.IsAny<EntityType>(), It.IsAny<Guid>())).ReturnsAsync(false);
-            mockEntityService.Setup(s => s.GetEntityNameAsync(It.IsAny<EntityType>(), It.IsAny<Guid>())).ReturnsAsync("Test Entity");
+            Mock<IContactLookupService> mockContactLookupService = new();
+            mockContactLookupService.Setup(s => s.IsPartialAsync(It.IsAny<Guid>())).ReturnsAsync(false);
+            mockContactLookupService.Setup(s => s.GetContactNameAsync(It.IsAny<Guid>())).ReturnsAsync("Test Entity");
 
-            INoteService noteService = new NoteService(repository, mockEntityService.Object);
+            INoteService noteService = new NoteService(repository, mockContactLookupService.Object);
 
-            _controller = new NotesController(noteService, repository, mockEntityService.Object);
+            _controller = new NotesController(noteService, repository, mockContactLookupService.Object);
         }
 
         public void Dispose()
@@ -169,8 +156,7 @@ public class NotesControllerTests
 
             NoteFormViewModel note = new()
             {
-                EntityId = contactId,
-                EntityType = EntityType.Person,
+                ContactId = contactId,
                 Title = "Test Note",
                 Value = "Content"
             };
@@ -188,23 +174,6 @@ public class NotesControllerTests
         }
 
         [Fact]
-        public async Task CreatePostWithNonPersonEntityTypeShouldReturnBadRequest()
-        {
-            NoteFormViewModel note = new()
-            {
-                EntityId = Guid.NewGuid(),
-                EntityType = EntityType.Company,
-                Title = "Test Note",
-                Value = "Content"
-            };
-
-            IActionResult result = await _controller.Create(note);
-
-            BadRequestObjectResult badRequest = Assert.IsType<BadRequestObjectResult>(result);
-            Assert.Equal("Only Person entities are supported.", badRequest.Value);
-        }
-
-        [Fact]
         public async Task EditPostWithValidDataShouldUpdateNote()
         {
             Guid noteId = Guid.NewGuid();
@@ -217,8 +186,7 @@ public class NotesControllerTests
             NoteFormViewModel update = new()
             {
                 Id = noteId,
-                EntityId = contactId,
-                EntityType = EntityType.Person,
+                ContactId = contactId,
                 Title = "New",
                 Value = "NewVal"
             };

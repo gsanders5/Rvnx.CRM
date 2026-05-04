@@ -23,7 +23,7 @@ public class PetServiceTests
     {
         // Arrange
         Guid contactId = Guid.NewGuid();
-        PetFormDto dto = new() { EntityId = contactId, Name = "Buddy", Species = "Dog" };
+        PetFormDto dto = new() { ContactId = contactId, Name = "Buddy", Species = "Dog" };
 
         _repositoryMock.Setup(r => r.CountAsync(
                 It.IsAny<System.Linq.Expressions.Expression<Func<Contact, bool>>>(),
@@ -62,7 +62,7 @@ public class PetServiceTests
         PetFormDto dto = new()
         {
             Id = petId,
-            EntityId = contactB,
+            ContactId = contactB,
             ContactIds = [contactB, contactC],
             Name = "Whiskers"
         };
@@ -129,7 +129,7 @@ public class PetServiceTests
     {
         // Arrange — registering a NEW pet against a deceased owner is forward-looking and refused.
         Guid contactId = Guid.NewGuid();
-        PetFormDto dto = new() { EntityId = contactId, Name = "Rex", Species = "Dog" };
+        PetFormDto dto = new() { ContactId = contactId, Name = "Rex", Species = "Dog" };
 
         Contact deceased = new()
         {

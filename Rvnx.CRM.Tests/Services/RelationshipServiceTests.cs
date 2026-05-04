@@ -5,7 +5,6 @@ using Rvnx.CRM.Core.DTOs.Contact;
 using Rvnx.CRM.Core.Enumerations;
 using Rvnx.CRM.Core.Interfaces;
 using Rvnx.CRM.Core.Models;
-using Rvnx.CRM.Core.Models.Business;
 using Rvnx.CRM.Core.Models.Contact;
 using Rvnx.CRM.Core.Models.Dates;
 using Rvnx.CRM.Core.Services;
@@ -27,7 +26,7 @@ public class RelationshipServiceTests
     }
 
     [Fact]
-    public async Task GetRelatedEntityOptionsAsyncWhenEntityTypeIsPersonReturnsPersonOptions()
+    public async Task GetRelatedContactOptionsAsyncWhenEntityTypeIsPersonReturnsPersonOptions()
     {
         Guid entityId = Guid.NewGuid();
         Guid otherContactId = Guid.NewGuid();
@@ -42,7 +41,7 @@ public class RelationshipServiceTests
                 new SelectOptionDto { Value = otherContactId.ToString(), Text = "John Doe" }
             ]);
 
-        List<SelectOptionDto> result = await _service.GetRelatedEntityOptionsAsync(entityId, EntityType.Person);
+        List<SelectOptionDto> result = await _service.GetRelatedContactOptionsAsync(entityId);
 
         Assert.Single(result);
         Assert.Equal("John Doe", result[0].Text);
@@ -57,7 +56,7 @@ public class RelationshipServiceTests
     }
 
     [Fact]
-    public async Task GetRelatedEntityOptionsAsyncPersonProjectionAppendsPartialAndDeceasedSuffixes()
+    public async Task GetRelatedContactOptionsAsyncPersonProjectionAppendsPartialAndDeceasedSuffixes()
     {
         Guid entityId = Guid.NewGuid();
 
@@ -73,7 +72,7 @@ public class RelationshipServiceTests
                 (_, projection, _, _, _) => capturedProjection = projection)
             .ReturnsAsync([]);
 
-        await _service.GetRelatedEntityOptionsAsync(entityId, EntityType.Person);
+        await _service.GetRelatedContactOptionsAsync(entityId);
 
         Assert.NotNull(capturedProjection);
         Func<Contact, SelectOptionDto> projectionFunc = capturedProjection.Compile();
@@ -95,7 +94,7 @@ public class RelationshipServiceTests
     {
         // (No arrange needed as we are using the statically populated list of relationship types)
 
-        List<SelectOptionDto> result = _service.GetRelationshipTypeOptions(EntityType.Person);
+        List<SelectOptionDto> result = _service.GetRelationshipTypeOptions();
 
         List<SelectOptionDto> spouseOptions = result.Where(x => x.Value.StartsWith(RelationshipTypeIds.Spouse.ToString(), StringComparison.Ordinal)).ToList();
 
@@ -112,7 +111,7 @@ public class RelationshipServiceTests
     {
         // (No arrange needed as we are using the statically populated list of relationship types)
 
-        List<SelectOptionDto> result = _service.GetRelationshipTypeOptions(EntityType.Person);
+        List<SelectOptionDto> result = _service.GetRelationshipTypeOptions();
 
         List<SelectOptionDto> parentOptions = result.Where(x => x.Value.StartsWith(RelationshipTypeIds.Parent.ToString(), StringComparison.Ordinal)).ToList();
 
@@ -137,54 +136,13 @@ public class RelationshipServiceTests
     {
         string selectedValue = $"{RelationshipTypeIds.Parent}_Rev";
 
-        List<SelectOptionDto> result = _service.GetRelationshipTypeOptions(EntityType.Person, selectedValue);
+        List<SelectOptionDto> result = _service.GetRelationshipTypeOptions(selectedValue);
 
         List<SelectOptionDto> parentOptions = result.Where(x => x.Value.StartsWith(RelationshipTypeIds.Parent.ToString(), StringComparison.Ordinal)).ToList();
 
         Assert.Equal(2, parentOptions.Count);
         Assert.False(parentOptions.Single(x => x.Value.EndsWith("_Fwd", StringComparison.Ordinal)).Selected);
         Assert.True(parentOptions.Single(x => x.Value.EndsWith("_Rev", StringComparison.Ordinal)).Selected);
-    }
-
-    [Fact]
-    public async Task GetRelatedEntityOptionsAsyncWhenEntityTypeIsCompanyReturnsCompanyOptions()
-    {
-        Guid entityId = Guid.NewGuid();
-        Guid companyId = Guid.NewGuid();
-
-        _repositoryMock.Setup(r => r.ListProjectedAsync<Employer, SelectOptionDto, string>(
-                It.IsAny<System.Linq.Expressions.Expression<Func<Employer, bool>>>(),
-                It.IsAny<System.Linq.Expressions.Expression<Func<Employer, SelectOptionDto>>>(),
-                It.IsAny<System.Linq.Expressions.Expression<Func<Employer, string>>>(),
-                It.IsAny<bool>(),
-                It.IsAny<CancellationToken>()))
-            .ReturnsAsync([
-                new SelectOptionDto { Value = companyId.ToString(), Text = "Acme Corp" }
-            ]);
-
-        List<SelectOptionDto> result = await _service.GetRelatedEntityOptionsAsync(entityId, EntityType.Company);
-
-        Assert.Single(result);
-        Assert.Equal("Acme Corp", result[0].Text);
-        Assert.Equal(companyId.ToString(), result[0].Value);
-
-        _repositoryMock.Verify(r => r.ListProjectedAsync<Employer, SelectOptionDto, string>(
-                It.IsAny<System.Linq.Expressions.Expression<Func<Employer, bool>>>(),
-                It.IsAny<System.Linq.Expressions.Expression<Func<Employer, SelectOptionDto>>>(),
-                It.IsAny<System.Linq.Expressions.Expression<Func<Employer, string>>>(),
-                It.IsAny<bool>(),
-                It.IsAny<CancellationToken>()), Times.Once);
-    }
-
-    [Fact]
-    public async Task GetRelatedEntityOptionsAsyncWhenEntityTypeIsUnsupportedReturnsEmptyList()
-    {
-        Guid entityId = Guid.NewGuid();
-
-        List<SelectOptionDto> result = await _service.GetRelatedEntityOptionsAsync(entityId, EntityType.Opportunity);
-
-        Assert.Empty(result);
-        Assert.Empty(_repositoryMock.Invocations);
     }
 
     [Theory]
@@ -247,8 +205,8 @@ public class RelationshipServiceTests
         Relationship relationship = new()
         {
             Id = relationshipId,
-            EntityId = p1Id,
-            RelatedEntityId = p2Id
+            ContactId = p1Id,
+            RelatedContactId = p2Id
         };
 
         Contact contact1 = new() { Id = p1Id, FirstName = "John" };
@@ -334,8 +292,8 @@ public class RelationshipServiceTests
         Guid typeId = Guid.NewGuid();
         string selection = $"{typeId}_Fwd";
 
-        Relationship existingRelationship = new() { Id = relationshipId, EntityId = Guid.NewGuid(), RelatedEntityId = Guid.NewGuid() };
-        Relationship updatedRelationship = new() { EntityId = existingRelationship.EntityId, RelatedEntityId = existingRelationship.RelatedEntityId };
+        Relationship existingRelationship = new() { Id = relationshipId, ContactId = Guid.NewGuid(), RelatedContactId = Guid.NewGuid() };
+        Relationship updatedRelationship = new() { ContactId = existingRelationship.ContactId, RelatedContactId = existingRelationship.RelatedContactId };
 
         _repositoryMock.Setup(r => r.GetByIdAsync<Relationship>(relationshipId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(existingRelationship);
@@ -363,12 +321,11 @@ public class RelationshipServiceTests
         Guid entityId = Guid.NewGuid();
         Guid relatedEntityId = Guid.NewGuid();
 
-        Relationship existingRelationship = new() { Id = relationshipId, EntityId = Guid.NewGuid(), RelatedEntityId = Guid.NewGuid() };
+        Relationship existingRelationship = new() { Id = relationshipId, ContactId = Guid.NewGuid(), RelatedContactId = Guid.NewGuid() };
         Relationship updatedRelationship = new()
         {
-            EntityId = entityId,
-            RelatedEntityId = relatedEntityId,
-            EntityType = EntityType.Person,
+            ContactId = entityId,
+            RelatedContactId = relatedEntityId,
             Description = "Updated description"
         };
 
@@ -384,11 +341,10 @@ public class RelationshipServiceTests
 
         Assert.True(result.Success);
         Assert.Equal(entityId, result.RedirectId);
-        Assert.Equal(EntityType.Person, result.EntityType);
 
         Assert.Equal(typeId, existingRelationship.RelationshipTypeId);
-        Assert.Equal(entityId, existingRelationship.EntityId);
-        Assert.Equal(relatedEntityId, existingRelationship.RelatedEntityId);
+        Assert.Equal(entityId, existingRelationship.ContactId);
+        Assert.Equal(relatedEntityId, existingRelationship.RelatedContactId);
         Assert.Equal("Updated description", existingRelationship.Description);
 
         _repositoryMock.Verify(r => r.UpdateAsync(existingRelationship, It.IsAny<CancellationToken>()), Times.Once);
@@ -406,12 +362,11 @@ public class RelationshipServiceTests
         Guid entityId = Guid.NewGuid();
         Guid relatedEntityId = Guid.NewGuid();
 
-        Relationship existingRelationship = new() { Id = relationshipId, EntityId = Guid.NewGuid(), RelatedEntityId = Guid.NewGuid() };
+        Relationship existingRelationship = new() { Id = relationshipId, ContactId = Guid.NewGuid(), RelatedContactId = Guid.NewGuid() };
         Relationship updatedRelationship = new()
         {
-            EntityId = entityId,
-            RelatedEntityId = relatedEntityId,
-            EntityType = EntityType.Person
+            ContactId = entityId,
+            RelatedContactId = relatedEntityId
         };
 
         _repositoryMock.Setup(r => r.GetByIdAsync<Relationship>(relationshipId, It.IsAny<CancellationToken>()))
@@ -426,11 +381,10 @@ public class RelationshipServiceTests
 
         Assert.True(result.Success);
         Assert.Equal(entityId, result.RedirectId);
-        Assert.Equal(EntityType.Person, result.EntityType);
 
         Assert.Equal(typeId, existingRelationship.RelationshipTypeId);
-        Assert.Equal(relatedEntityId, existingRelationship.EntityId); // Swapped
-        Assert.Equal(entityId, existingRelationship.RelatedEntityId); // Swapped
+        Assert.Equal(relatedEntityId, existingRelationship.ContactId); // Swapped
+        Assert.Equal(entityId, existingRelationship.RelatedContactId); // Swapped
 
         _repositoryMock.Verify(r => r.UpdateAsync(existingRelationship, It.IsAny<CancellationToken>()), Times.Once);
         _repositoryMock.Verify(r => r.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
@@ -459,7 +413,7 @@ public class RelationshipServiceTests
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(
             [
-                new Relationship { EntityId = targetId, RelatedEntityId = cId, RelationshipTypeId = typeId }
+                new Relationship { ContactId = targetId, RelatedContactId = cId, RelationshipTypeId = typeId }
             ]);
 
         // Batch contact load for BFS component nodes (cId is the discovered neighbour)
@@ -494,20 +448,18 @@ public class RelationshipServiceTests
 
         Relationship relationship = new()
         {
-            EntityId = entityId,
-            RelatedEntityId = relatedEntityId,
-            EntityType = EntityType.Person
+            ContactId = entityId,
+            RelatedContactId = relatedEntityId
         };
 
         RelationshipOperationResult result = await _service.CreateRelationshipAsync(relationship, selection);
 
         Assert.True(result.Success);
         Assert.Equal(entityId, result.RedirectId);
-        Assert.Equal(EntityType.Person, result.EntityType);
 
         Assert.Equal(typeId, relationship.RelationshipTypeId);
-        Assert.Equal(entityId, relationship.EntityId);
-        Assert.Equal(relatedEntityId, relationship.RelatedEntityId);
+        Assert.Equal(entityId, relationship.ContactId);
+        Assert.Equal(relatedEntityId, relationship.RelatedContactId);
 
         _repositoryMock.Verify(r => r.AddAsync(relationship, It.IsAny<CancellationToken>()), Times.Once);
         _repositoryMock.Verify(r => r.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
@@ -525,9 +477,8 @@ public class RelationshipServiceTests
 
         Relationship relationship = new()
         {
-            EntityId = entityId,
-            RelatedEntityId = relatedEntityId,
-            EntityType = EntityType.Person
+            ContactId = entityId,
+            RelatedContactId = relatedEntityId
         };
 
         RelationshipOperationResult result = await _service.CreateRelationshipAsync(relationship, selection);
@@ -535,11 +486,10 @@ public class RelationshipServiceTests
         Assert.True(result.Success);
         Assert.Equal(entityId,
             result.RedirectId); // The original entity stays the primary entity because Swap is called before Ok
-        Assert.Equal(EntityType.Person, result.EntityType);
 
         Assert.Equal(typeId, relationship.RelationshipTypeId);
-        Assert.Equal(relatedEntityId, relationship.EntityId); // Swapped
-        Assert.Equal(entityId, relationship.RelatedEntityId); // Swapped
+        Assert.Equal(relatedEntityId, relationship.ContactId); // Swapped
+        Assert.Equal(entityId, relationship.RelatedContactId); // Swapped
 
         _repositoryMock.Verify(r => r.AddAsync(relationship, It.IsAny<CancellationToken>()), Times.Once);
         _repositoryMock.Verify(r => r.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
@@ -562,6 +512,9 @@ public class RelationshipServiceTests
             Description = "A new partial contact"
         };
 
+        _repositoryMock.Setup(r => r.GetByIdAsync<Contact>(parentEntityId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new Contact { Id = parentEntityId, FirstName = "Parent" });
+
         RelationshipOperationResult result =
             await _service.CreatePartialContactRelationshipAsync(parentEntityId, selection, dto);
 
@@ -578,7 +531,7 @@ public class RelationshipServiceTests
             sd.EventDate == new DateOnly(1990, 5, 15)), It.IsAny<CancellationToken>()), Times.Once);
 
         _repositoryMock.Verify(r => r.AddAsync(It.Is<Relationship>(rel =>
-            rel.EntityId == parentEntityId &&
+            rel.ContactId == parentEntityId &&
             rel.RelationshipTypeId == typeId &&
             rel.Description == "A new partial contact"), It.IsAny<CancellationToken>()), Times.Once);
 
@@ -631,20 +584,18 @@ public class RelationshipServiceTests
     public async Task DeleteRelationshipAsyncWhenFoundReturnsOk()
     {
         Guid relationshipId = Guid.NewGuid();
-        Guid entityId = Guid.NewGuid();
-        EntityType entityType = EntityType.Person;
+        Guid contactId = Guid.NewGuid();
 
-        _repositoryMock.Setup(r => r.ListProjectedAsync<Relationship, (Guid EntityId, EntityType EntityType)>(
+        _repositoryMock.Setup(r => r.ListProjectedAsync<Relationship, Guid>(
                 It.IsAny<Expression<Func<Relationship, bool>>>(),
-                It.IsAny<Expression<Func<Relationship, (Guid EntityId, EntityType EntityType)>>>(),
+                It.IsAny<Expression<Func<Relationship, Guid>>>(),
                 It.IsAny<CancellationToken>()))
-            .ReturnsAsync([(entityId, entityType)]);
+            .ReturnsAsync([contactId]);
 
         OperationResult result = await _service.DeleteRelationshipAsync(relationshipId);
 
         Assert.True(result.Success);
-        Assert.Equal(entityId, result.RedirectId);
-        Assert.Equal(entityType, result.RedirectType);
+        Assert.Equal(contactId, result.RedirectId);
 
         _repositoryMock.Verify(r => r.DeleteAsync(It.IsAny<Expression<Func<Relationship, bool>>>(), It.IsAny<CancellationToken>()), Times.Once);
         _repositoryMock.Verify(r => r.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
@@ -657,9 +608,9 @@ public class RelationshipServiceTests
     {
         Guid relationshipId = Guid.NewGuid();
 
-        _repositoryMock.Setup(r => r.ListProjectedAsync<Relationship, (Guid EntityId, EntityType EntityType)>(
+        _repositoryMock.Setup(r => r.ListProjectedAsync<Relationship, Guid>(
                 It.IsAny<Expression<Func<Relationship, bool>>>(),
-                It.IsAny<Expression<Func<Relationship, (Guid EntityId, EntityType EntityType)>>>(),
+                It.IsAny<Expression<Func<Relationship, Guid>>>(),
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync([]);
 
@@ -681,9 +632,8 @@ public class RelationshipServiceTests
 
         Relationship relationship = new()
         {
-            EntityId = entityIdA,
-            RelatedEntityId = entityIdB,
-            EntityType = EntityType.Person
+            ContactId = entityIdA,
+            RelatedContactId = entityIdB
         };
 
         RelationshipOperationResult result =
@@ -691,8 +641,8 @@ public class RelationshipServiceTests
 
         Assert.True(result.Success);
         Assert.Equal(typeId, relationship.RelationshipTypeId);
-        Assert.Equal(entityIdA, relationship.EntityId);
-        Assert.Equal(entityIdB, relationship.RelatedEntityId);
+        Assert.Equal(entityIdA, relationship.ContactId);
+        Assert.Equal(entityIdB, relationship.RelatedContactId);
 
         _repositoryMock.Verify(r => r.AddAsync(relationship, It.IsAny<CancellationToken>()), Times.Once);
         _repositoryMock.Verify(r => r.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
@@ -701,16 +651,15 @@ public class RelationshipServiceTests
     [Fact]
     public async Task CreateRelationshipAsyncSymmetricTypeReverseSwapsToCanonicalDirection()
     {
-        // Spouse is symmetric — _Rev still swaps EntityId/RelatedEntityId so canonical storage is consistent
+        // Spouse is symmetric — _Rev still swaps ContactId/RelatedContactId so canonical storage is consistent
         Guid typeId = RelationshipTypeIds.Spouse;
         Guid entityIdA = Guid.NewGuid();
         Guid entityIdB = Guid.NewGuid();
 
         Relationship relationship = new()
         {
-            EntityId = entityIdB,
-            RelatedEntityId = entityIdA,
-            EntityType = EntityType.Person
+            ContactId = entityIdB,
+            RelatedContactId = entityIdA
         };
 
         RelationshipOperationResult result =
@@ -718,8 +667,8 @@ public class RelationshipServiceTests
 
         Assert.True(result.Success);
         Assert.Equal(typeId, relationship.RelationshipTypeId);
-        Assert.Equal(entityIdA, relationship.EntityId);
-        Assert.Equal(entityIdB, relationship.RelatedEntityId);
+        Assert.Equal(entityIdA, relationship.ContactId);
+        Assert.Equal(entityIdB, relationship.RelatedContactId);
 
         _repositoryMock.Verify(r => r.AddAsync(relationship, It.IsAny<CancellationToken>()), Times.Once);
         _repositoryMock.Verify(r => r.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
@@ -748,7 +697,7 @@ public class RelationshipServiceTests
             {
                 if (rel.Description == "Automatically added from suggested relationship.")
                 {
-                    capturedSuggestedEntityId = rel.EntityId;
+                    capturedSuggestedEntityId = rel.ContactId;
                 }
             })
             .ReturnsAsync((Relationship rel, CancellationToken _) => rel);
@@ -758,11 +707,37 @@ public class RelationshipServiceTests
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync([]);
 
+        _repositoryMock.Setup(r => r.GetByIdAsync<Contact>(parentEntityId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new Contact { Id = parentEntityId, FirstName = "Parent" });
+
         RelationshipOperationResult result =
             await _service.CreatePartialContactRelationshipAsync(parentEntityId, selection, dto);
 
         Assert.True(result.Success);
         Assert.NotEqual(Guid.Empty, capturedSuggestedEntityId);
+    }
+
+    [Fact]
+    public async Task CreatePartialContactRelationshipAsyncReturnsFailureWhenParentContactNotVisible()
+    {
+        Guid parentEntityId = Guid.NewGuid();
+        Guid typeId = Guid.NewGuid();
+        string selection = $"{typeId}_Fwd";
+
+        CreatePartialContactRelationshipDto dto = new()
+        {
+            PartialContactFirstName = "Jane"
+        };
+
+        _repositoryMock.Setup(r => r.GetByIdAsync<Contact>(parentEntityId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync((Contact?)null);
+
+        RelationshipOperationResult result =
+            await _service.CreatePartialContactRelationshipAsync(parentEntityId, selection, dto);
+
+        Assert.False(result.Success);
+        _repositoryMock.Verify(r => r.AddAsync(It.IsAny<Contact>(), It.IsAny<CancellationToken>()), Times.Never);
+        _repositoryMock.Verify(r => r.AddAsync(It.IsAny<Relationship>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]
@@ -775,9 +750,8 @@ public class RelationshipServiceTests
 
         Relationship relationship = new()
         {
-            EntityId = entityId,
-            RelatedEntityId = relatedEntityId,
-            EntityType = EntityType.Person
+            ContactId = entityId,
+            RelatedContactId = relatedEntityId
         };
 
         _repositoryMock.Setup(r => r.CountAsync<Relationship>(

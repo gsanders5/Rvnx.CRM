@@ -253,9 +253,9 @@ public class MergeServiceTests : IDisposable
         Guid typeId = Guid.NewGuid();
 
         Relationship rel1 = new()
-        { Id = Guid.NewGuid(), EntityId = primary.Id, RelatedEntityId = other.Id, RelationshipTypeId = typeId, EntityType = EntityType.Person };
+        { Id = Guid.NewGuid(), ContactId = primary.Id, RelatedContactId = other.Id, RelationshipTypeId = typeId };
         Relationship rel2 = new()
-        { Id = Guid.NewGuid(), EntityId = secondary.Id, RelatedEntityId = other.Id, RelationshipTypeId = typeId, EntityType = EntityType.Person };
+        { Id = Guid.NewGuid(), ContactId = secondary.Id, RelatedContactId = other.Id, RelationshipTypeId = typeId };
 
         await _context.Contacts!.AddRangeAsync(primary, secondary, other);
         await _context.Set<Relationship>().AddRangeAsync(rel1, rel2);
@@ -263,9 +263,9 @@ public class MergeServiceTests : IDisposable
 
         await _sut.MergeContactsAsync(primary.Id, secondary.Id);
 
-        List<Relationship> rels = await _context.Set<Relationship>().Where(r => r.EntityId == primary.Id).ToListAsync();
+        List<Relationship> rels = await _context.Set<Relationship>().Where(r => r.ContactId == primary.Id).ToListAsync();
         Assert.Single(rels);
-        Assert.Equal(other.Id, rels.First().RelatedEntityId);
+        Assert.Equal(other.Id, rels.First().RelatedContactId);
     }
 
     [Fact]
@@ -298,18 +298,16 @@ public class MergeServiceTests : IDisposable
         Relationship primaryToTertiary = new()
         {
             Id = Guid.NewGuid(),
-            EntityId = primary.Id,
-            RelatedEntityId = tertiary.Id,
-            RelationshipTypeId = typeId,
-            EntityType = EntityType.Person
+            ContactId = primary.Id,
+            RelatedContactId = tertiary.Id,
+            RelationshipTypeId = typeId
         };
         Relationship secondaryToTertiary = new()
         {
             Id = Guid.NewGuid(),
-            EntityId = secondary.Id,
-            RelatedEntityId = tertiary.Id,
-            RelationshipTypeId = typeId,
-            EntityType = EntityType.Person
+            ContactId = secondary.Id,
+            RelatedContactId = tertiary.Id,
+            RelationshipTypeId = typeId
         };
 
         await _context.Contacts!.AddRangeAsync(primary, secondary, tertiary);
@@ -319,14 +317,14 @@ public class MergeServiceTests : IDisposable
         await _sut.MergeContactsAsync(primary.Id, secondary.Id);
 
         List<Relationship> relsFromPrimary = await _context.Set<Relationship>()
-            .Where(r => r.EntityId == primary.Id)
+            .Where(r => r.ContactId == primary.Id)
             .ToListAsync();
 
         Assert.Single(relsFromPrimary);
-        Assert.Equal(tertiary.Id, relsFromPrimary.First().RelatedEntityId);
+        Assert.Equal(tertiary.Id, relsFromPrimary.First().RelatedContactId);
 
         bool selfReferential = await _context.Set<Relationship>()
-            .AnyAsync(r => r.EntityId == primary.Id && r.RelatedEntityId == primary.Id);
+            .AnyAsync(r => r.ContactId == primary.Id && r.RelatedContactId == primary.Id);
         Assert.False(selfReferential);
     }
 

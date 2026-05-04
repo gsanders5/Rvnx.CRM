@@ -1,20 +1,18 @@
-@using Rvnx.CRM.Core.Enumerations
 @model Rvnx.CRM.Core.DTOs.Contact.RelationshipFormViewModel
 
 @{
     ViewData["Title"] = "Edit Relationship";
 }
 
-<h1>Edit Relationship for @Model.EntityName</h1>
+<h1>Edit Relationship for @Model.ContactName</h1>
 
 <div class="row">
     <div class="col-md-6">
         <form asp-action="Edit" id="edit-relationship-form">
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
             <input type="hidden" asp-for="Id"/>
-            <input type="hidden" asp-for="EntityId"/>
-            <input type="hidden" asp-for="EntityType"/>
-            <input type="hidden" asp-for="EntityName"/>
+            <input type="hidden" asp-for="ContactId"/>
+            <input type="hidden" asp-for="ContactName"/>
             <input type="hidden" asp-for="RelationshipTypeId"/>
 
             <!-- Hidden input to store the final selection -->
@@ -63,7 +61,7 @@
 
             <!-- Step 2: Role Selection (Initially Hidden) -->
             <div class="mb-4" id="role-selection-container" style="display: none;">
-                <label class="form-label fw-bold">Step 2: @Model.EntityName is the...</label>
+                <label class="form-label fw-bold">Step 2: @Model.ContactName is the...</label>
                 <div class="btn-group w-100" role="group">
                     <button type="button" class="crm-btn-secondary role-btn" data-role="Fwd" id="role-fwd-btn">Parent</button>
                     <button type="button" class="crm-btn-secondary role-btn" data-role="Rev" id="role-rev-btn">Child</button>
@@ -71,11 +69,11 @@
             </div>
 
             <div class="mb-3">
-                <label asp-for="RelatedEntityId" class="form-label">Related Entity</label>
-                <select asp-for="RelatedEntityId" class="form-select" asp-items="@(new SelectList(Model.RelatedEntityOptions, "Value", "Text"))">
-                    <option value="">-- Select Related Entity --</option>
+                <label asp-for="RelatedContactId" class="form-label">Related Contact</label>
+                <select asp-for="RelatedContactId" class="form-select" asp-items="@(new SelectList(Model.RelatedContactOptions, "Value", "Text"))">
+                    <option value="">-- Select Related Contact --</option>
                 </select>
-                <span asp-validation-for="RelatedEntityId" class="text-danger"></span>
+                <span asp-validation-for="RelatedContactId" class="text-danger"></span>
             </div>
 
             <div class="crm-alert crm-alert-info" id="relationshipPreview" style="display: none;">
@@ -102,26 +100,19 @@
 
             <div class="d-grid gap-2 d-md-flex mt-4">
                 <button type="submit" class="crm-btn-primary"><i class="bi bi-save" aria-hidden="true"></i> Save</button>
-                @if (Model.IsEntityPartial || Model.IsRelatedEntityPartial)
+                @if (Model.IsContactPartial || Model.IsRelatedContactPartial)
                 {
                     <button type="button" class="crm-btn-secondary" data-mdb-modal-init data-mdb-target="#promoteModal">
                         <i class="bi bi-person-check" aria-hidden="true"></i> Promote to Contact
                     </button>
                 }
-                @if (Model.EntityType == EntityType.Person)
-                {
-                    <a asp-controller="Contacts" asp-action="Details" asp-route-id="@Model.EntityId" class="crm-btn-tertiary"><i class="bi bi-x-lg" aria-hidden="true"></i> Cancel</a>
-                }
-                else
-                {
-                    <a asp-controller="Home" asp-action="Index" class="crm-btn-tertiary"><i class="bi bi-x-lg" aria-hidden="true"></i> Cancel</a>
-                }
+                <a asp-controller="Contacts" asp-action="Details" asp-route-id="@Model.ContactId" class="crm-btn-tertiary"><i class="bi bi-x-lg" aria-hidden="true"></i> Cancel</a>
             </div>
         </form>
     </div>
 </div>
 
-@if (Model.IsEntityPartial || Model.IsRelatedEntityPartial)
+@if (Model.IsContactPartial || Model.IsRelatedContactPartial)
 {
     <!-- Promote Modal -->
     <div class="modal fade" id="promoteModal" tabindex="-1" aria-labelledby="promoteModalLabel" aria-hidden="true">
@@ -137,7 +128,7 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="crm-btn-tertiary" data-mdb-ripple-init data-mdb-dismiss="modal">Cancel</button>
-                    <form asp-controller="Relationships" asp-action="Promote" asp-route-contactId="@(Model.IsRelatedEntityPartial ? Model.RelatedEntityId : Model.EntityId)" method="post" class="d-inline">
+                    <form asp-controller="Relationships" asp-action="Promote" asp-route-contactId="@(Model.IsRelatedContactPartial ? Model.RelatedContactId : Model.ContactId)" method="post" class="d-inline">
                         <button type="submit" class="crm-btn-primary" data-mdb-ripple-init>Yes, Promote</button>
                     </form>
                 </div>
@@ -150,7 +141,7 @@
     @{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); }
     <script>
         $(document).ready(function() {
-            $('#RelatedEntityId').select2({ width: '100%' });
+            $('#RelatedContactId').select2({ width: '100%' });
         });
 
         document.addEventListener('DOMContentLoaded', function() {
@@ -170,7 +161,7 @@
                     this.toggleBtn = document.getElementById(config.toggleBtnId);
                     this.collapseEl = document.getElementById(config.collapseId);
 
-                    this.entityName = config.entityName;
+                    this.contactName = config.contactName;
 
                     this.state = {
                         typeId: null,
@@ -308,7 +299,7 @@
                     this.preview.textContent = '';
 
                     const s1 = document.createElement('strong');
-                    s1.textContent = this.entityName;
+                    s1.textContent = this.contactName;
                     this.preview.appendChild(s1);
 
                     this.preview.appendChild(document.createTextNode(` is ${relationText} of `));
@@ -321,7 +312,7 @@
                 }
             }
 
-            const entityName = @Json.Serialize(Model.EntityName);
+            const contactName = @Json.Serialize(Model.ContactName);
 
             new RelationshipSelector({
                 containerId: 'type-selection-container',
@@ -330,7 +321,7 @@
                 fwdBtnId: 'role-fwd-btn',
                 revBtnId: 'role-rev-btn',
                 previewId: 'relationshipPreview',
-                relatedInputId: 'RelatedEntityId',
+                relatedInputId: 'RelatedContactId',
 
                 collapseId: 'typeSelectionCollapse',
                 summaryId: 'type-selection-summary',
@@ -338,7 +329,7 @@
                 changeBtnId: 'change-type-btn',
                 toggleBtnId: 'typeCollapseToggle',
 
-                entityName: entityName
+                contactName: contactName
             });
         });
     </script>

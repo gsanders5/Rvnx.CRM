@@ -7,7 +7,7 @@ public class PetFormDto
     public Guid? Id { get; set; }
 
     [Required]
-    public Guid EntityId { get; set; }
+    public Guid ContactId { get; set; }
 
     public List<Guid> ContactIds { get; set; } = [];
 
@@ -21,7 +21,7 @@ public class PetFormDto
     [MaxLength(100)]
     public string? Breed { get; set; }
 
-    public DateTime? Birthday { get; set; }
+    public DateOnly? Birthday { get; set; }
 
     public string? Notes { get; set; }
 }

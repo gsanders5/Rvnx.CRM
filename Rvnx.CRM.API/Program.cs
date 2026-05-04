@@ -38,9 +38,8 @@ builder.Services.AddSwaggerGen(c =>
         Title = "Rvnx.CRM.API",
         Version = "v1",
         Description = "Personal CRM API. All endpoints require Bearer token authentication. All IDs are GUIDs. "
-                    + "Child resources (notes, facts, addresses, contact methods, significant dates) require entityId (parent contact GUID) "
-                    + "in their request bodies — they are always scoped to a Person. "
-                    + "Relationships require entityId plus entityType (enum: Person or Company)."
+                    + "Child resources (notes, facts, addresses, contact methods, significant dates, relationships) "
+                    + "require contactId in their request bodies."
     });
     c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {

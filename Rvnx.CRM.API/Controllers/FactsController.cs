@@ -10,7 +10,7 @@ namespace Rvnx.CRM.API.Controllers;
 
 /// <summary>
 /// Manages facts (quick key-value info) for contacts. Each fact has a category and value.
-/// Requires entityId (contact GUID) and entityType ("Person") when creating.
+/// Requires contactId (contact GUID) when creating.
 /// </summary>
 [ApiController]
 [Route("api/[controller]")]
@@ -31,10 +31,10 @@ public class FactsController(IFactService factService) : ControllerBase
     }
 
     /// <summary>
-    /// Create a new fact. Required fields: category, value, entityId, entityType ("Person").
+    /// Create a new fact. Required fields: category, value, contactId.
     /// </summary>
     /// <remarks>
-    /// Example: { "category": "Favorite Color", "value": "Blue", "entityId": "...", "entityType": "Person" }
+    /// Example: { "category": "Favorite Color", "value": "Blue", "contactId": "..." }
     /// </remarks>
     /// <param name="model">The fact data.</param>
     /// <returns>The new fact's ID.</returns>

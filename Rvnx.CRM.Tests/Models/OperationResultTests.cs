@@ -1,4 +1,3 @@
-using Rvnx.CRM.Core.Enumerations;
 using Rvnx.CRM.Core.Models;
 
 namespace Rvnx.CRM.Tests.Models;
@@ -10,11 +9,10 @@ public class OperationResultTests
     {
         var guid = Guid.NewGuid();
 
-        var result = OperationResult.Ok(guid, EntityType.Person);
+        var result = OperationResult.Ok(guid);
 
         Assert.True(result.Success);
         Assert.Equal(guid, result.RedirectId);
-        Assert.Equal(EntityType.Person, result.RedirectType);
     }
 
     [Fact]

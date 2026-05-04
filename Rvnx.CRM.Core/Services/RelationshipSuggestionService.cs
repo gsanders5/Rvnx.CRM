@@ -7,19 +7,20 @@ namespace Rvnx.CRM.Core.Services;
 public class RelationshipSuggestionService(IRepository repository) : IRelationshipSuggestionService
 {
     public async Task<bool> RelationshipDuplicateExistsAsync(
-        Guid entityId, Guid relatedEntityId, Guid typeId, Guid? excludeId = null)
+        Guid contactId, Guid relatedContactId, Guid typeId, Guid? excludeId = null)
     {
         return await repository.CountAsync<Relationship>(r =>
             (excludeId == null || r.Id != excludeId) &&
             r.RelationshipTypeId == typeId &&
-            ((r.EntityId == entityId && r.RelatedEntityId == relatedEntityId) ||
-             (r.EntityId == relatedEntityId && r.RelatedEntityId == entityId))) > 0;
+            ((r.ContactId == contactId && r.RelatedContactId == relatedContactId) ||
+             (r.ContactId == relatedContactId && r.RelatedContactId == contactId))) > 0;
     }
 
-    public async Task<List<SuggestedRelationshipDto>> GetSuggestedRelationshipsAsync(Guid entityId,
-        Guid? relatedEntityId, Guid relationshipTypeId, bool isReverse, string? partialContactName)
+    public async Task<List<SuggestedRelationshipDto>> GetSuggestedRelationshipsAsync(Guid contactId,
+        Guid? relatedContactId, Guid relationshipTypeId, bool isReverse, string? partialContactName)
     {
         List<SuggestedRelationshipDto> suggestions = [];
+        HashSet<string> seenPayloads = [];
 
         bool isTransitive = RelationshipTypeService.TransitiveRelationshipTypeIds.Contains(relationshipTypeId);
         bool isFamilyAdultChild =
@@ -36,47 +37,50 @@ public class RelationshipSuggestionService(IRepository repository) : IRelationsh
             return suggestions;
         }
 
-        Contact? entity = await repository.GetByIdAsync<Contact>(entityId);
-        if (entity == null)
+        Contact? contact = await repository.GetByIdAsync<Contact>(contactId);
+        if (contact == null)
         {
             return suggestions;
         }
 
-        string entityName = $"{entity.FirstName} {entity.LastName}".Trim();
+        string contactName = contact.FullName;
 
-        string relatedEntityName = partialContactName ?? string.Empty;
-        if (relatedEntityId.HasValue)
+        string relatedContactDisplayName = partialContactName ?? string.Empty;
+        if (relatedContactId.HasValue)
         {
-            Contact? relatedEntity = await repository.GetByIdAsync<Contact>(relatedEntityId.Value);
-            if (relatedEntity != null)
+            Contact? relatedContact = await repository.GetByIdAsync<Contact>(relatedContactId.Value);
+            if (relatedContact != null)
             {
-                relatedEntityName = $"{relatedEntity.FirstName} {relatedEntity.LastName}".Trim();
+                relatedContactDisplayName = relatedContact.FullName;
             }
         }
 
         async Task<HashSet<Guid>> GetComponentAsync(Guid startId, Guid typeIdToSearch)
         {
-            HashSet<Guid> comp = [];
-            Queue<Guid> q = new();
-            q.Enqueue(startId);
-            comp.Add(startId);
+            const int maxNodes = 50;
+            HashSet<Guid> comp = [startId];
+            HashSet<Guid> frontier = [startId];
 
-            int maxNodes = 50;
-
-            while (q.Count > 0 && comp.Count < maxNodes)
+            while (frontier.Count > 0 && comp.Count < maxNodes)
             {
-                Guid curr = q.Dequeue();
                 List<Relationship> edges = await repository.ListAsNoTrackingAsync<Relationship>(r =>
-                    r.RelationshipTypeId == typeIdToSearch && (r.EntityId == curr || r.RelatedEntityId == curr));
+                    r.RelationshipTypeId == typeIdToSearch &&
+                    (frontier.Contains(r.ContactId) || frontier.Contains(r.RelatedContactId)));
 
+                HashSet<Guid> nextFrontier = [];
                 foreach (Relationship edge in edges)
                 {
-                    Guid nbr = edge.EntityId == curr ? edge.RelatedEntityId : edge.EntityId;
-                    if (comp.Add(nbr))
+                    if (comp.Count >= maxNodes)
                     {
-                        q.Enqueue(nbr);
+                        break;
+                    }
+                    Guid neighbor = frontier.Contains(edge.ContactId) ? edge.RelatedContactId : edge.ContactId;
+                    if (comp.Add(neighbor))
+                    {
+                        nextFrontier.Add(neighbor);
                     }
                 }
+                frontier = nextFrontier;
             }
 
             return comp;
@@ -93,8 +97,7 @@ public class RelationshipSuggestionService(IRepository repository) : IRelationsh
             }
 
             string payload = $"{sId}_{tId}_{reverse}";
-            // Avoid duplicates in suggestions (if multiple paths lead to same edge)
-            if (!suggestions.Any(s => s.Payload == payload))
+            if (seenPayloads.Add(payload))
             {
                 suggestions.Add(new SuggestedRelationshipDto
                 {
@@ -108,14 +111,14 @@ public class RelationshipSuggestionService(IRepository repository) : IRelationsh
 
         if (isTransitive)
         {
-            HashSet<Guid> compE = await GetComponentAsync(entityId, relationshipTypeId);
-            HashSet<Guid> compR = relatedEntityId.HasValue
-                ? await GetComponentAsync(relatedEntityId.Value, relationshipTypeId)
+            HashSet<Guid> compE = await GetComponentAsync(contactId, relationshipTypeId);
+            HashSet<Guid> compR = relatedContactId.HasValue
+                ? await GetComponentAsync(relatedContactId.Value, relationshipTypeId)
                 : [Guid.Empty];
 
             // Batch-load all contacts from both components in two queries instead of one per node
-            HashSet<Guid> compEIds = compE.Where(id => id != entityId).ToHashSet();
-            HashSet<Guid> compRIds = compR.Where(id => id != Guid.Empty && id != relatedEntityId).ToHashSet();
+            HashSet<Guid> compEIds = compE.Where(id => id != contactId).ToHashSet();
+            HashSet<Guid> compRIds = compR.Where(id => id != Guid.Empty && id != relatedContactId).ToHashSet();
 
             HashSet<Guid> allNeededIds = [.. compEIds.Concat(compRIds)];
             List<Contact> batchContacts = allNeededIds.Count > 0
@@ -123,20 +126,20 @@ public class RelationshipSuggestionService(IRepository repository) : IRelationsh
                 : [];
             Dictionary<Guid, Contact> contactMap = batchContacts.ToDictionary(c => c.Id);
 
-            Guid tIdQuery = relatedEntityId ?? Guid.Empty;
+            Guid tIdQuery = relatedContactId ?? Guid.Empty;
             List<Relationship> existingRels = await repository.ListAsNoTrackingAsync<Relationship>(r =>
                 r.RelationshipTypeId == relationshipTypeId &&
-                (r.EntityId == entityId || r.RelatedEntityId == entityId ||
-                 r.EntityId == tIdQuery || r.RelatedEntityId == tIdQuery));
-            HashSet<(Guid, Guid)> existingEdges = existingRels.Select(r => (r.EntityId, r.RelatedEntityId)).ToHashSet();
+                (r.ContactId == contactId || r.RelatedContactId == contactId ||
+                 r.ContactId == tIdQuery || r.RelatedContactId == tIdQuery));
+            HashSet<(Guid, Guid)> existingEdges = existingRels.Select(r => (r.ContactId, r.RelatedContactId)).ToHashSet();
 
             foreach (Guid x in compEIds)
             {
                 if (contactMap.TryGetValue(x, out Contact? xContact))
                 {
-                    string xName = $"{xContact.FirstName} {xContact.LastName}".Trim();
-                    Guid tId = relatedEntityId ?? Guid.Empty;
-                    AddSuggestion(x, tId, xName, relatedEntityName, isReverse, existingEdges);
+                    string xName = xContact.FullName;
+                    Guid tId = relatedContactId ?? Guid.Empty;
+                    AddSuggestion(x, tId, xName, relatedContactDisplayName, isReverse, existingEdges);
                 }
             }
 
@@ -144,17 +147,17 @@ public class RelationshipSuggestionService(IRepository repository) : IRelationsh
             {
                 if (contactMap.TryGetValue(y, out Contact? yContact))
                 {
-                    string yName = $"{yContact.FirstName} {yContact.LastName}".Trim();
-                    AddSuggestion(entityId, y, entityName, yName, isReverse, existingEdges);
+                    string yName = yContact.FullName;
+                    AddSuggestion(contactId, y, contactName, yName, isReverse, existingEdges);
                 }
             }
         }
         else if (isFamilyAdultChild)
         {
-            Guid adultId = isReverse ? (relatedEntityId ?? Guid.Empty) : entityId;
-            Guid childId = isReverse ? entityId : (relatedEntityId ?? Guid.Empty);
+            Guid adultId = isReverse ? (relatedContactId ?? Guid.Empty) : contactId;
+            Guid childId = isReverse ? contactId : (relatedContactId ?? Guid.Empty);
 
-            string adultName = isReverse ? relatedEntityName : entityName;
+            string adultName = isReverse ? relatedContactDisplayName : contactName;
 
             if (childId != Guid.Empty)
             {
@@ -167,12 +170,13 @@ public class RelationshipSuggestionService(IRepository repository) : IRelationsh
 
                 List<Relationship> existingRels = await repository.ListAsNoTrackingAsync<Relationship>(r =>
                     r.RelationshipTypeId == relationshipTypeId &&
-                    (r.EntityId == adultId || r.RelatedEntityId == adultId));
-                HashSet<(Guid, Guid)> existingEdges = existingRels.Select(r => (r.EntityId, r.RelatedEntityId)).ToHashSet();
+                    (r.ContactId == adultId || r.RelatedContactId == adultId ||
+                     r.ContactId == childId || r.RelatedContactId == childId));
+                HashSet<(Guid, Guid)> existingEdges = existingRels.Select(r => (r.ContactId, r.RelatedContactId)).ToHashSet();
 
                 foreach (Contact sibContact in sibContacts)
                 {
-                    string sibName = $"{sibContact.FirstName} {sibContact.LastName}".Trim();
+                    string sibName = sibContact.FullName;
                     AddSuggestion(adultId, sibContact.Id, adultName, sibName, false, existingEdges);
                 }
             }

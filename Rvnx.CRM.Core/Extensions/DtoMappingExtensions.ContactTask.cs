@@ -15,7 +15,7 @@ public static partial class DtoMappingExtensions
             DueDate = entity.DueDate,
             IsCompleted = entity.IsCompleted,
             CompletedDate = entity.CompletedDate,
-            EntityId = entity.ContactId ?? Guid.Empty,
+            ContactId = entity.ContactId ?? Guid.Empty,
             CreatedDate = entity.CreatedDate,
             CreatedBy = entity.CreatedBy,
             LastChangedDate = entity.LastChangedDate,
@@ -32,7 +32,7 @@ public static partial class DtoMappingExtensions
             Description = dto.Description,
             DueDate = dto.DueDate,
             IsCompleted = dto.IsCompleted,
-            ContactId = dto.EntityId
+            ContactId = dto.ContactId
         };
     }
 

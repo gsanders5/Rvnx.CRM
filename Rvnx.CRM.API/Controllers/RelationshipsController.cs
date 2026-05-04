@@ -18,9 +18,13 @@ namespace Rvnx.CRM.API.Controllers;
 [ApiController]
 [Route("api/[controller]")]
 [Authorize]
-public class RelationshipsController(IRelationshipService relationshipService, IContactReadService contactReadService) : ControllerBase
+public class RelationshipsController(
+    IRelationshipService relationshipService,
+    IRelationshipSuggestionService relationshipSuggestionService,
+    IContactReadService contactReadService) : ControllerBase
 {
     private readonly IRelationshipService _relationshipService = relationshipService;
+    private readonly IRelationshipSuggestionService _relationshipSuggestionService = relationshipSuggestionService;
     private readonly IContactReadService _contactReadService = contactReadService;
 
     /// <summary>
@@ -46,7 +50,7 @@ public class RelationshipsController(IRelationshipService relationshipService, I
     /// </summary>
     /// <remarks>
     /// Each type has a Name and OppositeName. For asymmetric types (e.g. Parent/Child) use
-    /// Direction=Forward to apply the Name to EntityId, or Direction=Reverse to apply OppositeName.
+    /// Direction=Forward to apply the Name to ContactId, or Direction=Reverse to apply OppositeName.
     /// For symmetric types (Friend, Sibling, Colleague) Direction is ignored.
     /// </remarks>
     [HttpGet("types")]
@@ -69,17 +73,16 @@ public class RelationshipsController(IRelationshipService relationshipService, I
     /// <remarks>
     /// Workflow:
     /// 1. Call GET /api/relationships/types to find the RelationshipTypeId you want.
-    /// 2. Set Direction=Forward to apply the type's Name to EntityId (e.g. EntityId is the "Parent").
-    ///    Set Direction=Reverse to apply OppositeName (e.g. EntityId is the "Child").
+    /// 2. Set Direction=Forward to apply the type's Name to ContactId (e.g. ContactId is the "Parent").
+    ///    Set Direction=Reverse to apply OppositeName (e.g. ContactId is the "Child").
     ///    For symmetric types (Friend, Colleague, Sibling) direction does not matter.
     ///
     /// Example — create a Parent/Child relationship where Alice is the parent of Bob:
     ///
     ///     POST /api/relationships
     ///     {
-    ///       "entityId": "&lt;alice-id&gt;",
-    ///       "relatedEntityId": "&lt;bob-id&gt;",
-    ///       "entityType": "Person",
+    ///       "contactId": "&lt;alice-id&gt;",
+    ///       "relatedContactId": "&lt;bob-id&gt;",
     ///       "relationshipTypeId": "7c1f8d22-1b6a-4c28-9c1e-3f5a2b8e9d1a",
     ///       "direction": "Forward"
     ///     }
@@ -127,13 +130,83 @@ public class RelationshipsController(IRelationshipService relationshipService, I
         return result.ToNoContentResult();
     }
 
+    /// <summary>
+    /// Create a relationship together with a new partial contact (a placeholder
+    /// person who exists only to anchor the relationship). Returns the parent
+    /// contact's ID so callers can refresh the contact view.
+    /// </summary>
+    /// <remarks>
+    /// Use this when the related person isn't a full contact yet — e.g. "John's wife"
+    /// before her own profile is created. Promote the partial contact later via
+    /// POST /api/relationships/{contactId}/promote.
+    /// </remarks>
+    /// <param name="contactId">The parent contact GUID (the existing contact).</param>
+    /// <param name="request">Relationship type/direction and the partial contact's details.</param>
+    [HttpPost("contact/{contactId}/partial")]
+    public async Task<IActionResult> CreatePartial(Guid contactId, [FromBody] CreatePartialRelationshipRequest request)
+    {
+        CreatePartialContactRelationshipDto dto = new()
+        {
+            SelectedRelationshipType = BuildSelectedType(request.RelationshipTypeId, request.Direction),
+            PartialContactFirstName = request.PartialContactFirstName,
+            PartialContactLastName = request.PartialContactLastName,
+            Birthday = request.Birthday,
+            Description = request.Description,
+            SuggestedRelationships = request.SuggestedRelationships ?? []
+        };
+
+        RelationshipOperationResult result = await _relationshipService.CreatePartialContactRelationshipAsync(
+            contactId, dto.SelectedRelationshipType, dto);
+
+        return result.Success
+            ? Ok(new { Id = result.RedirectId })
+            : BadRequest(new { Error = result.ErrorMessage });
+    }
+
+    /// <summary>
+    /// Promote a partial contact to a full contact (clears the IsPartial flag).
+    /// </summary>
+    /// <param name="contactId">The partial contact's GUID.</param>
+    [HttpPost("contact/{contactId}/promote")]
+    public async Task<IActionResult> Promote(Guid contactId)
+    {
+        RelationshipOperationResult result = await _relationshipService.PromotePartialContactAsync(contactId);
+        return result.Success
+            ? NoContent()
+            : BadRequest(new { Error = result.ErrorMessage });
+    }
+
+    /// <summary>
+    /// Discover suggested transitive or family relationships that follow from the
+    /// given seed (e.g. siblings of an existing sibling, the other parent's adult-child
+    /// links). Returns a list of payload-tagged suggestions that the caller can echo
+    /// back as <c>SuggestedRelationships</c> when creating the primary relationship.
+    /// </summary>
+    /// <param name="contactId">The source contact GUID.</param>
+    /// <param name="relatedContactId">The target contact GUID, if known.</param>
+    /// <param name="relationshipTypeId">The relationship type GUID.</param>
+    /// <param name="direction">Forward or Reverse — same convention as POST /api/relationships.</param>
+    /// <param name="partialContactName">Optional display name when the related contact is a not-yet-created partial.</param>
+    [HttpGet("suggestions")]
+    public async Task<IActionResult> GetSuggestions(
+        [FromQuery] Guid contactId,
+        [FromQuery] Guid? relatedContactId,
+        [FromQuery] Guid relationshipTypeId,
+        [FromQuery] CoreEnumerations.RelationshipDirection direction = CoreEnumerations.RelationshipDirection.Forward,
+        [FromQuery] string? partialContactName = null)
+    {
+        bool isReverse = direction == CoreEnumerations.RelationshipDirection.Reverse;
+        List<SuggestedRelationshipDto> suggestions = await _relationshipSuggestionService
+            .GetSuggestedRelationshipsAsync(contactId, relatedContactId, relationshipTypeId, isReverse, partialContactName);
+        return Ok(suggestions);
+    }
+
     private static Relationship MapToRelationship(CreateRelationshipRequest r)
     {
         return new()
         {
-            EntityId = r.EntityId,
-            RelatedEntityId = r.RelatedEntityId,
-            EntityType = r.EntityType,
+            ContactId = r.ContactId,
+            RelatedContactId = r.RelatedContactId,
             Description = r.Description,
             StartDate = r.StartDate,
             EndDate = r.EndDate

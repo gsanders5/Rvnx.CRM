@@ -21,7 +21,7 @@
                     {
                         @foreach (var evt in Model.UpcomingEvents)
                         {
-                            <a href="@(evt.RelatedEntityId.HasValue ? Url.Action("Details", "Contacts", new { id = evt.RelatedEntityId }) : "#")"
+                            <a href="@(evt.RelatedContactId.HasValue ? Url.Action("Details", "Contacts", new { id = evt.RelatedContactId }) : "#")"
                                class="crm-event-row mb-1">
                                 <div class="crm-event-icon">
                                     @if (evt.Type == SignificantDateTitles.Birthday)
@@ -34,7 +34,7 @@
                                     }
                                 </div>
                                 <div class="flex-grow-1 min-width-0">
-                                    <div class="fw-semibold text-truncate" style="color: var(--crm-text-primary);">@evt.RelatedEntityName</div>
+                                    <div class="fw-semibold text-truncate" style="color: var(--crm-text-primary);">@evt.RelatedContactName</div>
                                     <div class="crm-meta">@evt.Title</div>
                                 </div>
                                 <div class="text-end flex-shrink-0">

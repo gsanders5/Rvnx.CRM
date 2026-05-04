@@ -29,10 +29,10 @@ public class ContactManagementService(IRepository repository, IFileValidationSer
         }
 
         List<Relationship> userRelationships = await _repository.ListAsync<Relationship>(r =>
-            (r.EntityId == contactId || r.RelatedEntityId == contactId) && r.EntityType == EntityType.Person);
+            r.ContactId == contactId || r.RelatedContactId == contactId);
 
         List<Guid> linkedContactIds = userRelationships
-            .Select(r => r.EntityId == contactId ? r.RelatedEntityId : r.EntityId)
+            .Select(r => r.ContactId == contactId ? r.RelatedContactId : r.ContactId)
             .Distinct()
             .ToList();
 
@@ -52,15 +52,15 @@ public class ContactManagementService(IRepository repository, IFileValidationSer
                 List<Guid> partialContactIds = linkedPartialContacts.Select(c => c.Id).ToList();
                 List<Relationship> allPartialRels = await _repository.ListByChunkedContainsAsync<Relationship, Guid>(
                     partialContactIds,
-                    chunk => r => (chunk.Contains(r.EntityId) || chunk.Contains(r.RelatedEntityId)) && r.EntityType == EntityType.Person,
+                    chunk => r => chunk.Contains(r.ContactId) || chunk.Contains(r.RelatedContactId),
                     asNoTracking: false);
 
                 // Optimization: avoid multiple iterations and LINQ enumerations by iterating once over the relationships
                 HashSet<Guid> allInvolvedIds = new(allPartialRels.Count * 2);
                 foreach (Relationship r in allPartialRels)
                 {
-                    allInvolvedIds.Add(r.EntityId);
-                    allInvolvedIds.Add(r.RelatedEntityId);
+                    allInvolvedIds.Add(r.ContactId);
+                    allInvolvedIds.Add(r.RelatedContactId);
                 }
 
                 List<Guid> potentialFullContactIds = allInvolvedIds.Except(partialContactIds).ToList();
@@ -86,11 +86,11 @@ public class ContactManagementService(IRepository repository, IFileValidationSer
 
                 foreach (Relationship rel in allPartialRels)
                 {
-                    if (relsByContactId.TryGetValue(rel.EntityId, out List<Relationship>? list1))
+                    if (relsByContactId.TryGetValue(rel.ContactId, out List<Relationship>? list1))
                     {
                         list1.Add(rel);
                     }
-                    if (relsByContactId.TryGetValue(rel.RelatedEntityId, out List<Relationship>? list2))
+                    if (relsByContactId.TryGetValue(rel.RelatedContactId, out List<Relationship>? list2))
                     {
                         list2.Add(rel);
                     }
@@ -104,7 +104,7 @@ public class ContactManagementService(IRepository repository, IFileValidationSer
                     {
                         foreach (Relationship rel in myRels)
                         {
-                            Guid siblingId = rel.EntityId == partialContact.Id ? rel.RelatedEntityId : rel.EntityId;
+                            Guid siblingId = rel.ContactId == partialContact.Id ? rel.RelatedContactId : rel.ContactId;
                             if (confirmedFullContactIds.Contains(siblingId))
                             {
                                 hasFullContactRelationship = true;
@@ -297,16 +297,10 @@ public class ContactManagementService(IRepository repository, IFileValidationSer
 
     private async Task DeleteContactDependenciesAsync(Guid contactId)
     {
-        // Note, Reminder, SignificantDate, Pet, ContactMethod, Fact, Address, Attachment, PhoneNumber
-        // are now configured with Cascade Delete via ContactId foreign key.
-
-        await DeleteRelatedEntitiesAsync<Relationship>(contactId);
-        await _repository.DeleteAsync<Relationship>(r => r.RelatedEntityId == contactId && r.EntityType == EntityType.Person);
-    }
-
-    private async Task DeleteRelatedEntitiesAsync<T>(Guid contactId) where T : PolymorphicEntity
-    {
-        await _repository.DeleteAsync<T>(e => e.EntityId == contactId && e.EntityType == EntityType.Person);
+        // Child entities (Note, Reminder, SignificantDate, Pet, ContactMethod, Fact, Address,
+        // Attachment, PhoneNumber) cascade-delete via the ContactId FK. Relationship rows are
+        // deleted manually because they reference the contact from either ContactId or RelatedContactId.
+        await _repository.DeleteAsync<Relationship>(r => r.ContactId == contactId || r.RelatedContactId == contactId);
     }
 
     public async Task<ContactOperationResult> DemoteToPartialAsync(Guid contactId)

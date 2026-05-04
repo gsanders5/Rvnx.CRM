@@ -1,6 +1,5 @@
 using Rvnx.CRM.Core.Models.Activity;
 using Rvnx.CRM.Core.Models.Base;
-using Rvnx.CRM.Core.Models.Business;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -21,10 +20,6 @@ public class Contact : Person
     public string? Religion { get; set; }
 
     public virtual ICollection<PetContact> PetContacts { get; set; } = [];
-
-    [Display(Name = "Employers")]
-    [InverseProperty(nameof(Employer.Employee))]
-    public virtual ICollection<Employer> Employers { get; set; } = [];
 
     public virtual ICollection<ContactLabel> ContactLabels { get; set; } = [];
 

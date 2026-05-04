@@ -21,7 +21,7 @@ public class Pet : BaseEntity
     public string? Breed { get; set; }
 
     [Display(Name = "Birthday")]
-    public DateTime? Birthday { get; set; }
+    public DateOnly? Birthday { get; set; }
 
     [Display(Name = "Notes")]
     public string? Notes { get; set; }

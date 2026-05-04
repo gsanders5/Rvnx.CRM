@@ -1,6 +1,11 @@
 namespace Rvnx.CRM.Core.DTOs.Base;
 
-public class NoteDeleteViewModel : NoteDto
+public record class NoteDeleteViewModel : NoteDto
 {
-    public string EntityName { get; set; } = string.Empty;
+    public string ContactName { get; init; } = string.Empty;
+
+    public NoteDeleteViewModel(NoteDto dto, string contactName) : base(dto)
+    {
+        ContactName = contactName;
+    }
 }

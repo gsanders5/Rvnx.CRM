@@ -30,7 +30,7 @@ public class PetsController(IPetService petService) : ControllerBase
     }
 
     /// <summary>
-    /// Create a new pet. Required fields: name, entityId.
+    /// Create a new pet. Required fields: name, contactId.
     /// The contactIds array links the pet to one or more contacts.
     /// </summary>
     /// <param name="model">The pet data.</param>

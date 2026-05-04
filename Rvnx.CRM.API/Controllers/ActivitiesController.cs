@@ -31,7 +31,7 @@ public class ActivitiesController(IActivityService activityService) : Controller
     }
 
     /// <summary>
-    /// Create a new activity. Required fields: title, activityDate, entityId.
+    /// Create a new activity. Required fields: title, activityDate, contactId.
     /// The contactIds array links the activity to one or more contacts.
     /// </summary>
     /// <param name="model">The activity data.</param>
@@ -91,5 +91,18 @@ public class ActivitiesController(IActivityService activityService) : Controller
     {
         OperationResult result = await _activityService.DeleteAsync(id);
         return result.ToNoContentResult();
+    }
+
+    /// <summary>
+    /// One-click activity logging — creates an activity of the given type for the contact,
+    /// dated today. Useful for quickly recording a phone call, email, or meeting.
+    /// </summary>
+    /// <param name="contactId">The contact GUID.</param>
+    /// <param name="activityType">The activity type (e.g. "Phone Call", "Email", "Meeting").</param>
+    [HttpPost("quicklog")]
+    public async Task<IActionResult> QuickLog([FromQuery] Guid contactId, [FromQuery] string activityType)
+    {
+        OperationResult result = await _activityService.QuickLogAsync(contactId, activityType);
+        return result.ToCreatedResult();
     }
 }

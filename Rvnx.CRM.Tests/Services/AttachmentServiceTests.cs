@@ -27,10 +27,10 @@ public class AttachmentServiceTests
         fileServiceMock.Setup(s => s.IsValidFileSignature(It.IsAny<byte[]>(), It.IsAny<string>())).Returns(true);
         fileServiceMock.Setup(s => s.GetMimeType(It.IsAny<string>())).Returns("image/png");
 
-        Mock<IEntityService> entityServiceMock = new();
-        entityServiceMock.Setup(s => s.ExistsAsync(It.IsAny<EntityType>(), It.IsAny<Guid>())).ReturnsAsync(true);
+        Mock<IContactLookupService> contactLookupServiceMock = new();
+        contactLookupServiceMock.Setup(s => s.ExistsAsync(It.IsAny<Guid>())).ReturnsAsync(true);
 
-        AttachmentService service = new(repo, fileServiceMock.Object, entityServiceMock.Object);
+        AttachmentService service = new(repo, fileServiceMock.Object, contactLookupServiceMock.Object);
 
         Guid contactId = Guid.NewGuid();
         context.Contacts!.Add(new Contact { Id = contactId, FirstName = "Test", LastName = "User" });
@@ -38,7 +38,7 @@ public class AttachmentServiceTests
 
         byte[] content = [1, 2, 3];
 
-        AttachmentOperationResult result = await service.UploadAttachmentAsync(contactId, EntityType.Person, content, "test.png");
+        AttachmentOperationResult result = await service.UploadAttachmentAsync(contactId, content, "test.png");
 
         Assert.True(result.Success);
         Assert.NotNull(result.AttachmentId);
@@ -53,12 +53,12 @@ public class AttachmentServiceTests
         using CRMDbContext context = GetInMemoryDbContext();
         Repository repo = new(context);
         Mock<IFileValidationService> fileServiceMock = new();
-        Mock<IEntityService> entityServiceMock = new();
-        entityServiceMock.Setup(s => s.ExistsAsync(It.IsAny<EntityType>(), It.IsAny<Guid>())).ReturnsAsync(false);
+        Mock<IContactLookupService> contactLookupServiceMock = new();
+        contactLookupServiceMock.Setup(s => s.ExistsAsync(It.IsAny<Guid>())).ReturnsAsync(false);
 
-        AttachmentService service = new(repo, fileServiceMock.Object, entityServiceMock.Object);
+        AttachmentService service = new(repo, fileServiceMock.Object, contactLookupServiceMock.Object);
 
-        AttachmentOperationResult result = await service.UploadAttachmentAsync(Guid.NewGuid(), EntityType.Person, [1], "test.png");
+        AttachmentOperationResult result = await service.UploadAttachmentAsync(Guid.NewGuid(), [1], "test.png");
 
         Assert.False(result.Success);
         Assert.True(result.IsNotFound);
@@ -70,37 +70,20 @@ public class AttachmentServiceTests
         using CRMDbContext context = GetInMemoryDbContext();
         Repository repo = new(context);
         Mock<IFileValidationService> fileServiceMock = new();
-        Mock<IEntityService> entityServiceMock = new();
-        entityServiceMock.Setup(s => s.ExistsAsync(It.IsAny<EntityType>(), It.IsAny<Guid>())).ReturnsAsync(true);
+        Mock<IContactLookupService> contactLookupServiceMock = new();
+        contactLookupServiceMock.Setup(s => s.ExistsAsync(It.IsAny<Guid>())).ReturnsAsync(true);
 
-        AttachmentService service = new(repo, fileServiceMock.Object, entityServiceMock.Object);
+        AttachmentService service = new(repo, fileServiceMock.Object, contactLookupServiceMock.Object);
 
         Guid contactId = Guid.NewGuid();
         context.Contacts!.Add(new Contact { Id = contactId, FirstName = "Partial", IsPartial = true });
         context.SaveChanges();
 
-        AttachmentOperationResult result = await service.UploadAttachmentAsync(contactId, EntityType.Person, [1], "test.png");
+        AttachmentOperationResult result = await service.UploadAttachmentAsync(contactId, [1], "test.png");
 
         Assert.False(result.Success);
         Assert.True(result.IsNotFound);
-        Assert.Contains("partial contact", result.Errors[0]);
-    }
-
-    [Fact]
-    public async Task UploadAttachmentAsyncShouldFailWhenEntityTypeNotSupported()
-    {
-        using CRMDbContext context = GetInMemoryDbContext();
-        Repository repo = new(context);
-        Mock<IFileValidationService> fileServiceMock = new();
-        Mock<IEntityService> entityServiceMock = new();
-        // No need to mock EntityService for this check as it happens before existence check
-
-        AttachmentService service = new(repo, fileServiceMock.Object, entityServiceMock.Object);
-
-        AttachmentOperationResult result = await service.UploadAttachmentAsync(Guid.NewGuid(), EntityType.Company, [1, 2, 3], "test.txt");
-
-        Assert.False(result.Success);
-        Assert.Contains("not currently supported", result.Errors[0]);
+        Assert.Contains("partial", result.Errors[0]);
     }
 
     [Fact]
@@ -109,15 +92,15 @@ public class AttachmentServiceTests
         using CRMDbContext context = GetInMemoryDbContext();
         Repository repo = new(context);
         Mock<IFileValidationService> fileServiceMock = new();
-        Mock<IEntityService> entityServiceMock = new();
-        entityServiceMock.Setup(s => s.ExistsAsync(It.IsAny<EntityType>(), It.IsAny<Guid>())).ReturnsAsync(true);
+        Mock<IContactLookupService> contactLookupServiceMock = new();
+        contactLookupServiceMock.Setup(s => s.ExistsAsync(It.IsAny<Guid>())).ReturnsAsync(true);
 
-        AttachmentService service = new(repo, fileServiceMock.Object, entityServiceMock.Object);
+        AttachmentService service = new(repo, fileServiceMock.Object, contactLookupServiceMock.Object);
         Guid contactId = Guid.NewGuid();
         context.Contacts!.Add(new Contact { Id = contactId, FirstName = "Test", LastName = "User" });
         context.SaveChanges();
 
-        AttachmentOperationResult result = await service.UploadAttachmentAsync(contactId, EntityType.Person, [], "test.png");
+        AttachmentOperationResult result = await service.UploadAttachmentAsync(contactId, [], "test.png");
 
         Assert.False(result.Success);
         Assert.Contains("File is empty", result.Errors[0]);
@@ -131,15 +114,15 @@ public class AttachmentServiceTests
         Mock<IFileValidationService> fileServiceMock = new();
         fileServiceMock.Setup(s => s.IsAllowedFileSize(It.IsAny<long>())).Returns(false);
 
-        Mock<IEntityService> entityServiceMock = new();
-        entityServiceMock.Setup(s => s.ExistsAsync(It.IsAny<EntityType>(), It.IsAny<Guid>())).ReturnsAsync(true);
+        Mock<IContactLookupService> contactLookupServiceMock = new();
+        contactLookupServiceMock.Setup(s => s.ExistsAsync(It.IsAny<Guid>())).ReturnsAsync(true);
 
-        AttachmentService service = new(repo, fileServiceMock.Object, entityServiceMock.Object);
+        AttachmentService service = new(repo, fileServiceMock.Object, contactLookupServiceMock.Object);
         Guid contactId = Guid.NewGuid();
         context.Contacts!.Add(new Contact { Id = contactId, FirstName = "Test", LastName = "User" });
         context.SaveChanges();
 
-        AttachmentOperationResult result = await service.UploadAttachmentAsync(contactId, EntityType.Person, [1, 2, 3], "test.png");
+        AttachmentOperationResult result = await service.UploadAttachmentAsync(contactId, [1, 2, 3], "test.png");
 
         Assert.False(result.Success);
         Assert.Contains("File is too large", result.Errors[0]);
@@ -154,15 +137,15 @@ public class AttachmentServiceTests
         fileServiceMock.Setup(s => s.IsAllowedFileSize(It.IsAny<long>())).Returns(true);
         fileServiceMock.Setup(s => s.IsAllowedExtension(It.IsAny<string>())).Returns(false);
 
-        Mock<IEntityService> entityServiceMock = new();
-        entityServiceMock.Setup(s => s.ExistsAsync(It.IsAny<EntityType>(), It.IsAny<Guid>())).ReturnsAsync(true);
+        Mock<IContactLookupService> contactLookupServiceMock = new();
+        contactLookupServiceMock.Setup(s => s.ExistsAsync(It.IsAny<Guid>())).ReturnsAsync(true);
 
-        AttachmentService service = new(repo, fileServiceMock.Object, entityServiceMock.Object);
+        AttachmentService service = new(repo, fileServiceMock.Object, contactLookupServiceMock.Object);
         Guid contactId = Guid.NewGuid();
         context.Contacts!.Add(new Contact { Id = contactId, FirstName = "Test", LastName = "User" });
         context.SaveChanges();
 
-        AttachmentOperationResult result = await service.UploadAttachmentAsync(contactId, EntityType.Person, [1, 2, 3], "test.exe");
+        AttachmentOperationResult result = await service.UploadAttachmentAsync(contactId, [1, 2, 3], "test.exe");
 
         Assert.False(result.Success);
         Assert.Contains("File type not allowed", result.Errors[0]);
@@ -178,15 +161,15 @@ public class AttachmentServiceTests
         fileServiceMock.Setup(s => s.IsAllowedExtension(It.IsAny<string>())).Returns(true);
         fileServiceMock.Setup(s => s.IsValidFileSignature(It.IsAny<byte[]>(), It.IsAny<string>())).Returns(false);
 
-        Mock<IEntityService> entityServiceMock = new();
-        entityServiceMock.Setup(s => s.ExistsAsync(It.IsAny<EntityType>(), It.IsAny<Guid>())).ReturnsAsync(true);
+        Mock<IContactLookupService> contactLookupServiceMock = new();
+        contactLookupServiceMock.Setup(s => s.ExistsAsync(It.IsAny<Guid>())).ReturnsAsync(true);
 
-        AttachmentService service = new(repo, fileServiceMock.Object, entityServiceMock.Object);
+        AttachmentService service = new(repo, fileServiceMock.Object, contactLookupServiceMock.Object);
         Guid contactId = Guid.NewGuid();
         context.Contacts!.Add(new Contact { Id = contactId, FirstName = "Test", LastName = "User" });
         context.SaveChanges();
 
-        AttachmentOperationResult result = await service.UploadAttachmentAsync(contactId, EntityType.Person, [1, 2, 3], "test.png");
+        AttachmentOperationResult result = await service.UploadAttachmentAsync(contactId, [1, 2, 3], "test.png");
 
         Assert.False(result.Success);
         Assert.Contains("Invalid file signature", result.Errors[0]);
@@ -198,9 +181,9 @@ public class AttachmentServiceTests
         using CRMDbContext context = GetInMemoryDbContext();
         Repository repo = new(context);
         Mock<IFileValidationService> fileServiceMock = new();
-        Mock<IEntityService> entityServiceMock = new();
+        Mock<IContactLookupService> contactLookupServiceMock = new();
 
-        AttachmentService service = new(repo, fileServiceMock.Object, entityServiceMock.Object);
+        AttachmentService service = new(repo, fileServiceMock.Object, contactLookupServiceMock.Object);
 
         Guid contactId = Guid.NewGuid();
         context.Contacts!.Add(new Contact { Id = contactId, FirstName = "Test", LastName = "User" });
@@ -230,9 +213,9 @@ public class AttachmentServiceTests
         using CRMDbContext context = GetInMemoryDbContext();
         Repository repo = new(context);
         Mock<IFileValidationService> fileServiceMock = new();
-        Mock<IEntityService> entityServiceMock = new();
+        Mock<IContactLookupService> contactLookupServiceMock = new();
 
-        AttachmentService service = new(repo, fileServiceMock.Object, entityServiceMock.Object);
+        AttachmentService service = new(repo, fileServiceMock.Object, contactLookupServiceMock.Object);
 
         AttachmentOperationResult result = await service.DeleteAttachmentAsync(Guid.NewGuid());
 
@@ -246,9 +229,10 @@ public class AttachmentServiceTests
         using CRMDbContext context = GetInMemoryDbContext();
         Repository repo = new(context);
         Mock<IFileValidationService> fileServiceMock = new();
-        Mock<IEntityService> entityServiceMock = new();
+        Mock<IContactLookupService> contactLookupServiceMock = new();
+        contactLookupServiceMock.Setup(s => s.IsPartialAsync(It.IsAny<Guid>())).ReturnsAsync(true);
 
-        AttachmentService service = new(repo, fileServiceMock.Object, entityServiceMock.Object);
+        AttachmentService service = new(repo, fileServiceMock.Object, contactLookupServiceMock.Object);
 
         Guid contactId = Guid.NewGuid();
         context.Contacts!.Add(new Contact { Id = contactId, FirstName = "Partial", IsPartial = true });
@@ -279,9 +263,9 @@ public class AttachmentServiceTests
         using CRMDbContext context = GetInMemoryDbContext();
         Repository repo = new(context);
         Mock<IFileValidationService> fileServiceMock = new();
-        Mock<IEntityService> entityServiceMock = new();
+        Mock<IContactLookupService> contactLookupServiceMock = new();
 
-        AttachmentService service = new(repo, fileServiceMock.Object, entityServiceMock.Object);
+        AttachmentService service = new(repo, fileServiceMock.Object, contactLookupServiceMock.Object);
 
         Guid contactId = Guid.NewGuid();
         context.Contacts!.Add(new Contact { Id = contactId, FirstName = "Test", LastName = "User" });
@@ -304,8 +288,7 @@ public class AttachmentServiceTests
         Assert.Equal("test.png", result.FileName);
         Assert.Equal("image/png", result.ContentType);
         Assert.Equal(AttachmentTypes.General, result.AttachmentType);
-        Assert.Equal(contactId, result.EntityId);
-        Assert.Equal(EntityType.Person, result.EntityType);
+        Assert.Equal(contactId, result.ContactId);
     }
 
     [Fact]
@@ -314,9 +297,9 @@ public class AttachmentServiceTests
         using CRMDbContext context = GetInMemoryDbContext();
         Repository repo = new(context);
         Mock<IFileValidationService> fileServiceMock = new();
-        Mock<IEntityService> entityServiceMock = new();
+        Mock<IContactLookupService> contactLookupServiceMock = new();
 
-        AttachmentService service = new(repo, fileServiceMock.Object, entityServiceMock.Object);
+        AttachmentService service = new(repo, fileServiceMock.Object, contactLookupServiceMock.Object);
 
         AttachmentDto? result = await service.GetAttachmentAsync(Guid.NewGuid());
 
@@ -329,9 +312,10 @@ public class AttachmentServiceTests
         using CRMDbContext context = GetInMemoryDbContext();
         Repository repo = new(context);
         Mock<IFileValidationService> fileServiceMock = new();
-        Mock<IEntityService> entityServiceMock = new();
+        Mock<IContactLookupService> contactLookupServiceMock = new();
+        contactLookupServiceMock.Setup(s => s.IsPartialAsync(It.IsAny<Guid>())).ReturnsAsync(true);
 
-        AttachmentService service = new(repo, fileServiceMock.Object, entityServiceMock.Object);
+        AttachmentService service = new(repo, fileServiceMock.Object, contactLookupServiceMock.Object);
 
         Guid contactId = Guid.NewGuid();
         context.Contacts!.Add(new Contact { Id = contactId, FirstName = "Partial", IsPartial = true });
@@ -357,9 +341,9 @@ public class AttachmentServiceTests
         using CRMDbContext context = GetInMemoryDbContext();
         Repository repo = new(context);
         Mock<IFileValidationService> fileServiceMock = new();
-        Mock<IEntityService> entityServiceMock = new();
+        Mock<IContactLookupService> contactLookupServiceMock = new();
 
-        AttachmentService service = new(repo, fileServiceMock.Object, entityServiceMock.Object);
+        AttachmentService service = new(repo, fileServiceMock.Object, contactLookupServiceMock.Object);
 
         Guid contactId = Guid.NewGuid();
         context.Contacts!.Add(new Contact { Id = contactId, FirstName = "Test", LastName = "User" });
@@ -393,9 +377,9 @@ public class AttachmentServiceTests
         using CRMDbContext context = GetInMemoryDbContext();
         Repository repo = new(context);
         Mock<IFileValidationService> fileServiceMock = new();
-        Mock<IEntityService> entityServiceMock = new();
+        Mock<IContactLookupService> contactLookupServiceMock = new();
 
-        AttachmentService service = new(repo, fileServiceMock.Object, entityServiceMock.Object);
+        AttachmentService service = new(repo, fileServiceMock.Object, contactLookupServiceMock.Object);
 
         AttachmentContentDto? result = await service.GetAttachmentContentAsync(Guid.NewGuid());
 
@@ -408,9 +392,10 @@ public class AttachmentServiceTests
         using CRMDbContext context = GetInMemoryDbContext();
         Repository repo = new(context);
         Mock<IFileValidationService> fileServiceMock = new();
-        Mock<IEntityService> entityServiceMock = new();
+        Mock<IContactLookupService> contactLookupServiceMock = new();
+        contactLookupServiceMock.Setup(s => s.IsPartialAsync(It.IsAny<Guid>())).ReturnsAsync(true);
 
-        AttachmentService service = new(repo, fileServiceMock.Object, entityServiceMock.Object);
+        AttachmentService service = new(repo, fileServiceMock.Object, contactLookupServiceMock.Object);
 
         Guid contactId = Guid.NewGuid();
         context.Contacts!.Add(new Contact { Id = contactId, FirstName = "Partial", IsPartial = true });
@@ -437,9 +422,9 @@ public class AttachmentServiceTests
         using CRMDbContext context = GetInMemoryDbContext();
         Repository repo = new(context);
         Mock<IFileValidationService> fileServiceMock = new();
-        Mock<IEntityService> entityServiceMock = new();
+        Mock<IContactLookupService> contactLookupServiceMock = new();
 
-        AttachmentService service = new(repo, fileServiceMock.Object, entityServiceMock.Object);
+        AttachmentService service = new(repo, fileServiceMock.Object, contactLookupServiceMock.Object);
 
         Guid attachmentId = Guid.NewGuid();
         context.Attachments!.Add(new Attachment
@@ -461,9 +446,9 @@ public class AttachmentServiceTests
         using CRMDbContext context = GetInMemoryDbContext();
         Repository repo = new(context);
         Mock<IFileValidationService> fileServiceMock = new();
-        Mock<IEntityService> entityServiceMock = new();
+        Mock<IContactLookupService> contactLookupServiceMock = new();
 
-        AttachmentService service = new(repo, fileServiceMock.Object, entityServiceMock.Object);
+        AttachmentService service = new(repo, fileServiceMock.Object, contactLookupServiceMock.Object);
 
         Guid contactId = Guid.NewGuid();
         context.Contacts!.Add(new Contact { Id = contactId, FirstName = "Test", LastName = "User" });
@@ -502,10 +487,10 @@ public class AttachmentServiceTests
             fileServiceMock.Setup(s => s.IsValidFileSignature(It.IsAny<byte[]>(), It.IsAny<string>())).Returns(true);
             fileServiceMock.Setup(s => s.GetMimeType(It.IsAny<string>())).Returns("text/plain");
 
-            Mock<IEntityService> entityServiceMock = new();
-            entityServiceMock.Setup(s => s.ExistsAsync(It.IsAny<EntityType>(), It.IsAny<Guid>())).ReturnsAsync(true);
+            Mock<IContactLookupService> contactLookupServiceMock = new();
+            contactLookupServiceMock.Setup(s => s.ExistsAsync(It.IsAny<Guid>())).ReturnsAsync(true);
 
-            AttachmentService service = new(repo, fileServiceMock.Object, entityServiceMock.Object);
+            AttachmentService service = new(repo, fileServiceMock.Object, contactLookupServiceMock.Object);
 
             Guid contactId = Guid.NewGuid();
             context.Contacts!.Add(new Contact { Id = contactId, FirstName = "Test", LastName = "User" });
@@ -516,7 +501,7 @@ public class AttachmentServiceTests
 
             // The malicious Content-Type is no longer even passed to the method.
             // The method signature change itself is part of the security fix (Defense in Depth / Trust Nothing).
-            AttachmentOperationResult result = await service.UploadAttachmentAsync(contactId, EntityType.Person, content, fileName);
+            AttachmentOperationResult result = await service.UploadAttachmentAsync(contactId, content, fileName);
 
             Assert.True(result.Success);
 

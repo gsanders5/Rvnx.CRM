@@ -11,6 +11,6 @@ public interface IAddressService
     Task<OperationResult> UpdateAsync(Guid id, AddressFormDto dto);
     Task<OperationResult> DeleteAsync(Guid id);
     Task<AddressFormDto?> GetFormAsync(Guid id);
-    Task<AddressFormDto?> GetFormForCreateAsync(Guid entityId);
+    Task<AddressFormDto?> GetFormForCreateAsync(Guid contactId);
     Task<Address?> GetByIdAsync(Guid id);
 }

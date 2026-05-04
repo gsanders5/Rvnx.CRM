@@ -48,11 +48,11 @@ public class ContactMethodsControllerTests : IDisposable
         _context.Contacts!.Add(new Contact { Id = entityId, FirstName = "Parent" });
         await _context.SaveChangesAsync();
 
-        IActionResult result = await _controller.Create(entityId, EntityType.Person);
+        IActionResult result = await _controller.Create(entityId);
 
         ViewResult viewResult = Assert.IsType<ViewResult>(result);
         ContactMethodFormDto model = Assert.IsType<ContactMethodFormDto>(viewResult.Model);
-        Assert.Equal(entityId, model.EntityId);
+        Assert.Equal(entityId, model.ContactId);
     }
 
     [Fact]
@@ -64,7 +64,7 @@ public class ContactMethodsControllerTests : IDisposable
 
         ContactMethodFormDto dto = new()
         {
-            EntityId = entityId,
+            ContactId = entityId,
             Type = ContactMethodType.Phone,
             Value = "(212) 736-5000",
             Label = "Work"
@@ -92,7 +92,7 @@ public class ContactMethodsControllerTests : IDisposable
 
         ContactMethodFormDto dto = new()
         {
-            EntityId = entityId,
+            ContactId = entityId,
         };
         _controller.ModelState.AddModelError("Value", "Required");
 
@@ -111,7 +111,7 @@ public class ContactMethodsControllerTests : IDisposable
 
         ContactMethodFormDto dto = new()
         {
-            EntityId = nonExistentEntityId,
+            ContactId = nonExistentEntityId,
             Type = ContactMethodType.Email,
             Value = "orphan@example.com"
         };
@@ -146,7 +146,7 @@ public class ContactMethodsControllerTests : IDisposable
         ContactMethodFormDto dto = new()
         {
             Id = methodId,
-            EntityId = entityId,
+            ContactId = entityId,
             Type = ContactMethodType.Email,
             Value = "New Value",
             Label = "New Label"
@@ -171,7 +171,7 @@ public class ContactMethodsControllerTests : IDisposable
         ContactMethodFormDto dto = new()
         {
             Id = methodId,
-            EntityId = Guid.NewGuid(),
+            ContactId = Guid.NewGuid(),
             Type = ContactMethodType.Phone,
             Value = "Val"
         };

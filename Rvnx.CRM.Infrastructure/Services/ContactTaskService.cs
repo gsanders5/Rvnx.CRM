@@ -1,7 +1,6 @@
 using Rvnx.CRM.Core.Constants;
 using Rvnx.CRM.Core.DTOs.Calendar;
 using Rvnx.CRM.Core.DTOs.Contact;
-using Rvnx.CRM.Core.Enumerations;
 using Rvnx.CRM.Core.Exceptions;
 using Rvnx.CRM.Core.Extensions;
 using Rvnx.CRM.Core.Interfaces;
@@ -24,13 +23,13 @@ public class ContactTaskService(IRepository repository) : IContactTaskService
 
     public async Task<OperationResult> CreateAsync(ContactTaskFormDto dto)
     {
-        if (!await _repository.IsValidContactAsync(dto.EntityId))
+        if (!await _repository.IsValidContactAsync(dto.ContactId))
         {
             return OperationResult.NotFound("Contact not found.");
         }
 
         // Tasks are forward-looking — refuse to attach a new follow-up to a deceased contact.
-        if (!await _repository.IsLivingContactAsync(dto.EntityId))
+        if (!await _repository.IsLivingContactAsync(dto.ContactId))
         {
             return OperationResult.Failure("Cannot create a task for a deceased contact.");
         }
@@ -39,7 +38,7 @@ public class ContactTaskService(IRepository repository) : IContactTaskService
         await _repository.AddAsync(task);
         await _repository.SaveChangesAsync();
 
-        return OperationResult.Ok(task.ContactId ?? Guid.Empty, EntityType.Person);
+        return OperationResult.Ok(task.ContactId ?? Guid.Empty);
     }
 
     public async Task<OperationResult> UpdateAsync(Guid id, ContactTaskFormDto dto)
@@ -56,7 +55,7 @@ public class ContactTaskService(IRepository repository) : IContactTaskService
             await _repository.UpdateAsync(existing);
             await _repository.SaveChangesAsync();
 
-            return OperationResult.Ok(existing.ContactId ?? Guid.Empty, EntityType.Person);
+            return OperationResult.Ok(existing.ContactId ?? Guid.Empty);
         }
         catch (EntityConcurrencyException)
         {
@@ -76,10 +75,10 @@ public class ContactTaskService(IRepository repository) : IContactTaskService
 
         if (contactIds.Count > 0)
         {
-            Guid entityId = contactIds.FirstOrDefault() ?? Guid.Empty;
+            Guid contactId = contactIds.FirstOrDefault() ?? Guid.Empty;
             await _repository.DeleteAsync<ContactTask>(t => t.Id == id);
             await _repository.SaveChangesAsync();
-            return OperationResult.Ok(entityId, EntityType.Person);
+            return OperationResult.Ok(contactId);
         }
 
         return OperationResult.NotFound("Task not found.");
@@ -93,7 +92,7 @@ public class ContactTaskService(IRepository repository) : IContactTaskService
             : new ContactTaskFormDto
             {
                 Id = task.Id,
-                EntityId = task.ContactId ?? Guid.Empty,
+                ContactId = task.ContactId ?? Guid.Empty,
                 Title = task.Title,
                 Description = task.Description,
                 DueDate = task.DueDate,
@@ -101,14 +100,14 @@ public class ContactTaskService(IRepository repository) : IContactTaskService
             };
     }
 
-    public async Task<ContactTaskFormDto?> GetFormForCreateAsync(Guid entityId)
+    public async Task<ContactTaskFormDto?> GetFormForCreateAsync(Guid contactId)
     {
         // Forward-looking: refuse to render the create form for a deceased contact.
-        return !await _repository.IsLivingContactAsync(entityId)
+        return !await _repository.IsLivingContactAsync(contactId)
             ? null
             : new ContactTaskFormDto
             {
-                EntityId = entityId,
+                ContactId = contactId,
                 DueDate = DateOnly.FromDateTime(DateTime.Today)
             };
     }
@@ -133,7 +132,7 @@ public class ContactTaskService(IRepository repository) : IContactTaskService
         await _repository.UpdateAsync(task);
         await _repository.SaveChangesAsync();
 
-        return OperationResult.Ok(task.ContactId ?? Guid.Empty, EntityType.Person);
+        return OperationResult.Ok(task.ContactId ?? Guid.Empty);
     }
 
     public async Task<List<CalendarEventDto>> GetCalendarEventsAsync()

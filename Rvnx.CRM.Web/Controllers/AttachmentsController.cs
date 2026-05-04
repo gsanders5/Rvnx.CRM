@@ -2,7 +2,6 @@ using FileTypeChecker.Web.Attributes;
 using Microsoft.AspNetCore.Mvc;
 using Rvnx.CRM.Core.DTOs.Base;
 using Rvnx.CRM.Core.DTOs.Contact;
-using Rvnx.CRM.Core.Enumerations;
 using Rvnx.CRM.Core.Interfaces;
 using Rvnx.CRM.Web.Controllers.Base;
 using System.Collections.Frozen;
@@ -22,7 +21,7 @@ public class AttachmentsController(
         new[] { "image/jpeg", "image/png", "image/gif" }.ToFrozenSet(StringComparer.OrdinalIgnoreCase);
 
     [HttpPost]
-    public async Task<IActionResult> Upload(Guid entityId, EntityType entityType, [ForbidExecutables] IFormFile file,
+    public async Task<IActionResult> Upload(Guid contactId, [ForbidExecutables] IFormFile file,
         string? returnUrl = null)
     {
         if (file == null || file.Length == 0)
@@ -50,7 +49,7 @@ public class AttachmentsController(
         byte[] fileBytes = ms.ToArray();
 
         AttachmentOperationResult result =
-            await _attachmentService.UploadAttachmentAsync(entityId, entityType, fileBytes, file.FileName);
+            await _attachmentService.UploadAttachmentAsync(contactId, fileBytes, file.FileName);
 
         return result.Success
             ? SafeRedirect(returnUrl)
@@ -81,7 +80,7 @@ public class AttachmentsController(
         }
 
         ContactOperationResult result =
-            await contactManagementService.SetAttachmentAsProfilePhotoAsync(attachment.EntityId, id);
+            await contactManagementService.SetAttachmentAsProfilePhotoAsync(attachment.ContactId, id);
 
         return result.Success ? SafeRedirect(returnUrl) :
             result.IsNotFound ? NotFound() : BadRequest(string.Join("; ", result.Errors));

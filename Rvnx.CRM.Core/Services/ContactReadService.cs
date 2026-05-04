@@ -156,7 +156,6 @@ public class ContactReadService(IRepository repository, IFavoriteService favorit
         // Optimization: Use ListAsNoTrackingAsync to avoid change tracking overhead for read-only operation
         List<Contact> contacts = await _repository.ListAsNoTrackingAsync<Contact>(c => c.Id == id && !c.IsPartial,
             default,
-            nameof(Contact.Employers),
             nameof(Contact.PetContacts) + "." + nameof(PetContact.Pet),
             nameof(Contact.Notes),
             nameof(Contact.SignificantDates),
@@ -178,22 +177,21 @@ public class ContactReadService(IRepository repository, IFavoriteService favorit
 
         // Relationships Optimization: Fetch both outgoing and incoming relationships in one query
         List<Relationship> allRelationships = await _repository.ListAsNoTrackingAsync<Relationship>(r =>
-            (r.EntityId == id && r.EntityType == EntityType.Person) ||
-            (r.RelatedEntityId == id && r.EntityType == EntityType.Person));
+            r.ContactId == id || r.RelatedContactId == id);
 
-        List<Relationship> relationships = allRelationships.Where(r => r.EntityId == id).ToList();
-        List<Relationship> relatedTo = allRelationships.Where(r => r.RelatedEntityId == id).ToList();
+        List<Relationship> relationships = allRelationships.Where(r => r.ContactId == id).ToList();
+        List<Relationship> relatedTo = allRelationships.Where(r => r.RelatedContactId == id).ToList();
 
         // Optimization: Replace LINQ Select().Concat().Distinct().ToList() with a pre-sized HashSet and foreach loops
         // to avoid multiple intermediate enumerator allocations and dynamic array resizing.
         HashSet<Guid> relatedIdsSet = new(relationships.Count + relatedTo.Count);
         foreach (Relationship r in relationships)
         {
-            relatedIdsSet.Add(r.RelatedEntityId);
+            relatedIdsSet.Add(r.RelatedContactId);
         }
         foreach (Relationship r in relatedTo)
         {
-            relatedIdsSet.Add(r.EntityId);
+            relatedIdsSet.Add(r.ContactId);
         }
 
         // Co-fetch the introducer with related contacts so a single round-trip fills both lookups.
@@ -227,7 +225,7 @@ public class ContactReadService(IRepository repository, IFavoriteService favorit
 
         foreach (Relationship rel in relationships)
         {
-            if (relatedMap.TryGetValue(rel.RelatedEntityId, out Contact? related))
+            if (relatedMap.TryGetValue(rel.RelatedContactId, out Contact? related))
             {
                 rel.RelatedPerson = related;
             }
@@ -235,7 +233,7 @@ public class ContactReadService(IRepository repository, IFavoriteService favorit
 
         foreach (Relationship rel in relatedTo)
         {
-            if (relatedMap.TryGetValue(rel.EntityId, out Contact? person))
+            if (relatedMap.TryGetValue(rel.ContactId, out Contact? person))
             {
                 rel.Person = person;
             }
@@ -248,7 +246,7 @@ public class ContactReadService(IRepository repository, IFavoriteService favorit
         List<PetDto> petDtos = contact.PetContacts.Select(pc =>
         {
             PetDto petDto = pc.Pet.ToDto();
-            petDto.EntityId = contact.Id;
+            petDto.ContactId = contact.Id;
             return petDto;
         }).ToList();
 
@@ -335,7 +333,7 @@ public class ContactReadService(IRepository repository, IFavoriteService favorit
         List<ActivityDto> activityDtos = contact.ActivityContacts.Select(ac =>
         {
             ActivityDto activityDto = ac.Activity.ToDto();
-            activityDto.EntityId = contact.Id;
+            activityDto.ContactId = contact.Id;
             return activityDto;
         }).ToList();
 
@@ -499,7 +497,7 @@ public class ContactReadService(IRepository repository, IFavoriteService favorit
     public async Task<bool> HasRelationshipsAsync(Guid id)
     {
         int count = await _repository.CountAsync<Relationship>(r =>
-            (r.EntityId == id || r.RelatedEntityId == id) && r.EntityType == EntityType.Person);
+            r.ContactId == id || r.RelatedContactId == id);
         return count > 0;
     }
 

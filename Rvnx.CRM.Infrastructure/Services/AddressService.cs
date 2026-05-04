@@ -1,5 +1,4 @@
 using Rvnx.CRM.Core.DTOs.Contact;
-using Rvnx.CRM.Core.Enumerations;
 using Rvnx.CRM.Core.Exceptions;
 using Rvnx.CRM.Core.Extensions;
 using Rvnx.CRM.Core.Interfaces;
@@ -22,7 +21,7 @@ public class AddressService(IRepository repository) : IAddressService
 
     public async Task<OperationResult> CreateAsync(AddressFormDto dto)
     {
-        if (!await _repository.IsValidContactAsync(dto.EntityId))
+        if (!await _repository.IsValidContactAsync(dto.ContactId))
         {
             return OperationResult.NotFound("Contact not found.");
         }
@@ -31,7 +30,7 @@ public class AddressService(IRepository repository) : IAddressService
         await _repository.AddAsync(address);
         await _repository.SaveChangesAsync();
 
-        return OperationResult.Ok(address.ContactId ?? Guid.Empty, EntityType.Person);
+        return OperationResult.Ok(address.ContactId ?? Guid.Empty);
     }
 
     public async Task<OperationResult> UpdateAsync(Guid id, AddressFormDto dto)
@@ -48,7 +47,7 @@ public class AddressService(IRepository repository) : IAddressService
             await _repository.UpdateAsync(existing);
             await _repository.SaveChangesAsync();
 
-            return OperationResult.Ok(existing.ContactId ?? Guid.Empty, EntityType.Person);
+            return OperationResult.Ok(existing.ContactId ?? Guid.Empty);
         }
         catch (EntityConcurrencyException)
         {
@@ -68,10 +67,10 @@ public class AddressService(IRepository repository) : IAddressService
 
         if (contactIds.Count > 0)
         {
-            Guid entityId = contactIds.FirstOrDefault() ?? Guid.Empty;
+            Guid contactId = contactIds.FirstOrDefault() ?? Guid.Empty;
             await _repository.DeleteAsync<Address>(a => a.Id == id);
             await _repository.SaveChangesAsync();
-            return OperationResult.Ok(entityId, EntityType.Person);
+            return OperationResult.Ok(contactId);
         }
 
         return OperationResult.NotFound("Address not found.");
@@ -85,7 +84,7 @@ public class AddressService(IRepository repository) : IAddressService
             : new AddressFormDto
             {
                 Id = address.Id,
-                EntityId = address.ContactId ?? Guid.Empty,
+                ContactId = address.ContactId ?? Guid.Empty,
                 Line1 = address.Line1,
                 Line2 = address.Line2,
                 City = address.City,
@@ -96,11 +95,11 @@ public class AddressService(IRepository repository) : IAddressService
             };
     }
 
-    public async Task<AddressFormDto?> GetFormForCreateAsync(Guid entityId)
+    public async Task<AddressFormDto?> GetFormForCreateAsync(Guid contactId)
     {
-        return !await _repository.IsValidContactAsync(entityId)
+        return !await _repository.IsValidContactAsync(contactId)
             ? null
-            : new AddressFormDto { EntityId = entityId };
+            : new AddressFormDto { ContactId = contactId };
     }
 
     public async Task<Address?> GetByIdAsync(Guid id)

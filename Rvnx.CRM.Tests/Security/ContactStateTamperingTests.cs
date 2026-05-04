@@ -18,7 +18,7 @@ namespace Rvnx.CRM.Tests.Security;
 /// Tests to verify that Edit actions properly protect audit fields
 /// and entity ownership from tampering via form data.
 /// </summary>
-public class EntityStateTamperingTests
+public class ContactStateTamperingTests
 {
     private static CRMDbContext GetInMemoryDbContext() => TestDbContextFactory.CreateForDefaultUser();
 
@@ -30,12 +30,12 @@ public class EntityStateTamperingTests
         using CRMDbContext context = GetInMemoryDbContext();
         Repository repository = new(context);
 
-        Mock<IEntityService> mockEntityService = new();
-        mockEntityService.Setup(s => s.IsPartialAsync(It.IsAny<EntityType>(), It.IsAny<Guid>())).ReturnsAsync(false);
-        mockEntityService.Setup(s => s.GetEntityNameAsync(It.IsAny<EntityType>(), It.IsAny<Guid>())).ReturnsAsync("Test Entity");
+        Mock<IContactLookupService> mockContactLookupService = new();
+        mockContactLookupService.Setup(s => s.IsPartialAsync(It.IsAny<Guid>())).ReturnsAsync(false);
+        mockContactLookupService.Setup(s => s.GetContactNameAsync(It.IsAny<Guid>())).ReturnsAsync("Test Entity");
 
-        INoteService noteService = new NoteService(repository, mockEntityService.Object);
-        NotesController controller = new(noteService, repository, mockEntityService.Object);
+        INoteService noteService = new NoteService(repository, mockContactLookupService.Object);
+        NotesController controller = new(noteService, repository, mockContactLookupService.Object);
 
         Guid noteId = Guid.NewGuid();
         Guid originalContactId = Guid.NewGuid();
@@ -54,12 +54,11 @@ public class EntityStateTamperingTests
         await context.SaveChangesAsync();
         context.ChangeTracker.Clear();
 
-        // Attacker tries to change EntityId via form submission
+        // Attacker tries to change ContactId via form submission
         NoteFormViewModel tamperAttempt = new()
         {
             Id = noteId,
-            EntityId = attackerContactId, // Attempting to move note to different contact
-            EntityType = EntityType.Company, // Attempting to change entity type
+            ContactId = attackerContactId, // Attempting to move note to different contact
             Title = "Updated Title",
             Value = "Updated Content"
         };
@@ -79,12 +78,12 @@ public class EntityStateTamperingTests
         using CRMDbContext context = GetInMemoryDbContext();
         Repository repository = new(context);
 
-        Mock<IEntityService> mockEntityService = new();
-        mockEntityService.Setup(s => s.IsPartialAsync(It.IsAny<EntityType>(), It.IsAny<Guid>())).ReturnsAsync(false);
-        mockEntityService.Setup(s => s.GetEntityNameAsync(It.IsAny<EntityType>(), It.IsAny<Guid>())).ReturnsAsync("Test Entity");
+        Mock<IContactLookupService> mockContactLookupService = new();
+        mockContactLookupService.Setup(s => s.IsPartialAsync(It.IsAny<Guid>())).ReturnsAsync(false);
+        mockContactLookupService.Setup(s => s.GetContactNameAsync(It.IsAny<Guid>())).ReturnsAsync("Test Entity");
 
-        INoteService noteService = new NoteService(repository, mockEntityService.Object);
-        NotesController controller = new(noteService, repository, mockEntityService.Object);
+        INoteService noteService = new NoteService(repository, mockContactLookupService.Object);
+        NotesController controller = new(noteService, repository, mockContactLookupService.Object);
 
         Guid noteId = Guid.NewGuid();
         Guid contactId = Guid.NewGuid();
@@ -168,7 +167,7 @@ public class EntityStateTamperingTests
         FactFormDto tamperAttempt = new()
         {
             Id = factId,
-            EntityId = attackerContactId,
+            ContactId = attackerContactId,
             Category = "Updated Category",
             Value = "Updated Value"
         };
@@ -215,7 +214,7 @@ public class EntityStateTamperingTests
         ContactMethodFormDto tamperAttempt = new()
         {
             Id = contactMethodId,
-            EntityId = attackerContactId,
+            ContactId = attackerContactId,
             Type = Core.Enumerations.ContactMethodType.Email,
             Value = "updated@example.com",
             Label = "Personal"
@@ -240,12 +239,12 @@ public class EntityStateTamperingTests
         using CRMDbContext context = GetInMemoryDbContext();
         Repository repository = new(context);
 
-        Mock<IEntityService> mockEntityService = new();
-        mockEntityService.Setup(s => s.IsPartialAsync(It.IsAny<EntityType>(), It.IsAny<Guid>())).ReturnsAsync(false);
-        mockEntityService.Setup(s => s.GetEntityNameAsync(It.IsAny<EntityType>(), It.IsAny<Guid>())).ReturnsAsync("Test Entity");
+        Mock<IContactLookupService> mockContactLookupService = new();
+        mockContactLookupService.Setup(s => s.IsPartialAsync(It.IsAny<Guid>())).ReturnsAsync(false);
+        mockContactLookupService.Setup(s => s.GetContactNameAsync(It.IsAny<Guid>())).ReturnsAsync("Test Entity");
 
-        INoteService noteService = new NoteService(repository, mockEntityService.Object);
-        NotesController controller = new(noteService, repository, mockEntityService.Object);
+        INoteService noteService = new NoteService(repository, mockContactLookupService.Object);
+        NotesController controller = new(noteService, repository, mockContactLookupService.Object);
 
         Guid nonExistentId = Guid.NewGuid();
         NoteFormViewModel note = new()

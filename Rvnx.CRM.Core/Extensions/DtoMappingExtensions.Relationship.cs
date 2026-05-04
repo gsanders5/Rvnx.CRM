@@ -16,19 +16,18 @@ public static partial class DtoMappingExtensions
         return new RelationshipDto
         {
             Id = entity.Id,
-            EntityId = entity.EntityId,
-            EntityType = entity.EntityType,
-            RelatedEntityId = entity.RelatedEntityId,
+            ContactId = entity.ContactId,
+            RelatedContactId = entity.RelatedContactId,
             RelationshipTypeId = entity.RelationshipTypeId,
             RelationshipTypeName = typeName,
             RelationshipTypeOppositeName = oppositeName,
             RelationshipTypeCategory = def?.Category ?? "Uncategorized",
-            RelatedEntityName = entity.RelatedPerson?.FullName ?? "Unknown",
-            EntityName = entity.Person?.FullName ?? "Unknown",
-            IsEntityPartial = (entity.Person as Contact)?.IsPartial == true,
-            IsRelatedEntityPartial = (entity.RelatedPerson as Contact)?.IsPartial == true,
-            IsEntityDeceased = entity.Person?.IsDeceased == true,
-            IsRelatedEntityDeceased = entity.RelatedPerson?.IsDeceased == true,
+            RelatedContactName = entity.RelatedPerson?.FullName ?? "Unknown",
+            ContactName = entity.Person?.FullName ?? "Unknown",
+            IsContactPartial = (entity.Person as Contact)?.IsPartial == true,
+            IsRelatedContactPartial = (entity.RelatedPerson as Contact)?.IsPartial == true,
+            IsContactDeceased = entity.Person?.IsDeceased == true,
+            IsRelatedContactDeceased = entity.RelatedPerson?.IsDeceased == true,
             Description = entity.Description,
             StartDate = entity.StartDate,
             EndDate = entity.EndDate
@@ -40,9 +39,8 @@ public static partial class DtoMappingExtensions
         return new Relationship
         {
             Id = Guid.NewGuid(),
-            EntityId = dto.EntityId,
-            RelatedEntityId = dto.RelatedEntityId,
-            EntityType = dto.EntityType,
+            ContactId = dto.ContactId,
+            RelatedContactId = dto.RelatedContactId,
             RelationshipTypeId = dto.RelationshipTypeId,
             Description = dto.Description,
             StartDate = dto.StartDate,
@@ -52,8 +50,8 @@ public static partial class DtoMappingExtensions
 
     public static void UpdateEntity(this Relationship entity, RelationshipFormDto dto)
     {
-        entity.EntityId = dto.EntityId;
-        entity.RelatedEntityId = dto.RelatedEntityId;
+        entity.ContactId = dto.ContactId;
+        entity.RelatedContactId = dto.RelatedContactId;
         entity.RelationshipTypeId = dto.RelationshipTypeId;
         entity.Description = dto.Description;
         entity.StartDate = dto.StartDate;

@@ -30,7 +30,7 @@ public class ContactTasksController(IContactTaskService contactTaskService) : Co
     }
 
     /// <summary>
-    /// Create a new task. Required fields: title, dueDate, entityId.
+    /// Create a new task. Required fields: title, dueDate, contactId.
     /// </summary>
     /// <param name="model">The task data.</param>
     /// <returns>The new task's ID.</returns>

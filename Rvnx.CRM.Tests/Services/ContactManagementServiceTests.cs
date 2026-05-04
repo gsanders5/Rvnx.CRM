@@ -46,9 +46,8 @@ public class ContactManagementServiceTests
 
             Relationship relationship = new()
             {
-                EntityId = fullContactId,
-                RelatedEntityId = partialContactId,
-                EntityType = EntityType.Person
+                ContactId = fullContactId,
+                RelatedContactId = partialContactId
             };
 
             RepositoryMock.Setup(r => r.ListAsync<Rvnx.CRM.Core.Models.User>(
@@ -314,13 +313,9 @@ public class ContactManagementServiceTests
 
             await Service.DeleteContactAsync(contactId);
 
-            // 1. Initial Relationship fetch -> ListAsync (1 call)
-            // 2. DeleteRelatedEntitiesAsync<Relationship> -> DeleteAsync(predicate) (NO ListAsync)
-            // 3. relatedTo -> DeleteAsync(predicate) (NO ListAsync)
-
             Assert.Equal(1, _relationshipListCalls);
 
-            RepositoryMock.Verify(r => r.DeleteAsync(It.IsAny<Expression<Func<Relationship, bool>>>(), It.IsAny<CancellationToken>()), Times.Exactly(2));
+            RepositoryMock.Verify(r => r.DeleteAsync(It.IsAny<Expression<Func<Relationship, bool>>>(), It.IsAny<CancellationToken>()), Times.Once);
         }
 
     }
@@ -342,17 +337,15 @@ public class ContactManagementServiceTests
             // Each partial contact is related to a "Full" contact (sibling), ensuring they are NOT orphans.
             List<Relationship> siblingRelationships = partialContacts.Select(p => new Relationship
             {
-                EntityId = p.Id,
-                RelatedEntityId = Guid.NewGuid(), // Unique sibling
-                EntityType = EntityType.Person
+                ContactId = p.Id,
+                RelatedContactId = Guid.NewGuid() // Unique sibling
             }).ToList();
 
             // Initial Relationships (Deleted contact <-> Partial contacts)
             List<Relationship> initialRelationships = partialContacts.Select(p => new Relationship
             {
-                EntityId = contactId,
-                RelatedEntityId = p.Id,
-                EntityType = EntityType.Person
+                ContactId = contactId,
+                RelatedContactId = p.Id
             }).ToList();
 
             List<Relationship> allRelationships = [.. initialRelationships, .. siblingRelationships];
@@ -360,7 +353,7 @@ public class ContactManagementServiceTests
             List<Contact> allContacts =
             [
                 .. partialContacts,
-                    .. siblingRelationships.Select(r => new Contact { Id = r.RelatedEntityId, IsPartial = false }),
+                    .. siblingRelationships.Select(r => new Contact { Id = r.RelatedContactId, IsPartial = false }),
                 ];
 
 

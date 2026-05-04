@@ -2,7 +2,6 @@ using Microsoft.EntityFrameworkCore;
 using Moq;
 using Rvnx.CRM.Core.Interfaces;
 using Rvnx.CRM.Core.Models.Base;
-using Rvnx.CRM.Core.Models.Business;
 using Rvnx.CRM.Core.Models.Contact;
 using Rvnx.CRM.Infrastructure.Data;
 using Rvnx.CRM.Infrastructure.Repositories;
@@ -33,34 +32,6 @@ public class RepositoryTests
             Assert.Equal(2, does.Count);
             Assert.Contains(does, c => c.FirstName == "John");
             Assert.Contains(does, c => c.FirstName == "Jane");
-        }
-
-        [Fact]
-        public async Task ListAsyncPredicateAndIncludesShouldIncludeRelatedEntities()
-        {
-            using CRMDbContext context = GetInMemoryDbContext();
-            Repository repo = new(context);
-
-            Guid contactId = Guid.NewGuid();
-            Contact contact = new() { Id = contactId, FirstName = "John", LastName = "Doe" };
-            await repo.AddAsync(contact);
-            await repo.SaveChangesAsync();
-
-            Employer employer = new()
-            {
-                Id = Guid.NewGuid(),
-                CompanyName = "Acme Corp",
-                EmployeeId = contactId
-            };
-            await repo.AddAsync(employer);
-            await repo.SaveChangesAsync();
-
-            List<Contact> result = await repo.ListAsNoTrackingAsync<Contact>(c => c.LastName == "Doe", default, "Employers");
-
-            Contact fetchedContact = result.Single();
-            Assert.NotNull(fetchedContact.Employers);
-            Assert.NotEmpty(fetchedContact.Employers);
-            Assert.Equal("Acme Corp", fetchedContact.Employers.First().CompanyName);
         }
 
         [Fact]

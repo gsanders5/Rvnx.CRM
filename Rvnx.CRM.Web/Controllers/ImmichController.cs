@@ -1,7 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Rvnx.CRM.Core.DTOs.Base;
 using Rvnx.CRM.Core.DTOs.Contact;
-using Rvnx.CRM.Core.Enumerations;
 using Rvnx.CRM.Core.Interfaces;
 using Rvnx.CRM.Web.Controllers.Base;
 
@@ -85,7 +84,7 @@ public class ImmichController(
                 : fileName;
 
             AttachmentOperationResult upload = await _attachmentService.UploadAttachmentAsync(
-                contactId, EntityType.Person, bytes, effectiveFileName);
+                contactId, bytes, effectiveFileName);
 
             if (!upload.Success || upload.AttachmentId is null)
             {

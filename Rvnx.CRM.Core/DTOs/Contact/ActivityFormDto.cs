@@ -7,7 +7,7 @@ public class ActivityFormDto
     public Guid? Id { get; set; }
 
     [Required]
-    public Guid EntityId { get; set; }
+    public Guid ContactId { get; set; }
 
     public List<Guid> ContactIds { get; set; } = [];
 

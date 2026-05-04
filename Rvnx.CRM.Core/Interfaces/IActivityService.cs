@@ -12,6 +12,6 @@ public interface IActivityService
     Task<OperationResult> UpdateAsync(Guid id, ActivityFormDto dto);
     Task<OperationResult> DeleteAsync(Guid id);
     Task<ActivityFormDto?> GetFormAsync(Guid id);
-    Task<ActivityFormDto?> GetFormForCreateAsync(Guid entityId);
+    Task<ActivityFormDto?> GetFormForCreateAsync(Guid contactId);
     Task<Activity?> GetByIdAsync(Guid id);
 }

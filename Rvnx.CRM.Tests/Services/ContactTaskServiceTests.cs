@@ -239,7 +239,7 @@ public class ContactTaskServiceTests : IDisposable
         Guid contactId = Guid.NewGuid();
         ContactTaskFormDto dto = new()
         {
-            EntityId = contactId,
+            ContactId = contactId,
             Title = "Send a card",
             DueDate = DateOnly.FromDateTime(DateTime.Today.AddDays(7))
         };

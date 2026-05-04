@@ -1,4 +1,3 @@
-@using Rvnx.CRM.Core.Enumerations
 @model Rvnx.CRM.Core.DTOs.Contact.RelationshipDeleteViewModel
 
 @{
@@ -13,10 +12,10 @@
     <hr/>
     <dl class="row">
         <dt class="col-sm-2">
-            Related Entity
+            Related Contact
         </dt>
         <dd class="col-sm-10">
-            @Model.RelatedEntityName
+            @Model.RelatedContactName
         </dd>
         <dt class="col-sm-2">
             Relationship Type
@@ -41,13 +40,9 @@
             {
                 <a href="@Model.ReturnUrl" class="crm-btn-tertiary"><i class="bi bi-x-lg" aria-hidden="true"></i>Cancel</a>
             }
-            else if (Model.EntityType == EntityType.Person)
-            {
-                <a asp-controller="Contacts" asp-action="Details" asp-route-id="@Model.EntityId" class="crm-btn-tertiary"><i class="bi bi-x-lg" aria-hidden="true"></i>Cancel</a>
-            }
             else
             {
-                <a asp-controller="Home" asp-action="Index" class="crm-btn-tertiary"><i class="bi bi-x-lg" aria-hidden="true"></i>Cancel</a>
+                <a asp-controller="Contacts" asp-action="Details" asp-route-id="@Model.ContactId" class="crm-btn-tertiary"><i class="bi bi-x-lg" aria-hidden="true"></i>Cancel</a>
             }
         </div>
     </form>

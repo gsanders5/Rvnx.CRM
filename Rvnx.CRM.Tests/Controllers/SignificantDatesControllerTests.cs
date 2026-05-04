@@ -43,7 +43,7 @@ public class SignificantDatesControllerTests : IDisposable
 
         CreateSignificantDateRequest dto = new()
         {
-            EntityId = contactId,
+            ContactId = contactId,
             Title = "Anniversary",
             EventDate = DateOnly.FromDateTime(DateTime.Today),
             RecurrenceType = Core.Enumerations.RecurrenceType.Annual
@@ -78,7 +78,7 @@ public class SignificantDatesControllerTests : IDisposable
 
         CreateSignificantDateRequest dto = new()
         {
-            EntityId = contactId,
+            ContactId = contactId,
             Title = SignificantDateTitles.Birthday, // Duplicate Title
             EventDate = DateOnly.FromDateTime(DateTime.Today)
         };
@@ -112,7 +112,7 @@ public class SignificantDatesControllerTests : IDisposable
 
         CreateSignificantDateRequest dto = new()
         {
-            EntityId = contactId,
+            ContactId = contactId,
             Title = SignificantDateTitles.Birthday, // Uppercase (Standard)
             EventDate = DateOnly.FromDateTime(DateTime.Today)
         };
@@ -153,7 +153,7 @@ public class SignificantDatesControllerTests : IDisposable
         UpdateSignificantDateRequest dto = new()
         {
             Id = anniversaryId,
-            EntityId = contactId,
+            ContactId = contactId,
             Title = SignificantDateTitles.Birthday, // Change Anniversary to Birthday
             EventDate = new DateOnly(2010, 5, 5)
         };
@@ -184,7 +184,7 @@ public class SignificantDatesControllerTests : IDisposable
         UpdateSignificantDateRequest dto = new()
         {
             Id = birthdayId,
-            EntityId = contactId,
+            ContactId = contactId,
             Title = SignificantDateTitles.Birthday,
             EventDate = new DateOnly(1990, 1, 2) // Change date only
         };

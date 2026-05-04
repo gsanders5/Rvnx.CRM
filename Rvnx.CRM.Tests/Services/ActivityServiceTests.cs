@@ -81,7 +81,7 @@ public class ActivityServiceTests
         Guid entityId = Guid.NewGuid();
         ActivityFormDto dto = new()
         {
-            EntityId = entityId,
+            ContactId = entityId,
             ContactIds = [entityId],
             Title = "Test"
         };
@@ -119,7 +119,7 @@ public class ActivityServiceTests
         ActivityFormDto? result = await _service.GetFormForCreateAsync(entityId);
 
         Assert.NotNull(result);
-        Assert.Equal(entityId, result.EntityId);
+        Assert.Equal(entityId, result.ContactId);
         Assert.Contains(entityId, result.ContactIds);
         Assert.Contains(selfContactId, result.ContactIds);
         Assert.Equal(2, result.ContactIds.Count);
@@ -148,7 +148,7 @@ public class ActivityServiceTests
 
         ActivityFormDto dto = new()
         {
-            EntityId = entityId,
+            ContactId = entityId,
             ContactIds = [otherContactId],
             Title = "Test Activity"
         };
@@ -173,7 +173,7 @@ public class ActivityServiceTests
     public async Task CreateAsyncWithInvalidContactReturnsFailure()
     {
         Guid entityId = Guid.NewGuid();
-        ActivityFormDto dto = new() { EntityId = entityId };
+        ActivityFormDto dto = new() { ContactId = entityId };
 
         _repositoryMock.Setup(r => r.CountAsync(It.IsAny<Expression<Func<Core.Models.Contact.Contact, bool>>>(), It.IsAny<CancellationToken>())).ReturnsAsync(0);
 
@@ -202,7 +202,7 @@ public class ActivityServiceTests
 
         ActivityFormDto dto = new()
         {
-            EntityId = entityId,
+            ContactId = entityId,
             ContactIds = [entityId, keepContactId] // Implicitly removing removeContactId
         };
 
@@ -226,7 +226,7 @@ public class ActivityServiceTests
     public async Task UpdateAsyncWithEntityConcurrencyExceptionAndDeletedEntityReturnsFailure()
     {
         Guid activityId = Guid.NewGuid();
-        ActivityFormDto dto = new() { EntityId = Guid.NewGuid() };
+        ActivityFormDto dto = new() { ContactId = Guid.NewGuid() };
 
         _repositoryMock.Setup(r => r.GetByIdWithIncludesAsync<Activity>(activityId, It.IsAny<string[]>()))
             .ReturnsAsync(new Activity { Id = activityId });
@@ -268,7 +268,7 @@ public class ActivityServiceTests
     public async Task UpdateAsyncWhenActivityNotFoundReturnsFailure()
     {
         Guid activityId = Guid.NewGuid();
-        ActivityFormDto dto = new() { EntityId = Guid.NewGuid() };
+        ActivityFormDto dto = new() { ContactId = Guid.NewGuid() };
 
         _repositoryMock.Setup(r => r.GetByIdWithIncludesAsync<Activity>(activityId, It.IsAny<string[]>()))
             .ReturnsAsync((Activity?)null);
@@ -333,7 +333,7 @@ public class ActivityServiceTests
 
         Assert.NotNull(result);
         Assert.Equal(activityId, result.Id);
-        Assert.Equal(contactId1, result.EntityId);
+        Assert.Equal(contactId1, result.ContactId);
         Assert.Contains(contactId1, result.ContactIds);
         Assert.Contains(contactId2, result.ContactIds);
         Assert.Equal(2, result.ContactIds.Count);
@@ -491,7 +491,7 @@ public class ActivityServiceTests
     public async Task UpdateAsyncWhenConcurrencyExceptionAndActivityStillExistsRethrows()
     {
         Guid activityId = Guid.NewGuid();
-        ActivityFormDto dto = new() { EntityId = Guid.NewGuid() };
+        ActivityFormDto dto = new() { ContactId = Guid.NewGuid() };
 
         _repositoryMock.Setup(r => r.GetByIdWithIncludesAsync<Activity>(activityId, It.IsAny<string[]>()))
             .ReturnsAsync(new Activity { Id = activityId, ActivityContacts = [] });
@@ -522,7 +522,7 @@ public class ActivityServiceTests
 
         ActivityFormDto dto = new()
         {
-            EntityId = entityId,
+            ContactId = entityId,
             ContactIds = [entityId, existingContactId, newContactId]
         };
 

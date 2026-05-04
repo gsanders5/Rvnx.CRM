@@ -10,7 +10,7 @@ namespace Rvnx.CRM.API.Controllers;
 
 /// <summary>
 /// Manages notes attached to contacts. Notes support Markdown content.
-/// Requires entityId (contact GUID) when creating.
+/// Requires contactId (contact GUID) when creating.
 /// </summary>
 [ApiController]
 [Route("api/[controller]")]
@@ -34,12 +34,12 @@ public class NotesController(INoteService noteService) : ControllerBase
     /// Create a new note.
     /// </summary>
     /// <remarks>
-    /// Required fields: title, value (the note body — supports Markdown), entityId.
+    /// Required fields: title, value (the note body — supports Markdown), contactId.
     ///
     /// Example:
     ///
     ///     {
-    ///       "entityId": "&lt;contact-id&gt;",
+    ///       "contactId": "&lt;contact-id&gt;",
     ///       "title": "First meeting",
     ///       "value": "Met at the conference. Very knowledgeable about distributed systems."
     ///     }
@@ -54,7 +54,7 @@ public class NotesController(INoteService noteService) : ControllerBase
             Title = model.Title,
             Value = model.Value,
             IsFavorite = model.IsFavorite,
-            EntityId = model.EntityId
+            ContactId = model.ContactId
         };
         OperationResult result = await _noteService.CreateAsync(vm);
         return result.ToCreatedResult();
@@ -67,10 +67,17 @@ public class NotesController(INoteService noteService) : ControllerBase
     /// <param name="id">The note GUID.</param>
     /// <param name="model">The complete note data.</param>
     [HttpPut("{id}")]
-    public async Task<IActionResult> Update(Guid id, [FromBody] NoteFormViewModel model)
+    public async Task<IActionResult> Update(Guid id, [FromBody] NoteFormDto model)
     {
-        model.Id = id;
-        OperationResult result = await _noteService.UpdateAsync(id, model);
+        NoteFormViewModel vm = new()
+        {
+            Id = id,
+            Title = model.Title,
+            Value = model.Value,
+            IsFavorite = model.IsFavorite,
+            ContactId = model.ContactId
+        };
+        OperationResult result = await _noteService.UpdateAsync(id, vm);
         return result.ToNoContentResult();
     }
 
@@ -107,6 +114,17 @@ public class NotesController(INoteService noteService) : ControllerBase
     public async Task<IActionResult> Delete(Guid id)
     {
         OperationResult result = await _noteService.DeleteAsync(id);
+        return result.ToNoContentResult();
+    }
+
+    /// <summary>
+    /// Toggle the IsFavorite flag on a note.
+    /// </summary>
+    /// <param name="id">The note GUID.</param>
+    [HttpPost("{id}/togglefavorite")]
+    public async Task<IActionResult> ToggleFavorite(Guid id)
+    {
+        OperationResult result = await _noteService.ToggleFavoriteAsync(id);
         return result.ToNoContentResult();
     }
 }

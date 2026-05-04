@@ -84,8 +84,8 @@ public class ContactReadServiceTests
 
             List<Relationship> allRelationships =
             [
-                new Relationship { Id = Guid.NewGuid(), EntityId = contactId, RelatedEntityId = relatedId1, EntityType = EntityType.Person, RelationshipTypeId = Guid.NewGuid() }, // outgoing
-                new Relationship { Id = Guid.NewGuid(), EntityId = relatedId2, RelatedEntityId = contactId, EntityType = EntityType.Person, RelationshipTypeId = Guid.NewGuid() }  // incoming
+                new Relationship { Id = Guid.NewGuid(), ContactId = contactId, RelatedContactId = relatedId1, RelationshipTypeId = Guid.NewGuid() }, // outgoing
+                new Relationship { Id = Guid.NewGuid(), ContactId = relatedId2, RelatedContactId = contactId, RelationshipTypeId = Guid.NewGuid() }  // incoming
             ];
 
             RepositoryMock.Setup(r => r.ListAsNoTrackingAsync<Contact>(
@@ -112,12 +112,12 @@ public class ContactReadServiceTests
             Assert.Equal(contactId, result.Id);
 
             Assert.Single(result.Relationships); // Outgoing
-            Assert.Equal(relatedId1, result.Relationships.First().RelatedEntityId);
-            Assert.Equal("Child", result.Relationships.First().RelatedEntityName);
+            Assert.Equal(relatedId1, result.Relationships.First().RelatedContactId);
+            Assert.Equal("Child", result.Relationships.First().RelatedContactName);
 
             Assert.Single(result.RelatedTo); // Incoming
-            Assert.Equal(relatedId2, result.RelatedTo.First().EntityId);
-            Assert.Equal("Parent", result.RelatedTo.First().EntityName);
+            Assert.Equal(relatedId2, result.RelatedTo.First().ContactId);
+            Assert.Equal("Parent", result.RelatedTo.First().ContactName);
         }
 
         [Fact]
@@ -185,8 +185,8 @@ public class ContactReadServiceTests
                 It.IsAny<CancellationToken>(),
                 It.IsAny<string[]>()))
                 .ReturnsAsync([
-                    new Relationship { Id = Guid.NewGuid(), EntityId = contactId, RelatedEntityId = livingId, EntityType = EntityType.Person, RelationshipTypeId = Guid.NewGuid() },
-                    new Relationship { Id = Guid.NewGuid(), EntityId = contactId, RelatedEntityId = deceasedId, EntityType = EntityType.Person, RelationshipTypeId = Guid.NewGuid() }
+                    new Relationship { Id = Guid.NewGuid(), ContactId = contactId, RelatedContactId = livingId, RelationshipTypeId = Guid.NewGuid() },
+                    new Relationship { Id = Guid.NewGuid(), ContactId = contactId, RelatedContactId = deceasedId, RelationshipTypeId = Guid.NewGuid() }
                 ]);
 
             RepositoryMock.Setup(r => r.ListProjectedAsync(
@@ -208,10 +208,10 @@ public class ContactReadServiceTests
             // And confirm the flag rides into the per-relationship DTO surface used by the view.
             Assert.NotNull(result);
             Assert.Equal(2, result.Relationships.Count());
-            RelationshipDto livingRel = result.Relationships.Single(r => r.RelatedEntityId == livingId);
-            RelationshipDto deceasedRel = result.Relationships.Single(r => r.RelatedEntityId == deceasedId);
-            Assert.False(livingRel.IsRelatedEntityDeceased);
-            Assert.True(deceasedRel.IsRelatedEntityDeceased);
+            RelationshipDto livingRel = result.Relationships.Single(r => r.RelatedContactId == livingId);
+            RelationshipDto deceasedRel = result.Relationships.Single(r => r.RelatedContactId == deceasedId);
+            Assert.False(livingRel.IsRelatedContactDeceased);
+            Assert.True(deceasedRel.IsRelatedContactDeceased);
         }
 
         [Fact]
@@ -1217,15 +1217,13 @@ public class ContactReadServiceTests
             Assert.NotNull(capturedFilter);
             Func<Relationship, bool> filterFunc = capturedFilter.Compile();
 
-            // Should match: entity is queryId and type is person
-            Assert.True(filterFunc(new Relationship { EntityId = queryId, RelatedEntityId = otherId, EntityType = EntityType.Person }));
-            // Should match: related entity is queryId and type is person
-            Assert.True(filterFunc(new Relationship { EntityId = otherId, RelatedEntityId = queryId, EntityType = EntityType.Person }));
+            // Should match: contact is queryId
+            Assert.True(filterFunc(new Relationship { ContactId = queryId, RelatedContactId = otherId }));
+            // Should match: related contact is queryId
+            Assert.True(filterFunc(new Relationship { ContactId = otherId, RelatedContactId = queryId }));
 
             // Should not match: neither ID matches
-            Assert.False(filterFunc(new Relationship { EntityId = Guid.NewGuid(), RelatedEntityId = otherId, EntityType = EntityType.Person }));
-            // Should not match: wrong entity type
-            Assert.False(filterFunc(new Relationship { EntityId = queryId, RelatedEntityId = otherId, EntityType = EntityType.Company }));
+            Assert.False(filterFunc(new Relationship { ContactId = Guid.NewGuid(), RelatedContactId = otherId }));
         }
     }
 

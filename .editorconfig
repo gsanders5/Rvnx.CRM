@@ -272,3 +272,8 @@ trim_trailing_whitespace = true
 [*.md]
 trim_trailing_whitespace = false
 insert_final_newline = true
+
+# EF Core migrations are auto-generated; the inline column-name arrays
+# trip CA1861 on every new migration. Suppress repo-wide for the folder.
+[**/Migrations/*.cs]
+dotnet_diagnostic.CA1861.severity = none

@@ -10,7 +10,7 @@ namespace Rvnx.CRM.API.Controllers;
 
 /// <summary>
 /// Manages contact methods (phone numbers, emails, social media, etc.) for contacts.
-/// Requires entityId (contact GUID) and entityType ("Person") when creating.
+/// Requires contactId (contact GUID) when creating.
 /// </summary>
 [ApiController]
 [Route("api/[controller]")]
@@ -31,7 +31,7 @@ public class ContactMethodsController(IContactMethodService contactMethodService
     }
 
     /// <summary>
-    /// Create a new contact method. Required fields: type (enum), value, entityId, entityType ("Person").
+    /// Create a new contact method. Required fields: type (enum), value, contactId.
     /// </summary>
     /// <param name="model">The contact method data.</param>
     /// <returns>The new contact method's ID.</returns>

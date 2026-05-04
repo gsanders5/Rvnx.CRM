@@ -16,7 +16,12 @@ public class ContactsControllerTests
     {
         _readServiceMock = new Mock<IContactReadService>();
         _managementServiceMock = new Mock<IContactManagementService>();
-        _sut = new ContactsController(_readServiceMock.Object, _managementServiceMock.Object);
+        _sut = new ContactsController(
+            _readServiceMock.Object,
+            _managementServiceMock.Object,
+            Mock.Of<IContactImportService>(),
+            Mock.Of<IContactExportService>(),
+            Mock.Of<ICsvExportService>());
     }
 
     [Fact]

@@ -1,5 +1,4 @@
 using Rvnx.CRM.Core.DTOs.Contact;
-using Rvnx.CRM.Core.Enumerations;
 using Rvnx.CRM.Core.Models;
 using Rvnx.CRM.Core.Models.Contact;
 
@@ -39,12 +38,9 @@ public interface IFactService
     Task<FactFormDto?> GetFormAsync(Guid id);
 
     /// <summary>
-    /// Initializes a new form DTO for creating a fact, linked to a specific entity.
+    /// Initializes a new form DTO for creating a fact linked to a contact.
     /// </summary>
-    /// <param name="entityId">The ID of the parent entity.</param>
-    /// <param name="entityType">The type of the parent entity.</param>
-    /// <returns>A pre-populated <see cref="FactFormDto"/>.</returns>
-    Task<FactFormDto?> GetFormForCreateAsync(Guid entityId, EntityType entityType);
+    Task<FactFormDto?> GetFormForCreateAsync(Guid contactId);
 
     /// <summary>
     /// Retrieves a fact entity by its ID.

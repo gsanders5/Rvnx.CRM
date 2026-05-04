@@ -1,5 +1,4 @@
 using Rvnx.CRM.Core.DTOs.Base;
-using Rvnx.CRM.Core.Enumerations;
 using Rvnx.CRM.Core.Models.Base;
 
 namespace Rvnx.CRM.Core.Extensions;
@@ -15,8 +14,7 @@ public static partial class DtoMappingExtensions
             Value = entity.Value,
             IsFavorite = entity.IsFavorite,
             CreatedDate = entity.CreatedDate,
-            EntityId = entity.ContactId ?? Guid.Empty,
-            EntityType = EntityType.Person
+            ContactId = entity.ContactId ?? Guid.Empty,
         };
     }
 
@@ -28,7 +26,7 @@ public static partial class DtoMappingExtensions
             Title = dto.Title,
             Value = dto.Value,
             IsFavorite = dto.IsFavorite,
-            ContactId = dto.EntityId
+            ContactId = dto.ContactId
         };
     }
 
