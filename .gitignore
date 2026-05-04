@@ -367,6 +367,10 @@ FodyWeavers.xsd
 *.db-shm
 *.db-wal
 
+# Track the anonymized demo database and the docs-build settings template.
+!/.demo/db/*.db
+!/.demo/appsettings.Local.json
+
 .vscode/
 /Rvnx.CRM.ConsoleApp/Properties/launchSettings.json
 /.claude/settings.local.json

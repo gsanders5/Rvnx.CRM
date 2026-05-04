@@ -26,6 +26,7 @@ Purpose: License compliance audit
 | Microsoft.Extensions.Hosting | 10.0.3 | Rvnx.CRM.ConsoleApp | MIT | https://licenses.nuget.org/MIT |
 | Microsoft.Extensions.Http | 10.0.3 | Rvnx.CRM.Infrastructure | MIT | https://licenses.nuget.org/MIT |
 | Microsoft.NET.Test.Sdk | 18.3.0 | Rvnx.CRM.Tests | MIT | https://licenses.nuget.org/MIT |
+| Microsoft.Playwright | 1.49.0 | Rvnx.CRM.DocsBuild | Apache-2.0 | https://github.com/microsoft/playwright-dotnet/blob/main/LICENSE |
 | MimeKit | 4.15.1 | Rvnx.CRM.Infrastructure | MIT | https://github.com/jstedfast/MimeKit/blob/master/LICENSE |
 | Moq | 4.20.72 | Rvnx.CRM.Tests | BSD-3-Clause | https://github.com/moq/moq4/blob/main/License.txt |
 | SixLabors.ImageSharp | 3.x | Rvnx.CRM.Infrastructure | Six Labors Split License 1.0 | https://github.com/SixLabors/ImageSharp/blob/main/LICENSE |
@@ -96,9 +97,13 @@ Purpose: License compliance audit
 
 ## Summary
 
-Total dependencies audited: 40
+Total dependencies audited: 41
 Licenses identified: MIT, Apache-2.0, BSD-3-Clause, CC BY 4.0 (Icons), MPL-2.0 (Option), Six Labors Split License 1.0, SIL Open Font License 1.1, Proprietary (Social Embeds)
 Unresolved: 0
+
+### Runtime-downloaded components
+
+- **Microsoft.Playwright** auto-downloads a Chromium build, FFmpeg, and the Chromium Headless Shell (~200 MB total) into the developer's local cache (`~/Library/Caches/ms-playwright/` on macOS) on first use of the `Rvnx.CRM.DocsBuild` project. These browser binaries are not bundled in this repository or any distribution of it. Their licenses (BSD-style for Chromium, LGPL for FFmpeg components) apply only to those locally-downloaded files; review the [Playwright browsers documentation](https://playwright.dev/dotnet/docs/browsers) if you redistribute them.
 
 ### License compatibility notes
 - **MIT**: Attribution required in distributed software. Very permissive.
