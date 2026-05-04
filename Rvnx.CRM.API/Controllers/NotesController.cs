@@ -67,10 +67,17 @@ public class NotesController(INoteService noteService) : ControllerBase
     /// <param name="id">The note GUID.</param>
     /// <param name="model">The complete note data.</param>
     [HttpPut("{id}")]
-    public async Task<IActionResult> Update(Guid id, [FromBody] NoteFormViewModel model)
+    public async Task<IActionResult> Update(Guid id, [FromBody] NoteFormDto model)
     {
-        model.Id = id;
-        OperationResult result = await _noteService.UpdateAsync(id, model);
+        NoteFormViewModel vm = new()
+        {
+            Id = id,
+            Title = model.Title,
+            Value = model.Value,
+            IsFavorite = model.IsFavorite,
+            ContactId = model.ContactId
+        };
+        OperationResult result = await _noteService.UpdateAsync(id, vm);
         return result.ToNoContentResult();
     }
 
@@ -107,6 +114,17 @@ public class NotesController(INoteService noteService) : ControllerBase
     public async Task<IActionResult> Delete(Guid id)
     {
         OperationResult result = await _noteService.DeleteAsync(id);
+        return result.ToNoContentResult();
+    }
+
+    /// <summary>
+    /// Toggle the IsFavorite flag on a note.
+    /// </summary>
+    /// <param name="id">The note GUID.</param>
+    [HttpPost("{id}/togglefavorite")]
+    public async Task<IActionResult> ToggleFavorite(Guid id)
+    {
+        OperationResult result = await _noteService.ToggleFavoriteAsync(id);
         return result.ToNoContentResult();
     }
 }

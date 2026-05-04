@@ -75,11 +75,21 @@ public class SignificantDatesController(ISignificantDateService significantDateS
     /// Use PATCH for partial updates.
     /// </summary>
     /// <param name="id">The significant date GUID.</param>
-    /// <param name="model">The complete significant date data.</param>
+    /// <param name="request">The complete significant date data.</param>
     [HttpPut("{id}")]
-    public async Task<IActionResult> Update(Guid id, [FromBody] SignificantDateDto model)
+    public async Task<IActionResult> Update(Guid id, [FromBody] UpdateSignificantDateRequest request)
     {
-        model.Id = id;
+        SignificantDateDto model = new()
+        {
+            Id = id,
+            ContactId = request.ContactId,
+            Title = request.Title,
+            Description = request.Description,
+            EventDate = request.EventDate,
+            RecurrenceType = request.RecurrenceType,
+            CustomIntervalDays = request.CustomIntervalDays,
+            IsActive = request.IsActive
+        };
         OperationResult result = await _significantDateService.UpdateAsync(id, model);
         return result.ToNoContentResult();
     }
@@ -117,6 +127,30 @@ public class SignificantDatesController(ISignificantDateService significantDateS
     public async Task<IActionResult> Delete(Guid id)
     {
         OperationResult result = await _significantDateService.DeleteAsync(id);
+        return result.ToNoContentResult();
+    }
+
+    /// <summary>
+    /// Add a reminder offset (in days before the event) to a significant date.
+    /// Each offset triggers an email reminder when the offset elapses.
+    /// </summary>
+    /// <param name="id">The significant date GUID.</param>
+    /// <param name="daysBeforeEvent">Number of days before the event to send the reminder.</param>
+    [HttpPost("{id}/offsets")]
+    public async Task<IActionResult> AddOffset(Guid id, [FromQuery] int daysBeforeEvent)
+    {
+        OperationResult result = await _significantDateService.AddReminderOffsetAsync(id, daysBeforeEvent);
+        return result.ToNoContentResult();
+    }
+
+    /// <summary>
+    /// Delete a reminder offset by its GUID.
+    /// </summary>
+    /// <param name="offsetId">The reminder offset GUID.</param>
+    [HttpDelete("offsets/{offsetId}")]
+    public async Task<IActionResult> DeleteOffset(Guid offsetId)
+    {
+        OperationResult result = await _significantDateService.DeleteReminderOffsetAsync(offsetId);
         return result.ToNoContentResult();
     }
 }
