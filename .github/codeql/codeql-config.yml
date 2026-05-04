@@ -1,0 +1,16 @@
+name: "Rvnx.CRM CodeQL config"
+
+# Exclude rules that produce known false positives for this codebase.
+#
+# cs/web/missing-token-validation: ASP.NET MVC antiforgery (CSRF) check.
+#   Rvnx.CRM.API is a stateless REST API authenticated with bearer tokens
+#   (custom ApiTokenAuthenticationHandler) — not cookies — so CSRF is not
+#   applicable. Antiforgery tokens are designed to defend cookie-based
+#   sessions; bearer-token clients construct each request explicitly and
+#   browsers will not auto-attach an Authorization header cross-origin.
+#   The rule fires on every new POST/DELETE in the API and cannot be
+#   suppressed per-call without polluting controllers with attributes
+#   that have no runtime effect.
+query-filters:
+  - exclude:
+      id: cs/web/missing-token-validation
