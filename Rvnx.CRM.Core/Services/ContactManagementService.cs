@@ -1,4 +1,5 @@
 using Rvnx.CRM.Core.Constants;
+using Rvnx.CRM.Core.DTOs.Base;
 using Rvnx.CRM.Core.DTOs.Contact;
 using Rvnx.CRM.Core.Enumerations;
 using Rvnx.CRM.Core.Exceptions;
@@ -122,6 +123,102 @@ public class ContactManagementService(IRepository repository, IFileValidationSer
             }
             await _repository.SaveChangesAsync();
         }
+    }
+
+    public async Task<BulkOperationResult> BulkDeleteAsync(IReadOnlyCollection<Guid> contactIds)
+    {
+        if (contactIds.Count == 0)
+        {
+            return BulkOperationResult.Ok(0);
+        }
+
+        Guid? selfContactId = await _selfContactService.GetSelfContactIdAsync();
+        HashSet<Guid> targetIds = [];
+        int skipped = 0;
+        foreach (Guid id in contactIds)
+        {
+            // Skip the self-contact so a user can't accidentally delete themselves out of
+            // their own dashboard, calendar, and reminders.
+            if (selfContactId.HasValue && id == selfContactId.Value)
+            {
+                skipped++;
+                continue;
+            }
+            targetIds.Add(id);
+        }
+
+        if (targetIds.Count == 0)
+        {
+            return BulkOperationResult.Ok(0, skipped);
+        }
+
+        List<Guid> existingIds = await _repository.ListProjectedByChunkedContainsAsync<Contact, Guid, Guid>(
+            [.. targetIds],
+            chunk => c => chunk.Contains(c.Id),
+            c => c.Id);
+        skipped += targetIds.Count - existingIds.Count;
+
+        // Delegates to the single-row delete so partial-contact cascade cleanup and
+        // self-contact FK detachment behave identically to the existing flow.
+        foreach (Guid id in existingIds)
+        {
+            await DeleteContactAsync(id);
+        }
+
+        return BulkOperationResult.Ok(existingIds.Count, skipped);
+    }
+
+    public async Task<BulkOperationResult> BulkSetHiddenAsync(IReadOnlyCollection<Guid> contactIds, bool hidden)
+    {
+        if (contactIds.Count == 0)
+        {
+            return BulkOperationResult.Ok(0);
+        }
+
+        Guid? selfContactId = await _selfContactService.GetSelfContactIdAsync();
+        HashSet<Guid> targetIds = [];
+        int skipped = 0;
+        foreach (Guid id in contactIds)
+        {
+            if (hidden && selfContactId.HasValue && id == selfContactId.Value)
+            {
+                skipped++;
+                continue;
+            }
+            targetIds.Add(id);
+        }
+
+        if (targetIds.Count == 0)
+        {
+            return BulkOperationResult.Ok(0, skipped);
+        }
+
+        List<Contact> contacts = await _repository.ListByChunkedContainsAsync<Contact, Guid>(
+            [.. targetIds],
+            chunk => c => chunk.Contains(c.Id),
+            asNoTracking: false);
+
+        int successful = 0;
+        foreach (Contact contact in contacts)
+        {
+            if (contact.IsHidden == hidden)
+            {
+                skipped++;
+                continue;
+            }
+            contact.IsHidden = hidden;
+            successful++;
+        }
+
+        skipped += targetIds.Count - contacts.Count;
+
+        if (contacts.Count > 0)
+        {
+            await _repository.UpdateRangeAsync(contacts);
+            await _repository.SaveChangesAsync();
+        }
+
+        return BulkOperationResult.Ok(successful, skipped);
     }
 
     public async Task<ContactOperationResult> CreateContactAsync(ContactFormDto contactDto)

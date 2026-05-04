@@ -1,4 +1,6 @@
+using Rvnx.CRM.Core.DTOs.Base;
 using Rvnx.CRM.Core.DTOs.Contact;
+using Rvnx.CRM.Core.Extensions;
 using Rvnx.CRM.Core.Interfaces;
 using Rvnx.CRM.Core.Models.Contact;
 
@@ -103,6 +105,83 @@ public class LabelService(IRepository repository) : ILabelService
     {
         await _repository.DeleteAsync<ContactLabel>(cl => cl.ContactId == contactId && cl.LabelId == labelId);
         await _repository.SaveChangesAsync();
+    }
+
+    public async Task<BulkOperationResult> BulkAssignLabelAsync(IReadOnlyCollection<Guid> contactIds, Guid labelId)
+    {
+        if (contactIds.Count == 0)
+        {
+            return BulkOperationResult.Ok(0);
+        }
+
+        Label? label = await _repository.GetByIdAsync<Label>(labelId);
+        if (label == null)
+        {
+            return BulkOperationResult.Fail("Label not found.");
+        }
+
+        HashSet<Guid> distinctIds = [.. contactIds];
+
+        List<Guid> existingPairs = await _repository.ListProjectedByChunkedContainsAsync<ContactLabel, Guid, Guid>(
+            [.. distinctIds],
+            chunk => cl => cl.LabelId == labelId && chunk.Contains(cl.ContactId),
+            cl => cl.ContactId);
+        HashSet<Guid> alreadyAssigned = [.. existingPairs];
+
+        List<Guid> existingContacts = await _repository.ListProjectedByChunkedContainsAsync<Contact, Guid, Guid>(
+            [.. distinctIds],
+            chunk => c => chunk.Contains(c.Id),
+            c => c.Id);
+        HashSet<Guid> validContactIds = [.. existingContacts];
+
+        List<ContactLabel> toAdd = [];
+        int skipped = 0;
+        foreach (Guid id in distinctIds)
+        {
+            if (!validContactIds.Contains(id))
+            {
+                skipped++;
+                continue;
+            }
+            if (alreadyAssigned.Contains(id))
+            {
+                skipped++;
+                continue;
+            }
+            toAdd.Add(new ContactLabel { Id = Guid.NewGuid(), ContactId = id, LabelId = labelId });
+        }
+
+        if (toAdd.Count > 0)
+        {
+            await _repository.AddRangeAsync(toAdd);
+            await _repository.SaveChangesAsync();
+        }
+
+        return BulkOperationResult.Ok(toAdd.Count, skipped);
+    }
+
+    public async Task<BulkOperationResult> BulkRemoveLabelAsync(IReadOnlyCollection<Guid> contactIds, Guid labelId)
+    {
+        if (contactIds.Count == 0)
+        {
+            return BulkOperationResult.Ok(0);
+        }
+
+        HashSet<Guid> distinctIds = [.. contactIds];
+
+        List<ContactLabel> existing = await _repository.ListByChunkedContainsAsync<ContactLabel, Guid>(
+            [.. distinctIds],
+            chunk => cl => cl.LabelId == labelId && chunk.Contains(cl.ContactId),
+            asNoTracking: false);
+
+        if (existing.Count > 0)
+        {
+            await _repository.DeleteRangeAsync(existing);
+            await _repository.SaveChangesAsync();
+        }
+
+        int skipped = distinctIds.Count - existing.Count;
+        return BulkOperationResult.Ok(existing.Count, skipped);
     }
 
     public async Task<List<LabelDto>> GetLabelsForContactAsync(Guid contactId)

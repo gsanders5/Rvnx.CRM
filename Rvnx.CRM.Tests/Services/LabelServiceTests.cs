@@ -391,4 +391,71 @@ public class LabelServiceTests
         Assert.Empty(result);
     }
 
+    [Fact]
+    public async Task BulkAssignLabelAsyncReturnsFailureWhenLabelMissing()
+    {
+        Guid labelId = Guid.NewGuid();
+        _mockRepo.Setup(r => r.GetByIdAsync<Label>(labelId, It.IsAny<CancellationToken>())).ReturnsAsync((Label?)null);
+
+        Core.DTOs.Base.BulkOperationResult result = await _service.BulkAssignLabelAsync([Guid.NewGuid()], labelId);
+
+        Assert.Equal(0, result.Successful);
+        Assert.Contains("Label not found.", result.Errors);
+    }
+
+    [Fact]
+    public async Task BulkAssignLabelAsyncSkipsAlreadyAssigned()
+    {
+        Guid labelId = Guid.NewGuid();
+        Guid contactA = Guid.NewGuid();
+        Guid contactB = Guid.NewGuid();
+
+        _mockRepo.Setup(r => r.GetByIdAsync<Label>(labelId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new Label { Id = labelId, Name = "Test" });
+
+        _mockRepo.Setup(r => r.ListProjectedAsync(
+                It.IsAny<Expression<Func<ContactLabel, bool>>>(),
+                It.IsAny<Expression<Func<ContactLabel, Guid>>>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync([contactA]);
+
+        _mockRepo.Setup(r => r.ListProjectedAsync(
+                It.IsAny<Expression<Func<Contact, bool>>>(),
+                It.IsAny<Expression<Func<Contact, Guid>>>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync([contactA, contactB]);
+
+        Core.DTOs.Base.BulkOperationResult result = await _service.BulkAssignLabelAsync([contactA, contactB], labelId);
+
+        Assert.Equal(1, result.Successful);
+        Assert.Equal(1, result.Skipped);
+        _mockRepo.Verify(r => r.AddRangeAsync(
+            It.Is<IEnumerable<ContactLabel>>(list => list.Count() == 1 && list.First().ContactId == contactB),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task BulkRemoveLabelAsyncDeletesMatchingPairs()
+    {
+        Guid labelId = Guid.NewGuid();
+        Guid contactA = Guid.NewGuid();
+        Guid contactB = Guid.NewGuid();
+
+        ContactLabel pair = new() { Id = Guid.NewGuid(), ContactId = contactA, LabelId = labelId };
+
+        _mockRepo.Setup(r => r.ListAsync<ContactLabel>(
+                It.IsAny<Expression<Func<ContactLabel, bool>>>(),
+                It.IsAny<CancellationToken>(),
+                It.IsAny<string[]>()))
+            .ReturnsAsync([pair]);
+
+        Core.DTOs.Base.BulkOperationResult result = await _service.BulkRemoveLabelAsync([contactA, contactB], labelId);
+
+        Assert.Equal(1, result.Successful);
+        Assert.Equal(1, result.Skipped);
+        _mockRepo.Verify(r => r.DeleteRangeAsync(
+            It.Is<IEnumerable<ContactLabel>>(list => list.Contains(pair)),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
 }

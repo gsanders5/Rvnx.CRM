@@ -1,3 +1,4 @@
+using Rvnx.CRM.Core.DTOs.Base;
 using Rvnx.CRM.Core.DTOs.Contact;
 
 namespace Rvnx.CRM.Core.Interfaces;
@@ -53,6 +54,22 @@ public interface ILabelService
     /// <param name="contactId">The contact ID.</param>
     /// <param name="labelId">The label ID.</param>
     Task RemoveLabelAsync(Guid contactId, Guid labelId);
+
+    /// <summary>
+    /// Assigns a label to multiple contacts. Already-assigned pairs are silently skipped.
+    /// </summary>
+    /// <param name="contactIds">The contact IDs.</param>
+    /// <param name="labelId">The label ID.</param>
+    /// <returns>A <see cref="BulkOperationResult"/> with the counts of newly-assigned and already-assigned rows.</returns>
+    Task<BulkOperationResult> BulkAssignLabelAsync(IReadOnlyCollection<Guid> contactIds, Guid labelId);
+
+    /// <summary>
+    /// Removes a label from multiple contacts. Pairs without an existing assignment are silently skipped.
+    /// </summary>
+    /// <param name="contactIds">The contact IDs.</param>
+    /// <param name="labelId">The label ID.</param>
+    /// <returns>A <see cref="BulkOperationResult"/> with the counts of removed and not-assigned rows.</returns>
+    Task<BulkOperationResult> BulkRemoveLabelAsync(IReadOnlyCollection<Guid> contactIds, Guid labelId);
 
     /// <summary>
     /// Retrieves all labels assigned to a specific contact.

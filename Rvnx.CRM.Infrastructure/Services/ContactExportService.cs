@@ -43,9 +43,33 @@ public class ContactExportService(IRepository repository, IVCardService vCardSer
         };
     }
 
-    public async Task<ContactExportResult> ExportAllToVCardZipAsync(CancellationToken cancellationToken = default)
+    public Task<ContactExportResult> ExportAllToVCardZipAsync(CancellationToken cancellationToken = default) =>
+        BuildVCardZipAsync(ids: null, cancellationToken);
+
+    public Task<ContactExportResult> ExportSelectedToVCardZipAsync(
+        IReadOnlyCollection<Guid> contactIds,
+        CancellationToken cancellationToken = default) =>
+        BuildVCardZipAsync(contactIds, cancellationToken);
+
+    private async Task<ContactExportResult> BuildVCardZipAsync(
+        IReadOnlyCollection<Guid>? ids,
+        CancellationToken cancellationToken)
     {
-        List<Contact> contacts = await _repository.ListAsNoTrackingAsync<Contact>(c => !c.IsPartial, cancellationToken);
+        List<Contact> contacts;
+        if (ids == null || ids.Count == 0)
+        {
+            contacts = await _repository.ListAsNoTrackingAsync<Contact>(c => !c.IsPartial, cancellationToken);
+        }
+        else
+        {
+            HashSet<Guid> idSet = [.. ids];
+            contacts = await _repository.ListByChunkedContainsAsync<Contact, Guid>(
+                [.. idSet],
+                chunk => c => !c.IsPartial && chunk.Contains(c.Id),
+                asNoTracking: true,
+                cancellationToken);
+        }
+
         List<Guid> contactIds = [.. contacts.Select(c => c.Id)];
 
         Dictionary<Guid, List<ContactMethod>> methodsByContact = await LoadGroupedAsync<ContactMethod>(

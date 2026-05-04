@@ -17,9 +17,22 @@ public class CsvExportService(IRepository repository) : ICsvExportService
 
     public static IReadOnlyList<string> ColumnHeaders { get; } = BuildColumnHeaders();
 
-    public async Task<ContactExportResult> ExportContactsAsync()
+    public async Task<ContactExportResult> ExportContactsAsync(IReadOnlyCollection<Guid>? ids = null)
     {
-        List<Contact> contacts = await repository.ListAsNoTrackingAsync<Contact>(c => !c.IsPartial);
+        List<Contact> contacts;
+        if (ids == null || ids.Count == 0)
+        {
+            contacts = await repository.ListAsNoTrackingAsync<Contact>(c => !c.IsPartial);
+        }
+        else
+        {
+            HashSet<Guid> idSet = [.. ids];
+            contacts = await repository.ListByChunkedContainsAsync<Contact, Guid>(
+                [.. idSet],
+                chunk => c => !c.IsPartial && chunk.Contains(c.Id),
+                asNoTracking: true);
+        }
+
         List<Guid> contactIds = [.. contacts.Select(c => c.Id)];
 
         (Dictionary<Guid, List<string>> emails, Dictionary<Guid, List<string>> phones) = await LoadContactMethodsAsync(contactIds);

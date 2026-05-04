@@ -851,4 +851,106 @@ public class ContactManagementServiceTests
             RepositoryMock.Verify(r => r.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
         }
     }
+
+    public class BulkTests : ContactManagementServiceTestBase
+    {
+        [Fact]
+        public async Task BulkSetHiddenAsyncSkipsSelfContactWhenHiding()
+        {
+            Guid selfId = Guid.NewGuid();
+            Guid otherId = Guid.NewGuid();
+            SelfContactServiceMock.Setup(s => s.GetSelfContactIdAsync()).ReturnsAsync(selfId);
+
+            Contact other = new() { Id = otherId, FirstName = "A", IsHidden = false };
+            RepositoryMock.Setup(r => r.ListAsync<Contact>(
+                It.IsAny<Expression<Func<Contact, bool>>>(),
+                It.IsAny<CancellationToken>(),
+                It.IsAny<string[]>()))
+                .ReturnsAsync((Expression<Func<Contact, bool>> p, CancellationToken _, string[] __) =>
+                    new List<Contact> { other }.Where(p.Compile()).ToList());
+
+            Core.DTOs.Base.BulkOperationResult result = await Service.BulkSetHiddenAsync([selfId, otherId], hidden: true);
+
+            Assert.Equal(1, result.Successful);
+            Assert.Equal(1, result.Skipped);
+            Assert.True(other.IsHidden);
+        }
+
+        [Fact]
+        public async Task BulkSetHiddenAsyncDoesNotSkipSelfWhenUnhiding()
+        {
+            Guid selfId = Guid.NewGuid();
+            SelfContactServiceMock.Setup(s => s.GetSelfContactIdAsync()).ReturnsAsync(selfId);
+
+            Contact selfContact = new() { Id = selfId, FirstName = "Me", IsHidden = true };
+            RepositoryMock.Setup(r => r.ListAsync<Contact>(
+                It.IsAny<Expression<Func<Contact, bool>>>(),
+                It.IsAny<CancellationToken>(),
+                It.IsAny<string[]>()))
+                .ReturnsAsync((Expression<Func<Contact, bool>> p, CancellationToken _, string[] __) =>
+                    new List<Contact> { selfContact }.Where(p.Compile()).ToList());
+
+            Core.DTOs.Base.BulkOperationResult result = await Service.BulkSetHiddenAsync([selfId], hidden: false);
+
+            Assert.Equal(1, result.Successful);
+            Assert.False(selfContact.IsHidden);
+        }
+
+        [Fact]
+        public async Task BulkSetHiddenAsyncSkipsRowsAlreadyInTargetState()
+        {
+            Guid id = Guid.NewGuid();
+            SelfContactServiceMock.Setup(s => s.GetSelfContactIdAsync()).ReturnsAsync((Guid?)null);
+
+            Contact alreadyHidden = new() { Id = id, FirstName = "X", IsHidden = true };
+            RepositoryMock.Setup(r => r.ListAsync<Contact>(
+                It.IsAny<Expression<Func<Contact, bool>>>(),
+                It.IsAny<CancellationToken>(),
+                It.IsAny<string[]>()))
+                .ReturnsAsync((Expression<Func<Contact, bool>> p, CancellationToken _, string[] __) =>
+                    new List<Contact> { alreadyHidden }.Where(p.Compile()).ToList());
+
+            Core.DTOs.Base.BulkOperationResult result = await Service.BulkSetHiddenAsync([id], hidden: true);
+
+            Assert.Equal(0, result.Successful);
+            Assert.Equal(1, result.Skipped);
+        }
+
+        [Fact]
+        public async Task BulkDeleteAsyncSkipsSelfContact()
+        {
+            Guid selfId = Guid.NewGuid();
+            Guid otherId = Guid.NewGuid();
+            SelfContactServiceMock.Setup(s => s.GetSelfContactIdAsync()).ReturnsAsync(selfId);
+
+            // Existence projection: only otherId exists (selfId is filtered out before this call).
+            RepositoryMock.Setup(r => r.ListProjectedAsync(
+                It.IsAny<Expression<Func<Contact, bool>>>(),
+                It.IsAny<Expression<Func<Contact, Guid>>>(),
+                It.IsAny<CancellationToken>()))
+                .ReturnsAsync([otherId]);
+
+            RepositoryMock.Setup(r => r.ListAsync<Rvnx.CRM.Core.Models.User>(
+                It.IsAny<Expression<Func<Rvnx.CRM.Core.Models.User, bool>>>(),
+                It.IsAny<CancellationToken>())).ReturnsAsync([]);
+            RepositoryMock.Setup(r => r.ListAsync<Relationship>(
+                It.IsAny<Expression<Func<Relationship, bool>>>(),
+                It.IsAny<CancellationToken>())).ReturnsAsync([]);
+
+            Core.DTOs.Base.BulkOperationResult result = await Service.BulkDeleteAsync([selfId, otherId]);
+
+            Assert.Equal(1, result.Successful);
+            Assert.Equal(1, result.Skipped);
+            RepositoryMock.Verify(r => r.DeleteAsync<Contact>(otherId, It.IsAny<CancellationToken>()), Times.Once);
+            RepositoryMock.Verify(r => r.DeleteAsync<Contact>(selfId, It.IsAny<CancellationToken>()), Times.Never);
+        }
+
+        [Fact]
+        public async Task BulkDeleteAsyncEmptyReturnsZeroSuccess()
+        {
+            Core.DTOs.Base.BulkOperationResult result = await Service.BulkDeleteAsync([]);
+            Assert.Equal(0, result.Successful);
+            Assert.Equal(0, result.Skipped);
+        }
+    }
 }

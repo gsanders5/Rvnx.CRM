@@ -1,3 +1,4 @@
+using Rvnx.CRM.Core.DTOs.Base;
 using Rvnx.CRM.Core.DTOs.Contact;
 
 namespace Rvnx.CRM.Core.Interfaces;
@@ -9,6 +10,25 @@ public interface IContactManagementService
     /// </summary>
     /// <param name="contactId">The ID of the contact to delete.</param>
     Task DeleteContactAsync(Guid contactId);
+
+    /// <summary>
+    /// Deletes multiple contacts. The current user's self-contact is silently skipped to
+    /// preserve their reminders, dashboard, and calendar entries. IDs that don't belong
+    /// to the current tenant are filtered out by the global query filter.
+    /// </summary>
+    /// <param name="contactIds">The IDs of the contacts to delete.</param>
+    /// <returns>A <see cref="BulkOperationResult"/> with the counts of deleted and skipped rows.</returns>
+    Task<BulkOperationResult> BulkDeleteAsync(IReadOnlyCollection<Guid> contactIds);
+
+    /// <summary>
+    /// Sets the IsHidden flag on multiple contacts in a single batch.
+    /// When <paramref name="hidden"/> is true the user's own self-contact is skipped so
+    /// they cannot accidentally hide themselves out of the dashboard/calendar.
+    /// </summary>
+    /// <param name="contactIds">The IDs of the contacts to update.</param>
+    /// <param name="hidden">Whether to hide (true) or unhide (false) the contacts.</param>
+    /// <returns>A <see cref="BulkOperationResult"/> with the counts of updated and skipped rows.</returns>
+    Task<BulkOperationResult> BulkSetHiddenAsync(IReadOnlyCollection<Guid> contactIds, bool hidden);
 
     /// <summary>
     /// Creates a new contact from the provided form data.
