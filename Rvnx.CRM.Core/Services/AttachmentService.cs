@@ -31,14 +31,9 @@ public class AttachmentService : IAttachmentService
     /// <inheritdoc />
     public async Task<AttachmentOperationResult> UploadAttachmentAsync(Guid contactId, byte[] content, string fileName)
     {
-        if (!await _contactLookupService.ExistsAsync(contactId))
+        if (!await _repository.IsValidContactAsync(contactId))
         {
-            return AttachmentOperationResult.NotFound("Contact not found.");
-        }
-
-        if (await IsPartialContactAsync(contactId))
-        {
-            return AttachmentOperationResult.NotFound("Cannot add attachment to partial contact.");
+            return AttachmentOperationResult.NotFound("Contact not found or is partial.");
         }
 
         if (content == null || content.Length == 0)
@@ -96,7 +91,7 @@ public class AttachmentService : IAttachmentService
             return AttachmentOperationResult.NotFound();
         }
 
-        if (attachment.ContactId.HasValue && await IsPartialContactAsync(attachment.ContactId.Value))
+        if (attachment.ContactId.HasValue && await _contactLookupService.IsPartialAsync(attachment.ContactId.Value))
         {
             return AttachmentOperationResult.NotFound("Cannot modify partial contact.");
         }
@@ -114,7 +109,7 @@ public class AttachmentService : IAttachmentService
 
         return attachment?.AttachmentContent == null
             ? null
-            : attachment.ContactId.HasValue && await IsPartialContactAsync(attachment.ContactId.Value)
+            : attachment.ContactId.HasValue && await _contactLookupService.IsPartialAsync(attachment.ContactId.Value)
             ? null
             : new AttachmentContentDto
             {
@@ -132,7 +127,7 @@ public class AttachmentService : IAttachmentService
         Attachment? attachment = await _repository.GetByIdAsync<Attachment>(attachmentId);
         return attachment == null
             ? null
-            : attachment.ContactId.HasValue && await IsPartialContactAsync(attachment.ContactId.Value)
+            : attachment.ContactId.HasValue && await _contactLookupService.IsPartialAsync(attachment.ContactId.Value)
             ? null
             : new AttachmentDto
             {
@@ -144,11 +139,4 @@ public class AttachmentService : IAttachmentService
             };
     }
 
-    private async Task<bool> IsPartialContactAsync(Guid contactId)
-    {
-        List<bool> isPartial = await _repository.ListProjectedAsync<Contact, bool>(
-            c => c.Id == contactId,
-            c => c.IsPartial);
-        return isPartial.FirstOrDefault();
-    }
 }

@@ -83,7 +83,7 @@ public class AttachmentServiceTests
 
         Assert.False(result.Success);
         Assert.True(result.IsNotFound);
-        Assert.Contains("partial contact", result.Errors[0]);
+        Assert.Contains("partial", result.Errors[0]);
     }
 
     [Fact]
@@ -230,6 +230,7 @@ public class AttachmentServiceTests
         Repository repo = new(context);
         Mock<IFileValidationService> fileServiceMock = new();
         Mock<IContactLookupService> contactLookupServiceMock = new();
+        contactLookupServiceMock.Setup(s => s.IsPartialAsync(It.IsAny<Guid>())).ReturnsAsync(true);
 
         AttachmentService service = new(repo, fileServiceMock.Object, contactLookupServiceMock.Object);
 
@@ -312,6 +313,7 @@ public class AttachmentServiceTests
         Repository repo = new(context);
         Mock<IFileValidationService> fileServiceMock = new();
         Mock<IContactLookupService> contactLookupServiceMock = new();
+        contactLookupServiceMock.Setup(s => s.IsPartialAsync(It.IsAny<Guid>())).ReturnsAsync(true);
 
         AttachmentService service = new(repo, fileServiceMock.Object, contactLookupServiceMock.Object);
 
@@ -391,6 +393,7 @@ public class AttachmentServiceTests
         Repository repo = new(context);
         Mock<IFileValidationService> fileServiceMock = new();
         Mock<IContactLookupService> contactLookupServiceMock = new();
+        contactLookupServiceMock.Setup(s => s.IsPartialAsync(It.IsAny<Guid>())).ReturnsAsync(true);
 
         AttachmentService service = new(repo, fileServiceMock.Object, contactLookupServiceMock.Object);
 

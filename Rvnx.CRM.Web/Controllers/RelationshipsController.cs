@@ -164,11 +164,6 @@ public class RelationshipsController(
             return NotFound();
         }
 
-        if (!await _contactLookupService.ExistsAsync(relationship.ContactId))
-        {
-            return NotFound();
-        }
-
         string currentSelection = $"{relationship.RelationshipTypeId}_Fwd";
         HashSet<Guid> partialIds = await _contactLookupService.GetPartialContactIdsAsync(
             [relationship.ContactId, relationship.RelatedContactId]);
