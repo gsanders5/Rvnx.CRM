@@ -18,9 +18,13 @@ namespace Rvnx.CRM.API.Controllers;
 [ApiController]
 [Route("api/[controller]")]
 [Authorize]
-public class RelationshipsController(IRelationshipService relationshipService, IContactReadService contactReadService) : ControllerBase
+public class RelationshipsController(
+    IRelationshipService relationshipService,
+    IRelationshipSuggestionService relationshipSuggestionService,
+    IContactReadService contactReadService) : ControllerBase
 {
     private readonly IRelationshipService _relationshipService = relationshipService;
+    private readonly IRelationshipSuggestionService _relationshipSuggestionService = relationshipSuggestionService;
     private readonly IContactReadService _contactReadService = contactReadService;
 
     /// <summary>
@@ -124,6 +128,77 @@ public class RelationshipsController(IRelationshipService relationshipService, I
     {
         OperationResult result = await _relationshipService.DeleteRelationshipAsync(id);
         return result.ToNoContentResult();
+    }
+
+    /// <summary>
+    /// Create a relationship together with a new partial contact (a placeholder
+    /// person who exists only to anchor the relationship). Returns the parent
+    /// contact's ID so callers can refresh the contact view.
+    /// </summary>
+    /// <remarks>
+    /// Use this when the related person isn't a full contact yet — e.g. "John's wife"
+    /// before her own profile is created. Promote the partial contact later via
+    /// POST /api/relationships/{contactId}/promote.
+    /// </remarks>
+    /// <param name="contactId">The parent contact GUID (the existing contact).</param>
+    /// <param name="request">Relationship type/direction and the partial contact's details.</param>
+    [HttpPost("contact/{contactId}/partial")]
+    public async Task<IActionResult> CreatePartial(Guid contactId, [FromBody] CreatePartialRelationshipRequest request)
+    {
+        CreatePartialContactRelationshipDto dto = new()
+        {
+            SelectedRelationshipType = BuildSelectedType(request.RelationshipTypeId, request.Direction),
+            PartialContactFirstName = request.PartialContactFirstName,
+            PartialContactLastName = request.PartialContactLastName,
+            Birthday = request.Birthday,
+            Description = request.Description,
+            SuggestedRelationships = request.SuggestedRelationships ?? []
+        };
+
+        RelationshipOperationResult result = await _relationshipService.CreatePartialContactRelationshipAsync(
+            contactId, dto.SelectedRelationshipType, dto);
+
+        return result.Success
+            ? Ok(new { Id = result.RedirectId })
+            : BadRequest(new { Error = result.ErrorMessage });
+    }
+
+    /// <summary>
+    /// Promote a partial contact to a full contact (clears the IsPartial flag).
+    /// </summary>
+    /// <param name="contactId">The partial contact's GUID.</param>
+    [HttpPost("contact/{contactId}/promote")]
+    public async Task<IActionResult> Promote(Guid contactId)
+    {
+        RelationshipOperationResult result = await _relationshipService.PromotePartialContactAsync(contactId);
+        return result.Success
+            ? NoContent()
+            : BadRequest(new { Error = result.ErrorMessage });
+    }
+
+    /// <summary>
+    /// Discover suggested transitive or family relationships that follow from the
+    /// given seed (e.g. siblings of an existing sibling, the other parent's adult-child
+    /// links). Returns a list of payload-tagged suggestions that the caller can echo
+    /// back as <c>SuggestedRelationships</c> when creating the primary relationship.
+    /// </summary>
+    /// <param name="contactId">The source contact GUID.</param>
+    /// <param name="relatedContactId">The target contact GUID, if known.</param>
+    /// <param name="relationshipTypeId">The relationship type GUID.</param>
+    /// <param name="direction">Forward or Reverse — same convention as POST /api/relationships.</param>
+    /// <param name="partialContactName">Optional display name when the related contact is a not-yet-created partial.</param>
+    [HttpGet("suggestions")]
+    public async Task<IActionResult> GetSuggestions(
+        [FromQuery] Guid contactId,
+        [FromQuery] Guid? relatedContactId,
+        [FromQuery] Guid relationshipTypeId,
+        [FromQuery] CoreEnumerations.RelationshipDirection direction = CoreEnumerations.RelationshipDirection.Forward,
+        [FromQuery] string? partialContactName = null)
+    {
+        bool isReverse = direction == CoreEnumerations.RelationshipDirection.Reverse;
+        List<SuggestedRelationshipDto> suggestions = await _relationshipSuggestionService
+            .GetSuggestedRelationshipsAsync(contactId, relatedContactId, relationshipTypeId, isReverse, partialContactName);
+        return Ok(suggestions);
     }
 
     private static Relationship MapToRelationship(CreateRelationshipRequest r)
