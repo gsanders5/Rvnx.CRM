@@ -15,10 +15,16 @@ namespace Rvnx.CRM.API.Controllers;
 [Authorize]
 public class ContactsController(
     IContactReadService contactReadService,
-    IContactManagementService contactManagementService) : ControllerBase
+    IContactManagementService contactManagementService,
+    IContactImportService contactImportService,
+    IContactExportService contactExportService,
+    ICsvExportService csvExportService) : ControllerBase
 {
     private readonly IContactReadService _contactReadService = contactReadService;
     private readonly IContactManagementService _contactManagementService = contactManagementService;
+    private readonly IContactImportService _contactImportService = contactImportService;
+    private readonly IContactExportService _contactExportService = contactExportService;
+    private readonly ICsvExportService _csvExportService = csvExportService;
 
     /// <summary>
     /// List all contacts. Returns a flat array of contact summaries.
@@ -132,5 +138,69 @@ public class ContactsController(
     {
         await _contactManagementService.DeleteContactAsync(id);
         return NoContent();
+    }
+
+    /// <summary>
+    /// Demote a full contact to a partial contact (sets the IsPartial flag).
+    /// Fails if the contact still has dependent records that require a full profile.
+    /// </summary>
+    /// <param name="id">The contact GUID.</param>
+    [HttpPost("{id}/demote")]
+    public async Task<IActionResult> DemoteToPartial(Guid id)
+    {
+        ContactOperationResult result = await _contactManagementService.DemoteToPartialAsync(id);
+        return result.ToNoContentResult();
+    }
+
+    /// <summary>
+    /// Import contacts from a vCard (.vcf) file. Submit as multipart/form-data with a "file" field.
+    /// Returns the count of added and skipped (duplicate) entries.
+    /// </summary>
+    /// <param name="file">The vCard file.</param>
+    [HttpPost("import")]
+    public async Task<IActionResult> Import(IFormFile file)
+    {
+        if (file == null || file.Length == 0)
+        {
+            return BadRequest(new { Error = "No file uploaded." });
+        }
+
+        await using Stream stream = file.OpenReadStream();
+        ContactImportResult result = await _contactImportService.ImportFromVCardAsync(stream);
+        return Ok(result);
+    }
+
+    /// <summary>
+    /// Export a single contact as a vCard (.vcf) file.
+    /// </summary>
+    /// <param name="id">The contact GUID.</param>
+    [HttpGet("{id}/export.vcf")]
+    public async Task<IActionResult> ExportVCard(Guid id)
+    {
+        ContactExportResult result = await _contactExportService.ExportToVCardAsync(id);
+        return result.FileContent.Length == 0
+            ? NotFound()
+            : File(result.FileContent, result.ContentType, result.FileName);
+    }
+
+    /// <summary>
+    /// Export all contacts as an RFC 4180 CSV file. Includes flattened emails,
+    /// phone numbers, primary address, and birthday.
+    /// </summary>
+    [HttpGet("export.csv")]
+    public async Task<IActionResult> ExportCsv()
+    {
+        ContactExportResult result = await _csvExportService.ExportContactsAsync();
+        return File(result.FileContent, result.ContentType, result.FileName);
+    }
+
+    /// <summary>
+    /// Export all contacts as a ZIP archive of vCard (.vcf) files.
+    /// </summary>
+    [HttpGet("export.zip")]
+    public async Task<IActionResult> ExportAllVCard(CancellationToken cancellationToken)
+    {
+        ContactExportResult result = await _contactExportService.ExportAllToVCardZipAsync(cancellationToken);
+        return File(result.FileContent, result.ContentType, result.FileName);
     }
 }
