@@ -99,15 +99,18 @@ public static class RelationshipTypeService
         new(RelationshipTypeIds.Acquaintance, "Acquaintance", "Acquaintance", "Social"),
     ]);
 
+    private static readonly Lazy<IReadOnlyList<RelationshipTypeDefinition>> _sorted =
+        new(() => [.. _all.Value.OrderBy(t => t.Category).ThenBy(t => t.Name)]);
+
     private static readonly Lazy<Dictionary<Guid, RelationshipTypeDefinition>> _byId =
         new(() => _all.Value.ToDictionary(t => t.Id));
 
     /// <summary>
-    /// Returns all available relationship types in declaration order.
+    /// Returns all available relationship types sorted by Category, then Name.
     /// </summary>
     public static IReadOnlyList<RelationshipTypeDefinition> GetAll()
     {
-        return _all.Value;
+        return _sorted.Value;
     }
 
     /// <summary>

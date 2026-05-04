@@ -20,6 +20,7 @@ public class RelationshipSuggestionService(IRepository repository) : IRelationsh
         Guid? relatedContactId, Guid relationshipTypeId, bool isReverse, string? partialContactName)
     {
         List<SuggestedRelationshipDto> suggestions = [];
+        HashSet<string> seenPayloads = [];
 
         bool isTransitive = RelationshipTypeService.TransitiveRelationshipTypeIds.Contains(relationshipTypeId);
         bool isFamilyAdultChild =
@@ -96,8 +97,7 @@ public class RelationshipSuggestionService(IRepository repository) : IRelationsh
             }
 
             string payload = $"{sId}_{tId}_{reverse}";
-            // Avoid duplicates in suggestions (if multiple paths lead to same edge)
-            if (!suggestions.Any(s => s.Payload == payload))
+            if (seenPayloads.Add(payload))
             {
                 suggestions.Add(new SuggestedRelationshipDto
                 {
@@ -170,7 +170,8 @@ public class RelationshipSuggestionService(IRepository repository) : IRelationsh
 
                 List<Relationship> existingRels = await repository.ListAsNoTrackingAsync<Relationship>(r =>
                     r.RelationshipTypeId == relationshipTypeId &&
-                    (r.ContactId == adultId || r.RelatedContactId == adultId));
+                    (r.ContactId == adultId || r.RelatedContactId == adultId ||
+                     r.ContactId == childId || r.RelatedContactId == childId));
                 HashSet<(Guid, Guid)> existingEdges = existingRels.Select(r => (r.ContactId, r.RelatedContactId)).ToHashSet();
 
                 foreach (Contact sibContact in sibContacts)
