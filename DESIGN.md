@@ -171,8 +171,8 @@ The API application delegates logic to the shared `Core` services via DI, just l
 
 | Controller | Endpoints |
 |---|---|
-| Contacts | List, Get, Create, Update, Delete, SetPhoto, UnsetPhoto |
-| Activities | ListByContact, Create, Update, Delete |
+| Contacts | List, Get, Create, Update, Delete, SetPhoto, UnsetPhoto, DemoteToPartial, Import (vCard), ExportVCard, ExportCsv, ExportAllVCard |
+| Activities | ListByContact, Create, Update, Delete, QuickLog |
 | Addresses | ListByContact, Create, Update, Delete |
 | Attachments | ListByContact, Upload, Download, Thumbnail, Delete |
 | Calendar | Events (significant dates + tasks, fetched concurrently) |
@@ -183,10 +183,10 @@ The API application delegates logic to the shared `Core` services via DI, just l
 | Favorites | List, Toggle |
 | Labels | List, Create, Update, Delete, Associate, Disassociate |
 | Merge | Merge |
-| Notes | ListByContact, Create, Update, Delete |
+| Notes | ListByContact, Create, Update, Delete, ToggleFavorite |
 | Pets | ListByContact, Create, Update, Delete |
-| Relationships | ListByContact, Create, Update, Delete |
-| SignificantDates | ListByContact, Create, Update, Delete |
+| Relationships | ListByContact, ListTypes, Create, Update, Delete, CreatePartial, Promote, Suggestions |
+| SignificantDates | ListByContact, Create, Update, Delete, AddOffset, DeleteOffset |
 
 ### Documentation
 
