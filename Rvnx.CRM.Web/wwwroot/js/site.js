@@ -43,6 +43,9 @@
         document.getElementById('confirmModalLabel').textContent = title;
         document.getElementById('confirmModalBody').textContent  = body;
 
+        // Reset state in case the previous open of this modal completed an AJAX delete
+        // (success path doesn't restore disabled/innerHTML; only the failure path does).
+        submitBtn.disabled = false;
         submitBtn.className = 'crm-btn-danger';
         submitBtn.innerHTML = `<i class="bi ${btnIcon}"></i> ${btnLabel}`;
 
