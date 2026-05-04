@@ -19,8 +19,11 @@ public class ContactsController(
     IContactReadService contactReadService,
     ISelfContactService selfContactService,
     IFileValidationService fileValidationService,
-    IImmichService immichService) : AuthorizedController
+    IImmichService immichService,
+    ILabelService labelService) : AuthorizedController
 {
+    private const int MaxBulkIds = 1000;
+
     private readonly ILogger<ContactsController> _logger = logger;
     private readonly ICurrentUserService _currentUserService = currentUserService;
     private readonly IContactImportService _contactImportService = contactImportService;
@@ -31,6 +34,7 @@ public class ContactsController(
     private readonly ISelfContactService _selfContactService = selfContactService;
     private readonly IFileValidationService _fileValidationService = fileValidationService;
     private readonly IImmichService _immichService = immichService;
+    private readonly ILabelService _labelService = labelService;
 
     private static readonly Action<ILogger, Exception?> LogErrorImportingVcf =
         LoggerMessage.Define(
@@ -135,10 +139,12 @@ public class ContactsController(
     public async Task<IActionResult> Index(bool showHidden = false)
     {
         List<ContactDto> contactDtos = await _contactReadService.GetIndexDataAsync(showHidden);
+        List<LabelDto> allLabels = contactDtos.Count > 0 ? await _labelService.GetAllAsync() : [];
 
         ContactIndexViewModel viewModel = new()
         {
             Contacts = contactDtos,
+            AllLabels = allLabels,
             SuccessMessage = TempData["SuccessMessage"] as string
         };
 
@@ -512,6 +518,104 @@ public class ContactsController(
             AllImmichTags = allImmichTags ?? [],
             IsSelf = isSelf
         };
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> BulkDelete(Guid[] ids)
+    {
+        if (!TryValidateBulkIds(ids, out IActionResult? error))
+        {
+            return error!;
+        }
+
+        BulkOperationResult result = await _contactManagementService.BulkDeleteAsync(ids);
+        return Json(result);
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> BulkSetHidden(Guid[] ids, bool hidden)
+    {
+        if (!TryValidateBulkIds(ids, out IActionResult? error))
+        {
+            return error!;
+        }
+
+        BulkOperationResult result = await _contactManagementService.BulkSetHiddenAsync(ids, hidden);
+        return Json(result);
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> BulkAssignLabel(Guid[] ids, Guid labelId)
+    {
+        if (!TryValidateBulkIds(ids, out IActionResult? error))
+        {
+            return error!;
+        }
+
+        if (labelId == Guid.Empty)
+        {
+            return BadRequest("A label must be selected.");
+        }
+
+        BulkOperationResult result = await _labelService.BulkAssignLabelAsync(ids, labelId);
+        return Json(result);
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> BulkRemoveLabel(Guid[] ids, Guid labelId)
+    {
+        if (!TryValidateBulkIds(ids, out IActionResult? error))
+        {
+            return error!;
+        }
+
+        if (labelId == Guid.Empty)
+        {
+            return BadRequest("A label must be selected.");
+        }
+
+        BulkOperationResult result = await _labelService.BulkRemoveLabelAsync(ids, labelId);
+        return Json(result);
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> ExportSelectedCsv(Guid[] ids)
+    {
+        if (!TryValidateBulkIds(ids, out IActionResult? error))
+        {
+            return error!;
+        }
+
+        ContactExportResult result = await _csvExportService.ExportContactsAsync(ids);
+        return File(result.FileContent, result.ContentType, result.FileName);
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> ExportSelectedVCard(Guid[] ids, CancellationToken cancellationToken)
+    {
+        if (!TryValidateBulkIds(ids, out IActionResult? error))
+        {
+            return error!;
+        }
+
+        ContactExportResult result = await _contactExportService.ExportSelectedToVCardZipAsync(ids, cancellationToken);
+        return File(result.FileContent, result.ContentType, result.FileName);
+    }
+
+    private static bool TryValidateBulkIds(Guid[] ids, out IActionResult? error)
+    {
+        if (ids == null || ids.Length == 0)
+        {
+            error = new BadRequestObjectResult("At least one contact id is required.");
+            return false;
+        }
+        if (ids.Length > MaxBulkIds)
+        {
+            error = new BadRequestObjectResult($"Too many ids; the maximum is {MaxBulkIds}.");
+            return false;
+        }
+        error = null;
+        return true;
     }
 
     [HttpPost]

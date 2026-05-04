@@ -1480,3 +1480,48 @@ table.dataTable .crm-dtr-child-empty {
   padding-bottom: 0;
   border-bottom: none;
 }
+
+/* ==========================================================================
+   Bulk action toolbar (Contacts list)
+   ========================================================================== */
+
+.bulk-toolbar {
+  display: none;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.625rem 0.875rem;
+  margin-bottom: 0.75rem;
+  background-color: var(--crm-surface-elevated);
+  border: 1px solid var(--crm-border);
+  border-radius: var(--crm-radius-sm);
+  box-shadow: var(--crm-shadow-sm);
+}
+
+.bulk-toolbar.is-active {
+  display: flex;
+}
+
+.bulk-toolbar-count {
+  font-weight: 600;
+  color: var(--crm-text-primary);
+  margin-right: 0.5rem;
+}
+
+.bulk-toolbar-group {
+  display: inline-flex;
+  gap: 0.25rem;
+}
+
+table.dataTable td.select-col,
+table.dataTable th.select-col {
+  text-align: center;
+  vertical-align: middle;
+  padding-left: 0.5rem;
+  padding-right: 0.5rem;
+}
+
+table.dataTable td.select-col input.row-select,
+table.dataTable th.select-col input#select-all {
+  cursor: pointer;
+}
