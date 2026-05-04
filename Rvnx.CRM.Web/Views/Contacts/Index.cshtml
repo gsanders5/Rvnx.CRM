@@ -475,9 +475,7 @@ else
                 if (selectedIds.size === 0) return;
                 var ids = Array.from(selectedIds);
                 postBulk(url, ids, extras)
-                    .done(function (result) {
-                        flash(buildResultMessage(result, 'updated'), 'success');
-                        clearSelection();
+                    .done(function () {
                         // Reload to refresh contact rows (label badges, hidden state) — the index is server-rendered.
                         window.location.reload();
                     })

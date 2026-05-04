@@ -169,19 +169,20 @@ public class LabelService(IRepository repository) : ILabelService
 
         HashSet<Guid> distinctIds = [.. contactIds];
 
-        List<ContactLabel> existing = await _repository.ListByChunkedContainsAsync<ContactLabel, Guid>(
+        List<Guid> matchedContactIds = await _repository.ListProjectedByChunkedContainsAsync<ContactLabel, Guid, Guid>(
             [.. distinctIds],
             chunk => cl => cl.LabelId == labelId && chunk.Contains(cl.ContactId),
-            asNoTracking: false);
+            cl => cl.ContactId);
 
-        if (existing.Count > 0)
+        if (matchedContactIds.Count > 0)
         {
-            await _repository.DeleteRangeAsync(existing);
+            HashSet<Guid> matchedSet = [.. matchedContactIds];
+            await _repository.DeleteAsync<ContactLabel>(cl => cl.LabelId == labelId && matchedSet.Contains(cl.ContactId));
             await _repository.SaveChangesAsync();
         }
 
-        int skipped = distinctIds.Count - existing.Count;
-        return BulkOperationResult.Ok(existing.Count, skipped);
+        int skipped = distinctIds.Count - matchedContactIds.Count;
+        return BulkOperationResult.Ok(matchedContactIds.Count, skipped);
     }
 
     public async Task<List<LabelDto>> GetLabelsForContactAsync(Guid contactId)

@@ -139,7 +139,7 @@ public class ContactsController(
     public async Task<IActionResult> Index(bool showHidden = false)
     {
         List<ContactDto> contactDtos = await _contactReadService.GetIndexDataAsync(showHidden);
-        List<LabelDto> allLabels = await _labelService.GetAllAsync();
+        List<LabelDto> allLabels = contactDtos.Count > 0 ? await _labelService.GetAllAsync() : [];
 
         ContactIndexViewModel viewModel = new()
         {
