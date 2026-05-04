@@ -13,7 +13,7 @@
 │   │   ├── Contact/            # Contact-related entities (Contact, ContactMethod, Relationship, Address, ContactTask, Pet)
 │   │   ├── Activity/           # Activity entity
 │   │   ├── Dates/              # SignificantDate, Reminder
-│   │   └── Business/           # Employer, Attachment, Note
+│   │   └── Business/           # Attachment, Note
 │   ├── Services/               # Pure domain logic services (e.g. FileValidation, DateCalculation)
 │   ├── Validation/             # Custom ValidationAttributes (e.g. PhoneNumberAttribute)
 │   └── Rvnx.CRM.Core.csproj
@@ -81,17 +81,17 @@ The system supports "Partial Contacts" — contacts that exist primarily as a na
 
 -   **Implementation**: They are standard `Contact` entities in the database.
 -   **Differentiation**: Defined by the `IsPartial` boolean flag on the `Contact` entity.
--   **Relationships**: `Relationship.RelatedEntityId` points to the partial contact's ID just like any other contact.
+-   **Relationships**: `Relationship.RelatedContactId` points to the partial contact's ID just like any other contact.
 -   **Promotion**: A partial contact can be "promoted" to a full contact, which simply toggles the `IsPartial` flag to `false`.
 
 ### Relationship Direction
 
-Relationships are polymorphic but primarily link Person to Person.
+Relationships link Contact to Contact.
 
--   **Storage**: Stored as `EntityId` (Source) -> `RelatedEntityId` (Target).
+-   **Storage**: Stored as `ContactId` (Source) -> `RelatedContactId` (Target).
 -   **API**: The `CreateRelationshipRequest` DTO accepts a typed `RelationshipDirection` enum (`Forward` or `Reverse`) alongside a `RelationshipTypeId` GUID. The API controller converts this to the internal `{TypeId}_Fwd` / `{TypeId}_Rev` string before passing it to the service.
 -   **Web UI**: The UI sends the combined string directly as a `<select>` value.
--   **Parsing**: `RelationshipService` parses the combined string. If `Rev` (Reverse) is selected, the service swaps `EntityId` and `RelatedEntityId` before saving, ensuring the relationship is stored in the semantic direction intended by the caller.
+-   **Parsing**: `RelationshipService` parses the combined string. If `Rev` (Reverse) is selected, the service swaps `ContactId` and `RelatedContactId` before saving, ensuring the relationship is stored in the semantic direction intended by the caller.
 
 ## Console Application
 
@@ -233,7 +233,6 @@ Concrete entity inheriting `Person`.
 - **Gender**: String (max 100).
 - **Religion**: String (max 100).
 - **Pets**: Managed via `Pet` entity with `ContactId` FK.
-- **Employers**: Managed via `Employer` entity with `EmployeeId` FK.
 - **Labels**: Managed via `ContactLabel` join entity.
 - **Addresses**: Managed via `Address` entity with `ContactId` FK. Supports Line1, Line2, City, State, Zip, Country, AddressType.
 - **ContactTasks**: Managed via `ContactTask` entity with `ContactId` FK. Supports Title, Description (Markdown), DueDate, IsCompleted, CompletedDate.
@@ -241,10 +240,11 @@ Concrete entity inheriting `Person`.
 
 ### Relationship
 
-Polymorphic entity linking two entities.
+Entity linking two contacts.
 
--   **Inheritance**: Inherits `PolymorphicEntity` (`EntityId`, `EntityType`).
--   **Target**: `RelatedEntityId` (Points to the target entity, usually another `Contact`).
+-   **Source**: `ContactId` (FK to the originating `Contact`).
+-   **Target**: `RelatedContactId` (FK to the related `Contact`).
+-   **Dates**: Optional `StartDate` / `EndDate` (`DateOnly?`).
 -   **Navigation**: `Person` and `RelatedPerson` are `[NotMapped]` and populated manually by `ContactReadService`.
 
 ### Attachment & Content
