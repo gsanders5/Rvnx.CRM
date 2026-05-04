@@ -512,6 +512,9 @@ public class RelationshipServiceTests
             Description = "A new partial contact"
         };
 
+        _repositoryMock.Setup(r => r.GetByIdAsync<Contact>(parentEntityId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new Contact { Id = parentEntityId, FirstName = "Parent" });
+
         RelationshipOperationResult result =
             await _service.CreatePartialContactRelationshipAsync(parentEntityId, selection, dto);
 
@@ -704,11 +707,37 @@ public class RelationshipServiceTests
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync([]);
 
+        _repositoryMock.Setup(r => r.GetByIdAsync<Contact>(parentEntityId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new Contact { Id = parentEntityId, FirstName = "Parent" });
+
         RelationshipOperationResult result =
             await _service.CreatePartialContactRelationshipAsync(parentEntityId, selection, dto);
 
         Assert.True(result.Success);
         Assert.NotEqual(Guid.Empty, capturedSuggestedEntityId);
+    }
+
+    [Fact]
+    public async Task CreatePartialContactRelationshipAsyncReturnsFailureWhenParentContactNotVisible()
+    {
+        Guid parentEntityId = Guid.NewGuid();
+        Guid typeId = Guid.NewGuid();
+        string selection = $"{typeId}_Fwd";
+
+        CreatePartialContactRelationshipDto dto = new()
+        {
+            PartialContactFirstName = "Jane"
+        };
+
+        _repositoryMock.Setup(r => r.GetByIdAsync<Contact>(parentEntityId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync((Contact?)null);
+
+        RelationshipOperationResult result =
+            await _service.CreatePartialContactRelationshipAsync(parentEntityId, selection, dto);
+
+        Assert.False(result.Success);
+        _repositoryMock.Verify(r => r.AddAsync(It.IsAny<Contact>(), It.IsAny<CancellationToken>()), Times.Never);
+        _repositoryMock.Verify(r => r.AddAsync(It.IsAny<Relationship>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]

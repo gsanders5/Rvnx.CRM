@@ -267,6 +267,11 @@ public class RelationshipService(IRepository repository, IRelationshipSuggestion
             return RelationshipOperationResult.Failure(error);
         }
 
+        if (await repository.GetByIdAsync<Contact>(parentContactId) == null)
+        {
+            return RelationshipOperationResult.Failure("Parent contact not found.");
+        }
+
         Contact partialContact = new()
         {
             Id = Guid.NewGuid(),
