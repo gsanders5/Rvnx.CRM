@@ -297,9 +297,9 @@ public class ContactManagementService(IRepository repository, IFileValidationSer
 
     private async Task DeleteContactDependenciesAsync(Guid contactId)
     {
-        // Note, Reminder, SignificantDate, Pet, ContactMethod, Fact, Address, Attachment, PhoneNumber
-        // are now configured with Cascade Delete via ContactId foreign key.
-
+        // Child entities (Note, Reminder, SignificantDate, Pet, ContactMethod, Fact, Address,
+        // Attachment, PhoneNumber) cascade-delete via the ContactId FK. Relationship rows are
+        // deleted manually because they reference the contact from either ContactId or RelatedContactId.
         await _repository.DeleteAsync<Relationship>(r => r.ContactId == contactId || r.RelatedContactId == contactId);
     }
 

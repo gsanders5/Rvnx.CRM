@@ -10,6 +10,10 @@ public interface IAttachmentService
     /// Uploads a new attachment for a contact.
     /// Determines MIME type safely based on file extension and validates content.
     /// </summary>
+    /// <param name="contactId">The ID of the contact to attach the file to.</param>
+    /// <param name="content">The raw bytes of the file being uploaded.</param>
+    /// <param name="fileName">The original file name, used to derive extension and MIME type.</param>
+    /// <returns>An <see cref="AttachmentOperationResult"/> indicating success or failure.</returns>
     Task<AttachmentOperationResult> UploadAttachmentAsync(Guid contactId, byte[] content, string fileName);
 
     /// <summary>

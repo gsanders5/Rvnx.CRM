@@ -10,6 +10,10 @@ namespace Rvnx.CRM.Core.Services;
 
 public class RelationshipService(IRepository repository, IRelationshipSuggestionService suggestionService) : IRelationshipService
 {
+    private const string ForwardSuffix = "_Fwd";
+    private const string ReverseSuffix = "_Rev";
+
+
     public async Task<RelationshipOperationResult> CreateRelationshipAsync(Relationship relationship,
         string selectedRelationshipType, List<string>? suggestedContactIds = null)
     {
@@ -176,13 +180,15 @@ public class RelationshipService(IRepository repository, IRelationshipSuggestion
             return (Guid.Empty, false, "Relationship Type is required.");
         }
 
-        string[] parts = selection.Split('_');
-        if (parts.Length != 2 || !Guid.TryParse(parts[0], out Guid typeId))
+        bool isReverse = selection.EndsWith(ReverseSuffix, StringComparison.Ordinal);
+        string suffix = isReverse ? ReverseSuffix : ForwardSuffix;
+        if (!selection.EndsWith(suffix, StringComparison.Ordinal) ||
+            !Guid.TryParse(selection[..^suffix.Length], out Guid typeId))
         {
             return (Guid.Empty, false, "Invalid Relationship Type.");
         }
 
-        return (typeId, parts[1] == "Rev", null);
+        return (typeId, isReverse, null);
     }
 
     private static void SwapRelationshipEntities(Relationship relationship)
@@ -198,13 +204,11 @@ public class RelationshipService(IRepository repository, IRelationshipSuggestion
             p => new SelectOptionDto
             {
                 Value = p.Id.ToString(),
-                Text = p.IsPartial && p.IsDeceased
-                    ? p.FirstName + " " + (p.LastName ?? "") + " (Partial Contact, Deceased)"
-                    : p.IsPartial
-                        ? p.FirstName + " " + (p.LastName ?? "") + " (Partial Contact)"
-                        : p.IsDeceased
-                            ? p.FirstName + " " + (p.LastName ?? "") + " (Deceased)"
-                            : p.FirstName + " " + (p.LastName ?? ""),
+                Text = p.FirstName + " " + (p.LastName ?? "") +
+                    (p.IsPartial && p.IsDeceased ? " (Partial Contact, Deceased)"
+                     : p.IsPartial ? " (Partial Contact)"
+                     : p.IsDeceased ? " (Deceased)"
+                     : ""),
                 Selected = selectedId == p.Id
             },
             p => p.FirstName + " " + (p.LastName ?? ""));
@@ -231,10 +235,10 @@ public class RelationshipService(IRepository repository, IRelationshipSuggestion
         string fwdText = t.IsSymmetric ? $"is {t.Name} of" : $"is {t.Name} of ({t.OppositeName})";
         return new SelectOptionDto
         {
-            Value = $"{t.Id}_Fwd",
+            Value = $"{t.Id}{ForwardSuffix}",
             Text = fwdText,
             Group = t.Category,
-            Selected = selectedValue == $"{t.Id}_Fwd"
+            Selected = selectedValue == $"{t.Id}{ForwardSuffix}"
         };
     }
 
@@ -242,10 +246,10 @@ public class RelationshipService(IRepository repository, IRelationshipSuggestion
     {
         return new SelectOptionDto
         {
-            Value = $"{t.Id}_Rev",
+            Value = $"{t.Id}{ReverseSuffix}",
             Text = $"is {t.OppositeName} of ({t.Name})",
             Group = t.Category,
-            Selected = selectedValue == $"{t.Id}_Rev"
+            Selected = selectedValue == $"{t.Id}{ReverseSuffix}"
         };
     }
 
