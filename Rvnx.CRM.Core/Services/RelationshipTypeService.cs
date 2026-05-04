@@ -15,6 +15,8 @@ public static class RelationshipTypeIds
     public static readonly Guid StepParent = Guid.Parse("6ad40b7f-9df5-4a73-8fe4-0bb17b6a3570");
     public static readonly Guid StepSibling = Guid.Parse("985d3d47-1585-4788-867d-3062c2b9b78a");
     public static readonly Guid HalfSibling = Guid.Parse("3553b74c-88ba-4c1b-957c-867d6d80f319");
+    public static readonly Guid ParentInLaw = Guid.Parse("a4d7c2e1-6b3f-4e89-9c2a-1d8b5e7f0a3c");
+    public static readonly Guid SiblingInLaw = Guid.Parse("e8b4f1d9-2c7a-4f3e-b1d6-9a4c8e2f5b71");
 
     public static readonly Guid SignificantOther = Guid.Parse("f9e8d7c6-b5a4-3210-9876-543210fedcbb");
     public static readonly Guid ExPartner = Guid.Parse("f9e8d7c6-b5a4-3210-9876-543210fedcbe");
@@ -84,6 +86,12 @@ public static class RelationshipTypeService
 
         new(RelationshipTypeIds.HalfSibling, "Half-Sibling", "Half-Sibling", "Family",
             NameMale: "Half-Brother", NameFemale: "Half-Sister", OppositeNameMale: "Half-Brother", OppositeNameFemale: "Half-Sister"),
+
+        new(RelationshipTypeIds.ParentInLaw, "Parent-in-Law", "Child-in-Law", "Family",
+            NameMale: "Father-in-Law", NameFemale: "Mother-in-Law", OppositeNameMale: "Son-in-Law", OppositeNameFemale: "Daughter-in-Law"),
+
+        new(RelationshipTypeIds.SiblingInLaw, "Sibling-in-Law", "Sibling-in-Law", "Family",
+            NameMale: "Brother-in-Law", NameFemale: "Sister-in-Law", OppositeNameMale: "Brother-in-Law", OppositeNameFemale: "Sister-in-Law"),
 
         new(RelationshipTypeIds.SignificantOther, "Significant Other", "Significant Other", "Romantic"),
         new(RelationshipTypeIds.ExPartner, "Ex-Partner", "Ex-Partner", "Romantic"),
