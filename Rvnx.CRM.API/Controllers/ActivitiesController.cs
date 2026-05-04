@@ -31,7 +31,7 @@ public class ActivitiesController(IActivityService activityService) : Controller
     }
 
     /// <summary>
-    /// Create a new activity. Required fields: title, activityDate, entityId.
+    /// Create a new activity. Required fields: title, activityDate, contactId.
     /// The contactIds array links the activity to one or more contacts.
     /// </summary>
     /// <param name="model">The activity data.</param>

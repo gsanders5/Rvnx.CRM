@@ -46,7 +46,7 @@ public class RelationshipsController(IRelationshipService relationshipService, I
     /// </summary>
     /// <remarks>
     /// Each type has a Name and OppositeName. For asymmetric types (e.g. Parent/Child) use
-    /// Direction=Forward to apply the Name to EntityId, or Direction=Reverse to apply OppositeName.
+    /// Direction=Forward to apply the Name to ContactId, or Direction=Reverse to apply OppositeName.
     /// For symmetric types (Friend, Sibling, Colleague) Direction is ignored.
     /// </remarks>
     [HttpGet("types")]
@@ -69,16 +69,16 @@ public class RelationshipsController(IRelationshipService relationshipService, I
     /// <remarks>
     /// Workflow:
     /// 1. Call GET /api/relationships/types to find the RelationshipTypeId you want.
-    /// 2. Set Direction=Forward to apply the type's Name to EntityId (e.g. EntityId is the "Parent").
-    ///    Set Direction=Reverse to apply OppositeName (e.g. EntityId is the "Child").
+    /// 2. Set Direction=Forward to apply the type's Name to ContactId (e.g. ContactId is the "Parent").
+    ///    Set Direction=Reverse to apply OppositeName (e.g. ContactId is the "Child").
     ///    For symmetric types (Friend, Colleague, Sibling) direction does not matter.
     ///
     /// Example — create a Parent/Child relationship where Alice is the parent of Bob:
     ///
     ///     POST /api/relationships
     ///     {
-    ///       "entityId": "&lt;alice-id&gt;",
-    ///       "relatedEntityId": "&lt;bob-id&gt;",
+    ///       "contactId": "&lt;alice-id&gt;",
+    ///       "relatedContactId": "&lt;bob-id&gt;",
     ///       "relationshipTypeId": "7c1f8d22-1b6a-4c28-9c1e-3f5a2b8e9d1a",
     ///       "direction": "Forward"
     ///     }
@@ -130,8 +130,8 @@ public class RelationshipsController(IRelationshipService relationshipService, I
     {
         return new()
         {
-            ContactId = r.EntityId,
-            RelatedContactId = r.RelatedEntityId,
+            ContactId = r.ContactId,
+            RelatedContactId = r.RelatedContactId,
             Description = r.Description,
             StartDate = r.StartDate,
             EndDate = r.EndDate

@@ -16,7 +16,7 @@ public static partial class DtoMappingExtensions
             ActivityDate = entity.ActivityDate,
             ActivityType = entity.ActivityType,
             Location = entity.Location,
-            EntityId = contactIds.FirstOrDefault(),
+            ContactId = contactIds.FirstOrDefault(),
             ContactIds = contactIds,
             CreatedDate = entity.CreatedDate,
             CreatedBy = entity.CreatedBy,

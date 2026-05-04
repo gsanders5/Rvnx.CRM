@@ -1,7 +1,6 @@
 using Rvnx.CRM.Core.Constants;
 using Rvnx.CRM.Core.DTOs.Common;
 using Rvnx.CRM.Core.DTOs.Contact;
-using Rvnx.CRM.Core.Enumerations;
 using Rvnx.CRM.Core.Interfaces;
 using Rvnx.CRM.Core.Models;
 using Rvnx.CRM.Core.Models.Contact;
@@ -12,7 +11,7 @@ namespace Rvnx.CRM.Core.Services;
 public class RelationshipService(IRepository repository, IRelationshipSuggestionService suggestionService) : IRelationshipService
 {
     public async Task<RelationshipOperationResult> CreateRelationshipAsync(Relationship relationship,
-        string selectedRelationshipType, List<string>? suggestedEntityIds = null)
+        string selectedRelationshipType, List<string>? suggestedContactIds = null)
     {
         (Guid typeId, bool isReverse, string? error) = ParseRelationshipSelection(selectedRelationshipType);
         if (error != null)
@@ -35,21 +34,21 @@ public class RelationshipService(IRepository repository, IRelationshipSuggestion
 
         await repository.AddAsync(relationship);
 
-        await AddSuggestedRelationshipsAsync(relationship, typeId, suggestedEntityIds, partialContactId: null);
+        await AddSuggestedRelationshipsAsync(relationship, typeId, suggestedContactIds, partialContactId: null);
 
         await repository.SaveChangesAsync();
 
         Guid redirectId = isReverse ? relationship.RelatedContactId : relationship.ContactId;
-        return RelationshipOperationResult.Ok(redirectId, EntityType.Person);
+        return RelationshipOperationResult.Ok(redirectId);
     }
 
     private async Task AddSuggestedRelationshipsAsync(
         Relationship primaryRelationship,
         Guid typeId,
-        List<string>? suggestedEntityIds,
+        List<string>? suggestedContactIds,
         Guid? partialContactId)
     {
-        if (suggestedEntityIds == null || suggestedEntityIds.Count == 0)
+        if (suggestedContactIds == null || suggestedContactIds.Count == 0)
         {
             return;
         }
@@ -57,7 +56,7 @@ public class RelationshipService(IRepository repository, IRelationshipSuggestion
         HashSet<Guid> allNodeIds = [];
         List<(Guid sId, Guid tId, bool reverse)> parsedSuggestions = [];
 
-        foreach (string payload in suggestedEntityIds)
+        foreach (string payload in suggestedContactIds)
         {
             string[] parts = payload.Split('_');
             if (parts.Length == 3 && Guid.TryParse(parts[0], out Guid sId) &&
@@ -167,7 +166,7 @@ public class RelationshipService(IRepository repository, IRelationshipSuggestion
         await repository.SaveChangesAsync();
 
         Guid redirectId = isReverse ? existingRelationship.RelatedContactId : existingRelationship.ContactId;
-        return RelationshipOperationResult.Ok(redirectId, EntityType.Person);
+        return RelationshipOperationResult.Ok(redirectId);
     }
 
     private static (Guid TypeId, bool IsReverse, string? Error) ParseRelationshipSelection(string selection)
@@ -192,20 +191,10 @@ public class RelationshipService(IRepository repository, IRelationshipSuggestion
             (relationship.RelatedContactId, relationship.ContactId);
     }
 
-    public async Task<List<SelectOptionDto>> GetRelatedEntityOptionsAsync(Guid entityId, EntityType entityType,
-        Guid? selectedId = null)
-    {
-        return entityType switch
-        {
-            EntityType.Person => await GetPersonOptionsAsync(entityId, selectedId),
-            _ => []
-        };
-    }
-
-    private async Task<List<SelectOptionDto>> GetPersonOptionsAsync(Guid entityId, Guid? selectedId)
+    public async Task<List<SelectOptionDto>> GetRelatedContactOptionsAsync(Guid contactId, Guid? selectedId = null)
     {
         return await repository.ListProjectedAsync<Contact, SelectOptionDto, string>(
-            p => p.Id != entityId,
+            p => p.Id != contactId,
             p => new SelectOptionDto
             {
                 Value = p.Id.ToString(),
@@ -221,12 +210,9 @@ public class RelationshipService(IRepository repository, IRelationshipSuggestion
             p => p.FirstName + " " + (p.LastName ?? ""));
     }
 
-    public List<SelectOptionDto> GetRelationshipTypeOptions(EntityType entityType, string? selectedValue = null)
+    public List<SelectOptionDto> GetRelationshipTypeOptions(string? selectedValue = null)
     {
-        List<RelationshipTypeDefinition> types = RelationshipTypeService.GetByEntityType(entityType);
-        types = [.. types.OrderBy(t => t.Category).ThenBy(t => t.Name)];
-
-        return types.SelectMany(t => MapToSelectOptions(t, selectedValue)).ToList();
+        return [.. RelationshipTypeService.GetAll().SelectMany(t => MapToSelectOptions(t, selectedValue))];
     }
 
     private static IEnumerable<SelectOptionDto> MapToSelectOptions(RelationshipTypeDefinition t,
@@ -263,13 +249,12 @@ public class RelationshipService(IRepository repository, IRelationshipSuggestion
         };
     }
 
-    public List<RelationshipTypeDefinition> GetRelationshipTypes(EntityType entityType)
+    public List<RelationshipTypeDefinition> GetRelationshipTypes()
     {
-        return
-            [.. RelationshipTypeService.GetByEntityType(entityType).OrderBy(t => t.Category).ThenBy(t => t.Name)];
+        return [.. RelationshipTypeService.GetAll()];
     }
 
-    public async Task<RelationshipOperationResult> CreatePartialContactRelationshipAsync(Guid parentEntityId,
+    public async Task<RelationshipOperationResult> CreatePartialContactRelationshipAsync(Guid parentContactId,
         string selectedRelationshipType, CreatePartialContactRelationshipDto dto)
     {
         (Guid typeId, bool isReverse, string? error) = ParseRelationshipSelection(selectedRelationshipType);
@@ -306,7 +291,7 @@ public class RelationshipService(IRepository repository, IRelationshipSuggestion
         Relationship relationship = new()
         {
             Id = Guid.NewGuid(),
-            ContactId = parentEntityId,
+            ContactId = parentContactId,
             RelatedContactId = partialContact.Id,
             RelationshipTypeId = typeId,
             Description = dto.Description
@@ -323,7 +308,7 @@ public class RelationshipService(IRepository repository, IRelationshipSuggestion
 
         await repository.SaveChangesAsync();
 
-        return RelationshipOperationResult.Ok(parentEntityId, EntityType.Person);
+        return RelationshipOperationResult.Ok(parentContactId);
     }
 
     public async Task<RelationshipOperationResult> PromotePartialContactAsync(Guid contactId)
@@ -343,7 +328,7 @@ public class RelationshipService(IRepository repository, IRelationshipSuggestion
         await repository.UpdateAsync(contact);
         await repository.SaveChangesAsync();
 
-        return RelationshipOperationResult.Ok(contact.Id, EntityType.Person);
+        return RelationshipOperationResult.Ok(contact.Id);
     }
 
     public async Task<Relationship?> GetRelationshipForEditAsync(Guid id)
@@ -379,7 +364,7 @@ public class RelationshipService(IRepository repository, IRelationshipSuggestion
         {
             await repository.DeleteAsync<Relationship>(r => r.Id == id);
             await repository.SaveChangesAsync();
-            return OperationResult.Ok(contactIds[0], EntityType.Person);
+            return OperationResult.Ok(contactIds[0]);
         }
 
         return OperationResult.Failure("Relationship not found.");

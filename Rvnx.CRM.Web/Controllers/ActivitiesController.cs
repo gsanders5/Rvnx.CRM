@@ -14,9 +14,9 @@ public class ActivitiesController(IActivityService activityService, IRepository 
     private readonly IContactReadService _contactReadService = contactReadService;
 
     [HttpGet]
-    public async Task<IActionResult> Create(Guid entityId)
+    public async Task<IActionResult> Create(Guid contactId)
     {
-        ActivityFormDto? dto = await _activityService.GetFormForCreateAsync(entityId);
+        ActivityFormDto? dto = await _activityService.GetFormForCreateAsync(contactId);
         if (dto == null)
         {
             return NotFound();
@@ -47,7 +47,7 @@ public class ActivitiesController(IActivityService activityService, IRepository 
     {
         OperationResult result = await _activityService.QuickLogAsync(contactId, activityType);
         return result.Success
-            ? RedirectToEntity(result.RedirectId, result.RedirectType)
+            ? RedirectToContact(result.RedirectId)
             : result.IsNotFound ? NotFound() : BadRequest(result.ErrorMessage);
     }
 
@@ -97,7 +97,7 @@ public class ActivitiesController(IActivityService activityService, IRepository 
     {
         OperationResult result = await _activityService.DeleteAsync(id);
         return result.Success
-            ? RedirectToEntity(result.RedirectId, result.RedirectType)
+            ? RedirectToContact(result.RedirectId)
             : RedirectToAction("Index", "Contacts");
     }
 

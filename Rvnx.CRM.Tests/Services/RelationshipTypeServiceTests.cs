@@ -1,4 +1,3 @@
-using Rvnx.CRM.Core.Enumerations;
 using Rvnx.CRM.Core.Models.Contact;
 using Rvnx.CRM.Core.Services;
 
@@ -13,26 +12,6 @@ public class RelationshipTypeServiceTests
 
         Assert.NotNull(result);
         Assert.NotEmpty(result);
-        Assert.True(result.Count > 0);
-    }
-
-    [Fact]
-    public void GetByEntityTypePersonReturnsOnlyPersonTypes()
-    {
-        List<RelationshipTypeDefinition> result = RelationshipTypeService.GetByEntityType(EntityType.Person);
-
-        Assert.NotNull(result);
-        Assert.NotEmpty(result);
-        Assert.All(result, t => Assert.Equal(EntityType.Person, t.EntityType));
-    }
-
-    [Fact]
-    public void GetByEntityTypeUnknownTypeReturnsEmpty()
-    {
-        List<RelationshipTypeDefinition> result = RelationshipTypeService.GetByEntityType((EntityType)99);
-
-        Assert.NotNull(result);
-        Assert.Empty(result);
     }
 
     [Fact]

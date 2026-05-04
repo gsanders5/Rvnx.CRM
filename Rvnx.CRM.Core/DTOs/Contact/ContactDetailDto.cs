@@ -3,7 +3,7 @@ using Rvnx.CRM.Core.DTOs.Dates;
 
 namespace Rvnx.CRM.Core.DTOs.Contact;
 
-public class ContactDetailDto : ContactDto
+public record class ContactDetailDto : ContactDto
 {
     public string? Nickname { get; set; }
 

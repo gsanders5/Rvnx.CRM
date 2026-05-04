@@ -1,6 +1,5 @@
 using Rvnx.CRM.Core.Constants;
 using Rvnx.CRM.Core.DTOs.Base;
-using Rvnx.CRM.Core.Enumerations;
 using Rvnx.CRM.Core.Extensions;
 using Rvnx.CRM.Core.Interfaces;
 using Rvnx.CRM.Core.Models.Base;
@@ -12,13 +11,13 @@ public class AttachmentService : IAttachmentService
 {
     private readonly IRepository _repository;
     private readonly IFileValidationService _fileValidationService;
-    private readonly IEntityService _entityService;
+    private readonly IContactLookupService _contactLookupService;
 
-    public AttachmentService(IRepository repository, IFileValidationService fileValidationService, IEntityService entityService)
+    public AttachmentService(IRepository repository, IFileValidationService fileValidationService, IContactLookupService contactLookupService)
     {
         _repository = repository;
         _fileValidationService = fileValidationService;
-        _entityService = entityService;
+        _contactLookupService = contactLookupService;
     }
 
     public async Task<List<AttachmentDto>> GetByContactAsync(Guid contactId)
@@ -30,19 +29,14 @@ public class AttachmentService : IAttachmentService
     }
 
     /// <inheritdoc />
-    public async Task<AttachmentOperationResult> UploadAttachmentAsync(Guid entityId, EntityType entityType, byte[] content, string fileName)
+    public async Task<AttachmentOperationResult> UploadAttachmentAsync(Guid contactId, byte[] content, string fileName)
     {
-        if (entityType != EntityType.Person)
+        if (!await _contactLookupService.ExistsAsync(contactId))
         {
-            return AttachmentOperationResult.Failure($"Attachments are not currently supported for {entityType}.");
+            return AttachmentOperationResult.NotFound("Contact not found.");
         }
 
-        if (!await _entityService.ExistsAsync(entityType, entityId))
-        {
-            return AttachmentOperationResult.NotFound($"Entity not found.");
-        }
-
-        if (await IsPartialContactAsync(entityId))
+        if (await IsPartialContactAsync(contactId))
         {
             return AttachmentOperationResult.NotFound("Cannot add attachment to partial contact.");
         }
@@ -73,7 +67,7 @@ public class AttachmentService : IAttachmentService
         Attachment attachment = new()
         {
             Id = Guid.NewGuid(),
-            ContactId = entityId,
+            ContactId = contactId,
             AttachmentType = AttachmentTypes.General,
             ContentType = safeContentType,
             FileName = fileName,
@@ -146,8 +140,7 @@ public class AttachmentService : IAttachmentService
                 FileName = attachment.FileName ?? string.Empty,
                 ContentType = attachment.ContentType,
                 AttachmentType = attachment.AttachmentType,
-                EntityId = attachment.ContactId ?? Guid.Empty,
-                EntityType = EntityType.Person
+                ContactId = attachment.ContactId ?? Guid.Empty
             };
     }
 

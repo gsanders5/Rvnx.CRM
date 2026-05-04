@@ -112,12 +112,12 @@ public class ContactReadServiceTests
             Assert.Equal(contactId, result.Id);
 
             Assert.Single(result.Relationships); // Outgoing
-            Assert.Equal(relatedId1, result.Relationships.First().RelatedEntityId);
-            Assert.Equal("Child", result.Relationships.First().RelatedEntityName);
+            Assert.Equal(relatedId1, result.Relationships.First().RelatedContactId);
+            Assert.Equal("Child", result.Relationships.First().RelatedContactName);
 
             Assert.Single(result.RelatedTo); // Incoming
-            Assert.Equal(relatedId2, result.RelatedTo.First().EntityId);
-            Assert.Equal("Parent", result.RelatedTo.First().EntityName);
+            Assert.Equal(relatedId2, result.RelatedTo.First().ContactId);
+            Assert.Equal("Parent", result.RelatedTo.First().ContactName);
         }
 
         [Fact]
@@ -208,10 +208,10 @@ public class ContactReadServiceTests
             // And confirm the flag rides into the per-relationship DTO surface used by the view.
             Assert.NotNull(result);
             Assert.Equal(2, result.Relationships.Count());
-            RelationshipDto livingRel = result.Relationships.Single(r => r.RelatedEntityId == livingId);
-            RelationshipDto deceasedRel = result.Relationships.Single(r => r.RelatedEntityId == deceasedId);
-            Assert.False(livingRel.IsRelatedEntityDeceased);
-            Assert.True(deceasedRel.IsRelatedEntityDeceased);
+            RelationshipDto livingRel = result.Relationships.Single(r => r.RelatedContactId == livingId);
+            RelationshipDto deceasedRel = result.Relationships.Single(r => r.RelatedContactId == deceasedId);
+            Assert.False(livingRel.IsRelatedContactDeceased);
+            Assert.True(deceasedRel.IsRelatedContactDeceased);
         }
 
         [Fact]

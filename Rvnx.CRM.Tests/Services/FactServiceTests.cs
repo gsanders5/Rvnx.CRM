@@ -27,7 +27,7 @@ public class FactServiceTests
         Fact existingFact = new()
         { Id = factId, ContactId = contactId };
         FactFormDto dto = new()
-        { Id = factId, EntityId = contactId };
+        { Id = factId, ContactId = contactId };
 
         _repositoryMock.Setup(r => r.GetByIdAsync<Fact>(factId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(existingFact);
@@ -52,7 +52,7 @@ public class FactServiceTests
         Fact existingFact = new()
         { Id = factId, ContactId = contactId };
         FactFormDto dto = new()
-        { Id = factId, EntityId = contactId };
+        { Id = factId, ContactId = contactId };
 
         _repositoryMock.Setup(r => r.GetByIdAsync<Fact>(factId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(existingFact);

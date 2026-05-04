@@ -8,7 +8,6 @@ namespace Rvnx.CRM.Infrastructure.Migrations;
 public partial class AddContactFavorites : Migration
 {
     /// <inheritdoc />
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("Performance", "CA1861:Avoid constant arrays as arguments", Justification = "EF Core Migrations generated code creates arrays for columns")]
     protected override void Up(MigrationBuilder migrationBuilder)
     {
         migrationBuilder.CreateTable(

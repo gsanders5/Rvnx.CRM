@@ -40,9 +40,9 @@ public interface IPetService
     /// <summary>
     /// Initializes a new form DTO for adding a pet to a contact.
     /// </summary>
-    /// <param name="entityId">The ID of the contact (owner).</param>
+    /// <param name="contactId">The ID of the contact (owner).</param>
     /// <returns>A pre-populated <see cref="PetFormDto"/>.</returns>
-    Task<PetFormDto?> GetFormForCreateAsync(Guid entityId);
+    Task<PetFormDto?> GetFormForCreateAsync(Guid contactId);
 
     /// <summary>
     /// Retrieves a pet entity by its ID.

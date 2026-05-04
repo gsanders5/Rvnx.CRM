@@ -1,6 +1,5 @@
 using Rvnx.CRM.Core.Constants;
 using Rvnx.CRM.Core.DTOs.Contact;
-using Rvnx.CRM.Core.Enumerations;
 using Rvnx.CRM.Core.Exceptions;
 using Rvnx.CRM.Core.Extensions;
 using Rvnx.CRM.Core.Interfaces;
@@ -26,21 +25,21 @@ public class ActivityService(IRepository repository, ISelfContactService selfCon
 
     public async Task<OperationResult> CreateAsync(ActivityFormDto dto)
     {
-        if (!await _repository.IsValidContactAsync(dto.EntityId))
+        if (!await _repository.IsValidContactAsync(dto.ContactId))
         {
             return OperationResult.NotFound("Contact not found.");
         }
 
         // Activities are present-tense — refuse to log against a deceased primary contact.
-        if (!await _repository.IsLivingContactAsync(dto.EntityId))
+        if (!await _repository.IsLivingContactAsync(dto.ContactId))
         {
             return OperationResult.Failure("Cannot log an activity for a deceased contact.");
         }
 
-        List<Guid> contactIds = dto.ContactIds.Count > 0 ? dto.ContactIds : [dto.EntityId];
-        if (!contactIds.Contains(dto.EntityId))
+        List<Guid> contactIds = dto.ContactIds.Count > 0 ? dto.ContactIds : [dto.ContactId];
+        if (!contactIds.Contains(dto.ContactId))
         {
-            contactIds.Add(dto.EntityId);
+            contactIds.Add(dto.ContactId);
         }
 
         Activity activity = dto.ToEntity();
@@ -55,7 +54,7 @@ public class ActivityService(IRepository repository, ISelfContactService selfCon
 
         await _repository.SaveChangesAsync();
 
-        return OperationResult.Ok(dto.EntityId, EntityType.Person);
+        return OperationResult.Ok(dto.ContactId);
     }
 
     public async Task<OperationResult> QuickLogAsync(Guid contactId, string activityType)
@@ -78,7 +77,7 @@ public class ActivityService(IRepository repository, ISelfContactService selfCon
 
         ActivityFormDto dto = new()
         {
-            EntityId = contactId,
+            ContactId = contactId,
             Title = activityType,
             ActivityType = activityType,
             ActivityDate = DateTime.Today,
@@ -88,11 +87,11 @@ public class ActivityService(IRepository repository, ISelfContactService selfCon
         return await CreateAsync(dto);
     }
 
-    private async Task<List<Guid>> BuildContactIdsWithSelfAsync(Guid entityId)
+    private async Task<List<Guid>> BuildContactIdsWithSelfAsync(Guid contactId)
     {
-        List<Guid> contactIds = [entityId];
+        List<Guid> contactIds = [contactId];
         Guid? selfContactId = await _selfContactService.GetSelfContactIdAsync();
-        if (selfContactId.HasValue && selfContactId.Value != entityId)
+        if (selfContactId.HasValue && selfContactId.Value != contactId)
         {
             contactIds.Add(selfContactId.Value);
         }
@@ -112,10 +111,10 @@ public class ActivityService(IRepository repository, ISelfContactService selfCon
             existing.UpdateEntity(dto);
             await _repository.UpdateAsync(existing);
 
-            List<Guid> contactIds = dto.ContactIds.Count > 0 ? dto.ContactIds : [dto.EntityId];
-            if (!contactIds.Contains(dto.EntityId))
+            List<Guid> contactIds = dto.ContactIds.Count > 0 ? dto.ContactIds : [dto.ContactId];
+            if (!contactIds.Contains(dto.ContactId))
             {
-                contactIds.Add(dto.EntityId);
+                contactIds.Add(dto.ContactId);
             }
 
             HashSet<Guid> desiredContactIds = [.. contactIds];
@@ -141,7 +140,7 @@ public class ActivityService(IRepository repository, ISelfContactService selfCon
 
             await _repository.SaveChangesAsync();
 
-            return OperationResult.Ok(dto.EntityId, EntityType.Person);
+            return OperationResult.Ok(dto.ContactId);
         }
         catch (EntityConcurrencyException)
         {
@@ -160,14 +159,14 @@ public class ActivityService(IRepository repository, ISelfContactService selfCon
             return OperationResult.NotFound("Activity not found.");
         }
 
-        Guid entityId = (await _repository.ListProjectedAsync<ActivityContact, Guid>(
+        Guid contactId = (await _repository.ListProjectedAsync<ActivityContact, Guid>(
             ac => ac.ActivityId == id,
             ac => ac.ContactId)).FirstOrDefault();
 
         await _repository.DeleteAsync<Activity>(a => a.Id == id);
         await _repository.SaveChangesAsync();
 
-        return OperationResult.Ok(entityId, EntityType.Person);
+        return OperationResult.Ok(contactId);
     }
 
     public async Task<ActivityFormDto?> GetFormAsync(Guid id)
@@ -179,12 +178,12 @@ public class ActivityService(IRepository repository, ISelfContactService selfCon
         }
 
         List<Guid> contactIds = activity.ActivityContacts.Select(ac => ac.ContactId).ToList();
-        Guid entityId = contactIds.FirstOrDefault();
+        Guid contactId = contactIds.FirstOrDefault();
 
         return new ActivityFormDto
         {
             Id = activity.Id,
-            EntityId = entityId,
+            ContactId = contactId,
             ContactIds = contactIds,
             Title = activity.Title,
             Description = activity.Description,
@@ -194,12 +193,12 @@ public class ActivityService(IRepository repository, ISelfContactService selfCon
         };
     }
 
-    public async Task<ActivityFormDto?> GetFormForCreateAsync(Guid entityId)
+    public async Task<ActivityFormDto?> GetFormForCreateAsync(Guid contactId)
     {
         // Forward-looking: refuse to render the create form for a deceased contact.
-        return !await _repository.IsLivingContactAsync(entityId)
+        return !await _repository.IsLivingContactAsync(contactId)
             ? null
-            : new ActivityFormDto { EntityId = entityId, ContactIds = await BuildContactIdsWithSelfAsync(entityId) };
+            : new ActivityFormDto { ContactId = contactId, ContactIds = await BuildContactIdsWithSelfAsync(contactId) };
     }
 
     public async Task<Activity?> GetByIdAsync(Guid id)

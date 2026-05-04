@@ -1,5 +1,4 @@
 using Rvnx.CRM.Core.DTOs.Contact;
-using Rvnx.CRM.Core.Enumerations;
 using Rvnx.CRM.Core.Models;
 using Rvnx.CRM.Core.Models.Contact;
 
@@ -39,12 +38,9 @@ public interface IContactMethodService
     Task<ContactMethodFormDto?> GetFormAsync(Guid id);
 
     /// <summary>
-    /// Initializes a new form DTO for creating a contact method, linked to a specific entity.
+    /// Initializes a new form DTO for creating a contact method linked to a contact.
     /// </summary>
-    /// <param name="entityId">The ID of the parent entity (e.g., Contact).</param>
-    /// <param name="entityType">The type of the parent entity.</param>
-    /// <returns>A pre-populated <see cref="ContactMethodFormDto"/>.</returns>
-    Task<ContactMethodFormDto?> GetFormForCreateAsync(Guid entityId, EntityType entityType);
+    Task<ContactMethodFormDto?> GetFormForCreateAsync(Guid contactId);
 
     /// <summary>
     /// Retrieves a contact method entity by its ID.

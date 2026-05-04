@@ -21,7 +21,7 @@ public class ContactMethodFormDto : IValidatableObject
     [Display(Name = "Label")]
     public string? Label { get; set; }
 
-    public Guid EntityId { get; set; }
+    public Guid ContactId { get; set; }
 
     public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
     {

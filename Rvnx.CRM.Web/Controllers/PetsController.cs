@@ -14,9 +14,9 @@ public class PetsController(IPetService petService, IRepository repository, ICon
     private readonly IContactReadService _contactReadService = contactReadService;
 
     [HttpGet]
-    public async Task<IActionResult> Create(Guid entityId)
+    public async Task<IActionResult> Create(Guid contactId)
     {
-        PetFormDto? dto = await _petService.GetFormForCreateAsync(entityId);
+        PetFormDto? dto = await _petService.GetFormForCreateAsync(contactId);
         if (dto == null)
         {
             return NotFound();
@@ -88,7 +88,7 @@ public class PetsController(IPetService petService, IRepository repository, ICon
     {
         OperationResult result = await _petService.DeleteAsync(id);
         return result.Success
-            ? RedirectToEntity(result.RedirectId, result.RedirectType)
+            ? RedirectToContact(result.RedirectId)
             : RedirectToAction("Index", "Contacts");
     }
 

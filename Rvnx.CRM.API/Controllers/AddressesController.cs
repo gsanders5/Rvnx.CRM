@@ -10,7 +10,7 @@ namespace Rvnx.CRM.API.Controllers;
 
 /// <summary>
 /// Manages addresses for contacts. Each address has a type (e.g., "Home", "Work").
-/// Requires entityId (contact GUID) when creating.
+/// Requires contactId (contact GUID) when creating.
 /// </summary>
 [ApiController]
 [Route("api/[controller]")]
@@ -31,7 +31,7 @@ public class AddressesController(IAddressService addressService) : ControllerBas
     }
 
     /// <summary>
-    /// Create a new address. Required fields: line1, city, state, zip, country, addressType, entityId.
+    /// Create a new address. Required fields: line1, city, state, zip, country, addressType, contactId.
     /// </summary>
     /// <param name="model">The address data.</param>
     /// <returns>The new address's ID.</returns>

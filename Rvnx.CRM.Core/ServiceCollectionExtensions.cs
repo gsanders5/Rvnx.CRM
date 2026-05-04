@@ -14,7 +14,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IDashboardService, DashboardService>();
         services.AddScoped<IRelationshipService, RelationshipService>();
         services.AddScoped<IRelationshipSuggestionService, RelationshipSuggestionService>();
-        services.AddScoped<IEntityService, EntityService>();
+        services.AddScoped<IContactLookupService, ContactLookupService>();
         services.AddScoped<IFileValidationService, FileValidationService>();
         services.AddScoped<ILabelService, LabelService>();
         services.AddScoped<IAttachmentService, AttachmentService>();

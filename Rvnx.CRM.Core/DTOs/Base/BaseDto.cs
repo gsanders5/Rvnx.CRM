@@ -1,6 +1,6 @@
 namespace Rvnx.CRM.Core.DTOs.Base;
 
-public class BaseDto
+public record class BaseDto
 {
     public Guid Id { get; set; }
     public string CreatedBy { get; set; } = "System";

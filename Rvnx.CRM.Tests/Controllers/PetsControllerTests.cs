@@ -52,7 +52,7 @@ public class PetsControllerTests : IDisposable
         ViewResult viewResult = Assert.IsType<ViewResult>(result);
         PetFormDto? model = viewResult.Model as PetFormDto;
         Assert.NotNull(model);
-        Assert.Equal(contactId, model.EntityId);
+        Assert.Equal(contactId, model.ContactId);
         Assert.Contains(contactId, model.ContactIds);
     }
 
@@ -65,7 +65,7 @@ public class PetsControllerTests : IDisposable
 
         PetFormDto dto = new()
         {
-            EntityId = contactId,
+            ContactId = contactId,
             ContactIds = [contactId],
             Name = "Buddy",
             Species = "Dog",
@@ -117,7 +117,7 @@ public class PetsControllerTests : IDisposable
         Assert.Equal("Whiskers", model.Name);
         Assert.Equal("Cat", model.Species);
         Assert.Equal("Siamese", model.Breed);
-        Assert.Equal(contactId, model.EntityId);
+        Assert.Equal(contactId, model.ContactId);
         Assert.Contains(contactId, model.ContactIds);
     }
 
@@ -148,7 +148,7 @@ public class PetsControllerTests : IDisposable
         PetFormDto dto = new()
         {
             Id = petId,
-            EntityId = contactId,
+            ContactId = contactId,
             ContactIds = [contactId],
             Name = "New Name",
             Species = "Dog",
@@ -184,7 +184,7 @@ public class PetsControllerTests : IDisposable
         await _context.SaveChangesAsync();
         _context.ChangeTracker.Clear();
 
-        PetFormDto dto = new() { Id = Guid.NewGuid(), Name = "Test", EntityId = contactId };
+        PetFormDto dto = new() { Id = Guid.NewGuid(), Name = "Test", ContactId = contactId };
 
         IActionResult result = await _controller.Edit(petId, dto);
 
@@ -284,7 +284,7 @@ public class PetsControllerTests : IDisposable
 
         // Force the POST path that re-renders the view by submitting an invalid model.
         _controller.ModelState.AddModelError("Name", "required");
-        PetFormDto dto = new() { Id = petId, EntityId = contactId, ContactIds = [contactId] };
+        PetFormDto dto = new() { Id = petId, ContactId = contactId, ContactIds = [contactId] };
 
         await _controller.Edit(petId, dto);
 

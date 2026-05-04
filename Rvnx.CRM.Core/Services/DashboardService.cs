@@ -91,17 +91,17 @@ public class DashboardService(IRepository repository, ILogger<DashboardService> 
             });
         }
 
-        List<(Guid EntityId, Guid RelatedEntityId)> relationships =
-            await _repository.ListProjectedAsync<Relationship, (Guid EntityId, Guid RelatedEntityId)>(
+        List<(Guid ContactId, Guid RelatedContactId)> relationships =
+            await _repository.ListProjectedAsync<Relationship, (Guid ContactId, Guid RelatedContactId)>(
                 r => true,
                 r => new ValueTuple<Guid, Guid>(r.ContactId, r.RelatedContactId));
 
-        foreach ((Guid entityId, Guid relatedEntityId) in relationships)
+        foreach ((Guid contactId, Guid relatedContactId) in relationships)
         {
             dashboard.GraphLinks.Add(new GraphLinkDto
             {
-                Source = entityId.ToString(),
-                Target = relatedEntityId.ToString(),
+                Source = contactId.ToString(),
+                Target = relatedContactId.ToString(),
                 Type = "Relationship"
             });
         }
@@ -126,13 +126,13 @@ public class DashboardService(IRepository repository, ILogger<DashboardService> 
         // Optimization: avoid multiple iterations and collection instantiations by iterating over the relationships collection once
         int contactsWithRelationshipsCount = 0;
         HashSet<Guid> uniqueContactsWithRelationships = new(relationships.Count * 2);
-        foreach ((Guid entityId, Guid relatedEntityId) in relationships)
+        foreach ((Guid contactId, Guid relatedContactId) in relationships)
         {
-            if (uniqueContactsWithRelationships.Add(entityId) && contactDict.ContainsKey(entityId))
+            if (uniqueContactsWithRelationships.Add(contactId) && contactDict.ContainsKey(contactId))
             {
                 contactsWithRelationshipsCount++;
             }
-            if (uniqueContactsWithRelationships.Add(relatedEntityId) && contactDict.ContainsKey(relatedEntityId))
+            if (uniqueContactsWithRelationships.Add(relatedContactId) && contactDict.ContainsKey(relatedContactId))
             {
                 contactsWithRelationshipsCount++;
             }
@@ -195,8 +195,8 @@ public class DashboardService(IRepository repository, ILogger<DashboardService> 
                 Description = desc,
                 Date = nextOccurrence,
                 Type = isBirthday ? SignificantDateTitles.Birthday : "Event",
-                RelatedEntityId = contact.Id,
-                RelatedEntityName = contact.FullName,
+                RelatedContactId = contact.Id,
+                RelatedContactName = contact.FullName,
                 TimeUntil = GetTimeUntil(nextOccurrence)
             };
 

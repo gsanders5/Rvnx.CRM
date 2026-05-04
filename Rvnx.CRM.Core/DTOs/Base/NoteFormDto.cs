@@ -17,5 +17,5 @@ public class NoteFormDto
 
     public bool IsFavorite { get; set; }
 
-    public Guid EntityId { get; set; }
+    public Guid ContactId { get; set; }
 }

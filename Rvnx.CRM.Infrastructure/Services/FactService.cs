@@ -1,5 +1,4 @@
 using Rvnx.CRM.Core.DTOs.Contact;
-using Rvnx.CRM.Core.Enumerations;
 using Rvnx.CRM.Core.Exceptions;
 using Rvnx.CRM.Core.Extensions;
 using Rvnx.CRM.Core.Interfaces;
@@ -22,7 +21,7 @@ public class FactService(IRepository repository) : IFactService
 
     public async Task<OperationResult> CreateAsync(FactFormDto dto)
     {
-        if (!await _repository.IsValidContactAsync(dto.EntityId))
+        if (!await _repository.IsValidContactAsync(dto.ContactId))
         {
             return OperationResult.NotFound("Contact not found.");
         }
@@ -31,7 +30,7 @@ public class FactService(IRepository repository) : IFactService
         await _repository.AddAsync(fact);
         await _repository.SaveChangesAsync();
 
-        return OperationResult.Ok(fact.ContactId ?? Guid.Empty, EntityType.Person);
+        return OperationResult.Ok(fact.ContactId ?? Guid.Empty);
     }
 
     public async Task<OperationResult> UpdateAsync(Guid id, FactFormDto dto)
@@ -49,7 +48,7 @@ public class FactService(IRepository repository) : IFactService
             await _repository.UpdateAsync(existingFact);
             await _repository.SaveChangesAsync();
 
-            return OperationResult.Ok(existingFact.ContactId ?? Guid.Empty, EntityType.Person);
+            return OperationResult.Ok(existingFact.ContactId ?? Guid.Empty);
         }
         catch (EntityConcurrencyException)
         {
@@ -74,7 +73,7 @@ public class FactService(IRepository repository) : IFactService
             await _repository.DeleteAsync<Fact>(f => f.Id == id);
             await _repository.SaveChangesAsync();
 
-            return OperationResult.Ok(entityId, EntityType.Person);
+            return OperationResult.Ok(entityId);
         }
         return OperationResult.NotFound("Fact not found.");
     }
@@ -90,15 +89,15 @@ public class FactService(IRepository repository) : IFactService
                 Id = fact.Id,
                 Category = fact.Category,
                 Value = fact.Value,
-                EntityId = fact.ContactId ?? Guid.Empty
+                ContactId = fact.ContactId ?? Guid.Empty
             };
     }
 
-    public async Task<FactFormDto?> GetFormForCreateAsync(Guid entityId, EntityType entityType)
+    public async Task<FactFormDto?> GetFormForCreateAsync(Guid contactId)
     {
-        return entityType != EntityType.Person || !await _repository.IsValidContactAsync(entityId)
+        return !await _repository.IsValidContactAsync(contactId)
             ? null
-            : new FactFormDto { EntityId = entityId };
+            : new FactFormDto { ContactId = contactId };
     }
 
     public async Task<Fact?> GetByIdAsync(Guid id)

@@ -11,7 +11,7 @@ namespace Rvnx.CRM.API.Controllers;
 /// <summary>
 /// Manages significant dates (birthdays, anniversaries, custom dates) for contacts.
 /// Dates can have recurrence patterns and reminder offsets.
-/// Requires entityId (contact GUID) and entityType ("Person") when creating.
+/// Requires contactId (contact GUID) when creating.
 /// </summary>
 [ApiController]
 [Route("api/[controller]")]
@@ -35,7 +35,7 @@ public class SignificantDatesController(ISignificantDateService significantDateS
     /// Create a new significant date.
     /// </summary>
     /// <remarks>
-    /// Required fields: title, eventDate, entityId, entityType ("Person").
+    /// Required fields: title, eventDate, contactId.
     ///
     /// RecurrenceType values: None, Annual, Monthly, Custom.
     /// Use Custom with customIntervalDays to set an arbitrary repeat interval.
@@ -44,8 +44,7 @@ public class SignificantDatesController(ISignificantDateService significantDateS
     /// Example — add an annual birthday:
     ///
     ///     {
-    ///       "entityId": "&lt;contact-id&gt;",
-    ///       "entityType": "Person",
+    ///       "contactId": "&lt;contact-id&gt;",
     ///       "title": "Birthday",
     ///       "eventDate": "1990-06-15",
     ///       "recurrenceType": "Annual"
@@ -58,7 +57,7 @@ public class SignificantDatesController(ISignificantDateService significantDateS
     {
         SignificantDateDto model = new()
         {
-            EntityId = request.EntityId,
+            ContactId = request.ContactId,
             Title = request.Title,
             Description = request.Description,
             EventDate = request.EventDate,

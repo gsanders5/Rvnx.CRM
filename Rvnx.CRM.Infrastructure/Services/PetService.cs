@@ -1,5 +1,4 @@
 using Rvnx.CRM.Core.DTOs.Contact;
-using Rvnx.CRM.Core.Enumerations;
 using Rvnx.CRM.Core.Exceptions;
 using Rvnx.CRM.Core.Extensions;
 using Rvnx.CRM.Core.Interfaces;
@@ -24,21 +23,21 @@ public class PetService(IRepository repository) : IPetService
 
     public async Task<OperationResult> CreateAsync(PetFormDto dto)
     {
-        if (!await _repository.IsValidContactAsync(dto.EntityId))
+        if (!await _repository.IsValidContactAsync(dto.ContactId))
         {
             return OperationResult.NotFound("Contact not found.");
         }
 
         // New pet ownership is forward-looking — refuse if the primary owner is deceased.
-        if (!await _repository.IsLivingContactAsync(dto.EntityId))
+        if (!await _repository.IsLivingContactAsync(dto.ContactId))
         {
             return OperationResult.Failure("Cannot register a new pet for a deceased contact.");
         }
 
-        List<Guid> contactIds = dto.ContactIds.Count > 0 ? dto.ContactIds : [dto.EntityId];
-        if (!contactIds.Contains(dto.EntityId))
+        List<Guid> contactIds = dto.ContactIds.Count > 0 ? dto.ContactIds : [dto.ContactId];
+        if (!contactIds.Contains(dto.ContactId))
         {
-            contactIds.Add(dto.EntityId);
+            contactIds.Add(dto.ContactId);
         }
 
         Pet pet = dto.ToEntity();
@@ -53,7 +52,7 @@ public class PetService(IRepository repository) : IPetService
 
         await _repository.SaveChangesAsync();
 
-        return OperationResult.Ok(dto.EntityId, EntityType.Person);
+        return OperationResult.Ok(dto.ContactId);
     }
 
     public async Task<OperationResult> UpdateAsync(Guid id, PetFormDto dto)
@@ -69,10 +68,10 @@ public class PetService(IRepository repository) : IPetService
             existingPet.UpdateEntity(dto);
             await _repository.UpdateAsync(existingPet);
 
-            List<Guid> contactIds = dto.ContactIds.Count > 0 ? dto.ContactIds : [dto.EntityId];
-            if (!contactIds.Contains(dto.EntityId))
+            List<Guid> contactIds = dto.ContactIds.Count > 0 ? dto.ContactIds : [dto.ContactId];
+            if (!contactIds.Contains(dto.ContactId))
             {
-                contactIds.Add(dto.EntityId);
+                contactIds.Add(dto.ContactId);
             }
 
             HashSet<Guid> desiredContactIds = [.. contactIds];
@@ -98,7 +97,7 @@ public class PetService(IRepository repository) : IPetService
 
             await _repository.SaveChangesAsync();
 
-            return OperationResult.Ok(dto.EntityId, EntityType.Person);
+            return OperationResult.Ok(dto.ContactId);
         }
         catch (EntityConcurrencyException)
         {
@@ -121,12 +120,12 @@ public class PetService(IRepository repository) : IPetService
             pc => pc.PetId == id,
             pc => pc.ContactId);
 
-        Guid entityId = contactIds.FirstOrDefault();
+        Guid contactId = contactIds.FirstOrDefault();
 
         await _repository.DeleteAsync<Pet>(p => p.Id == id);
         await _repository.SaveChangesAsync();
 
-        return OperationResult.Ok(entityId, EntityType.Person);
+        return OperationResult.Ok(contactId);
     }
 
     public async Task<PetFormDto?> GetFormAsync(Guid id)
@@ -138,12 +137,12 @@ public class PetService(IRepository repository) : IPetService
         }
 
         List<Guid> contactIds = pet.PetContacts.Select(pc => pc.ContactId).ToList();
-        Guid entityId = contactIds.FirstOrDefault();
+        Guid contactId = contactIds.FirstOrDefault();
 
         return new PetFormDto
         {
             Id = pet.Id,
-            EntityId = entityId,
+            ContactId = contactId,
             ContactIds = contactIds,
             Name = pet.Name,
             Species = pet.Species,
@@ -153,12 +152,12 @@ public class PetService(IRepository repository) : IPetService
         };
     }
 
-    public async Task<PetFormDto?> GetFormForCreateAsync(Guid entityId)
+    public async Task<PetFormDto?> GetFormForCreateAsync(Guid contactId)
     {
         // Forward-looking: refuse to render the create form when the primary owner is deceased.
-        return !await _repository.IsLivingContactAsync(entityId)
+        return !await _repository.IsLivingContactAsync(contactId)
             ? null
-            : new PetFormDto { EntityId = entityId, ContactIds = [entityId] };
+            : new PetFormDto { ContactId = contactId, ContactIds = [contactId] };
     }
 
     public async Task<Pet?> GetByIdAsync(Guid id)

@@ -17,7 +17,7 @@ public static partial class DtoMappingExtensions
             Birthday = entity.Birthday,
             Notes = entity.Notes,
             ContactIds = contactIds,
-            EntityId = contactIds.FirstOrDefault()
+            ContactId = contactIds.FirstOrDefault()
         };
     }
 

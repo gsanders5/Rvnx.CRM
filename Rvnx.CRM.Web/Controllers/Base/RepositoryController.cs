@@ -1,6 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
-using Rvnx.CRM.Core.Enumerations;
 using Rvnx.CRM.Core.Extensions;
 using Rvnx.CRM.Core.Interfaces;
 using Rvnx.CRM.Core.Models;
@@ -27,16 +26,16 @@ public abstract class RepositoryController : AuthorizedController
         return await _repository.IsValidContactAsync(id);
     }
 
-    protected IActionResult RedirectToEntity(Guid id, EntityType? type)
+    protected IActionResult RedirectToContact(Guid id)
     {
-        return id == Guid.Empty || type == null
+        return id == Guid.Empty
             ? RedirectToAction("Index", "Home")
-            : type == EntityType.Person ? RedirectToAction("Details", "Contacts", new { id }) : RedirectToAction("Index", "Home");
+            : RedirectToAction("Details", "Contacts", new { id });
     }
 
     /// <summary>
     /// Maps a service <see cref="OperationResult"/> to the standard controller response:
-    /// success redirects to the associated entity, IsNotFound returns 404, otherwise returns null
+    /// success redirects to the associated contact, IsNotFound returns 404, otherwise returns null
     /// (signalling the caller should re-render the form). Eliminates repeated boilerplate across
     /// every Create/Edit/Delete POST action.
     /// </summary>
@@ -44,7 +43,7 @@ public abstract class RepositoryController : AuthorizedController
     {
         if (result.Success)
         {
-            return RedirectToEntity(result.RedirectId, result.RedirectType);
+            return RedirectToContact(result.RedirectId);
         }
 
         return result.IsNotFound ? NotFound() : null;

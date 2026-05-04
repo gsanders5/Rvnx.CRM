@@ -35,8 +35,8 @@ public class UpcomingEventDto
     public string Description { get; set; } = string.Empty;
     public DateTime Date { get; set; }
     public string Type { get; set; } = string.Empty;
-    public Guid? RelatedEntityId { get; set; }
-    public string RelatedEntityName { get; set; } = string.Empty;
+    public Guid? RelatedContactId { get; set; }
+    public string RelatedContactName { get; set; } = string.Empty;
     public string TimeUntil { get; set; } = string.Empty;
 }
 

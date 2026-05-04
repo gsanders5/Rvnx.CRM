@@ -11,11 +11,11 @@ public class CreateRelationshipRequest
 {
     /// <summary>The contact who is the source of the relationship.</summary>
     [Required]
-    public Guid EntityId { get; set; }
+    public Guid ContactId { get; set; }
 
     /// <summary>The contact who is the target of the relationship.</summary>
     [Required]
-    public Guid RelatedEntityId { get; set; }
+    public Guid RelatedContactId { get; set; }
 
     /// <summary>
     /// The relationship type GUID. Use GET /api/relationships/types to list all types with their IDs,

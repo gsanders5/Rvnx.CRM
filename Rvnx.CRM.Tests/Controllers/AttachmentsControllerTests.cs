@@ -2,7 +2,6 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Moq;
 using Rvnx.CRM.Core.DTOs.Base;
-using Rvnx.CRM.Core.Enumerations;
 using Rvnx.CRM.Core.Interfaces;
 using Rvnx.CRM.Web.Controllers;
 using System.Text;
@@ -35,7 +34,7 @@ public class AttachmentsControllerTests
                 .Returns(Task.CompletedTask)
                 .Verifiable(); // We want to verify this is NOT called
 
-            IActionResult result = await controller.Upload(Guid.NewGuid(), EntityType.Person, fileMock.Object);
+            IActionResult result = await controller.Upload(Guid.NewGuid(), fileMock.Object);
 
             Assert.IsType<BadRequestObjectResult>(result);
 
@@ -52,7 +51,7 @@ public class AttachmentsControllerTests
         public async Task UploadShouldReturnNotFoundWhenEntityBelongsToAnotherUser()
         {
             Mock<IAttachmentService> serviceMock = new();
-            serviceMock.Setup(s => s.UploadAttachmentAsync(It.IsAny<Guid>(), It.IsAny<EntityType>(), It.IsAny<byte[]>(), It.IsAny<string>()))
+            serviceMock.Setup(s => s.UploadAttachmentAsync(It.IsAny<Guid>(), It.IsAny<byte[]>(), It.IsAny<string>()))
                 .ReturnsAsync(AttachmentOperationResult.NotFound("Entity not found."));
 
             Mock<IFileValidationService> fileValidationMock = new();
@@ -85,7 +84,7 @@ public class AttachmentsControllerTests
                 .Callback<Stream, CancellationToken>((stream, token) => ms.CopyTo(stream))
                 .Returns(Task.CompletedTask);
 
-            IActionResult result = await controller.Upload(Guid.NewGuid(), EntityType.Person, fileMock.Object);
+            IActionResult result = await controller.Upload(Guid.NewGuid(), fileMock.Object);
 
             Assert.IsType<NotFoundObjectResult>(result);
         }
@@ -140,14 +139,14 @@ public class AttachmentsControllerTests
         public async Task UploadShouldRedirectToReturnUrlWhenValidLocalUrl()
         {
             Mock<IAttachmentService> serviceMock = new();
-            serviceMock.Setup(s => s.UploadAttachmentAsync(It.IsAny<Guid>(), It.IsAny<EntityType>(), It.IsAny<byte[]>(), It.IsAny<string>()))
+            serviceMock.Setup(s => s.UploadAttachmentAsync(It.IsAny<Guid>(), It.IsAny<byte[]>(), It.IsAny<string>()))
                 .ReturnsAsync(AttachmentOperationResult.Ok(Guid.NewGuid()));
 
             AttachmentsController controller = GetController(serviceMock);
             string returnUrl = "/Contacts/Details/123";
             IFormFile file = CreateMockFile();
 
-            IActionResult result = await controller.Upload(Guid.NewGuid(), EntityType.Person, file, returnUrl);
+            IActionResult result = await controller.Upload(Guid.NewGuid(), file, returnUrl);
 
             LocalRedirectResult redirectResult = Assert.IsType<LocalRedirectResult>(result);
             Assert.Equal(returnUrl, redirectResult.Url);
@@ -157,7 +156,7 @@ public class AttachmentsControllerTests
         public async Task UploadShouldRedirectToRefererWhenReturnUrlMissingAndRefererIsSafe()
         {
             Mock<IAttachmentService> serviceMock = new();
-            serviceMock.Setup(s => s.UploadAttachmentAsync(It.IsAny<Guid>(), It.IsAny<EntityType>(), It.IsAny<byte[]>(), It.IsAny<string>()))
+            serviceMock.Setup(s => s.UploadAttachmentAsync(It.IsAny<Guid>(), It.IsAny<byte[]>(), It.IsAny<string>()))
                 .ReturnsAsync(AttachmentOperationResult.Ok(Guid.NewGuid()));
 
             AttachmentsController controller = GetController(serviceMock);
@@ -166,7 +165,7 @@ public class AttachmentsControllerTests
             string safeReferer = "http://localhost/Contacts/Details/123";
             controller.Request.Headers["Referer"] = safeReferer;
 
-            IActionResult result = await controller.Upload(Guid.NewGuid(), EntityType.Person, file, null);
+            IActionResult result = await controller.Upload(Guid.NewGuid(), file, null);
 
             LocalRedirectResult redirectResult = Assert.IsType<LocalRedirectResult>(result);
             Assert.Equal("/Contacts/Details/123", redirectResult.Url);
@@ -176,7 +175,7 @@ public class AttachmentsControllerTests
         public async Task UploadShouldRedirectToHomeWhenReturnUrlMissingAndRefererIsUnsafe()
         {
             Mock<IAttachmentService> serviceMock = new();
-            serviceMock.Setup(s => s.UploadAttachmentAsync(It.IsAny<Guid>(), It.IsAny<EntityType>(), It.IsAny<byte[]>(), It.IsAny<string>()))
+            serviceMock.Setup(s => s.UploadAttachmentAsync(It.IsAny<Guid>(), It.IsAny<byte[]>(), It.IsAny<string>()))
                 .ReturnsAsync(AttachmentOperationResult.Ok(Guid.NewGuid()));
 
             AttachmentsController controller = GetController(serviceMock);
@@ -185,7 +184,7 @@ public class AttachmentsControllerTests
             string unsafeReferer = "http://evil.com/exploit";
             controller.Request.Headers["Referer"] = unsafeReferer;
 
-            IActionResult result = await controller.Upload(Guid.NewGuid(), EntityType.Person, file, null);
+            IActionResult result = await controller.Upload(Guid.NewGuid(), file, null);
 
             RedirectToActionResult redirectResult = Assert.IsType<RedirectToActionResult>(result);
             Assert.Equal("Index", redirectResult.ActionName);
@@ -196,13 +195,13 @@ public class AttachmentsControllerTests
         public async Task UploadShouldRedirectToHomeWhenReturnUrlAndRefererAreMissing()
         {
             Mock<IAttachmentService> serviceMock = new();
-            serviceMock.Setup(s => s.UploadAttachmentAsync(It.IsAny<Guid>(), It.IsAny<EntityType>(), It.IsAny<byte[]>(), It.IsAny<string>()))
+            serviceMock.Setup(s => s.UploadAttachmentAsync(It.IsAny<Guid>(), It.IsAny<byte[]>(), It.IsAny<string>()))
                 .ReturnsAsync(AttachmentOperationResult.Ok(Guid.NewGuid()));
 
             AttachmentsController controller = GetController(serviceMock);
             IFormFile file = CreateMockFile();
 
-            IActionResult result = await controller.Upload(Guid.NewGuid(), EntityType.Person, file, null);
+            IActionResult result = await controller.Upload(Guid.NewGuid(), file, null);
 
             RedirectToActionResult redirectResult = Assert.IsType<RedirectToActionResult>(result);
             Assert.Equal("Index", redirectResult.ActionName);
@@ -286,7 +285,7 @@ public class AttachmentsControllerTests
         public async Task UploadShouldRejectWhenExtensionIsImageButContentIsNot()
         {
             Mock<IAttachmentService> serviceMock = new();
-            serviceMock.Setup(s => s.UploadAttachmentAsync(It.IsAny<Guid>(), It.IsAny<EntityType>(), It.IsAny<byte[]>(), It.IsAny<string>()))
+            serviceMock.Setup(s => s.UploadAttachmentAsync(It.IsAny<Guid>(), It.IsAny<byte[]>(), It.IsAny<string>()))
                 .ReturnsAsync(AttachmentOperationResult.Failure("Invalid file signature."));
 
             AttachmentsController controller = GetController(serviceMock);
@@ -294,7 +293,7 @@ public class AttachmentsControllerTests
 
             IFormFile file = CreateMockFile("exploit.png", "image/png", 100);
 
-            IActionResult result = await controller.Upload(Guid.NewGuid(), EntityType.Person, file);
+            IActionResult result = await controller.Upload(Guid.NewGuid(), file);
 
             BadRequestObjectResult badRequest = Assert.IsType<BadRequestObjectResult>(result);
             Assert.Equal("Invalid file signature.", badRequest.Value);
@@ -304,7 +303,7 @@ public class AttachmentsControllerTests
         public async Task UploadShouldSucceedWhenExtensionIsImageAndContentIsImage()
         {
             Mock<IAttachmentService> serviceMock = new();
-            serviceMock.Setup(s => s.UploadAttachmentAsync(It.IsAny<Guid>(), It.IsAny<EntityType>(), It.IsAny<byte[]>(), It.IsAny<string>()))
+            serviceMock.Setup(s => s.UploadAttachmentAsync(It.IsAny<Guid>(), It.IsAny<byte[]>(), It.IsAny<string>()))
                 .ReturnsAsync(AttachmentOperationResult.Ok(Guid.NewGuid()));
 
             AttachmentsController controller = GetController(serviceMock);
@@ -312,7 +311,7 @@ public class AttachmentsControllerTests
 
             IFormFile file = CreateMockFile("valid.png", "image/png", 100);
 
-            IActionResult result = await controller.Upload(Guid.NewGuid(), EntityType.Person, file);
+            IActionResult result = await controller.Upload(Guid.NewGuid(), file);
 
             LocalRedirectResult redirectResult = Assert.IsType<LocalRedirectResult>(result);
             Assert.Equal("/Contacts", redirectResult.Url);
@@ -322,7 +321,7 @@ public class AttachmentsControllerTests
         public async Task UploadShouldRejectWhenExtensionIsPdfButContentIsNot()
         {
             Mock<IAttachmentService> serviceMock = new();
-            serviceMock.Setup(s => s.UploadAttachmentAsync(It.IsAny<Guid>(), It.IsAny<EntityType>(), It.IsAny<byte[]>(), It.IsAny<string>()))
+            serviceMock.Setup(s => s.UploadAttachmentAsync(It.IsAny<Guid>(), It.IsAny<byte[]>(), It.IsAny<string>()))
                 .ReturnsAsync(AttachmentOperationResult.Failure("Invalid file signature."));
 
             AttachmentsController controller = GetController(serviceMock);
@@ -330,7 +329,7 @@ public class AttachmentsControllerTests
 
             IFormFile file = CreateMockFile("fake.pdf", "application/pdf", 100);
 
-            IActionResult result = await controller.Upload(Guid.NewGuid(), EntityType.Person, file);
+            IActionResult result = await controller.Upload(Guid.NewGuid(), file);
 
             BadRequestObjectResult badRequest = Assert.IsType<BadRequestObjectResult>(result);
             Assert.Equal("Invalid file signature.", badRequest.Value);
@@ -340,7 +339,7 @@ public class AttachmentsControllerTests
         public async Task UploadShouldRejectWhenFileExceedsSizeLimit()
         {
             Mock<IAttachmentService> serviceMock = new();
-            serviceMock.Setup(s => s.UploadAttachmentAsync(It.IsAny<Guid>(), It.IsAny<EntityType>(), It.IsAny<byte[]>(), It.IsAny<string>()))
+            serviceMock.Setup(s => s.UploadAttachmentAsync(It.IsAny<Guid>(), It.IsAny<byte[]>(), It.IsAny<string>()))
                 .ReturnsAsync(AttachmentOperationResult.Failure("File is too large."));
 
             AttachmentsController controller = GetController(serviceMock);
@@ -349,7 +348,7 @@ public class AttachmentsControllerTests
             long fileSize = 31 * 1024 * 1024;
             IFormFile file = CreateMockFile("largefile.pdf", "application/pdf", fileSize);
 
-            IActionResult result = await controller.Upload(Guid.NewGuid(), EntityType.Person, file);
+            IActionResult result = await controller.Upload(Guid.NewGuid(), file);
 
             BadRequestObjectResult badRequest = Assert.IsType<BadRequestObjectResult>(result);
             Assert.Equal("File is too large.", badRequest.Value);

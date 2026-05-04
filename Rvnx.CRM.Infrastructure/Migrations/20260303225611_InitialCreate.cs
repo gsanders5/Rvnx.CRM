@@ -8,7 +8,6 @@ namespace Rvnx.CRM.Infrastructure.Migrations;
 public partial class InitialCreate : Migration
 {
     /// <inheritdoc />
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("Performance", "CA1861:Avoid constant arrays as arguments", Justification = "This is a one-time run for DB migrations.")]
     protected override void Up(MigrationBuilder migrationBuilder)
     {
         migrationBuilder.CreateTable(

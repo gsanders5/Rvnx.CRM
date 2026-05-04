@@ -12,7 +12,7 @@ public interface IContactTaskService
     Task<OperationResult> UpdateAsync(Guid id, ContactTaskFormDto dto);
     Task<OperationResult> DeleteAsync(Guid id);
     Task<ContactTaskFormDto?> GetFormAsync(Guid id);
-    Task<ContactTaskFormDto?> GetFormForCreateAsync(Guid entityId);
+    Task<ContactTaskFormDto?> GetFormForCreateAsync(Guid contactId);
     Task<ContactTask?> GetByIdAsync(Guid id);
     Task<OperationResult> ToggleCompleteAsync(Guid id);
     Task<List<CalendarEventDto>> GetCalendarEventsAsync();

@@ -1,5 +1,4 @@
 using Rvnx.CRM.Core.DTOs.Base;
-using Rvnx.CRM.Core.Enumerations;
 using Rvnx.CRM.Core.Exceptions;
 using Rvnx.CRM.Core.Extensions;
 using Rvnx.CRM.Core.Interfaces;
@@ -8,10 +7,10 @@ using Rvnx.CRM.Core.Models.Base;
 
 namespace Rvnx.CRM.Infrastructure.Services;
 
-public class NoteService(IRepository repository, IEntityService entityService) : INoteService
+public class NoteService(IRepository repository, IContactLookupService contactLookupService) : INoteService
 {
     private readonly IRepository _repository = repository;
-    private readonly IEntityService _entityService = entityService;
+    private readonly IContactLookupService _contactLookupService = contactLookupService;
 
     public async Task<List<NoteDto>> GetByContactAsync(Guid contactId)
     {
@@ -23,12 +22,7 @@ public class NoteService(IRepository repository, IEntityService entityService) :
 
     public async Task<OperationResult> CreateAsync(NoteFormViewModel dto)
     {
-        if (dto.EntityType != EntityType.Person)
-        {
-            return OperationResult.Failure("Only Person entities are supported.");
-        }
-
-        if (!await _repository.IsValidContactAsync(dto.EntityId))
+        if (!await _repository.IsValidContactAsync(dto.ContactId))
         {
             return OperationResult.NotFound("Contact not found.");
         }
@@ -37,7 +31,7 @@ public class NoteService(IRepository repository, IEntityService entityService) :
         await _repository.AddAsync(note);
         await _repository.SaveChangesAsync();
 
-        return OperationResult.Ok(note.ContactId ?? Guid.Empty, EntityType.Person);
+        return OperationResult.Ok(note.ContactId ?? Guid.Empty);
     }
 
     public async Task<OperationResult> UpdateAsync(Guid id, NoteFormViewModel dto)
@@ -55,7 +49,7 @@ public class NoteService(IRepository repository, IEntityService entityService) :
             await _repository.UpdateAsync(existingNote);
             await _repository.SaveChangesAsync();
 
-            return OperationResult.Ok(existingNote.ContactId ?? Guid.Empty, EntityType.Person);
+            return OperationResult.Ok(existingNote.ContactId ?? Guid.Empty);
         }
         catch (EntityConcurrencyException)
         {
@@ -75,10 +69,10 @@ public class NoteService(IRepository repository, IEntityService entityService) :
 
         if (contactIds.Count > 0)
         {
-            Guid entityId = contactIds.FirstOrDefault() ?? Guid.Empty;
+            Guid contactId = contactIds.FirstOrDefault() ?? Guid.Empty;
             await _repository.DeleteAsync<Note>(n => n.Id == id);
             await _repository.SaveChangesAsync();
-            return OperationResult.Ok(entityId, EntityType.Person);
+            return OperationResult.Ok(contactId);
         }
         return OperationResult.NotFound("Note not found.");
     }
@@ -95,23 +89,19 @@ public class NoteService(IRepository repository, IEntityService entityService) :
                 Title = note.Title,
                 Value = note.Value,
                 IsFavorite = note.IsFavorite,
-                EntityId = note.ContactId ?? Guid.Empty,
-                EntityType = EntityType.Person,
-                EntityName = await _entityService.GetEntityNameAsync(EntityType.Person, note.ContactId ?? Guid.Empty)
+                ContactId = note.ContactId ?? Guid.Empty,
+                ContactName = await _contactLookupService.GetContactNameAsync(note.ContactId ?? Guid.Empty)
             };
     }
 
-    public async Task<NoteFormViewModel?> GetFormForCreateAsync(Guid entityId, EntityType entityType)
+    public async Task<NoteFormViewModel?> GetFormForCreateAsync(Guid contactId)
     {
-        return entityId == Guid.Empty || entityType != EntityType.Person
-            ? null
-            : !await _repository.IsValidContactAsync(entityId)
+        return contactId == Guid.Empty || !await _repository.IsValidContactAsync(contactId)
             ? null
             : new NoteFormViewModel
             {
-                EntityId = entityId,
-                EntityType = entityType,
-                EntityName = await _entityService.GetEntityNameAsync(entityType, entityId)
+                ContactId = contactId,
+                ContactName = await _contactLookupService.GetContactNameAsync(contactId)
             };
     }
 
@@ -133,6 +123,6 @@ public class NoteService(IRepository repository, IEntityService entityService) :
         await _repository.UpdateAsync(note);
         await _repository.SaveChangesAsync();
 
-        return OperationResult.Ok(note.ContactId ?? Guid.Empty, EntityType.Person);
+        return OperationResult.Ok(note.ContactId ?? Guid.Empty);
     }
 }

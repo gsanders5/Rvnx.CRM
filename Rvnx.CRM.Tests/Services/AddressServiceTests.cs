@@ -23,7 +23,7 @@ public class AddressServiceTests
     {
         // Arrange
         Guid contactId = Guid.NewGuid();
-        AddressFormDto dto = new() { EntityId = contactId, Line1 = "123 Main St", AddressType = "Home" };
+        AddressFormDto dto = new() { ContactId = contactId, Line1 = "123 Main St", AddressType = "Home" };
 
         _repositoryMock.Setup(r => r.CountAsync(
                 It.IsAny<System.Linq.Expressions.Expression<Func<Contact, bool>>>(),
@@ -45,7 +45,7 @@ public class AddressServiceTests
     {
         // Arrange
         Guid addressId = Guid.NewGuid();
-        AddressFormDto dto = new() { EntityId = Guid.NewGuid(), Line1 = "456 Elm St", AddressType = "Work" };
+        AddressFormDto dto = new() { ContactId = Guid.NewGuid(), Line1 = "456 Elm St", AddressType = "Work" };
 
         _repositoryMock.Setup(r => r.GetByIdAsync<Address>(addressId, It.IsAny<CancellationToken>()))
             .ReturnsAsync((Address?)null);

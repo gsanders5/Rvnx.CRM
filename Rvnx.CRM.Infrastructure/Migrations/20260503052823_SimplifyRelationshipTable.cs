@@ -44,7 +44,6 @@ namespace Rvnx.CRM.Infrastructure.Migrations
         }
 
         /// <inheritdoc />
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Performance", "CA1861:Avoid constant arrays as arguments", Justification = "This is a one-time run for DB migrations.")]
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropIndex(

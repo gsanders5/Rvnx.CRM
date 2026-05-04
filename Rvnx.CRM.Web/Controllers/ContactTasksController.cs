@@ -13,9 +13,9 @@ public class ContactTasksController(IContactTaskService contactTaskService, IRep
     private readonly IContactTaskService _contactTaskService = contactTaskService;
 
     [HttpGet]
-    public async Task<IActionResult> Create(Guid entityId)
+    public async Task<IActionResult> Create(Guid contactId)
     {
-        ContactTaskFormDto? dto = await _contactTaskService.GetFormForCreateAsync(entityId);
+        ContactTaskFormDto? dto = await _contactTaskService.GetFormForCreateAsync(contactId);
         return dto == null ? NotFound() : View(dto);
     }
 
@@ -73,7 +73,7 @@ public class ContactTasksController(IContactTaskService contactTaskService, IRep
     {
         OperationResult result = await _contactTaskService.DeleteAsync(id);
         return result.Success
-            ? RedirectToEntity(result.RedirectId, result.RedirectType)
+            ? RedirectToContact(result.RedirectId)
             : RedirectToAction("Index", "Contacts");
     }
 
@@ -82,7 +82,7 @@ public class ContactTasksController(IContactTaskService contactTaskService, IRep
     {
         OperationResult result = await _contactTaskService.ToggleCompleteAsync(id);
         return result.Success
-            ? RedirectToEntity(result.RedirectId, result.RedirectType)
+            ? RedirectToContact(result.RedirectId)
             : NotFound();
     }
 }

@@ -1,5 +1,4 @@
 using Rvnx.CRM.Core.Constants;
-using Rvnx.CRM.Core.Enumerations;
 using Rvnx.CRM.Core.Models.Contact;
 using Rvnx.CRM.Core.Services;
 using Rvnx.CRM.Infrastructure.Services;
@@ -36,7 +35,7 @@ public class FakeDataGeneratorTests
         List<Relationship> relationships = FakeDataGenerator.GenerateRelationships(contacts, relationshipCount);
 
         Assert.Equal(relationshipCount, relationships.Count);
-        HashSet<Guid> validTypes = RelationshipTypeService.GetByEntityType(EntityType.Person).Select(t => t.Id).ToHashSet();
+        HashSet<Guid> validTypes = RelationshipTypeService.GetAll().Select(t => t.Id).ToHashSet();
 
         foreach (Relationship rel in relationships)
         {

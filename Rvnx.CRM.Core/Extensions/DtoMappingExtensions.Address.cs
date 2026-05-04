@@ -17,7 +17,7 @@ public static partial class DtoMappingExtensions
             Zip = entity.Zip,
             Country = entity.Country,
             AddressType = entity.AddressType,
-            EntityId = entity.ContactId ?? Guid.Empty,
+            ContactId = entity.ContactId ?? Guid.Empty,
             CreatedDate = entity.CreatedDate,
             CreatedBy = entity.CreatedBy,
             LastChangedDate = entity.LastChangedDate,
@@ -37,7 +37,7 @@ public static partial class DtoMappingExtensions
             Zip = dto.Zip,
             Country = dto.Country,
             AddressType = dto.AddressType,
-            ContactId = dto.EntityId
+            ContactId = dto.ContactId
         };
     }
 

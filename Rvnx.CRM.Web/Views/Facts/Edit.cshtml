@@ -11,7 +11,7 @@
         <form asp-action="Edit">
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
             <input type="hidden" asp-for="Id"/>
-            <input type="hidden" asp-for="EntityId"/>
+            <input type="hidden" asp-for="ContactId"/>
 
             <div class="form-floating mb-3">
                 <input asp-for="Category" class="form-control" id="Category" placeholder=" "/>
@@ -25,7 +25,7 @@
             </div>
             <div class="d-grid gap-2 d-md-flex mt-4">
                 <button type="submit" class="crm-btn-primary"><i class="bi bi-save" aria-hidden="true"></i>Save</button>
-                <a asp-controller="Contacts" asp-action="Details" asp-route-id="@Model.EntityId" class="crm-btn-tertiary"><i class="bi bi-x-lg" aria-hidden="true"></i>Cancel</a>
+                <a asp-controller="Contacts" asp-action="Details" asp-route-id="@Model.ContactId" class="crm-btn-tertiary"><i class="bi bi-x-lg" aria-hidden="true"></i>Cancel</a>
             </div>
         </form>
     </div>

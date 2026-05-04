@@ -246,7 +246,7 @@ public class ContactReadService(IRepository repository, IFavoriteService favorit
         List<PetDto> petDtos = contact.PetContacts.Select(pc =>
         {
             PetDto petDto = pc.Pet.ToDto();
-            petDto.EntityId = contact.Id;
+            petDto.ContactId = contact.Id;
             return petDto;
         }).ToList();
 
@@ -333,7 +333,7 @@ public class ContactReadService(IRepository repository, IFavoriteService favorit
         List<ActivityDto> activityDtos = contact.ActivityContacts.Select(ac =>
         {
             ActivityDto activityDto = ac.Activity.ToDto();
-            activityDto.EntityId = contact.Id;
+            activityDto.ContactId = contact.Id;
             return activityDto;
         }).ToList();
 

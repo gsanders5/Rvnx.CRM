@@ -13,9 +13,9 @@ public class AddressesController(IAddressService addressService, IRepository rep
     private readonly IAddressService _addressService = addressService;
 
     [HttpGet]
-    public async Task<IActionResult> Create(Guid entityId)
+    public async Task<IActionResult> Create(Guid contactId)
     {
-        AddressFormDto? dto = await _addressService.GetFormForCreateAsync(entityId);
+        AddressFormDto? dto = await _addressService.GetFormForCreateAsync(contactId);
         return dto == null ? NotFound() : View(dto);
     }
 
@@ -73,7 +73,7 @@ public class AddressesController(IAddressService addressService, IRepository rep
     {
         OperationResult result = await _addressService.DeleteAsync(id);
         return result.Success
-            ? RedirectToEntity(result.RedirectId, result.RedirectType)
+            ? RedirectToContact(result.RedirectId)
             : RedirectToAction("Index", "Contacts");
     }
 }

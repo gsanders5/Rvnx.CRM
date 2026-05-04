@@ -447,7 +447,7 @@ public class DashboardServiceTests
         // Assert — deceased contact still appears as a node, but no upcoming event for them.
         Assert.Equal(2, result.GraphNodes.Count);
         Assert.Single(result.UpcomingEvents);
-        Assert.Equal(livingId, result.UpcomingEvents[0].RelatedEntityId);
+        Assert.Equal(livingId, result.UpcomingEvents[0].RelatedContactId);
     }
 
     [Fact]

@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Rvnx.CRM.Core.DTOs.Base;
-using Rvnx.CRM.Core.Enumerations;
+using Rvnx.CRM.Core.Extensions;
 using Rvnx.CRM.Core.Interfaces;
 using Rvnx.CRM.Core.Models;
 using Rvnx.CRM.Core.Models.Base;
@@ -8,22 +8,17 @@ using Rvnx.CRM.Web.Controllers.Base;
 
 namespace Rvnx.CRM.Web.Controllers;
 
-public class NotesController(INoteService noteService, IRepository repository, IEntityService entityService)
+public class NotesController(INoteService noteService, IRepository repository, IContactLookupService contactLookupService)
     : RepositoryController(repository)
 {
     private readonly INoteService _noteService = noteService;
-    private readonly IEntityService _entityService = entityService;
+    private readonly IContactLookupService _contactLookupService = contactLookupService;
 
     [HttpGet]
-    public async Task<IActionResult> Create(Guid entityId, EntityType entityType)
+    public async Task<IActionResult> Create(Guid contactId)
     {
-        NoteFormViewModel? viewModel = await _noteService.GetFormForCreateAsync(entityId, entityType);
-
-        return viewModel == null
-            ? entityType != EntityType.Person
-                ? BadRequest("Only Person entities are supported.")
-                : NotFound()
-            : View(viewModel);
+        NoteFormViewModel? viewModel = await _noteService.GetFormForCreateAsync(contactId);
+        return viewModel == null ? NotFound() : View(viewModel);
     }
 
     [HttpPost]
@@ -33,14 +28,13 @@ public class NotesController(INoteService noteService, IRepository repository, I
         {
             OperationResult result = await _noteService.CreateAsync(viewModel);
             return result.Success
-                ? RedirectToEntity(result.RedirectId, result.RedirectType)
+                ? RedirectToContact(result.RedirectId)
                 : result.IsNotFound ? NotFound() : BadRequest(result.ErrorMessage);
         }
 
-        if (viewModel.EntityId != Guid.Empty)
+        if (viewModel.ContactId != Guid.Empty)
         {
-            viewModel.EntityName =
-                await _entityService.GetEntityNameAsync(viewModel.EntityType, viewModel.EntityId);
+            viewModel.ContactName = await _contactLookupService.GetContactNameAsync(viewModel.ContactId);
         }
 
         return View(viewModel);
@@ -75,10 +69,9 @@ public class NotesController(INoteService noteService, IRepository repository, I
             }
         }
 
-        if (viewModel.EntityId != Guid.Empty)
+        if (viewModel.ContactId != Guid.Empty)
         {
-            viewModel.EntityName =
-                await _entityService.GetEntityNameAsync(viewModel.EntityType, viewModel.EntityId);
+            viewModel.ContactName = await _contactLookupService.GetContactNameAsync(viewModel.ContactId);
         }
 
         return View(viewModel);
@@ -98,18 +91,8 @@ public class NotesController(INoteService noteService, IRepository repository, I
             return NotFound();
         }
 
-        NoteDeleteViewModel viewModel = new()
-        {
-            Id = note.Id,
-            Title = note.Title,
-            Value = note.Value,
-            EntityId = note.ContactId ?? Guid.Empty,
-            EntityType = EntityType.Person,
-            CreatedDate = note.CreatedDate,
-            EntityName = await _entityService.GetEntityNameAsync(EntityType.Person,
-                note.ContactId ?? Guid.Empty)
-        };
-        return View(viewModel);
+        string contactName = await _contactLookupService.GetContactNameAsync(note.ContactId ?? Guid.Empty);
+        return View(new NoteDeleteViewModel(note.ToDto(), contactName));
     }
 
     [HttpPost, ActionName("Delete")]
@@ -117,7 +100,7 @@ public class NotesController(INoteService noteService, IRepository repository, I
     {
         OperationResult result = await _noteService.DeleteAsync(id);
         return result.Success
-            ? RedirectToEntity(result.RedirectId, result.RedirectType)
+            ? RedirectToContact(result.RedirectId)
             : RedirectToAction("Index", "Home");
     }
 

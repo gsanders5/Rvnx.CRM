@@ -110,8 +110,7 @@ public class DtoMappingExtensionsTests
             Assert.Equal("test-document.pdf", dto.FileName);
             Assert.Equal("application/pdf", dto.ContentType);
             Assert.Equal("Document", dto.AttachmentType);
-            Assert.Equal(contactId, dto.EntityId);
-            Assert.Equal(EntityType.Person, dto.EntityType);
+            Assert.Equal(contactId, dto.ContactId);
         }
 
         [Fact]
@@ -145,7 +144,7 @@ public class DtoMappingExtensionsTests
 
             AttachmentDto dto = attachment.ToDto();
 
-            Assert.Equal(Guid.Empty, dto.EntityId);
+            Assert.Equal(Guid.Empty, dto.ContactId);
         }
 
         [Fact]
@@ -162,7 +161,6 @@ public class DtoMappingExtensionsTests
 
             AttachmentDto dto = attachment.ToDto();
 
-            Assert.Equal(EntityType.Person, dto.EntityType);
         }
     }
     public class ContactDetailDtoMappingTests
@@ -311,8 +309,7 @@ public class DtoMappingExtensionsTests
             Assert.Equal(entity.Type, dto.Type);
             Assert.Equal(entity.Value, dto.Value);
             Assert.Equal(entity.Label, dto.Label);
-            Assert.Equal(entity.ContactId.Value, dto.EntityId);
-            Assert.Equal(EntityType.Person, dto.EntityType);
+            Assert.Equal(entity.ContactId.Value, dto.ContactId);
             Assert.Equal(entity.CreatedDate, dto.CreatedDate);
         }
 
@@ -335,8 +332,7 @@ public class DtoMappingExtensionsTests
             Assert.Equal(entity.Type, dto.Type);
             Assert.Equal(entity.Value, dto.Value);
             Assert.Equal(entity.Label, dto.Label);
-            Assert.Equal(Guid.Empty, dto.EntityId);
-            Assert.Equal(EntityType.Person, dto.EntityType);
+            Assert.Equal(Guid.Empty, dto.ContactId);
             Assert.Equal(entity.CreatedDate, dto.CreatedDate);
         }
 
@@ -348,7 +344,7 @@ public class DtoMappingExtensionsTests
                 Type = ContactMethodType.Phone,
                 Value = "+1234567890",
                 Label = "Mobile",
-                EntityId = Guid.NewGuid()
+                ContactId = Guid.NewGuid()
             };
 
             ContactMethod entity = dto.ToEntity();
@@ -357,7 +353,7 @@ public class DtoMappingExtensionsTests
             Assert.Equal(dto.Type, entity.Type);
             Assert.Equal(dto.Value, entity.Value);
             Assert.Equal(dto.Label, entity.Label);
-            Assert.Equal(dto.EntityId, entity.ContactId);
+            Assert.Equal(dto.ContactId, entity.ContactId);
         }
 
         [Fact]
@@ -378,8 +374,7 @@ public class DtoMappingExtensionsTests
                 Type = ContactMethodType.Website,
                 Value = "https://example.com",
                 Label = "New Label",
-                // EntityId in DTO might be different but should be ignored by UpdateEntity
-                EntityId = Guid.NewGuid()
+                ContactId = Guid.NewGuid()
             };
 
             entity.UpdateEntity(dto);
@@ -462,8 +457,7 @@ public class DtoMappingExtensionsTests
             Assert.Equal(fact.Id, dto.Id);
             Assert.Equal(fact.Category, dto.Category);
             Assert.Equal(fact.Value, dto.Value);
-            Assert.Equal(fact.ContactId.Value, dto.EntityId);
-            Assert.Equal(EntityType.Person, dto.EntityType);
+            Assert.Equal(fact.ContactId.Value, dto.ContactId);
             Assert.Equal(fact.CreatedDate, dto.CreatedDate);
         }
 
@@ -481,7 +475,7 @@ public class DtoMappingExtensionsTests
 
             FactDto dto = fact.ToDto();
 
-            Assert.Equal(Guid.Empty, dto.EntityId);
+            Assert.Equal(Guid.Empty, dto.ContactId);
         }
 
         [Fact]
@@ -491,7 +485,7 @@ public class DtoMappingExtensionsTests
             {
                 Category = "New Category",
                 Value = "New Value",
-                EntityId = Guid.NewGuid()
+                ContactId = Guid.NewGuid()
             };
 
             Fact entity = formDto.ToEntity();
@@ -499,7 +493,7 @@ public class DtoMappingExtensionsTests
             Assert.NotEqual(Guid.Empty, entity.Id);
             Assert.Equal(formDto.Category, entity.Category);
             Assert.Equal(formDto.Value, entity.Value);
-            Assert.Equal(formDto.EntityId, entity.ContactId);
+            Assert.Equal(formDto.ContactId, entity.ContactId);
         }
 
         [Fact]
@@ -518,8 +512,7 @@ public class DtoMappingExtensionsTests
             {
                 Category = "Updated Category",
                 Value = "Updated Value",
-                // EntityId in DTO might be different but should be ignored by UpdateEntity
-                EntityId = Guid.NewGuid()
+                ContactId = Guid.NewGuid()
             };
 
             fact.UpdateEntity(formDto);
@@ -549,8 +542,7 @@ public class DtoMappingExtensionsTests
             Assert.Equal(note.Id, dto.Id);
             Assert.Equal(note.Title, dto.Title);
             Assert.Equal(note.Value, dto.Value);
-            Assert.Equal(note.ContactId.Value, dto.EntityId);
-            Assert.Equal(EntityType.Person, dto.EntityType);
+            Assert.Equal(note.ContactId.Value, dto.ContactId);
             Assert.Equal(note.CreatedDate, dto.CreatedDate);
         }
 
@@ -568,7 +560,7 @@ public class DtoMappingExtensionsTests
 
             NoteDto dto = note.ToDto();
 
-            Assert.Equal(Guid.Empty, dto.EntityId);
+            Assert.Equal(Guid.Empty, dto.ContactId);
         }
 
         [Fact]
@@ -578,7 +570,7 @@ public class DtoMappingExtensionsTests
             {
                 Title = "New Title",
                 Value = "New Value",
-                EntityId = Guid.NewGuid()
+                ContactId = Guid.NewGuid()
             };
 
             Note entity = formDto.ToEntity();
@@ -586,7 +578,7 @@ public class DtoMappingExtensionsTests
             Assert.NotEqual(Guid.Empty, entity.Id);
             Assert.Equal(formDto.Title, entity.Title);
             Assert.Equal(formDto.Value, entity.Value);
-            Assert.Equal(formDto.EntityId, entity.ContactId);
+            Assert.Equal(formDto.ContactId, entity.ContactId);
         }
 
         [Fact]
@@ -605,8 +597,7 @@ public class DtoMappingExtensionsTests
             {
                 Title = "Updated Title",
                 Value = "Updated Value",
-                // EntityId in DTO might be different but should be ignored by UpdateEntity
-                EntityId = Guid.NewGuid()
+                ContactId = Guid.NewGuid()
             };
 
             note.UpdateEntity(formDto);
@@ -647,7 +638,7 @@ public class DtoMappingExtensionsTests
             Assert.Equal(entity.Breed, dto.Breed);
             Assert.Equal(entity.Birthday, dto.Birthday);
             Assert.Equal(entity.Notes, dto.Notes);
-            Assert.Equal(contactId1, dto.EntityId);
+            Assert.Equal(contactId1, dto.ContactId);
             Assert.Equal(2, dto.ContactIds.Count);
             Assert.Contains(contactId1, dto.ContactIds);
             Assert.Contains(contactId2, dto.ContactIds);
@@ -666,7 +657,7 @@ public class DtoMappingExtensionsTests
             PetDto dto = entity.ToDto();
 
             Assert.Empty(dto.ContactIds);
-            Assert.Equal(Guid.Empty, dto.EntityId);
+            Assert.Equal(Guid.Empty, dto.ContactId);
         }
 
         [Fact]
@@ -679,7 +670,7 @@ public class DtoMappingExtensionsTests
                 Breed = "Siamese",
                 Birthday = new DateOnly(2019, 5, 15),
                 Notes = "Hates water",
-                EntityId = Guid.NewGuid(),
+                ContactId = Guid.NewGuid(),
                 ContactIds = [Guid.NewGuid(), Guid.NewGuid()]
             };
 
@@ -713,7 +704,7 @@ public class DtoMappingExtensionsTests
                 Breed = "New Breed",
                 Birthday = DateOnly.FromDateTime(DateTime.UtcNow),
                 Notes = "New Notes",
-                EntityId = Guid.NewGuid()
+                ContactId = Guid.NewGuid()
             };
 
             entity.UpdateEntity(dto);
@@ -748,8 +739,7 @@ public class DtoMappingExtensionsTests
             Assert.Equal(entity.Title, dto.Title);
             Assert.Equal(entity.EventDate, dto.EventDate);
             Assert.Equal(entity.Description, dto.Description);
-            Assert.Equal(entity.ContactId, dto.EntityId);
-            Assert.Equal(EntityType.Person, dto.EntityType);
+            Assert.Equal(entity.ContactId, dto.ContactId);
             Assert.Equal(entity.RecurrenceType, dto.RecurrenceType);
             Assert.Equal(entity.CustomIntervalDays, dto.CustomIntervalDays);
             Assert.Equal(entity.IsActive, dto.IsActive);
@@ -780,7 +770,7 @@ public class DtoMappingExtensionsTests
 
             SignificantDateDto dto = entity.ToDto();
 
-            Assert.Equal(Guid.Empty, dto.EntityId);
+            Assert.Equal(Guid.Empty, dto.ContactId);
         }
 
         [Fact]
@@ -793,7 +783,6 @@ public class DtoMappingExtensionsTests
 
             SignificantDateDto dto = entity.ToDto();
 
-            Assert.Equal(EntityType.Person, dto.EntityType);
         }
 
         [Fact]

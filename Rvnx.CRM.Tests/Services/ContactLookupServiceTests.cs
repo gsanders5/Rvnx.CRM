@@ -1,20 +1,19 @@
 using Moq;
-using Rvnx.CRM.Core.Enumerations;
 using Rvnx.CRM.Core.Interfaces;
 using Rvnx.CRM.Core.Models.Contact;
 using Rvnx.CRM.Core.Services;
 
 namespace Rvnx.CRM.Tests.Services;
 
-public class EntityServiceTests
+public class ContactLookupServiceTests
 {
     private readonly Mock<IRepository> _repositoryMock;
-    private readonly EntityService _service;
+    private readonly ContactLookupService _service;
 
-    public EntityServiceTests()
+    public ContactLookupServiceTests()
     {
         _repositoryMock = new Mock<IRepository>();
-        _service = new EntityService(_repositoryMock.Object);
+        _service = new ContactLookupService(_repositoryMock.Object);
     }
 
     [Fact]
@@ -23,26 +22,14 @@ public class EntityServiceTests
         Guid id = Guid.NewGuid();
         _repositoryMock.Setup(r => r.ExistsAsync<Contact>(id, It.IsAny<CancellationToken>())).ReturnsAsync(true);
 
-        bool result = await _service.ExistsAsync(EntityType.Person, id);
+        bool result = await _service.ExistsAsync(id);
 
         Assert.True(result);
         _repositoryMock.Verify(r => r.ExistsAsync<Contact>(id, It.IsAny<CancellationToken>()), Times.Once);
     }
 
-    [Theory]
-    [InlineData((EntityType)99)]
-    public async Task ExistsAsyncUnsupportedTypeReturnsFalse(EntityType entityType)
-    {
-        Guid id = Guid.NewGuid();
-
-        bool result = await _service.ExistsAsync(entityType, id);
-
-        Assert.False(result);
-        Assert.Empty(_repositoryMock.Invocations);
-    }
-
     [Fact]
-    public async Task GetEntityNameAsyncPersonReturnsFullName()
+    public async Task GetContactNameAsyncPersonReturnsFullName()
     {
         Guid id = Guid.NewGuid();
         _repositoryMock.Setup(r => r.ListProjectedAsync(
@@ -51,13 +38,13 @@ public class EntityServiceTests
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(["John Doe"]);
 
-        string result = await _service.GetEntityNameAsync(EntityType.Person, id);
+        string result = await _service.GetContactNameAsync(id);
 
         Assert.Equal("John Doe", result);
     }
 
     [Fact]
-    public async Task GetEntityNameAsyncPersonWhenNotFoundReturnsUnknownPerson()
+    public async Task GetContactNameAsyncPersonWhenNotFoundReturnsUnknownPerson()
     {
         Guid id = Guid.NewGuid();
         _repositoryMock.Setup(r => r.ListProjectedAsync(
@@ -66,7 +53,7 @@ public class EntityServiceTests
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync([]);
 
-        string result = await _service.GetEntityNameAsync(EntityType.Person, id);
+        string result = await _service.GetContactNameAsync(id);
 
         Assert.Equal("Unknown Person", result);
     }
@@ -81,7 +68,7 @@ public class EntityServiceTests
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync([true]);
 
-        bool result = await _service.IsPartialAsync(EntityType.Person, id);
+        bool result = await _service.IsPartialAsync(id);
 
         Assert.True(result);
     }
@@ -96,7 +83,7 @@ public class EntityServiceTests
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync([]);
 
-        bool result = await _service.IsPartialAsync(EntityType.Person, id);
+        bool result = await _service.IsPartialAsync(id);
 
         Assert.False(result);
     }
@@ -111,18 +98,9 @@ public class EntityServiceTests
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync([false]);
 
-        bool result = await _service.IsPartialAsync(EntityType.Person, id);
+        bool result = await _service.IsPartialAsync(id);
 
         Assert.False(result);
     }
 
-    [Fact]
-    public async Task IsPartialAsyncCompanyReturnsFalse()
-    {
-        Guid id = Guid.NewGuid();
-
-        bool result = await _service.IsPartialAsync((EntityType)99, id);
-
-        Assert.False(result);
-    }
 }

@@ -1,8 +1,6 @@
-using Rvnx.CRM.Core.Enumerations;
-
 namespace Rvnx.CRM.Core.Models.Contact;
 
-public record RelationshipTypeDefinition(Guid Id, string Name, string OppositeName, string Category, EntityType EntityType,
+public record RelationshipTypeDefinition(Guid Id, string Name, string OppositeName, string Category,
     string? NameMale = null, string? NameFemale = null,
     string? OppositeNameMale = null, string? OppositeNameFemale = null)
 {

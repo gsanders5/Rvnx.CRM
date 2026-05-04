@@ -168,14 +168,7 @@ public class ReminderNotificationService(
         string senderName = smtpSettings["SenderName"] ?? "Rvnx CRM";
 
         Core.Models.Contact.Contact? contact = offset.SignificantDate?.Contact;
-        string contactName = contact != null
-            ? $"{contact.FirstName} {contact.LastName}".Trim()
-            : "Unknown Contact";
-
-        if (string.IsNullOrWhiteSpace(contactName))
-        {
-            contactName = "Unknown Contact";
-        }
+        string contactName = contact?.FullName is { Length: > 0 } name ? name : "Unknown Contact";
 
         string title = offset.SignificantDate?.Title ?? "Significant Date";
         string dateFormatted = occurrenceDate.ToString("D", CultureInfo.CurrentCulture);

@@ -32,7 +32,7 @@ public class SignificantDatesController(ISignificantDateService significantDateS
             ? NotFound()
             : View(new Rvnx.CRM.Core.DTOs.Dates.CreateSignificantDateRequest
             {
-                EntityId = contactId,
+                ContactId = contactId,
                 EventDate = DateOnly.FromDateTime(DateTime.Today),
                 RecurrenceType = RecurrenceType.Annual,
                 ReminderOffsetDays = [0, 7, 30]
@@ -46,7 +46,7 @@ public class SignificantDatesController(ISignificantDateService significantDateS
         {
             SignificantDateDto sdDto = new()
             {
-                EntityId = dto.EntityId,
+                ContactId = dto.ContactId,
                 Title = dto.Title,
                 Description = dto.Description,
                 EventDate = dto.EventDate,
@@ -60,7 +60,7 @@ public class SignificantDatesController(ISignificantDateService significantDateS
             OperationResult result = await _significantDateService.CreateAsync(sdDto);
             if (result.Success)
             {
-                return RedirectToAction(nameof(Index), new { contactId = dto.EntityId });
+                return RedirectToAction(nameof(Index), new { contactId = dto.ContactId });
             }
 
             if (result.IsConflict)
@@ -97,7 +97,7 @@ public class SignificantDatesController(ISignificantDateService significantDateS
         return View(new Rvnx.CRM.Core.DTOs.Dates.UpdateSignificantDateRequest
         {
             Id = dto.Id,
-            EntityId = dto.EntityId,
+            ContactId = dto.ContactId,
             Title = dto.Title,
             Description = dto.Description,
             EventDate = dto.EventDate,
@@ -120,7 +120,7 @@ public class SignificantDatesController(ISignificantDateService significantDateS
             SignificantDateDto sdDto = new()
             {
                 Id = dto.Id,
-                EntityId = dto.EntityId,
+                ContactId = dto.ContactId,
                 Title = dto.Title,
                 Description = dto.Description,
                 EventDate = dto.EventDate,
@@ -132,7 +132,7 @@ public class SignificantDatesController(ISignificantDateService significantDateS
             OperationResult result = await _significantDateService.UpdateAsync(id, sdDto);
             if (result.Success)
             {
-                return RedirectToAction(nameof(Index), new { contactId = dto.EntityId });
+                return RedirectToAction(nameof(Index), new { contactId = dto.ContactId });
             }
 
             if (result.IsConflict)

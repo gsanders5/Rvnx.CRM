@@ -162,7 +162,7 @@
     <div class="crm-card">
         <div class="crm-card-header">
             <h5 class="card-title mb-0"><i class="bi bi-person-badge" aria-hidden="true"></i> Contact Info</h5>
-            <a asp-controller="ContactMethods" asp-action="Create" asp-route-entityId="@Model.Id" asp-route-entityType="Person" class="crm-btn-secondary btn-sm" aria-label="Add Contact Info"><i class="bi bi-plus-lg" aria-hidden="true"></i> Add</a>
+            <a asp-controller="ContactMethods" asp-action="Create" asp-route-contactId="@Model.Id" class="crm-btn-secondary btn-sm" aria-label="Add Contact Info"><i class="bi bi-plus-lg" aria-hidden="true"></i> Add</a>
         </div>
         <div class="crm-card-body">
             @if (Model.ContactMethods != null && Model.ContactMethods.Any())
@@ -222,7 +222,7 @@
             <div class="mt-3 pt-3" style="border-top: 1px solid var(--crm-border-subtle);">
                 <div class="d-flex justify-content-between align-items-center mb-2">
                     <h6 class="crm-section-label mb-0"><i class="bi bi-geo-alt me-1" aria-hidden="true"></i> ADDRESSES</h6>
-                    <a asp-controller="Addresses" asp-action="Create" asp-route-entityId="@Model.Id" class="crm-btn-secondary btn-sm" style="padding: 0.125rem 0.5rem;" aria-label="Add Address"><i class="bi bi-plus-lg" aria-hidden="true"></i></a>
+                    <a asp-controller="Addresses" asp-action="Create" asp-route-contactId="@Model.Id" class="crm-btn-secondary btn-sm" style="padding: 0.125rem 0.5rem;" aria-label="Add Address"><i class="bi bi-plus-lg" aria-hidden="true"></i></a>
                 </div>
                 @if (Model.Addresses != null && Model.Addresses.Any())
                 {
@@ -291,7 +291,7 @@
     <div class="crm-card">
         <div class="crm-card-header">
             <h5 class="card-title mb-0"><i class="bi bi-lightbulb" aria-hidden="true"></i> Quick Facts</h5>
-            <a asp-controller="Facts" asp-action="Create" asp-route-entityId="@Model.Id" asp-route-entityType="Person" class="crm-btn-secondary btn-sm" aria-label="Add Quick Fact"><i class="bi bi-plus-lg" aria-hidden="true"></i> Add</a>
+            <a asp-controller="Facts" asp-action="Create" asp-route-contactId="@Model.Id" class="crm-btn-secondary btn-sm" aria-label="Add Quick Fact"><i class="bi bi-plus-lg" aria-hidden="true"></i> Add</a>
         </div>
         <div class="crm-card-body">
             @if (Model.Facts != null && Model.Facts.Any())
@@ -351,10 +351,10 @@
                 var allRels = (Model.Relationships ?? [])
                     .Select(r => new
                     {
-                        Name = r.RelatedEntityName,
-                        LinkId = r.RelatedEntityId,
-                        IsPartial = r.IsRelatedEntityPartial,
-                        IsDeceased = r.IsRelatedEntityDeceased,
+                        Name = r.RelatedContactName,
+                        LinkId = r.RelatedContactId,
+                        IsPartial = r.IsRelatedContactPartial,
+                        IsDeceased = r.IsRelatedContactDeceased,
                         Badge = r.RelationshipTypeOppositeName,
                         Category = r.RelationshipTypeCategory,
                         r.Id
@@ -362,10 +362,10 @@
                     .Concat((Model.RelatedTo ?? [])
                         .Select(r => new
                         {
-                            Name = r.EntityName,
-                            LinkId = r.EntityId,
-                            IsPartial = r.IsEntityPartial,
-                            IsDeceased = r.IsEntityDeceased,
+                            Name = r.ContactName,
+                            LinkId = r.ContactId,
+                            IsPartial = r.IsContactPartial,
+                            IsDeceased = r.IsContactDeceased,
                             Badge = r.RelationshipTypeName,
                             Category = r.RelationshipTypeCategory,
                             r.Id
@@ -458,7 +458,7 @@
                 </div>
             }
             <div class="text-end mt-2">
-                <a asp-controller="Relationships" asp-action="Create" asp-route-entityId="@Model.Id" asp-route-entityType="Person" class="crm-btn-secondary btn-sm" aria-label="Add Relationship"><i class="bi bi-plus-lg" aria-hidden="true"></i> Add Relationship</a>
+                <a asp-controller="Relationships" asp-action="Create" asp-route-contactId="@Model.Id" class="crm-btn-secondary btn-sm" aria-label="Add Relationship"><i class="bi bi-plus-lg" aria-hidden="true"></i> Add Relationship</a>
             </div>
         </div>
     </div>
@@ -470,7 +470,7 @@
             @* New pet ownership is forward-looking — hide the entry point for a deceased contact. *@
             @if (!Model.IsDeceased)
             {
-                <a asp-controller="Pets" asp-action="Create" asp-route-entityId="@Model.Id" class="crm-btn-secondary btn-sm" aria-label="Add Pet"><i class="bi bi-plus-lg" aria-hidden="true"></i> Add</a>
+                <a asp-controller="Pets" asp-action="Create" asp-route-contactId="@Model.Id" class="crm-btn-secondary btn-sm" aria-label="Add Pet"><i class="bi bi-plus-lg" aria-hidden="true"></i> Add</a>
             }
         </div>
         <div class="crm-card-body">
@@ -613,7 +613,7 @@
     <div class="crm-card">
         <div class="crm-card-header">
             <h5 class="card-title mb-0"><i class="bi bi-journal-text" aria-hidden="true"></i> Notes</h5>
-            <a asp-controller="Notes" asp-action="Create" asp-route-entityId="@Model.Id" asp-route-entityType="Person" class="crm-btn-secondary btn-sm" aria-label="Add Note"><i class="bi bi-plus-lg" aria-hidden="true"></i> Add</a>
+            <a asp-controller="Notes" asp-action="Create" asp-route-contactId="@Model.Id" class="crm-btn-secondary btn-sm" aria-label="Add Note"><i class="bi bi-plus-lg" aria-hidden="true"></i> Add</a>
         </div>
         <div class="crm-card-body">
             @if (Model.Notes != null && Model.Notes.Any())
@@ -680,7 +680,7 @@
                             </button>
                         </form>
                     }
-                    <a asp-controller="Activities" asp-action="Create" asp-route-entityId="@Model.Id" class="crm-btn-secondary btn-sm" aria-label="Add Activity">
+                    <a asp-controller="Activities" asp-action="Create" asp-route-contactId="@Model.Id" class="crm-btn-secondary btn-sm" aria-label="Add Activity">
                         <i class="bi bi-plus-lg" aria-hidden="true"></i> Add
                     </a>
                 </div>
@@ -778,7 +778,7 @@
             @* Tasks are forward-looking — hide the entry point for a deceased contact. *@
             @if (!Model.IsDeceased)
             {
-                <a asp-controller="ContactTasks" asp-action="Create" asp-route-entityId="@Model.Id" class="crm-btn-secondary btn-sm" aria-label="Add Task">
+                <a asp-controller="ContactTasks" asp-action="Create" asp-route-contactId="@Model.Id" class="crm-btn-secondary btn-sm" aria-label="Add Task">
                     <i class="bi bi-plus-lg" aria-hidden="true"></i> Add
                 </a>
             }
@@ -856,8 +856,7 @@
         <div class="crm-card-body">
             <div class="collapse mb-3" id="uploadAttachmentForm" style="transition: height var(--crm-transition-expand) ease;">
                 <form asp-controller="Attachments" asp-action="Upload" asp-route-returnUrl="@(Context.Request.Path + Context.Request.QueryString)" method="post" enctype="multipart/form-data" class="p-3" style="background: var(--crm-surface-secondary); border-radius: var(--crm-radius-sm); border: 1px solid var(--crm-border-subtle);">
-                    <input type="hidden" name="entityId" value="@Model.Id"/>
-                    <input type="hidden" name="entityType" value="Person"/>
+                    <input type="hidden" name="contactId" value="@Model.Id"/>
                     <div class="mb-2">
                         <label for="file" class="form-label crm-meta">Select File</label>
                         <input type="file" name="file" class="form-control form-control-sm" required/>

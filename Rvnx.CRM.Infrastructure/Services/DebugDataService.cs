@@ -1,4 +1,3 @@
-using Rvnx.CRM.Core.Enumerations;
 using Rvnx.CRM.Core.Interfaces;
 using Rvnx.CRM.Core.Models.Base;
 using Rvnx.CRM.Core.Models.Contact;

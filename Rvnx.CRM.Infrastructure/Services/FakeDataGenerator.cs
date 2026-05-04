@@ -134,7 +134,7 @@ public class FakeDataGenerator
     public static List<Relationship> GenerateRelationships(List<Contact> contacts, int count)
     {
         List<Relationship> relationships = [];
-        List<RelationshipTypeDefinition> personTypes = RelationshipTypeService.GetByEntityType(EntityType.Person);
+        IReadOnlyList<RelationshipTypeDefinition> personTypes = RelationshipTypeService.GetAll();
 
         if (contacts.Count < 2)
         {

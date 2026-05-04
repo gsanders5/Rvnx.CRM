@@ -2,7 +2,7 @@ using Rvnx.CRM.Core.DTOs.Base;
 
 namespace Rvnx.CRM.Core.DTOs.Dates;
 
-public class ReminderOffsetDto : BaseDto
+public record class ReminderOffsetDto : BaseDto
 {
     public int DaysBeforeEvent { get; set; }
     public bool IsActive { get; set; }

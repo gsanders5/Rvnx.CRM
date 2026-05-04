@@ -6,7 +6,7 @@ public class ContactTaskFormDto
 {
     public Guid? Id { get; set; }
 
-    public Guid EntityId { get; set; }
+    public Guid ContactId { get; set; }
 
     [Required]
     [MaxLength(200)]

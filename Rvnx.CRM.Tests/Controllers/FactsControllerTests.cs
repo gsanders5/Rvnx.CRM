@@ -4,7 +4,6 @@ using Microsoft.AspNetCore.Mvc.ViewFeatures;
 using Microsoft.EntityFrameworkCore;
 using Moq;
 using Rvnx.CRM.Core.DTOs.Contact;
-using Rvnx.CRM.Core.Enumerations;
 using Rvnx.CRM.Core.Interfaces;
 using Rvnx.CRM.Core.Models.Contact;
 using Rvnx.CRM.Infrastructure.Data;
@@ -48,11 +47,11 @@ public class FactsControllerTests : IDisposable
         _context.Contacts!.Add(new Contact { Id = entityId, FirstName = "Parent" });
         await _context.SaveChangesAsync();
 
-        IActionResult result = await _controller.Create(entityId, EntityType.Person);
+        IActionResult result = await _controller.Create(entityId);
 
         ViewResult viewResult = Assert.IsType<ViewResult>(result);
         FactFormDto model = Assert.IsType<FactFormDto>(viewResult.Model);
-        Assert.Equal(entityId, model.EntityId);
+        Assert.Equal(entityId, model.ContactId);
     }
 
     [Fact]
@@ -64,7 +63,7 @@ public class FactsControllerTests : IDisposable
 
         FactFormDto dto = new()
         {
-            EntityId = entityId,
+            ContactId = entityId,
             Category = "Hobby",
             Value = "Reading"
         };
@@ -100,7 +99,7 @@ public class FactsControllerTests : IDisposable
         FactFormDto dto = new()
         {
             Id = factId,
-            EntityId = entityId,
+            ContactId = entityId,
             Category = "New",
             Value = "NewVal"
         };
