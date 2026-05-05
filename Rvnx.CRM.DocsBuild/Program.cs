@@ -154,6 +154,11 @@ internal static partial class Program
         string url = urlBase + directive.Path;
         await page.GotoAsync(url, new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
 
+        if (!string.IsNullOrEmpty(directive.Click))
+        {
+            await page.Locator(directive.Click).ClickAsync();
+        }
+
         if (directive.WaitMs > 0)
         {
             await page.WaitForTimeoutAsync(directive.WaitMs);
@@ -388,10 +393,11 @@ internal static partial class Program
 
             int waitMs = int.TryParse(kv.GetValueOrDefault("wait"), out int w) ? w : 0;
             string? selector = kv.GetValueOrDefault("selector");
+            string? click = kv.GetValueOrDefault("click");
             int width = int.TryParse(kv.GetValueOrDefault("width"), out int wd) ? wd : 1440;
             int height = int.TryParse(kv.GetValueOrDefault("height"), out int ht) ? ht : 900;
 
-            result.Add(new ScreenshotDirective(target, path, mode, theme, waitMs, output, selector, width, height));
+            result.Add(new ScreenshotDirective(target, path, mode, theme, waitMs, output, selector, click, width, height));
         }
 
         return result;
@@ -467,6 +473,7 @@ internal static partial class Program
         int WaitMs,
         string OutputPath,
         string? Selector,
+        string? Click,
         int Width,
         int Height);
 }

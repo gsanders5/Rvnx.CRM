@@ -1,7 +1,9 @@
+using System.Globalization;
 using Microsoft.AspNetCore.Mvc;
 using Rvnx.CRM.Core.DTOs.Calendar;
 using Rvnx.CRM.Core.Interfaces;
 using Rvnx.CRM.Web.Controllers.Base;
+using Rvnx.CRM.Web.ViewModels.Calendar;
 
 namespace Rvnx.CRM.Web.Controllers;
 
@@ -11,9 +13,12 @@ public class CalendarController(ISignificantDateService significantDateService, 
     private readonly IContactTaskService _contactTaskService = contactTaskService;
 
     [HttpGet]
-    public IActionResult Index()
+    public IActionResult Index(DateOnly? date)
     {
-        return View();
+        return View(new CalendarIndexViewModel
+        {
+            InitialDate = (date ?? DateOnly.FromDateTime(DateTime.Today)).ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)
+        });
     }
 
     [HttpGet]

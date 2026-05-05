@@ -10,8 +10,8 @@ A self-hosted personal CRM — keep track of the people in your life.
 
 ### Contacts
 
-<!-- SCREENSHOT: target=web path=/Contacts mode=viewport theme=light wait=1500 out=.demo/screenshots/contacts.png -->
-<!-- SCREENSHOT: target=web path=/Contacts mode=viewport theme=dark wait=1500 out=.demo/screenshots/contacts-dark.png -->
+<!-- SCREENSHOT: target=web path=/Contacts mode=viewport theme=light click=#select-all wait=1500 out=.demo/screenshots/contacts.png -->
+<!-- SCREENSHOT: target=web path=/Contacts mode=viewport theme=dark click=#select-all wait=1500 out=.demo/screenshots/contacts-dark.png -->
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset=".demo/screenshots/contacts-dark.png">
   <img alt="Contacts list" src=".demo/screenshots/contacts.png">
@@ -47,7 +47,7 @@ Each contact has dedicated sections for:
 
 ### Calendar
 
-<!-- SCREENSHOT: target=web path=/Calendar mode=viewport wait=1500 out=.demo/screenshots/calendar.png -->
+<!-- SCREENSHOT: target=web path=/Calendar?date=2026-01-15 mode=viewport wait=1500 out=.demo/screenshots/calendar.png -->
 ![Calendar](.demo/screenshots/calendar.png)
 
 Monthly calendar view of upcoming significant dates and incomplete tasks, with list view for compact browsing.

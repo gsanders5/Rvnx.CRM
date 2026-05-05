@@ -1,6 +1,6 @@
+@model Rvnx.CRM.Web.ViewModels.Calendar.CalendarIndexViewModel
 @{
     ViewData["Title"] = "Calendar";
-    var today = DateTime.Today.ToString("yyyy-MM-dd");
 }
 
 <div class="d-flex justify-content-between align-items-center mb-4">
@@ -22,7 +22,7 @@
 
             const calendar = new FullCalendar.Calendar(document.getElementById('calendar'), {
                 initialView: 'dayGridMonth',
-                initialDate: '@today',
+                initialDate: '@Model.InitialDate',
                 height: 'auto',
                 headerToolbar: {
                     left: 'prev,next today',
