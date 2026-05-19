@@ -1,4 +1,5 @@
 @using Rvnx.CRM.Core.DTOs.Contact
+@using Rvnx.CRM.Core.DTOs.Dates
 @using Rvnx.CRM.Core.Enumerations
 @using Rvnx.CRM.Core.Constants
 @using Rvnx.CRM.Core.Helpers
@@ -17,113 +18,212 @@
 
 @{
     ViewData["Title"] = "Details";
+
+    // Pick the soonest active significant date within 60 days for the hero milestone.
+    // SignificantDateDto.NextOccurrence is pre-computed by DateCalculationService and
+    // already handles year==1 birthdays + Annual/Monthly/Custom recurrence correctly.
+    DateOnly heroToday = DateOnly.FromDateTime(DateTime.Today);
+    SignificantDateDto? nextMilestone = null;
+    int? nextMilestoneDaysUntil = null;
+    int? nextMilestoneTurning = null;
+    bool nextMilestoneIsBirthday = false;
+    if (!Model.IsDeceased && Model.SignificantDates != null)
+    {
+        foreach (var d in Model.SignificantDates.Where(d => d.IsActive && d.NextOccurrence != null))
+        {
+            DateOnly nextOccurrence = d.NextOccurrence!.Value;
+            int days = nextOccurrence.DayNumber - heroToday.DayNumber;
+            if (days < 0 || days > 60) continue;
+            if (nextMilestoneDaysUntil != null && days >= nextMilestoneDaysUntil) continue;
+
+            nextMilestone = d;
+            nextMilestoneDaysUntil = days;
+            nextMilestoneIsBirthday = string.Equals(d.Title, SignificantDateTitles.Birthday, StringComparison.OrdinalIgnoreCase);
+            nextMilestoneTurning = nextMilestoneIsBirthday && d.EventDate.Year != 1
+                ? nextOccurrence.Year - d.EventDate.Year
+                : null;
+        }
+    }
+
+    string DaysLabel(int days) =>
+        days == 0 ? "TODAY" :
+        days == 1 ? "TOMORROW" :
+        $"IN {days}D";
 }
 
-<div class="container">
-<div class="d-flex flex-column flex-md-row justify-content-between align-items-center mb-4 gap-3 crm-action-bar">
-    <div class="d-flex flex-column align-items-center align-items-md-start">
-        <h1 class="mb-0 text-center text-md-start">@Model.FullName</h1>
-        @if (Model.IsDeceased)
-        {
-            <span class="crm-badge crm-badge-muted mt-1" title="This contact is marked as deceased">
-                <i class="fa-solid fa-book-skull me-1" aria-hidden="true"></i>
-                @if (Model.DateOfDeath.HasValue)
-                {
-                    <text>Deceased on @Model.DateOfDeath.Value.ToString("yyyy-MM-dd")</text>
-                }
-                else
-                {
-                    <text>Deceased</text>
-                }
-            </span>
-        }
-    </div>
-
-    @* Desktop action buttons *@
-    <div class="d-none d-md-flex gap-2 flex-wrap justify-content-center crm-action-bar-full">
-        <a asp-controller="Merge" asp-action="Index" asp-route-primaryId="@Model.Id" class="crm-btn-secondary btn-sm"><i class="bi bi-diagram-3" aria-hidden="true"></i> Merge</a>
-        <a asp-action="Export" asp-route-id="@Model.Id" class="crm-btn-secondary btn-sm"><i class="fa-solid fa-file-export" aria-hidden="true"></i> Export VCF</a>
-        <a asp-action="Edit" asp-route-id="@Model.Id" class="crm-btn-primary btn-sm"><i class="bi bi-pencil-square" aria-hidden="true"></i> Edit</a>
-        <a asp-action="Index" class="crm-btn-tertiary btn-sm"><i class="bi bi-arrow-left" aria-hidden="true"></i> Back</a>
-    </div>
-
-    @* Mobile action dropdown *@
-    <div class="d-flex d-md-none gap-2 crm-action-bar-mobile">
-        <a asp-action="Edit" asp-route-id="@Model.Id" class="crm-btn-primary btn-sm"><i class="bi bi-pencil-square" aria-hidden="true"></i> Edit</a>
-        <div class="dropdown">
-            <button class="crm-btn-secondary btn-sm dropdown-toggle" type="button" data-mdb-dropdown-init data-mdb-toggle="dropdown" aria-expanded="false">
-                <i class="bi bi-three-dots-vertical" aria-hidden="true"></i> Actions
-            </button>
-            <ul class="dropdown-menu dropdown-menu-end">
-                <li><a class="dropdown-item" asp-controller="Merge" asp-action="Index" asp-route-primaryId="@Model.Id"><i class="bi bi-diagram-3 me-2" aria-hidden="true"></i>Merge</a></li>
-                <li><a class="dropdown-item" asp-action="Export" asp-route-id="@Model.Id"><i class="fa-solid fa-file-export me-2" aria-hidden="true"></i>Export VCF</a></li>
-                <li><hr class="dropdown-divider"></li>
-                <li><a class="dropdown-item" asp-action="Index"><i class="bi bi-arrow-left me-2" aria-hidden="true"></i>Back to Contacts</a></li>
-            </ul>
-        </div>
+<div class="crm-details-actions-strip">
+    <a asp-action="Index" class="crm-btn-tertiary btn-sm">
+        <i class="bi bi-arrow-left" aria-hidden="true"></i> Back to Contacts
+    </a>
+    <div class="d-flex gap-2 align-items-center flex-wrap">
+        <a asp-controller="Merge" asp-action="Index" asp-route-primaryId="@Model.Id" class="crm-btn-secondary btn-sm" title="Merge with another contact">
+            <i class="bi bi-diagram-3" aria-hidden="true"></i> Merge
+        </a>
+        <a asp-action="Export" asp-route-id="@Model.Id" class="crm-btn-secondary btn-sm" title="Export as vCard">
+            <i class="bi bi-file-earmark-arrow-down" aria-hidden="true"></i> Export VCF
+        </a>
+        <a asp-action="Edit" asp-route-id="@Model.Id" class="crm-btn-primary btn-sm" title="Edit contact">
+            <i class="bi bi-pencil-square" aria-hidden="true"></i> Edit
+        </a>
     </div>
 </div>
 
-<div class="row">
-<!-- Left Column -->
-<div class="col-md-4">
-    <!-- Profile Card -->
-    <div class="crm-card">
+<section class="crm-details-masthead crm-fade-in">
+    <div class="crm-details-masthead-grid">
         @if (Model.ProfileImageId.HasValue)
         {
-            <img src="@Url.Action("Thumbnail", "Attachments", new { id = Model.ProfileImageId, maxWidth = 400 })" class="crm-profile-image w-100" alt="Profile photo of @Model.FullName" loading="lazy" style="border-radius: var(--crm-radius-md) var(--crm-radius-md) 0 0;">
+            <img src="@Url.Action("Thumbnail", "Attachments", new { id = Model.ProfileImageId, maxWidth = 400 })" class="crm-details-photo" alt="Profile photo of @Model.FullName" loading="lazy" />
         }
         else
         {
-            <div class="crm-profile-placeholder" role="img" aria-label="Default profile placeholder">
-                <i class="bi bi-person-fill display-1" aria-hidden="true"></i>
+            <div class="crm-details-photo crm-details-photo-placeholder" role="img" aria-label="Default profile placeholder">
+                <i class="bi bi-person-fill" aria-hidden="true"></i>
             </div>
         }
+
+        <div style="flex: 1; min-width: 0;">
+            @if (Model.Labels != null && Model.Labels.Any())
+            {
+                <div class="crm-details-filed-under">
+                    <span class="crm-eyebrow">FILED UNDER</span>
+                    @foreach (var label in Model.Labels)
+                    {
+                        @await Html.PartialAsync("_LabelBadge", label)
+                    }
+                </div>
+            }
+            else
+            {
+                <div class="crm-eyebrow" style="margin-bottom: 8px;">CONTACT</div>
+            }
+
+            <h1 class="crm-details-name">
+                @{
+                    var displayFirst = string.IsNullOrWhiteSpace(Model.FirstName) ? Model.FullName : Model.FirstName;
+                    var displayLast = Model.LastName;
+                }
+                @displayFirst@if (!string.IsNullOrWhiteSpace(displayLast))
+                {
+                    <text> </text><em>@displayLast</em>
+                }
+                @if (!string.IsNullOrWhiteSpace(Model.Nickname))
+                {
+                    <span class="crm-details-nickname">"@Model.Nickname"</span>
+                }
+            </h1>
+
+            @if (!string.IsNullOrWhiteSpace(Model.JobTitle) || !string.IsNullOrWhiteSpace(Model.Company))
+            {
+                <div class="crm-details-tagline">
+                    @Model.JobTitle@if (!string.IsNullOrWhiteSpace(Model.JobTitle) && !string.IsNullOrWhiteSpace(Model.Company))
+                    {
+                        <text> at </text>
+                    }
+                    @if (!string.IsNullOrWhiteSpace(Model.Company))
+                    {
+                        <span class="crm-details-tagline-accent">@Model.Company</span>
+                    }
+                </div>
+            }
+
+            <div class="crm-details-meta-line">
+                @if (!string.IsNullOrWhiteSpace(Model.Pronouns))
+                {
+                    <span class="crm-eyebrow">@Model.Pronouns</span>
+                }
+                @if (!string.IsNullOrWhiteSpace(Model.Gender))
+                {
+                    @if (!string.IsNullOrWhiteSpace(Model.Pronouns))
+                    {
+                        <span class="crm-meta-dot" aria-hidden="true"></span>
+                    }
+                    <span class="crm-eyebrow">@Model.Gender</span>
+                }
+                @if (Model.FirstMetOn.HasValue)
+                {
+                    <span class="crm-meta-dot" aria-hidden="true"></span>
+                    <span class="crm-eyebrow">MET @Model.FirstMetOn.Value.ToString("MMM yyyy").ToUpperInvariant()</span>
+                }
+                @if (Model.IsDeceased)
+                {
+                    <span class="crm-meta-dot" aria-hidden="true"></span>
+                    <span class="crm-badge crm-badge-muted" title="This contact is marked as deceased">
+                        <i class="fa-solid fa-book-skull me-1" aria-hidden="true"></i>
+                        @if (Model.DateOfDeath.HasValue)
+                        {
+                            <text>Deceased @Model.DateOfDeath.Value.ToString("MMM d, yyyy")</text>
+                        }
+                        else
+                        {
+                            <text>Deceased</text>
+                        }
+                    </span>
+                }
+            </div>
+        </div>
+
+        @if (nextMilestone != null && nextMilestoneDaysUntil.HasValue)
+        {
+            <aside class="crm-details-hero">
+                <div class="crm-details-hero-eyebrow">
+                    @nextMilestone.Title.ToUpperInvariant() · @DaysLabel(nextMilestoneDaysUntil.Value)
+                </div>
+                <div class="crm-details-hero-value">
+                    @if (nextMilestoneIsBirthday && nextMilestoneTurning.HasValue)
+                    {
+                        <text>Turning @nextMilestoneTurning</text>
+                    }
+                    else
+                    {
+                        <text>@nextMilestone.EventDate.ToString("MMM d")</text>
+                    }
+                </div>
+                <a asp-controller="SignificantDates" asp-action="Edit" asp-route-id="@nextMilestone.Id" class="crm-btn-primary btn-sm" style="margin-top: 10px; width: 100%; justify-content: center;">
+                    <i class="bi bi-bell" aria-hidden="true"></i> Manage reminder
+                </a>
+            </aside>
+        }
+    </div>
+</section>
+
+<div class="crm-details-body">
+
+<!-- LEFT COLUMN -->
+<div class="crm-details-col-left">
+    <!-- Primary Info -->
+    <div class="crm-card">
         <div class="crm-card-header">
-            <h5 class="card-title mb-0"><i class="bi bi-person-lines-fill" aria-hidden="true"></i> <span class="crm-section-label">Primary Info</span></h5>
+            <h5 class="card-title mb-0"><i class="bi bi-person-lines-fill" aria-hidden="true"></i> Primary Info</h5>
         </div>
         <div class="crm-card-body">
-            <dl class="row mb-0" style="font-size: 0.875rem; line-height: 1.5;">
+            <dl class="crm-deflist mb-0">
                 @if (!string.IsNullOrEmpty(Model.MaidenName))
                 {
-                    <dt class="col-sm-4" style="color: var(--crm-text-secondary);">Maiden Name</dt>
-                    <dd class="col-sm-8">@Model.MaidenName</dd>
+                    <div class="crm-deflist-row"><dt>Maiden name</dt><dd>@Model.MaidenName</dd></div>
                 }
-
                 @if (!string.IsNullOrEmpty(Model.Nickname))
                 {
-                    <dt class="col-sm-4" style="color: var(--crm-text-secondary);">Nickname</dt>
-                    <dd class="col-sm-8">@Model.Nickname</dd>
+                    <div class="crm-deflist-row"><dt>Nickname</dt><dd>@Model.Nickname</dd></div>
                 }
-
                 @if (!string.IsNullOrEmpty(Model.Company))
                 {
-                    <dt class="col-sm-4" style="color: var(--crm-text-secondary);">Company</dt>
-                    <dd class="col-sm-8">@Model.Company</dd>
+                    <div class="crm-deflist-row"><dt>Company</dt><dd>@Model.Company</dd></div>
                 }
-
                 @if (!string.IsNullOrEmpty(Model.JobTitle))
                 {
-                    <dt class="col-sm-4" style="color: var(--crm-text-secondary);">Job Title</dt>
-                    <dd class="col-sm-8">@Model.JobTitle</dd>
+                    <div class="crm-deflist-row"><dt>Job title</dt><dd>@Model.JobTitle</dd></div>
                 }
-
                 @if (!string.IsNullOrEmpty(Model.Pronouns))
                 {
-                    <dt class="col-sm-4" style="color: var(--crm-text-secondary);">Pronouns</dt>
-                    <dd class="col-sm-8">@Model.Pronouns</dd>
+                    <div class="crm-deflist-row"><dt>Pronouns</dt><dd>@Model.Pronouns</dd></div>
                 }
-
                 @if (!string.IsNullOrEmpty(Model.Gender))
                 {
-                    <dt class="col-sm-4" style="color: var(--crm-text-secondary);">Gender</dt>
-                    <dd class="col-sm-8">@Model.Gender</dd>
+                    <div class="crm-deflist-row"><dt>Gender</dt><dd>@Model.Gender</dd></div>
                 }
-
                 @if (!string.IsNullOrEmpty(Model.Religion))
                 {
-                    <dt class="col-sm-4" style="color: var(--crm-text-secondary);">Religion</dt>
-                    <dd class="col-sm-8">@Model.Religion</dd>
+                    <div class="crm-deflist-row"><dt>Religion</dt><dd>@Model.Religion</dd></div>
                 }
             </dl>
         </div>
@@ -137,23 +237,26 @@
                 <h5 class="card-title mb-0"><i class="bi bi-people-fill" aria-hidden="true"></i> How We Met</h5>
             </div>
             <div class="crm-card-body">
-                <dl class="row mb-0" style="font-size: 0.875rem; line-height: 1.5;">
+                <dl class="crm-deflist mb-0">
                     @if (Model.FirstMetOn.HasValue)
                     {
-                        <dt class="col-sm-4" style="color: var(--crm-text-secondary);">First Met</dt>
-                        <dd class="col-sm-8">@Model.FirstMetOn.Value.ToString("MMM d, yyyy")</dd>
+                        <div class="crm-deflist-row"><dt>First met</dt><dd>@Model.FirstMetOn.Value.ToString("MMM d, yyyy")</dd></div>
                     }
                     @if (Model.IntroducedByContactId.HasValue && !string.IsNullOrEmpty(Model.IntroducedByContactName))
                     {
-                        <dt class="col-sm-4" style="color: var(--crm-text-secondary);">Introduced By</dt>
-                        <dd class="col-sm-8"><a asp-action="Details" asp-route-id="@Model.IntroducedByContactId" style="color: var(--crm-brand);">@Model.IntroducedByContactName</a></dd>
-                    }
-                    @if (!string.IsNullOrEmpty(Model.HowWeMet))
-                    {
-                        <dt class="col-sm-12" style="color: var(--crm-text-secondary);">Story</dt>
-                        <dd class="col-sm-12" style="white-space: pre-wrap;">@Model.HowWeMet</dd>
+                        <div class="crm-deflist-row">
+                            <dt>Introduced by</dt>
+                            <dd><a asp-action="Details" asp-route-id="@Model.IntroducedByContactId" style="color: var(--crm-brand);">@Model.IntroducedByContactName</a></dd>
+                        </div>
                     }
                 </dl>
+                @if (!string.IsNullOrEmpty(Model.HowWeMet))
+                {
+                    <div style="margin-top: 10px; padding-top: 10px; border-top: 1px dotted var(--crm-border);">
+                        <div class="crm-eyebrow" style="margin-bottom: 6px;">STORY</div>
+                        <div class="crm-serif" style="font-size: 14px; font-style: italic; color: var(--crm-text-secondary); line-height: 1.45; padding-left: 12px; border-left: 2px solid var(--crm-brand); white-space: pre-wrap;">"@Model.HowWeMet"</div>
+                    </div>
+                }
             </div>
         </div>
     }
@@ -526,8 +629,8 @@
     </div>
 </div>
 
-<!-- Right Column -->
-<div class="col-md-8">
+<!-- MIDDLE COLUMN -->
+<div class="crm-details-col-middle">
     <!-- Important Dates -->
     <div class="crm-card">
         <div class="crm-card-header">
@@ -980,8 +1083,6 @@
 
     <!-- Social Media Embeds -->
     <partial name="_SocialMediaEmbeds" model="Model" />
-
-</div>
 </div>
 </div>
 
