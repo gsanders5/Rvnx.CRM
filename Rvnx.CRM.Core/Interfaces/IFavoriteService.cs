@@ -1,3 +1,5 @@
+using Rvnx.CRM.Core.DTOs.Contact;
+
 namespace Rvnx.CRM.Core.Interfaces;
 
 public interface IFavoriteService
@@ -13,4 +15,10 @@ public interface IFavoriteService
     /// Returns the set of contact IDs that the current user has favorited.
     /// </summary>
     Task<HashSet<Guid>> GetFavoriteContactIdsAsync();
+
+    /// <summary>
+    /// Returns the current user's favorite contacts as lightweight items for the sidebar's
+    /// pinned-people list. Includes the contact id, first name, last name, and profile image id.
+    /// </summary>
+    Task<List<FavoriteSidebarItemDto>> GetFavoriteSidebarItemsAsync();
 }

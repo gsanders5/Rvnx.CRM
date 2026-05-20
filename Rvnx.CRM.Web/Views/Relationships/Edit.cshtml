@@ -4,138 +4,158 @@
     ViewData["Title"] = "Edit Relationship";
 }
 
-<h1>Edit Relationship for @Model.ContactName</h1>
-
-<div class="row">
-    <div class="col-md-6">
-        <form asp-action="Edit" id="edit-relationship-form">
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-            <input type="hidden" asp-for="Id"/>
-            <input type="hidden" asp-for="ContactId"/>
-            <input type="hidden" asp-for="ContactName"/>
-            <input type="hidden" asp-for="RelationshipTypeId"/>
-
-            <!-- Hidden input to store the final selection -->
-            <input type="hidden" asp-for="SelectedRelationshipType" id="SelectedRelationshipType"/>
-
-            <!-- Step 1: Type Selection -->
-            <div class="mb-4">
-                <label class="form-label fw-bold">Step 1: Choose Relationship Type</label>
-
-                <!-- Summary (Initially Hidden) -->
-                <div id="type-selection-summary" class="crm-card mb-2" style="display: none;">
-                    <div class="crm-card-body p-2 d-flex justify-content-between align-items-center">
-                        <span class="fw-bold" style="color: var(--crm-brand);" id="selected-type-text"></span>
-                        <button type="button" class="crm-btn-tertiary btn-sm" id="change-type-btn" aria-label="Change relationship type">
-                            <i class="bi bi-pencil me-1" aria-hidden="true"></i> Change
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Collapsible Container -->
-                <div class="collapse show" id="typeSelectionCollapse">
-                    <div class="d-flex flex-wrap gap-2" id="type-selection-container">
-                        @foreach (var group in Model.RelationshipTypes.GroupBy(t => t.Category))
-                        {
-                            <div class="w-100 mt-2 mb-1 text-muted small text-uppercase fw-bold">@group.Key</div>
-                            @foreach (var type in group)
-                            {
-                                <button type="button"
-                                        class="crm-btn-secondary relationship-type-btn"
-                                        data-id="@type.Id"
-                                        data-is-symmetric="@type.IsSymmetric.ToString().ToLower()"
-                                        data-name="@type.Name"
-                                        data-opposite-name="@type.OppositeName">
-                                    @(type.IsSymmetric ? type.Name : $"{type.Name} / {type.OppositeName}")
-                                </button>
-                            }
-                        }
-                    </div>
-                </div>
-
-                <!-- Hidden toggle button -->
-                <button class="d-none" type="button" id="typeCollapseToggle" data-mdb-collapse-init data-mdb-target="#typeSelectionCollapse"></button>
-
-                <span asp-validation-for="SelectedRelationshipType" class="text-danger"></span>
-            </div>
-
-            <!-- Step 2: Role Selection (Initially Hidden) -->
-            <div class="mb-4" id="role-selection-container" style="display: none;">
-                <label class="form-label fw-bold">Step 2: @Model.ContactName is the...</label>
-                <div class="btn-group w-100" role="group">
-                    <button type="button" class="crm-btn-secondary role-btn" data-role="Fwd" id="role-fwd-btn">Parent</button>
-                    <button type="button" class="crm-btn-secondary role-btn" data-role="Rev" id="role-rev-btn">Child</button>
-                </div>
-            </div>
-
-            <div class="mb-3">
-                <label asp-for="RelatedContactId" class="form-label">Related Contact</label>
-                <select asp-for="RelatedContactId" class="form-select" asp-items="@(new SelectList(Model.RelatedContactOptions, "Value", "Text"))">
-                    <option value="">-- Select Related Contact --</option>
-                </select>
-                <span asp-validation-for="RelatedContactId" class="text-danger"></span>
-            </div>
-
-            <div class="crm-alert crm-alert-info" id="relationshipPreview" style="display: none;">
-                <!-- Preview text will be injected here -->
-            </div>
-
-            <div class="form-floating mb-3">
-                <input asp-for="StartDate" class="form-control" type="date" id="StartDate" placeholder=" "/>
-                <label asp-for="StartDate">StartDate</label>
-                <span asp-validation-for="StartDate" class="text-danger"></span>
-            </div>
-
-            <div class="form-floating mb-3">
-                <input asp-for="EndDate" class="form-control" type="date" id="EndDate" placeholder=" "/>
-                <label asp-for="EndDate">EndDate</label>
-                <span asp-validation-for="EndDate" class="text-danger"></span>
-            </div>
-
-            <div class="form-floating mb-3">
-                <textarea asp-for="Description" class="form-control" style="height: 100px" id="Description" placeholder=" "></textarea>
-                <label asp-for="Description">Description</label>
-                <span asp-validation-for="Description" class="text-danger"></span>
-            </div>
-
-            <div class="d-grid gap-2 d-md-flex mt-4">
-                <button type="submit" class="crm-btn-primary"><i class="bi bi-save" aria-hidden="true"></i> Save</button>
-                @if (Model.IsContactPartial || Model.IsRelatedContactPartial)
-                {
-                    <button type="button" class="crm-btn-secondary" data-mdb-modal-init data-mdb-target="#promoteModal">
-                        <i class="bi bi-person-check" aria-hidden="true"></i> Promote to Contact
-                    </button>
-                }
-                <a asp-controller="Contacts" asp-action="Details" asp-route-id="@Model.ContactId" class="crm-btn-tertiary"><i class="bi bi-x-lg" aria-hidden="true"></i> Cancel</a>
-            </div>
-        </form>
-    </div>
+<div class="crm-details-actions-strip">
+    <a asp-controller="Contacts" asp-action="Details" asp-route-id="@Model.ContactId" class="crm-btn-tertiary btn-sm">
+        <i class="bi bi-arrow-left" aria-hidden="true"></i> Back to Contact
+    </a>
 </div>
 
-@if (Model.IsContactPartial || Model.IsRelatedContactPartial)
-{
-    <!-- Promote Modal -->
-    <div class="modal fade" id="promoteModal" tabindex="-1" aria-labelledby="promoteModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="promoteModalLabel">Promote to Contact</h5>
-                    <button type="button" class="btn-close" data-mdb-ripple-init data-mdb-dismiss="modal" aria-label="Close"></button>
+<section class="crm-edit-masthead crm-fade-in">
+    <div class="crm-edit-masthead-photo-placeholder" aria-hidden="true">
+        <i class="bi bi-people"></i>
+    </div>
+    <div>
+        <div class="crm-eyebrow" style="margin-bottom: 6px;">Editing relationship</div>
+        <h1 class="crm-edit-masthead-title">
+            Edit relationship for <em>@Model.ContactName</em>
+        </h1>
+    </div>
+</section>
+
+<div class="crm-page" style="padding-top: 16px;">
+    @* === ORIGINAL WIZARD CONTENT BELOW — DO NOT MODIFY THE INNER MARKUP === *@
+
+    <div class="row">
+        <div class="col-md-6">
+            <form asp-action="Edit" id="edit-relationship-form">
+                <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                <input type="hidden" asp-for="Id"/>
+                <input type="hidden" asp-for="ContactId"/>
+                <input type="hidden" asp-for="ContactName"/>
+                <input type="hidden" asp-for="RelationshipTypeId"/>
+
+                <!-- Hidden input to store the final selection -->
+                <input type="hidden" asp-for="SelectedRelationshipType" id="SelectedRelationshipType"/>
+
+                <!-- Step 1: Type Selection -->
+                <div class="mb-4">
+                    <label class="form-label fw-bold">Step 1: Choose Relationship Type</label>
+
+                    <!-- Summary (Initially Hidden) -->
+                    <div id="type-selection-summary" class="crm-card mb-2" style="display: none;">
+                        <div class="crm-card-body p-2 d-flex justify-content-between align-items-center">
+                            <span class="fw-bold" style="color: var(--crm-brand);" id="selected-type-text"></span>
+                            <button type="button" class="crm-btn-tertiary btn-sm" id="change-type-btn" aria-label="Change relationship type">
+                                <i class="bi bi-pencil me-1" aria-hidden="true"></i> Change
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Collapsible Container -->
+                    <div class="collapse show" id="typeSelectionCollapse">
+                        <div class="d-flex flex-wrap gap-2" id="type-selection-container">
+                            @foreach (var group in Model.RelationshipTypes.GroupBy(t => t.Category))
+                            {
+                                <div class="w-100 mt-2 mb-1 text-muted small text-uppercase fw-bold">@group.Key</div>
+                                @foreach (var type in group)
+                                {
+                                    <button type="button"
+                                            class="crm-btn-secondary relationship-type-btn"
+                                            data-id="@type.Id"
+                                            data-is-symmetric="@type.IsSymmetric.ToString().ToLower()"
+                                            data-name="@type.Name"
+                                            data-opposite-name="@type.OppositeName">
+                                        @(type.IsSymmetric ? type.Name : $"{type.Name} / {type.OppositeName}")
+                                    </button>
+                                }
+                            }
+                        </div>
+                    </div>
+
+                    <!-- Hidden toggle button -->
+                    <button class="d-none" type="button" id="typeCollapseToggle" data-mdb-collapse-init data-mdb-target="#typeSelectionCollapse"></button>
+
+                    <span asp-validation-for="SelectedRelationshipType" class="text-danger"></span>
                 </div>
-                <div class="modal-body">
-                    <p>Are you sure you want to promote this partial contact to a full contact record?</p>
-                    <p class="text-muted small">Promoting will make them appear in the main contact directory and allow you to add notes, facts, and other details.</p>
+
+                <!-- Step 2: Role Selection (Initially Hidden) -->
+                <div class="mb-4" id="role-selection-container" style="display: none;">
+                    <label class="form-label fw-bold">Step 2: @Model.ContactName is the...</label>
+                    <div class="btn-group w-100" role="group">
+                        <button type="button" class="crm-btn-secondary role-btn" data-role="Fwd" id="role-fwd-btn">Parent</button>
+                        <button type="button" class="crm-btn-secondary role-btn" data-role="Rev" id="role-rev-btn">Child</button>
+                    </div>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="crm-btn-tertiary" data-mdb-ripple-init data-mdb-dismiss="modal">Cancel</button>
-                    <form asp-controller="Relationships" asp-action="Promote" asp-route-contactId="@(Model.IsRelatedContactPartial ? Model.RelatedContactId : Model.ContactId)" method="post" class="d-inline">
-                        <button type="submit" class="crm-btn-primary" data-mdb-ripple-init>Yes, Promote</button>
-                    </form>
+
+                <div class="mb-3">
+                    <label asp-for="RelatedContactId" class="form-label">Related Contact</label>
+                    <select asp-for="RelatedContactId" class="form-select" asp-items="@(new SelectList(Model.RelatedContactOptions, "Value", "Text"))">
+                        <option value="">-- Select Related Contact --</option>
+                    </select>
+                    <span asp-validation-for="RelatedContactId" class="text-danger"></span>
+                </div>
+
+                <div class="crm-alert crm-alert-info" id="relationshipPreview" style="display: none;">
+                    <!-- Preview text will be injected here -->
+                </div>
+
+                <div class="form-floating mb-3">
+                    <input asp-for="StartDate" class="form-control" type="date" id="StartDate" placeholder=" "/>
+                    <label asp-for="StartDate">StartDate</label>
+                    <span asp-validation-for="StartDate" class="text-danger"></span>
+                </div>
+
+                <div class="form-floating mb-3">
+                    <input asp-for="EndDate" class="form-control" type="date" id="EndDate" placeholder=" "/>
+                    <label asp-for="EndDate">EndDate</label>
+                    <span asp-validation-for="EndDate" class="text-danger"></span>
+                </div>
+
+                <div class="form-floating mb-3">
+                    <textarea asp-for="Description" class="form-control" style="height: 100px" id="Description" placeholder=" "></textarea>
+                    <label asp-for="Description">Description</label>
+                    <span asp-validation-for="Description" class="text-danger"></span>
+                </div>
+
+                <div class="d-grid gap-2 d-md-flex mt-4">
+                    <button type="submit" class="crm-btn-primary"><i class="bi bi-save" aria-hidden="true"></i> Save</button>
+                    @if (Model.IsContactPartial || Model.IsRelatedContactPartial)
+                    {
+                        <button type="button" class="crm-btn-secondary" data-mdb-modal-init data-mdb-target="#promoteModal">
+                            <i class="bi bi-person-check" aria-hidden="true"></i> Promote to Contact
+                        </button>
+                    }
+                    <a asp-controller="Contacts" asp-action="Details" asp-route-id="@Model.ContactId" class="crm-btn-tertiary"><i class="bi bi-x-lg" aria-hidden="true"></i> Cancel</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    @if (Model.IsContactPartial || Model.IsRelatedContactPartial)
+    {
+        <!-- Promote Modal -->
+        <div class="modal fade" id="promoteModal" tabindex="-1" aria-labelledby="promoteModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="promoteModalLabel">Promote to Contact</h5>
+                        <button type="button" class="btn-close" data-mdb-ripple-init data-mdb-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p>Are you sure you want to promote this partial contact to a full contact record?</p>
+                        <p class="text-muted small">Promoting will make them appear in the main contact directory and allow you to add notes, facts, and other details.</p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="crm-btn-tertiary" data-mdb-ripple-init data-mdb-dismiss="modal">Cancel</button>
+                        <form asp-controller="Relationships" asp-action="Promote" asp-route-contactId="@(Model.IsRelatedContactPartial ? Model.RelatedContactId : Model.ContactId)" method="post" class="d-inline">
+                            <button type="submit" class="crm-btn-primary" data-mdb-ripple-init>Yes, Promote</button>
+                        </form>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
-}
+    }
+</div>
 
 @section Scripts {
     @{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); }

@@ -1,0 +1,40 @@
+@using Rvnx.CRM.Core.DTOs.Contact
+@model List<FavoriteSidebarItemDto>
+
+@functions {
+    static string FullName(FavoriteSidebarItemDto p) =>
+        string.IsNullOrWhiteSpace(p.LastName)
+            ? p.FirstName
+            : $"{p.FirstName} {p.LastName!.Substring(0, 1)}.";
+
+    static string Initials(string firstName, string? lastName)
+    {
+        char a = !string.IsNullOrEmpty(firstName) ? char.ToUpperInvariant(firstName[0]) : '?';
+        char b = !string.IsNullOrEmpty(lastName) ? char.ToUpperInvariant(lastName[0]) : ' ';
+        return string.Concat(a, b).Trim();
+    }
+}
+
+@if (Model.Count == 0)
+{
+    <div class="crm-muted" style="padding: 0 10px; font-size: 12px; font-style: italic;">
+        Star contacts to pin them here.
+    </div>
+}
+else
+{
+    @foreach (var p in Model)
+    {
+        <a class="crm-sidebar-pin-item" asp-controller="Contacts" asp-action="Details" asp-route-id="@p.Id" title="@p.FirstName @p.LastName">
+            @if (p.ProfileImageId.HasValue)
+            {
+                <img src="@Url.Action("Thumbnail", "Attachments", new { id = p.ProfileImageId, maxWidth = 44, maxHeight = 44 })" alt="" loading="lazy" />
+            }
+            else
+            {
+                <span class="crm-sidebar-pin-avatar" aria-hidden="true">@Initials(p.FirstName, p.LastName)</span>
+            }
+            <span class="text-truncate" style="flex: 1; min-width: 0;">@FullName(p)</span>
+        </a>
+    }
+}
