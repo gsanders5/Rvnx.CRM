@@ -44,7 +44,7 @@
                         {
                             <tr>
                                 <td class="align-middle fw-medium">@item.Title</td>
-                                <td class="align-middle">@item.EventDate.ToShortDateString()</td>
+                                <td class="align-middle">@item.EventDate.ToEventDateDisplay()</td>
                                 <td class="align-middle">
                                     @if (item.RecurrenceType == Rvnx.CRM.Core.Enumerations.RecurrenceType.Custom)
                                     {

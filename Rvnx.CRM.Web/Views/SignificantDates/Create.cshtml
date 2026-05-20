@@ -60,21 +60,7 @@
                         <div class="crm-form-divider-line"></div>
                     </div>
 
-                    <div class="crm-form-card-grid">
-                        <div class="crm-field-group">
-                            <label asp-for="EventDate">Event Date</label>
-                            <input asp-for="EventDate" class="crm-input" type="date" id="EventDate" />
-                            <span asp-validation-for="EventDate" class="crm-field-error"></span>
-                        </div>
-                        <div class="crm-field-group">
-                            <label class="crm-field-label" for="YearUnknownField">Year Unknown</label>
-                            <label class="crm-toggle">
-                                <input type="checkbox" id="YearUnknownField" />
-                                <span class="crm-toggle-track"></span>
-                                <span class="crm-toggle-knob"></span>
-                            </label>
-                        </div>
-                    </div>
+                    @await Html.PartialAsync("_EventDateField", Model.EventDate)
 
                     <div class="crm-form-divider">
                         <div class="crm-form-divider-line"></div>
@@ -171,33 +157,6 @@
 
             $recurrenceSelect.on('change', toggleCustomInterval);
             toggleCustomInterval(); // Initial check
-
-            var eventDateField = document.getElementById('EventDate');
-            var yearUnknownField = document.getElementById('YearUnknownField');
-
-            function toggleYearUnknown() {
-                if (yearUnknownField.checked) {
-                    if (eventDateField.value) {
-                        const parts = eventDateField.value.split('-');
-                        if (parts.length === 3) {
-                            eventDateField.value = '0001-' + parts[1] + '-' + parts[2];
-                        }
-                    }
-                } else {
-                    if (eventDateField.value) {
-                        const parts = eventDateField.value.split('-');
-                        if (parts.length === 3 && parts[0] === '0001') {
-                            const currentYear = new Date().getFullYear();
-                            eventDateField.value = currentYear + '-' + parts[1] + '-' + parts[2];
-                        }
-                    }
-                }
-            }
-
-            if (yearUnknownField) {
-                yearUnknownField.addEventListener('change', toggleYearUnknown);
-                toggleYearUnknown();
-            }
         });
     </script>
 }

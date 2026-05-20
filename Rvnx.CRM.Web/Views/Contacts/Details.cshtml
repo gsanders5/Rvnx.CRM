@@ -645,7 +645,7 @@
                     <div class="crm-list-item d-flex w-100 justify-content-between align-items-center">
                         <h6 class="mb-0 me-2 fw-semibold" style="font-size: 0.875rem;">@date.Title</h6>
                         <div class="d-flex flex-wrap gap-1 align-items-center justify-content-end">
-                            <span class="crm-date-badge crm-date-badge-date">@(date.EventDate.Year == 1 ? date.EventDate.ToString("M/d") : date.EventDate.ToShortDateString())</span>
+                            <span class="crm-date-badge crm-date-badge-date">@date.EventDate.ToEventDateDisplay()</span>
 
                             @if (string.Equals(date.Title, SignificantDateTitles.Birthday, StringComparison.OrdinalIgnoreCase))
                             {

@@ -240,3 +240,73 @@ document.addEventListener('DOMContentLoaded', function () {
         return '';
     });
 });
+
+// ---------------------------------------------------------------------------
+// Event date field with optional "year unknown"
+// A [data-event-date] group keeps a canonical yyyy-MM-dd in its hidden
+// [data-event-date-value] input (year 0001 = unknown). The native date picker
+// shows when the year is known; month + day selects replace it when it is not.
+// Toggling either way carries the month/day across, whether or not a date was
+// entered first.
+// ---------------------------------------------------------------------------
+document.addEventListener('DOMContentLoaded', function () {
+    document.querySelectorAll('[data-event-date]').forEach(function (group) {
+        const hidden = group.querySelector('[data-event-date-value]');
+        const full   = group.querySelector('[data-event-date-full]');
+        const mdWrap = group.querySelector('[data-event-date-md]');
+        const month  = group.querySelector('[data-event-date-month]');
+        const day    = group.querySelector('[data-event-date-day]');
+        const toggle = group.querySelector('[data-event-date-yearunknown]');
+        if (!hidden || !full || !mdWrap || !month || !day || !toggle) return;
+
+        function commit() {
+            if (toggle.checked) {
+                hidden.value = (month.value && day.value)
+                    ? '0001-' + month.value + '-' + day.value
+                    : '';
+            } else {
+                hidden.value = full.value || '';
+            }
+        }
+
+        function showYearUnknown(on) {
+            full.hidden = on;
+            mdWrap.hidden = !on;
+        }
+
+        // Hide day options past the selected month's end. Year-unknown dates are
+        // stored under year 0001 (not a leap year), so February tops out at 28.
+        const daysInMonth = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+        function clampDays() {
+            const max = month.value ? daysInMonth[Number(month.value) - 1] : 31;
+            Array.from(day.options).forEach(function (opt) {
+                if (opt.value) opt.hidden = Number(opt.value) > max;
+            });
+            if (day.value && Number(day.value) > max) day.value = '';
+        }
+
+        toggle.addEventListener('change', function () {
+            const parts = full.value.split('-');
+            if (toggle.checked) {
+                // Carry the picker's month/day into the selects.
+                month.value = parts.length === 3 ? parts[1] : '';
+                day.value   = parts.length === 3 ? parts[2] : '';
+                clampDays();
+            } else if (month.value && day.value) {
+                // Carry the selects back, keeping the picker's year (or this year).
+                full.value = (parts[0] || new Date().getFullYear()) +
+                             '-' + month.value + '-' + day.value;
+            }
+            showYearUnknown(toggle.checked);
+            commit();
+        });
+
+        full.addEventListener('change', commit);
+        month.addEventListener('change', function () { clampDays(); commit(); });
+        day.addEventListener('change', commit);
+
+        clampDays();
+        showYearUnknown(toggle.checked);
+        commit();
+    });
+});
