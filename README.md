@@ -2,8 +2,6 @@
 
 A self-hosted personal CRM — keep track of the people in your life.
 
-![Demo](.demo/screenshots/demo.gif)
-
 ---
 
 ## Features
