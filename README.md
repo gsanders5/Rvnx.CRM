@@ -47,7 +47,7 @@ Each contact has dedicated sections for:
 
 ### Calendar
 
-<!-- SCREENSHOT: target=web path=/Calendar?date=2026-01-15 mode=viewport wait=1500 out=.demo/screenshots/calendar.png -->
+<!-- SCREENSHOT: target=web path=/Calendar?date=2026-05-15 mode=viewport wait=1500 out=.demo/screenshots/calendar.png -->
 ![Calendar](.demo/screenshots/calendar.png)
 
 Monthly calendar view of upcoming significant dates and incomplete tasks, with list view for compact browsing.

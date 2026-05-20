@@ -159,6 +159,24 @@ internal static partial class Program
             await page.Locator(directive.Click).ClickAsync();
         }
 
+        // Full-page captures: resize the viewport to the full content height
+        // before capturing, for two reasons:
+        //  1. loading="lazy" thumbnails only fetch once in the viewport — a tall
+        //     viewport puts every image in view so they all load (letting
+        //     imagesLoaded → Masonry settle).
+        //  2. Playwright's fullPage screenshot resizes the viewport mid-capture,
+        //     which re-fires responsive Masonry layout; during that re-layout
+        //     grid items briefly flash to the origin and pick up a stray :hover,
+        //     exposing hover-only UI (the attachment action buttons). Pre-sizing
+        //     makes the eventual capture a no-op resize.
+        if (directive.Mode == ScreenshotMode.FullPage)
+        {
+            int fullHeight = await page.EvaluateAsync<int>(
+                "() => Math.max(document.body.scrollHeight, document.documentElement.scrollHeight)");
+            await page.SetViewportSizeAsync(directive.Width, fullHeight);
+            await page.WaitForLoadStateAsync(LoadState.NetworkIdle);
+        }
+
         if (directive.WaitMs > 0)
         {
             await page.WaitForTimeoutAsync(directive.WaitMs);
