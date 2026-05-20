@@ -215,7 +215,7 @@ internal static partial class Program
     private static Process StartDotnetProject(string repoRoot, string project, string urls, string[] extraArgs)
     {
         // --no-launch-profile is required so launchSettings.json doesn't override --urls.
-        List<string> args = ["run", "--project", project, "--no-build", "--no-launch-profile", "--urls", urls];
+        List<string> args = ["run", "--project", project, "--no-launch-profile", "--urls", urls];
         if (extraArgs.Length > 0)
         {
             args.Add("--");
