@@ -4,40 +4,100 @@
     ViewData["Title"] = "Edit Important Date";
 }
 
-<div class="row justify-content-center">
-    <div class="col-md-8 col-lg-7">
-        <form asp-action="Edit">
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-            <input type="hidden" asp-for="Id"/>
-            <input type="hidden" asp-for="ContactId"/>
+@* ── Action strip ────────────────────────────────────────────────────── *@
+<div class="crm-details-actions-strip">
+    <a asp-action="Index" asp-route-contactId="@Model.ContactId" class="crm-btn-tertiary btn-sm">
+        <i class="bi bi-arrow-left" aria-hidden="true"></i> Back
+    </a>
+    <div class="d-flex gap-2 align-items-center flex-wrap">
+        <span class="crm-eyebrow crm-unsaved-indicator" id="unsaved-indicator" hidden>
+            <i class="bi bi-circle-fill" aria-hidden="true" style="font-size: 6px; vertical-align: middle; margin-right: 4px;"></i>
+            Unsaved
+        </span>
+        <button type="submit" class="crm-btn-primary btn-sm" form="significantdate-form">
+            <i class="bi bi-save" aria-hidden="true"></i> Save
+        </button>
+    </div>
+</div>
 
-            <div class="crm-form-card">
-                <div class="crm-form-card-header">
-                    <h4><i class="bi bi-pencil-square" aria-hidden="true"></i> Edit Important Date</h4>
+@* ── Editorial masthead ─────────────────────────────────────────────── *@
+<section class="crm-edit-masthead crm-fade-in">
+    <div class="crm-edit-masthead-photo-placeholder" aria-hidden="true">
+        <i class="bi bi-calendar-event"></i>
+    </div>
+    <div>
+        <div class="crm-eyebrow" style="margin-bottom: 6px;">Editing important date</div>
+        <h1 class="crm-edit-masthead-title">
+            @if (!string.IsNullOrWhiteSpace(Model.Title))
+            {
+                @Model.Title
+            }
+            else
+            {
+                <text>Important Date</text>
+            }
+        </h1>
+    </div>
+</section>
+
+@* ── Body ───────────────────────────────────────────────────────────── *@
+<div class="crm-edit-body">
+
+    <div class="crm-edit-col-main">
+        @* The main edit form. AddOffset/DeleteOffset forms must NOT nest inside it,
+           so they live in a separate <form> below — connected via HTML5 form="…" attrs
+           on the side-column Save button so it still submits this form. *@
+        <form id="significantdate-form" asp-action="Edit" data-edit-form>
+            @Html.AntiForgeryToken()
+            <input type="hidden" asp-for="Id" />
+            <input type="hidden" asp-for="ContactId" />
+
+            <div asp-validation-summary="ModelOnly" class="crm-field-error"></div>
+
+            @* ── Event ─────────────────────────────────────────────────── *@
+            <div class="crm-card">
+                <div class="crm-card-header">
+                    <h5 class="card-title mb-0"><i class="bi bi-pencil-square" aria-hidden="true"></i> Event</h5>
                 </div>
+                <div class="crm-card-body">
 
-                <div class="crm-form-card-body">
-
-                    <div class="form-floating mb-3">
-                        <input asp-for="Title" class="form-control form-control-lg" id="Title" placeholder=" "/>
+                    <div class="crm-field-group">
                         <label asp-for="Title">Title</label>
-                        <span asp-validation-for="Title" class="text-danger"></span>
+                        <input asp-for="Title" class="crm-input" id="Title" />
+                        <span asp-validation-for="Title" class="crm-field-error"></span>
                     </div>
 
-                    <div class="form-floating mb-3">
-                        <input asp-for="EventDate" class="form-control" type="date" id="EventDate" placeholder=" "/>
-                        <label asp-for="EventDate">Event Date</label>
-                        <span asp-validation-for="EventDate" class="text-danger"></span>
+                    <div class="crm-form-divider">
+                        <div class="crm-form-divider-line"></div>
+                        <span class="crm-eyebrow">Date</span>
+                        <div class="crm-form-divider-line"></div>
                     </div>
 
-                    <div class="mb-3 form-check form-switch">
-                        <input type="checkbox" class="form-check-input" id="YearUnknownField" @(Model.EventDate.Year == 1 ? "checked" : "") />
-                        <label class="form-check-label" for="YearUnknownField">Year Unknown</label>
+                    <div class="crm-form-card-grid">
+                        <div class="crm-field-group">
+                            <label asp-for="EventDate">Event Date</label>
+                            <input asp-for="EventDate" class="crm-input" type="date" id="EventDate" />
+                            <span asp-validation-for="EventDate" class="crm-field-error"></span>
+                        </div>
+                        <div class="crm-field-group">
+                            <label class="crm-field-label" for="YearUnknownField">Year Unknown</label>
+                            <label class="crm-toggle">
+                                <input type="checkbox" id="YearUnknownField" @(Model.EventDate.Year == 1 ? "checked" : "") />
+                                <span class="crm-toggle-track"></span>
+                                <span class="crm-toggle-knob"></span>
+                            </label>
+                        </div>
                     </div>
 
-                    <div class="mb-4">
-                        <label asp-for="RecurrenceType" class="form-label">Recurrence Type</label>
-                        <select asp-for="RecurrenceType" class="form-select" id="RecurrenceType">
+                    <div class="crm-form-divider">
+                        <div class="crm-form-divider-line"></div>
+                        <span class="crm-eyebrow">Recurrence</span>
+                        <div class="crm-form-divider-line"></div>
+                    </div>
+
+                    <div class="crm-field-group">
+                        <label asp-for="RecurrenceType">Recurrence Type</label>
+                        <select asp-for="RecurrenceType" class="crm-input" id="RecurrenceType">
                             <option value="0">None (One-time)</option>
                             <option value="1">Annual</option>
                             <option value="2">Monthly</option>
@@ -45,67 +105,105 @@
                         </select>
                     </div>
 
-                    <div class="form-floating mb-4" id="customIntervalDiv" style="display: none;">
-                        <input asp-for="CustomIntervalDays" class="form-control" type="number" id="CustomIntervalDays" placeholder=" "/>
+                    <div class="crm-field-group" id="customIntervalDiv" style="display: none;">
                         <label asp-for="CustomIntervalDays">Custom Interval (Days)</label>
-                        <span asp-validation-for="CustomIntervalDays" class="text-danger"></span>
+                        <input asp-for="CustomIntervalDays" class="crm-input" type="number" id="CustomIntervalDays" />
+                        <span asp-validation-for="CustomIntervalDays" class="crm-field-error"></span>
                     </div>
 
-                    <div class="form-floating mb-4">
-                        <textarea asp-for="Description" class="form-control" style="height: 100px" id="Description" placeholder=" "></textarea>
+                    <div class="crm-form-divider">
+                        <div class="crm-form-divider-line"></div>
+                        <span class="crm-eyebrow">Description</span>
+                        <div class="crm-form-divider-line"></div>
+                    </div>
+
+                    <div class="crm-field-group">
                         <label asp-for="Description">Description</label>
-                        <span asp-validation-for="Description" class="text-danger"></span>
+                        <textarea asp-for="Description" class="crm-input" style="height: 100px" id="Description"></textarea>
+                        <span asp-validation-for="Description" class="crm-field-error"></span>
                     </div>
 
-                    <div class="form-check form-switch mb-4">
-                        <input class="form-check-input" type="checkbox" role="switch" id="IsActive" name="IsActive" value="true" @(Model.IsActive ? "checked" : "")>
-                        <label class="form-check-label" for="IsActive">Active</label>
-                        <input type="hidden" name="IsActive" value="false"/>
+                    <div class="crm-toggle-row">
+                        <div>
+                            <div class="crm-toggle-row-label">Active</div>
+                            <div class="crm-toggle-row-desc">Inactive dates are hidden from reminders.</div>
+                        </div>
+                        <label class="crm-toggle">
+                            <input type="checkbox" role="switch" id="IsActive" name="IsActive" value="true" @(Model.IsActive ? "checked" : "")>
+                            <span class="crm-toggle-track"></span>
+                            <span class="crm-toggle-knob"></span>
+                        </label>
                     </div>
-
-                    <div class="d-grid gap-2 d-md-flex mt-4">
-                        <button type="submit" class="crm-btn-primary"><i class="bi bi-save" aria-hidden="true"></i> Save</button>
-                        <a asp-action="Index" asp-route-contactId="@Model.ContactId" class="crm-btn-tertiary"><i class="bi bi-x-lg" aria-hidden="true"></i> Cancel</a>
-                    </div>
+                    <input type="hidden" name="IsActive" value="false" />
                 </div>
             </div>
         </form>
 
-        <div class="crm-card mt-4">
+        @* ── Reminders (separate forms — must live outside #significantdate-form) ── *@
+        <div class="crm-card">
+            <div class="crm-card-header">
+                <h5 class="card-title mb-0"><i class="bi bi-bell" aria-hidden="true"></i> Reminder Offsets</h5>
+            </div>
             <div class="crm-card-body">
-                <h5>Reminder Offsets</h5>
-                <p class="text-muted small">Manage when you are notified before the event.</p>
+                <p class="crm-field-help" style="margin-top: 0; margin-bottom: 14px;">Manage when you are notified before the event.</p>
 
-                <form asp-action="AddOffset" method="post" class="d-flex align-items-center mb-3">
-                    <input type="hidden" name="significantDateId" value="@Model.Id"/>
-                    <div class="input-group">
-                        <input type="number" name="daysBeforeEvent" class="form-control" placeholder="Days before" required min="0"/>
-                        <button type="submit" class="crm-btn-secondary">Add</button>
+                <form asp-action="AddOffset" method="post" class="d-flex align-items-end gap-2" style="margin-bottom: 16px;">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="significantDateId" value="@Model.Id" />
+                    <div class="crm-field-group" style="flex: 1; min-width: 0;">
+                        <label for="daysBeforeEvent">Days before event</label>
+                        <input type="number" id="daysBeforeEvent" name="daysBeforeEvent" class="crm-input" placeholder="e.g. 7" required min="0" />
                     </div>
+                    <button type="submit" class="crm-btn-secondary btn-sm">
+                        <i class="bi bi-plus-lg" aria-hidden="true"></i> Add
+                    </button>
                 </form>
 
-                <ul class="list-group">
-                    @{
-                        var offsets = ViewBag.Offsets as IEnumerable<Rvnx.CRM.Core.DTOs.Dates.ReminderOffsetDto>;
-                    }
-                    @if (offsets != null)
-                    {
-                        foreach (var offset in offsets)
+                @{
+                    var offsets = ViewBag.Offsets as IEnumerable<Rvnx.CRM.Core.DTOs.Dates.ReminderOffsetDto>;
+                }
+                @if (offsets != null && offsets.Any())
+                {
+                    <dl class="crm-deflist">
+                        @foreach (var offset in offsets)
                         {
-                            <li class="list-group-item d-flex justify-content-between align-items-center">
-                                @(offset.DaysBeforeEvent == 0 ? "Day of event" : $"{offset.DaysBeforeEvent} days before")
+                            <div class="crm-deflist-row" style="grid-template-columns: 1fr auto; padding: 8px 0;">
+                                <dd style="margin: 0; font-size: 13px;">
+                                    @(offset.DaysBeforeEvent == 0 ? "Day of event" : $"{offset.DaysBeforeEvent} days before")
+                                </dd>
                                 <form asp-action="DeleteOffset" method="post" style="display:inline;">
-                                    <input type="hidden" name="offsetId" value="@offset.Id"/>
-                                    <input type="hidden" name="significantDateId" value="@Model.Id"/>
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="offsetId" value="@offset.Id" />
+                                    <input type="hidden" name="significantDateId" value="@Model.Id" />
                                     <button type="submit" class="crm-icon-btn icon-danger" title="Delete offset" aria-label="Delete reminder offset">
                                         <i class="bi bi-x-lg" aria-hidden="true"></i>
                                     </button>
                                 </form>
-                            </li>
+                            </div>
                         }
-                    }
-                </ul>
+                    </dl>
+                }
+                else
+                {
+                    <div class="crm-empty py-2">
+                        <i class="bi bi-bell-slash" aria-hidden="true"></i>
+                        <span>No reminders configured.</span>
+                    </div>
+                }
             </div>
+        </div>
+    </div>
+
+    <div class="crm-edit-col-side">
+        <div class="crm-save-shortcut-card">
+            <div class="crm-save-shortcut-title">Ready to save?</div>
+            <div class="crm-save-shortcut-desc">Changes are applied immediately.</div>
+            <button type="submit" class="crm-btn-primary btn-sm" form="significantdate-form">
+                <i class="bi bi-save" aria-hidden="true"></i> Save
+            </button>
+            <a asp-action="Index" asp-route-contactId="@Model.ContactId" class="crm-btn-tertiary btn-sm">
+                <i class="bi bi-x-lg" aria-hidden="true"></i> Cancel
+            </a>
         </div>
     </div>
 </div>

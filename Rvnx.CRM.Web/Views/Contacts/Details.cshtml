@@ -958,11 +958,11 @@
         </div>
         <div class="crm-card-body">
             <div class="collapse mb-3" id="uploadAttachmentForm" style="transition: height var(--crm-transition-expand) ease;">
-                <form asp-controller="Attachments" asp-action="Upload" asp-route-returnUrl="@(Context.Request.Path + Context.Request.QueryString)" method="post" enctype="multipart/form-data" class="p-3" style="background: var(--crm-surface-secondary); border-radius: var(--crm-radius-sm); border: 1px solid var(--crm-border-subtle);">
+                <form asp-controller="Attachments" asp-action="Upload" asp-route-returnUrl="@(Context.Request.Path + Context.Request.QueryString)" method="post" enctype="multipart/form-data" style="padding: 14px; background: var(--crm-surface-secondary); border-radius: var(--crm-radius-sm); border: 1px solid var(--crm-border-subtle);">
                     <input type="hidden" name="contactId" value="@Model.Id"/>
-                    <div class="mb-2">
-                        <label for="file" class="form-label crm-meta">Select File</label>
-                        <input type="file" name="file" class="form-control form-control-sm" required/>
+                    <div class="crm-field-group" style="margin-bottom: 10px;">
+                        <label for="file">Select File</label>
+                        <input type="file" id="file" name="file" class="crm-input" required/>
                     </div>
                     <button type="submit" class="crm-btn-primary btn-sm" aria-label="Upload Attachment"><i class="bi bi-upload" aria-hidden="true"></i> Upload</button>
                 </form>

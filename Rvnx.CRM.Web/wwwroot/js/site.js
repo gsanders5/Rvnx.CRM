@@ -209,3 +209,34 @@ $(function() {
         }, 10000);
     });
 });
+
+// ---------------------------------------------------------------------------
+// Unsaved-changes indicator + beforeunload guard
+// Any <form data-edit-form> wires up automatically:
+//   - shows .crm-unsaved-indicator (within the form) on first input/change
+//   - prompts the browser on nav-away while any tracked form is dirty
+//   - clears the dirty flag on submit so Save doesn't trigger the prompt
+// One window-level beforeunload listener tracks the dirty set across all forms.
+// ---------------------------------------------------------------------------
+document.addEventListener('DOMContentLoaded', function () {
+    const dirtyForms = new Set();
+
+    document.querySelectorAll('form[data-edit-form]').forEach(function (form) {
+        const indicator = form.querySelector('.crm-unsaved-indicator');
+        function markDirty() {
+            if (dirtyForms.has(form)) return;
+            dirtyForms.add(form);
+            if (indicator) indicator.hidden = false;
+        }
+        form.addEventListener('input', markDirty);
+        form.addEventListener('change', markDirty);
+        form.addEventListener('submit', function () { dirtyForms.delete(form); });
+    });
+
+    window.addEventListener('beforeunload', function (e) {
+        if (dirtyForms.size === 0) return;
+        e.preventDefault();
+        e.returnValue = '';
+        return '';
+    });
+});
