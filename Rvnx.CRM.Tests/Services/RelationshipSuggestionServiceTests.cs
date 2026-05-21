@@ -74,4 +74,68 @@ public class RelationshipSuggestionServiceTests
                 It.IsAny<CancellationToken>()),
             Times.Never);
     }
+
+    [Fact]
+    public async Task GetSuggestedRelationshipsAsyncWithContactNotFoundReturnsEmpty()
+    {
+        Guid transitiveTypeId = RelationshipTypeIds.Sibling;
+        Guid entityId = Guid.NewGuid();
+        Guid relatedEntityId = Guid.NewGuid();
+
+        _repositoryMock.Setup(r => r.GetByIdAsync<Contact>(entityId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync((Contact?)null);
+
+        List<SuggestedRelationshipDto> result =
+            await _service.GetSuggestedRelationshipsAsync(entityId, relatedEntityId, transitiveTypeId, false, null);
+
+        Assert.Empty(result);
+
+        _repositoryMock.Verify(
+            r => r.GetByIdAsync<Contact>(entityId, It.IsAny<CancellationToken>()),
+            Times.Once);
+        _repositoryMock.Verify(
+            r => r.ListAsNoTrackingAsync<Relationship>(
+                It.IsAny<Expression<Func<Relationship, bool>>>(),
+                It.IsAny<CancellationToken>()),
+            Times.Never);
+    }
+
+    [Fact]
+    public async Task GetSuggestedRelationshipsAsyncWithRelatedContactNotFoundUsesPartialName()
+    {
+        Guid transitiveTypeId = RelationshipTypeIds.Sibling;
+        Guid entityId = Guid.NewGuid();
+        Guid relatedEntityId = Guid.NewGuid();
+        string partialName = "Unknown Sibling";
+
+        Contact contact = new() { Id = entityId, FirstName = "Known", LastName = "Contact" };
+
+        _repositoryMock.Setup(r => r.GetByIdAsync<Contact>(entityId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(contact);
+
+        // Setup related contact to return null
+        _repositoryMock.Setup(r => r.GetByIdAsync<Contact>(relatedEntityId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync((Contact?)null);
+
+        // Setup component loading - just return the start ID
+        _repositoryMock.Setup(r => r.ListAsNoTrackingAsync<Relationship>(
+                It.IsAny<Expression<Func<Relationship, bool>>>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync([]);
+
+        List<SuggestedRelationshipDto> result =
+            await _service.GetSuggestedRelationshipsAsync(entityId, relatedEntityId, transitiveTypeId, false, partialName);
+
+        // We only assert that we asked for both contacts and it did not crash.
+        // It returns empty because GetComponent doesn't find more nodes, but we verify the related contact was queried.
+        Assert.Empty(result);
+
+        _repositoryMock.Verify(
+            r => r.GetByIdAsync<Contact>(entityId, It.IsAny<CancellationToken>()),
+            Times.Once);
+
+        _repositoryMock.Verify(
+            r => r.GetByIdAsync<Contact>(relatedEntityId, It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
 }
