@@ -108,7 +108,7 @@ public class RelationshipService(IRepository repository, IRelationshipSuggestion
             existingEdges.Add((r.RelatedContactId, r.ContactId));
         }
 
-        foreach ((Guid sId, Guid tId, bool reverse) in parsedSuggestions)
+        foreach (var (sId, tId, reverse) in parsedSuggestions)
         {
             Relationship newRel = new()
             {
