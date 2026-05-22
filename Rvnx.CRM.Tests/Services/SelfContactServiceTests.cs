@@ -49,6 +49,34 @@ public class SelfContactServiceTests
     }
 
     [Fact]
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Naming", "CA1707:Identifiers should not contain underscores", Justification = "Test names follow a standard convention")]
+    public async Task GetSelfContactIdAsync_GetByIdFails_FallsBackToSubjectIdQuery()
+    {
+        Guid userId = Guid.NewGuid();
+        Guid selfContactId = Guid.NewGuid();
+        _currentUserServiceMock.Setup(c => c.UserId).Returns(userId);
+
+        _repositoryMock.Setup(r => r.GetByIdAsync<Rvnx.CRM.Core.Models.User>(userId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync((Rvnx.CRM.Core.Models.User?)null);
+
+        Expression<Func<Rvnx.CRM.Core.Models.User, bool>>? capturedExpression = null;
+        Rvnx.CRM.Core.Models.User fallbackUser = new() { Id = Guid.NewGuid(), SubjectId = userId.ToString(), SelfContactId = selfContactId };
+
+        _repositoryMock.Setup(r => r.ListAsync(It.IsAny<Expression<Func<Rvnx.CRM.Core.Models.User, bool>>>(), It.IsAny<CancellationToken>()))
+            .Callback<Expression<Func<Rvnx.CRM.Core.Models.User, bool>>, CancellationToken>((expr, _) => capturedExpression = expr)
+            .ReturnsAsync([fallbackUser]);
+
+        Guid? result = await _service.GetSelfContactIdAsync();
+
+        Assert.Equal(selfContactId, result);
+        Assert.NotNull(capturedExpression);
+
+        Func<Rvnx.CRM.Core.Models.User, bool> compiledExpr = capturedExpression.Compile();
+        Assert.True(compiledExpr(new Rvnx.CRM.Core.Models.User { SubjectId = userId.ToString() }));
+        Assert.False(compiledExpr(new Rvnx.CRM.Core.Models.User { SubjectId = Guid.NewGuid().ToString() }));
+    }
+
+    [Fact]
     public async Task GetSelfContactIdAsyncCachesResultAcrossCalls()
     {
         Guid userId = Guid.NewGuid();
