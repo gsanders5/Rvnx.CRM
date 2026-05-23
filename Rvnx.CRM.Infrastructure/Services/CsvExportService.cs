@@ -139,7 +139,7 @@ public class CsvExportService(IRepository repository) : ICsvExportService
                     && sd.Title == SignificantDateTitles.Birthday,
                 sd => new ValueTuple<Guid, DateOnly>(sd.ContactId!.Value, sd.EventDate));
 
-        foreach ((Guid cid, DateOnly date) in rows)
+        foreach (var (cid, date) in rows)
         {
             birthdays.TryAdd(cid, date);
         }
