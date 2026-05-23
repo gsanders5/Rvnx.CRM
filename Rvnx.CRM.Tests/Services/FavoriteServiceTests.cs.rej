@@ -1,0 +1,8 @@
+--- FavoriteServiceTests.cs
++++ FavoriteServiceTests.cs
+@@ -4,6 +4,7 @@
+ using Rvnx.CRM.Core.Services;
+ using System.Linq.Expressions;
++using Rvnx.CRM.Core.Extensions;
+
+ namespace Rvnx.CRM.Tests.Services;

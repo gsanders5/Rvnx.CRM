@@ -1,0 +1,97 @@
+--- Rvnx.CRM.Tests/Services/FavoriteServiceTests.cs
++++ Rvnx.CRM.Tests/Services/FavoriteServiceTests.cs
+@@ -4,6 +4,7 @@
+ using Rvnx.CRM.Core.Services;
+ using System.Linq.Expressions;
+ using Rvnx.CRM.Core.Extensions;
++using System.Diagnostics.CodeAnalysis;
+
+ namespace Rvnx.CRM.Tests.Services;
+
+@@ -143,6 +144,7 @@
+         }
+
+         [Fact]
++        [SuppressMessage("Naming", "CA1707:Identifiers should not contain underscores", Justification = "Test names follow a standard convention")]
+         public async Task WhenUserIdNull_ReturnsEmptyList()
+         {
+             // Arrange
+@@ -161,6 +163,7 @@
+         }
+
+         [Fact]
++        [SuppressMessage("Naming", "CA1707:Identifiers should not contain underscores", Justification = "Test names follow a standard convention")]
+         public async Task WhenNoFavorites_ReturnsEmptyList()
+         {
+             // Arrange
+@@ -180,8 +183,8 @@
+             Assert.NotNull(result);
+             Assert.Empty(result);
+             _repositoryMock.Verify(x => x.ListProjectedByChunkedContainsAsync(
+-                It.IsAny<List<Guid>>(),
+-                It.IsAny<Func<List<Guid>, Expression<Func<Contact, bool>>>>(),
++                It.IsAny<IEnumerable<Guid>>(),
++                It.IsAny<Func<IEnumerable<Guid>, Expression<Func<Contact, bool>>>>(),
+                 It.IsAny<Expression<Func<Contact, Core.DTOs.Contact.FavoriteSidebarItemDto>>>(),
+                 It.IsAny<CancellationToken>()), Times.Never);
+         }
+@@ -187,6 +190,7 @@
+         }
+
+         [Fact]
++        [SuppressMessage("Naming", "CA1707:Identifiers should not contain underscores", Justification = "Test names follow a standard convention")]
+         public async Task WhenContactsFilteredOut_ReturnsEmptyList()
+         {
+             // Arrange
+@@ -201,8 +205,8 @@
+                 .ReturnsAsync([contactId]);
+
+             _repositoryMock.Setup(x => x.ListProjectedByChunkedContainsAsync(
+-                It.IsAny<List<Guid>>(),
+-                It.IsAny<Func<List<Guid>, Expression<Func<Contact, bool>>>>(),
++                It.IsAny<IEnumerable<Guid>>(),
++                It.IsAny<Func<IEnumerable<Guid>, Expression<Func<Contact, bool>>>>(),
+                 It.IsAny<Expression<Func<Contact, Core.DTOs.Contact.FavoriteSidebarItemDto>>>(),
+                 It.IsAny<CancellationToken>()))
+                 .ReturnsAsync([]);
+@@ -214,14 +218,15 @@
+             Assert.NotNull(result);
+             Assert.Empty(result);
+             _repositoryMock.Verify(x => x.ListProjectedByChunkedContainsAsync(
+-                It.IsAny<List<Guid>>(),
+-                It.IsAny<Func<List<Guid>, Expression<Func<Attachment, bool>>>>(),
+-                It.IsAny<Expression<Func<Attachment, (Guid, Guid)>>>(),
++                It.IsAny<IEnumerable<Guid>>(),
++                It.IsAny<Func<IEnumerable<Guid>, Expression<Func<Rvnx.CRM.Core.Models.Contact.Attachment, bool>>>>(),
++                It.IsAny<Expression<Func<Rvnx.CRM.Core.Models.Contact.Attachment, (Guid, Guid)>>>(),
+                 It.IsAny<CancellationToken>()), Times.Never);
+         }
+
+         [Fact]
++        [SuppressMessage("Naming", "CA1707:Identifiers should not contain underscores", Justification = "Test names follow a standard convention")]
+         public async Task WithValidFavorites_ReturnsSortedItemsWithProfileImages()
+         {
+             // Arrange
+@@ -250,8 +255,8 @@
+
+             // Second query: Contacts chunked lookup
+             _repositoryMock.Setup(x => x.ListProjectedByChunkedContainsAsync(
+-                It.IsAny<List<Guid>>(),
+-                It.IsAny<Func<List<Guid>, Expression<Func<Contact, bool>>>>(),
++                It.IsAny<IEnumerable<Guid>>(),
++                It.IsAny<Func<IEnumerable<Guid>, Expression<Func<Contact, bool>>>>(),
+                 It.IsAny<Expression<Func<Contact, Core.DTOs.Contact.FavoriteSidebarItemDto>>>(),
+                 It.IsAny<CancellationToken>()))
+                 .ReturnsAsync(unsortedItems);
+@@ -260,9 +265,9 @@
+             List<(Guid ContactId, Guid AttachmentId)> attachments = [(contactId2, attachmentId2)];
+
+             _repositoryMock.Setup(x => x.ListProjectedByChunkedContainsAsync(
+-                It.IsAny<List<Guid>>(),
+-                It.IsAny<Func<List<Guid>, Expression<Func<Attachment, bool>>>>(),
+-                It.IsAny<Expression<Func<Attachment, (Guid, Guid)>>>(),
++                It.IsAny<IEnumerable<Guid>>(),
++                It.IsAny<Func<IEnumerable<Guid>, Expression<Func<Rvnx.CRM.Core.Models.Contact.Attachment, bool>>>>(),
++                It.IsAny<Expression<Func<Rvnx.CRM.Core.Models.Contact.Attachment, (Guid, Guid)>>>(),
+                 It.IsAny<CancellationToken>()))
+                 .ReturnsAsync(attachments);
