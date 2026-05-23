@@ -1,4 +1,5 @@
 using Moq;
+using Rvnx.CRM.Core.Extensions;
 using Rvnx.CRM.Core.Interfaces;
 using Rvnx.CRM.Core.Models.Contact;
 using Rvnx.CRM.Core.Services;
@@ -126,5 +127,159 @@ public class FavoriteServiceTests
         Assert.Equal(2, result.Count);
         Assert.Contains(contactId1, result);
         Assert.Contains(contactId2, result);
+    }
+
+    public class FavoriteServiceGetFavoriteSidebarItemsAsyncTests
+    {
+        private readonly Mock<IRepository> _repositoryMock;
+        private readonly Mock<ICurrentUserService> _currentUserServiceMock;
+        private readonly FavoriteService _service;
+
+        public FavoriteServiceGetFavoriteSidebarItemsAsyncTests()
+        {
+            _repositoryMock = new Mock<IRepository>();
+            _currentUserServiceMock = new Mock<ICurrentUserService>();
+            _service = new FavoriteService(_repositoryMock.Object, _currentUserServiceMock.Object);
+        }
+
+        [Fact]
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Naming", "CA1707:Identifiers should not contain underscores", Justification = "Test names follow a standard convention")]
+        public async Task WhenUserIdNull_ReturnsEmptyList()
+        {
+            // Arrange
+            _currentUserServiceMock.Setup(x => x.UserId).Returns((Guid?)null);
+
+            // Act
+            List<Core.DTOs.Contact.FavoriteSidebarItemDto> result = await _service.GetFavoriteSidebarItemsAsync();
+
+            // Assert
+            Assert.NotNull(result);
+            Assert.Empty(result);
+            _repositoryMock.Verify(x => x.ListProjectedAsync(
+                It.IsAny<Expression<Func<ContactFavorite, bool>>>(),
+                It.IsAny<Expression<Func<ContactFavorite, Guid>>>(),
+                It.IsAny<CancellationToken>()), Times.Never);
+        }
+
+        [Fact]
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Naming", "CA1707:Identifiers should not contain underscores", Justification = "Test names follow a standard convention")]
+        public async Task WhenNoFavorites_ReturnsEmptyList()
+        {
+            // Arrange
+            Guid userId = Guid.NewGuid();
+            _currentUserServiceMock.Setup(x => x.UserId).Returns(userId);
+
+            _repositoryMock.Setup(x => x.ListProjectedAsync(
+                It.IsAny<Expression<Func<ContactFavorite, bool>>>(),
+                It.IsAny<Expression<Func<ContactFavorite, Guid>>>(),
+                It.IsAny<CancellationToken>()))
+                .ReturnsAsync([]);
+
+            // Act
+            List<Core.DTOs.Contact.FavoriteSidebarItemDto> result = await _service.GetFavoriteSidebarItemsAsync();
+
+            // Assert
+            Assert.NotNull(result);
+            Assert.Empty(result);
+            _repositoryMock.Verify(x => x.ListProjectedAsync(
+                It.IsAny<Expression<Func<Contact, bool>>>(),
+                It.IsAny<Expression<Func<Contact, Core.DTOs.Contact.FavoriteSidebarItemDto>>>(),
+                It.IsAny<CancellationToken>()), Times.Never);
+        }
+
+        [Fact]
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Naming", "CA1707:Identifiers should not contain underscores", Justification = "Test names follow a standard convention")]
+        public async Task WhenContactsFilteredOut_ReturnsEmptyList()
+        {
+            // Arrange
+            Guid userId = Guid.NewGuid();
+            Guid contactId = Guid.NewGuid();
+            _currentUserServiceMock.Setup(x => x.UserId).Returns(userId);
+
+            _repositoryMock.Setup(x => x.ListProjectedAsync(
+                It.IsAny<Expression<Func<ContactFavorite, bool>>>(),
+                It.IsAny<Expression<Func<ContactFavorite, Guid>>>(),
+                It.IsAny<CancellationToken>()))
+                .ReturnsAsync([contactId]);
+
+            _repositoryMock.Setup(x => x.ListProjectedAsync(
+                It.IsAny<Expression<Func<Contact, bool>>>(),
+                It.IsAny<Expression<Func<Contact, Core.DTOs.Contact.FavoriteSidebarItemDto>>>(),
+                It.IsAny<CancellationToken>()))
+                .ReturnsAsync([]);
+
+            // Act
+            List<Core.DTOs.Contact.FavoriteSidebarItemDto> result = await _service.GetFavoriteSidebarItemsAsync();
+
+            // Assert
+            Assert.NotNull(result);
+            Assert.Empty(result);
+            _repositoryMock.Verify(x => x.ListProjectedAsync(
+                It.IsAny<Expression<Func<Rvnx.CRM.Core.Models.Base.Attachment, bool>>>(),
+                It.IsAny<Expression<Func<Rvnx.CRM.Core.Models.Base.Attachment, (Guid, Guid)>>>(),
+                It.IsAny<CancellationToken>()), Times.Never);
+        }
+
+        [Fact]
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Naming", "CA1707:Identifiers should not contain underscores", Justification = "Test names follow a standard convention")]
+        public async Task WithValidFavorites_ReturnsSortedItemsWithProfileImages()
+        {
+            // Arrange
+            Guid userId = Guid.NewGuid();
+            _currentUserServiceMock.Setup(x => x.UserId).Returns(userId);
+
+            Guid contactId1 = Guid.NewGuid();
+            Guid contactId2 = Guid.NewGuid();
+            Guid contactId3 = Guid.NewGuid();
+            Guid attachmentId2 = Guid.NewGuid(); // Only contact 2 has a profile image
+
+            // First query: Favorite Ids
+            _repositoryMock.Setup(x => x.ListProjectedAsync(
+                It.IsAny<Expression<Func<ContactFavorite, bool>>>(),
+                It.IsAny<Expression<Func<ContactFavorite, Guid>>>(),
+                It.IsAny<CancellationToken>()))
+                .ReturnsAsync([contactId1, contactId2, contactId3]);
+
+            // Unsorted list of items
+            List<Core.DTOs.Contact.FavoriteSidebarItemDto> unsortedItems =
+            [
+                new() { Id = contactId1, FirstName = "Zebra", LastName = "Zoo" },
+                new() { Id = contactId2, FirstName = "Apple", LastName = "Seed" },
+                new() { Id = contactId3, FirstName = "Apple", LastName = "Cider" }
+            ];
+
+            // Second query: Contacts chunked lookup
+            _repositoryMock.Setup(x => x.ListProjectedAsync(
+                It.IsAny<Expression<Func<Contact, bool>>>(),
+                It.IsAny<Expression<Func<Contact, Core.DTOs.Contact.FavoriteSidebarItemDto>>>(),
+                It.IsAny<CancellationToken>()))
+                .ReturnsAsync(unsortedItems);
+
+            // Third query: Attachments chunked lookup
+            List<(Guid ContactId, Guid AttachmentId)> attachments = [(contactId2, attachmentId2)];
+
+            _repositoryMock.Setup(x => x.ListProjectedAsync(
+                It.IsAny<Expression<Func<Rvnx.CRM.Core.Models.Base.Attachment, bool>>>(),
+                It.IsAny<Expression<Func<Rvnx.CRM.Core.Models.Base.Attachment, (Guid, Guid)>>>(),
+                It.IsAny<CancellationToken>()))
+                .ReturnsAsync(attachments);
+
+            // Act
+            List<Core.DTOs.Contact.FavoriteSidebarItemDto> result = await _service.GetFavoriteSidebarItemsAsync();
+
+            // Assert
+            Assert.NotNull(result);
+            Assert.Equal(3, result.Count);
+
+            // Assert Sorting (Apple Cider, Apple Seed, Zebra Zoo)
+            Assert.Equal(contactId3, result[0].Id); // Apple Cider
+            Assert.Equal(contactId2, result[1].Id); // Apple Seed
+            Assert.Equal(contactId1, result[2].Id); // Zebra Zoo
+
+            // Assert Profile Images mapped correctly
+            Assert.Null(result[0].ProfileImageId);
+            Assert.Equal(attachmentId2, result[1].ProfileImageId);
+            Assert.Null(result[2].ProfileImageId);
+        }
     }
 }
