@@ -1,6 +1,7 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Rvnx.CRM.Infrastructure;
 
 namespace Rvnx.CRM.ConsoleApp;
 
@@ -22,7 +23,7 @@ internal static class TaskManager
         using IHost host = AppHost.Build();
         ILogger logger = host.Services.GetRequiredService<ILogger<Program>>();
 
-        if (!await AppHost.MigrateDatabaseAsync(host, logger))
+        if (!await host.Services.ApplyDatabaseMigrationsAsync())
         {
             return 1;
         }
