@@ -1,7 +1,9 @@
 using Moq;
 using Rvnx.CRM.Core.Interfaces;
 using Rvnx.CRM.Core.Models.Contact;
+using Rvnx.CRM.Core.Models.Base;
 using Rvnx.CRM.Core.Services;
+using Rvnx.CRM.Core.Extensions;
 using System.Linq.Expressions;
 
 namespace Rvnx.CRM.Tests.Services;
@@ -126,5 +128,124 @@ public class FavoriteServiceTests
         Assert.Equal(2, result.Count);
         Assert.Contains(contactId1, result);
         Assert.Contains(contactId2, result);
+    }
+}
+
+public class FavoriteServiceGetFavoriteSidebarItemsAsyncTests
+{
+    private readonly Mock<IRepository> _repositoryMock;
+    private readonly Mock<ICurrentUserService> _currentUserServiceMock;
+    private readonly FavoriteService _service;
+
+    public FavoriteServiceGetFavoriteSidebarItemsAsyncTests()
+    {
+        _repositoryMock = new Mock<IRepository>();
+        _currentUserServiceMock = new Mock<ICurrentUserService>();
+        _service = new FavoriteService(_repositoryMock.Object, _currentUserServiceMock.Object);
+    }
+
+    [Fact]
+    public async Task GetFavoriteSidebarItemsAsyncWhenUserIdNullReturnsEmptyList()
+    {
+        _currentUserServiceMock.Setup(x => x.UserId).Returns((Guid?)null);
+
+        List<Rvnx.CRM.Core.DTOs.Contact.FavoriteSidebarItemDto> result = await _service.GetFavoriteSidebarItemsAsync();
+
+        Assert.Empty(result);
+    }
+
+    [Fact]
+    public async Task GetFavoriteSidebarItemsAsyncWhenNoFavoritesReturnsEmptyList()
+    {
+        Guid userId = Guid.NewGuid();
+        _currentUserServiceMock.Setup(x => x.UserId).Returns(userId);
+
+        _repositoryMock.Setup(x => x.ListProjectedAsync(
+            It.IsAny<Expression<Func<ContactFavorite, bool>>>(),
+            It.IsAny<Expression<Func<ContactFavorite, Guid>>>(),
+            It.IsAny<CancellationToken>()))
+            .ReturnsAsync([]);
+
+        List<Rvnx.CRM.Core.DTOs.Contact.FavoriteSidebarItemDto> result = await _service.GetFavoriteSidebarItemsAsync();
+
+        Assert.Empty(result);
+    }
+
+    [Fact]
+    public async Task GetFavoriteSidebarItemsAsyncWhenAllContactsHiddenOrDeceasedReturnsEmptyList()
+    {
+        Guid userId = Guid.NewGuid();
+        _currentUserServiceMock.Setup(x => x.UserId).Returns(userId);
+
+        Guid contactId = Guid.NewGuid();
+        _repositoryMock.Setup(x => x.ListProjectedAsync(
+            It.IsAny<Expression<Func<ContactFavorite, bool>>>(),
+            It.IsAny<Expression<Func<ContactFavorite, Guid>>>(),
+            It.IsAny<CancellationToken>()))
+            .ReturnsAsync([contactId]);
+
+        // Instead of mocking the extension method, mock the underlying interface method ListProjectedAsync
+        _repositoryMock.Setup(x => x.ListProjectedAsync(
+            It.IsAny<Expression<Func<Contact, bool>>>(),
+            It.IsAny<Expression<Func<Contact, Rvnx.CRM.Core.DTOs.Contact.FavoriteSidebarItemDto>>>(),
+            It.IsAny<CancellationToken>()))
+            .ReturnsAsync([]);
+
+        List<Rvnx.CRM.Core.DTOs.Contact.FavoriteSidebarItemDto> result = await _service.GetFavoriteSidebarItemsAsync();
+
+        Assert.Empty(result);
+    }
+
+    [Fact]
+    public async Task GetFavoriteSidebarItemsAsyncWithValidFavoritesReturnsSortedItemsWithAttachments()
+    {
+        Guid userId = Guid.NewGuid();
+        _currentUserServiceMock.Setup(x => x.UserId).Returns(userId);
+
+        Guid contactId1 = Guid.NewGuid();
+        Guid contactId2 = Guid.NewGuid();
+        Guid attachmentId2 = Guid.NewGuid();
+
+        _repositoryMock.Setup(x => x.ListProjectedAsync(
+            It.IsAny<Expression<Func<ContactFavorite, bool>>>(),
+            It.IsAny<Expression<Func<ContactFavorite, Guid>>>(),
+            It.IsAny<CancellationToken>()))
+            .ReturnsAsync([contactId1, contactId2]);
+
+        List<Rvnx.CRM.Core.DTOs.Contact.FavoriteSidebarItemDto> items =
+        [
+            new Rvnx.CRM.Core.DTOs.Contact.FavoriteSidebarItemDto { Id = contactId2, FirstName = "Alice", LastName = "Smith" },
+            new Rvnx.CRM.Core.DTOs.Contact.FavoriteSidebarItemDto { Id = contactId1, FirstName = "Bob", LastName = "Jones" }
+        ];
+
+        _repositoryMock.Setup(x => x.ListProjectedAsync(
+            It.IsAny<Expression<Func<Contact, bool>>>(),
+            It.IsAny<Expression<Func<Contact, Rvnx.CRM.Core.DTOs.Contact.FavoriteSidebarItemDto>>>(),
+            It.IsAny<CancellationToken>()))
+            .ReturnsAsync(items);
+
+        List<(Guid ContactId, Guid AttachmentId)> attachments =
+        [
+            (contactId2, attachmentId2)
+        ];
+
+        _repositoryMock.Setup(x => x.ListProjectedAsync(
+            It.IsAny<Expression<Func<Attachment, bool>>>(),
+            It.IsAny<Expression<Func<Attachment, (Guid, Guid)>>>(),
+            It.IsAny<CancellationToken>()))
+            .ReturnsAsync(attachments);
+
+        List<Rvnx.CRM.Core.DTOs.Contact.FavoriteSidebarItemDto> result = await _service.GetFavoriteSidebarItemsAsync();
+
+        Assert.Equal(2, result.Count);
+
+        // Sorted by FirstName then LastName: Alice Smith, Bob Jones
+        Assert.Equal("Alice", result[0].FirstName);
+        Assert.Equal(contactId2, result[0].Id);
+        Assert.Equal(attachmentId2, result[0].ProfileImageId);
+
+        Assert.Equal("Bob", result[1].FirstName);
+        Assert.Equal(contactId1, result[1].Id);
+        Assert.Null(result[1].ProfileImageId);
     }
 }
