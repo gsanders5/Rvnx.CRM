@@ -107,4 +107,22 @@ public static class ServiceCollectionExtensions
             LogDbCreationError(logger, ex);
         }
     }
+
+    public static async Task<bool> ApplyDatabaseMigrationsAsync(this IServiceProvider provider)
+    {
+        using IServiceScope scope = provider.CreateScope();
+        IServiceProvider services = scope.ServiceProvider;
+        try
+        {
+            CRMDbContext context = services.GetRequiredService<CRMDbContext>();
+            await context.Database.MigrateAsync();
+            return true;
+        }
+        catch (Exception ex)
+        {
+            ILogger<CRMDbContext> logger = services.GetRequiredService<ILogger<CRMDbContext>>();
+            LogDbCreationError(logger, ex);
+            return false;
+        }
+    }
 }
