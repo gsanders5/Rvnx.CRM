@@ -127,4 +127,127 @@ public class FavoriteServiceTests
         Assert.Contains(contactId1, result);
         Assert.Contains(contactId2, result);
     }
+
+    [Fact]
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Naming", "CA1707:Identifiers should not contain underscores", Justification = "Test names follow a standard convention")]
+    public async Task GetFavoriteSidebarItemsAsync_UserIdNull_ReturnsEmptyList()
+    {
+        // Arrange
+        _currentUserServiceMock.Setup(x => x.UserId).Returns((Guid?)null);
+
+        // Act
+        var result = await _service.GetFavoriteSidebarItemsAsync();
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.Empty(result);
+    }
+
+    [Fact]
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Naming", "CA1707:Identifiers should not contain underscores", Justification = "Test names follow a standard convention")]
+    public async Task GetFavoriteSidebarItemsAsync_NoFavorites_ReturnsEmptyList()
+    {
+        // Arrange
+        Guid userId = Guid.NewGuid();
+        _currentUserServiceMock.Setup(x => x.UserId).Returns(userId);
+
+        _repositoryMock.Setup(x => x.ListProjectedAsync(
+            It.IsAny<Expression<Func<ContactFavorite, bool>>>(),
+            It.IsAny<Expression<Func<ContactFavorite, Guid>>>(),
+            It.IsAny<CancellationToken>()))
+            .ReturnsAsync([]);
+
+        // Act
+        var result = await _service.GetFavoriteSidebarItemsAsync();
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.Empty(result);
+    }
+
+    [Fact]
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Naming", "CA1707:Identifiers should not contain underscores", Justification = "Test names follow a standard convention")]
+    public async Task GetFavoriteSidebarItemsAsync_NoValidContacts_ReturnsEmptyList()
+    {
+        // Arrange
+        Guid userId = Guid.NewGuid();
+        _currentUserServiceMock.Setup(x => x.UserId).Returns(userId);
+
+        Guid contactId1 = Guid.NewGuid();
+        List<Guid> favoriteIds = [contactId1];
+
+        _repositoryMock.Setup(x => x.ListProjectedAsync(
+            It.IsAny<Expression<Func<ContactFavorite, bool>>>(),
+            It.IsAny<Expression<Func<ContactFavorite, Guid>>>(),
+            It.IsAny<CancellationToken>()))
+            .ReturnsAsync(favoriteIds);
+
+        _repositoryMock.Setup(x => x.ListProjectedAsync<Contact, Core.DTOs.Contact.FavoriteSidebarItemDto>(
+            It.IsAny<Expression<Func<Contact, bool>>>(),
+            It.IsAny<Expression<Func<Contact, Core.DTOs.Contact.FavoriteSidebarItemDto>>>(),
+            It.IsAny<CancellationToken>()))
+            .ReturnsAsync([]);
+
+        // Act
+        var result = await _service.GetFavoriteSidebarItemsAsync();
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.Empty(result);
+    }
+
+    [Fact]
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Naming", "CA1707:Identifiers should not contain underscores", Justification = "Test names follow a standard convention")]
+    public async Task GetFavoriteSidebarItemsAsync_WithValidContacts_ReturnsOrderedListWithProfileImages()
+    {
+        // Arrange
+        Guid userId = Guid.NewGuid();
+        _currentUserServiceMock.Setup(x => x.UserId).Returns(userId);
+
+        Guid contactId1 = Guid.NewGuid();
+        Guid contactId2 = Guid.NewGuid();
+        List<Guid> favoriteIds = [contactId1, contactId2];
+
+        _repositoryMock.Setup(x => x.ListProjectedAsync(
+            It.IsAny<Expression<Func<ContactFavorite, bool>>>(),
+            It.IsAny<Expression<Func<ContactFavorite, Guid>>>(),
+            It.IsAny<CancellationToken>()))
+            .ReturnsAsync(favoriteIds);
+
+        var item1 = new Core.DTOs.Contact.FavoriteSidebarItemDto { Id = contactId1, FirstName = "Zoe", LastName = "Smith" };
+        var item2 = new Core.DTOs.Contact.FavoriteSidebarItemDto { Id = contactId2, FirstName = "Alice", LastName = "Jones" };
+        List<Core.DTOs.Contact.FavoriteSidebarItemDto> items = [item1, item2];
+
+        _repositoryMock.Setup(x => x.ListProjectedAsync<Contact, Core.DTOs.Contact.FavoriteSidebarItemDto>(
+            It.IsAny<Expression<Func<Contact, bool>>>(),
+            It.IsAny<Expression<Func<Contact, Core.DTOs.Contact.FavoriteSidebarItemDto>>>(),
+            It.IsAny<CancellationToken>()))
+            .ReturnsAsync(items);
+
+        Guid attachmentId2 = Guid.NewGuid();
+        List<(Guid ContactId, Guid AttachmentId)> attachments = [(contactId2, attachmentId2)];
+
+        _repositoryMock.Setup(x => x.ListProjectedAsync<Core.Models.Base.Attachment, (Guid, Guid)>(
+            It.IsAny<Expression<Func<Core.Models.Base.Attachment, bool>>>(),
+            It.IsAny<Expression<Func<Core.Models.Base.Attachment, (Guid, Guid)>>>(),
+            It.IsAny<CancellationToken>()))
+            .ReturnsAsync(attachments);
+
+        // Act
+        var result = await _service.GetFavoriteSidebarItemsAsync();
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.Equal(2, result.Count);
+
+        // Alice should be first because of sorting
+        Assert.Equal(contactId2, result[0].Id);
+        Assert.Equal("Alice", result[0].FirstName);
+        Assert.Equal(attachmentId2, result[0].ProfileImageId);
+
+        // Zoe should be second
+        Assert.Equal(contactId1, result[1].Id);
+        Assert.Equal("Zoe", result[1].FirstName);
+        Assert.Null(result[1].ProfileImageId);
+    }
 }
