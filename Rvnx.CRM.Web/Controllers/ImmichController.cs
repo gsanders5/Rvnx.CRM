@@ -1,9 +1,9 @@
 using Microsoft.AspNetCore.Mvc;
 using Rvnx.CRM.Core.DTOs.Base;
 using Rvnx.CRM.Core.DTOs.Contact;
-using Rvnx.CRM.Web.ViewModels.Immich;
 using Rvnx.CRM.Core.Interfaces;
 using Rvnx.CRM.Web.Controllers.Base;
+using Rvnx.CRM.Web.ViewModels.Immich;
 
 namespace Rvnx.CRM.Web.Controllers;
 
