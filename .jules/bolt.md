@@ -136,3 +136,7 @@ Action: When a service builds a read-only in-memory aggregate (graph nodes, rece
 ## 2026-04-18 - Avoid full entity fetch for Favorite deletion
 **Learning:** `FavoriteService.ToggleFavoriteAsync` was loading the entire `ContactFavorite` entity into memory via `ListAsync` just to check if it existed and delete it. This caused EF Core to load unnecessary fields and track an entity that was about to be deleted.
 **Action:** Replace `ListAsync` with `CountAsync` to check existence efficiently without loading entities into memory. Also, use the bulk delete feature (`DeleteAsync(Expression)`) instead of `DeleteAsync(entity)` to avoid the overhead of fetching and tracking the entity before deleting it.
+
+## 2026-05-26 - Optimize MergeService AddAsync N+1 overhead
+**Learning:** `MergeService.cs` was executing an N+1 query pattern during PetContact merge resolution by calling `await _repository.AddAsync(new PetContact {...})` inside a `foreach` loop, causing excessive ORM tracking overhead and network roundtrips.
+**Action:** Replaced iterative `AddAsync` calls inside the loop with collection aggregation, followed by a single bulk `await _repository.AddRangeAsync` call outside the loop to optimize database insertion performance.
