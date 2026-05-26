@@ -74,4 +74,121 @@ public class RelationshipSuggestionServiceTests
                 It.IsAny<CancellationToken>()),
             Times.Never);
     }
+
+    [Fact]
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Naming", "CA1707:Identifiers should not contain underscores", Justification = "Test names follow a standard convention")]
+    public async Task GetSuggestedRelationshipsAsync_WhenContactDoesNotExist_ReturnsEmpty()
+    {
+        Guid entityId = Guid.NewGuid();
+        Guid typeId = RelationshipTypeIds.Sibling;
+
+        _repositoryMock.Setup(r => r.GetByIdAsync<Contact>(entityId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync((Contact?)null);
+
+        List<SuggestedRelationshipDto> result =
+            await _service.GetSuggestedRelationshipsAsync(entityId, null, typeId, false, null);
+
+        Assert.Empty(result);
+        _repositoryMock.Verify(
+            r => r.ListAsNoTrackingAsync<Relationship>(
+                It.IsAny<Expression<Func<Relationship, bool>>>(),
+                It.IsAny<CancellationToken>()),
+            Times.Never);
+    }
+
+    [Fact]
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Naming", "CA1707:Identifiers should not contain underscores", Justification = "Test names follow a standard convention")]
+    public async Task GetSuggestedRelationshipsAsync_WithTransitiveType_ReturnsSuggestionsForRelatedComponent()
+    {
+        Guid contactId = Guid.NewGuid();
+        Guid relatedContactId = Guid.NewGuid();
+        Guid newTransitiveContactId = Guid.NewGuid();
+        Guid typeId = RelationshipTypeIds.Sibling;
+
+        Contact contact = new() { Id = contactId, FirstName = "John", LastName = "Doe" };
+        Contact relatedContact = new() { Id = relatedContactId, FirstName = "Jane", LastName = "Doe" };
+        Contact newContact = new() { Id = newTransitiveContactId, FirstName = "Jim", LastName = "Doe" };
+
+        _repositoryMock.Setup(r => r.GetByIdAsync<Contact>(contactId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(contact);
+        _repositoryMock.Setup(r => r.GetByIdAsync<Contact>(relatedContactId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(relatedContact);
+
+        List<Relationship> relationshipsDb = [
+            new() { ContactId = relatedContactId, RelatedContactId = newTransitiveContactId, RelationshipTypeId = typeId }
+        ];
+
+        _repositoryMock.Setup(r => r.ListAsNoTrackingAsync<Relationship>(
+                It.IsAny<Expression<Func<Relationship, bool>>>(),
+                It.IsAny<CancellationToken>(),
+                It.IsAny<string[]>()))
+            .ReturnsAsync((Expression<Func<Relationship, bool>> expr, CancellationToken ct, string[] includes) =>
+                relationshipsDb.AsQueryable().Where(expr).ToList());
+
+        List<Contact> contactsDb = [contact, relatedContact, newContact];
+
+        _repositoryMock.Setup(r => r.ListAsNoTrackingAsync<Contact>(
+                It.IsAny<Expression<Func<Contact, bool>>>(),
+                It.IsAny<CancellationToken>(),
+                It.IsAny<string[]>()))
+            .ReturnsAsync((Expression<Func<Contact, bool>> expr, CancellationToken ct, string[] includes) =>
+                contactsDb.AsQueryable().Where(expr).ToList());
+
+        List<SuggestedRelationshipDto> result =
+            await _service.GetSuggestedRelationshipsAsync(contactId, relatedContactId, typeId, false, null);
+
+        Assert.Single(result);
+        SuggestedRelationshipDto suggestion = result.First();
+        Assert.Equal("John Doe", suggestion.SourceName);
+        Assert.Equal("Jim Doe", suggestion.TargetName);
+        Assert.Equal("Sibling", suggestion.RelationshipName);
+    }
+
+    [Fact]
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Naming", "CA1707:Identifiers should not contain underscores", Justification = "Test names follow a standard convention")]
+    public async Task GetSuggestedRelationshipsAsync_WithFamilyAdultChildType_ReturnsSuggestionsForChildSiblings()
+    {
+        Guid adultId = Guid.NewGuid();
+        Guid childId = Guid.NewGuid();
+        Guid siblingId = Guid.NewGuid();
+        Guid typeId = RelationshipTypeIds.Parent; // FamilyAdultChild
+
+        Contact adult = new() { Id = adultId, FirstName = "Adult", LastName = "One" };
+        Contact child = new() { Id = childId, FirstName = "Child", LastName = "One" };
+        Contact sibling = new() { Id = siblingId, FirstName = "Sibling", LastName = "One" };
+
+        _repositoryMock.Setup(r => r.GetByIdAsync<Contact>(adultId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(adult);
+        _repositoryMock.Setup(r => r.GetByIdAsync<Contact>(childId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(child);
+
+        List<Relationship> relationshipsDb = [
+            new() { ContactId = childId, RelatedContactId = siblingId, RelationshipTypeId = RelationshipTypeIds.Sibling }
+        ];
+
+        _repositoryMock.Setup(r => r.ListAsNoTrackingAsync<Relationship>(
+                It.IsAny<Expression<Func<Relationship, bool>>>(),
+                It.IsAny<CancellationToken>(),
+                It.IsAny<string[]>()))
+            .ReturnsAsync((Expression<Func<Relationship, bool>> expr, CancellationToken ct, string[] includes) =>
+                relationshipsDb.AsQueryable().Where(expr).ToList());
+
+        List<Contact> contactsDb = [adult, child, sibling];
+
+        _repositoryMock.Setup(r => r.ListAsNoTrackingAsync<Contact>(
+                It.IsAny<Expression<Func<Contact, bool>>>(),
+                It.IsAny<CancellationToken>(),
+                It.IsAny<string[]>()))
+            .ReturnsAsync((Expression<Func<Contact, bool>> expr, CancellationToken ct, string[] includes) =>
+                contactsDb.AsQueryable().Where(expr).ToList());
+
+        List<SuggestedRelationshipDto> result =
+            await _service.GetSuggestedRelationshipsAsync(adultId, childId, typeId, false, null);
+
+        Assert.Single(result);
+        SuggestedRelationshipDto suggestion = result.First();
+        Assert.Equal("Adult One", suggestion.SourceName);
+        Assert.Equal("Sibling One", suggestion.TargetName);
+        Assert.Equal("Parent", suggestion.RelationshipName); // Note: It suggests adult -> sibling relation.
+    }
 }
