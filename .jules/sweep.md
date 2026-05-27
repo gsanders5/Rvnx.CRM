@@ -31,3 +31,6 @@
 ## 2024-05-23 - C# Tuple Deconstruction Code Review Error
 **Learning:** The code review tool flagged tuple deconstruction (`foreach ((Guid id, Guid relatedId) in list)`) as a compilation error when iterating over a `List<(Guid, Guid)>`. This was a hallucination, as `dotnet build` and `dotnet test` passed without issue.
 **Action:** Always trust successful `dotnet build` and `dotnet test` results over the reviewer claims of basic C# compilation failures.
+## 2024-05-18 - Avoid Refactoring Inline LINQ Projections to Methods
+**Learning:** Entity Framework Core cannot translate standard methods or `[NotMapped]` properties (like `FullName` on the `Contact` entity) into SQL during database queries (e.g., `ListProjectedAsync`). Attempting to extract duplicated string concatenations (like `(c.FirstName + " " + c.LastName).Trim()`) into helpers will cause runtime translation exceptions.
+**Action:** When working in repositories or query projections, leave simple property concatenations inline. Do not extract them to methods or rely on `[NotMapped]` calculated properties for queries.
