@@ -123,3 +123,7 @@
 ## 2024-05-18 - Added GetContactNamesAsync and HasRelationshipsAsync tests to ContactReadService
 **Learning:** Found that `ContactReadService.GetContactNamesAsync` and `HasRelationshipsAsync` methods lacked test coverage. The `GetContactNamesAsync` method has logic to format the contact name differently depending on whether it is a partial contact or not. It's important to test these utility methods to ensure UI dropdowns and checks behave correctly.
 **Action:** When inspecting a class for test coverage, always verify that smaller utility methods (like `GetContactNamesAsync` and `HasRelationshipsAsync`) are actually covered, not just primary business logic. Ensure that conditional formatting logic within projections is tested via mock returns and assertions.
+
+## 2024-05-28 - Testing Graph Logic in `RelationshipSuggestionService`
+**Learning:** Network relationship building methods involving `Transitive` and `FamilyAdultChild` networks lacked any testing, obscuring complex multi-join data handling paths where contacts are discovered asynchronously. Mocking `ListAsNoTrackingAsync` dynamically using `ReturnsAsync` with `AsQueryable().Where(expr).ToList()` creates robust in-memory tests for complex relationship network graph evaluations.
+**Action:** Always ensure any graph traversing logic or recursive network checks have robust in-memory test backing to avoid regressions in relationship inference features.
