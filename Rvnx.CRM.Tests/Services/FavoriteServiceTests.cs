@@ -2,6 +2,9 @@ using Moq;
 using Rvnx.CRM.Core.Interfaces;
 using Rvnx.CRM.Core.Models.Contact;
 using Rvnx.CRM.Core.Services;
+using Rvnx.CRM.Core.DTOs.Contact;
+using Rvnx.CRM.Core.Extensions;
+using Rvnx.CRM.Core.Models.Base;
 using System.Linq.Expressions;
 
 namespace Rvnx.CRM.Tests.Services;
@@ -126,5 +129,126 @@ public class FavoriteServiceTests
         Assert.Equal(2, result.Count);
         Assert.Contains(contactId1, result);
         Assert.Contains(contactId2, result);
+    }
+    [Fact]
+    public async Task GetFavoriteSidebarItemsAsyncWhenUserIdNullReturnsEmptyList()
+    {
+        // Arrange
+        _currentUserServiceMock.Setup(x => x.UserId).Returns((Guid?)null);
+
+        // Act
+        List<FavoriteSidebarItemDto> result = await _service.GetFavoriteSidebarItemsAsync();
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.Empty(result);
+        _repositoryMock.Verify(x => x.ListProjectedAsync(
+            It.IsAny<Expression<Func<ContactFavorite, bool>>>(),
+            It.IsAny<Expression<Func<ContactFavorite, Guid>>>(),
+            It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task GetFavoriteSidebarItemsAsyncWhenNoFavoritesFoundReturnsEmptyList()
+    {
+        // Arrange
+        Guid userId = Guid.NewGuid();
+        _currentUserServiceMock.Setup(x => x.UserId).Returns(userId);
+
+        _repositoryMock.Setup(x => x.ListProjectedAsync(
+            It.IsAny<Expression<Func<ContactFavorite, bool>>>(),
+            It.IsAny<Expression<Func<ContactFavorite, Guid>>>(),
+            It.IsAny<CancellationToken>()))
+            .ReturnsAsync([]);
+
+        // Act
+        List<FavoriteSidebarItemDto> result = await _service.GetFavoriteSidebarItemsAsync();
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.Empty(result);
+    }
+
+    [Fact]
+    public async Task GetFavoriteSidebarItemsAsyncWhenFavoritesFoundButNoMatchingActiveContactsReturnsEmptyList()
+    {
+        // Arrange
+        Guid userId = Guid.NewGuid();
+        _currentUserServiceMock.Setup(x => x.UserId).Returns(userId);
+
+        List<Guid> favoriteIds = [Guid.NewGuid()];
+
+        _repositoryMock.Setup(x => x.ListProjectedAsync(
+            It.IsAny<Expression<Func<ContactFavorite, bool>>>(),
+            It.IsAny<Expression<Func<ContactFavorite, Guid>>>(),
+            It.IsAny<CancellationToken>()))
+            .ReturnsAsync(favoriteIds);
+
+        _repositoryMock.Setup(x => x.ListProjectedAsync(
+                It.IsAny<Expression<Func<Contact, bool>>>(),
+                It.IsAny<Expression<Func<Contact, FavoriteSidebarItemDto>>>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync([]);
+
+        // Act
+        List<FavoriteSidebarItemDto> result = await _service.GetFavoriteSidebarItemsAsync();
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.Empty(result);
+    }
+
+    [Fact]
+    public async Task GetFavoriteSidebarItemsAsyncHappyPathWithSortingAndProfileImageReturnsSortedList()
+    {
+        // Arrange
+        Guid userId = Guid.NewGuid();
+        _currentUserServiceMock.Setup(x => x.UserId).Returns(userId);
+
+        Guid contactIdZ = Guid.NewGuid();
+        Guid contactIdA = Guid.NewGuid();
+        List<Guid> favoriteIds = [contactIdZ, contactIdA];
+
+        _repositoryMock.Setup(x => x.ListProjectedAsync(
+            It.IsAny<Expression<Func<ContactFavorite, bool>>>(),
+            It.IsAny<Expression<Func<ContactFavorite, Guid>>>(),
+            It.IsAny<CancellationToken>()))
+            .ReturnsAsync(favoriteIds);
+
+        List<FavoriteSidebarItemDto> unsortedContacts = [
+            new FavoriteSidebarItemDto { Id = contactIdZ, FirstName = "Zebra", LastName = "Zoo" },
+            new FavoriteSidebarItemDto { Id = contactIdA, FirstName = "Apple", LastName = "Aardvark" }
+        ];
+
+        _repositoryMock.Setup(x => x.ListProjectedAsync(
+                It.IsAny<Expression<Func<Contact, bool>>>(),
+                It.IsAny<Expression<Func<Contact, FavoriteSidebarItemDto>>>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(unsortedContacts);
+
+        Guid attachmentIdA = Guid.NewGuid();
+        List<(Guid, Guid)> attachments = [(contactIdA, attachmentIdA)];
+
+        _repositoryMock.Setup(x => x.ListProjectedAsync(
+                It.IsAny<Expression<Func<Attachment, bool>>>(),
+                It.IsAny<Expression<Func<Attachment, (Guid, Guid)>>>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(attachments);
+
+        // Act
+        List<FavoriteSidebarItemDto> result = await _service.GetFavoriteSidebarItemsAsync();
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.Equal(2, result.Count);
+
+        // Verify sorting (Apple before Zebra)
+        Assert.Equal(contactIdA, result[0].Id);
+        Assert.Equal("Apple", result[0].FirstName);
+        Assert.Equal(attachmentIdA, result[0].ProfileImageId);
+
+        Assert.Equal(contactIdZ, result[1].Id);
+        Assert.Equal("Zebra", result[1].FirstName);
+        Assert.Null(result[1].ProfileImageId);
     }
 }
