@@ -123,3 +123,7 @@
 ## 2024-05-18 - Added GetContactNamesAsync and HasRelationshipsAsync tests to ContactReadService
 **Learning:** Found that `ContactReadService.GetContactNamesAsync` and `HasRelationshipsAsync` methods lacked test coverage. The `GetContactNamesAsync` method has logic to format the contact name differently depending on whether it is a partial contact or not. It's important to test these utility methods to ensure UI dropdowns and checks behave correctly.
 **Action:** When inspecting a class for test coverage, always verify that smaller utility methods (like `GetContactNamesAsync` and `HasRelationshipsAsync`) are actually covered, not just primary business logic. Ensure that conditional formatting logic within projections is tested via mock returns and assertions.
+
+## 2024-05-28 - Testing Secondary Read Methods with Projections
+**Learning:** Secondary read methods (e.g. `GetFavoriteSidebarItemsAsync`) that map entities to DTOs and handle relationships/sorting often lack coverage if only primary CRUD operations are tested. They contain subtle mapping logic and multiple early exit conditions that can cause regressions.
+**Action:** When working on services, check for secondary read/projection methods. explicitly write test cases where the query returns an empty collection to verify fallback behaviors, and test the mapping and sorting to ensure they correctly return the mapped DTOs.
