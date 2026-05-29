@@ -4,9 +4,9 @@ using Microsoft.AspNetCore.Mvc;
 using Moq;
 using Rvnx.CRM.Core.DTOs.Base;
 using Rvnx.CRM.Core.DTOs.Contact;
-using Rvnx.CRM.Web.ViewModels.Immich;
 using Rvnx.CRM.Core.Interfaces;
 using Rvnx.CRM.Web.Controllers;
+using Rvnx.CRM.Web.ViewModels.Immich;
 using System.Reflection;
 using System.Text;
 
