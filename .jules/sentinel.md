@@ -60,3 +60,7 @@
 **Vulnerability:** AccountController relied solely on `Url.IsLocalUrl()` to prevent Open Redirects during login.
 **Learning:** While `Url.IsLocalUrl()` is standard and generally safe, it only checks if a URL is relative (not absolute). It does not verify if the relative path actually exists or is a safe place to redirect a user within the application, leaving potential room for obscure bypasses or unwanted internal routing if other vulnerabilities exist.
 **Prevention:** Implement defense-in-depth by augmenting `Url.IsLocalUrl()` with an explicit `IsUrlInSafelist()` check that verifies the relative path against a known-good list of allowed application routes (e.g., `/`, `/Home`, `/Contacts`). Default to the application root if validation fails.
+## 2025-05-30 - Remove hardcoded credentials from configuration
+**Vulnerability:** Placeholder passwords and usernames were checked into source control in `appsettings.json` (`SmtpSettings`).
+**Learning:** Even placeholder or dummy credentials trigger secret-scanning false positives and establish a poor pattern of putting secrets in checked-in files.
+**Prevention:** Always use empty strings `""` for configuration fields that will contain secrets in checked-in `appsettings.json` files, and inject the actual values via environment variables or a git-ignored `appsettings.Local.json` file.
