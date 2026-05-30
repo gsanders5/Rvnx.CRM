@@ -6,7 +6,6 @@ using Rvnx.CRM.Core.Models.Contact;
 using Rvnx.CRM.Core.Models.Dates;
 using Rvnx.CRM.Core.Services;
 using System.Linq.Expressions;
-using System.ComponentModel.DataAnnotations;
 
 namespace Rvnx.CRM.Tests.Services;
 
@@ -85,18 +84,6 @@ public class ContactUpdateHelperTests
         _repositoryMock.Verify(r => r.DeleteAsync<ContactMethod>(It.IsAny<Guid>(), It.IsAny<CancellationToken>()), Times.Never);
         _repositoryMock.Verify(r => r.UpdateAsync(It.IsAny<ContactMethod>(), It.IsAny<CancellationToken>()), Times.Never);
         _repositoryMock.Verify(r => r.AddAsync(It.IsAny<ContactMethod>(), It.IsAny<CancellationToken>()), Times.Never);
-    }
-
-    [Fact]
-    public async Task UpdateOrAddContactMethodAsyncWithInvalidPhoneThrowsValidationException()
-    {
-        Guid contactId = Guid.NewGuid();
-
-        await Assert.ThrowsAsync<ValidationException>(() =>
-            ContactUpdateHelper.UpdateOrAddContactMethodAsync(_repositoryMock.Object, contactId, ContactMethodType.Phone, "invalid_phone", null));
-
-        _repositoryMock.Verify(r => r.AddAsync(It.IsAny<ContactMethod>(), It.IsAny<CancellationToken>()), Times.Never);
-        _repositoryMock.Verify(r => r.UpdateAsync(It.IsAny<ContactMethod>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]
