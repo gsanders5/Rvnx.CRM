@@ -10,3 +10,6 @@
 ## 2026-04-16 - Prevent Redundant Reading of Icons within Labelled Containers
 **Learning:** Bootstrap Icons (and other purely decorative icon tags) inside wrappers that already convey their meaning (like buttons or tabs with text) are read redundantly by screen readers unless hidden.
 **Action:** When adding decorative visual elements like `<i class="bi ...">` inside elements that already contain text or tooltips explaining the intent, always add `aria-hidden="true"` to prevent screen readers from announcing redundant content. Ensure the attribute is only added once.
+## 2024-05-30 - Missing ARIA label on task complete toggle
+**Learning:** Found a submit button used to toggle tasks complete/incomplete that relies on an icon and a title attribute. The title attribute is helpful, but for screen reader users, the form submission toggling the complete status lacks a proper aria-label to explicitly describe the action.
+**Action:** When adding icon-only buttons, especially in lists toggling state, always include an `aria-label` attribute even if a `title` is present.
