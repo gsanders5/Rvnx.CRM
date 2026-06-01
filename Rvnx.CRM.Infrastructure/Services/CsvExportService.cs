@@ -67,7 +67,7 @@ public class CsvExportService(IRepository repository) : ICsvExportService
                 cm => new ValueTuple<Guid, ContactMethodType, string, DateTime>(
                     cm.ContactId!.Value, cm.Type, cm.Value, cm.CreatedDate));
 
-        foreach ((Guid contactId, ContactMethodType type, string value, DateTime _) in rows.OrderBy(r => r.CreatedDate))
+        foreach (var (contactId, type, value, _) in rows.OrderBy(r => r.CreatedDate))
         {
             Dictionary<Guid, List<string>>? bucket = type switch
             {
@@ -139,7 +139,7 @@ public class CsvExportService(IRepository repository) : ICsvExportService
                     && sd.Title == SignificantDateTitles.Birthday,
                 sd => new ValueTuple<Guid, DateOnly>(sd.ContactId!.Value, sd.EventDate));
 
-        foreach ((Guid cid, DateOnly date) in rows)
+        foreach (var (cid, date) in rows)
         {
             birthdays.TryAdd(cid, date);
         }
