@@ -96,7 +96,7 @@ public class FavoriteService(IRepository repository, ICurrentUserService current
                 a => new ValueTuple<Guid, Guid>(a.ContactId!.Value, a.Id));
 
         Dictionary<Guid, Guid> profileImageByContact = new(profileAttachments.Count);
-        foreach ((Guid contactId, Guid attachmentId) in profileAttachments)
+        foreach (var (contactId, attachmentId) in profileAttachments)
         {
             profileImageByContact.TryAdd(contactId, attachmentId);
         }
