@@ -65,3 +65,6 @@
 ## 2024-06-10 - [Extract Database Migrations from Web]
 **Learning:** The `Program.cs` file in the Web project was directly referencing `Microsoft.EntityFrameworkCore` to execute `context.Database.Migrate()` on startup, violating layer boundaries by coupling the presentation layer to the persistence technology.
 **Action:** Extract database initialization logic, including `CRMDbContext` dependencies and ORM-specific error logging, into an extension method (e.g., `ApplyDatabaseMigrations`) in the `Infrastructure` layer's `ServiceCollectionExtensions`. This keeps `Program.cs` clean and strictly separates concerns.
+## 2024-06-11 - [Extract Database Migrations from ConsoleApp]
+**Learning:** The `AppHost.cs` file in the ConsoleApp project was directly referencing `Microsoft.EntityFrameworkCore` to execute `context.Database.MigrateAsync()` on startup, violating layer boundaries by coupling the presentation/host layer to the persistence technology.
+**Action:** Extract database initialization logic, including `CRMDbContext` dependencies and ORM-specific error logging, into an extension method (e.g., `ApplyDatabaseMigrationsAsync`) in the `Infrastructure` layer's `ServiceCollectionExtensions`. This keeps `AppHost.cs` clean and strictly separates concerns.

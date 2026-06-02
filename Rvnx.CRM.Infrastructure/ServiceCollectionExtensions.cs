@@ -92,6 +92,9 @@ public static class ServiceCollectionExtensions
             new EventId(1, nameof(LogDbCreationError)),
             "An error occurred creating the DB.");
 
+    private static readonly Action<ILogger, Exception?> LogMigrationError =
+        LoggerMessage.Define(LogLevel.Error, new EventId(1), "An error occurred migrating the database");
+
     public static void ApplyDatabaseMigrations(this IServiceProvider provider)
     {
         using IServiceScope scope = provider.CreateScope();
@@ -105,6 +108,22 @@ public static class ServiceCollectionExtensions
         {
             ILogger<CRMDbContext> logger = services.GetRequiredService<ILogger<CRMDbContext>>();
             LogDbCreationError(logger, ex);
+        }
+    }
+
+    public static async Task<bool> ApplyDatabaseMigrationsAsync(this IServiceProvider provider, ILogger logger)
+    {
+        try
+        {
+            using IServiceScope scope = provider.CreateScope();
+            CRMDbContext context = scope.ServiceProvider.GetRequiredService<CRMDbContext>();
+            await context.Database.MigrateAsync();
+            return true;
+        }
+        catch (Exception ex)
+        {
+            LogMigrationError(logger, ex);
+            return false;
         }
     }
 }
