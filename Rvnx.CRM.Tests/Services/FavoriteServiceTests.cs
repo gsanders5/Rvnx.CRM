@@ -1,11 +1,11 @@
 using Moq;
+using Rvnx.CRM.Core.DTOs.Contact;
+using Rvnx.CRM.Core.Extensions;
 using Rvnx.CRM.Core.Interfaces;
+using Rvnx.CRM.Core.Models.Base;
 using Rvnx.CRM.Core.Models.Contact;
 using Rvnx.CRM.Core.Services;
-using Rvnx.CRM.Core.DTOs.Contact;
-using Rvnx.CRM.Core.Models.Base;
 using System.Collections.Generic;
-using Rvnx.CRM.Core.Extensions;
 using System.Linq.Expressions;
 
 namespace Rvnx.CRM.Tests.Services;
