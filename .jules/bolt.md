@@ -136,3 +136,7 @@ Action: When a service builds a read-only in-memory aggregate (graph nodes, rece
 ## 2026-04-18 - Avoid full entity fetch for Favorite deletion
 **Learning:** `FavoriteService.ToggleFavoriteAsync` was loading the entire `ContactFavorite` entity into memory via `ListAsync` just to check if it existed and delete it. This caused EF Core to load unnecessary fields and track an entity that was about to be deleted.
 **Action:** Replace `ListAsync` with `CountAsync` to check existence efficiently without loading entities into memory. Also, use the bulk delete feature (`DeleteAsync(Expression)`) instead of `DeleteAsync(entity)` to avoid the overhead of fetching and tracking the entity before deleting it.
+
+## 2026-04-18 - Avoid GroupBy overhead when mapping collections
+**Learning:** In modern C#, utilizing `IEnumerable.GroupBy(keySelector).ToDictionary(g => g.Key, g => g.ToList())` forces the instantiation and iteration of intermediate `IGrouping` structures before materializing the dictionary and inner collections, which results in unnecessary memory allocations.
+**Action:** When creating a grouped dictionary of collections from a fetched list, pre-allocate a `Dictionary` (using `Count` capacity if bounded) and iterate over the source list manually using a `foreach` loop with `TryGetValue` logic. This eliminates intermediate LINQ objects and provides a direct, highly-performant aggregation.
