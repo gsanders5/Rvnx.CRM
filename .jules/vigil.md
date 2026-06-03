@@ -126,3 +126,6 @@
 ## 2024-06-03 - Explicitly test fallback lookup logic
 **Learning:** Services in Rvnx.CRM sometimes use a dual-lookup pattern, attempting a primary ID lookup (like `GetByIdAsync`) and falling back to a secondary criteria lookup (like `ListAsync` by `SubjectId`) if the primary fails.
 **Action:** When testing these services, explicitly write tests for both the successful fallback path (primary fails, fallback succeeds) and the completely-missing path (primary fails, fallback fails) to ensure fallback logic is fully covered and prevent silent regressions.
+## 2026-06-03 - Format style verification
+**Learning:** The project's `.editorconfig` has rules that enforce using `dotnet format style` requiring `System` namespaces to not be grouped to the top first (`dotnet_sort_system_directives_first = false`), and `dotnet_separate_import_directive_groups = false`. The repository also runs `dotnet format style --verify-no-changes --severity error` in its GitHub Actions CI, which will fail if imports are out of place.
+**Action:** Always check existing file formatting or run `dotnet format` if you edit or create `.cs` files to make sure they do not fail the CI syntax check.
