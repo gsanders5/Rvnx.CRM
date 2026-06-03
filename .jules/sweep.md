@@ -31,3 +31,6 @@
 ## 2024-05-23 - C# Tuple Deconstruction Code Review Error
 **Learning:** The code review tool flagged tuple deconstruction (`foreach ((Guid id, Guid relatedId) in list)`) as a compilation error when iterating over a `List<(Guid, Guid)>`. This was a hallucination, as `dotnet build` and `dotnet test` passed without issue.
 **Action:** Always trust successful `dotnet build` and `dotnet test` results over the reviewer claims of basic C# compilation failures.
+## 2024-05-18 - Simplify foreach loop tuple deconstruction
+**Learning:** Explicit tuple type declarations in foreach loops (e.g. `foreach ((Guid id, string name) in list)`) add unnecessary visual noise and verbosity. C# allows deconstructing using `var` directly (e.g. `foreach (var (id, name) in list)`), improving code clarity.
+**Action:** Use `var` for tuple deconstruction in foreach loops to improve readability while maintaining strongly-typed behavior.
