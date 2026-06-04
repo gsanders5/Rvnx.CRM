@@ -1,8 +1,0 @@
---- .jules/vigil.md
-+++ .jules/vigil.md
-@@ -95,8 +95,3 @@
- **Learning:** Found that `ContactReadService.GetContactNamesAsync` and `HasRelationshipsAsync` methods lacked test coverage. The `GetContactNamesAsync` method has logic to format the contact name differently depending on whether it is a partial contact or not. It's important to test these utility methods to ensure UI dropdowns and checks behave correctly.
- **Action:** When inspecting a class for test coverage, always verify that smaller utility methods (like `GetContactNamesAsync` and `HasRelationshipsAsync`) are actually covered, not just primary business logic. Ensure that conditional formatting logic within projections is tested via mock returns and assertions.
--## 2026-04-18 - Added test coverage for `ContactReadService.GetIntroducerCandidatesAsync`
--**Learning:** Found that `ContactReadService.GetIntroducerCandidatesAsync` lacked test coverage. This utility method is important for fetching and returning correctly formatted full names and evaluating filtering parameters correctly (ignoring excluded contacts and partial contacts).
--**Action:** When working on services that return lists for UI dropdowns or lists, ensure utility methods (such as those returning `ContactSelectItemDto`) are fully tested to correctly map the contact properties to the DTO and to correctly handle filter configurations.

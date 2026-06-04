@@ -1315,6 +1315,8 @@ public class ContactReadServiceTests
             Assert.False(filterFunc(new Contact { Id = contactId, IsPartial = false }));
             Assert.True(filterFunc(new Contact { Id = Guid.NewGuid(), IsPartial = false }));
             Assert.False(filterFunc(new Contact { Id = Guid.NewGuid(), IsPartial = true }));
+        }
+    }
 
     public class GetIntroducerCandidatesAsyncTests : ContactReadServiceTestBase
     {
