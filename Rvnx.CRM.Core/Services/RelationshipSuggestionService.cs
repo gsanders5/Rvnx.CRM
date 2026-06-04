@@ -117,10 +117,33 @@ public class RelationshipSuggestionService(IRepository repository) : IRelationsh
                 : [Guid.Empty];
 
             // Batch-load all contacts from both components in two queries instead of one per node
-            HashSet<Guid> compEIds = compE.Where(id => id != contactId).ToHashSet();
-            HashSet<Guid> compRIds = compR.Where(id => id != Guid.Empty && id != relatedContactId).ToHashSet();
+            HashSet<Guid> compEIds = new HashSet<Guid>(compE.Count);
+            foreach (Guid id in compE)
+            {
+                if (id != contactId)
+                {
+                    compEIds.Add(id);
+                }
+            }
 
-            HashSet<Guid> allNeededIds = [.. compEIds.Concat(compRIds)];
+            HashSet<Guid> compRIds = new HashSet<Guid>(compR.Count);
+            foreach (Guid id in compR)
+            {
+                if (id != Guid.Empty && id != relatedContactId)
+                {
+                    compRIds.Add(id);
+                }
+            }
+
+            HashSet<Guid> allNeededIds = new HashSet<Guid>(compEIds.Count + compRIds.Count);
+            foreach (Guid id in compEIds)
+            {
+                allNeededIds.Add(id);
+            }
+            foreach (Guid id in compRIds)
+            {
+                allNeededIds.Add(id);
+            }
             List<Contact> batchContacts = allNeededIds.Count > 0
                 ? await repository.ListAsNoTrackingAsync<Contact>(c => allNeededIds.Contains(c.Id))
                 : [];
@@ -131,7 +154,12 @@ public class RelationshipSuggestionService(IRepository repository) : IRelationsh
                 r.RelationshipTypeId == relationshipTypeId &&
                 (r.ContactId == contactId || r.RelatedContactId == contactId ||
                  r.ContactId == tIdQuery || r.RelatedContactId == tIdQuery));
-            HashSet<(Guid, Guid)> existingEdges = existingRels.Select(r => (r.ContactId, r.RelatedContactId)).ToHashSet();
+
+            HashSet<(Guid, Guid)> existingEdges = new HashSet<(Guid, Guid)>(existingRels.Count);
+            foreach (Relationship r in existingRels)
+            {
+                existingEdges.Add((r.ContactId, r.RelatedContactId));
+            }
 
             foreach (Guid x in compEIds)
             {
@@ -162,7 +190,15 @@ public class RelationshipSuggestionService(IRepository repository) : IRelationsh
             if (childId != Guid.Empty)
             {
                 HashSet<Guid> childSiblings = await GetComponentAsync(childId, RelationshipTypeIds.Sibling);
-                HashSet<Guid> siblingIds = childSiblings.Where(id => id != childId).ToHashSet();
+
+                HashSet<Guid> siblingIds = new HashSet<Guid>(childSiblings.Count);
+                foreach (Guid id in childSiblings)
+                {
+                    if (id != childId)
+                    {
+                        siblingIds.Add(id);
+                    }
+                }
 
                 List<Contact> sibContacts = siblingIds.Count > 0
                     ? await repository.ListAsNoTrackingAsync<Contact>(c => siblingIds.Contains(c.Id))
@@ -172,7 +208,12 @@ public class RelationshipSuggestionService(IRepository repository) : IRelationsh
                     r.RelationshipTypeId == relationshipTypeId &&
                     (r.ContactId == adultId || r.RelatedContactId == adultId ||
                      r.ContactId == childId || r.RelatedContactId == childId));
-                HashSet<(Guid, Guid)> existingEdges = existingRels.Select(r => (r.ContactId, r.RelatedContactId)).ToHashSet();
+
+                HashSet<(Guid, Guid)> existingEdges = new HashSet<(Guid, Guid)>(existingRels.Count);
+                foreach (Relationship r in existingRels)
+                {
+                    existingEdges.Add((r.ContactId, r.RelatedContactId));
+                }
 
                 foreach (Contact sibContact in sibContacts)
                 {

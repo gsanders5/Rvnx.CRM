@@ -136,3 +136,7 @@ Action: When a service builds a read-only in-memory aggregate (graph nodes, rece
 ## 2026-04-18 - Avoid full entity fetch for Favorite deletion
 **Learning:** `FavoriteService.ToggleFavoriteAsync` was loading the entire `ContactFavorite` entity into memory via `ListAsync` just to check if it existed and delete it. This caused EF Core to load unnecessary fields and track an entity that was about to be deleted.
 **Action:** Replace `ListAsync` with `CountAsync` to check existence efficiently without loading entities into memory. Also, use the bulk delete feature (`DeleteAsync(Expression)`) instead of `DeleteAsync(entity)` to avoid the overhead of fetching and tracking the entity before deleting it.
+
+## 2026-06-04 - Eliminate LINQ Allocations in HashSet Conversions
+**Learning:** Chaining `.Where(predicate).ToHashSet()` or `.Select(projection).ToHashSet()` introduces significant unnecessary overhead. It creates intermediate iterator state machines and causes dynamic array resizing within the target collection, which hurts performance when executed within loops or high-throughput services like `RelationshipSuggestionService`.
+**Action:** When creating a filtered or mapped `HashSet` from an existing collection, pre-allocate the target `HashSet` with a known initial capacity (e.g., `new HashSet<T>(source.Count)`) and populate it using a single-pass `foreach` loop instead of LINQ extension methods.
