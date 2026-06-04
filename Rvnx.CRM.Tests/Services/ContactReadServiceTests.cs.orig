@@ -1315,64 +1315,208 @@ public class ContactReadServiceTests
             Assert.False(filterFunc(new Contact { Id = contactId, IsPartial = false }));
             Assert.True(filterFunc(new Contact { Id = Guid.NewGuid(), IsPartial = false }));
             Assert.False(filterFunc(new Contact { Id = Guid.NewGuid(), IsPartial = true }));
+        }
+
+        [Fact]
+        public async Task GetContactDetailsAsyncPopulatesIntroducedByContactNameWhenIntroducerExists()
+        {
+            Guid contactId = Guid.NewGuid();
+            Guid introducerId = Guid.NewGuid();
+            Contact contact = new()
+            {
+                Id = contactId,
+                FirstName = "Bob",
+                LastName = "Newcomer",
+                IntroducedByContactId = introducerId
+            };
+
+            RepositoryMock.Setup(r => r.ListAsNoTrackingAsync<Contact>(
+                It.IsAny<Expression<Func<Contact, bool>>>(),
+                It.IsAny<CancellationToken>(),
+                It.IsAny<string[]>()))
+                .ReturnsAsync([contact]);
+
+            RepositoryMock.Setup(r => r.ListAsNoTrackingAsync<Relationship>(
+                It.IsAny<Expression<Func<Relationship, bool>>>(),
+                It.IsAny<CancellationToken>(),
+                It.IsAny<string[]>()))
+                .ReturnsAsync([]);
+
+            // Co-fetch lookup returns the introducer's projected entity.
+            RepositoryMock.Setup(r => r.ListProjectedAsync<Contact, Contact>(
+                It.IsAny<Expression<Func<Contact, bool>>>(),
+                It.IsAny<Expression<Func<Contact, Contact>>>(),
+                It.IsAny<CancellationToken>()))
+                .ReturnsAsync([new Contact { Id = introducerId, FirstName = "Alice", LastName = "Mentor" }]);
+
+            ContactDetailDto? result = await Service.GetContactDetailsAsync(contactId);
+
+            Assert.NotNull(result);
+            Assert.Equal(introducerId, result.IntroducedByContactId);
+            Assert.Equal("Alice Mentor", result.IntroducedByContactName);
+        }
+
+        [Fact]
+        public async Task GetContactDetailsAsyncLeavesIntroducedByContactNameNullWhenIntroducerMissing()
+        {
+            Guid contactId = Guid.NewGuid();
+            Guid introducerId = Guid.NewGuid();
+            Contact contact = new()
+            {
+                Id = contactId,
+                FirstName = "Carol",
+                LastName = "Orphan",
+                IntroducedByContactId = introducerId
+            };
+
+            RepositoryMock.Setup(r => r.ListAsNoTrackingAsync<Contact>(
+                It.IsAny<Expression<Func<Contact, bool>>>(),
+                It.IsAny<CancellationToken>(),
+                It.IsAny<string[]>()))
+                .ReturnsAsync([contact]);
+
+            RepositoryMock.Setup(r => r.ListAsNoTrackingAsync<Relationship>(
+                It.IsAny<Expression<Func<Relationship, bool>>>(),
+                It.IsAny<CancellationToken>(),
+                It.IsAny<string[]>()))
+                .ReturnsAsync([]);
+
+            // Co-fetch lookup returns nothing — referenced contact does not exist (e.g. deleted).
+            RepositoryMock.Setup(r => r.ListProjectedAsync<Contact, Contact>(
+                It.IsAny<Expression<Func<Contact, bool>>>(),
+                It.IsAny<Expression<Func<Contact, Contact>>>(),
+                It.IsAny<CancellationToken>()))
+                .ReturnsAsync([]);
+
+            ContactDetailDto? result = await Service.GetContactDetailsAsync(contactId);
+
+            Assert.NotNull(result);
+            Assert.Equal(introducerId, result.IntroducedByContactId);
+            Assert.Null(result.IntroducedByContactName);
+        }
+
+        [Fact]
+        public async Task GetContactDetailsAsyncLeavesIntroducedByContactNameNullWhenNoneSet()
+        {
+            Guid contactId = Guid.NewGuid();
+            Contact contact = new()
+            {
+                Id = contactId,
+                FirstName = "Lone",
+                LastName = "Contact",
+                IntroducedByContactId = null
+            };
+
+            RepositoryMock.Setup(r => r.ListAsNoTrackingAsync<Contact>(
+                It.IsAny<Expression<Func<Contact, bool>>>(),
+                It.IsAny<CancellationToken>(),
+                It.IsAny<string[]>()))
+                .ReturnsAsync([contact]);
+
+            RepositoryMock.Setup(r => r.ListAsNoTrackingAsync<Relationship>(
+                It.IsAny<Expression<Func<Relationship, bool>>>(),
+                It.IsAny<CancellationToken>(),
+                It.IsAny<string[]>()))
+                .ReturnsAsync([]);
+
+            ContactDetailDto? result = await Service.GetContactDetailsAsync(contactId);
+
+            Assert.NotNull(result);
+            Assert.Null(result.IntroducedByContactName);
+        }
+    }
 
     public class GetIntroducerCandidatesAsyncTests : ContactReadServiceTestBase
     {
         [Fact]
-        public async Task GetIntroducerCandidatesAsyncWhenContactsExistMapsAndSortsCandidatesByName()
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Naming", "CA1707:Identifiers should not contain underscores", Justification = "Test names follow a standard convention")]
+        public async Task GetIntroducerCandidatesAsync_MapsAndSortsCandidatesByName()
         {
             Guid contact1Id = Guid.NewGuid();
             Guid contact2Id = Guid.NewGuid();
+            Contact contact1 = new() { Id = contact1Id, FirstName = "Zebra", LastName = "Zoo", IsPartial = false };
+            Contact contact2 = new() { Id = contact2Id, FirstName = "Apple", LastName = "Tree", IsPartial = false };
 
-            RepositoryMock.Setup(r => r.ListProjectedAsync<Contact, ContactSelectItemDto>(It.IsAny<Expression<Func<Contact, bool>>>(), It.IsAny<Expression<Func<Contact, ContactSelectItemDto>>>(), It.IsAny<CancellationToken>()))
-                .ReturnsAsync(new List<ContactSelectItemDto> {
-                    new() { Id = contact1Id, FullName = "Zebra Zoo" },
-                    new() { Id = contact2Id, FullName = "Apple Tree" }
+            RepositoryMock.Setup(r => r.ListProjectedAsync<Contact, ContactSelectItemDto>(
+                It.IsAny<Expression<Func<Contact, bool>>>(),
+                It.IsAny<Expression<Func<Contact, ContactSelectItemDto>>>(),
+                It.IsAny<CancellationToken>()))
+                .ReturnsAsync((Expression<Func<Contact, bool>> predicate, Expression<Func<Contact, ContactSelectItemDto>> projection, CancellationToken ct) =>
+                {
+                    return new[] { contact1, contact2 }.AsQueryable().Where(predicate).Select(projection).ToList();
                 });
 
             List<ContactSelectItemDto> result = await Service.GetIntroducerCandidatesAsync(null);
 
             Assert.NotNull(result);
             Assert.Equal(2, result.Count);
+            Assert.Equal(contact2Id, result[0].Id);
             Assert.Equal("Apple Tree", result[0].FullName);
+            Assert.Equal(contact1Id, result[1].Id);
             Assert.Equal("Zebra Zoo", result[1].FullName);
         }
 
         [Fact]
-        public async Task GetIntroducerCandidatesAsyncWhenExcludingPartialContactsFiltersCorrectly()
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Naming", "CA1707:Identifiers should not contain underscores", Justification = "Test names follow a standard convention")]
+        public async Task GetIntroducerCandidatesAsync_ExcludesPartialContacts()
         {
-            Contact partialContact = new() { Id = Guid.NewGuid(), IsPartial = true };
-            Contact fullContact = new() { Id = Guid.NewGuid(), IsPartial = false };
+            Guid contact1Id = Guid.NewGuid();
+            Guid contact2Id = Guid.NewGuid();
+            Contact contact1 = new() { Id = contact1Id, FirstName = "Valid", LastName = "Contact", IsPartial = false };
+            Contact contact2 = new() { Id = contact2Id, FirstName = "Partial", LastName = "Contact", IsPartial = true };
 
-            List<Contact> data = [partialContact, fullContact];
-
-            RepositoryMock.Setup(r => r.ListProjectedAsync<Contact, ContactSelectItemDto>(It.IsAny<Expression<Func<Contact, bool>>>(), It.IsAny<Expression<Func<Contact, ContactSelectItemDto>>>(), It.IsAny<CancellationToken>()))
-                .ReturnsAsync((Expression<Func<Contact, bool>> expr, Expression<Func<Contact, ContactSelectItemDto>> projection, CancellationToken ct) =>
-                    data.AsQueryable().Where(expr).Select(projection).ToList());
+            RepositoryMock.Setup(r => r.ListProjectedAsync<Contact, ContactSelectItemDto>(
+                It.IsAny<Expression<Func<Contact, bool>>>(),
+                It.IsAny<Expression<Func<Contact, ContactSelectItemDto>>>(),
+                It.IsAny<CancellationToken>()))
+                .ReturnsAsync((Expression<Func<Contact, bool>> predicate, Expression<Func<Contact, ContactSelectItemDto>> projection, CancellationToken ct) =>
+                {
+                    return new[] { contact1, contact2 }.AsQueryable().Where(predicate).Select(projection).ToList();
+                });
 
             List<ContactSelectItemDto> result = await Service.GetIntroducerCandidatesAsync(null);
 
             Assert.Single(result);
-            Assert.Equal(fullContact.Id, result[0].Id);
+            Assert.Equal(contact1Id, result[0].Id);
         }
 
         [Fact]
-        public async Task GetIntroducerCandidatesAsyncWhenExcludingIdFiltersTargetContact()
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Naming", "CA1707:Identifiers should not contain underscores", Justification = "Test names follow a standard convention")]
+        public async Task GetIntroducerCandidatesAsync_WithExcludeId_ExcludesTargetContact()
         {
             Guid targetId = Guid.NewGuid();
-            Contact excludedContact = new() { Id = targetId, IsPartial = false };
-            Contact includedContact = new() { Id = Guid.NewGuid(), IsPartial = false };
+            Guid otherId = Guid.NewGuid();
+            Contact targetContact = new() { Id = targetId, FirstName = "Target", LastName = "Exclude", IsPartial = false };
+            Contact otherContact = new() { Id = otherId, FirstName = "Other", LastName = "Keep", IsPartial = false };
 
-            List<Contact> data = [excludedContact, includedContact];
-
-            RepositoryMock.Setup(r => r.ListProjectedAsync<Contact, ContactSelectItemDto>(It.IsAny<Expression<Func<Contact, bool>>>(), It.IsAny<Expression<Func<Contact, ContactSelectItemDto>>>(), It.IsAny<CancellationToken>()))
-                .ReturnsAsync((Expression<Func<Contact, bool>> expr, Expression<Func<Contact, ContactSelectItemDto>> projection, CancellationToken ct) =>
-                    data.AsQueryable().Where(expr).Select(projection).ToList());
+            RepositoryMock.Setup(r => r.ListProjectedAsync<Contact, ContactSelectItemDto>(
+                It.IsAny<Expression<Func<Contact, bool>>>(),
+                It.IsAny<Expression<Func<Contact, ContactSelectItemDto>>>(),
+                It.IsAny<CancellationToken>()))
+                .ReturnsAsync((Expression<Func<Contact, bool>> predicate, Expression<Func<Contact, ContactSelectItemDto>> projection, CancellationToken ct) =>
+                {
+                    return new[] { targetContact, otherContact }.AsQueryable().Where(predicate).Select(projection).ToList();
+                });
 
             List<ContactSelectItemDto> result = await Service.GetIntroducerCandidatesAsync(targetId);
 
             Assert.Single(result);
-            Assert.Equal(includedContact.Id, result[0].Id);
+            Assert.Equal(otherId, result[0].Id);
+        }
+
+        [Fact]
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Naming", "CA1707:Identifiers should not contain underscores", Justification = "Test names follow a standard convention")]
+        public async Task GetIntroducerCandidatesAsync_WithNullExcludeId_IncludesAllValidContacts()
+        {
+            RepositoryMock.Setup(r => r.ListProjectedAsync<Contact, ContactSelectItemDto>(
+                It.IsAny<Expression<Func<Contact, bool>>>(),
+                It.IsAny<Expression<Func<Contact, ContactSelectItemDto>>>(),
+                It.IsAny<CancellationToken>()))
+                .ReturnsAsync([]);
+
+            await Service.GetIntroducerCandidatesAsync(null);
+
+            RepositoryMock.Verify(r => r.ListProjectedAsync<Contact, ContactSelectItemDto>(It.IsAny<Expression<Func<Contact, bool>>>(), It.IsAny<Expression<Func<Contact, ContactSelectItemDto>>>(), It.IsAny<CancellationToken>()), Times.Once);
         }
     }
 }
