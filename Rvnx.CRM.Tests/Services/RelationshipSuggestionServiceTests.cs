@@ -74,4 +74,54 @@ public class RelationshipSuggestionServiceTests
                 It.IsAny<CancellationToken>()),
             Times.Never);
     }
+
+    [Fact]
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Naming", "CA1707:Identifiers should not contain underscores", Justification = "Test names follow a standard convention")]
+    public async Task GetSuggestedRelationshipsAsync_WithTransitiveType_ReturnsNetworkSuggestions()
+    {
+        // Arrange
+        Guid entityId = Guid.NewGuid();
+        Guid relatedEntityId = Guid.NewGuid();
+
+        Guid otherEntityA = Guid.NewGuid();
+        Guid otherEntityB = Guid.NewGuid();
+
+        Guid typeId = RelationshipTypeIds.Sibling;
+
+        List<Contact> mockContacts = new List<Contact>
+        {
+            new Contact { Id = entityId, FirstName = "Main", LastName = "User" },
+            new Contact { Id = relatedEntityId, FirstName = "Related", LastName = "User" },
+            new Contact { Id = otherEntityA, FirstName = "Other", LastName = "A" },
+            new Contact { Id = otherEntityB, FirstName = "Other", LastName = "B" }
+        };
+
+        List<Relationship> mockRelationships = new List<Relationship>
+        {
+            new Relationship { Id = Guid.NewGuid(), ContactId = entityId, RelatedContactId = otherEntityA, RelationshipTypeId = typeId },
+            new Relationship { Id = Guid.NewGuid(), ContactId = relatedEntityId, RelatedContactId = otherEntityB, RelationshipTypeId = typeId }
+        };
+
+        _repositoryMock.Setup(r => r.GetByIdAsync<Contact>(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((Guid id, CancellationToken ct) => mockContacts.FirstOrDefault(c => c.Id == id));
+
+        _repositoryMock.Setup(r => r.ListAsNoTrackingAsync<Contact>(
+                It.IsAny<Expression<Func<Contact, bool>>>(), It.IsAny<CancellationToken>(), It.IsAny<string[]>()))
+            .ReturnsAsync((Expression<Func<Contact, bool>> expr, CancellationToken ct, string[] includes) =>
+                mockContacts.AsQueryable().Where(expr).ToList());
+
+        _repositoryMock.Setup(r => r.ListAsNoTrackingAsync<Relationship>(
+                It.IsAny<Expression<Func<Relationship, bool>>>(), It.IsAny<CancellationToken>(), It.IsAny<string[]>()))
+            .ReturnsAsync((Expression<Func<Relationship, bool>> expr, CancellationToken ct, string[] includes) =>
+                mockRelationships.AsQueryable().Where(expr).ToList());
+
+        // Act
+        List<SuggestedRelationshipDto> result = await _service.GetSuggestedRelationshipsAsync(
+            entityId, relatedEntityId, typeId, false, null);
+
+        // Assert
+        Assert.NotEmpty(result);
+        Assert.Contains(result, s => s.SourceName == "Other A" && s.TargetName == "Related User");
+        Assert.Contains(result, s => s.SourceName == "Main User" && s.TargetName == "Other B");
+    }
 }
