@@ -319,12 +319,12 @@ public class ContactsController(
         try
         {
             await Task.WhenAll(peopleTask, tagsTask);
-            return (peopleTask.Result, tagsTask.Result);
+            return (await peopleTask, await tagsTask);
         }
         catch (OperationCanceledException)
         {
-            return (peopleTask.Status == TaskStatus.RanToCompletion ? peopleTask.Result : [],
-                    tagsTask.Status == TaskStatus.RanToCompletion ? tagsTask.Result : []);
+            return (peopleTask.Status == TaskStatus.RanToCompletion ? await peopleTask : [],
+                    tagsTask.Status == TaskStatus.RanToCompletion ? await tagsTask : []);
         }
     }
 

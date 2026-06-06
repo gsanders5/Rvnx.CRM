@@ -31,3 +31,8 @@
 ## 2024-05-23 - C# Tuple Deconstruction Code Review Error
 **Learning:** The code review tool flagged tuple deconstruction (`foreach ((Guid id, Guid relatedId) in list)`) as a compilation error when iterating over a `List<(Guid, Guid)>`. This was a hallucination, as `dotnet build` and `dotnet test` passed without issue.
 **Action:** Always trust successful `dotnet build` and `dotnet test` results over the reviewer claims of basic C# compilation failures.
+
+## 2024-06-06 - Replacing .Result with await after Task.WhenAll
+
+**Learning:** Accessing the `.Result` property of a `Task` after it has been `await Task.WhenAll(...)` is safe from deadlocks, but using `await` is the preferred C# idiom. It avoids wrapping exceptions in an `AggregateException` and keeps the syntax consistent. C# 12 collection expressions (`[.. await task1, .. await task2]`) gracefully support this.
+**Action:** When gathering results from tasks coordinated by `Task.WhenAll`, strictly use `await task1` instead of `task1.Result`.

@@ -27,7 +27,7 @@ public class CalendarController(ISignificantDateService significantDateService, 
         Task<List<CalendarEventDto>> dateTask = _significantDateService.GetCalendarEventsAsync();
         Task<List<CalendarEventDto>> taskTask = _contactTaskService.GetCalendarEventsAsync();
         await Task.WhenAll(dateTask, taskTask);
-        List<CalendarEventDto> events = [.. dateTask.Result, .. taskTask.Result];
+        List<CalendarEventDto> events = [.. await dateTask, .. await taskTask];
         foreach (CalendarEventDto evt in events)
         {
             evt.Url = Url.Action("Details", "Contacts", new { id = evt.ContactId });

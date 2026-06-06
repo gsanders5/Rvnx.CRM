@@ -27,7 +27,7 @@ public class CalendarController(ISignificantDateService significantDateService, 
 
         await Task.WhenAll(dateEventsTask, taskEventsTask);
 
-        List<CalendarEventDto> allEvents = [.. dateEventsTask.Result, .. taskEventsTask.Result];
+        List<CalendarEventDto> allEvents = [.. await dateEventsTask, .. await taskEventsTask];
         return Ok(allEvents);
     }
 }

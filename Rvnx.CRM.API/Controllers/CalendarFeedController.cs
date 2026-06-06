@@ -70,7 +70,7 @@ public class CalendarFeedController(
 
         await Task.WhenAll(dateEventsTask, taskEventsTask);
 
-        string ics = _calendarFeedService.BuildIcsFeed(dateEventsTask.Result, taskEventsTask.Result);
+        string ics = _calendarFeedService.BuildIcsFeed(await dateEventsTask, await taskEventsTask);
 
         return File(Encoding.UTF8.GetBytes(ics), "text/calendar; charset=utf-8", "rvnx-calendar.ics");
     }
