@@ -32,7 +32,6 @@ public class SignificantDateServiceTests : IDisposable
     [Fact]
     public async Task GetCalendarEventsAsyncWithActiveDatesReturnsCorrectEvents()
     {
-        // Arrange
         Guid contactId1 = Guid.NewGuid();
         Guid contactId2 = Guid.NewGuid();
 
@@ -75,10 +74,8 @@ public class SignificantDateServiceTests : IDisposable
 
         await _context.SaveChangesAsync();
 
-        // Act
         List<CalendarEventDto> events = await _service.GetCalendarEventsAsync();
 
-        // Assert
         Assert.NotNull(events);
         Assert.Equal(2, events.Count);
 

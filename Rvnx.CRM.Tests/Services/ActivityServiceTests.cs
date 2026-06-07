@@ -40,7 +40,6 @@ public class ActivityServiceTests
             .ReturnsAsync((Expression<Func<Core.Models.Contact.Contact, bool>> filter, CancellationToken _) =>
                 filter.Compile()(deceased) ? 1 : 0);
 
-        // Act
         ActivityFormDto? result = await _service.GetFormForCreateAsync(entityId);
 
         // Assert — deceased contacts cannot have a new activity form rendered.
@@ -50,7 +49,6 @@ public class ActivityServiceTests
     [Fact]
     public async Task QuickLogAsyncWhenContactIsDeceasedReturnsFailure()
     {
-        // Arrange
         Guid entityId = Guid.NewGuid();
 
         Core.Models.Contact.Contact deceased = new()
@@ -68,7 +66,6 @@ public class ActivityServiceTests
         // Act — use a real QuickLog suggestion type so the type guard does not short-circuit.
         OperationResult result = await _service.QuickLogAsync(entityId, Core.Constants.ActivityTypeSuggestions.QuickLog[0].Type);
 
-        // Assert
         Assert.False(result.Success);
         Assert.Contains("deceased", result.ErrorMessage, StringComparison.OrdinalIgnoreCase);
         _repositoryMock.Verify(r => r.AddAsync(It.IsAny<Activity>(), It.IsAny<CancellationToken>()), Times.Never);
@@ -77,7 +74,6 @@ public class ActivityServiceTests
     [Fact]
     public async Task CreateAsyncWhenContactIsDeceasedReturnsFailure()
     {
-        // Arrange
         Guid entityId = Guid.NewGuid();
         ActivityFormDto dto = new()
         {
@@ -98,10 +94,8 @@ public class ActivityServiceTests
             .ReturnsAsync((Expression<Func<Core.Models.Contact.Contact, bool>> filter, CancellationToken _) =>
                 filter.Compile()(deceased) ? 1 : 0);
 
-        // Act
         OperationResult result = await _service.CreateAsync(dto);
 
-        // Assert
         Assert.False(result.Success);
         Assert.Contains("deceased", result.ErrorMessage, StringComparison.OrdinalIgnoreCase);
         _repositoryMock.Verify(r => r.AddAsync(It.IsAny<Activity>(), It.IsAny<CancellationToken>()), Times.Never);
