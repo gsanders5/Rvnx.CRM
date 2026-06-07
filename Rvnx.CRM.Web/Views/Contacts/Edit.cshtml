@@ -197,7 +197,7 @@
                         <div class="crm-field-group">
                             <label class="crm-field-label" for="BirthdayYearUnknownField">Year Unknown</label>
                             <label class="crm-toggle">
-                                <input type="checkbox" id="BirthdayYearUnknownField"
+                                <input type="checkbox" id="BirthdayYearUnknownField" aria-label="Year Unknown"
                                        @(Model.Birthday?.Year == 1 ? "checked" : "") />
                                 <span class="crm-toggle-track"></span>
                                 <span class="crm-toggle-knob"></span>
@@ -206,7 +206,7 @@
                         <div class="crm-field-group">
                             <label class="crm-field-label" for="RemindOnBirthday">Remind on Birthday</label>
                             <label class="crm-toggle">
-                                <input asp-for="RemindOnBirthday" />
+                                <input asp-for="RemindOnBirthday" aria-label="Remind on Birthday" />
                                 <span class="crm-toggle-track"></span>
                                 <span class="crm-toggle-knob"></span>
                             </label>
@@ -343,7 +343,7 @@
                             <div class="crm-toggle-row-desc">Hidden contacts are excluded from the main list by default.</div>
                         </div>
                         <label class="crm-toggle">
-                            <input asp-for="IsHidden" />
+                            <input asp-for="IsHidden" aria-label="Hidden" />
                             <span class="crm-toggle-track"></span>
                             <span class="crm-toggle-knob"></span>
                         </label>
@@ -364,7 +364,7 @@
                             </div>
                         </div>
                         <label class="crm-toggle">
-                            <input asp-for="IsDeceased" id="IsDeceasedField" disabled="@Model.IsSelf" />
+                            <input asp-for="IsDeceased" id="IsDeceasedField" aria-label="Deceased" disabled="@Model.IsSelf" />
                             <span class="crm-toggle-track"></span>
                             <span class="crm-toggle-knob"></span>
                         </label>
