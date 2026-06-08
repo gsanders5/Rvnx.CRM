@@ -10,3 +10,7 @@
 ## 2026-04-16 - Prevent Redundant Reading of Icons within Labelled Containers
 **Learning:** Bootstrap Icons (and other purely decorative icon tags) inside wrappers that already convey their meaning (like buttons or tabs with text) are read redundantly by screen readers unless hidden.
 **Action:** When adding decorative visual elements like `<i class="bi ...">` inside elements that already contain text or tooltips explaining the intent, always add `aria-hidden="true"` to prevent screen readers from announcing redundant content. Ensure the attribute is only added once.
+
+## 2025-06-08 - Accessible custom toggle inputs
+**Learning:** Custom toggle switches (e.g., `crm-toggle` class) that place their visual descriptive text outside the `<label>` wrapper (for example, using `crm-toggle-row-desc` div) require an explicit `aria-label` attribute on the inner `<input type="checkbox">` to ensure accurate screen reader announcements, since the `<label>` wrapper itself doesn't contain readable text, just the empty `.crm-toggle-track` and `.crm-toggle-knob` spans.
+**Action:** When working on UI components or pages with `.crm-toggle`, always ensure the inner `<input>` element includes a descriptive `aria-label` attribute so that its purpose is clearly communicated to screen reader users.
