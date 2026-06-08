@@ -74,4 +74,55 @@ public class RelationshipSuggestionServiceTests
                 It.IsAny<CancellationToken>()),
             Times.Never);
     }
+
+    [Fact]
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Naming", "CA1707:Identifiers should not contain underscores", Justification = "Test names follow a standard convention")]
+    public async Task GetSuggestedRelationshipsAsync_TransitiveRelationship_ReturnsValidSuggestions()
+    {
+        // Arrange
+        Guid siblingTypeId = RelationshipTypeIds.Sibling;
+        Guid contactAId = Guid.NewGuid(); // Alice
+        Guid contactBId = Guid.NewGuid(); // Bob
+        Guid contactCId = Guid.NewGuid(); // Charlie
+
+        List<Contact> contacts =
+        [
+            new() { Id = contactAId, FirstName = "Alice", LastName = "Smith" },
+            new() { Id = contactBId, FirstName = "Bob", LastName = "Smith" },
+            new() { Id = contactCId, FirstName = "Charlie", LastName = "Smith" }
+        ];
+
+        // Existing relationship: Alice is Sibling of Bob
+        List<Relationship> relationships =
+        [
+            new() { Id = Guid.NewGuid(), ContactId = contactAId, RelatedContactId = contactBId, RelationshipTypeId = siblingTypeId }
+        ];
+
+        _repositoryMock.Setup(r => r.GetByIdAsync<Contact>(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((Guid id, CancellationToken ct) => contacts.FirstOrDefault(c => c.Id == id));
+
+        _repositoryMock.Setup(r => r.ListAsNoTrackingAsync<Contact>(
+                It.IsAny<Expression<Func<Contact, bool>>>(),
+                It.IsAny<CancellationToken>(),
+                It.IsAny<string[]>()))
+            .ReturnsAsync((Expression<Func<Contact, bool>> expr, CancellationToken ct, string[] includes) =>
+                contacts.AsQueryable().Where(expr).ToList());
+
+        _repositoryMock.Setup(r => r.ListAsNoTrackingAsync<Relationship>(
+                It.IsAny<Expression<Func<Relationship, bool>>>(),
+                It.IsAny<CancellationToken>(),
+                It.IsAny<string[]>()))
+            .ReturnsAsync((Expression<Func<Relationship, bool>> expr, CancellationToken ct, string[] includes) =>
+                relationships.AsQueryable().Where(expr).ToList());
+
+        // Act
+        // Suggest relationships for Charlie (contactC) targeting Alice (contactA)
+        var result = await _service.GetSuggestedRelationshipsAsync(contactCId, contactAId, siblingTypeId, false, "Alice Smith");
+
+        // Assert
+        Assert.Single(result);
+        Assert.Equal("Charlie Smith", result[0].SourceName);
+        Assert.Equal("Bob Smith", result[0].TargetName);
+        Assert.Equal("Sibling", result[0].RelationshipName);
+    }
 }
