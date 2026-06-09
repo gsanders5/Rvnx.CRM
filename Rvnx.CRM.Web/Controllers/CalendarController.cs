@@ -5,7 +5,6 @@ using Rvnx.CRM.Web.Controllers.Base;
 using Rvnx.CRM.Web.ViewModels.Calendar;
 using System.Globalization;
 
-
 namespace Rvnx.CRM.Web.Controllers;
 
 public class CalendarController(ISignificantDateService significantDateService, IContactTaskService contactTaskService) : AuthorizedController

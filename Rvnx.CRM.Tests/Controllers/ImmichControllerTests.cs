@@ -6,6 +6,7 @@ using Rvnx.CRM.Core.DTOs.Base;
 using Rvnx.CRM.Core.DTOs.Contact;
 using Rvnx.CRM.Core.Interfaces;
 using Rvnx.CRM.Web.Controllers;
+using Rvnx.CRM.Web.ViewModels.Immich;
 using System.Reflection;
 using System.Text;
 
@@ -56,7 +57,7 @@ public class ImmichControllerTests
     public async Task GalleryReturnsEmptyPartialWhenImmichOff()
     {
         Mock<IImmichService> immichMock = new();
-        immichMock.SetupGet(s => s.IsEnabled).Returns(false);
+        immichMock.Setup(s => s.IsEnabledAsync(It.IsAny<CancellationToken>())).ReturnsAsync(false);
 
         ImmichController controller = CreateController(immichMock);
 
@@ -77,8 +78,8 @@ public class ImmichControllerTests
         Guid tagId = Guid.NewGuid();
 
         Mock<IImmichService> immichMock = new();
-        immichMock.SetupGet(s => s.IsEnabled).Returns(true);
-        immichMock.SetupGet(s => s.WebBaseUrl).Returns("https://photos.example.com");
+        immichMock.Setup(s => s.IsEnabledAsync(It.IsAny<CancellationToken>())).ReturnsAsync(true);
+        immichMock.Setup(s => s.GetWebBaseUrlAsync(It.IsAny<CancellationToken>())).ReturnsAsync("https://photos.example.com");
 
         ImmichAssetDto[] assets = [new ImmichAssetDto(Guid.NewGuid(), "a.jpg", "IMAGE")];
         immichMock.Setup(s => s.GetAssetsAsync(personId, tagId, 24, It.IsAny<CancellationToken>()))

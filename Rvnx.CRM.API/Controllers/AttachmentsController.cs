@@ -13,10 +13,14 @@ namespace Rvnx.CRM.API.Controllers;
 [ApiController]
 [Route("api/[controller]")]
 [Authorize]
-public class AttachmentsController(IAttachmentService attachmentService, IThumbnailService thumbnailService) : ControllerBase
+public class AttachmentsController(
+    IAttachmentService attachmentService,
+    IThumbnailService thumbnailService,
+    IFileValidationService fileValidationService) : ControllerBase
 {
     private readonly IAttachmentService _attachmentService = attachmentService;
     private readonly IThumbnailService _thumbnailService = thumbnailService;
+    private readonly IFileValidationService _fileValidationService = fileValidationService;
 
     /// <summary>
     /// List all attachments for a specific contact.
@@ -41,6 +45,16 @@ public class AttachmentsController(IAttachmentService attachmentService, IThumbn
         if (file == null || file.Length == 0)
         {
             return BadRequest("No file uploaded.");
+        }
+
+        if (!_fileValidationService.IsAllowedFileSize(file.Length))
+        {
+            return BadRequest("File is too large.");
+        }
+
+        if (!_fileValidationService.IsAllowedExtension(Path.GetExtension(file.FileName)))
+        {
+            return BadRequest("File type not allowed.");
         }
 
         using MemoryStream stream = new();
