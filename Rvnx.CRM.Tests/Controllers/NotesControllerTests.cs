@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Moq;
 using Rvnx.CRM.Core.DTOs.Base;
+using Rvnx.CRM.Core.DTOs.Contact;
 using Rvnx.CRM.Core.Interfaces;
 using Rvnx.CRM.Core.Models;
 using Rvnx.CRM.Core.Models.Base;
@@ -16,9 +17,148 @@ namespace Rvnx.CRM.Tests.Controllers;
 
 public class NotesControllerTests
 {
+    public class Security
+    {
+        [Fact]
+        public async Task NotesControllerEditShouldPreserveEntityId()
+        {
+            using CRMDbContext context = TestDbContextFactory.CreateForDefaultUser();
+            Repository repository = new(context);
+
+            Mock<IContactLookupService> mockContactLookupService = new();
+            mockContactLookupService.Setup(s => s.IsPartialAsync(It.IsAny<Guid>())).ReturnsAsync(false);
+            mockContactLookupService.Setup(s => s.GetContactNameAsync(It.IsAny<Guid>())).ReturnsAsync("Test Entity");
+
+            INoteService noteService = new NoteService(repository, mockContactLookupService.Object);
+            NotesController controller = new(noteService, repository, mockContactLookupService.Object);
+
+            Guid noteId = Guid.NewGuid();
+            Guid originalContactId = Guid.NewGuid();
+            Guid attackerContactId = Guid.NewGuid();
+
+            context.Contacts!.Add(new Contact { Id = originalContactId, FirstName = "Original" });
+            context.Contacts!.Add(new Contact { Id = attackerContactId, FirstName = "Attacker" });
+
+            context.Set<Note>().Add(new Note
+            {
+                Id = noteId,
+                ContactId = originalContactId,
+                Title = "Original Title",
+                Value = "Original Content"
+            });
+            await context.SaveChangesAsync();
+            context.ChangeTracker.Clear();
+
+            // Attacker tries to change ContactId via form submission
+            NoteFormViewModel tamperAttempt = new()
+            {
+                Id = noteId,
+                ContactId = attackerContactId, // Attempting to move note to different contact
+                Title = "Updated Title",
+                Value = "Updated Content"
+            };
+
+            await controller.Edit(noteId, tamperAttempt);
+
+            Note? updatedNote = await context.Set<Note>().FindAsync(noteId);
+            Assert.NotNull(updatedNote);
+            Assert.Equal(originalContactId, updatedNote.ContactId); // Should stay original
+            Assert.Equal("Updated Title", updatedNote.Title); // Content should update
+            Assert.Equal("Updated Content", updatedNote.Value); // Content should update
+        }
+
+        [Fact]
+        public async Task NotesControllerEditShouldPreserveCreatedDateAndCreatedBy()
+        {
+            using CRMDbContext context = TestDbContextFactory.CreateForDefaultUser();
+            Repository repository = new(context);
+
+            Mock<IContactLookupService> mockContactLookupService = new();
+            mockContactLookupService.Setup(s => s.IsPartialAsync(It.IsAny<Guid>())).ReturnsAsync(false);
+            mockContactLookupService.Setup(s => s.GetContactNameAsync(It.IsAny<Guid>())).ReturnsAsync("Test Entity");
+
+            INoteService noteService = new NoteService(repository, mockContactLookupService.Object);
+            NotesController controller = new(noteService, repository, mockContactLookupService.Object);
+
+            Guid noteId = Guid.NewGuid();
+            Guid contactId = Guid.NewGuid();
+
+            context.Contacts!.Add(new Contact { Id = contactId, FirstName = "Test" });
+
+            Note originalNote = new()
+            {
+                Id = noteId,
+                ContactId = contactId,
+                Title = "Original",
+                Value = "Content"
+                // We do not set CreatedDate/CreatedBy here because CRMDbContext
+            };
+            context.Set<Note>().Add(originalNote);
+
+            // 1. Save the original note. The Context will assign 'Now' and 'test-user'.
+            await context.SaveChangesAsync();
+
+            // 2. Capture the authoritative values that were just saved to the DB.
+            DateTime assignedCreatedDate = originalNote.CreatedDate;
+            string? assignedCreatedBy = originalNote.CreatedBy;
+
+            // 3. Clear memory to simulate a fresh HTTP request.
+            context.ChangeTracker.Clear();
+
+            // 4. Attacker constructs a payload trying to overwrite the audit fields
+            NoteFormViewModel tamperAttempt = new()
+            {
+                Id = noteId,
+                Title = "Updated",
+                Value = "Updated Content"
+                // CreatedDate and CreatedBy are not on the DTO, effectively testing that they can't be bound
+            };
+
+            await controller.Edit(noteId, tamperAttempt);
+
+            // 5. Clear memory again to force a fresh read from the DB.
+            context.ChangeTracker.Clear();
+
+            Note? updatedNote = await context.Set<Note>().FindAsync(noteId);
+            Assert.NotNull(updatedNote);
+
+            // These ensure the edit logic ignored the attacker's values
+            Assert.Equal(assignedCreatedDate, updatedNote.CreatedDate);
+            Assert.Equal(assignedCreatedBy, updatedNote.CreatedBy);
+
+            // Sanity check: ensure the Title/Value DID update
+            Assert.Equal("Updated", updatedNote.Title);
+        }
+
+        [Fact]
+        public async Task NotesControllerEditShouldReturnNotFoundWhenNoteDoesNotExist()
+        {
+            using CRMDbContext context = TestDbContextFactory.CreateForDefaultUser();
+            Repository repository = new(context);
+
+            Mock<IContactLookupService> mockContactLookupService = new();
+            mockContactLookupService.Setup(s => s.IsPartialAsync(It.IsAny<Guid>())).ReturnsAsync(false);
+            mockContactLookupService.Setup(s => s.GetContactNameAsync(It.IsAny<Guid>())).ReturnsAsync("Test Entity");
+
+            INoteService noteService = new NoteService(repository, mockContactLookupService.Object);
+            NotesController controller = new(noteService, repository, mockContactLookupService.Object);
+
+            Guid nonExistentId = Guid.NewGuid();
+            NoteFormViewModel note = new()
+            {
+                Id = nonExistentId,
+                Title = "Test",
+                Value = "Test"
+            };
+
+            IActionResult result = await controller.Edit(nonExistentId, note);
+
+            Assert.IsType<NotFoundResult>(result);
+        }
+    }
+
     public class NotesControllerSecurityTests : IDisposable
     {
-
         private readonly CRMDbContext _context;
         private readonly NotesController _controller;
         private readonly Guid _currentUserId;
@@ -109,11 +249,10 @@ public class NotesControllerTests
 
             Assert.IsType<NotFoundResult>(result);
         }
-
     }
+
     public class General : IDisposable
     {
-
         private readonly CRMDbContext _context;
         private readonly NotesController _controller;
 
@@ -215,6 +354,5 @@ public class NotesControllerTests
             Assert.IsType<RedirectToActionResult>(result);
             Assert.Null(await _context.Set<Note>().FindAsync(noteId));
         }
-
     }
 }
