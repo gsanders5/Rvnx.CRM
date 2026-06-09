@@ -4,11 +4,12 @@ namespace Rvnx.CRM.Core.Interfaces;
 
 public interface IImmichService
 {
-    bool IsEnabled { get; }
+    // Async because the answer depends on the current group's settings row in the database.
+    Task<bool> IsEnabledAsync(CancellationToken ct);
 
-    // Web UI base (e.g. "https://immich.example.com") derived from the configured API BaseUrl;
-    // null when Immich isn't configured.
-    string? WebBaseUrl { get; }
+    // Web UI base (e.g. "https://immich.example.com") derived from the group's API BaseUrl;
+    // null when Immich isn't configured for the current group.
+    Task<string?> GetWebBaseUrlAsync(CancellationToken ct);
 
     Task<IReadOnlyList<ImmichOptionDto>> GetAllPeopleAsync(CancellationToken ct);
 
