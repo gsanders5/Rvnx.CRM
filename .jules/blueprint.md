@@ -66,6 +66,7 @@
 **Learning:** The `Program.cs` file in the Web project was directly referencing `Microsoft.EntityFrameworkCore` to execute `context.Database.Migrate()` on startup, violating layer boundaries by coupling the presentation layer to the persistence technology.
 **Action:** Extract database initialization logic, including `CRMDbContext` dependencies and ORM-specific error logging, into an extension method (e.g., `ApplyDatabaseMigrations`) in the `Infrastructure` layer's `ServiceCollectionExtensions`. This keeps `Program.cs` clean and strictly separates concerns.
 
-## 2024-06-06 - ViewModels Belong in Web Layer
-**Learning:** Found several `*ViewModel.cs` files incorrectly residing in the `Rvnx.CRM.Core` project. `Core` should only contain domain models and DTOs that do not depend on presentation frameworks. ViewModels are strongly tied to MVC Razor views (using `@model`) and MVC Controllers.
-**Action:** Always move `ViewModel` classes to the `Rvnx.CRM.Web/ViewModels/...` directory, keeping `Core` isolated from presentation concerns.
+## 2024-05-25 - [Move UI-Specific ViewModels from Core to Web]
+
+**Learning:** UI-specific models (`ImmichGalleryRequest` and `ImmichGalleryViewModel`) were previously located in `Rvnx.CRM.Core/DTOs/Contact`. In a cleanly architected system, the `Core` (domain/application) layer should have no knowledge of Web/UI-specific concepts like ViewModels or HTTP request binding objects.
+**Action:** When working with ViewModels or HTTP request objects, ensure they are placed in the `Rvnx.CRM.Web/ViewModels/[FeatureName]` directory rather than the `Core` project. When refactoring, move these files from `Core` to `Web` to maintain strict layer boundaries.

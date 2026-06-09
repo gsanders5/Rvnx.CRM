@@ -29,21 +29,14 @@ public static class ServiceCollectionExtensions
             client.Timeout = TimeSpan.FromSeconds(10);
         });
 
-        services.AddHttpClient<IImmichService, ImmichService>((_, client) =>
+        // Connection details (base URL + API key) come from the current group's database row
+        // and are applied per request inside ImmichService, not on the shared client.
+        services.AddHttpClient<IImmichService, ImmichService>(client =>
         {
-            IConfigurationSection cfg = configuration.GetSection(ImmichService.ConfigSection);
-            string? baseUrl = cfg["BaseUrl"];
-            string? apiKey = cfg["ApiKey"];
-            if (!string.IsNullOrWhiteSpace(baseUrl))
-            {
-                client.BaseAddress = new Uri(baseUrl.TrimEnd('/') + "/");
-            }
-            if (!string.IsNullOrWhiteSpace(apiKey))
-            {
-                client.DefaultRequestHeaders.Add("x-api-key", apiKey);
-            }
             client.Timeout = TimeSpan.FromSeconds(10);
         });
+
+        services.AddScoped<IImmichSettingsService, ImmichSettingsService>();
 
         services.AddScoped<IUserSynchronizationService, UserSynchronizationService>();
 
@@ -92,6 +85,9 @@ public static class ServiceCollectionExtensions
             new EventId(1, nameof(LogDbCreationError)),
             "An error occurred creating the DB.");
 
+    private static readonly Action<ILogger, Exception?> LogMigrationError =
+        LoggerMessage.Define(LogLevel.Error, new EventId(1), "An error occurred migrating the database");
+
     public static void ApplyDatabaseMigrations(this IServiceProvider provider)
     {
         using IServiceScope scope = provider.CreateScope();
@@ -105,6 +101,22 @@ public static class ServiceCollectionExtensions
         {
             ILogger<CRMDbContext> logger = services.GetRequiredService<ILogger<CRMDbContext>>();
             LogDbCreationError(logger, ex);
+        }
+    }
+
+    public static async Task<bool> ApplyDatabaseMigrationsAsync(this IServiceProvider provider, ILogger logger)
+    {
+        try
+        {
+            using IServiceScope scope = provider.CreateScope();
+            CRMDbContext context = scope.ServiceProvider.GetRequiredService<CRMDbContext>();
+            await context.Database.MigrateAsync();
+            return true;
+        }
+        catch (Exception ex)
+        {
+            LogMigrationError(logger, ex);
+            return false;
         }
     }
 }
