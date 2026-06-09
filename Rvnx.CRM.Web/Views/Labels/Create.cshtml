@@ -4,41 +4,75 @@
     ViewData["Title"] = "Create Label";
 }
 
-<div class="row justify-content-center">
-    <div class="col-md-6 col-lg-5">
-        <div class="crm-form-card">
-            <div class="crm-form-card-header">
-                <h4><i class="bi bi-tag" aria-hidden="true"></i> Create Label</h4>
-            </div>
-            <div class="crm-form-card-body">
+<form id="label-form" asp-action="Create" data-edit-form method="post">
+    @Html.AntiForgeryToken()
 
-                <form asp-action="Create" method="post">
-                    <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+    <div class="crm-details-actions-strip">
+        <a asp-action="Index" class="crm-btn-tertiary btn-sm">
+            <i class="bi bi-arrow-left" aria-hidden="true"></i> Back to Labels
+        </a>
+        <div class="d-flex gap-2 align-items-center flex-wrap">
+            <span class="crm-eyebrow crm-unsaved-indicator" id="unsaved-indicator" hidden>
+                <i class="bi bi-circle-fill" aria-hidden="true" style="font-size: 6px; vertical-align: middle; margin-right: 4px;"></i>
+                Unsaved
+            </span>
+            <button type="submit" class="crm-btn-primary btn-sm">
+                <i class="bi bi-save" aria-hidden="true"></i> Save
+            </button>
+        </div>
+    </div>
 
-                    <div class="form-floating mb-3">
-                        <input asp-for="Name" class="form-control" placeholder="Name" required autofocus />
-                        <label asp-for="Name">Name <span class="text-danger">*</span></label>
-                        <span asp-validation-for="Name" class="text-danger"></span>
+    <section class="crm-edit-masthead crm-fade-in">
+        <div class="crm-edit-masthead-photo-placeholder" aria-hidden="true">
+            <i class="bi bi-tag"></i>
+        </div>
+        <div>
+            <div class="crm-eyebrow" style="margin-bottom: 6px;">Adding label</div>
+            <h1 class="crm-edit-masthead-title">Create a label</h1>
+        </div>
+    </section>
+
+    <div class="crm-edit-body">
+        <div class="crm-edit-col-main">
+            <div asp-validation-summary="ModelOnly" class="crm-field-error"></div>
+
+            <div class="crm-card">
+                <div class="crm-card-header">
+                    <h5 class="card-title mb-0"><i class="bi bi-tag" aria-hidden="true"></i> Details</h5>
+                </div>
+                <div class="crm-card-body">
+                    <div class="crm-field-group">
+                        <label asp-for="Name">Name *</label>
+                        <input asp-for="Name" class="crm-input" required autofocus />
+                        <span asp-validation-for="Name" class="crm-field-error"></span>
                     </div>
 
-                    <div class="mb-4">
-                        <label asp-for="Color" class="form-label d-block text-muted small mb-1">Badge Color</label>
+                    <div class="crm-field-group">
+                        <label asp-for="Color">Badge Color</label>
                         <div class="d-flex align-items-center gap-3">
                             <input asp-for="Color" type="color" class="form-control form-control-color border-0 p-0" style="width: 4rem; height: 3rem; cursor: pointer;" title="Choose badge color" value="@(Model.Color ?? "#4CAF50")" />
                             <small class="text-muted">Select a background color. Text color adjusts automatically.</small>
                         </div>
-                        <span asp-validation-for="Color" class="text-danger"></span>
+                        <span asp-validation-for="Color" class="crm-field-error"></span>
                     </div>
+                </div>
+            </div>
+        </div>
 
-                    <div class="d-grid gap-2 d-md-flex mt-4">
-                        <button type="submit" class="crm-btn-primary"><i class="bi bi-check-lg" aria-hidden="true"></i> Create Label</button>
-                        <a asp-action="Index" class="crm-btn-tertiary"><i class="bi bi-x-lg" aria-hidden="true"></i> Cancel</a>
-                    </div>
-                </form>
+        <div class="crm-edit-col-side">
+            <div class="crm-save-shortcut-card">
+                <div class="crm-save-shortcut-title">Ready to save?</div>
+                <div class="crm-save-shortcut-desc">Changes are applied immediately.</div>
+                <button type="submit" class="crm-btn-primary btn-sm" form="label-form">
+                    <i class="bi bi-save" aria-hidden="true"></i> Save
+                </button>
+                <a asp-action="Index" class="crm-btn-tertiary btn-sm">
+                    <i class="bi bi-arrow-left" aria-hidden="true"></i> Cancel
+                </a>
             </div>
         </div>
     </div>
-</div>
+</form>
 
 @section Scripts {
     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}

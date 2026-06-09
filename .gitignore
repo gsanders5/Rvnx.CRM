@@ -11,6 +11,9 @@
 *.sln.docstates
 appsettings.Local.json
 
+# C# language-server / build project cache
+*.csproj.lscache
+
 # User-specific files (MonoDevelop/Xamarin Studio)
 *.userprefs
 

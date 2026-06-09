@@ -1,101 +1,160 @@
+@using Rvnx.CRM.Core.Extensions
 @model IEnumerable<Rvnx.CRM.Core.DTOs.Contact.LabelDto>
 
 @{
     ViewData["Title"] = "Labels";
+    int totalAssignments = Model.Sum(l => l.ContactCount);
+
+    string PickTextOn(string? hex)
+    {
+        if (string.IsNullOrWhiteSpace(hex)) return "#ffffff";
+        return ColorContrastHelper.GetContrastTextColor(hex);
+    }
 }
 
-<div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
-    <h2 class="mb-0">Labels</h2>
-    <button type="button" class="crm-btn-primary" id="btn-create-label">
-        <i class="bi bi-plus-lg" aria-hidden="true"></i> Create Label
-    </button>
-</div>
+<div class="crm-page">
 
-@if (!Model.Any())
-{
-    <div class="text-center py-5 my-5">
-        <i class="bi bi-tags display-1 opacity-25 mb-3" style="color: var(--crm-text-tertiary);" aria-hidden="true"></i>
-        <h3 class="h4 mt-3" style="color: var(--crm-text-secondary);">No Labels Found</h3>
-        <p class="mb-4" style="color: var(--crm-text-tertiary);">Create your first label to organize contacts.</p>
-    </div>
-}
-else
-{
-    <div class="crm-card" style="margin-bottom: 0;">
-        <div class="crm-card-body p-0">
-            <div class="table-responsive">
-                <table class="table table-hover align-middle mb-0">
-                    <thead>
-                        <tr>
-                            <th>Label</th>
-                            <th class="text-end" style="width: 200px;">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach (var label in Model)
-                        {
-                            <tr>
-                                <td>
-                                    <h5 class="mb-0">
-                                        @await Html.PartialAsync("_LabelBadge", label)
-                                    </h5>
-                                </td>
-                                <td class="text-end">
-                                    <div class="crm-icon-actions">
-                                        <button type="button" class="crm-icon-btn icon-edit btn-edit-label"
-                                                data-id="@label.Id"
-                                                data-name="@label.Name"
-                                                data-color="@(label.Color ?? "#e9ecef")"
-                                                title="Edit" aria-label="Edit @label.Name">
-                                            <i class="bi bi-pencil-square" aria-hidden="true"></i>
-                                        </button>
-                                        <button type="button" class="crm-icon-btn icon-danger"
-                                                data-confirm-action="@Url.Action("Delete", "Labels", new { id = label.Id })"
-                                                data-confirm-title="Delete Label"
-                                                data-confirm-body="Are you sure you want to delete the &quot;@label.Name&quot; label? It will be removed from all contacts."
-                                                data-confirm-remove="tr"
-                                                title="Delete" aria-label="Delete @label.Name">
-                                            <i class="bi bi-trash" aria-hidden="true"></i>
-                                        </button>
-                                    </div>
-                                </td>
-                            </tr>
-                        }
-                    </tbody>
-                </table>
-            </div>
+    <div class="crm-masthead crm-fade-in">
+        <div>
+            <div class="crm-eyebrow" style="margin-bottom: 8px;">Organize</div>
+            <h1 class="crm-masthead-title">
+                Labels <em>(@Model.Count())</em>
+            </h1>
+            @if (Model.Any())
+            {
+                <div class="crm-serif" style="font-size: 15px; color: var(--crm-text-secondary); margin-top: 6px; font-style: italic;">
+                    @totalAssignments contact@(totalAssignments == 1 ? "" : "s") tagged across all labels.
+                </div>
+            }
+        </div>
+        <div class="crm-masthead-actions">
+            <button type="button" class="crm-btn-primary btn-sm" id="btn-create-label">
+                <i class="bi bi-plus-lg" aria-hidden="true"></i> Create Label
+            </button>
         </div>
     </div>
-}
 
-<div class="modal fade" id="labelModal" tabindex="-1" aria-labelledby="labelModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-            <form id="labelForm" method="post">
-                @Html.AntiForgeryToken()
-                <div class="modal-header">
-                    <h5 class="modal-title" id="labelModalLabel">Create Label</h5>
-                    <button type="button" class="btn-close" data-mdb-ripple-init data-mdb-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <input type="hidden" name="Id" id="labelFormId" />
-
-                    <div class="form-floating mb-3">
-                        <input type="text" name="Name" id="labelFormName" class="form-control" placeholder="Name" required autofocus />
-                        <label for="labelFormName">Name <span style="color: var(--crm-danger);">*</span></label>
+    @if (!Model.Any())
+    {
+        <div class="crm-card crm-fade-in crm-delay-1 text-center" style="padding: 80px 22px;">
+            <i class="bi bi-tags display-1 opacity-25 mb-3" style="color: var(--crm-text-tertiary);" aria-hidden="true"></i>
+            <h3 class="crm-serif" style="font-size: 22px; color: var(--crm-text-secondary); font-style: italic; margin-bottom: 6px;">
+                No labels yet.
+            </h3>
+            <p class="mb-4" style="color: var(--crm-text-tertiary); font-size: 13px;">
+                Create your first label to start segmenting your contacts.
+            </p>
+            <button type="button" class="crm-btn-primary btn-sm" id="btn-create-label-empty"
+                    onclick="document.getElementById('btn-create-label').click();">
+                <i class="bi bi-plus-lg" aria-hidden="true"></i> Create Your First Label
+            </button>
+        </div>
+    }
+    else
+    {
+        <div class="crm-card crm-fade-in crm-delay-1 crm-labels-table" style="margin-bottom: 0; padding: 0; overflow: hidden;">
+            <div class="crm-labels-table-header">
+                <div class="crm-eyebrow">Label</div>
+                <div class="crm-eyebrow" style="text-align: right;">Contacts</div>
+                <div class="crm-eyebrow" style="text-align: right;">Actions</div>
+            </div>
+            @foreach (var label in Model)
+            {
+                var bg = string.IsNullOrWhiteSpace(label.Color) ? "#1E3A5F" : label.Color!;
+                var fg = PickTextOn(bg);
+                <div class="crm-labels-row">
+                    <div class="crm-labels-row-name">
+                        <span class="crm-label-badge-lg" style="background: @bg; color: @fg;">@label.Name</span>
+                        <span class="crm-label-table-hex">@bg.ToUpperInvariant()</span>
                     </div>
-
-                    <div>
-                        <label class="form-label d-block" style="color: var(--crm-text-secondary); font-size: 0.8125rem;">Badge Color</label>
-                        <div class="d-flex align-items-center gap-3">
-                            <input type="color" name="Color" id="labelFormColor" class="form-control form-control-color border-0 p-0" style="width: 4rem; height: 3rem; cursor: pointer;" value="#4CAF50" title="Choose badge color" />
-                            <small style="color: var(--crm-text-tertiary);">Select a background color. Text color adjusts automatically.</small>
+                    <div class="crm-labels-row-count">
+                        <span class="crm-label-table-count">@label.ContactCount</span>
+                        <span class="crm-labels-row-count-unit">@(label.ContactCount == 1 ? "person" : "people")</span>
+                    </div>
+                    <div class="crm-labels-row-actions">
+                        <div class="crm-icon-actions justify-content-end">
+                            <button type="button" class="crm-icon-btn icon-edit btn-edit-label"
+                                    data-id="@label.Id"
+                                    data-name="@label.Name"
+                                    data-color="@(label.Color ?? "#1E3A5F")"
+                                    data-count="@label.ContactCount"
+                                    title="Edit" aria-label="Edit @label.Name">
+                                <i class="bi bi-pencil-square" aria-hidden="true"></i>
+                            </button>
+                            <button type="button" class="crm-icon-btn icon-danger"
+                                    data-confirm-action="@Url.Action("Delete", "Labels", new { id = label.Id })"
+                                    data-confirm-title="Delete Label"
+                                    data-confirm-body="Are you sure you want to delete the &quot;@label.Name&quot; label? It will be removed from all contacts."
+                                    data-confirm-remove=".crm-labels-row"
+                                    title="Delete" aria-label="Delete @label.Name">
+                                <i class="bi bi-trash" aria-hidden="true"></i>
+                            </button>
                         </div>
                     </div>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="crm-btn-tertiary" data-mdb-ripple-init data-mdb-dismiss="modal">Cancel</button>
-                    <button type="submit" class="crm-btn-primary" id="labelFormSubmit">
+            }
+        </div>
+    }
+
+</div>
+
+<div class="modal fade" id="labelModal" tabindex="-1" aria-labelledby="labelModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content crm-label-modal-content">
+            <form id="labelForm" method="post">
+                @Html.AntiForgeryToken()
+                <div class="modal-header crm-label-modal-header">
+                    <div>
+                        <div class="crm-eyebrow" id="labelModalEyebrow" style="margin-bottom: 4px;">NEW</div>
+                        <h5 class="crm-serif mb-0" id="labelModalLabel">Create a label</h5>
+                    </div>
+                    <button type="button" class="crm-icon-btn" data-mdb-ripple-init data-mdb-dismiss="modal" aria-label="Close">
+                        <i class="bi bi-x-lg" aria-hidden="true"></i>
+                    </button>
+                </div>
+                <div class="modal-body crm-label-modal-body">
+                    <input type="hidden" name="Id" id="labelFormId" />
+
+                    <div class="crm-label-preview-pane">
+                        <span id="labelPreview" class="crm-label-badge-lg" style="background: #1E3A5F; color: #fff;">Preview</span>
+                    </div>
+
+                    <div>
+                        <label for="labelFormName" class="crm-eyebrow" style="display: block; margin-bottom: 6px;">NAME</label>
+                        <input type="text" name="Name" id="labelFormName" class="form-control crm-label-modal-input" placeholder="e.g. Book Club" required autofocus />
+                    </div>
+
+                    <div>
+                        <label class="crm-eyebrow" style="display: block; margin-bottom: 8px;">BADGE COLOR</label>
+                        <div class="crm-color-preset-grid" id="labelPresetGrid" role="radiogroup" aria-label="Preset colors">
+                            @{
+                                var presets = new[]
+                                {
+                                    "#3498db", "#9C27B0", "#E67E22", "#2ECC71", "#E91E63", "#607D8B",
+                                    "#FFB300", "#795548", "#5C6BC0", "#26A69A", "#EF5350", "#4361EE"
+                                };
+                            }
+                            @foreach (var c in presets)
+                            {
+                                <button type="button" class="crm-color-preset" data-color="@c" style="background: @c;" aria-label="@c" title="@c"></button>
+                            }
+                        </div>
+                        <div class="crm-color-custom-row">
+                            <input type="color" name="Color" id="labelFormColor" class="crm-color-input" value="#1E3A5F" title="Choose badge color" />
+                            <span class="crm-mono crm-label-table-hex" id="labelFormColorHex">#1E3A5F</span>
+                            <span style="flex: 1;"></span>
+                            <small class="crm-modal-hint">Text color adjusts automatically.</small>
+                        </div>
+                    </div>
+
+                    <div id="labelUsageNotice" class="crm-label-usage-notice" hidden>
+                        <i class="bi bi-info-circle" aria-hidden="true"></i>
+                        <span>This label is on <strong><span id="labelUsageCount">0</span> contacts</strong>. Changes apply to all of them.</span>
+                    </div>
+                </div>
+                <div class="modal-footer crm-label-modal-footer">
+                    <button type="button" class="crm-btn-tertiary btn-sm" data-mdb-ripple-init data-mdb-dismiss="modal">Cancel</button>
+                    <button type="submit" class="crm-btn-primary btn-sm" id="labelFormSubmit">
                         <i class="bi bi-check-lg" aria-hidden="true"></i> <span id="labelFormSubmitText">Create Label</span>
                     </button>
                 </div>
@@ -110,27 +169,83 @@ else
             var modalEl = document.getElementById('labelModal');
             var form = document.getElementById('labelForm');
             var titleEl = document.getElementById('labelModalLabel');
+            var eyebrowEl = document.getElementById('labelModalEyebrow');
             var idInput = document.getElementById('labelFormId');
             var nameInput = document.getElementById('labelFormName');
             var colorInput = document.getElementById('labelFormColor');
+            var colorHexEl = document.getElementById('labelFormColorHex');
             var submitText = document.getElementById('labelFormSubmitText');
+            var preview = document.getElementById('labelPreview');
+            var presetGrid = document.getElementById('labelPresetGrid');
+            var usageNotice = document.getElementById('labelUsageNotice');
+            var usageCount = document.getElementById('labelUsageCount');
+
+            // Mirrors ColorContrastHelper.GetContrastTextColor (Core/Extensions) so the
+            // modal preview matches the badge color the server picks for the table.
+            function pickTextOn(hex) {
+                var c = (hex || '#000000').replace('#', '');
+                if (c.length === 3) c = c[0] + c[0] + c[1] + c[1] + c[2] + c[2];
+                if (c.length !== 6) return '#000000';
+                function linearize(v) {
+                    var n = v / 255;
+                    return n <= 0.03928 ? n / 12.92 : Math.pow((n + 0.055) / 1.055, 2.4);
+                }
+                var r = parseInt(c.slice(0, 2), 16);
+                var g = parseInt(c.slice(2, 4), 16);
+                var b = parseInt(c.slice(4, 6), 16);
+                var luminance = 0.2126 * linearize(r) + 0.7152 * linearize(g) + 0.0722 * linearize(b);
+                return luminance > 0.179 ? '#000000' : '#ffffff';
+            }
+
+            function updatePreview() {
+                var name = (nameInput.value || '').trim() || 'Preview';
+                var color = (colorInput.value || '#1E3A5F').toUpperCase();
+                preview.textContent = name;
+                preview.style.background = color;
+                preview.style.color = pickTextOn(color);
+                colorHexEl.textContent = color;
+                Array.prototype.forEach.call(presetGrid.querySelectorAll('.crm-color-preset'), function (btn) {
+                    btn.classList.toggle('is-selected', btn.dataset.color.toUpperCase() === color);
+                });
+            }
+
+            nameInput.addEventListener('input', updatePreview);
+            colorInput.addEventListener('input', updatePreview);
+
+            presetGrid.addEventListener('click', function (e) {
+                var btn = e.target.closest('.crm-color-preset');
+                if (!btn) return;
+                colorInput.value = btn.dataset.color;
+                updatePreview();
+            });
 
             function openModal(mode, data) {
                 if (mode === 'create') {
-                    titleEl.textContent = 'Create Label';
+                    eyebrowEl.textContent = 'NEW';
+                    titleEl.textContent = 'Create a label';
                     submitText.textContent = 'Create Label';
                     form.action = '@Url.Action("Create", "Labels")';
                     idInput.value = '00000000-0000-0000-0000-000000000000';
                     nameInput.value = '';
-                    colorInput.value = '#4CAF50';
+                    colorInput.value = '#1E3A5F';
+                    usageNotice.hidden = true;
                 } else {
-                    titleEl.textContent = 'Edit Label';
+                    eyebrowEl.textContent = 'EDITING';
+                    titleEl.textContent = 'Edit "' + data.name + '"';
                     submitText.textContent = 'Save Changes';
                     form.action = '@Url.Action("Edit", "Labels", new { id = "__ID__" })'.replace('__ID__', data.id);
                     idInput.value = data.id;
                     nameInput.value = data.name;
                     colorInput.value = data.color;
+                    var n = parseInt(data.count, 10) || 0;
+                    if (n > 0) {
+                        usageCount.textContent = n;
+                        usageNotice.hidden = false;
+                    } else {
+                        usageNotice.hidden = true;
+                    }
                 }
+                updatePreview();
                 mdb.Modal.getOrCreateInstance(modalEl).show();
             }
 
@@ -144,7 +259,8 @@ else
                 openModal('edit', {
                     id: btn.dataset.id,
                     name: btn.dataset.name,
-                    color: btn.dataset.color
+                    color: btn.dataset.color,
+                    count: btn.dataset.count
                 });
             });
 

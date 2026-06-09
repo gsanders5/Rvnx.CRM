@@ -3,56 +3,103 @@
 
 @{
     ViewData["Title"] = "Dashboard";
+
+    DateTime now = DateTime.Now;
+    string greeting;
+    if (now.Hour < 5) { greeting = "evening"; }
+    else if (now.Hour < 12) { greeting = "morning"; }
+    else if (now.Hour < 17) { greeting = "afternoon"; }
+    else { greeting = "evening"; }
+    int birthdayCount = Model.UpcomingEvents.Count(e => e.Type == SignificantDateTitles.Birthday);
+
+    // Pull the first token of the signed-in user's name (same source the sidebar uses)
+    // so the greeting reads "Good afternoon, Elena." instead of "Good afternoon.".
+    string? firstName = null;
+    if (User.Identity?.IsAuthenticated == true && !string.IsNullOrWhiteSpace(User.Identity.Name))
+    {
+        firstName = User.Identity.Name.Split(' ', '@')[0];
+    }
 }
 
-<div class="container-fluid px-4 py-4">
+<div class="crm-page">
 
-    @* ── Top row: Upcoming Events (left) + Recently Modified (right) ── *@
+    @* ── Editorial masthead ───────────────────────────────────────────── *@
+    <div class="crm-masthead crm-fade-in">
+        <div>
+            <div class="crm-eyebrow" style="margin-bottom: 8px;">@now.ToString("dddd · MMMM d, yyyy")</div>
+            <h1 class="crm-masthead-title crm-masthead-title-lg">
+                @if (!string.IsNullOrEmpty(firstName))
+                {
+                    <text>Good @greeting, <em>@firstName.</em></text>
+                }
+                else
+                {
+                    <text>Good @greeting<em>.</em></text>
+                }
+            </h1>
+        </div>
+        <div style="text-align: right;">
+            <div class="crm-eyebrow" style="margin-bottom: 6px;">Next 30 days</div>
+            <div class="crm-masthead-subtitle">
+                <em>@Model.UpcomingEvents.Count @(Model.UpcomingEvents.Count == 1 ? "event" : "events")</em>@if (birthdayCount > 0)
+                {
+                    <span>, including <em>@birthdayCount @(birthdayCount == 1 ? "birthday" : "birthdays")</em></span>
+                }<span>.</span>
+            </div>
+        </div>
+    </div>
+
     <div class="row g-3 mb-3">
 
-        @* Upcoming Events *@
-        <div class="col-12 col-lg-6">
-            <div class="crm-card h-100">
+        @* ── Upcoming Events ───────────────────────────────────────────── *@
+        <div class="col-12 col-lg-7">
+            <div class="crm-card crm-fade-in crm-delay-1 h-100">
                 <div class="crm-card-header">
                     <h5 class="card-title mb-0"><i class="bi bi-calendar-event" aria-hidden="true"></i> Upcoming Events</h5>
+                    <a class="crm-btn-tertiary btn-sm" asp-controller="Calendar" asp-action="Index">
+                        See calendar <i class="bi bi-arrow-right" aria-hidden="true"></i>
+                    </a>
                 </div>
-                <div class="crm-card-body">
+                <div class="crm-card-body" style="padding: 8px 22px 18px;">
                     @if (Model.UpcomingEvents.Any())
                     {
                         @foreach (var evt in Model.UpcomingEvents)
                         {
-                            <a href="@(evt.RelatedContactId.HasValue ? Url.Action("Details", "Contacts", new { id = evt.RelatedContactId }) : "#")"
-                               class="crm-event-row mb-1">
-                                <div class="crm-event-icon">
-                                    @if (evt.Type == SignificantDateTitles.Birthday)
-                                    {
-                                        <i class="bi bi-gift-fill" aria-hidden="true"></i>
-                                    }
-                                    else
-                                    {
-                                        <i class="bi bi-alarm-fill" aria-hidden="true"></i>
-                                    }
+                            var isBirthday = evt.Type == SignificantDateTitles.Birthday;
+                            var timeText = evt.TimeUntil ?? "";
+                            var urgencyClass = "is-later";
+                            if (timeText.Contains("Today", StringComparison.OrdinalIgnoreCase) ||
+                                timeText.Contains("Tomorrow", StringComparison.OrdinalIgnoreCase))
+                            {
+                                urgencyClass = "is-today";
+                            }
+                            else if (timeText.Contains("day", StringComparison.OrdinalIgnoreCase) ||
+                                     timeText.Contains("week", StringComparison.OrdinalIgnoreCase))
+                            {
+                                urgencyClass = "is-soon";
+                            }
+                            var isSoon = urgencyClass != "is-later";
+                            var href = evt.RelatedContactId.HasValue
+                                ? Url.Action("Details", "Contacts", new { id = evt.RelatedContactId })
+                                : "#";
+                            <a href="@href" class="crm-event-editorial">
+                                <div class="crm-date-pill @(isSoon ? "is-soon" : "")">
+                                    <div class="crm-date-pill-month">@evt.Date.ToString("MMM")</div>
+                                    <div class="crm-date-pill-day">@evt.Date.Day</div>
                                 </div>
-                                <div class="flex-grow-1 min-width-0">
-                                    <div class="fw-semibold text-truncate" style="color: var(--crm-text-primary);">@evt.RelatedContactName</div>
-                                    <div class="crm-meta">@evt.Title</div>
-                                </div>
-                                <div class="text-end flex-shrink-0">
-                                    @{
-                                        var urgencyClass = "urgency-medium";
-                                        var timeText = evt.TimeUntil;
-                                        if (timeText.Contains("1 week") || timeText.Contains("days") || timeText.Contains("Tomorrow") || timeText.Contains("Today"))
+                                <div style="min-width: 0;">
+                                    <div class="crm-event-editorial-title">
+                                        <i class="bi @(isBirthday ? "bi-gift-fill" : "bi-alarm-fill")" aria-hidden="true"></i>
+                                        <span class="crm-event-editorial-who">@evt.RelatedContactName</span>
+                                    </div>
+                                    <div class="crm-event-editorial-body">
+                                        @evt.Title@if (!string.IsNullOrWhiteSpace(evt.Description))
                                         {
-                                            urgencyClass = "urgency-high";
+                                            <span class="crm-muted"> — @evt.Description</span>
                                         }
-                                        else if (timeText.Contains("month") || (int.TryParse(timeText.Split(' ')[0], out var weeks) && weeks > 6))
-                                        {
-                                            urgencyClass = "urgency-low";
-                                        }
-                                    }
-                                    <span class="crm-event-time @urgencyClass">@evt.TimeUntil</span>
-                                    <div class="crm-meta mt-1">@evt.Date.ToShortDateString()</div>
+                                    </div>
                                 </div>
+                                <span class="crm-event-urgency @urgencyClass">@evt.TimeUntil</span>
                             </a>
                         }
                     }
@@ -60,26 +107,26 @@
                     {
                         <div class="crm-empty py-2">
                             <i class="bi bi-calendar-x" aria-hidden="true"></i>
-                            <span class="">No upcoming events to look forward to.</span>
+                            <span>No upcoming events to look forward to.</span>
                         </div>
                     }
                 </div>
             </div>
         </div>
 
-        @* Recently Modified *@
-        <div class="col-12 col-lg-6">
-            <div class="crm-card h-100">
+        @* ── Recently Modified ─────────────────────────────────────────── *@
+        <div class="col-12 col-lg-5">
+            <div class="crm-card crm-fade-in crm-delay-2 h-100">
                 <div class="crm-card-header">
                     <h5 class="card-title mb-0"><i class="bi bi-clock-history" aria-hidden="true"></i> Recently Modified</h5>
+                    <span class="crm-eyebrow">LAST @Model.RecentContacts.Count CHANGES</span>
                 </div>
-                <div class="crm-card-body">
+                <div class="crm-card-body" style="padding: 8px 22px 18px;">
                     @if (Model.RecentContacts.Any())
                     {
                         @foreach (var contact in Model.RecentContacts)
                         {
-                            <a asp-controller="Contacts" asp-action="Details" asp-route-id="@contact.Id"
-                               class="crm-contact-row mb-1">
+                            <a asp-controller="Contacts" asp-action="Details" asp-route-id="@contact.Id" class="crm-recent-row">
                                 @if (contact.ProfileImageId.HasValue)
                                 {
                                     <img src="@Url.Action("Thumbnail", "Attachments", new { id = contact.ProfileImageId, maxWidth = 80, maxHeight = 80 })"
@@ -92,19 +139,19 @@
                                         <i class="bi bi-person-fill" aria-hidden="true"></i>
                                     </div>
                                 }
-                                <div class="flex-grow-1 min-width-0">
-                                    <div class="fw-semibold text-truncate" style="color: var(--crm-text-primary);">
-                                        @contact.FullName
+                                <div style="flex: 1; min-width: 0;">
+                                    <div class="text-truncate" style="display: flex; align-items: center; gap: 8px;">
+                                        <span class="crm-recent-row-name">@contact.FullName</span>
                                         @if (contact.IsNew)
                                         {
-                                            <span class="crm-badge crm-badge-success badge-new ms-2" style="font-size: 0.65rem;">New</span>
+                                            <span class="crm-badge crm-badge-new" style="font-size: 0.65rem;">NEW</span>
                                         }
                                     </div>
-                                    <div class="crm-meta">
-                                        Changed @contact.LastChangedDate.ToShortDateString()
+                                    <div class="crm-recent-row-meta">
+                                        CHANGED @contact.LastChangedDate.ToString("MMM d").ToUpperInvariant()
                                     </div>
                                 </div>
-                                <i class="bi bi-chevron-right crm-chevron" aria-hidden="true"></i>
+                                <i class="bi bi-chevron-right" aria-hidden="true" style="color: var(--crm-text-tertiary); font-size: 12px;"></i>
                             </a>
                         }
                     }
@@ -112,7 +159,7 @@
                     {
                         <div class="crm-empty py-2">
                             <i class="bi bi-person-x" aria-hidden="true"></i>
-                            <span class="">No contacts yet — start building your network.</span>
+                            <span>No contacts yet — start building your network.</span>
                         </div>
                     }
                 </div>
@@ -120,62 +167,48 @@
         </div>
     </div>
 
-    @* ── Network Graph ── *@
-    <div class="crm-card" id="network-card">
+    @* ── Stats Strip ───────────────────────────────────────────────────── *@
+    <div class="crm-card crm-fade-in crm-delay-3" style="margin-bottom: 1rem;">
+        <div class="crm-stats-strip">
+            <div class="crm-stats-strip-cell">
+                <div class="crm-stats-strip-value is-accent">@Model.Stats.TotalContacts</div>
+                <div class="crm-stats-strip-label"><i class="bi bi-people-fill" aria-hidden="true"></i> Total Contacts</div>
+            </div>
+            <div class="crm-stats-strip-cell">
+                <div class="crm-stats-strip-value">@Model.Stats.ContactsWithRelationships</div>
+                <div class="crm-stats-strip-label"><i class="bi bi-diagram-3-fill" aria-hidden="true"></i> In Your Network</div>
+            </div>
+            <div class="crm-stats-strip-cell">
+                <div class="crm-stats-strip-value">@Model.Stats.ContactsWithBirthday</div>
+                <div class="crm-stats-strip-label"><i class="bi bi-gift-fill" aria-hidden="true"></i> Birthdays Tracked</div>
+            </div>
+            <div class="crm-stats-strip-cell">
+                <div class="crm-stats-strip-value">@Model.Stats.ContactsHidden</div>
+                <div class="crm-stats-strip-label"><i class="bi bi-eye-slash-fill" aria-hidden="true"></i> Hidden</div>
+            </div>
+        </div>
+    </div>
+
+    @* ── Network Graph ─────────────────────────────────────────────────── *@
+    <div class="crm-card crm-fade-in crm-delay-4" id="network-card">
         <div class="crm-card-header">
             <h5 class="card-title mb-0"><i class="bi bi-diagram-3" aria-hidden="true"></i> Your Network</h5>
-            <button id="fullscreen-btn" class="crm-btn-secondary btn-sm" title="Toggle Fullscreen" aria-label="Toggle Fullscreen">
+            <button id="fullscreen-btn" class="crm-btn-tertiary btn-sm" title="Toggle Fullscreen" aria-label="Toggle Fullscreen">
                 <i class="bi bi-arrows-fullscreen" aria-hidden="true"></i>
             </button>
         </div>
         <div class="crm-card-body p-0 position-relative">
             <div id="network-graph" class="crm-network-container" style="width: 100%; height: 500px; background-color: var(--crm-surface-secondary); overflow: hidden;"></div>
             <div class="position-absolute bottom-0 end-0 mb-3 me-3 d-flex flex-column gap-1" style="z-index: 10;">
-                <button id="zoom-in-btn" class="crm-btn-secondary btn-sm" title="Zoom In" aria-label="Zoom In" style="padding: 0.375rem;">
+                <button id="zoom-in-btn" class="crm-btn-tertiary btn-sm" title="Zoom In" aria-label="Zoom In" style="padding: 0.375rem;">
                     <i class="bi bi-plus-lg" aria-hidden="true"></i>
                 </button>
-                <button id="zoom-out-btn" class="crm-btn-secondary btn-sm" title="Zoom Out" aria-label="Zoom Out" style="padding: 0.375rem;">
+                <button id="zoom-out-btn" class="crm-btn-tertiary btn-sm" title="Zoom Out" aria-label="Zoom Out" style="padding: 0.375rem;">
                     <i class="bi bi-dash-lg" aria-hidden="true"></i>
                 </button>
-                <button id="reset-zoom-btn" class="crm-btn-secondary btn-sm" title="Reset View" aria-label="Reset View" style="padding: 0.375rem;">
+                <button id="reset-zoom-btn" class="crm-btn-tertiary btn-sm" title="Reset View" aria-label="Reset View" style="padding: 0.375rem;">
                     <i class="bi bi-arrow-counterclockwise" aria-hidden="true"></i>
                 </button>
-            </div>
-        </div>
-    </div>
-
-    @* ── Stats Row ── *@
-    <div class="row g-3 mb-3">
-        <div class="col-6 col-md-3">
-            <div class="crm-card crm-stat-card">
-                <div class="crm-card-body py-2">
-                    <div class="stat-value" style="color: var(--crm-brand);">@Model.Stats.TotalContacts</div>
-                    <div class="stat-label"><i class="bi bi-people-fill me-1" aria-hidden="true"></i>Total Contacts</div>
-                </div>
-            </div>
-        </div>
-        <div class="col-6 col-md-3">
-            <div class="crm-card crm-stat-card">
-                <div class="crm-card-body py-2">
-                    <div class="stat-value" style="color: var(--crm-success);">@Model.Stats.ContactsWithRelationships</div>
-                    <div class="stat-label"><i class="bi bi-diagram-3-fill me-1" aria-hidden="true"></i>In Your Network</div>
-                </div>
-            </div>
-        </div>
-        <div class="col-6 col-md-3">
-            <div class="crm-card crm-stat-card">
-                <div class="crm-card-body py-2">
-                    <div class="stat-value" style="color: var(--crm-warning);">@Model.Stats.ContactsWithBirthday</div>
-                    <div class="stat-label"><i class="bi bi-gift-fill me-1" aria-hidden="true"></i>Birthdays Tracked</div>
-                </div>
-            </div>
-        </div>
-        <div class="col-6 col-md-3">
-            <div class="crm-card crm-stat-card">
-                <div class="crm-card-body py-2">
-                    <div class="stat-value" style="color: var(--crm-text-tertiary);">@Model.Stats.ContactsHidden</div>
-                    <div class="stat-label"><i class="bi bi-eye-slash-fill me-1" aria-hidden="true"></i>Hidden</div>
-                </div>
             </div>
         </div>
     </div>
@@ -183,9 +216,6 @@
 </div>
 
 @section Scripts {
-    @{
-        var scriptNonce = Context.Items["csp-nonce"] as string ?? string.Empty;
-    }
     <script src="~/js/network-graph.js" asp-append-version="true"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function () {
