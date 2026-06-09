@@ -47,7 +47,7 @@
         // (success path doesn't restore disabled/innerHTML; only the failure path does).
         submitBtn.disabled = false;
         submitBtn.className = 'crm-btn-danger';
-        submitBtn.innerHTML = `<i class="bi ${btnIcon}"></i> ${btnLabel}`;
+        submitBtn.innerHTML = `<i class="bi ${btnIcon}" aria-hidden="true"></i> ${btnLabel}`;
 
         form.action = action;
 
@@ -106,7 +106,7 @@
             console.error('Delete failed:', err);
             submitBtn.disabled = false;
             submitBtn.className = 'crm-btn-danger';
-            submitBtn.innerHTML = '<i class="bi bi-trash"></i> Delete';
+            submitBtn.innerHTML = '<i class="bi bi-trash" aria-hidden="true"></i> Delete';
         })
         .finally(function () {
             _triggerEl = null;

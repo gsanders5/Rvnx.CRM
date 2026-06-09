@@ -1,6 +1,6 @@
 using Rvnx.CRM.Core.DTOs.Base;
 
-namespace Rvnx.CRM.Core.DTOs.Contact;
+namespace Rvnx.CRM.Web.ViewModels.Immich;
 
 public sealed class ImmichGalleryViewModel
 {

@@ -899,7 +899,7 @@
                     <div class="crm-list-item d-flex justify-content-between align-items-start">
                         <div class="d-flex align-items-start gap-2">
                             <form asp-controller="ContactTasks" asp-action="ToggleComplete" asp-route-id="@task.Id" method="post" class="mt-1">
-                                <button type="submit" class="btn btn-sm p-0 border-0" title="@(task.IsCompleted ? "Mark incomplete" : "Mark complete")">
+                                <button type="submit" class="btn btn-sm p-0 border-0" title="@(task.IsCompleted ? "Mark incomplete" : "Mark complete")" aria-label="@(task.IsCompleted ? "Mark incomplete" : "Mark complete")">
                                     <i class="bi @(task.IsCompleted ? "bi-check-circle-fill" : "bi-circle") fs-5" style="color: @(task.IsCompleted ? "var(--crm-success)" : "var(--crm-text-tertiary)");" aria-hidden="true"></i>
                                 </button>
                             </form>
