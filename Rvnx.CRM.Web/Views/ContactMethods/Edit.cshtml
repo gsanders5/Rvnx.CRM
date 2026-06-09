@@ -4,39 +4,80 @@
     ViewData["Title"] = "Edit Contact Info";
 }
 
-<h1>Edit Contact Info</h1>
+<form id="contact-method-form" asp-action="Edit" data-edit-form>
+    @Html.AntiForgeryToken()
+    <input asp-for="Id" type="hidden" />
+    <input asp-for="ContactId" type="hidden" />
 
-<div class="row">
-    <div class="col-md-6">
-        <form asp-action="Edit">
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-            <input type="hidden" asp-for="Id"/>
-            <input type="hidden" asp-for="ContactId"/>
-
-            <div class="mb-3">
-                <label asp-for="Type" class="form-label">Type</label>
-                <select asp-for="Type" asp-items="Html.GetEnumSelectList<Rvnx.CRM.Core.Enumerations.ContactMethodType>()" class="form-select" id="Type"></select>
-                <span asp-validation-for="Type" class="text-danger"></span>
-            </div>
-
-            <div class="form-floating mb-3">
-                <input asp-for="Value" class="form-control" id="Value" placeholder=" "/>
-                <label asp-for="Value">Value</label>
-                <span asp-validation-for="Value" class="text-danger"></span>
-            </div>
-
-            <div class="form-floating mb-3">
-                <input asp-for="Label" class="form-control" id="Label" placeholder=" "/>
-                <label asp-for="Label">Label</label>
-                <span asp-validation-for="Label" class="text-danger"></span>
-            </div>
-            <div class="d-grid gap-2 d-md-flex mt-4">
-                <button type="submit" class="crm-btn-primary"><i class="bi bi-save" aria-hidden="true"></i>Save</button>
-                <a asp-controller="Contacts" asp-action="Details" asp-route-id="@Model.ContactId" class="crm-btn-tertiary"><i class="bi bi-x-lg" aria-hidden="true"></i>Cancel</a>
-            </div>
-        </form>
+    <div class="crm-details-actions-strip">
+        <a asp-controller="Contacts" asp-action="Details" asp-route-id="@Model.ContactId" class="crm-btn-tertiary btn-sm">
+            <i class="bi bi-arrow-left" aria-hidden="true"></i> Back to Contact
+        </a>
+        <div class="d-flex gap-2 align-items-center flex-wrap">
+            <span class="crm-eyebrow crm-unsaved-indicator" id="unsaved-indicator" hidden>
+                <i class="bi bi-circle-fill" aria-hidden="true" style="font-size: 6px; vertical-align: middle; margin-right: 4px;"></i>
+                Unsaved
+            </span>
+            <button type="submit" class="crm-btn-primary btn-sm">
+                <i class="bi bi-save" aria-hidden="true"></i> Save
+            </button>
+        </div>
     </div>
-</div>
+
+    <section class="crm-edit-masthead crm-fade-in">
+        <div class="crm-edit-masthead-photo-placeholder" aria-hidden="true">
+            <i class="bi bi-person-badge"></i>
+        </div>
+        <div>
+            <div class="crm-eyebrow" style="margin-bottom: 6px;">Editing contact method</div>
+            <h1 class="crm-edit-masthead-title">Contact method details</h1>
+        </div>
+    </section>
+
+    <div class="crm-edit-body">
+        <div class="crm-edit-col-main">
+            <div asp-validation-summary="ModelOnly" class="crm-field-error"></div>
+
+            <div class="crm-card">
+                <div class="crm-card-header">
+                    <h5 class="card-title mb-0"><i class="bi bi-person-badge" aria-hidden="true"></i> Details</h5>
+                </div>
+                <div class="crm-card-body">
+                    <div class="crm-field-group">
+                        <label asp-for="Type">Type</label>
+                        <select asp-for="Type" asp-items="Html.GetEnumSelectList<Rvnx.CRM.Core.Enumerations.ContactMethodType>()" class="crm-input" id="Type"></select>
+                        <span asp-validation-for="Type" class="crm-field-error"></span>
+                    </div>
+
+                    <div class="crm-field-group">
+                        <label asp-for="Value">Value</label>
+                        <input asp-for="Value" class="crm-input" id="Value" />
+                        <span asp-validation-for="Value" class="crm-field-error"></span>
+                    </div>
+
+                    <div class="crm-field-group">
+                        <label asp-for="Label">Label</label>
+                        <input asp-for="Label" class="crm-input" id="Label" />
+                        <span asp-validation-for="Label" class="crm-field-error"></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="crm-edit-col-side">
+            <div class="crm-save-shortcut-card">
+                <div class="crm-save-shortcut-title">Ready to save?</div>
+                <div class="crm-save-shortcut-desc">Changes are applied immediately.</div>
+                <button type="submit" class="crm-btn-primary btn-sm" form="contact-method-form">
+                    <i class="bi bi-save" aria-hidden="true"></i> Save
+                </button>
+                <a asp-controller="Contacts" asp-action="Details" asp-route-id="@Model.ContactId" class="crm-btn-tertiary btn-sm">
+                    <i class="bi bi-arrow-left" aria-hidden="true"></i> Cancel
+                </a>
+            </div>
+        </div>
+    </div>
+</form>
 
 @section Scripts {
     @{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); }

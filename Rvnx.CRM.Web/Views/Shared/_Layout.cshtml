@@ -1,6 +1,36 @@
 @using Microsoft.Extensions.Configuration
+@using Rvnx.CRM.Core.DTOs.Contact
+@using Rvnx.CRM.Core.Interfaces
 @inject IConfiguration Configuration
-@inject Rvnx.CRM.Core.Interfaces.ICurrentUserService CurrentUserService
+@inject ICurrentUserService CurrentUserService
+@inject IFavoriteService FavoriteService
+
+@{
+    var routeController = (ViewContext.RouteData.Values["controller"] as string ?? "Home").ToLowerInvariant();
+    string ActiveClass(params string[] controllers) =>
+        controllers.Any(c => string.Equals(c, routeController, StringComparison.OrdinalIgnoreCase))
+            ? "crm-sidebar-nav-item active"
+            : "crm-sidebar-nav-item";
+
+    bool authEnabled = Configuration.GetValue<bool>("Authentication:Enabled");
+    bool isAuthenticated = User.Identity?.IsAuthenticated == true;
+
+    List<FavoriteSidebarItemDto> pinnedPeople = new();
+    if (authEnabled && isAuthenticated)
+    {
+        try
+        {
+            pinnedPeople = await FavoriteService.GetFavoriteSidebarItemsAsync();
+        }
+        catch
+        {
+            pinnedPeople = new List<FavoriteSidebarItemDto>();
+        }
+    }
+
+    string userDisplay = isAuthenticated ? (User.Identity!.Name ?? "Account") : "Guest";
+    string userInitials = userDisplay.Length > 0 ? char.ToUpperInvariant(userDisplay[0]).ToString() : "?";
+}
 
 <!DOCTYPE html>
 <html lang="en">
@@ -14,7 +44,7 @@
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Newsreader:ital,wght@0,400;0,500;1,400;1,500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
     <!-- MDB -->
     <link href="https://cdn.jsdelivr.net/npm/mdb-ui-kit@9.3.0/css/mdb.min.css" rel="stylesheet" integrity="sha384-GpFoyPQNL9Cd/Zc0GujAdo/6oVI34lnXg+7E8+rIhRo1kgxbujqXU1TlKwdc79mI" crossorigin="anonymous" />
     <!-- Bootstrap Icons -->
@@ -36,79 +66,92 @@
 </head>
 <body>
     <a href="#main-content" class="visually-hidden-focusable position-absolute top-0 start-0 p-3 z-3 bg-primary text-white text-decoration-none rounded-bottom-end">Skip to main content</a>
-    <header>
-        <nav class="navbar navbar-expand-sm navbar-toggleable-sm border-bottom box-shadow mb-3">
-            <div class="container-fluid">
-                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index" aria-label="Rvnx CRM Home">
-                    <img src="~/logo.svg" alt="" height="30" width="73" class="d-inline-block align-text-top" />
-                </a>
-                <button class="navbar-toggler" type="button" data-mdb-collapse-init data-mdb-toggle="collapse" data-mdb-target="#navbarSupportedContent" aria-controls="navbarSupportedContent"
-                        aria-expanded="false" aria-label="Toggle navigation">
-                    <i class="fas fa-bars" aria-hidden="true"></i>
-                </button>
-                <div class="collapse navbar-collapse d-sm-inline-flex justify-content-between" id="navbarSupportedContent">
-                    <ul class="navbar-nav flex-grow-1">
-                        <li class="nav-item">
-                            <a class="nav-link" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" asp-area="" asp-controller="Contacts" asp-action="Index">Contacts</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" asp-area="" asp-controller="Calendar" asp-action="Index">Calendar</a>
-                        </li>
-                    </ul>
-                    <ul class="navbar-nav">
-                        @if (Configuration.GetValue<bool>("Authentication:Enabled"))
-                        {
-                            if (User.Identity?.IsAuthenticated == true)
-                            {
-                                <li class="nav-item">
-                                    <a class="nav-link" asp-area="" asp-controller="Contacts" asp-action="Self">Hello, @User.Identity.Name!</a>
-                                </li>
-                                <li class="nav-item">
-                                    <form class="form-inline" asp-area="" asp-controller="Account" asp-action="Logout" method="post">
-                                        <button type="submit" class="nav-link btn btn-link">Logout</button>
-                                    </form>
-                                </li>
-                            }
-                            else
-                            {
-                                <li class="nav-item">
-                                    <a class="nav-link" asp-area="" asp-controller="Account" asp-action="Login">Login</a>
-                                </li>
-                            }
-                        }
-                        <li class="nav-item">
-                            <button class="btn btn-link nav-link" id="theme-toggle" title="Toggle theme" aria-label="Toggle theme">
-                                <i class="bi bi-moon-stars-fill" id="theme-icon" aria-hidden="true"></i>
-                            </button>
-                        </li>
-                        @if (Configuration.GetValue<bool>("Authentication:Enabled") && User.Identity?.IsAuthenticated == true)
-                        {
-                            <li class="nav-item">
-                                <a class="nav-link" asp-area="" asp-controller="UserSettings" asp-action="Index"
-                                   aria-label="User Settings" title="Settings">
-                                    <i class="bi bi-gear-fill" aria-hidden="true"></i>
-                                </a>
-                            </li>
-                        }
-                    </ul>
+
+    <div class="crm-shell" id="crm-shell">
+        <aside class="crm-sidebar" aria-label="Primary navigation">
+            <a class="crm-sidebar-brand" asp-controller="Home" asp-action="Index" aria-label="Rvnx CRM Home">
+                <img src="~/logo.svg" alt="Rvnx CRM" class="brand-logo" />
+            </a>
+
+            <div class="crm-eyebrow" style="padding: 0 8px 8px;">Workspace</div>
+            <a class="@ActiveClass("Home")" asp-controller="Home" asp-action="Index">
+                <i class="bi bi-house" aria-hidden="true"></i> Home
+            </a>
+            <a class="@ActiveClass("Contacts")" asp-controller="Contacts" asp-action="Index">
+                <i class="bi bi-people" aria-hidden="true"></i> People
+            </a>
+            <a class="@ActiveClass("Calendar")" asp-controller="Calendar" asp-action="Index">
+                <i class="bi bi-calendar3" aria-hidden="true"></i> Calendar
+            </a>
+            <a class="@ActiveClass("Labels")" asp-controller="Labels" asp-action="Index">
+                <i class="bi bi-tag" aria-hidden="true"></i> Labels
+            </a>
+
+            @if (authEnabled && isAuthenticated)
+            {
+                <div style="height: 18px;"></div>
+                <div class="crm-eyebrow" style="padding: 0 8px 8px;">Pinned people</div>
+                <div id="crm-pinned-people" data-pinned-people>
+                    @await Html.PartialAsync("_PinnedPeople", pinnedPeople)
                 </div>
+            }
+
+            <div class="crm-sidebar-footer">
+                @if (authEnabled && isAuthenticated)
+                {
+                    <a class="crm-sidebar-footer-avatar" asp-controller="Contacts" asp-action="Self" title="Your profile" aria-label="Your profile" style="text-decoration: none;">
+                        @userInitials
+                    </a>
+                    <div style="flex: 1; min-width: 0; line-height: 1.2;">
+                        <div class="crm-sidebar-footer-name text-truncate">@userDisplay</div>
+                        <div class="crm-sidebar-footer-meta text-truncate">Signed in</div>
+                    </div>
+                    <a class="crm-icon-btn" asp-controller="UserSettings" asp-action="Index" title="Settings" aria-label="User settings">
+                        <i class="bi bi-gear" aria-hidden="true"></i>
+                    </a>
+                    <form asp-controller="Account" asp-action="Logout" method="post" class="m-0">
+                        <button type="submit" class="crm-icon-btn" title="Sign out" aria-label="Sign out">
+                            <i class="bi bi-box-arrow-right" aria-hidden="true"></i>
+                        </button>
+                    </form>
+                }
+                else if (authEnabled)
+                {
+                    <a class="crm-btn-secondary btn-sm" asp-controller="Account" asp-action="Login" style="flex: 1; justify-content: center;">
+                        <i class="bi bi-box-arrow-in-right" aria-hidden="true"></i> Sign in
+                    </a>
+                }
+                else
+                {
+                    <div class="crm-sidebar-footer-avatar" aria-hidden="true">RC</div>
+                    <div style="flex: 1; min-width: 0; line-height: 1.2;">
+                        <div class="crm-sidebar-footer-name">Local workspace</div>
+                        <div class="crm-sidebar-footer-meta">Auth disabled</div>
+                    </div>
+                }
             </div>
-        </nav>
-    </header>
-    <div class="container">
-        <main id="main-content" role="main" class="pb-3" tabindex="-1">
-            @RenderBody()
-        </main>
+        </aside>
+
+        <div class="crm-sidebar-backdrop" id="crm-sidebar-backdrop" aria-hidden="true"></div>
+
+        <div class="crm-shell-main">
+            <header class="crm-topbar" role="banner">
+                <button class="crm-sidebar-toggle" id="crm-sidebar-toggle" type="button" aria-label="Open navigation">
+                    <i class="bi bi-list" aria-hidden="true"></i>
+                </button>
+                <div style="flex: 1;"></div>
+                <div class="crm-topbar-actions">
+                    <button class="crm-icon-btn" id="theme-toggle" type="button" title="Toggle theme" aria-label="Toggle theme">
+                        <i class="bi bi-moon-stars-fill" id="theme-icon" aria-hidden="true"></i>
+                    </button>
+                </div>
+            </header>
+            <main id="main-content" role="main" tabindex="-1">
+                @RenderBody()
+            </main>
+        </div>
     </div>
 
-    @* <footer class="border-top footer text-muted">
-    <div class="container">
-        &copy; 2025 - Rvnx.CRM.Web
-    </div>
-</footer> *@
     <script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js" integrity="sha384-1H217gwSVyLSIfaLxHbE7dRb3v4mYCKbpQvzx0cegeju1MVsGrX5xXxAvs/HgeFs" crossorigin="anonymous"></script>
     <!-- MDB -->
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/mdb-ui-kit@9.3.0/js/mdb.umd.min.js" integrity="sha384-wm149nUGAcjSR+VI0SefSbxQhUP3rVwkj4hZieXuXH8w6nibLuWruYYHb8tukbXT" crossorigin="anonymous"></script>
@@ -121,6 +164,7 @@
             const themeIcon = document.getElementById('theme-icon');
 
             function updateIcon(theme) {
+                if (!themeIcon) return;
                 if (theme === 'dark') {
                     themeIcon.classList.remove('bi-moon-stars-fill');
                     themeIcon.classList.add('bi-sun-fill');
@@ -133,14 +177,30 @@
             const currentTheme = document.documentElement.getAttribute('data-mdb-theme');
             updateIcon(currentTheme);
 
-            toggleButton.addEventListener('click', () => {
-                const currentTheme = document.documentElement.getAttribute('data-mdb-theme');
-                const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            if (toggleButton) {
+                toggleButton.addEventListener('click', () => {
+                    const currentTheme = document.documentElement.getAttribute('data-mdb-theme');
+                    const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+                    document.documentElement.setAttribute('data-mdb-theme', newTheme);
+                    localStorage.setItem('theme', newTheme);
+                    updateIcon(newTheme);
+                });
+            }
 
-                document.documentElement.setAttribute('data-mdb-theme', newTheme);
-                localStorage.setItem('theme', newTheme);
-                updateIcon(newTheme);
-            });
+            // Mobile sidebar toggle
+            const shell = document.getElementById('crm-shell');
+            const sidebarToggle = document.getElementById('crm-sidebar-toggle');
+            const backdrop = document.getElementById('crm-sidebar-backdrop');
+            if (shell && sidebarToggle) {
+                sidebarToggle.addEventListener('click', () => {
+                    shell.classList.toggle('crm-sidebar-open');
+                });
+            }
+            if (backdrop) {
+                backdrop.addEventListener('click', () => {
+                    shell.classList.remove('crm-sidebar-open');
+                });
+            }
         });
     </script>
     <!-- DataTables JS -->

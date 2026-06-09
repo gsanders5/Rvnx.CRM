@@ -4,45 +4,92 @@
     ViewData["Title"] = "Edit Task";
 }
 
-<h1>Edit Task</h1>
+<form id="task-form" asp-action="Edit" data-edit-form>
+    @Html.AntiForgeryToken()
+    <input asp-for="Id" type="hidden" />
+    <input asp-for="ContactId" type="hidden" />
 
-<div class="row">
-    <div class="col-12">
-        <form asp-action="Edit">
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-            <input type="hidden" asp-for="Id"/>
-            <input type="hidden" asp-for="ContactId"/>
-
-            <div class="form-floating mb-3">
-                <input asp-for="Title" class="form-control" id="Title" placeholder=" " autofocus/>
-                <label asp-for="Title">Title <span class="text-danger">*</span></label>
-                <span asp-validation-for="Title" class="text-danger"></span>
-            </div>
-
-            <div class="form-floating mb-3">
-                <input asp-for="DueDate" class="form-control" type="date" id="DueDate" placeholder=" " required/>
-                <label asp-for="DueDate">Due Date <span class="text-danger">*</span></label>
-                <span asp-validation-for="DueDate" class="text-danger"></span>
-            </div>
-
-            <div class="mb-3">
-                <label asp-for="Description" class="form-label">Description</label>
-                <textarea asp-for="Description" id="Description" placeholder="Notes about this task..."></textarea>
-                <span asp-validation-for="Description" class="text-danger"></span>
-            </div>
-
-            <div class="form-check mb-3">
-                <input asp-for="IsCompleted" class="form-check-input" type="checkbox" id="IsCompleted"/>
-                <label asp-for="IsCompleted" class="form-check-label">Completed</label>
-            </div>
-
-            <div class="d-grid gap-2 d-md-flex mt-4">
-                <button type="submit" class="crm-btn-primary"><i class="bi bi-save" aria-hidden="true"></i>Save</button>
-                <a asp-controller="Contacts" asp-action="Details" asp-route-id="@Model.ContactId" class="crm-btn-tertiary"><i class="bi bi-arrow-left" aria-hidden="true"></i>Back to Contact</a>
-            </div>
-        </form>
+    <div class="crm-details-actions-strip">
+        <a asp-controller="Contacts" asp-action="Details" asp-route-id="@Model.ContactId" class="crm-btn-tertiary btn-sm">
+            <i class="bi bi-arrow-left" aria-hidden="true"></i> Back to Contact
+        </a>
+        <div class="d-flex gap-2 align-items-center flex-wrap">
+            <span class="crm-eyebrow crm-unsaved-indicator" id="unsaved-indicator" hidden>
+                <i class="bi bi-circle-fill" aria-hidden="true" style="font-size: 6px; vertical-align: middle; margin-right: 4px;"></i>
+                Unsaved
+            </span>
+            <button type="submit" class="crm-btn-primary btn-sm">
+                <i class="bi bi-save" aria-hidden="true"></i> Save
+            </button>
+        </div>
     </div>
-</div>
+
+    <section class="crm-edit-masthead crm-fade-in">
+        <div class="crm-edit-masthead-photo-placeholder" aria-hidden="true">
+            <i class="bi bi-check2-square"></i>
+        </div>
+        <div>
+            <div class="crm-eyebrow" style="margin-bottom: 6px;">Editing task</div>
+            <h1 class="crm-edit-masthead-title">@(string.IsNullOrWhiteSpace(Model.Title) ? "Task details" : Model.Title)</h1>
+        </div>
+    </section>
+
+    <div class="crm-edit-body">
+        <div class="crm-edit-col-main">
+            <div asp-validation-summary="ModelOnly" class="crm-field-error"></div>
+
+            <div class="crm-card">
+                <div class="crm-card-header">
+                    <h5 class="card-title mb-0"><i class="bi bi-check2-square" aria-hidden="true"></i> Details</h5>
+                </div>
+                <div class="crm-card-body">
+                    <div class="crm-field-group">
+                        <label asp-for="Title">Title *</label>
+                        <input asp-for="Title" class="crm-input" id="Title" autofocus />
+                        <span asp-validation-for="Title" class="crm-field-error"></span>
+                    </div>
+
+                    <div class="crm-field-group">
+                        <label asp-for="DueDate">Due Date *</label>
+                        <input asp-for="DueDate" type="date" class="crm-input" id="DueDate" required />
+                        <span asp-validation-for="DueDate" class="crm-field-error"></span>
+                    </div>
+
+                    <div class="crm-field-group">
+                        <label asp-for="Description">Description</label>
+                        <textarea asp-for="Description" class="crm-input" id="Description" placeholder="Notes about this task..."></textarea>
+                        <span asp-validation-for="Description" class="crm-field-error"></span>
+                    </div>
+
+                    <div class="crm-toggle-row">
+                        <div>
+                            <div class="crm-toggle-row-label">Completed</div>
+                            <div class="crm-toggle-row-desc">Mark this task as done.</div>
+                        </div>
+                        <label class="crm-toggle">
+                            <input asp-for="IsCompleted" id="IsCompleted" />
+                            <span class="crm-toggle-track"></span>
+                            <span class="crm-toggle-knob"></span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="crm-edit-col-side">
+            <div class="crm-save-shortcut-card">
+                <div class="crm-save-shortcut-title">Ready to save?</div>
+                <div class="crm-save-shortcut-desc">Changes are applied immediately.</div>
+                <button type="submit" class="crm-btn-primary btn-sm" form="task-form">
+                    <i class="bi bi-save" aria-hidden="true"></i> Save
+                </button>
+                <a asp-controller="Contacts" asp-action="Details" asp-route-id="@Model.ContactId" class="crm-btn-tertiary btn-sm">
+                    <i class="bi bi-arrow-left" aria-hidden="true"></i> Cancel
+                </a>
+            </div>
+        </div>
+    </div>
+</form>
 
 @section Scripts {
     @{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); }

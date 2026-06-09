@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Rvnx.CRM.Core.DTOs.Contact;
 using Rvnx.CRM.Core.Interfaces;
 using Rvnx.CRM.Web.Controllers.Base;
 
@@ -21,5 +22,16 @@ public class FavoritesController(
 
         bool isFavorite = await _favoriteService.ToggleFavoriteAsync(contactId);
         return Json(new { isFavorite });
+    }
+
+    /// <summary>
+    /// Returns the rendered sidebar "Pinned people" list for the current user.
+    /// Used by the contacts list star-toggle to refresh the sidebar without a full page reload.
+    /// </summary>
+    [HttpGet]
+    public async Task<IActionResult> SidebarPartial()
+    {
+        List<FavoriteSidebarItemDto> items = await _favoriteService.GetFavoriteSidebarItemsAsync();
+        return PartialView("_PinnedPeople", items);
     }
 }
