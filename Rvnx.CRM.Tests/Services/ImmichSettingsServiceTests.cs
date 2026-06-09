@@ -1,4 +1,5 @@
 using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Configuration;
 using Moq;
 using Rvnx.CRM.Core.DTOs.Immich;
 using Rvnx.CRM.Core.Interfaces;
@@ -15,7 +16,18 @@ public class ImmichSettingsServiceTests
 
     public ImmichSettingsServiceTests()
     {
-        _service = new ImmichSettingsService(_mockRepo.Object, new MemoryCache(new MemoryCacheOptions()), Mock.Of<ICurrentUserService>());
+        _service = CreateService(serverEnabled: true);
+    }
+
+    private ImmichSettingsService CreateService(bool serverEnabled)
+    {
+        IConfiguration config = new ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                ["Immich:Enabled"] = serverEnabled ? "true" : "false",
+            })
+            .Build();
+        return new ImmichSettingsService(_mockRepo.Object, new MemoryCache(new MemoryCacheOptions()), Mock.Of<ICurrentUserService>(), config);
     }
 
     private void SetupStored(params GroupImmichSettings[] rows)
@@ -59,6 +71,48 @@ public class ImmichSettingsServiceTests
         Assert.NotNull(conn);
         Assert.Equal(groupId, conn!.GroupId);
         Assert.Equal("raw-key", conn.ApiKey);
+    }
+
+    [Fact]
+    public void ServerEnabledReflectsConfiguration()
+    {
+        Assert.True(CreateService(serverEnabled: true).ServerEnabled);
+        Assert.False(CreateService(serverEnabled: false).ServerEnabled);
+    }
+
+    [Fact]
+    public async Task GetConnectionAsyncReturnsNullWhenServerDisabled()
+    {
+        ImmichSettingsService service = CreateService(serverEnabled: false);
+        SetupStored(new GroupImmichSettings { GroupId = Guid.NewGuid(), Enabled = true, BaseUrl = "https://x/api", ApiKey = "raw-key" });
+
+        Assert.Null(await service.GetConnectionAsync());
+        _mockRepo.Verify(r => r.ListAsNoTrackingAsync(It.IsAny<Expression<Func<GroupImmichSettings, bool>>>(), It.IsAny<CancellationToken>(), It.IsAny<string[]>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task SaveAsyncFailsWhenServerDisabled()
+    {
+        ImmichSettingsService service = CreateService(serverEnabled: false);
+
+        ImmichSettingsOperationResult result = await service.SaveAsync(true, "https://immich.example.com/api", "key");
+
+        Assert.False(result.Success);
+        Assert.Contains(result.Errors, e => e.Contains("disabled for this server", StringComparison.Ordinal));
+        _mockRepo.Verify(r => r.AddAsync(It.IsAny<GroupImmichSettings>(), It.IsAny<CancellationToken>()), Times.Never);
+        _mockRepo.Verify(r => r.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task DeleteAsyncFailsWhenServerDisabled()
+    {
+        ImmichSettingsService service = CreateService(serverEnabled: false);
+
+        ImmichSettingsOperationResult result = await service.DeleteAsync();
+
+        Assert.False(result.Success);
+        Assert.Contains(result.Errors, e => e.Contains("disabled for this server", StringComparison.Ordinal));
+        _mockRepo.Verify(r => r.DeleteAsync(It.IsAny<GroupImmichSettings>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]

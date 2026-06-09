@@ -9,6 +9,13 @@ namespace Rvnx.CRM.Core.Interfaces;
 /// </summary>
 public interface IImmichSettingsService
 {
+    /// <summary>
+    /// Whether this server permits Immich integration at all, controlled by the global
+    /// <c>Immich:Enabled</c> flag in configuration. When false, no group's connection is
+    /// active regardless of its stored settings, and the integration cannot be configured.
+    /// </summary>
+    bool ServerEnabled { get; }
+
     /// <summary>Display-safe settings for the current group, or null when none are stored.</summary>
     Task<ImmichSettingsDto?> GetSettingsAsync(CancellationToken ct = default);
 
