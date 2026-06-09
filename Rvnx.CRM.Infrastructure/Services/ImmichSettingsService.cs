@@ -1,17 +1,24 @@
 using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Configuration;
 using Rvnx.CRM.Core.DTOs.Immich;
 using Rvnx.CRM.Core.Interfaces;
 using Rvnx.CRM.Core.Models;
 
 namespace Rvnx.CRM.Infrastructure.Services;
 
-public class ImmichSettingsService(IRepository repository, IMemoryCache cache, ICurrentUserService currentUserService) : IImmichSettingsService
+public class ImmichSettingsService(IRepository repository, IMemoryCache cache, ICurrentUserService currentUserService, IConfiguration configuration) : IImmichSettingsService
 {
     private static readonly TimeSpan ConnectionCacheTtl = TimeSpan.FromMinutes(5);
 
     private readonly IRepository _repository = repository;
     private readonly IMemoryCache _cache = cache;
     private readonly ICurrentUserService _currentUserService = currentUserService;
+    private readonly IConfiguration _configuration = configuration;
+
+    // Server-wide master switch. Absent config defaults to enabled so existing deployments
+    // keep working after upgrade; an administrator sets "Immich:Enabled": false to turn the
+    // whole integration off, leaving per-group enable/disable and API keys to each group.
+    public bool ServerEnabled => _configuration.GetValue("Immich:Enabled", true);
 
     public async Task<ImmichSettingsDto?> GetSettingsAsync(CancellationToken ct = default)
     {
@@ -30,6 +37,13 @@ public class ImmichSettingsService(IRepository repository, IMemoryCache cache, I
     // needs the connection; SaveAsync/DeleteAsync invalidate on change.
     public async Task<ImmichConnectionDto?> GetConnectionAsync(CancellationToken ct = default)
     {
+        // When the server-wide flag is off the integration is unavailable to every group,
+        // so short-circuit before touching the cache or database.
+        if (!ServerEnabled)
+        {
+            return null;
+        }
+
         string cacheKey = ImmichCacheKeys.Connection(_currentUserService.GroupId);
         if (_cache.TryGetValue(cacheKey, out ImmichConnectionDto? cached))
         {

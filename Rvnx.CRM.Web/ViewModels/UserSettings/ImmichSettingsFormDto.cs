@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace Rvnx.CRM.Web.ViewModels.GroupSettings;
+namespace Rvnx.CRM.Web.ViewModels.UserSettings;
 
 public class ImmichSettingsFormDto
 {

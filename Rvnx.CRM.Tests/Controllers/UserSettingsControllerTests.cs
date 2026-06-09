@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc.ViewFeatures;
 using Microsoft.Extensions.Hosting;
 using Moq;
 using Rvnx.CRM.Core.DTOs.ApiToken;
+using Rvnx.CRM.Core.DTOs.Immich;
 using Rvnx.CRM.Core.Interfaces;
 using Rvnx.CRM.Core.Models;
 using Rvnx.CRM.Web.Controllers;
@@ -15,6 +16,7 @@ public class UserSettingsControllerTests : IDisposable
 {
     private readonly Mock<ICurrentUserService> _currentUserMock;
     private readonly Mock<IApiTokenService> _apiTokenMock;
+    private readonly Mock<IImmichSettingsService> _immichSettingsMock;
     private readonly Mock<IHostEnvironment> _hostEnvironmentMock;
     private readonly UserSettingsController _controller;
     private readonly Guid _userId = Guid.NewGuid();
@@ -30,10 +32,15 @@ public class UserSettingsControllerTests : IDisposable
 
         _apiTokenMock = new Mock<IApiTokenService>();
 
+        _immichSettingsMock = new Mock<IImmichSettingsService>();
+        _immichSettingsMock.Setup(s => s.ServerEnabled).Returns(true);
+        _immichSettingsMock.Setup(s => s.GetSettingsAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync((ImmichSettingsDto?)null);
+
         _hostEnvironmentMock = new Mock<IHostEnvironment>();
         _hostEnvironmentMock.Setup(e => e.EnvironmentName).Returns("Production");
 
-        _controller = new UserSettingsController(_currentUserMock.Object, _apiTokenMock.Object, _hostEnvironmentMock.Object)
+        _controller = new UserSettingsController(_currentUserMock.Object, _apiTokenMock.Object, _immichSettingsMock.Object, _hostEnvironmentMock.Object)
         {
             TempData = new TempDataDictionary(new DefaultHttpContext(), Mock.Of<ITempDataProvider>())
         };
@@ -145,5 +152,96 @@ public class UserSettingsControllerTests : IDisposable
         UserSettingsViewModel model = Assert.IsType<UserSettingsViewModel>(Assert.IsType<ViewResult>(result).Model);
         Assert.False(model.ShowDangerZone);
         Assert.False(model.ShowDevOperations);
+    }
+
+    [Fact]
+    public async Task IndexPrefillsImmichFormFromStoredSettings()
+    {
+        _immichSettingsMock.Setup(s => s.GetSettingsAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new ImmichSettingsDto { Enabled = true, BaseUrl = "https://immich.example.com/api", ApiKeyHint = "••••3kfa" });
+
+        IActionResult result = await _controller.Index();
+
+        UserSettingsViewModel model = Assert.IsType<UserSettingsViewModel>(Assert.IsType<ViewResult>(result).Model);
+        Assert.True(model.HasImmichSettings);
+        Assert.True(model.ImmichServerEnabled);
+        Assert.True(model.ImmichForm.Enabled);
+        Assert.Equal("https://immich.example.com/api", model.ImmichForm.BaseUrl);
+        Assert.Null(model.ImmichForm.ApiKey);
+    }
+
+    [Fact]
+    public async Task SaveImmichRedirectsOnSuccess()
+    {
+        _immichSettingsMock.Setup(s => s.SaveAsync(true, "https://immich.example.com/api", "key", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(ImmichSettingsOperationResult.Ok());
+
+        IActionResult result = await _controller.SaveImmich(new ImmichSettingsFormDto
+        {
+            Enabled = true,
+            BaseUrl = "https://immich.example.com/api",
+            ApiKey = "key",
+        });
+
+        RedirectToActionResult redirect = Assert.IsType<RedirectToActionResult>(result);
+        Assert.Equal(nameof(UserSettingsController.Index), redirect.ActionName);
+        Assert.Equal("Immich settings saved.", _controller.TempData["ImmichSettings:Message"]);
+    }
+
+    [Fact]
+    public async Task SaveImmichReturnsViewWithErrorsWhenServiceFails()
+    {
+        _immichSettingsMock.Setup(s => s.SaveAsync(It.IsAny<bool>(), It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(ImmichSettingsOperationResult.Failure("An API key is required when connecting Immich for the first time."));
+
+        IActionResult result = await _controller.SaveImmich(new ImmichSettingsFormDto
+        {
+            Enabled = true,
+            BaseUrl = "https://immich.example.com/api",
+        });
+
+        ViewResult view = Assert.IsType<ViewResult>(result);
+        Assert.Equal(nameof(UserSettingsController.Index), view.ViewName);
+        Assert.False(_controller.ModelState.IsValid);
+    }
+
+    [Fact]
+    public async Task SaveImmichSkipsServiceWhenModelInvalid()
+    {
+        _controller.ModelState.AddModelError("BaseUrl", "Server URL is required.");
+
+        IActionResult result = await _controller.SaveImmich(new ImmichSettingsFormDto());
+
+        Assert.IsType<ViewResult>(result);
+        _immichSettingsMock.Verify(s => s.SaveAsync(It.IsAny<bool>(), It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task SaveImmichForbiddenWhenServerDisabled()
+    {
+        _immichSettingsMock.Setup(s => s.ServerEnabled).Returns(false);
+
+        IActionResult result = await _controller.SaveImmich(new ImmichSettingsFormDto
+        {
+            Enabled = true,
+            BaseUrl = "https://immich.example.com/api",
+            ApiKey = "key",
+        });
+
+        Assert.IsType<ForbidResult>(result);
+        _immichSettingsMock.Verify(s => s.SaveAsync(It.IsAny<bool>(), It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task DeleteImmichRedirectsToIndex()
+    {
+        _immichSettingsMock.Setup(s => s.DeleteAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(ImmichSettingsOperationResult.Ok());
+
+        IActionResult result = await _controller.DeleteImmich();
+
+        RedirectToActionResult redirect = Assert.IsType<RedirectToActionResult>(result);
+        Assert.Equal(nameof(UserSettingsController.Index), redirect.ActionName);
+        _immichSettingsMock.Verify(s => s.DeleteAsync(It.IsAny<CancellationToken>()), Times.Once);
     }
 }

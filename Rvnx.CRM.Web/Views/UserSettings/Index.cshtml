@@ -18,6 +18,7 @@
                 <ul class="list-unstyled mb-0">
                     <li><a class="nav-link px-0 py-2" href="#profile">Profile</a></li>
                     <li><a class="nav-link px-0 py-2" href="#api-tokens">API Tokens</a></li>
+                    <li><a class="nav-link px-0 py-2" href="#immich">Immich Photos</a></li>
                     @if (Model.ShowDangerZone)
                     {
                         <li><a class="nav-link px-0 py-2" href="#danger-zone" style="color: var(--crm-danger);">Danger Zone</a></li>
@@ -116,6 +117,97 @@
                                 </tbody>
                             </table>
                         </div>
+                    }
+                </div>
+            </section>
+
+            @* ── Immich Photos ───────────────────────────────────────────── *@
+            <section id="immich" class="crm-card crm-fade-in crm-delay-1 mb-4">
+                <div class="crm-card-header" style="display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap;">
+                    <h5 class="card-title mb-0"><i class="bi bi-images" aria-hidden="true"></i> Immich Photos</h5>
+                    @if (Model.HasImmichSettings)
+                    {
+                        <span class="badge @(Model.Immich!.Enabled ? "bg-success" : "bg-secondary")">
+                            @(Model.Immich.Enabled ? "Enabled" : "Disabled")
+                        </span>
+                    }
+                </div>
+                <div class="crm-card-body">
+                    @if (!string.IsNullOrEmpty(Model.ImmichStatusMessage))
+                    {
+                        <div class="crm-alert crm-alert-success mb-3" role="alert">@Model.ImmichStatusMessage</div>
+                    }
+
+                    <p style="color: var(--crm-text-secondary);">
+                        Connect a self-hosted <a href="https://immich.app" target="_blank" rel="noopener noreferrer">Immich</a>
+                        photo server. The connection is shared by everyone in your group — all members see the same
+                        Immich people, tags, and photos.
+                    </p>
+
+                    @if (!Model.ImmichServerEnabled)
+                    {
+                        <div class="crm-alert crm-alert-info mb-0" role="alert">
+                            Immich integration has been disabled for this server by the administrator. Enable
+                            <code>Immich:Enabled</code> in the server configuration to allow groups to connect a photo server.
+                        </div>
+                    }
+                    else
+                    {
+                        <div asp-validation-summary="ModelOnly" class="crm-alert crm-alert-danger" role="alert"></div>
+
+                        <form asp-controller="UserSettings" asp-action="SaveImmich" method="post" class="d-flex flex-column gap-3" style="max-width: 560px;">
+                            @Html.AntiForgeryToken()
+
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" role="switch" id="immichEnabled"
+                                       asp-for="ImmichForm.Enabled" />
+                                <label class="form-check-label" for="immichEnabled">Enable Immich integration for your group</label>
+                            </div>
+
+                            <div class="crm-field-group">
+                                <label asp-for="ImmichForm.BaseUrl">Server URL <span style="color: var(--crm-danger);">*</span></label>
+                                <input asp-for="ImmichForm.BaseUrl" class="crm-input" type="url"
+                                       placeholder="https://immich.example.com/api" />
+                                <span asp-validation-for="ImmichForm.BaseUrl" class="crm-field-error"></span>
+                                <small class="crm-field-help" style="color: var(--crm-text-tertiary);">
+                                    Include the <code>/api</code> suffix.
+                                </small>
+                            </div>
+
+                            <div class="crm-field-group">
+                                <label asp-for="ImmichForm.ApiKey">
+                                    API Key
+                                    @if (!Model.HasImmichSettings)
+                                    {
+                                        <span style="color: var(--crm-danger);">*</span>
+                                    }
+                                </label>
+                                <input asp-for="ImmichForm.ApiKey" class="crm-input" type="password" autocomplete="off"
+                                       placeholder="@(Model.HasImmichSettings ? $"Current key: {Model.Immich!.ApiKeyHint} — leave blank to keep" : "Paste your Immich API key")" />
+                                <span asp-validation-for="ImmichForm.ApiKey" class="crm-field-error"></span>
+                                <small class="crm-field-help" style="color: var(--crm-text-tertiary);">
+                                    Create one in Immich under Account Settings &rarr; API Keys. The key is stored
+                                    server-side and never shown again@(Model.HasImmichSettings ? "; leave blank to keep the current key" : "").
+                                </small>
+                            </div>
+
+                            <div class="d-flex align-items-center gap-2">
+                                <button type="submit" class="crm-btn-primary btn-sm">
+                                    <i class="bi bi-check-lg" aria-hidden="true"></i> Save
+                                </button>
+                                @if (Model.HasImmichSettings)
+                                {
+                                    <button type="button" class="crm-btn-danger btn-sm"
+                                            data-confirm-action="@Url.Action("DeleteImmich", "UserSettings")"
+                                            data-confirm-title="Remove Immich Settings"
+                                            data-confirm-body="Remove the Immich server connection and stored API key for your whole group? Photo galleries will disappear for every group member."
+                                            data-confirm-btn-label="Remove"
+                                            data-confirm-btn-icon="bi-trash">
+                                        <i class="bi bi-trash" aria-hidden="true"></i> Remove connection
+                                    </button>
+                                }
+                            </div>
+                        </form>
                     }
                 </div>
             </section>
