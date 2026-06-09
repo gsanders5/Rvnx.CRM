@@ -25,7 +25,7 @@ else
 {
     @foreach (var p in Model)
     {
-        <a class="crm-sidebar-pin-item" asp-controller="Contacts" asp-action="Details" asp-route-id="@p.Id" title="@p.FirstName @p.LastName">
+        <a class="crm-sidebar-pin-item" asp-controller="Contacts" asp-action="Details" asp-route-id="@p.Id" title="@p.FirstName @p.LastName" aria-label="Pinned contact @p.FirstName @p.LastName">
             @if (p.ProfileImageId.HasValue)
             {
                 <img src="@Url.Action("Thumbnail", "Attachments", new { id = p.ProfileImageId, maxWidth = 44, maxHeight = 44 })" alt="" loading="lazy" />
