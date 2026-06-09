@@ -76,7 +76,18 @@ public class ImmichController(
 
             // Pre-sizing the buffer avoids reallocations during CopyToAsync; IsAllowedFileSize already caps well below int.MaxValue.
             using MemoryStream ms = declaredLength is long capacity ? new((int)capacity) : new();
-            await media.Content.CopyToAsync(ms, ct);
+
+            // 🛡️ Sentinel: Prevent memory exhaustion DoS if Content-Length is missing or spoofed
+            byte[] buffer = new byte[81920];
+            int bytesRead;
+            while ((bytesRead = await media.Content.ReadAsync(buffer, ct)) > 0)
+            {
+                ms.Write(buffer, 0, bytesRead);
+                if (!_fileValidationService.IsAllowedFileSize(ms.Length))
+                {
+                    return BadRequest("File is too large.");
+                }
+            }
             byte[] bytes = ms.ToArray();
 
             string effectiveFileName = string.IsNullOrWhiteSpace(fileName)
