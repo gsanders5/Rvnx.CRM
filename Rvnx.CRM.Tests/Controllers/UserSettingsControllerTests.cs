@@ -233,6 +233,17 @@ public class UserSettingsControllerTests : IDisposable
     }
 
     [Fact]
+    public async Task DeleteImmichForbiddenWhenServerDisabled()
+    {
+        _immichSettingsMock.Setup(s => s.ServerEnabled).Returns(false);
+
+        IActionResult result = await _controller.DeleteImmich();
+
+        Assert.IsType<ForbidResult>(result);
+        _immichSettingsMock.Verify(s => s.DeleteAsync(It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
     public async Task DeleteImmichRedirectsToIndex()
     {
         _immichSettingsMock.Setup(s => s.DeleteAsync(It.IsAny<CancellationToken>()))

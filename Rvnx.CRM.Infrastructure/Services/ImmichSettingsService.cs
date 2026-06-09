@@ -18,7 +18,7 @@ public class ImmichSettingsService(IRepository repository, IMemoryCache cache, I
     // Server-wide master switch. Absent config defaults to enabled so existing deployments
     // keep working after upgrade; an administrator sets "Immich:Enabled": false to turn the
     // whole integration off, leaving per-group enable/disable and API keys to each group.
-    public bool ServerEnabled => _configuration.GetValue("Immich:Enabled", true);
+    public bool ServerEnabled => _configuration.GetValue<bool>("Immich:Enabled", true);
 
     public async Task<ImmichSettingsDto?> GetSettingsAsync(CancellationToken ct = default)
     {

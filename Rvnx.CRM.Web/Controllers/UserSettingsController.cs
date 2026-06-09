@@ -98,6 +98,11 @@ public class UserSettingsController(
     [HttpPost]
     public async Task<IActionResult> DeleteImmich()
     {
+        if (!_immichSettingsService.ServerEnabled)
+        {
+            return Forbid();
+        }
+
         ImmichSettingsOperationResult result = await _immichSettingsService.DeleteAsync();
         TempData[TempDataKeys.ImmichSettingsMessage] = result.Success
             ? "Immich settings removed."
