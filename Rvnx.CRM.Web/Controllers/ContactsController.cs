@@ -217,9 +217,9 @@ public class ContactsController(
         }
 
         bool hasRelationships = await _contactReadService.HasRelationshipsAsync(id.Value);
-        (IReadOnlyList<ImmichOptionDto> people, IReadOnlyList<ImmichOptionDto> tags) = await LoadImmichOptionsAsync();
+        (bool immichEnabled, IReadOnlyList<ImmichOptionDto> people, IReadOnlyList<ImmichOptionDto> tags) = await LoadImmichOptionsAsync();
         bool isSelf = await IsSelfContactAsync(id.Value);
-        ContactEditViewModel viewModel = MapToEditViewModel(dto, dto.ProfileImageId, hasRelationships, _immichService.IsEnabled, people, tags, isSelf);
+        ContactEditViewModel viewModel = MapToEditViewModel(dto, dto.ProfileImageId, hasRelationships, immichEnabled, people, tags, isSelf);
 
         return View(viewModel);
     }
@@ -293,8 +293,8 @@ public class ContactsController(
         }
 
         bool hasRelationships = await _contactReadService.HasRelationshipsAsync(id);
-        (IReadOnlyList<ImmichOptionDto> people, IReadOnlyList<ImmichOptionDto> tags) = await LoadImmichOptionsAsync();
-        ContactEditViewModel viewModel = MapToEditViewModel(contactDto, formConfig?.ProfileImageId, hasRelationships, _immichService.IsEnabled, people, tags, isSelf);
+        (bool immichEnabled, IReadOnlyList<ImmichOptionDto> people, IReadOnlyList<ImmichOptionDto> tags) = await LoadImmichOptionsAsync();
+        ContactEditViewModel viewModel = MapToEditViewModel(contactDto, formConfig?.ProfileImageId, hasRelationships, immichEnabled, people, tags, isSelf);
 
         return View(viewModel);
     }
@@ -305,11 +305,11 @@ public class ContactsController(
         return selfContactId.HasValue && selfContactId.Value == contactId;
     }
 
-    private async Task<(IReadOnlyList<ImmichOptionDto> People, IReadOnlyList<ImmichOptionDto> Tags)> LoadImmichOptionsAsync()
+    private async Task<(bool Enabled, IReadOnlyList<ImmichOptionDto> People, IReadOnlyList<ImmichOptionDto> Tags)> LoadImmichOptionsAsync()
     {
-        if (!_immichService.IsEnabled)
+        if (!await _immichService.IsEnabledAsync(HttpContext.RequestAborted))
         {
-            return ([], []);
+            return (false, [], []);
         }
 
         // Cap total wait so an unreachable Immich server can't pin every Edit page render to the full HttpClient timeout.
@@ -319,11 +319,12 @@ public class ContactsController(
         try
         {
             await Task.WhenAll(peopleTask, tagsTask);
-            return (peopleTask.Result, tagsTask.Result);
+            return (true, peopleTask.Result, tagsTask.Result);
         }
         catch (OperationCanceledException)
         {
-            return (peopleTask.Status == TaskStatus.RanToCompletion ? peopleTask.Result : [],
+            return (true,
+                    peopleTask.Status == TaskStatus.RanToCompletion ? peopleTask.Result : [],
                     tagsTask.Status == TaskStatus.RanToCompletion ? tagsTask.Result : []);
         }
     }

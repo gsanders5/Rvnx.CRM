@@ -1,7 +1,7 @@
 using Microsoft.Extensions.Caching.Memory;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Rvnx.CRM.Core.DTOs.Base;
+using Rvnx.CRM.Core.DTOs.Immich;
 using Rvnx.CRM.Core.Interfaces;
 using System.Net.Http.Json;
 using System.Text.Json;
@@ -11,16 +11,16 @@ namespace Rvnx.CRM.Infrastructure.Services;
 
 public class ImmichService : IImmichService
 {
-    public const string ConfigSection = "Immich";
-
     private static readonly TimeSpan CacheTtl = TimeSpan.FromMinutes(5);
-    private const string TagsAllCacheKey = "immich:tags:all";
-    private const string PeopleAllCacheKey = "immich:people:all";
 
     private readonly HttpClient _httpClient;
+    private readonly IImmichSettingsService _settingsService;
     private readonly IMemoryCache _cache;
     private readonly ILogger<ImmichService> _logger;
-    private readonly bool _isConfigEnabled;
+
+    // Connection settings are loaded from the current group's database row once per scoped
+    // instance (i.e. once per request) and reused across calls within that request.
+    private Task<ImmichConnectionDto?>? _connectionTask;
 
     private static readonly JsonSerializerOptions JsonOptions = new()
     {
@@ -50,47 +50,51 @@ public class ImmichService : IImmichService
 
     public ImmichService(
         HttpClient httpClient,
-        IConfiguration configuration,
+        IImmichSettingsService settingsService,
         IMemoryCache cache,
         ILogger<ImmichService> logger)
     {
         _httpClient = httpClient;
+        _settingsService = settingsService;
         _cache = cache;
         _logger = logger;
-        _isConfigEnabled = bool.TryParse(configuration.GetSection(ConfigSection)["Enabled"], out bool enabled) && enabled;
     }
 
-    public bool IsEnabled => _isConfigEnabled && _httpClient.BaseAddress is not null;
-
-    public string? WebBaseUrl
+    public async Task<bool> IsEnabledAsync(CancellationToken ct)
     {
-        get
+        return await GetActiveConnectionAsync() is not null;
+    }
+
+    public async Task<string?> GetWebBaseUrlAsync(CancellationToken ct)
+    {
+        ImmichConnectionDto? connection = await GetActiveConnectionAsync();
+        if (connection is null)
         {
-            string? raw = _httpClient.BaseAddress?.ToString().TrimEnd('/');
-            if (string.IsNullOrEmpty(raw))
-            {
-                return null;
-            }
-            const string apiSuffix = "/api";
-            return raw.EndsWith(apiSuffix, StringComparison.OrdinalIgnoreCase)
-                ? raw[..^apiSuffix.Length]
-                : raw;
+            return null;
         }
+
+        string raw = connection.BaseUrl.TrimEnd('/');
+        const string apiSuffix = "/api";
+        return raw.EndsWith(apiSuffix, StringComparison.OrdinalIgnoreCase)
+            ? raw[..^apiSuffix.Length]
+            : raw;
     }
 
     public async Task<IReadOnlyList<ImmichOptionDto>> GetAllPeopleAsync(CancellationToken ct)
     {
-        if (!IsEnabled)
+        ImmichConnectionDto? connection = await GetActiveConnectionAsync();
+        if (connection is null)
         {
             return [];
         }
 
-        if (_cache.TryGetValue(PeopleAllCacheKey, out IReadOnlyList<ImmichOptionDto>? cached) && cached is not null)
+        string cacheKey = ImmichCacheKeys.People(connection.GroupId);
+        if (_cache.TryGetValue(cacheKey, out IReadOnlyList<ImmichOptionDto>? cached) && cached is not null)
         {
             return cached;
         }
 
-        ImmichPeopleResponse? response = await GetJsonAsync<ImmichPeopleResponse>($"people?withHidden=false&size={PeoplePageSize}", ct);
+        ImmichPeopleResponse? response = await GetJsonAsync<ImmichPeopleResponse>(connection, $"people?withHidden=false&size={PeoplePageSize}", ct);
         if (response is null)
         {
             return [];
@@ -109,7 +113,7 @@ public class ImmichService : IImmichService
                 .OrderBy(o => o.Text, StringComparer.OrdinalIgnoreCase)
                 .ToList();
 
-        _cache.Set(PeopleAllCacheKey, result, new MemoryCacheEntryOptions
+        _cache.Set(cacheKey, result, new MemoryCacheEntryOptions
         {
             AbsoluteExpirationRelativeToNow = CacheTtl
         });
@@ -118,17 +122,19 @@ public class ImmichService : IImmichService
 
     public async Task<IReadOnlyList<ImmichOptionDto>> GetAllTagsAsync(CancellationToken ct)
     {
-        if (!IsEnabled)
+        ImmichConnectionDto? connection = await GetActiveConnectionAsync();
+        if (connection is null)
         {
             return [];
         }
 
-        if (_cache.TryGetValue(TagsAllCacheKey, out IReadOnlyList<ImmichOptionDto>? cached) && cached is not null)
+        string cacheKey = ImmichCacheKeys.Tags(connection.GroupId);
+        if (_cache.TryGetValue(cacheKey, out IReadOnlyList<ImmichOptionDto>? cached) && cached is not null)
         {
             return cached;
         }
 
-        List<ImmichTag>? tags = await GetJsonAsync<List<ImmichTag>>("tags", ct);
+        List<ImmichTag>? tags = await GetJsonAsync<List<ImmichTag>>(connection, "tags", ct);
         if (tags is null)
         {
             return [];
@@ -140,7 +146,7 @@ public class ImmichService : IImmichService
             .OrderBy(o => o.Text, StringComparer.OrdinalIgnoreCase)
             .ToList();
 
-        _cache.Set(TagsAllCacheKey, result, new MemoryCacheEntryOptions
+        _cache.Set(cacheKey, result, new MemoryCacheEntryOptions
         {
             AbsoluteExpirationRelativeToNow = CacheTtl
         });
@@ -149,7 +155,8 @@ public class ImmichService : IImmichService
 
     public async Task<IReadOnlyList<ImmichAssetDto>> GetAssetsAsync(Guid? personId, Guid? tagId, int maxResults, CancellationToken ct)
     {
-        if (!IsEnabled || (personId is null && tagId is null) || maxResults <= 0)
+        ImmichConnectionDto? connection = await GetActiveConnectionAsync();
+        if (connection is null || (personId is null && tagId is null) || maxResults <= 0)
         {
             return [];
         }
@@ -157,11 +164,11 @@ public class ImmichService : IImmichService
         List<Task<List<ImmichAsset>>> queries = [];
         if (personId.HasValue)
         {
-            queries.Add(SearchAssetsAsync(new { personIds = new[] { personId.Value }, type = "IMAGE", size = maxResults }, ct));
+            queries.Add(SearchAssetsAsync(connection, new { personIds = new[] { personId.Value }, type = "IMAGE", size = maxResults }, ct));
         }
         if (tagId.HasValue)
         {
-            queries.Add(SearchAssetsAsync(new { tagIds = new[] { tagId.Value }, type = "IMAGE", size = maxResults }, ct));
+            queries.Add(SearchAssetsAsync(connection, new { tagIds = new[] { tagId.Value }, type = "IMAGE", size = maxResults }, ct));
         }
 
         List<ImmichAsset>[] results = await Task.WhenAll(queries);
@@ -195,9 +202,45 @@ public class ImmichService : IImmichService
         return await FetchMediaAsync($"assets/{assetId}/original", ct);
     }
 
+    // Returns the group's connection settings only when the integration is usable
+    // (enabled and carrying a valid absolute base URL); null otherwise.
+    private async Task<ImmichConnectionDto?> GetActiveConnectionAsync()
+    {
+        // The lazily-shared task deliberately ignores per-call cancellation tokens so one
+        // cancelled caller can't poison the cached lookup for the rest of the request.
+        _connectionTask ??= _settingsService.GetConnectionAsync(CancellationToken.None);
+        ImmichConnectionDto? connection = await _connectionTask;
+
+        if (connection is null
+            || !connection.Enabled
+            || !Uri.TryCreate(NormalizeBaseUrl(connection.BaseUrl), UriKind.Absolute, out _))
+        {
+            return null;
+        }
+        return connection;
+    }
+
+    private static string NormalizeBaseUrl(string baseUrl)
+    {
+        return baseUrl.Trim().TrimEnd('/') + "/";
+    }
+
+    private static HttpRequestMessage CreateRequest(HttpMethod method, ImmichConnectionDto connection, string relativeUrl)
+    {
+        // The API key is attached per request (not on the shared HttpClient) because each
+        // group can point at a different Immich server with different credentials.
+        HttpRequestMessage request = new(method, new Uri(new Uri(NormalizeBaseUrl(connection.BaseUrl)), relativeUrl));
+        if (!string.IsNullOrWhiteSpace(connection.ApiKey))
+        {
+            request.Headers.Add("x-api-key", connection.ApiKey);
+        }
+        return request;
+    }
+
     private async Task<ImmichMediaPayload?> FetchMediaAsync(string relativeUrl, CancellationToken ct)
     {
-        if (!IsEnabled)
+        ImmichConnectionDto? connection = await GetActiveConnectionAsync();
+        if (connection is null)
         {
             return null;
         }
@@ -205,7 +248,8 @@ public class ImmichService : IImmichService
         HttpResponseMessage? response = null;
         try
         {
-            response = await _httpClient.GetAsync(relativeUrl, HttpCompletionOption.ResponseHeadersRead, ct);
+            using HttpRequestMessage request = CreateRequest(HttpMethod.Get, connection, relativeUrl);
+            response = await _httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, ct);
             if (!response.IsSuccessStatusCode)
             {
                 LogHttpFailure(_logger, (int)response.StatusCode, relativeUrl, null);
@@ -225,11 +269,13 @@ public class ImmichService : IImmichService
         }
     }
 
-    private async Task<List<ImmichAsset>> SearchAssetsAsync(object body, CancellationToken ct)
+    private async Task<List<ImmichAsset>> SearchAssetsAsync(ImmichConnectionDto connection, object body, CancellationToken ct)
     {
         try
         {
-            using HttpResponseMessage response = await _httpClient.PostAsJsonAsync("search/metadata", body, JsonOptions, ct);
+            using HttpRequestMessage request = CreateRequest(HttpMethod.Post, connection, "search/metadata");
+            request.Content = JsonContent.Create(body, options: JsonOptions);
+            using HttpResponseMessage response = await _httpClient.SendAsync(request, ct);
             if (!response.IsSuccessStatusCode)
             {
                 LogHttpFailure(_logger, (int)response.StatusCode, "search/metadata", null);
@@ -246,11 +292,12 @@ public class ImmichService : IImmichService
         }
     }
 
-    private async Task<T?> GetJsonAsync<T>(string relativeUrl, CancellationToken ct)
+    private async Task<T?> GetJsonAsync<T>(ImmichConnectionDto connection, string relativeUrl, CancellationToken ct)
     {
         try
         {
-            using HttpResponseMessage response = await _httpClient.GetAsync(relativeUrl, ct);
+            using HttpRequestMessage request = CreateRequest(HttpMethod.Get, connection, relativeUrl);
+            using HttpResponseMessage response = await _httpClient.SendAsync(request, ct);
             if (!response.IsSuccessStatusCode)
             {
                 LogHttpFailure(_logger, (int)response.StatusCode, relativeUrl, null);
