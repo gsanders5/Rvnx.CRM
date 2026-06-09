@@ -1,16 +1,47 @@
 @model Rvnx.CRM.Web.ViewModels.Calendar.CalendarIndexViewModel
 @{
     ViewData["Title"] = "Calendar";
+
+    DateTime initialDate;
+    if (!DateTime.TryParse(Model.InitialDate, out initialDate))
+    {
+        initialDate = DateTime.Today;
+    }
 }
 
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <h1>Calendar</h1>
-</div>
+<div class="crm-page">
 
-<div class="crm-card">
-    <div class="crm-card-body">
-        <div id="calendar"></div>
+    <div class="crm-masthead crm-fade-in">
+        <div>
+            <div class="crm-eyebrow" style="margin-bottom: 8px;">Calendar</div>
+            <h1 class="crm-masthead-title">
+                @initialDate.ToString("MMMM") <em>@initialDate.ToString("yyyy")</em>
+            </h1>
+        </div>
     </div>
+
+    <div class="crm-calendar-legend crm-fade-in crm-delay-1">
+        <span class="crm-eyebrow">Legend</span>
+        <span class="crm-calendar-legend-item">
+            <span class="crm-calendar-legend-swatch" style="background: #e67e22;"></span>
+            Birthday
+        </span>
+        <span class="crm-calendar-legend-item">
+            <span class="crm-calendar-legend-swatch" style="background: #3498db;"></span>
+            Significant Date
+        </span>
+        <span class="crm-calendar-legend-item">
+            <span class="crm-calendar-legend-swatch" style="background: #2ecc71;"></span>
+            Task
+        </span>
+    </div>
+
+    <div class="crm-card crm-fade-in crm-delay-2">
+        <div class="crm-card-body">
+            <div id="calendar"></div>
+        </div>
+    </div>
+
 </div>
 
 @section Scripts {
@@ -18,8 +49,6 @@
     <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function () {
-            const isDark = document.documentElement.getAttribute('data-mdb-theme') === 'dark';
-
             const calendar = new FullCalendar.Calendar(document.getElementById('calendar'), {
                 initialView: 'dayGridMonth',
                 initialDate: '@Model.InitialDate',
@@ -62,45 +91,55 @@
     <style>
         /* ── Shared ── */
         .fc .fc-toolbar-title {
-            font-size: 1.1rem;
-            font-weight: 500;
+            font-family: 'Newsreader', 'Source Serif Pro', Georgia, serif;
+            font-size: 1.4rem;
+            font-weight: 400;
+            letter-spacing: -0.01em;
         }
 
         .fc-event {
             cursor: pointer;
+            border-radius: 4px;
+            padding: 1px 4px;
+        }
+
+        .fc .fc-button {
+            font-family: inherit;
+            text-transform: none;
+            font-size: 0.8rem;
         }
 
         /* ── Light mode ── */
         :root {
-            --fc-border-color: rgba(0,0,0,0.12);
-            --fc-page-bg-color: #ffffff;
-            --fc-neutral-bg-color: #f8f9fa;
-            --fc-today-bg-color: rgba(13, 110, 253, 0.06);
-            --fc-button-bg-color: #ffffff;
-            --fc-button-border-color: rgba(0,0,0,0.2);
-            --fc-button-text-color: #212529;
-            --fc-button-hover-bg-color: #e9ecef;
-            --fc-button-hover-border-color: rgba(0,0,0,0.3);
-            --fc-button-active-bg-color: #dee2e6;
-            --fc-button-active-border-color: rgba(0,0,0,0.3);
+            --fc-border-color: var(--crm-border);
+            --fc-page-bg-color: var(--crm-surface-elevated);
+            --fc-neutral-bg-color: var(--crm-surface-secondary);
+            --fc-today-bg-color: var(--crm-brand-subtle);
+            --fc-button-bg-color: var(--crm-surface-elevated);
+            --fc-button-border-color: var(--crm-border);
+            --fc-button-text-color: var(--crm-text-primary);
+            --fc-button-hover-bg-color: var(--crm-surface-secondary);
+            --fc-button-hover-border-color: var(--crm-border);
+            --fc-button-active-bg-color: var(--crm-brand);
+            --fc-button-active-border-color: var(--crm-brand);
             --fc-event-text-color: #fff;
         }
 
         /* ── Dark mode ── */
         [data-mdb-theme="dark"] {
-            --fc-border-color: var(--crm-border-subtle);
+            --fc-border-color: var(--crm-border);
             --fc-page-bg-color: var(--crm-surface-elevated);
             --fc-neutral-bg-color: var(--crm-surface-secondary);
-            --fc-today-bg-color: rgba(90, 123, 255, 0.1);
+            --fc-today-bg-color: var(--crm-brand-subtle);
             --fc-button-bg-color: var(--crm-surface-secondary);
             --fc-button-border-color: var(--crm-border);
             --fc-button-text-color: var(--crm-text-primary);
-            --fc-button-hover-bg-color: rgba(255,255,255,0.08);
+            --fc-button-hover-bg-color: rgba(255, 255, 255, 0.06);
             --fc-button-hover-border-color: var(--crm-border);
-            --fc-button-active-bg-color: rgba(255,255,255,0.12);
-            --fc-button-active-border-color: var(--crm-border);
+            --fc-button-active-bg-color: var(--crm-brand);
+            --fc-button-active-border-color: var(--crm-brand);
             --fc-event-text-color: #fff;
-            --fc-list-event-hover-bg-color: rgba(255,255,255,0.05);
+            --fc-list-event-hover-bg-color: rgba(255, 255, 255, 0.04);
         }
 
             [data-mdb-theme="dark"] .fc-col-header-cell-cushion,
