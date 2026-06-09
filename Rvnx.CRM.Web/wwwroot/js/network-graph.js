@@ -54,7 +54,7 @@ function initializeNetworkGraph(nodes, links) {
       if (document.fullscreenElement) {
         networkCard.classList.add("fixed-top", "w-100", "h-100", "z-3", "m-0");
         container.style.height = "calc(100vh - 72px)"; // Account for card header
-        fullscreenBtn.innerHTML = '<i class="bi bi-fullscreen-exit"></i>';
+        fullscreenBtn.innerHTML = '<i class="bi bi-fullscreen-exit" aria-hidden="true"></i>';
       } else {
         networkCard.classList.remove(
           "fixed-top",
@@ -64,7 +64,7 @@ function initializeNetworkGraph(nodes, links) {
           "m-0",
         );
         container.style.height = "500px";
-        fullscreenBtn.innerHTML = '<i class="bi bi-arrows-fullscreen"></i>';
+        fullscreenBtn.innerHTML = '<i class="bi bi-arrows-fullscreen" aria-hidden="true"></i>';
       }
     });
   }

@@ -123,7 +123,6 @@
 ## 2024-05-18 - Added GetContactNamesAsync and HasRelationshipsAsync tests to ContactReadService
 **Learning:** Found that `ContactReadService.GetContactNamesAsync` and `HasRelationshipsAsync` methods lacked test coverage. The `GetContactNamesAsync` method has logic to format the contact name differently depending on whether it is a partial contact or not. It's important to test these utility methods to ensure UI dropdowns and checks behave correctly.
 **Action:** When inspecting a class for test coverage, always verify that smaller utility methods (like `GetContactNamesAsync` and `HasRelationshipsAsync`) are actually covered, not just primary business logic. Ensure that conditional formatting logic within projections is tested via mock returns and assertions.
-
-## 2024-06-07 - Added test coverage for GetIntroducerCandidatesAsync
-**Learning:** The `GetIntroducerCandidatesAsync` utility method on `ContactReadService` evaluates business rules like sorting alphabetically, filtering out partial contacts, and excluding a specific contact ID. Because this populates UI dropdowns correctly, these filters are critical but were untested.
-**Action:** Always verify that utility query methods which return selection items are thoroughly tested, confirming both that they properly filter data out and correctly order the final results.
+## 2026-05-25 - [Testing Multi-Hop Graph Traversal Logic]
+**Learning:** The relationship suggestion service builds complex multi-hop graphs to determine transitive (e.g. Sibling -> Sibling) and adult/child family links, but these paths were largely untested. Without tests verifying these multi-hop resolutions, breaking the graph construction logic during optimization would not fail any tests.
+**Action:** When a service builds or traverses relational graphs (e.g., recursive queries, multi-hop component builders), explicitly test at least one multi-hop scenario instead of just checking basic creation or empty early-exit responses.
