@@ -15,194 +15,244 @@ using Rvnx.CRM.Web.Controllers;
 
 namespace Rvnx.CRM.Tests.Controllers;
 
-public class ContactMethodsControllerTests : IDisposable
+public class ContactMethodsControllerTests
 {
-    private readonly CRMDbContext _context;
-    private readonly ContactMethodsController _controller;
-
-    public ContactMethodsControllerTests()
+    public class Security
     {
-        _context = TestDbContextFactory.CreateForDefaultUser();
-        Repository repository = new(_context);
-        IContactMethodService contactMethodService = new ContactMethodService(repository);
-
-        _controller = new ContactMethodsController(contactMethodService, repository)
+        [Fact]
+        public async Task ContactMethodsControllerEditShouldPreserveEntityId()
         {
-            ControllerContext = new ControllerContext { HttpContext = new DefaultHttpContext() }
-        };
-        _controller.TempData = new TempDataDictionary(_controller.HttpContext, Mock.Of<ITempDataProvider>());
+            using CRMDbContext context = TestDbContextFactory.CreateForDefaultUser();
+            Repository repository = new(context);
+            IContactMethodService contactMethodService = new ContactMethodService(repository);
+            ContactMethodsController controller = new(contactMethodService, repository);
+
+            Guid contactMethodId = Guid.NewGuid();
+            Guid originalContactId = Guid.NewGuid();
+            Guid attackerContactId = Guid.NewGuid();
+
+            context.Contacts!.Add(new Contact { Id = originalContactId, FirstName = "Original" });
+            context.Contacts!.Add(new Contact { Id = attackerContactId, FirstName = "Attacker" });
+
+            context.Set<ContactMethod>().Add(new ContactMethod
+            {
+                Id = contactMethodId,
+                ContactId = originalContactId,
+                Type = Core.Enumerations.ContactMethodType.Email,
+                Value = "original@example.com",
+                Label = "Work"
+            });
+            await context.SaveChangesAsync();
+            context.ChangeTracker.Clear();
+
+            ContactMethodFormDto tamperAttempt = new()
+            {
+                Id = contactMethodId,
+                ContactId = attackerContactId,
+                Type = Core.Enumerations.ContactMethodType.Email,
+                Value = "updated@example.com",
+                Label = "Personal"
+            };
+
+            await controller.Edit(contactMethodId, tamperAttempt);
+
+            ContactMethod? updatedMethod = await context.Set<ContactMethod>().FindAsync(contactMethodId);
+            Assert.NotNull(updatedMethod);
+            Assert.Equal(originalContactId, updatedMethod.ContactId);
+            Assert.Equal("updated@example.com", updatedMethod.Value);
+            Assert.Equal("Personal", updatedMethod.Label);
+        }
     }
 
-    public void Dispose()
+    public class General : IDisposable
     {
-        _context.Database.EnsureDeleted();
-        _context.Dispose();
+        private readonly CRMDbContext _context;
+        private readonly ContactMethodsController _controller;
 
-        GC.SuppressFinalize(this);
-    }
-
-    [Fact]
-    public async Task CreateGetReturnsViewWithCorrectModel()
-    {
-        Guid entityId = Guid.NewGuid();
-        _context.Contacts!.Add(new Contact { Id = entityId, FirstName = "Parent" });
-        await _context.SaveChangesAsync();
-
-        IActionResult result = await _controller.Create(entityId);
-
-        ViewResult viewResult = Assert.IsType<ViewResult>(result);
-        ContactMethodFormDto model = Assert.IsType<ContactMethodFormDto>(viewResult.Model);
-        Assert.Equal(entityId, model.ContactId);
-    }
-
-    [Fact]
-    public async Task CreatePostValidDataCreatesContactMethod()
-    {
-        Guid entityId = Guid.NewGuid();
-        _context.Contacts!.Add(new Contact { Id = entityId, FirstName = "Parent", LastName = "Entity" });
-        await _context.SaveChangesAsync();
-
-        ContactMethodFormDto dto = new()
+        public General()
         {
-            ContactId = entityId,
-            Type = ContactMethodType.Phone,
-            Value = "(212) 736-5000",
-            Label = "Work"
-        };
+            _context = TestDbContextFactory.CreateForDefaultUser();
+            Repository repository = new(_context);
+            IContactMethodService contactMethodService = new ContactMethodService(repository);
 
-        IActionResult result = await _controller.Create(dto);
+            _controller = new ContactMethodsController(contactMethodService, repository)
+            {
+                ControllerContext = new ControllerContext { HttpContext = new DefaultHttpContext() }
+            };
+            _controller.TempData = new TempDataDictionary(_controller.HttpContext, Mock.Of<ITempDataProvider>());
+        }
 
-        RedirectToActionResult redirectResult = Assert.IsType<RedirectToActionResult>(result);
-        Assert.Equal("Details", redirectResult.ActionName); // RedirectToEntity -> Details
-        Assert.Equal("Contacts", redirectResult.ControllerName);
-        Assert.Equal(entityId, redirectResult.RouteValues?["id"]);
-
-        ContactMethod? created = await _context.Set<ContactMethod>().FirstOrDefaultAsync(c => c.Value == "+12127365000");
-        Assert.NotNull(created);
-        Assert.Equal(entityId, created.ContactId);
-        Assert.Equal(ContactMethodType.Phone, created.Type);
-    }
-
-    [Fact]
-    public async Task CreatePostInvalidDataReturnsView()
-    {
-        Guid entityId = Guid.NewGuid();
-        _context.Contacts!.Add(new Contact { Id = entityId, FirstName = "Parent" });
-        await _context.SaveChangesAsync();
-
-        ContactMethodFormDto dto = new()
+        public void Dispose()
         {
-            ContactId = entityId,
-        };
-        _controller.ModelState.AddModelError("Value", "Required");
+            _context.Database.EnsureDeleted();
+            _context.Dispose();
 
-        IActionResult result = await _controller.Create(dto);
+            GC.SuppressFinalize(this);
+        }
 
-        ViewResult viewResult = Assert.IsType<ViewResult>(result);
-        Assert.Equal(dto, viewResult.Model);
-        Assert.False(_controller.ModelState.IsValid);
-    }
-
-    [Fact]
-    public async Task CreatePostWithNonExistentParentReturnsNotFound()
-    {
-        // We do NOT create the parent entity
-        Guid nonExistentEntityId = Guid.NewGuid();
-
-        ContactMethodFormDto dto = new()
+        [Fact]
+        public async Task CreateGetReturnsViewWithCorrectModel()
         {
-            ContactId = nonExistentEntityId,
-            Type = ContactMethodType.Email,
-            Value = "orphan@example.com"
-        };
+            Guid entityId = Guid.NewGuid();
+            _context.Contacts!.Add(new Contact { Id = entityId, FirstName = "Parent" });
+            await _context.SaveChangesAsync();
 
-        IActionResult result = await _controller.Create(dto);
+            IActionResult result = await _controller.Create(entityId);
 
-        Assert.IsType<NotFoundResult>(result);
+            ViewResult viewResult = Assert.IsType<ViewResult>(result);
+            ContactMethodFormDto model = Assert.IsType<ContactMethodFormDto>(viewResult.Model);
+            Assert.Equal(entityId, model.ContactId);
+        }
 
-        ContactMethod? created = await _context.Set<ContactMethod>().FirstOrDefaultAsync(c => c.Value == "orphan@example.com");
-        Assert.Null(created);
-    }
-
-    [Fact]
-    public async Task EditPostValidDataUpdatesContactMethod()
-    {
-        Guid entityId = Guid.NewGuid();
-        Guid methodId = Guid.NewGuid();
-
-        _context.Contacts!.Add(new Contact { Id = entityId, FirstName = "Test", LastName = "User" });
-        _context.Set<ContactMethod>().Add(new ContactMethod
+        [Fact]
+        public async Task CreatePostValidDataCreatesContactMethod()
         {
-            Id = methodId,
-            ContactId = entityId,
-            Type = ContactMethodType.Phone,
-            Value = "Old Value",
-            Label = "Old Label"
-        });
-        await _context.SaveChangesAsync();
+            Guid entityId = Guid.NewGuid();
+            _context.Contacts!.Add(new Contact { Id = entityId, FirstName = "Parent", LastName = "Entity" });
+            await _context.SaveChangesAsync();
 
-        _context.ChangeTracker.Clear();
+            ContactMethodFormDto dto = new()
+            {
+                ContactId = entityId,
+                Type = ContactMethodType.Phone,
+                Value = "(212) 736-5000",
+                Label = "Work"
+            };
 
-        ContactMethodFormDto dto = new()
+            IActionResult result = await _controller.Create(dto);
+
+            RedirectToActionResult redirectResult = Assert.IsType<RedirectToActionResult>(result);
+            Assert.Equal("Details", redirectResult.ActionName); // RedirectToEntity -> Details
+            Assert.Equal("Contacts", redirectResult.ControllerName);
+            Assert.Equal(entityId, redirectResult.RouteValues?["id"]);
+
+            ContactMethod? created = await _context.Set<ContactMethod>().FirstOrDefaultAsync(c => c.Value == "+12127365000");
+            Assert.NotNull(created);
+            Assert.Equal(entityId, created.ContactId);
+            Assert.Equal(ContactMethodType.Phone, created.Type);
+        }
+
+        [Fact]
+        public async Task CreatePostInvalidDataReturnsView()
         {
-            Id = methodId,
-            ContactId = entityId,
-            Type = ContactMethodType.Email,
-            Value = "New Value",
-            Label = "New Label"
-        };
+            Guid entityId = Guid.NewGuid();
+            _context.Contacts!.Add(new Contact { Id = entityId, FirstName = "Parent" });
+            await _context.SaveChangesAsync();
 
-        IActionResult result = await _controller.Edit(methodId, dto);
+            ContactMethodFormDto dto = new()
+            {
+                ContactId = entityId,
+            };
+            _controller.ModelState.AddModelError("Value", "Required");
 
-        RedirectToActionResult redirectResult = Assert.IsType<RedirectToActionResult>(result);
-        Assert.Equal("Details", redirectResult.ActionName);
+            IActionResult result = await _controller.Create(dto);
 
-        ContactMethod? updated = await _context.Set<ContactMethod>().FindAsync(methodId);
-        Assert.NotNull(updated);
-        Assert.Equal("New Value", updated.Value);
-        Assert.Equal("New Label", updated.Label);
-        Assert.Equal(ContactMethodType.Email, updated.Type);
-    }
+            ViewResult viewResult = Assert.IsType<ViewResult>(result);
+            Assert.Equal(dto, viewResult.Model);
+            Assert.False(_controller.ModelState.IsValid);
+        }
 
-    [Fact]
-    public async Task EditPostReturnsNotFoundWhenEntityDoesNotExist()
-    {
-        Guid methodId = Guid.NewGuid();
-        ContactMethodFormDto dto = new()
+        [Fact]
+        public async Task CreatePostWithNonExistentParentReturnsNotFound()
         {
-            Id = methodId,
-            ContactId = Guid.NewGuid(),
-            Type = ContactMethodType.Phone,
-            Value = "Val"
-        };
+            // We do NOT create the parent entity
+            Guid nonExistentEntityId = Guid.NewGuid();
 
-        IActionResult result = await _controller.Edit(methodId, dto);
+            ContactMethodFormDto dto = new()
+            {
+                ContactId = nonExistentEntityId,
+                Type = ContactMethodType.Email,
+                Value = "orphan@example.com"
+            };
 
-        Assert.IsType<NotFoundResult>(result);
-    }
+            IActionResult result = await _controller.Create(dto);
 
-    [Fact]
-    public async Task DeletePostDeletesContactMethod()
-    {
-        Guid entityId = Guid.NewGuid();
-        Guid methodId = Guid.NewGuid();
+            Assert.IsType<NotFoundResult>(result);
 
-        _context.Contacts!.Add(new Contact { Id = entityId, FirstName = "Test", LastName = "User" });
-        _context.Set<ContactMethod>().Add(new ContactMethod
+            ContactMethod? created = await _context.Set<ContactMethod>().FirstOrDefaultAsync(c => c.Value == "orphan@example.com");
+            Assert.Null(created);
+        }
+
+        [Fact]
+        public async Task EditPostValidDataUpdatesContactMethod()
         {
-            Id = methodId,
-            ContactId = entityId,
-            Type = ContactMethodType.Phone,
-            Value = "To Delete"
-        });
-        await _context.SaveChangesAsync();
+            Guid entityId = Guid.NewGuid();
+            Guid methodId = Guid.NewGuid();
 
-        IActionResult result = await _controller.DeleteConfirmed(methodId);
+            _context.Contacts!.Add(new Contact { Id = entityId, FirstName = "Test", LastName = "User" });
+            _context.Set<ContactMethod>().Add(new ContactMethod
+            {
+                Id = methodId,
+                ContactId = entityId,
+                Type = ContactMethodType.Phone,
+                Value = "Old Value",
+                Label = "Old Label"
+            });
+            await _context.SaveChangesAsync();
 
-        RedirectToActionResult redirectResult = Assert.IsType<RedirectToActionResult>(result);
-        Assert.Equal("Details", redirectResult.ActionName);
+            _context.ChangeTracker.Clear();
 
-        ContactMethod? deleted = await _context.Set<ContactMethod>().FindAsync(methodId);
-        Assert.Null(deleted);
+            ContactMethodFormDto dto = new()
+            {
+                Id = methodId,
+                ContactId = entityId,
+                Type = ContactMethodType.Email,
+                Value = "New Value",
+                Label = "New Label"
+            };
+
+            IActionResult result = await _controller.Edit(methodId, dto);
+
+            RedirectToActionResult redirectResult = Assert.IsType<RedirectToActionResult>(result);
+            Assert.Equal("Details", redirectResult.ActionName);
+
+            ContactMethod? updated = await _context.Set<ContactMethod>().FindAsync(methodId);
+            Assert.NotNull(updated);
+            Assert.Equal("New Value", updated.Value);
+            Assert.Equal("New Label", updated.Label);
+            Assert.Equal(ContactMethodType.Email, updated.Type);
+        }
+
+        [Fact]
+        public async Task EditPostReturnsNotFoundWhenEntityDoesNotExist()
+        {
+            Guid methodId = Guid.NewGuid();
+            ContactMethodFormDto dto = new()
+            {
+                Id = methodId,
+                ContactId = Guid.NewGuid(),
+                Type = ContactMethodType.Phone,
+                Value = "Val"
+            };
+
+            IActionResult result = await _controller.Edit(methodId, dto);
+
+            Assert.IsType<NotFoundResult>(result);
+        }
+
+        [Fact]
+        public async Task DeletePostDeletesContactMethod()
+        {
+            Guid entityId = Guid.NewGuid();
+            Guid methodId = Guid.NewGuid();
+
+            _context.Contacts!.Add(new Contact { Id = entityId, FirstName = "Test", LastName = "User" });
+            _context.Set<ContactMethod>().Add(new ContactMethod
+            {
+                Id = methodId,
+                ContactId = entityId,
+                Type = ContactMethodType.Phone,
+                Value = "To Delete"
+            });
+            await _context.SaveChangesAsync();
+
+            IActionResult result = await _controller.DeleteConfirmed(methodId);
+
+            RedirectToActionResult redirectResult = Assert.IsType<RedirectToActionResult>(result);
+            Assert.Equal("Details", redirectResult.ActionName);
+
+            ContactMethod? deleted = await _context.Set<ContactMethod>().FindAsync(methodId);
+            Assert.Null(deleted);
+        }
     }
 }
