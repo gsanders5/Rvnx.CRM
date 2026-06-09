@@ -10,6 +10,6 @@
 ## 2026-04-16 - Prevent Redundant Reading of Icons within Labelled Containers
 **Learning:** Bootstrap Icons (and other purely decorative icon tags) inside wrappers that already convey their meaning (like buttons or tabs with text) are read redundantly by screen readers unless hidden.
 **Action:** When adding decorative visual elements like `<i class="bi ...">` inside elements that already contain text or tooltips explaining the intent, always add `aria-hidden="true"` to prevent screen readers from announcing redundant content. Ensure the attribute is only added once.
-## 2024-05-26 - Add aria-hidden to dynamically injected icons
-**Learning:** Decorative icons injected dynamically via JavaScript (e.g. `innerHTML`) also need `aria-hidden="true"` to prevent screen readers from reading them redundantly.
-**Action:** Ensure dynamically injected icons (like Bootstrap Icons `<i class="bi ...">`) have `aria-hidden="true"` when used as purely decorative elements alongside textual labels or inside elements with `aria-label`.
+## 2026-04-16 - Accessible Pinned Contact Links
+**Learning:** Anchor tags containing decorative images (like avatars with `alt=""`) and no text content can be unlabelled for screen readers, even if a `title` attribute is present.
+**Action:** Always ensure that links containing only decorative images have an explicit `aria-label` attribute describing their destination or action.

@@ -5,6 +5,7 @@ using Rvnx.CRM.Core.Interfaces;
 using Rvnx.CRM.Core.Models;
 using Rvnx.CRM.Core.Models.Contact;
 using Rvnx.CRM.Web.Controllers.Base;
+using Rvnx.CRM.Web.ViewModels.Contact;
 
 namespace Rvnx.CRM.Web.Controllers;
 
