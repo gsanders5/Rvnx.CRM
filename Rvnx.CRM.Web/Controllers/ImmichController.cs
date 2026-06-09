@@ -3,6 +3,7 @@ using Rvnx.CRM.Core.DTOs.Base;
 using Rvnx.CRM.Core.DTOs.Contact;
 using Rvnx.CRM.Core.Interfaces;
 using Rvnx.CRM.Web.Controllers.Base;
+using Rvnx.CRM.Web.ViewModels.Immich;
 
 namespace Rvnx.CRM.Web.Controllers;
 
@@ -22,7 +23,7 @@ public class ImmichController(
     [HttpGet("Immich/Gallery")]
     public async Task<IActionResult> Gallery([FromQuery] ImmichGalleryRequest request, CancellationToken ct)
     {
-        IReadOnlyList<ImmichAssetDto> assets = _immichService.IsEnabled
+        IReadOnlyList<ImmichAssetDto> assets = await _immichService.IsEnabledAsync(ct)
             ? await _immichService.GetAssetsAsync(request.PersonId, request.TagId, MaxAssets, ct)
             : [];
 
@@ -33,7 +34,7 @@ public class ImmichController(
             PersonName = request.PersonName,
             TagId = request.TagId,
             TagValue = request.TagValue,
-            WebBaseUrl = _immichService.WebBaseUrl,
+            WebBaseUrl = await _immichService.GetWebBaseUrlAsync(ct),
             Assets = assets,
         };
 
@@ -76,7 +77,18 @@ public class ImmichController(
 
             // Pre-sizing the buffer avoids reallocations during CopyToAsync; IsAllowedFileSize already caps well below int.MaxValue.
             using MemoryStream ms = declaredLength is long capacity ? new((int)capacity) : new();
-            await media.Content.CopyToAsync(ms, ct);
+
+            // 🛡️ Sentinel: Prevent memory exhaustion DoS if Content-Length is missing or spoofed
+            byte[] buffer = new byte[81920];
+            int bytesRead;
+            while ((bytesRead = await media.Content.ReadAsync(buffer, ct)) > 0)
+            {
+                ms.Write(buffer, 0, bytesRead);
+                if (!_fileValidationService.IsAllowedFileSize(ms.Length))
+                {
+                    return BadRequest("File is too large.");
+                }
+            }
             byte[] bytes = ms.ToArray();
 
             string effectiveFileName = string.IsNullOrWhiteSpace(fileName)

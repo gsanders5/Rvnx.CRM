@@ -1,9 +1,9 @@
 using Microsoft.Extensions.Caching.Memory;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using Moq.Protected;
 using Rvnx.CRM.Core.DTOs.Base;
+using Rvnx.CRM.Core.DTOs.Immich;
 using Rvnx.CRM.Core.Interfaces;
 using Rvnx.CRM.Infrastructure.Services;
 using System.Net;
@@ -15,29 +15,22 @@ public class ImmichServiceTests
 {
     private const string BaseUrl = "https://immich.example.com/api/";
 
-    private static IConfiguration BuildConfig(bool enabled)
+    private static Mock<IImmichSettingsService> BuildSettingsMock(bool enabled, bool hasSettings)
     {
-        return new ConfigurationBuilder()
-            .AddInMemoryCollection(new Dictionary<string, string?>
-            {
-                ["Immich:Enabled"] = enabled ? "true" : "false",
-                ["Immich:BaseUrl"] = BaseUrl,
-                ["Immich:ApiKey"] = "test-api-key"
-            })
-            .Build();
+        Mock<IImmichSettingsService> settings = new();
+        settings.Setup(s => s.GetConnectionAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(hasSettings
+                ? new ImmichConnectionDto(Guid.NewGuid(), enabled, BaseUrl, "test-api-key")
+                : null);
+        return settings;
     }
 
     private static (ImmichService Service, Mock<HttpMessageHandler> Handler, HttpClient Client) CreateService(
-        bool enabled = true, bool setBaseAddress = true)
+        bool enabled = true, bool hasSettings = true)
     {
         Mock<HttpMessageHandler> handler = new();
         HttpClient client = new(handler.Object);
-        if (setBaseAddress)
-        {
-            client.BaseAddress = new Uri(BaseUrl);
-            client.DefaultRequestHeaders.Add("x-api-key", "test-api-key");
-        }
-        ImmichService service = new(client, BuildConfig(enabled), new MemoryCache(new MemoryCacheOptions()), NullLogger<ImmichService>.Instance);
+        ImmichService service = new(client, BuildSettingsMock(enabled, hasSettings).Object, new MemoryCache(new MemoryCacheOptions()), NullLogger<ImmichService>.Instance);
         return (service, handler, client);
     }
 
@@ -56,22 +49,42 @@ public class ImmichServiceTests
     }
 
     [Fact]
-    public void IsEnabledReturnsFalseWhenConfigDisabled()
+    public async Task IsEnabledAsyncReturnsFalseWhenSettingsDisabled()
     {
         (ImmichService service, _, HttpClient client) = CreateService(enabled: false);
         using (client)
         {
-            Assert.False(service.IsEnabled);
+            Assert.False(await service.IsEnabledAsync(CancellationToken.None));
         }
     }
 
     [Fact]
-    public void IsEnabledReturnsFalseWhenBaseAddressMissing()
+    public async Task IsEnabledAsyncReturnsFalseWhenNoSettingsStored()
     {
-        (ImmichService service, _, HttpClient client) = CreateService(enabled: true, setBaseAddress: false);
+        (ImmichService service, _, HttpClient client) = CreateService(enabled: true, hasSettings: false);
         using (client)
         {
-            Assert.False(service.IsEnabled);
+            Assert.False(await service.IsEnabledAsync(CancellationToken.None));
+        }
+    }
+
+    [Fact]
+    public async Task IsEnabledAsyncReturnsTrueWhenSettingsEnabled()
+    {
+        (ImmichService service, _, HttpClient client) = CreateService(enabled: true);
+        using (client)
+        {
+            Assert.True(await service.IsEnabledAsync(CancellationToken.None));
+        }
+    }
+
+    [Fact]
+    public async Task GetWebBaseUrlAsyncStripsApiSuffix()
+    {
+        (ImmichService service, _, HttpClient client) = CreateService(enabled: true);
+        using (client)
+        {
+            Assert.Equal("https://immich.example.com", await service.GetWebBaseUrlAsync(CancellationToken.None));
         }
     }
 
