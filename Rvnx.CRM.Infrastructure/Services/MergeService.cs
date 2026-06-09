@@ -247,13 +247,17 @@ public class MergeService(CRMDbContext context, IRepository repository) : IMerge
 
             List<PetContact> petContactsToDelete = [];
             List<Pet> orphanPetsToDelete = [];
+
+            // Optimization: Collect new entities in a list to batch insert via AddRangeAsync outside the loop,
+            // preventing N+1 database roundtrips.
+            List<PetContact> petContactsToAdd = [];
             foreach (PetContact pc in secondaryPetContacts)
             {
                 if (existingPetNames.Add(pc.Pet.Name.ToLowerInvariant()))
                 {
                     if (!primaryPetIds.Contains(pc.PetId))
                     {
-                        await _repository.AddAsync(new PetContact
+                        petContactsToAdd.Add(new PetContact
                         {
                             PetId = pc.PetId,
                             ContactId = primaryId
@@ -269,6 +273,12 @@ public class MergeService(CRMDbContext context, IRepository repository) : IMerge
                 }
                 petContactsToDelete.Add(pc);
             }
+
+            if (petContactsToAdd.Count > 0)
+            {
+                await _repository.AddRangeAsync(petContactsToAdd);
+            }
+
             if (petContactsToDelete.Count > 0)
             {
                 await _repository.DeleteRangeAsync(petContactsToDelete);
