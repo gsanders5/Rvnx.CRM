@@ -127,4 +127,43 @@ public class FavoriteServiceTests
         Assert.Contains(contactId1, result);
         Assert.Contains(contactId2, result);
     }
+
+    [Fact]
+    public async Task GetFavoriteSidebarItemsAsyncWhenUserIdNullReturnsEmptyList()
+    {
+        // Arrange
+        _currentUserServiceMock.Setup(x => x.UserId).Returns((Guid?)null);
+
+        // Act
+        List<Rvnx.CRM.Core.DTOs.Contact.FavoriteSidebarItemDto> result = await _service.GetFavoriteSidebarItemsAsync();
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.Empty(result);
+        _repositoryMock.Verify(x => x.ListProjectedAsync(
+            It.IsAny<Expression<Func<ContactFavorite, bool>>>(),
+            It.IsAny<Expression<Func<ContactFavorite, Guid>>>(),
+            It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task GetFavoriteSidebarItemsAsyncWhenNoFavoritesReturnsEmptyList()
+    {
+        // Arrange
+        Guid userId = Guid.NewGuid();
+        _currentUserServiceMock.Setup(x => x.UserId).Returns(userId);
+
+        _repositoryMock.Setup(x => x.ListProjectedAsync(
+            It.IsAny<Expression<Func<ContactFavorite, bool>>>(),
+            It.IsAny<Expression<Func<ContactFavorite, Guid>>>(),
+            It.IsAny<CancellationToken>()))
+            .ReturnsAsync([]);
+
+        // Act
+        List<Rvnx.CRM.Core.DTOs.Contact.FavoriteSidebarItemDto> result = await _service.GetFavoriteSidebarItemsAsync();
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.Empty(result);
+    }
 }
