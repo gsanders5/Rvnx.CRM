@@ -6,4 +6,5 @@ public static class TempDataKeys
     public const string NewApiTokenName = "NewApiTokenName";
     public const string DangerZoneMessage = "DangerZone:Message";
     public const string DangerZoneError = "DangerZone:Error";
+    public const string GroupSettingsMessage = "GroupSettings:Message";
 }
