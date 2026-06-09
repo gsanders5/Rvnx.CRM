@@ -117,39 +117,15 @@ public class RelationshipSuggestionService(IRepository repository) : IRelationsh
                 : [Guid.Empty];
 
             // Batch-load all contacts from both components in two queries instead of one per node
-            // ⚡ Bolt Optimization: Replace LINQ .Where().ToHashSet() with pre-allocated HashSet and loop
-            // to avoid state machine allocations, multiple collection passes, and array resizing.
-            HashSet<Guid> compEIds = new(compE.Count);
-            foreach (Guid id in compE)
-            {
-                if (id != contactId)
-                {
-                    compEIds.Add(id);
-                }
-            }
+            HashSet<Guid> compEIds = compE.Where(id => id != contactId).ToHashSet();
+            HashSet<Guid> compRIds = compR.Where(id => id != Guid.Empty && id != relatedContactId).ToHashSet();
 
-            // ⚡ Bolt Optimization: Replace LINQ .Where().ToHashSet() with pre-allocated HashSet and loop
-            HashSet<Guid> compRIds = new(compR.Count);
-            foreach (Guid id in compR)
-            {
-                if (id != Guid.Empty && id != relatedContactId)
-                {
-                    compRIds.Add(id);
-                }
-            }
-
-            // ⚡ Bolt Optimization: Use collection expressions instead of LINQ Concat
             HashSet<Guid> allNeededIds = [.. compEIds, .. compRIds];
             List<Contact> batchContacts = allNeededIds.Count > 0
                 ? await repository.ListAsNoTrackingAsync<Contact>(c => allNeededIds.Contains(c.Id))
                 : [];
 
-            // ⚡ Bolt Optimization: Replace LINQ ToDictionary with pre-allocated Dictionary and loop
-            Dictionary<Guid, Contact> contactMap = new(batchContacts.Count);
-            foreach (Contact c in batchContacts)
-            {
-                contactMap.TryAdd(c.Id, c);
-            }
+            Dictionary<Guid, Contact> contactMap = batchContacts.ToDictionary(c => c.Id);
 
             Guid tIdQuery = relatedContactId ?? Guid.Empty;
             List<Relationship> existingRels = await repository.ListAsNoTrackingAsync<Relationship>(r =>
@@ -157,12 +133,9 @@ public class RelationshipSuggestionService(IRepository repository) : IRelationsh
                 (r.ContactId == contactId || r.RelatedContactId == contactId ||
                  r.ContactId == tIdQuery || r.RelatedContactId == tIdQuery));
 
-            // ⚡ Bolt Optimization: Replace LINQ .Select().ToHashSet() with pre-allocated HashSet and loop
-            HashSet<(Guid, Guid)> existingEdges = new(existingRels.Count);
-            foreach (Relationship r in existingRels)
-            {
-                existingEdges.Add((r.ContactId, r.RelatedContactId));
-            }
+            HashSet<(Guid, Guid)> existingEdges = existingRels
+                .Select(r => (r.ContactId, r.RelatedContactId))
+                .ToHashSet();
 
             foreach (Guid x in compEIds)
             {
@@ -193,16 +166,7 @@ public class RelationshipSuggestionService(IRepository repository) : IRelationsh
             if (childId != Guid.Empty)
             {
                 HashSet<Guid> childSiblings = await GetComponentAsync(childId, RelationshipTypeIds.Sibling);
-
-                // ⚡ Bolt Optimization: Replace LINQ .Where().ToHashSet() with pre-allocated HashSet and loop
-                HashSet<Guid> siblingIds = new(childSiblings.Count);
-                foreach (Guid id in childSiblings)
-                {
-                    if (id != childId)
-                    {
-                        siblingIds.Add(id);
-                    }
-                }
+                HashSet<Guid> siblingIds = childSiblings.Where(id => id != childId).ToHashSet();
 
                 List<Contact> sibContacts = siblingIds.Count > 0
                     ? await repository.ListAsNoTrackingAsync<Contact>(c => siblingIds.Contains(c.Id))
@@ -213,12 +177,9 @@ public class RelationshipSuggestionService(IRepository repository) : IRelationsh
                     (r.ContactId == adultId || r.RelatedContactId == adultId ||
                      r.ContactId == childId || r.RelatedContactId == childId));
 
-                // ⚡ Bolt Optimization: Replace LINQ .Select().ToHashSet() with pre-allocated HashSet and loop
-                HashSet<(Guid, Guid)> existingEdges = new(existingRels.Count);
-                foreach (Relationship r in existingRels)
-                {
-                    existingEdges.Add((r.ContactId, r.RelatedContactId));
-                }
+                HashSet<(Guid, Guid)> existingEdges = existingRels
+                    .Select(r => (r.ContactId, r.RelatedContactId))
+                    .ToHashSet();
 
                 foreach (Contact sibContact in sibContacts)
                 {

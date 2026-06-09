@@ -18,8 +18,8 @@ public class ImmichService : IImmichService
     private readonly IMemoryCache _cache;
     private readonly ILogger<ImmichService> _logger;
 
-    // Connection settings are loaded from the current group's database row once per scoped
-    // instance (i.e. once per request) and reused across calls within that request.
+    // Dedupes connection lookups within this service instance (typed HTTP clients are
+    // transient); cross-instance reuse comes from the settings service's memory cache.
     private Task<ImmichConnectionDto?>? _connectionTask;
 
     private static readonly JsonSerializerOptions JsonOptions = new()

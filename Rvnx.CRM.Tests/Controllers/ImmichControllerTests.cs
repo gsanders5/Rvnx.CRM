@@ -56,8 +56,10 @@ public class ImmichControllerTests
     [Fact]
     public async Task GalleryReturnsEmptyPartialWhenImmichOff()
     {
+        // When Immich isn't configured, the service itself returns no assets.
         Mock<IImmichService> immichMock = new();
-        immichMock.Setup(s => s.IsEnabledAsync(It.IsAny<CancellationToken>())).ReturnsAsync(false);
+        immichMock.Setup(s => s.GetAssetsAsync(It.IsAny<Guid?>(), It.IsAny<Guid?>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync([]);
 
         ImmichController controller = CreateController(immichMock);
 
@@ -67,7 +69,6 @@ public class ImmichControllerTests
         PartialViewResult partial = Assert.IsType<PartialViewResult>(result);
         ImmichGalleryViewModel vm = Assert.IsType<ImmichGalleryViewModel>(partial.Model);
         Assert.Empty(vm.Assets);
-        immichMock.Verify(s => s.GetAssetsAsync(It.IsAny<Guid?>(), It.IsAny<Guid?>(), It.IsAny<int>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]

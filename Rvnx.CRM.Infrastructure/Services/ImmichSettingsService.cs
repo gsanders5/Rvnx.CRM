@@ -5,10 +5,13 @@ using Rvnx.CRM.Core.Models;
 
 namespace Rvnx.CRM.Infrastructure.Services;
 
-public class ImmichSettingsService(IRepository repository, IMemoryCache cache) : IImmichSettingsService
+public class ImmichSettingsService(IRepository repository, IMemoryCache cache, ICurrentUserService currentUserService) : IImmichSettingsService
 {
+    private static readonly TimeSpan ConnectionCacheTtl = TimeSpan.FromMinutes(5);
+
     private readonly IRepository _repository = repository;
     private readonly IMemoryCache _cache = cache;
+    private readonly ICurrentUserService _currentUserService = currentUserService;
 
     public async Task<ImmichSettingsDto?> GetSettingsAsync(CancellationToken ct = default)
     {
@@ -23,12 +26,26 @@ public class ImmichSettingsService(IRepository repository, IMemoryCache cache) :
             };
     }
 
+    // Cached (including the "not configured" case) because every proxied thumbnail request
+    // needs the connection; SaveAsync/DeleteAsync invalidate on change.
     public async Task<ImmichConnectionDto?> GetConnectionAsync(CancellationToken ct = default)
     {
+        string cacheKey = ImmichCacheKeys.Connection(_currentUserService.GroupId);
+        if (_cache.TryGetValue(cacheKey, out ImmichConnectionDto? cached))
+        {
+            return cached;
+        }
+
         GroupImmichSettings? settings = await GetCurrentAsync(tracked: false, ct);
-        return settings == null
+        ImmichConnectionDto? connection = settings == null
             ? null
             : new ImmichConnectionDto(settings.GroupId, settings.Enabled, settings.BaseUrl, settings.ApiKey);
+
+        _cache.Set(cacheKey, connection, new MemoryCacheEntryOptions
+        {
+            AbsoluteExpirationRelativeToNow = ConnectionCacheTtl
+        });
+        return connection;
     }
 
     public async Task<ImmichSettingsOperationResult> SaveAsync(bool enabled, string baseUrl, string? apiKey, CancellationToken ct = default)
@@ -74,7 +91,7 @@ public class ImmichSettingsService(IRepository repository, IMemoryCache cache) :
 
         await _repository.SaveChangesAsync(ct);
         InvalidateLookupCaches(settings.GroupId);
-        return ImmichSettingsOperationResult.Ok(settings.Id);
+        return ImmichSettingsOperationResult.Ok();
     }
 
     public async Task<ImmichSettingsOperationResult> DeleteAsync(CancellationToken ct = default)
@@ -89,7 +106,7 @@ public class ImmichSettingsService(IRepository repository, IMemoryCache cache) :
         await _repository.DeleteAsync(settings, ct);
         await _repository.SaveChangesAsync(ct);
         InvalidateLookupCaches(groupId);
-        return ImmichSettingsOperationResult.Ok(settings.Id);
+        return ImmichSettingsOperationResult.Ok();
     }
 
     // The repository's global query filter scopes the query to the current group, and the unique
@@ -102,9 +119,11 @@ public class ImmichSettingsService(IRepository repository, IMemoryCache cache) :
         return rows.FirstOrDefault();
     }
 
-    // Settings changes may point at a different Immich server; drop cached people/tag lookups.
+    // Settings changes may point at a different Immich server; drop the cached connection
+    // and people/tag lookups.
     private void InvalidateLookupCaches(Guid? groupId)
     {
+        _cache.Remove(ImmichCacheKeys.Connection(groupId));
         _cache.Remove(ImmichCacheKeys.People(groupId));
         _cache.Remove(ImmichCacheKeys.Tags(groupId));
     }

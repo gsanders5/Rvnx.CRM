@@ -15,7 +15,7 @@ public class ImmichSettingsServiceTests
 
     public ImmichSettingsServiceTests()
     {
-        _service = new ImmichSettingsService(_mockRepo.Object, new MemoryCache(new MemoryCacheOptions()));
+        _service = new ImmichSettingsService(_mockRepo.Object, new MemoryCache(new MemoryCacheOptions()), Mock.Of<ICurrentUserService>());
     }
 
     private void SetupStored(params GroupImmichSettings[] rows)
@@ -123,7 +123,6 @@ public class ImmichSettingsServiceTests
         ImmichSettingsOperationResult result = await _service.SaveAsync(true, "https://new.example.com/api", null);
 
         Assert.True(result.Success);
-        Assert.Equal(existing.Id, result.SettingsId);
         Assert.True(existing.Enabled);
         Assert.Equal("https://new.example.com/api", existing.BaseUrl);
         Assert.Equal("old-key", existing.ApiKey);

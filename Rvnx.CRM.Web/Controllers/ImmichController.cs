@@ -4,6 +4,7 @@ using Rvnx.CRM.Core.DTOs.Contact;
 using Rvnx.CRM.Core.Interfaces;
 using Rvnx.CRM.Web.Controllers.Base;
 using Rvnx.CRM.Web.ViewModels.Immich;
+using System.Buffers;
 
 namespace Rvnx.CRM.Web.Controllers;
 
@@ -23,9 +24,8 @@ public class ImmichController(
     [HttpGet("Immich/Gallery")]
     public async Task<IActionResult> Gallery([FromQuery] ImmichGalleryRequest request, CancellationToken ct)
     {
-        IReadOnlyList<ImmichAssetDto> assets = await _immichService.IsEnabledAsync(ct)
-            ? await _immichService.GetAssetsAsync(request.PersonId, request.TagId, MaxAssets, ct)
-            : [];
+        IReadOnlyList<ImmichAssetDto> assets =
+            await _immichService.GetAssetsAsync(request.PersonId, request.TagId, MaxAssets, ct);
 
         ImmichGalleryViewModel vm = new()
         {
@@ -75,19 +75,26 @@ public class ImmichController(
                 return BadRequest("File is too large.");
             }
 
-            // Pre-sizing the buffer avoids reallocations during CopyToAsync; IsAllowedFileSize already caps well below int.MaxValue.
+            // IsAllowedFileSize already caps well below int.MaxValue.
             using MemoryStream ms = declaredLength is long capacity ? new((int)capacity) : new();
 
             // 🛡️ Sentinel: Prevent memory exhaustion DoS if Content-Length is missing or spoofed
-            byte[] buffer = new byte[81920];
-            int bytesRead;
-            while ((bytesRead = await media.Content.ReadAsync(buffer, ct)) > 0)
+            byte[] buffer = ArrayPool<byte>.Shared.Rent(81920);
+            try
             {
-                ms.Write(buffer, 0, bytesRead);
-                if (!_fileValidationService.IsAllowedFileSize(ms.Length))
+                int bytesRead;
+                while ((bytesRead = await media.Content.ReadAsync(buffer, ct)) > 0)
                 {
-                    return BadRequest("File is too large.");
+                    ms.Write(buffer, 0, bytesRead);
+                    if (!_fileValidationService.IsAllowedFileSize(ms.Length))
+                    {
+                        return BadRequest("File is too large.");
+                    }
                 }
+            }
+            finally
+            {
+                ArrayPool<byte>.Shared.Return(buffer);
             }
             byte[] bytes = ms.ToArray();
 
