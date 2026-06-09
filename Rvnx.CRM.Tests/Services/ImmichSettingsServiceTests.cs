@@ -91,6 +91,31 @@ public class ImmichSettingsServiceTests
     }
 
     [Fact]
+    public async Task SaveAsyncFailsWhenServerDisabled()
+    {
+        ImmichSettingsService service = CreateService(serverEnabled: false);
+
+        ImmichSettingsOperationResult result = await service.SaveAsync(true, "https://immich.example.com/api", "key");
+
+        Assert.False(result.Success);
+        Assert.Contains(result.Errors, e => e.Contains("disabled for this server", StringComparison.Ordinal));
+        _mockRepo.Verify(r => r.AddAsync(It.IsAny<GroupImmichSettings>(), It.IsAny<CancellationToken>()), Times.Never);
+        _mockRepo.Verify(r => r.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task DeleteAsyncFailsWhenServerDisabled()
+    {
+        ImmichSettingsService service = CreateService(serverEnabled: false);
+
+        ImmichSettingsOperationResult result = await service.DeleteAsync();
+
+        Assert.False(result.Success);
+        Assert.Contains(result.Errors, e => e.Contains("disabled for this server", StringComparison.Ordinal));
+        _mockRepo.Verify(r => r.DeleteAsync(It.IsAny<GroupImmichSettings>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
     public async Task SaveAsyncFailsWhenBaseUrlMissing()
     {
         ImmichSettingsOperationResult result = await _service.SaveAsync(true, "  ", "key");

@@ -64,6 +64,11 @@ public class ImmichSettingsService(IRepository repository, IMemoryCache cache, I
 
     public async Task<ImmichSettingsOperationResult> SaveAsync(bool enabled, string baseUrl, string? apiKey, CancellationToken ct = default)
     {
+        if (!ServerEnabled)
+        {
+            return ImmichSettingsOperationResult.Failure("Immich integration is disabled for this server.");
+        }
+
         baseUrl = baseUrl?.Trim() ?? string.Empty;
         if (string.IsNullOrWhiteSpace(baseUrl))
         {
@@ -110,6 +115,11 @@ public class ImmichSettingsService(IRepository repository, IMemoryCache cache, I
 
     public async Task<ImmichSettingsOperationResult> DeleteAsync(CancellationToken ct = default)
     {
+        if (!ServerEnabled)
+        {
+            return ImmichSettingsOperationResult.Failure("Immich integration is disabled for this server.");
+        }
+
         GroupImmichSettings? settings = await GetCurrentAsync(tracked: true, ct);
         if (settings == null)
         {
