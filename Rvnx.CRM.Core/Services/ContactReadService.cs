@@ -62,7 +62,7 @@ public class ContactReadService(IRepository repository, IFavoriteService favorit
             // Optimization: Use Dictionary with capacity and TryAdd instead of GroupBy().ToDictionary(..., First())
             // to avoid allocations of IGrouping structures and redundant list iterations.
             Dictionary<Guid, Guid> attachmentMap = new(profileAttachments.Count);
-            foreach ((Guid ContactId, Guid AttachmentId) in profileAttachments)
+            foreach (var (ContactId, AttachmentId) in profileAttachments)
             {
                 attachmentMap.TryAdd(ContactId, AttachmentId);
             }
@@ -88,7 +88,7 @@ public class ContactReadService(IRepository repository, IFavoriteService favorit
         // Optimization: Use Dictionary with capacity and foreach loop instead of GroupBy().ToDictionary(...)
         // to avoid allocations of IGrouping structures and redundant list iterations.
         Dictionary<Guid, List<LabelDto>> labelsByContact = new(allContactLabels.Count);
-        foreach ((Guid contactId, Guid labelId, string labelName, string? color) in allContactLabels)
+        foreach (var (contactId, labelId, labelName, color) in allContactLabels)
         {
             if (!labelsByContact.TryGetValue(contactId, out List<LabelDto>? labelsList))
             {
@@ -125,7 +125,7 @@ public class ContactReadService(IRepository repository, IFavoriteService favorit
             // Optimization: Use Dictionary with capacity and TryAdd instead of GroupBy().ToDictionary(..., First())
             // to avoid allocations of IGrouping structures and redundant list iterations.
             Dictionary<Guid, DateOnly> birthdayMap = new(birthdayDates.Count);
-            foreach ((Guid ContactId, DateOnly EventDate) in birthdayDates)
+            foreach (var (ContactId, EventDate) in birthdayDates)
             {
                 birthdayMap.TryAdd(ContactId, EventDate);
             }
@@ -277,14 +277,14 @@ public class ContactReadService(IRepository repository, IFavoriteService favorit
                             (c.FirstName + " " + (c.LastName ?? "")).Trim(),
                             c.IsDeceased));
 
-                foreach ((Guid oId, string name, bool isDeceased) in ownerInfos)
+                foreach (var (oId, name, isDeceased) in ownerInfos)
                 {
                     ownerInfoMap.TryAdd(oId, (name, isDeceased));
                 }
             }
 
             Dictionary<Guid, List<PetOwnerDto>> ownersByPet = [];
-            foreach ((Guid petId, Guid ownerId) in ownerLinks)
+            foreach (var (petId, ownerId) in ownerLinks)
             {
                 if (ownerId == id || !ownerInfoMap.TryGetValue(ownerId, out (string Name, bool IsDeceased) info))
                 {
@@ -366,14 +366,14 @@ public class ContactReadService(IRepository repository, IFavoriteService favorit
                             (c.FirstName + " " + (c.LastName ?? "")).Trim(),
                             c.IsDeceased));
 
-                foreach ((Guid cId, string name, bool isDeceased) in infos)
+                foreach (var (cId, name, isDeceased) in infos)
                 {
                     contactInfoMap.TryAdd(cId, (name, isDeceased));
                 }
             }
 
             Dictionary<Guid, List<Guid>> participantsByActivity = [];
-            foreach ((Guid activityId, Guid contactId) in allParticipants)
+            foreach (var (activityId, contactId) in allParticipants)
             {
                 if (!participantsByActivity.TryGetValue(activityId, out List<Guid>? list))
                 {
