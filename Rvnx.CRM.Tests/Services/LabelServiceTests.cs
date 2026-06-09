@@ -392,6 +392,32 @@ public class LabelServiceTests
     }
 
     [Fact]
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Naming", "CA1707:Identifiers should not contain underscores", Justification = "Test names follow a standard convention")]
+    public async Task BulkAssignLabelAsync_WhenContactIdsEmpty_ReturnsOkAndDoesNotCallRepository()
+    {
+        Core.DTOs.Base.BulkOperationResult result = await _service.BulkAssignLabelAsync([], Guid.NewGuid());
+
+        Assert.Equal(0, result.Successful);
+        Assert.Empty(result.Errors);
+        _mockRepo.Verify(r => r.GetByIdAsync<Label>(It.IsAny<Guid>(), It.IsAny<CancellationToken>()), Times.Never);
+        _mockRepo.Verify(r => r.AddRangeAsync(It.IsAny<IEnumerable<ContactLabel>>(), It.IsAny<CancellationToken>()), Times.Never);
+        _mockRepo.Verify(r => r.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Naming", "CA1707:Identifiers should not contain underscores", Justification = "Test names follow a standard convention")]
+    public async Task BulkRemoveLabelAsync_WhenContactIdsEmpty_ReturnsOkAndDoesNotCallRepository()
+    {
+        Core.DTOs.Base.BulkOperationResult result = await _service.BulkRemoveLabelAsync([], Guid.NewGuid());
+
+        Assert.Equal(0, result.Successful);
+        Assert.Empty(result.Errors);
+        _mockRepo.Verify(r => r.ListProjectedAsync(It.IsAny<Expression<Func<ContactLabel, bool>>>(), It.IsAny<Expression<Func<ContactLabel, Guid>>>(), It.IsAny<CancellationToken>()), Times.Never);
+        _mockRepo.Verify(r => r.DeleteAsync(It.IsAny<Expression<Func<ContactLabel, bool>>>(), It.IsAny<CancellationToken>()), Times.Never);
+        _mockRepo.Verify(r => r.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
     public async Task BulkAssignLabelAsyncReturnsFailureWhenLabelMissing()
     {
         Guid labelId = Guid.NewGuid();

@@ -126,3 +126,6 @@
 ## 2026-05-25 - [Testing Multi-Hop Graph Traversal Logic]
 **Learning:** The relationship suggestion service builds complex multi-hop graphs to determine transitive (e.g. Sibling -> Sibling) and adult/child family links, but these paths were largely untested. Without tests verifying these multi-hop resolutions, breaking the graph construction logic during optimization would not fail any tests.
 **Action:** When a service builds or traverses relational graphs (e.g., recursive queries, multi-hop component builders), explicitly test at least one multi-hop scenario instead of just checking basic creation or empty early-exit responses.
+## 2024-06-09 - Repository Extension Methods and Mocking
+**Learning:** In Rvnx.CRM, `IRepository` extension methods like `ListProjectedByChunkedContainsAsync` have their own internal early-exit logic. Furthermore, Moq cannot mock extension methods directly.
+**Action:** When testing early-exits for methods that call `IRepository` extensions, verify the underlying repository interface method (e.g. `ListProjectedAsync`) that the extension method calls, rather than attempting to mock the extension method itself.
