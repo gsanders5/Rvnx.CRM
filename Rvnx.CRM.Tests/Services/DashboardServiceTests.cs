@@ -441,7 +441,6 @@ public class DashboardServiceTests
         ]);
         SetupRelationships([]);
 
-        // Act
         DashboardDto result = await _service.GetDashboardDataAsync();
 
         // Assert — deceased contact still appears as a node, but no upcoming event for them.

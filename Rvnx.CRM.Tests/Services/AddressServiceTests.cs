@@ -21,7 +21,6 @@ public class AddressServiceTests
     [Fact]
     public async Task CreateAsyncWhenContactNotFoundReturnsFailure()
     {
-        // Arrange
         Guid contactId = Guid.NewGuid();
         AddressFormDto dto = new() { ContactId = contactId, Line1 = "123 Main St", AddressType = "Home" };
 
@@ -30,10 +29,8 @@ public class AddressServiceTests
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(0);
 
-        // Act
         OperationResult result = await _service.CreateAsync(dto);
 
-        // Assert
         Assert.False(result.Success);
         Assert.True(result.IsNotFound);
         _repositoryMock.Verify(r => r.AddAsync(It.IsAny<Address>(), It.IsAny<CancellationToken>()), Times.Never);
@@ -43,17 +40,14 @@ public class AddressServiceTests
     [Fact]
     public async Task UpdateAsyncWhenAddressNotFoundReturnsFailure()
     {
-        // Arrange
         Guid addressId = Guid.NewGuid();
         AddressFormDto dto = new() { ContactId = Guid.NewGuid(), Line1 = "456 Elm St", AddressType = "Work" };
 
         _repositoryMock.Setup(r => r.GetByIdAsync<Address>(addressId, It.IsAny<CancellationToken>()))
             .ReturnsAsync((Address?)null);
 
-        // Act
         OperationResult result = await _service.UpdateAsync(addressId, dto);
 
-        // Assert
         Assert.False(result.Success);
         Assert.True(result.IsNotFound);
         _repositoryMock.Verify(r => r.UpdateAsync(It.IsAny<Address>(), It.IsAny<CancellationToken>()), Times.Never);
@@ -63,7 +57,6 @@ public class AddressServiceTests
     [Fact]
     public async Task GetFormAsyncWhenAddressExistsButContactInvalidReturnsNull()
     {
-        // Arrange
         Guid addressId = Guid.NewGuid();
         Guid contactId = Guid.NewGuid();
         Address address = new() { Id = addressId, ContactId = contactId, Line1 = "789 Oak Ave", AddressType = "Home" };
@@ -76,10 +69,8 @@ public class AddressServiceTests
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(0); // IsValidContactAsync
 
-        // Act
         AddressFormDto? result = await _service.GetFormAsync(addressId);
 
-        // Assert
         Assert.Null(result);
     }
 }

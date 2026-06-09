@@ -21,7 +21,6 @@ public class PetServiceTests
     [Fact]
     public async Task CreateAsyncWhenContactNotFoundReturnsNotFoundResult()
     {
-        // Arrange
         Guid contactId = Guid.NewGuid();
         PetFormDto dto = new() { ContactId = contactId, Name = "Buddy", Species = "Dog" };
 
@@ -30,10 +29,8 @@ public class PetServiceTests
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(0);
 
-        // Act
         OperationResult result = await _service.CreateAsync(dto);
 
-        // Assert
         Assert.False(result.Success);
         Assert.True(result.IsNotFound);
         _repositoryMock.Verify(r => r.AddAsync(It.IsAny<Pet>(), It.IsAny<CancellationToken>()), Times.Never);
@@ -43,7 +40,6 @@ public class PetServiceTests
     [Fact]
     public async Task UpdateAsyncWhenPetContactsRequireChange()
     {
-        // Arrange
         Guid petId = Guid.NewGuid();
         Guid contactA = Guid.NewGuid();
         Guid contactB = Guid.NewGuid();
@@ -82,10 +78,8 @@ public class PetServiceTests
         _repositoryMock.Setup(r => r.SaveChangesAsync(It.IsAny<CancellationToken>()))
             .ReturnsAsync(1);
 
-        // Act
         OperationResult result = await _service.UpdateAsync(petId, dto);
 
-        // Assert
         Assert.True(result.Success);
         _repositoryMock.Verify(r => r.DeleteRangeAsync(
             It.Is<IEnumerable<PetContact>>(list => list.Any(pc => pc.ContactId == contactA)),
@@ -98,7 +92,6 @@ public class PetServiceTests
     [Fact]
     public async Task GetByContactAsyncWithMultiplePetsReturnsMappedDtos()
     {
-        // Arrange
         Guid contactId = Guid.NewGuid();
 
         List<PetContact> petContacts =
@@ -114,10 +107,8 @@ public class PetServiceTests
                 nameof(PetContact.Pet)))
             .ReturnsAsync(petContacts);
 
-        // Act
         List<PetDto> result = await _service.GetByContactAsync(contactId);
 
-        // Assert
         Assert.Equal(3, result.Count);
         Assert.Contains(result, p => p.Name == "Rex");
         Assert.Contains(result, p => p.Name == "Mittens");
@@ -143,10 +134,8 @@ public class PetServiceTests
             .ReturnsAsync((System.Linq.Expressions.Expression<Func<Contact, bool>> filter, CancellationToken _) =>
                 filter.Compile()(deceased) ? 1 : 0);
 
-        // Act
         OperationResult result = await _service.CreateAsync(dto);
 
-        // Assert
         Assert.False(result.Success);
         Assert.Contains("deceased", result.ErrorMessage, StringComparison.OrdinalIgnoreCase);
         _repositoryMock.Verify(r => r.AddAsync(It.IsAny<Pet>(), It.IsAny<CancellationToken>()), Times.Never);
@@ -155,7 +144,6 @@ public class PetServiceTests
     [Fact]
     public async Task GetFormForCreateAsyncWhenPrimaryOwnerIsDeceasedReturnsNull()
     {
-        // Arrange
         Guid contactId = Guid.NewGuid();
 
         Contact deceased = new()
@@ -170,10 +158,8 @@ public class PetServiceTests
             .ReturnsAsync((System.Linq.Expressions.Expression<Func<Contact, bool>> filter, CancellationToken _) =>
                 filter.Compile()(deceased) ? 1 : 0);
 
-        // Act
         PetFormDto? result = await _service.GetFormForCreateAsync(contactId);
 
-        // Assert
         Assert.Null(result);
     }
 }

@@ -25,7 +25,6 @@ public class NoteServiceTests
     [Fact]
     public async Task CreateAsyncWithValidDataReturnsSuccess()
     {
-        // Arrange
         Guid contactId = Guid.NewGuid();
         NoteFormViewModel dto = new()
         {
@@ -43,10 +42,8 @@ public class NoteServiceTests
         _repositoryMock.Setup(r => r.SaveChangesAsync(It.IsAny<CancellationToken>()))
             .ReturnsAsync(1);
 
-        // Act
         OperationResult result = await _service.CreateAsync(dto);
 
-        // Assert
         Assert.True(result.Success);
         Assert.Equal(contactId, result.RedirectId);
         _repositoryMock.Verify(r => r.AddAsync(It.IsAny<Note>(), It.IsAny<CancellationToken>()), Times.Once);
@@ -56,7 +53,6 @@ public class NoteServiceTests
     [Fact]
     public async Task CreateAsyncWhenContactNotFoundReturnsFailure()
     {
-        // Arrange
         NoteFormViewModel dto = new()
         {
             ContactId = Guid.NewGuid(),
@@ -67,10 +63,8 @@ public class NoteServiceTests
         _repositoryMock.Setup(r => r.CountAsync(It.IsAny<System.Linq.Expressions.Expression<Func<Contact, bool>>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(0); // IsValidContactAsync
 
-        // Act
         OperationResult result = await _service.CreateAsync(dto);
 
-        // Assert
         Assert.False(result.Success);
         Assert.Equal("Contact not found.", result.ErrorMessage);
         _repositoryMock.Verify(r => r.AddAsync(It.IsAny<Note>(), It.IsAny<CancellationToken>()), Times.Never);
@@ -80,7 +74,6 @@ public class NoteServiceTests
     [Fact]
     public async Task UpdateAsyncWithValidDataReturnsSuccess()
     {
-        // Arrange
         Guid noteId = Guid.NewGuid();
         Guid contactId = Guid.NewGuid();
         Note existingNote = new()
@@ -100,10 +93,8 @@ public class NoteServiceTests
         _repositoryMock.Setup(r => r.SaveChangesAsync(It.IsAny<CancellationToken>()))
             .ReturnsAsync(1);
 
-        // Act
         OperationResult result = await _service.UpdateAsync(noteId, dto);
 
-        // Assert
         Assert.True(result.Success);
         Assert.Equal(contactId, result.RedirectId);
         _repositoryMock.Verify(r => r.UpdateAsync(It.IsAny<Note>(), It.IsAny<CancellationToken>()), Times.Once);
@@ -113,7 +104,6 @@ public class NoteServiceTests
     [Fact]
     public async Task DeleteAsyncWhenNoteExistsDeletesAndReturnsSuccess()
     {
-        // Arrange
         Guid noteId = Guid.NewGuid();
         Guid contactId = Guid.NewGuid();
 
@@ -129,10 +119,8 @@ public class NoteServiceTests
         _repositoryMock.Setup(r => r.SaveChangesAsync(It.IsAny<CancellationToken>()))
             .ReturnsAsync(1);
 
-        // Act
         OperationResult result = await _service.DeleteAsync(noteId);
 
-        // Assert
         Assert.True(result.Success);
         Assert.Equal(contactId, result.RedirectId);
         _repositoryMock.Verify(r => r.DeleteAsync<Note>(It.IsAny<System.Linq.Expressions.Expression<Func<Note, bool>>>(), It.IsAny<CancellationToken>()), Times.Once);
@@ -142,7 +130,6 @@ public class NoteServiceTests
     [Fact]
     public async Task DeleteAsyncWhenNoteDoesNotExistReturnsFailure()
     {
-        // Arrange
         Guid noteId = Guid.NewGuid();
 
         _repositoryMock.Setup(r => r.ListProjectedAsync<Note, Guid?>(
@@ -151,10 +138,8 @@ public class NoteServiceTests
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync([]);
 
-        // Act
         OperationResult result = await _service.DeleteAsync(noteId);
 
-        // Assert
         Assert.False(result.Success);
         Assert.Equal("Note not found.", result.ErrorMessage);
         _repositoryMock.Verify(r => r.DeleteAsync<Note>(It.IsAny<System.Linq.Expressions.Expression<Func<Note, bool>>>(), It.IsAny<CancellationToken>()), Times.Never);
@@ -217,7 +202,6 @@ public class NoteServiceTests
     [Fact]
     public async Task CreateAsyncWithIsFavoriteTruePersistsFlag()
     {
-        // Arrange
         Guid contactId = Guid.NewGuid();
         NoteFormViewModel dto = new()
         {
@@ -239,10 +223,8 @@ public class NoteServiceTests
         _repositoryMock.Setup(r => r.SaveChangesAsync(It.IsAny<CancellationToken>()))
             .ReturnsAsync(1);
 
-        // Act
         OperationResult result = await _service.CreateAsync(dto);
 
-        // Assert
         Assert.True(result.Success);
         Assert.NotNull(captured);
         Assert.True(captured!.IsFavorite);
@@ -251,7 +233,6 @@ public class NoteServiceTests
     [Fact]
     public async Task UpdateAsyncTogglingIsFavoritePersistsFlag()
     {
-        // Arrange
         Guid noteId = Guid.NewGuid();
         Guid contactId = Guid.NewGuid();
         Note existingNote = new()
@@ -283,10 +264,8 @@ public class NoteServiceTests
         _repositoryMock.Setup(r => r.SaveChangesAsync(It.IsAny<CancellationToken>()))
             .ReturnsAsync(1);
 
-        // Act
         OperationResult result = await _service.UpdateAsync(noteId, dto);
 
-        // Assert
         Assert.True(result.Success);
         Assert.True(existingNote.IsFavorite);
     }
@@ -294,7 +273,6 @@ public class NoteServiceTests
     [Fact]
     public async Task GetByContactAsyncPreservesIsFavoriteOnReturnedDtos()
     {
-        // Arrange
         Guid contactId = Guid.NewGuid();
         List<Note> notes =
         [
@@ -307,10 +285,8 @@ public class NoteServiceTests
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(notes);
 
-        // Act
         List<NoteDto> result = await _service.GetByContactAsync(contactId);
 
-        // Assert
         Assert.Equal(2, result.Count);
         Assert.True(result.Single(n => n.Title == "Pinned").IsFavorite);
         Assert.False(result.Single(n => n.Title == "Normal").IsFavorite);
@@ -319,7 +295,6 @@ public class NoteServiceTests
     [Fact]
     public async Task ToggleFavoriteAsyncFlipsTheFlagAndSaves()
     {
-        // Arrange
         Guid noteId = Guid.NewGuid();
         Guid contactId = Guid.NewGuid();
         Note existingNote = new()
@@ -343,10 +318,8 @@ public class NoteServiceTests
         _repositoryMock.Setup(r => r.SaveChangesAsync(It.IsAny<CancellationToken>()))
             .ReturnsAsync(1);
 
-        // Act
         OperationResult result = await _service.ToggleFavoriteAsync(noteId);
 
-        // Assert
         Assert.True(result.Success);
         Assert.True(existingNote.IsFavorite);
         Assert.Equal(contactId, result.RedirectId);
@@ -357,16 +330,13 @@ public class NoteServiceTests
     [Fact]
     public async Task ToggleFavoriteAsyncWhenNoteMissingReturnsNotFound()
     {
-        // Arrange
         Guid noteId = Guid.NewGuid();
 
         _repositoryMock.Setup(r => r.GetByIdAsync<Note>(noteId, It.IsAny<CancellationToken>()))
             .ReturnsAsync((Note?)null);
 
-        // Act
         OperationResult result = await _service.ToggleFavoriteAsync(noteId);
 
-        // Assert
         Assert.False(result.Success);
         Assert.True(result.IsNotFound);
         _repositoryMock.Verify(r => r.UpdateAsync(It.IsAny<Note>(), It.IsAny<CancellationToken>()), Times.Never);

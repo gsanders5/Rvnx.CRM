@@ -1015,7 +1015,6 @@ public class ContactReadServiceTests
         [Fact]
         public async Task GetContactNamesAsyncEvaluatesProjectionCorrectly()
         {
-            // Arrange
             Guid id1 = Guid.NewGuid();
             Guid id2 = Guid.NewGuid();
 
@@ -1040,10 +1039,8 @@ public class ContactReadServiceTests
                     })
                 .ReturnsAsync([]); // Return value doesn't matter, we evaluate the expression
 
-            // Act
             await Service.GetContactNamesAsync();
 
-            // Assert
             Assert.NotNull(capturedProjection);
             Assert.NotNull(capturedFilter);
 
@@ -1068,7 +1065,6 @@ public class ContactReadServiceTests
         [Fact]
         public async Task GetContactNamesAsyncProjectionAppendsDeceasedSuffix()
         {
-            // Arrange
             Guid deceasedId = Guid.NewGuid();
             Guid partialDeceasedId = Guid.NewGuid();
 
@@ -1088,10 +1084,8 @@ public class ContactReadServiceTests
                     (_, projection, _) => capturedProjection = projection)
                 .ReturnsAsync([]);
 
-            // Act
             await Service.GetContactNamesAsync();
 
-            // Assert
             Assert.NotNull(capturedProjection);
             Func<Contact, (Guid, string)> projectionFunc = capturedProjection.Compile();
 
@@ -1107,7 +1101,6 @@ public class ContactReadServiceTests
         [Fact]
         public async Task GetContactNamesAsyncWhenExcludeDeceasedFiltersDeceasedContacts()
         {
-            // Arrange
             Guid livingId = Guid.NewGuid();
             Guid deceasedId = Guid.NewGuid();
 
@@ -1125,10 +1118,8 @@ public class ContactReadServiceTests
                     (filter, _, _) => capturedFilter = filter)
                 .ReturnsAsync([]);
 
-            // Act
             await Service.GetContactNamesAsync(excludeDeceased: true);
 
-            // Assert
             Assert.NotNull(capturedFilter);
             Func<Contact, bool> filterFunc = capturedFilter.Compile();
 
@@ -1159,10 +1150,8 @@ public class ContactReadServiceTests
                     (filter, _, _) => capturedFilter = filter)
                 .ReturnsAsync([]);
 
-            // Act
             await Service.GetContactNamesAsync(excludeDeceased: true, alwaysIncludeIds: [keepDeceasedId]);
 
-            // Assert
             Assert.NotNull(capturedFilter);
             Func<Contact, bool> filterFunc = capturedFilter.Compile();
 
@@ -1188,10 +1177,8 @@ public class ContactReadServiceTests
                     (filter, _, _) => capturedFilter = filter)
                 .ReturnsAsync([]);
 
-            // Act
             await Service.GetContactNamesAsync();
 
-            // Assert
             Assert.NotNull(capturedFilter);
             Assert.True(capturedFilter.Compile()(deceased));
         }
@@ -1199,7 +1186,6 @@ public class ContactReadServiceTests
         [Fact]
         public async Task HasRelationshipsAsyncEvaluatesFilterCorrectly()
         {
-            // Arrange
             Guid queryId = Guid.NewGuid();
             Guid otherId = Guid.NewGuid();
 
@@ -1210,10 +1196,8 @@ public class ContactReadServiceTests
                     (filter, ct) => capturedFilter = filter)
                 .ReturnsAsync(0);
 
-            // Act
             await Service.HasRelationshipsAsync(queryId);
 
-            // Assert
             Assert.NotNull(capturedFilter);
             Func<Relationship, bool> filterFunc = capturedFilter.Compile();
 

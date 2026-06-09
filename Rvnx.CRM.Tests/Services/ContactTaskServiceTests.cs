@@ -41,7 +41,6 @@ public class ContactTaskServiceTests : IDisposable
     [Fact]
     public async Task ToggleCompleteAsyncSetsCompletedDateWhenMarkingComplete()
     {
-        // Arrange
         Guid taskId = Guid.NewGuid();
         Guid contactId = Guid.NewGuid();
         ContactTask task = new()
@@ -69,12 +68,10 @@ public class ContactTaskServiceTests : IDisposable
 
         DateTime before = DateTime.UtcNow;
 
-        // Act
         OperationResult result = await _serviceWithMock.ToggleCompleteAsync(taskId);
 
         DateTime after = DateTime.UtcNow;
 
-        // Assert
         Assert.True(result.Success);
         Assert.NotNull(captured);
         Assert.True(captured.IsCompleted);
@@ -85,7 +82,6 @@ public class ContactTaskServiceTests : IDisposable
     [Fact]
     public async Task ToggleCompleteAsyncClearsCompletedDateWhenMarkingIncomplete()
     {
-        // Arrange
         Guid taskId = Guid.NewGuid();
         Guid contactId = Guid.NewGuid();
         ContactTask task = new()
@@ -112,10 +108,8 @@ public class ContactTaskServiceTests : IDisposable
         _repositoryMock.Setup(r => r.SaveChangesAsync(It.IsAny<CancellationToken>()))
             .ReturnsAsync(1);
 
-        // Act
         OperationResult result = await _serviceWithMock.ToggleCompleteAsync(taskId);
 
-        // Assert
         Assert.True(result.Success);
         Assert.NotNull(captured);
         Assert.False(captured.IsCompleted);
@@ -125,7 +119,6 @@ public class ContactTaskServiceTests : IDisposable
     [Fact]
     public async Task GetCalendarEventsAsyncExcludesCompletedAndNullContactIdTasks()
     {
-        // Arrange
         Guid contactId = Guid.NewGuid();
 
         _context.Contacts!.Add(new Contact
@@ -167,10 +160,8 @@ public class ContactTaskServiceTests : IDisposable
 
         await _context.SaveChangesAsync();
 
-        // Act
         List<CalendarEventDto> events = await _serviceWithDb.GetCalendarEventsAsync();
 
-        // Assert
         Assert.Single(events);
         CalendarEventDto ev = events[0];
         Assert.Contains("Active Task", ev.Title);
@@ -224,10 +215,8 @@ public class ContactTaskServiceTests : IDisposable
 
         await _context.SaveChangesAsync();
 
-        // Act
         List<CalendarEventDto> events = await _serviceWithDb.GetCalendarEventsAsync();
 
-        // Assert
         Assert.Single(events);
         Assert.Contains("Living Task", events[0].Title);
     }
@@ -235,7 +224,6 @@ public class ContactTaskServiceTests : IDisposable
     [Fact]
     public async Task CreateAsyncWhenContactIsDeceasedReturnsFailure()
     {
-        // Arrange
         Guid contactId = Guid.NewGuid();
         ContactTaskFormDto dto = new()
         {
@@ -256,10 +244,8 @@ public class ContactTaskServiceTests : IDisposable
             .ReturnsAsync((System.Linq.Expressions.Expression<Func<Contact, bool>> filter, CancellationToken _) =>
                 filter.Compile()(deceased) ? 1 : 0);
 
-        // Act
         OperationResult result = await _serviceWithMock.CreateAsync(dto);
 
-        // Assert
         Assert.False(result.Success);
         Assert.Contains("deceased", result.ErrorMessage, StringComparison.OrdinalIgnoreCase);
         _repositoryMock.Verify(r => r.AddAsync(It.IsAny<ContactTask>(), It.IsAny<CancellationToken>()), Times.Never);
@@ -283,10 +269,8 @@ public class ContactTaskServiceTests : IDisposable
             .ReturnsAsync((System.Linq.Expressions.Expression<Func<Contact, bool>> filter, CancellationToken _) =>
                 filter.Compile()(deceased) ? 1 : 0);
 
-        // Act
         ContactTaskFormDto? result = await _serviceWithMock.GetFormForCreateAsync(contactId);
 
-        // Assert
         Assert.Null(result);
     }
 }
