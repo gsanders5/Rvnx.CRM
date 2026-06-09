@@ -10,4 +10,6 @@ internal static class ImmichCacheKeys
     public static string People(Guid? groupId) => $"immich:{groupId?.ToString() ?? "local"}:people:all";
 
     public static string Tags(Guid? groupId) => $"immich:{groupId?.ToString() ?? "local"}:tags:all";
+
+    public static string Connection(Guid? groupId) => $"immich:{groupId?.ToString() ?? "local"}:connection";
 }

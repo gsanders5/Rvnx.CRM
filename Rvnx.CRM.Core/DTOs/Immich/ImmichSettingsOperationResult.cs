@@ -4,16 +4,14 @@ namespace Rvnx.CRM.Core.DTOs.Immich;
 
 public class ImmichSettingsOperationResult : EntityOperationResult
 {
-    public Guid? SettingsId { get; set; }
-
     public static ImmichSettingsOperationResult Failure(params string[] errors)
     {
         return new ImmichSettingsOperationResult { Success = false, Errors = errors.ToList() };
     }
 
-    public static ImmichSettingsOperationResult Ok(Guid settingsId)
+    public static ImmichSettingsOperationResult Ok()
     {
-        return new ImmichSettingsOperationResult { Success = true, SettingsId = settingsId };
+        return new ImmichSettingsOperationResult { Success = true };
     }
 
     public static ImmichSettingsOperationResult NotFound(string error = "Immich settings not found.")

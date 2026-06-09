@@ -62,7 +62,7 @@ public sealed class GroupSettingsControllerTests : IDisposable
     public async Task SaveImmichRedirectsOnSuccess()
     {
         _mockService.Setup(s => s.SaveAsync(true, "https://immich.example.com/api", "key", It.IsAny<CancellationToken>()))
-            .ReturnsAsync(ImmichSettingsOperationResult.Ok(Guid.NewGuid()));
+            .ReturnsAsync(ImmichSettingsOperationResult.Ok());
 
         IActionResult result = await _controller.SaveImmich(new ImmichSettingsFormDto
         {
@@ -111,7 +111,7 @@ public sealed class GroupSettingsControllerTests : IDisposable
     public async Task DeleteImmichRedirectsToIndex()
     {
         _mockService.Setup(s => s.DeleteAsync(It.IsAny<CancellationToken>()))
-            .ReturnsAsync(ImmichSettingsOperationResult.Ok(Guid.NewGuid()));
+            .ReturnsAsync(ImmichSettingsOperationResult.Ok());
 
         IActionResult result = await _controller.DeleteImmich();
 

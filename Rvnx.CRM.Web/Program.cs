@@ -12,7 +12,7 @@ namespace Rvnx.CRM.Web;
 
 public class Program
 {
-    public static void Main(string[] args)
+    public static async Task Main(string[] args)
     {
         WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
         builder.Configuration.AddJsonFile("appsettings.Local.json", optional: true, reloadOnChange: true);
@@ -149,7 +149,8 @@ public class Program
             await next();
         });
 
-        app.Services.ApplyDatabaseMigrations();
+        // Migration failure is logged but does not stop the site from serving.
+        await app.Services.ApplyDatabaseMigrationsAsync(app.Logger);
 
         if (!app.Environment.IsDevelopment())
         {
