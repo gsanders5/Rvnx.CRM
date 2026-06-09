@@ -4,20 +4,31 @@
     ViewData["Title"] = "Contacts";
 }
 
-<div class="d-flex flex-column flex-md-row justify-content-between align-items-center mb-3">
-    <h1>Contacts</h1>
-    <div class="d-flex flex-wrap gap-2 mt-3 mt-md-0">
+<div class="crm-page">
+
+<div class="crm-masthead crm-fade-in">
+    <div>
+        <div class="crm-eyebrow" style="margin-bottom: 8px;">The directory</div>
+        <h1 class="crm-masthead-title">
+            Contacts <em>(@Model.Contacts.Count())</em>
+        </h1>
+    </div>
+    <div class="crm-masthead-actions">
         @if (Context.Request.Query["showHidden"] == "True")
         {
-            <a asp-action="Index" asp-route-showHidden="False" class="crm-btn-tertiary btn-sm" title="Hide hidden and deceased contacts">Hide Hidden / Deceased</a>
+            <a asp-action="Index" asp-route-showHidden="False" class="crm-btn-tertiary btn-sm" title="Hide hidden and deceased contacts">
+                <i class="bi bi-eye-slash" aria-hidden="true"></i> Hide hidden / deceased
+            </a>
         }
         else
         {
-            <a asp-action="Index" asp-route-showHidden="True" class="crm-btn-tertiary btn-sm" title="Show hidden and deceased contacts">View Hidden / Deceased</a>
+            <a asp-action="Index" asp-route-showHidden="True" class="crm-btn-tertiary btn-sm" title="Show hidden and deceased contacts">
+                <i class="bi bi-eye-slash" aria-hidden="true"></i> View hidden / deceased
+            </a>
         }
         <div class="dropdown">
             <button class="crm-btn-secondary btn-sm dropdown-toggle" type="button" data-mdb-dropdown-init data-mdb-toggle="dropdown" aria-expanded="false">
-                <i class="fa-solid fa-file-csv" aria-hidden="true"></i> Import / Export
+                <i class="bi bi-file-earmark-arrow-down" aria-hidden="true"></i> Import / Export
             </button>
             <ul class="dropdown-menu dropdown-menu-end">
                 <li><a class="dropdown-item" asp-action="Import"><i class="fa-solid fa-file-import me-2" aria-hidden="true"></i>Import VCF</a></li>
@@ -133,7 +144,7 @@
         </div>
     </div>
 
-        <table id="contacts-table" class="table table-striped table-hover align-middle" style="width: 100%; visibility: hidden;">
+        <table id="contacts-table" class="table table-hover align-middle crm-editorial-table" style="width: 100%; visibility: hidden;">
             <thead>
             <tr>
                 <th scope="col" class="select-col no-sort">
@@ -176,7 +187,7 @@
                         </a>
                     </td>
                     <td data-order="@(item.IsFavorite ? "0" : "1") @item.FullName">
-                        <a asp-action="Details" asp-route-id="@item.Id" class="fw-semibold text-decoration-none" style="color: var(--crm-text-primary);">
+                        <a asp-action="Details" asp-route-id="@item.Id" class="text-decoration-none crm-contact-name" style="color: var(--crm-text-primary);">
                             @item.FullName
                         </a>
                         @if (item.IsHidden)
@@ -190,6 +201,10 @@
                             <span class="crm-badge crm-badge-muted ms-2" title="Deceased@(item.DateOfDeath.HasValue ? " (" + item.DateOfDeath.Value.ToShortDateString() + ")" : "")">
                                 <i class="fa-solid fa-book-skull" aria-hidden="true"></i>
                             </span>
+                        }
+                        @if (!string.IsNullOrWhiteSpace(item.Pronouns))
+                        {
+                            <div class="crm-contact-pronouns">@item.Pronouns</div>
                         }
                         @if (item.Labels != null && item.Labels.Any())
                         {
@@ -252,9 +267,9 @@
 }
 else
 {
-    <div class="text-center py-5 my-5">
+    <div class="crm-card text-center" style="padding: 80px 22px;">
         <i class="bi bi-person-rolodex display-1 opacity-25 mb-3" style="color: var(--crm-text-tertiary);" aria-hidden="true"></i>
-        <h3 class="h4 mt-3" style="color: var(--crm-text-secondary);">No contacts found</h3>
+        <h3 class="crm-serif mt-3" style="font-size: 22px; color: var(--crm-text-secondary); font-style: italic;">No contacts found.</h3>
         <p class="mb-4" style="color: var(--crm-text-tertiary);">
             @(Context.Request.Query["showHidden"] == "True"
                 ? "There are no contacts at the moment."
@@ -265,6 +280,8 @@ else
         </a>
     </div>
 }
+
+</div>
 
 @section Scripts {
     <script>
@@ -298,6 +315,15 @@ else
                         nameCell.attr('data-order', (isFavorite ? '0 ' : '1 ') + contactName);
 
                         table.row(row).invalidate('dom').draw(false);
+
+                        // Refresh the sidebar Pinned People list (server-rendered) so it
+                        // stays in sync with the star state. Falls back silently if the
+                        // container isn't present (e.g., auth disabled).
+                        var sidebarHost = document.getElementById('crm-pinned-people');
+                        if (sidebarHost) {
+                            $.get('/Favorites/SidebarPartial')
+                                .done(function (html) { sidebarHost.innerHTML = html; });
+                        }
                     }
                 });
             });

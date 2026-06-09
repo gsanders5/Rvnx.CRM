@@ -1,339 +1,480 @@
 @using Microsoft.AspNetCore.Mvc.Rendering
 @using Rvnx.CRM.Core.DTOs.Base
+@using Rvnx.CRM.Core.Extensions
 @model Rvnx.CRM.Core.DTOs.Contact.ContactEditViewModel
 
 @{
     ViewData["Title"] = "Edit Contact";
+
+    var pronounOptions = Model.PronounOptions.Where(o => o != "Other" && o != "Unspecified").ToList();
+    var genderOptions = Model.GenderOptions.Where(o => o != "Other" && o != "Unspecified").ToList();
+
+    var assignedLabelIds = Model.AssignedLabelIds ?? new List<Guid>();
+    var assignedLabels = (Model.AllLabels ?? []).Where(l => assignedLabelIds.Contains(l.Id)).ToList();
+    var unassignedLabels = (Model.AllLabels ?? []).Where(l => !assignedLabelIds.Contains(l.Id)).ToList();
+
+    string LabelChipStyle(string? color, bool filled)
+    {
+        var bg = string.IsNullOrWhiteSpace(color) ? "#1E3A5F" : color!;
+        var fg = ColorContrastHelper.GetContrastTextColor(bg);
+        return filled
+            ? $"background: {bg}; color: {fg}; border-color: {bg};"
+            : $"color: {bg}; border-color: {bg};";
+    }
 }
 
-<h1>Edit Contact</h1>
+<form id="contact-form" asp-action="Edit" enctype="multipart/form-data" data-edit-form>
+    @Html.AntiForgeryToken()
+    <input asp-for="Id" type="hidden" />
+    <input asp-for="ProfileImageId" type="hidden" />
+    @* Email + Phone are managed via the dedicated ContactMethods pages.
+       Round-trip the existing primary values so ContactUpdateHelper doesn't delete them on save. *@
+    <input asp-for="Email" type="hidden" />
+    <input asp-for="Phone" type="hidden" />
 
-<div class="row">
-    <div class="col-md-6">
-        <form id="contact-form" asp-action="Edit" enctype="multipart/form-data">
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-            <input type="hidden" asp-for="Id"/>
-            <input type="hidden" asp-for="ProfileImageId"/>
+    @* ── Action strip ────────────────────────────────────────────────────── *@
+    <div class="crm-details-actions-strip">
+        <a asp-action="Details" asp-route-id="@Model.Id" class="crm-btn-tertiary btn-sm">
+            <i class="bi bi-arrow-left" aria-hidden="true"></i> Back to Contact
+        </a>
+        <div class="d-flex gap-2 align-items-center flex-wrap">
+            <span class="crm-eyebrow crm-unsaved-indicator" id="unsaved-indicator" hidden>
+                <i class="bi bi-circle-fill" aria-hidden="true" style="font-size: 6px; vertical-align: middle; margin-right: 4px;"></i>
+                Unsaved changes
+            </span>
+            <button type="button" class="crm-btn-danger btn-sm"
+                    data-confirm-action="@Url.Action("Delete", "Contacts", new { id = Model.Id })"
+                    data-confirm-title="Delete Contact"
+                    data-confirm-body="Are you sure you want to delete this contact? This cannot be undone.">
+                <i class="bi bi-trash" aria-hidden="true"></i> Delete
+            </button>
+            <button type="button" class="crm-btn-secondary btn-sm"
+                    disabled="@(!Model.HasRelationships)"
+                    title="@(!Model.HasRelationships ? "Contact must have at least one relationship to be converted to a partial contact." : null)"
+                    data-confirm-action="@(Model.HasRelationships ? Url.Action("DemoteToPartial", "Contacts", new { id = Model.Id }) : null)"
+                    data-confirm-title="Convert to Partial Contact"
+                    data-confirm-body="This will convert the contact back to a partial contact. Their data will be preserved but they will no longer appear in the main contacts list. Continue?"
+                    data-confirm-btn-label="Convert to Partial"
+                    data-confirm-btn-icon="bi-person-dash">
+                <i class="bi bi-person-dash" aria-hidden="true"></i> Convert to Partial
+            </button>
+            <button type="submit" class="crm-btn-primary btn-sm">
+                <i class="bi bi-save" aria-hidden="true"></i> Save
+            </button>
+        </div>
+    </div>
 
-            <div class="form-floating mb-3">
-                <input asp-for="FirstName" class="form-control" placeholder="FirstName" required autofocus/>
-                <label asp-for="FirstName">First Name <span class="text-danger">*</span></label>
-                <span asp-validation-for="FirstName" class="text-danger"></span>
+    @* ── Editorial masthead ─────────────────────────────────────────────── *@
+    <section class="crm-edit-masthead crm-fade-in">
+        @if (Model.ProfileImageId.HasValue)
+        {
+            <img class="crm-edit-masthead-photo"
+                 src="@Url.Action("Thumbnail", "Attachments", new { id = Model.ProfileImageId, maxWidth = 200 })"
+                 alt="" loading="lazy" />
+        }
+        else
+        {
+            <div class="crm-edit-masthead-photo-placeholder" aria-hidden="true">
+                <i class="bi bi-person-fill"></i>
+            </div>
+        }
+        <div>
+            <div class="crm-eyebrow" style="margin-bottom: 6px;">Editing contact</div>
+            <h1 class="crm-edit-masthead-title">
+                @Model.FirstName@if (!string.IsNullOrWhiteSpace(Model.LastName))
+                {
+                    <text> </text><em>@Model.LastName</em>
+                }
+            </h1>
+        </div>
+    </section>
+
+    @* ── Body ───────────────────────────────────────────────────────────── *@
+    <div class="crm-edit-body">
+
+        @* ── Main column ─────────────────────────────────────────────────── *@
+        <div class="crm-edit-col-main">
+
+            <div asp-validation-summary="ModelOnly" class="crm-field-error"></div>
+
+            @* ── Identity ───────────────────────────────────────────────── *@
+            <div class="crm-card">
+                <div class="crm-card-header">
+                    <h5 class="card-title mb-0"><i class="bi bi-person-lines-fill" aria-hidden="true"></i> Identity</h5>
+                </div>
+                <div class="crm-card-body">
+                    <div class="crm-form-card-grid">
+                        <div class="crm-field-group">
+                            <label asp-for="FirstName">First Name *</label>
+                            <input asp-for="FirstName" class="crm-input" required autofocus />
+                            <span asp-validation-for="FirstName" class="crm-field-error"></span>
+                        </div>
+                        <div class="crm-field-group">
+                            <label asp-for="LastName">Last Name</label>
+                            <input asp-for="LastName" class="crm-input" />
+                            <span asp-validation-for="LastName" class="crm-field-error"></span>
+                        </div>
+                        <div class="crm-field-group">
+                            <label asp-for="MaidenName">Maiden Name</label>
+                            <input asp-for="MaidenName" class="crm-input" placeholder="Optional" />
+                            <span asp-validation-for="MaidenName" class="crm-field-error"></span>
+                        </div>
+                        <div class="crm-field-group">
+                            <label asp-for="Nickname">Nickname</label>
+                            <input asp-for="Nickname" class="crm-input" placeholder="Optional" />
+                            <span asp-validation-for="Nickname" class="crm-field-error"></span>
+                        </div>
+                        <div class="crm-field-group">
+                            <label asp-for="Company">Company</label>
+                            <input asp-for="Company" class="crm-input" />
+                            <span asp-validation-for="Company" class="crm-field-error"></span>
+                        </div>
+                        <div class="crm-field-group">
+                            <label asp-for="JobTitle">Job Title</label>
+                            <input asp-for="JobTitle" class="crm-input" />
+                            <span asp-validation-for="JobTitle" class="crm-field-error"></span>
+                        </div>
+                    </div>
+                </div>
             </div>
 
-            <div class="form-floating mb-3">
-                <input asp-for="LastName" class="form-control" placeholder="LastName"/>
-                <label asp-for="LastName"></label>
-                <span asp-validation-for="LastName" class="text-danger"></span>
+            @* ── Personal ───────────────────────────────────────────────── *@
+            <div class="crm-card">
+                <div class="crm-card-header">
+                    <h5 class="card-title mb-0"><i class="bi bi-people-fill" aria-hidden="true"></i> Personal</h5>
+                </div>
+                <div class="crm-card-body">
+                    <div class="crm-form-card-grid">
+                        <div class="crm-field-group">
+                            <label asp-for="Pronouns">Pronouns</label>
+                            <select asp-for="Pronouns" id="pronouns-select" class="crm-input">
+                                <option value=""></option>
+                                @if (!string.IsNullOrEmpty(Model.Pronouns) && !pronounOptions.Contains(Model.Pronouns))
+                                {
+                                    <option value="@Model.Pronouns">@Model.Pronouns</option>
+                                }
+                                @foreach (var option in pronounOptions)
+                                {
+                                    <option value="@option">@option</option>
+                                }
+                            </select>
+                            <span asp-validation-for="Pronouns" class="crm-field-error"></span>
+                        </div>
+                        <div class="crm-field-group">
+                            <label asp-for="Gender">Gender</label>
+                            <select asp-for="Gender" id="gender-select" class="crm-input">
+                                <option value=""></option>
+                                @if (!string.IsNullOrEmpty(Model.Gender) && !genderOptions.Contains(Model.Gender))
+                                {
+                                    <option value="@Model.Gender">@Model.Gender</option>
+                                }
+                                @foreach (var option in genderOptions)
+                                {
+                                    <option value="@option">@option</option>
+                                }
+                            </select>
+                            <span asp-validation-for="Gender" class="crm-field-error"></span>
+                        </div>
+                        <div class="crm-field-group">
+                            <label asp-for="Religion">Religion</label>
+                            <input asp-for="Religion" class="crm-input" placeholder="Optional" />
+                            <span asp-validation-for="Religion" class="crm-field-error"></span>
+                        </div>
+                    </div>
+
+                    <div class="crm-form-divider">
+                        <div class="crm-form-divider-line"></div>
+                        <span class="crm-eyebrow">Birthday</span>
+                        <div class="crm-form-divider-line"></div>
+                    </div>
+
+                    <div class="crm-form-card-grid-3">
+                        <div class="crm-field-group">
+                            <label asp-for="Birthday" id="BirthdayLabel">Birthday</label>
+                            <input asp-for="Birthday" type="date" class="crm-input" id="BirthdayField" />
+                            <span asp-validation-for="Birthday" class="crm-field-error"></span>
+                        </div>
+                        <div class="crm-field-group">
+                            <label class="crm-field-label" for="BirthdayYearUnknownField">Year Unknown</label>
+                            <label class="crm-toggle">
+                                <input type="checkbox" id="BirthdayYearUnknownField"
+                                       @(Model.Birthday?.Year == 1 ? "checked" : "") />
+                                <span class="crm-toggle-track"></span>
+                                <span class="crm-toggle-knob"></span>
+                            </label>
+                        </div>
+                        <div class="crm-field-group">
+                            <label class="crm-field-label" for="RemindOnBirthday">Remind on Birthday</label>
+                            <label class="crm-toggle">
+                                <input asp-for="RemindOnBirthday" />
+                                <span class="crm-toggle-track"></span>
+                                <span class="crm-toggle-knob"></span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
             </div>
 
-            <div class="form-floating mb-3">
-                <input asp-for="MaidenName" class="form-control" placeholder="MaidenName"/>
-                <label asp-for="MaidenName"></label>
-                <span asp-validation-for="MaidenName" class="text-danger"></span>
+            @* ── How We Met ─────────────────────────────────────────────── *@
+            <div class="crm-card">
+                <div class="crm-card-header">
+                    <h5 class="card-title mb-0"><i class="bi bi-people" aria-hidden="true"></i> How We Met</h5>
+                </div>
+                <div class="crm-card-body">
+                    <div class="crm-form-card-grid">
+                        <div class="crm-field-group">
+                            <label asp-for="FirstMetOn">First Met On</label>
+                            <input asp-for="FirstMetOn" type="date" class="crm-input" />
+                            <span asp-validation-for="FirstMetOn" class="crm-field-error"></span>
+                        </div>
+                        <div class="crm-field-group">
+                            <label asp-for="IntroducedByContactId">Introduced By</label>
+                            <select asp-for="IntroducedByContactId" id="introduced-by-select" class="crm-input">
+                                <option value=""></option>
+                                @foreach (var candidate in Model.IntroducerCandidates)
+                                {
+                                    <option value="@candidate.Id">@candidate.FullName</option>
+                                }
+                            </select>
+                            <span asp-validation-for="IntroducedByContactId" class="crm-field-error"></span>
+                        </div>
+                    </div>
+                    <div class="crm-field-group" style="margin-top: 14px;">
+                        <label asp-for="HowWeMet">How We Met Story</label>
+                        <textarea asp-for="HowWeMet" class="crm-input" maxlength="1000"
+                                  placeholder="Describe how you met this person..."
+                                  id="how-we-met-field"></textarea>
+                        <div class="crm-char-counter">
+                            <span id="how-we-met-count">@(Model.HowWeMet?.Length ?? 0)</span> / 1000
+                        </div>
+                        <span asp-validation-for="HowWeMet" class="crm-field-error"></span>
+                    </div>
+                </div>
             </div>
 
-            <div class="form-floating mb-3">
-                <input asp-for="Nickname" class="form-control" placeholder="Nickname"/>
-                <label asp-for="Nickname"></label>
-                <span asp-validation-for="Nickname" class="text-danger"></span>
-            </div>
-
-            <div class="form-floating mb-3">
-                <input asp-for="Email" class="form-control" placeholder="Email"/>
-                <label asp-for="Email"></label>
-                <span asp-validation-for="Email" class="text-danger"></span>
-            </div>
-
-            <div class="form-floating mb-3">
-                <input asp-for="Phone" class="form-control" placeholder="Phone"/>
-                <label asp-for="Phone"></label>
-                <span asp-validation-for="Phone" class="text-danger"></span>
-            </div>
-
-            <div class="form-floating mb-3">
-                <input asp-for="Company" class="form-control" placeholder="Company"/>
-                <label asp-for="Company"></label>
-                <span asp-validation-for="Company" class="text-danger"></span>
-            </div>
-
-            <div class="form-floating mb-3">
-                <input asp-for="JobTitle" class="form-control" placeholder="JobTitle"/>
-                <label asp-for="JobTitle"></label>
-                <span asp-validation-for="JobTitle" class="text-danger"></span>
-            </div>
-
-            <div class="form-floating mb-3">
-                <input asp-for="Birthday" class="form-control" type="date" placeholder="Birthday" id="BirthdayField" />
-                <label asp-for="Birthday"></label>
-                <span asp-validation-for="Birthday" class="text-danger"></span>
-            </div>
-
-            <div class="mb-3 form-check form-switch">
-                <input type="checkbox" class="form-check-input" id="BirthdayYearUnknownField" @(Model.Birthday?.Year == 1 ? "checked" : "") />
-                <label class="form-check-label" for="BirthdayYearUnknownField">Year Unknown</label>
-            </div>
-
-            <div class="mb-3 form-check form-switch">
-                <input asp-for="RemindOnBirthday" class="form-check-input"/>
-                <label asp-for="RemindOnBirthday" class="form-check-label"></label>
-            </div>
-
-            <div class="mb-3">
-                <label asp-for="Pronouns" class="form-label">Pronouns</label>
-                <select asp-for="Pronouns" id="pronouns-select" class="form-select">
-                    <option value=""></option>
-                    @{
-                        var pronounOptions = Model.PronounOptions.Where(o => o != "Other" && o != "Unspecified").ToList();
-                        if (!string.IsNullOrEmpty(Model.Pronouns) && !pronounOptions.Contains(Model.Pronouns))
-                        {
-                            <option value="@Model.Pronouns">@Model.Pronouns</option>
-                        }
-                    }
-                    @foreach (var option in pronounOptions)
-                    {
-                        <option value="@option">@option</option>
-                    }
-                </select>
-                <span asp-validation-for="Pronouns" class="text-danger"></span>
-            </div>
-
-            <div class="mb-3">
-                <label asp-for="Gender" class="form-label">Gender</label>
-                <select asp-for="Gender" id="gender-select" class="form-select">
-                    <option value=""></option>
-                    @{
-                        var genderOptions = Model.GenderOptions.Where(o => o != "Other" && o != "Unspecified").ToList();
-                        if (!string.IsNullOrEmpty(Model.Gender) && !genderOptions.Contains(Model.Gender))
-                        {
-                            <option value="@Model.Gender">@Model.Gender</option>
-                        }
-                    }
-                    @foreach (var option in genderOptions)
-                    {
-                        <option value="@option">@option</option>
-                    }
-                </select>
-                <span asp-validation-for="Gender" class="text-danger"></span>
-            </div>
-
-            <div class="mb-3">
-                <label asp-for="Religion" class="form-label">Religion</label>
-                <input asp-for="Religion" class="form-control" placeholder="Optional"/>
-                <span asp-validation-for="Religion" class="text-danger"></span>
-            </div>
-
-            <div class="mb-3">
-                <label asp-for="HowWeMet" class="form-label">How We Met</label>
-                <textarea asp-for="HowWeMet" class="form-control" rows="3" maxlength="1000" placeholder="Describe how you met this person..."></textarea>
-                <span asp-validation-for="HowWeMet" class="text-danger"></span>
-            </div>
-
-            <div class="form-floating mb-3">
-                <input asp-for="FirstMetOn" class="form-control" type="date" placeholder="First Met On"/>
-                <label asp-for="FirstMetOn"></label>
-                <span asp-validation-for="FirstMetOn" class="text-danger"></span>
-            </div>
-
-            <div class="mb-3">
-                <label asp-for="IntroducedByContactId" class="form-label">Introduced By</label>
-                <select asp-for="IntroducedByContactId" id="introduced-by-select" class="form-select">
-                    <option value=""></option>
-                    @foreach (var candidate in Model.IntroducerCandidates)
-                    {
-                        <option value="@candidate.Id">@candidate.FullName</option>
-                    }
-                </select>
-                <span asp-validation-for="IntroducedByContactId" class="text-danger"></span>
+            @* ── Profile Photo ──────────────────────────────────────────── *@
+            <div class="crm-card">
+                <div class="crm-card-header">
+                    <h5 class="card-title mb-0"><i class="bi bi-image" aria-hidden="true"></i> Profile Photo</h5>
+                </div>
+                <div class="crm-card-body">
+                    <div class="crm-edit-photo-layout">
+                        <div class="crm-edit-photo-current">
+                            @if (Model.ProfileImageId.HasValue)
+                            {
+                                <img src="@Url.Action("View", "Attachments", new { id = Model.ProfileImageId })" alt="Current profile photo" />
+                                <button type="submit" asp-action="UnsetPhoto" asp-route-id="@Model.Id"
+                                        formnovalidate
+                                        class="crm-btn-danger btn-sm"
+                                        onclick="return confirm('Are you sure you want to remove the profile photo?');">
+                                    <i class="bi bi-x-circle" aria-hidden="true"></i> Remove Photo
+                                </button>
+                            }
+                            else
+                            {
+                                <div class="crm-edit-photo-placeholder" aria-hidden="true">
+                                    <i class="bi bi-person-fill"></i>
+                                </div>
+                            }
+                        </div>
+                        <div class="crm-dropzone-wrap">
+                            <div class="crm-eyebrow" style="margin-bottom: 8px;">Upload New Photo</div>
+                            <label for="profileImage" class="crm-dropzone" id="profile-image-dropzone">
+                                <i class="bi bi-cloud-arrow-up" aria-hidden="true"></i>
+                                <div class="crm-dropzone-hint">Click to upload or drag and drop</div>
+                                <div class="crm-dropzone-formats">PNG, JPG, WEBP — MAX 10MB</div>
+                            </label>
+                            <input type="file" id="profileImage" name="profileImage"
+                                   class="crm-visually-hidden"
+                                   accept="image/*"
+                                   data-preview-target="#new-profile-image-preview" />
+                            <div style="margin-top: 12px;">
+                                <img id="new-profile-image-preview" src=""
+                                     class="img-fluid rounded border d-none"
+                                     alt="New profile image preview"
+                                     style="max-height: 200px; object-fit: contain;" />
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             @if (Model.ImmichEnabled)
             {
-                <input type="hidden" asp-for="ImmichPersonName" id="ImmichPersonName"/>
-                <input type="hidden" asp-for="ImmichTagValue" id="ImmichTagValue"/>
-
-                <div class="mb-3">
-                    <label for="ImmichPersonId" class="form-label">Immich Person</label>
-                    <select asp-for="ImmichPersonId"
-                            id="ImmichPersonId"
-                            class="form-select"
-                            asp-items="@(new SelectList(Model.AllImmichPeople, nameof(ImmichOptionDto.Id), nameof(ImmichOptionDto.Text), Model.ImmichPersonId))">
-                        <option value=""></option>
-                    </select>
-                    <div class="form-text">Links this contact to an Immich face-recognition person.</div>
-                </div>
-
-                <div class="mb-3">
-                    <label for="ImmichTagId" class="form-label">Immich Tag</label>
-                    <select asp-for="ImmichTagId"
-                            id="ImmichTagId"
-                            class="form-select"
-                            asp-items="@(new SelectList(Model.AllImmichTags, nameof(ImmichOptionDto.Id), nameof(ImmichOptionDto.Text), Model.ImmichTagId))">
-                        <option value=""></option>
-                    </select>
-                    <div class="form-text">Links this contact to an Immich tag.</div>
+                @* ── Immich ─────────────────────────────────────────────── *@
+                <div class="crm-card">
+                    <div class="crm-card-header">
+                        <h5 class="card-title mb-0"><i class="bi bi-images" aria-hidden="true"></i> Immich</h5>
+                    </div>
+                    <div class="crm-card-body">
+                        <input type="hidden" asp-for="ImmichPersonName" id="ImmichPersonName" />
+                        <input type="hidden" asp-for="ImmichTagValue" id="ImmichTagValue" />
+                        <div class="crm-form-card-grid">
+                            <div class="crm-field-group">
+                                <label for="ImmichPersonId">Immich Person</label>
+                                <select asp-for="ImmichPersonId" id="ImmichPersonId" class="crm-input"
+                                        asp-items="@(new SelectList(Model.AllImmichPeople, nameof(ImmichOptionDto.Id), nameof(ImmichOptionDto.Text), Model.ImmichPersonId))">
+                                    <option value=""></option>
+                                </select>
+                                <div class="crm-field-help">Links this contact to an Immich face-recognition person.</div>
+                            </div>
+                            <div class="crm-field-group">
+                                <label for="ImmichTagId">Immich Tag</label>
+                                <select asp-for="ImmichTagId" id="ImmichTagId" class="crm-input"
+                                        asp-items="@(new SelectList(Model.AllImmichTags, nameof(ImmichOptionDto.Id), nameof(ImmichOptionDto.Text), Model.ImmichTagId))">
+                                    <option value=""></option>
+                                </select>
+                                <div class="crm-field-help">Links this contact to an Immich tag.</div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             }
 
-            <div class="mb-3">
-                <label for="profileImage" class="form-label">Profile Image</label>
-                @if (Model.ProfileImageId.HasValue)
-                {
-                    <div class="d-flex align-items-center mb-2">
-                        <img src="@Url.Action("View", "Attachments", new { id = Model.ProfileImageId })" class="rounded me-2" alt="Current Profile" style="width: 50px; height: 50px; object-fit: cover;"/>
-                        <button type="submit" asp-action="UnsetPhoto" asp-route-id="@Model.Id" class="crm-btn-danger btn-sm" onclick="return confirm('Are you sure you want to remove the profile photo?');">
-                            <i class="bi bi-x-circle" aria-hidden="true"></i> Unset Photo
-                        </button>
-                    </div>
-                }
-                <input type="file" name="profileImage" class="form-control" accept="image/*" data-preview-target="#new-profile-image-preview"/>
-                <div class="mt-2">
-                    <img id="new-profile-image-preview" src="" class="img-fluid rounded border d-none" alt="New Profile Image Preview" style="max-height: 200px; object-fit: contain;"/>
+            @* ── Settings ──────────────────────────────────────────────── *@
+            <div class="crm-card">
+                <div class="crm-card-header">
+                    <h5 class="card-title mb-0"><i class="bi bi-sliders" aria-hidden="true"></i> Settings</h5>
                 </div>
-            </div>
-
-            <div class="mb-3 form-check form-switch">
-                <input asp-for="IsHidden" class="form-check-input"/>
-                <label asp-for="IsHidden" class="form-check-label"></label>
-                <div class="form-text">Hidden contacts are excluded from the main list by default.</div>
-            </div>
-
-            <div class="mb-3 form-check form-switch">
-                @if (Model.IsSelf)
-                {
-                    <input asp-for="IsDeceased" class="form-check-input" id="IsDeceasedField" disabled/>
-                }
-                else
-                {
-                    <input asp-for="IsDeceased" class="form-check-input" id="IsDeceasedField"/>
-                }
-                <label asp-for="IsDeceased" class="form-check-label"></label>
-                <div class="form-text">
-                    @if (Model.IsSelf)
-                    {
-                        <span>You cannot mark your own contact as deceased.</span>
-                    }
-                    else
-                    {
-                        <span>Suppresses birthday and anniversary reminders.</span>
-                    }
-                </div>
-            </div>
-
-            <div class="form-floating mb-3" id="DateOfDeathGroup">
-                @if (Model.IsSelf)
-                {
-                    <input asp-for="DateOfDeath" class="form-control" type="date" placeholder="Date of Death" disabled/>
-                }
-                else
-                {
-                    <input asp-for="DateOfDeath" class="form-control" type="date" placeholder="Date of Death"/>
-                }
-                <label asp-for="DateOfDeath"></label>
-                <span asp-validation-for="DateOfDeath" class="text-danger"></span>
-            </div>
-
-            <div class="d-flex justify-content-between align-items-center mt-4">
-                <div class="d-grid gap-2 d-md-flex">
-                    <button type="submit" class="crm-btn-primary"><i class="bi bi-save" aria-hidden="true"></i> Save</button>
-                    <a asp-action="Details" asp-route-id="@Model.Id" class="crm-btn-tertiary"><i class="bi bi-arrow-left" aria-hidden="true"></i> Back to Contact</a>
-                </div>
-                <div class="d-flex gap-2">
-                    <button type="button" class="crm-btn-secondary"
-                            disabled="@(!Model.HasRelationships)"
-                            title="@(!Model.HasRelationships ? "Contact must have at least one relationship to be converted to a partial contact." : null)"
-                            data-confirm-action="@(Model.HasRelationships ? Url.Action("DemoteToPartial", "Contacts", new { id = Model.Id }) : null)"
-                            data-confirm-title="Convert to Partial Contact"
-                            data-confirm-body="This will convert the contact back to a partial contact. Their data will be preserved but they will no longer appear in the main contacts list. Continue?"
-                            data-confirm-btn-label="Convert to Partial"
-                            data-confirm-btn-icon="bi-person-dash">
-                        <i class="bi bi-person-dash" aria-hidden="true"></i> Convert to Partial
-                    </button>
-                    <button type="button" class="crm-btn-danger"
-                            data-confirm-action="@Url.Action("Delete", "Contacts", new { id = Model.Id })"
-                            data-confirm-title="Delete Contact"
-                            data-confirm-body="Are you sure you want to delete this contact? This cannot be undone.">
-                        <i class="bi bi-trash" aria-hidden="true"></i> Delete
-                    </button>
-                </div>
-            </div>
-        </form>
-    </div>
-    <div class="col-md-6">
-        <div class="crm-card">
-            <div class="crm-card-header">
-                <h5 class="card-title mb-0"><i class="bi bi-tags" aria-hidden="true"></i> Manage Labels</h5>
-            </div>
-            <div class="crm-card-body">
-                <h6 class="mb-3">Assigned Labels</h6>
-                @if (Model.AssignedLabelIds != null && Model.AllLabels != null)
-                {
-                    var assignedLabels = Model.AllLabels.Where(l => Model.AssignedLabelIds.Contains(l.Id)).ToList();
-                    var unassignedLabels = Model.AllLabels.Where(l => !Model.AssignedLabelIds.Contains(l.Id)).ToList();
-
-                    if (assignedLabels.Any())
-                    {
-                        <div class="d-flex flex-wrap gap-2 mb-4">
-                            @foreach (var label in assignedLabels)
-                            {
-                                <div class="d-inline-flex align-items-center border rounded p-1">
-                                    <div class="ps-1">
-                                        @await Html.PartialAsync("_LabelBadge", label)
-                                    </div>
-                                    <form asp-action="RemoveLabel" asp-route-contactId="@Model.Id" asp-route-labelId="@label.Id" method="post" class="d-inline ms-1">
-                                        <button type="submit" class="btn btn-sm btn-link text-danger p-0" title="Remove label @label.Name" aria-label="Remove label @label.Name">
-                                            <i class="bi bi-x-circle-fill" aria-hidden="true"></i>
-                                        </button>
-                                    </form>
-                                </div>
-                            }
+                <div class="crm-card-body">
+                    <div class="crm-toggle-row">
+                        <div>
+                            <div class="crm-toggle-row-label">Hidden</div>
+                            <div class="crm-toggle-row-desc">Hidden contacts are excluded from the main list by default.</div>
                         </div>
-                    }
-                    else
-                    {
-                        <p class="text-muted small mb-4">No labels assigned.</p>
-                    }
-
-                    <h6 class="mb-3">Add Label</h6>
-                    if (unassignedLabels.Any())
-                    {
-                        <form asp-action="AssignLabel" method="post" class="d-flex flex-wrap gap-2">
-                            <input type="hidden" name="contactId" value="@Model.Id"/>
-                            <select name="labelId" id="labelId" class="form-select form-select-sm flex-grow-1" style="min-width: 150px;" required>
-                                <option value="">Select a label...</option>
-                                @foreach (var label in unassignedLabels)
-                                {
-                                    <option value="@label.Id">@label.Name</option>
-                                }
-                            </select>
-                            <button type="submit" class="crm-btn-secondary btn-sm"><i class="bi bi-plus" aria-hidden="true"></i> Add</button>
-                        </form>
-                    }
-                    else if (!Model.AllLabels.Any())
-                    {
-                        <p class="text-muted small">No labels exist yet. <a asp-controller="Labels" asp-action="Create">Create one first.</a></p>
-                    }
-                    else
-                    {
-                        <p class="text-muted small">All available labels have been assigned.</p>
-                    }
-
-                    <div class="mt-4 pt-3" style="border-top: 1px solid var(--crm-border-subtle);">
-                        <a asp-controller="Labels" asp-action="Index" class="small text-decoration-none" style="color: var(--crm-brand);"><i class="bi bi-gear me-1" aria-hidden="true"></i>Manage all labels</a>
+                        <label class="crm-toggle">
+                            <input asp-for="IsHidden" />
+                            <span class="crm-toggle-track"></span>
+                            <span class="crm-toggle-knob"></span>
+                        </label>
                     </div>
-                }
+
+                    <div class="crm-toggle-row">
+                        <div>
+                            <div class="crm-toggle-row-label">Deceased</div>
+                            <div class="crm-toggle-row-desc">
+                                @if (Model.IsSelf)
+                                {
+                                    <text>You cannot mark your own contact as deceased.</text>
+                                }
+                                else
+                                {
+                                    <text>Suppresses birthday and anniversary reminders.</text>
+                                }
+                            </div>
+                        </div>
+                        <label class="crm-toggle">
+                            <input asp-for="IsDeceased" id="IsDeceasedField" disabled="@Model.IsSelf" />
+                            <span class="crm-toggle-track"></span>
+                            <span class="crm-toggle-knob"></span>
+                        </label>
+                    </div>
+
+                    <div class="crm-field-group" id="DateOfDeathGroup" style="margin-top: 12px;">
+                        <label asp-for="DateOfDeath">Date of Death</label>
+                        <input asp-for="DateOfDeath" type="date" class="crm-input" disabled="@Model.IsSelf" />
+                        <span asp-validation-for="DateOfDeath" class="crm-field-error"></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        @* ── Side column ─────────────────────────────────────────────────── *@
+        <div class="crm-edit-col-side">
+
+            @* ── Labels ────────────────────────────────────────────────── *@
+            <div class="crm-card" id="labels-card" data-contact-id="@Model.Id">
+                <div class="crm-card-header">
+                    <h5 class="card-title mb-0"><i class="bi bi-tags" aria-hidden="true"></i> Labels</h5>
+                </div>
+                <div class="crm-card-body">
+                    <div class="crm-eyebrow" style="margin-bottom: 10px;">Assigned</div>
+                    <div id="assigned-labels" class="crm-label-zone">
+                        @foreach (var label in assignedLabels)
+                        {
+                            <span class="crm-label-chip" data-label-id="@label.Id"
+                                  style="@LabelChipStyle(label.Color, filled: true)">
+                                @label.Name
+                                <button type="button" class="crm-label-chip-remove"
+                                        data-remove-label
+                                        data-label-id="@label.Id"
+                                        title="Remove @label.Name"
+                                        aria-label="Remove @label.Name">×</button>
+                            </span>
+                        }
+                    </div>
+                    <div class="crm-label-zone-empty" id="assigned-labels-empty">No labels assigned yet.</div>
+
+                    <div style="height: 1px; background: var(--crm-border-subtle); margin: 14px 0 12px;"></div>
+
+                    <div class="crm-eyebrow" style="margin-bottom: 8px;">Add Label</div>
+                    <div id="available-labels" class="crm-label-zone">
+                        @foreach (var label in unassignedLabels)
+                        {
+                            <button type="button" class="crm-label-chip crm-label-chip-ghost"
+                                    data-add-label
+                                    data-label-id="@label.Id"
+                                    data-label-name="@label.Name"
+                                    data-label-color="@(label.Color ?? "#1E3A5F")"
+                                    style="@LabelChipStyle(label.Color, filled: false)">
+                                <i class="bi bi-plus-lg" aria-hidden="true" style="font-size: 10px;"></i>
+                                @label.Name
+                            </button>
+                        }
+                    </div>
+                    <div class="crm-label-zone-empty" id="available-labels-empty">All labels assigned.</div>
+
+                    <noscript>
+                        @* Fallback: server-rendered form. JS hides this; without JS it stays usable. *@
+                        @if (unassignedLabels.Any())
+                        {
+                            <form asp-action="AssignLabel" method="post" class="d-flex flex-wrap gap-2 mt-3">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="contactId" value="@Model.Id" />
+                                <input type="hidden" name="returnUrl" value="@(Context.Request.Path + Context.Request.QueryString)" />
+                                <select name="labelId" class="form-select form-select-sm flex-grow-1" required>
+                                    <option value="">Select a label...</option>
+                                    @foreach (var label in unassignedLabels)
+                                    {
+                                        <option value="@label.Id">@label.Name</option>
+                                    }
+                                </select>
+                                <button type="submit" class="crm-btn-secondary btn-sm">Add</button>
+                            </form>
+                        }
+                    </noscript>
+
+                    <div style="margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--crm-border-subtle);">
+                        <a asp-controller="Labels" asp-action="Index"
+                           style="font-size: 12px; color: var(--crm-brand); display: inline-flex; align-items: center; gap: 6px; text-decoration: none;">
+                            <i class="bi bi-gear" aria-hidden="true" style="font-size: 11px;"></i> Manage all labels
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            @* ── Save shortcut ─────────────────────────────────────────── *@
+            <div class="crm-save-shortcut-card">
+                <div class="crm-save-shortcut-title">Ready to save?</div>
+                <div class="crm-save-shortcut-desc">Changes will be applied immediately to the contact record.</div>
+                <button type="submit" class="crm-btn-primary btn-sm" form="contact-form">
+                    <i class="bi bi-save" aria-hidden="true"></i> Save Changes
+                </button>
+                <a asp-action="Details" asp-route-id="@Model.Id" class="crm-btn-tertiary btn-sm">
+                    <i class="bi bi-arrow-left" aria-hidden="true"></i> Back to Contact
+                </a>
             </div>
         </div>
     </div>
-</div>
+</form>
 
 @section Scripts {
     @{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); }
     <script>
         (function () {
+            // ── Select2 init (kept from previous Edit page) ─────────────
             $('#pronouns-select').select2({ width: '100%', tags: true, placeholder: 'Select or enter pronouns...', allowClear: true });
             $('#gender-select').select2({ width: '100%', tags: true, placeholder: 'Select or enter gender...', allowClear: true });
-            $('#labelId').select2({ width: '100%', placeholder: 'Select a label...' });
             $('#introduced-by-select').select2({ width: '100%', placeholder: 'Search for a contact...', allowClear: true });
 
             @if (Model.ImmichEnabled)
@@ -342,11 +483,7 @@
                 function initImmichSelect(selectId, hiddenNameId, placeholder) {
                     const $el = $('#' + selectId);
                     if ($el.length === 0) return;
-                    $el.select2({
-                        width: '100%',
-                        allowClear: true,
-                        placeholder: placeholder
-                    });
+                    $el.select2({ width: '100%', allowClear: true, placeholder: placeholder });
                     $el.on('select2:select', function (e) {
                         document.getElementById(hiddenNameId).value = e.params.data.text;
                     });
@@ -354,16 +491,17 @@
                         document.getElementById(hiddenNameId).value = '';
                     });
                 }
-
                 initImmichSelect('ImmichPersonId', 'ImmichPersonName', 'Select an Immich person...');
                 initImmichSelect('ImmichTagId', 'ImmichTagValue', 'Select an Immich tag...');
                 </text>
             }
 
+            // ── Birthday: Year Unknown toggle swaps year between 0001 and current ──
             const birthdayField = document.getElementById('BirthdayField');
             const birthdayYearUnknownField = document.getElementById('BirthdayYearUnknownField');
 
             function toggleBirthdayYear() {
+                if (!birthdayField || !birthdayYearUnknownField) return;
                 if (birthdayYearUnknownField.checked) {
                     if (birthdayField.value) {
                         const parts = birthdayField.value.split('-');
@@ -387,6 +525,7 @@
                 toggleBirthdayYear();
             }
 
+            // ── Deceased toggle reveals/hides Date of Death ──
             const isDeceasedField = document.getElementById('IsDeceasedField');
             const dateOfDeathGroup = document.getElementById('DateOfDeathGroup');
 
@@ -399,6 +538,138 @@
                 isDeceasedField.addEventListener('change', toggleDateOfDeathVisibility);
                 toggleDateOfDeathVisibility();
             }
+
+            // ── How We Met char counter ──
+            const howWeMetField = document.getElementById('how-we-met-field');
+            const howWeMetCount = document.getElementById('how-we-met-count');
+            if (howWeMetField && howWeMetCount) {
+                howWeMetField.addEventListener('input', function () {
+                    howWeMetCount.textContent = howWeMetField.value.length;
+                });
+            }
+
+            // ── Drag-and-drop forwards files to the hidden <input type="file"> ──
+            const dropzone = document.getElementById('profile-image-dropzone');
+            const fileInput = document.getElementById('profileImage');
+            if (dropzone && fileInput) {
+                ['dragenter', 'dragover'].forEach(evt => dropzone.addEventListener(evt, function (e) {
+                    e.preventDefault();
+                    dropzone.classList.add('is-dragover');
+                }));
+                ['dragleave', 'drop'].forEach(evt => dropzone.addEventListener(evt, function (e) {
+                    e.preventDefault();
+                    dropzone.classList.remove('is-dragover');
+                }));
+                dropzone.addEventListener('drop', function (e) {
+                    if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files.length) {
+                        fileInput.files = e.dataTransfer.files;
+                        fileInput.dispatchEvent(new Event('change', { bubbles: true }));
+                    }
+                });
+            }
+
+            // ── Labels AJAX (assign / remove) ──
+            // AssignLabel / RemoveLabel always return a redirect; redirect:'manual' lets us
+            // recognise success without forcing fetch to download the full Edit page HTML.
+            const labelsCard = document.getElementById('labels-card');
+            const contactId = labelsCard && labelsCard.dataset.contactId;
+            const tokenInput = document.querySelector('#contact-form input[name="__RequestVerificationToken"]');
+            const assignedZone = document.getElementById('assigned-labels');
+            const availableZone = document.getElementById('available-labels');
+            const assignedEmpty = document.getElementById('assigned-labels-empty');
+            const availableEmpty = document.getElementById('available-labels-empty');
+
+            function refreshEmptyMessages() {
+                if (assignedEmpty) assignedEmpty.style.display = assignedZone.children.length === 0 ? 'block' : 'none';
+                if (availableEmpty) availableEmpty.style.display = availableZone.children.length === 0 ? 'block' : 'none';
+            }
+            refreshEmptyMessages();
+
+            // Mirrors ColorContrastHelper.GetContrastTextColor (WCAG luminance, threshold 0.179)
+            function pickTextOn(hex) {
+                let c = (hex || '#1E3A5F').replace('#', '');
+                if (c.length === 3) c = c[0] + c[0] + c[1] + c[1] + c[2] + c[2];
+                if (c.length !== 6) return '#ffffff';
+                const lin = v => { const n = v / 255; return n <= 0.03928 ? n / 12.92 : Math.pow((n + 0.055) / 1.055, 2.4); };
+                const r = parseInt(c.slice(0, 2), 16);
+                const g = parseInt(c.slice(2, 4), 16);
+                const b = parseInt(c.slice(4, 6), 16);
+                const luma = 0.2126 * lin(r) + 0.7152 * lin(g) + 0.0722 * lin(b);
+                return luma > 0.179 ? '#000000' : '#ffffff';
+            }
+
+            async function postLabelChange(action, labelId) {
+                if (!contactId || !labelId || !tokenInput) return false;
+                const body = new URLSearchParams({
+                    contactId: contactId,
+                    labelId: labelId,
+                    __RequestVerificationToken: tokenInput.value
+                });
+                try {
+                    const resp = await fetch('/Contacts/' + action, {
+                        method: 'POST',
+                        body: body,
+                        redirect: 'manual',
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'Content-Type': 'application/x-www-form-urlencoded'
+                        }
+                    });
+                    return resp.ok || resp.type === 'opaqueredirect';
+                } catch (err) {
+                    console.error('Label change failed:', err);
+                    return false;
+                }
+            }
+
+            assignedZone.addEventListener('click', async function (e) {
+                const btn = e.target.closest('[data-remove-label]');
+                if (!btn) return;
+                e.preventDefault();
+                const chip = btn.closest('[data-label-id]');
+                if (!chip) return;
+                const labelId = chip.dataset.labelId;
+                const labelName = chip.textContent.trim().replace(/×$/, '').trim();
+                const ok = await postLabelChange('RemoveLabel', labelId);
+                if (!ok) return;
+                const color = chip.style.background || chip.style.backgroundColor || '#1E3A5F';
+                chip.remove();
+                const ghost = document.createElement('button');
+                ghost.type = 'button';
+                ghost.className = 'crm-label-chip crm-label-chip-ghost';
+                ghost.setAttribute('data-add-label', '');
+                ghost.dataset.labelId = labelId;
+                ghost.dataset.labelName = labelName;
+                ghost.dataset.labelColor = color;
+                ghost.style.color = color;
+                ghost.style.borderColor = color;
+                ghost.innerHTML = '<i class="bi bi-plus-lg" aria-hidden="true" style="font-size: 10px;"></i> ' + labelName;
+                availableZone.appendChild(ghost);
+                refreshEmptyMessages();
+            });
+
+            availableZone.addEventListener('click', async function (e) {
+                const btn = e.target.closest('[data-add-label]');
+                if (!btn) return;
+                e.preventDefault();
+                const labelId = btn.dataset.labelId;
+                const labelName = btn.dataset.labelName;
+                const labelColor = btn.dataset.labelColor || '#1E3A5F';
+                const ok = await postLabelChange('AssignLabel', labelId);
+                if (!ok) return;
+                btn.remove();
+                const chip = document.createElement('span');
+                chip.className = 'crm-label-chip';
+                chip.dataset.labelId = labelId;
+                chip.style.background = labelColor;
+                chip.style.color = pickTextOn(labelColor);
+                chip.style.borderColor = labelColor;
+                chip.innerHTML = labelName +
+                    ' <button type="button" class="crm-label-chip-remove" data-remove-label data-label-id="' + labelId + '" title="Remove ' + labelName + '" aria-label="Remove ' + labelName + '">×</button>';
+                assignedZone.appendChild(chip);
+                refreshEmptyMessages();
+            });
+
         })();
     </script>
 }

@@ -4,39 +4,73 @@
     ViewData["Title"] = "Create Important Date";
 }
 
-<div class="row justify-content-center">
-    <div class="col-md-8 col-lg-7">
-        <form asp-action="Create">
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-            <input type="hidden" asp-for="ContactId"/>
+<form id="significantdate-form" asp-action="Create" data-edit-form>
+    @Html.AntiForgeryToken()
+    <input type="hidden" asp-for="ContactId" />
 
-            <div class="crm-form-card">
-                <div class="crm-form-card-header">
-                    <h4><i class="bi bi-calendar-heart" aria-hidden="true"></i> Create Important Date</h4>
+    @* ── Action strip ────────────────────────────────────────────────────── *@
+    <div class="crm-details-actions-strip">
+        <a asp-action="Index" asp-route-contactId="@Model.ContactId" class="crm-btn-tertiary btn-sm">
+            <i class="bi bi-arrow-left" aria-hidden="true"></i> Back
+        </a>
+        <div class="d-flex gap-2 align-items-center flex-wrap">
+            <span class="crm-eyebrow crm-unsaved-indicator" id="unsaved-indicator" hidden>
+                <i class="bi bi-circle-fill" aria-hidden="true" style="font-size: 6px; vertical-align: middle; margin-right: 4px;"></i>
+                Unsaved
+            </span>
+            <button type="submit" class="crm-btn-primary btn-sm">
+                <i class="bi bi-plus-lg" aria-hidden="true"></i> Create
+            </button>
+        </div>
+    </div>
+
+    @* ── Editorial masthead ─────────────────────────────────────────────── *@
+    <section class="crm-edit-masthead crm-fade-in">
+        <div class="crm-edit-masthead-photo-placeholder" aria-hidden="true">
+            <i class="bi bi-calendar-event"></i>
+        </div>
+        <div>
+            <div class="crm-eyebrow" style="margin-bottom: 6px;">Adding important date</div>
+            <h1 class="crm-edit-masthead-title">New Important Date</h1>
+        </div>
+    </section>
+
+    @* ── Body ───────────────────────────────────────────────────────────── *@
+    <div class="crm-edit-body">
+
+        <div class="crm-edit-col-main">
+            <div asp-validation-summary="ModelOnly" class="crm-field-error"></div>
+
+            @* ── Event ─────────────────────────────────────────────────── *@
+            <div class="crm-card">
+                <div class="crm-card-header">
+                    <h5 class="card-title mb-0"><i class="bi bi-calendar-heart" aria-hidden="true"></i> Event</h5>
                 </div>
+                <div class="crm-card-body">
 
-                <div class="crm-form-card-body">
-
-                    <div class="form-floating mb-3">
-                        <input asp-for="Title" class="form-control form-control-lg" id="Title" placeholder=" " autofocus/>
+                    <div class="crm-field-group">
                         <label asp-for="Title">Title</label>
-                        <span asp-validation-for="Title" class="text-danger"></span>
+                        <input asp-for="Title" class="crm-input" id="Title" autofocus />
+                        <span asp-validation-for="Title" class="crm-field-error"></span>
                     </div>
 
-                    <div class="form-floating mb-3">
-                        <input asp-for="EventDate" class="form-control" type="date" id="EventDate" placeholder=" "/>
-                        <label asp-for="EventDate">Event Date</label>
-                        <span asp-validation-for="EventDate" class="text-danger"></span>
+                    <div class="crm-form-divider">
+                        <div class="crm-form-divider-line"></div>
+                        <span class="crm-eyebrow">Date</span>
+                        <div class="crm-form-divider-line"></div>
                     </div>
 
-                    <div class="mb-3 form-check form-switch">
-                        <input type="checkbox" class="form-check-input" id="YearUnknownField" />
-                        <label class="form-check-label" for="YearUnknownField">Year Unknown</label>
+                    @await Html.PartialAsync("_EventDateField", Model.EventDate)
+
+                    <div class="crm-form-divider">
+                        <div class="crm-form-divider-line"></div>
+                        <span class="crm-eyebrow">Recurrence</span>
+                        <div class="crm-form-divider-line"></div>
                     </div>
 
-                    <div class="mb-4">
-                        <label asp-for="RecurrenceType" class="form-label">Recurrence Type</label>
-                        <select asp-for="RecurrenceType" class="form-select" id="RecurrenceType">
+                    <div class="crm-field-group">
+                        <label asp-for="RecurrenceType">Recurrence Type</label>
+                        <select asp-for="RecurrenceType" class="crm-input" id="RecurrenceType">
                             <option value="0">None (One-time)</option>
                             <option value="1">Annual</option>
                             <option value="2">Monthly</option>
@@ -44,48 +78,65 @@
                         </select>
                     </div>
 
-                    <div class="form-floating mb-4" id="customIntervalDiv" style="display: none;">
-                        <input asp-for="CustomIntervalDays" class="form-control" type="number" id="CustomIntervalDays" placeholder=" "/>
+                    <div class="crm-field-group" id="customIntervalDiv" style="display: none;">
                         <label asp-for="CustomIntervalDays">Custom Interval (Days)</label>
-                        <span asp-validation-for="CustomIntervalDays" class="text-danger"></span>
+                        <input asp-for="CustomIntervalDays" class="crm-input" type="number" id="CustomIntervalDays" />
+                        <span asp-validation-for="CustomIntervalDays" class="crm-field-error"></span>
                     </div>
 
-                    <div class="form-floating mb-4">
-                        <textarea asp-for="Description" class="form-control" style="height: 100px" id="Description" placeholder=" "></textarea>
+                    <div class="crm-form-divider">
+                        <div class="crm-form-divider-line"></div>
+                        <span class="crm-eyebrow">Description</span>
+                        <div class="crm-form-divider-line"></div>
+                    </div>
+
+                    <div class="crm-field-group">
                         <label asp-for="Description">Description</label>
-                        <span asp-validation-for="Description" class="text-danger"></span>
+                        <textarea asp-for="Description" class="crm-input" style="height: 100px" id="Description"></textarea>
+                        <span asp-validation-for="Description" class="crm-field-error"></span>
                     </div>
 
-                    <hr class="my-4">
+                    <div class="crm-form-divider">
+                        <div class="crm-form-divider-line"></div>
+                        <span class="crm-eyebrow">Reminders</span>
+                        <div class="crm-form-divider-line"></div>
+                    </div>
 
-                    <h5>Reminders</h5>
-                    <p class="text-muted small mb-3">Select when you want to be reminded before the event occurs.</p>
+                    <p class="crm-field-help" style="margin-top: 0; margin-bottom: 12px;">Select when you want to be reminded before the event occurs.</p>
 
-                    <div class="mb-3">
+                    <div class="crm-check-chip-row">
                         @{
                             var defaultOffsets = new[] { 30, 7, 0 };
                         }
                         @foreach (var days in defaultOffsets)
                         {
-                            <div class="form-check form-check-inline">
-                                <input class="form-check-input" type="checkbox" name="ReminderOffsetDays" value="@days" id="offset_@days"
+                            <label class="crm-check-chip" for="offset_@days">
+                                <input type="checkbox" name="ReminderOffsetDays" value="@days" id="offset_@days"
                                        @(Model.ReminderOffsetDays.Contains(days) ? "checked" : "")>
-                                <label class="form-check-label" for="offset_@days">
+                                <span class="crm-check-chip-label">
                                     @(days == 0 ? "On day of event" : $"{days} days before")
-                                </label>
-                            </div>
+                                </span>
+                            </label>
                         }
-                    </div>
-
-                    <div class="d-grid gap-2 d-md-flex mt-4">
-                        <button type="submit" class="crm-btn-primary"><i class="bi bi-plus-lg" aria-hidden="true"></i> Create</button>
-                        <a asp-action="Index" asp-route-contactId="@Model.ContactId" class="crm-btn-tertiary"><i class="bi bi-x-lg" aria-hidden="true"></i> Cancel</a>
                     </div>
                 </div>
             </div>
-        </form>
+        </div>
+
+        <div class="crm-edit-col-side">
+            <div class="crm-save-shortcut-card">
+                <div class="crm-save-shortcut-title">Ready to save?</div>
+                <div class="crm-save-shortcut-desc">Changes are applied immediately.</div>
+                <button type="submit" class="crm-btn-primary btn-sm" form="significantdate-form">
+                    <i class="bi bi-plus-lg" aria-hidden="true"></i> Create
+                </button>
+                <a asp-action="Index" asp-route-contactId="@Model.ContactId" class="crm-btn-tertiary btn-sm">
+                    <i class="bi bi-x-lg" aria-hidden="true"></i> Cancel
+                </a>
+            </div>
+        </div>
     </div>
-</div>
+</form>
 
 @section Scripts {
     @{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); }
@@ -106,33 +157,6 @@
 
             $recurrenceSelect.on('change', toggleCustomInterval);
             toggleCustomInterval(); // Initial check
-
-            var eventDateField = document.getElementById('EventDate');
-            var yearUnknownField = document.getElementById('YearUnknownField');
-
-            function toggleYearUnknown() {
-                if (yearUnknownField.checked) {
-                    if (eventDateField.value) {
-                        const parts = eventDateField.value.split('-');
-                        if (parts.length === 3) {
-                            eventDateField.value = '0001-' + parts[1] + '-' + parts[2];
-                        }
-                    }
-                } else {
-                    if (eventDateField.value) {
-                        const parts = eventDateField.value.split('-');
-                        if (parts.length === 3 && parts[0] === '0001') {
-                            const currentYear = new Date().getFullYear();
-                            eventDateField.value = currentYear + '-' + parts[1] + '-' + parts[2];
-                        }
-                    }
-                }
-            }
-
-            if (yearUnknownField) {
-                yearUnknownField.addEventListener('change', toggleYearUnknown);
-                toggleYearUnknown();
-            }
         });
     </script>
 }
