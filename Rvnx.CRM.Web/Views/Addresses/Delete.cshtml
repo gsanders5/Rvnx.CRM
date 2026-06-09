@@ -4,22 +4,52 @@
     ViewData["Title"] = "Delete Address";
 }
 
-<h1>Delete Address</h1>
+<div class="crm-details-actions-strip">
+    <a asp-controller="Contacts" asp-action="Details" asp-route-id="@Model.ContactId" class="crm-btn-tertiary btn-sm">
+        <i class="bi bi-arrow-left" aria-hidden="true"></i> Cancel
+    </a>
+</div>
 
-<h3>Are you sure you want to delete this address?</h3>
-<div>
-    <dl class="row">
-        <dt class="col-sm-2">Type</dt>
-        <dd class="col-sm-10">@Model.AddressType</dd>
-        <dt class="col-sm-2">Address</dt>
-        <dd class="col-sm-10">@Model.FormattedAddress</dd>
-    </dl>
+<section class="crm-edit-masthead crm-fade-in">
+    <div class="crm-edit-masthead-photo-placeholder is-danger" aria-hidden="true">
+        <i class="bi bi-trash"></i>
+    </div>
+    <div>
+        <div class="crm-eyebrow is-danger" style="margin-bottom: 6px;">Confirm delete</div>
+        <h1 class="crm-edit-masthead-title">
+            Delete @(string.IsNullOrWhiteSpace(Model.AddressType) ? "address" : Model.AddressType + " address")?
+        </h1>
+    </div>
+</section>
 
-    <form asp-action="Delete">
-        <input type="hidden" asp-for="Id"/>
-        <div class="d-grid gap-2 d-md-flex mt-4">
-            <button type="submit" class="crm-btn-danger"><i class="bi bi-trash" aria-hidden="true"></i>Delete</button>
-            <a asp-controller="Contacts" asp-action="Details" asp-route-id="@Model.ContactId" class="crm-btn-tertiary"><i class="bi bi-arrow-left" aria-hidden="true"></i>Cancel</a>
+<div class="crm-page">
+    <div class="crm-card crm-delete-card" style="max-width: 720px;">
+        <div class="crm-card-body">
+            <p class="crm-subtle" style="margin-bottom: 16px;">
+                This will permanently delete this address. This action cannot be undone.
+            </p>
+
+            <dl class="crm-deflist">
+                <div class="crm-deflist-row">
+                    <dt>Type</dt>
+                    <dd>@Model.AddressType</dd>
+                </div>
+                <div class="crm-deflist-row">
+                    <dt>Address</dt>
+                    <dd>@Model.FormattedAddress</dd>
+                </div>
+            </dl>
+
+            <form asp-action="Delete" method="post" class="d-flex gap-2" style="margin-top: 18px; flex-wrap: wrap;">
+                @Html.AntiForgeryToken()
+                <input asp-for="Id" type="hidden" />
+                <button type="submit" class="crm-btn-danger">
+                    <i class="bi bi-trash" aria-hidden="true"></i> Delete
+                </button>
+                <a asp-controller="Contacts" asp-action="Details" asp-route-id="@Model.ContactId" class="crm-btn-tertiary">
+                    Cancel
+                </a>
+            </form>
         </div>
-    </form>
+    </div>
 </div>

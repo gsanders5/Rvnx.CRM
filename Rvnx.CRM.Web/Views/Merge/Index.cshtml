@@ -4,47 +4,54 @@
     ViewData["Title"] = "Merge Contact";
 }
 
-<div class="container">
-    <div class="row justify-content-center">
-        <div class="col-md-8">
-            <div class="crm-form-card">
-                <div class="crm-form-card-header">
-                    <h4><i class="bi bi-diagram-3" aria-hidden="true"></i> Merge Contact</h4>
-                </div>
-                <div class="crm-form-card-body">
-                    <p>Select another contact to merge into <strong>@Model.PrimaryContact?.FullName</strong>.</p>
-                    <p class="small" style="color: var(--crm-danger);">
-                        <strong>Warning:</strong> The contact you select below (the secondary contact) will be
-                        <strong>deleted</strong> after its data is migrated to @Model.PrimaryContact?.FullName.
-                    </p>
+<form id="merge-form" asp-action="Confirm" method="post">
+    @Html.AntiForgeryToken()
+    <input type="hidden" asp-for="PrimaryContactId" />
 
-                    <form asp-action="Confirm" method="post">
-                        <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+    <div class="crm-details-actions-strip">
+        <a asp-controller="Contacts" asp-action="Details" asp-route-id="@Model.PrimaryContactId" class="crm-btn-tertiary btn-sm">
+            <i class="bi bi-arrow-left" aria-hidden="true"></i> Back to Contact
+        </a>
+        <button type="submit" class="crm-btn-primary btn-sm">
+            <i class="bi bi-diagram-3" aria-hidden="true"></i> Next: Preview Merge
+        </button>
+    </div>
 
-                        <input type="hidden" asp-for="PrimaryContactId" />
+    <section class="crm-edit-masthead crm-fade-in">
+        <div class="crm-edit-masthead-photo-placeholder" aria-hidden="true"><i class="bi bi-diagram-3"></i></div>
+        <div>
+            <div class="crm-eyebrow" style="margin-bottom: 6px;">Merge contacts</div>
+            <h1 class="crm-edit-masthead-title">
+                Pick a contact to merge into <em>@Model.PrimaryContact?.FullName</em>
+            </h1>
+        </div>
+    </section>
 
-                        <div class="mb-4">
-                            <label asp-for="SecondaryContactId" class="form-label">Select Contact to Merge In</label>
-                            <select asp-for="SecondaryContactId" asp-items="ViewBag.SecondaryContacts" class="form-select" required>
-                                <option value="">-- Select Contact --</option>
-                            </select>
-                            <span asp-validation-for="SecondaryContactId" class="text-danger"></span>
-                        </div>
+    <div class="crm-page" style="max-width: 720px;">
+        <div asp-validation-summary="ModelOnly" class="crm-field-error"></div>
 
-                        <div class="d-flex justify-content-between">
-                            <a asp-controller="Contacts" asp-action="Details" asp-route-id="@Model.PrimaryContactId" class="crm-btn-tertiary">
-                                Cancel
-                            </a>
-                            <button type="submit" class="crm-btn-primary">
-                                Next: Preview Merge <i class="bi bi-arrow-right" aria-hidden="true"></i>
-                            </button>
-                        </div>
-                    </form>
+        <div class="crm-card">
+            <div class="crm-card-header">
+                <h5 class="card-title mb-0"><i class="bi bi-people" aria-hidden="true"></i> Secondary Contact</h5>
+            </div>
+            <div class="crm-card-body">
+                <p>Select another contact to merge into <strong>@Model.PrimaryContact?.FullName</strong>.</p>
+                <p class="small" style="color: var(--crm-danger);">
+                    <strong>Warning:</strong> The contact you select below (the secondary contact) will be
+                    <strong>deleted</strong> after its data is migrated to @Model.PrimaryContact?.FullName.
+                </p>
+
+                <div class="crm-field-group">
+                    <label asp-for="SecondaryContactId">Select a contact to merge into the primary</label>
+                    <select asp-for="SecondaryContactId" id="SecondaryContactId" asp-items="ViewBag.SecondaryContacts" class="crm-input" required>
+                        <option value="">-- Select Contact --</option>
+                    </select>
+                    <span asp-validation-for="SecondaryContactId" class="crm-field-error"></span>
                 </div>
             </div>
         </div>
     </div>
-</div>
+</form>
 
 @section Scripts {
     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
