@@ -1,4 +1,4 @@
-namespace Rvnx.CRM.Core.DTOs.Contact;
+namespace Rvnx.CRM.Web.ViewModels.Immich;
 
 public sealed record ImmichGalleryRequest
 {

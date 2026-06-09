@@ -60,7 +60,8 @@
 **Vulnerability:** AccountController relied solely on `Url.IsLocalUrl()` to prevent Open Redirects during login.
 **Learning:** While `Url.IsLocalUrl()` is standard and generally safe, it only checks if a URL is relative (not absolute). It does not verify if the relative path actually exists or is a safe place to redirect a user within the application, leaving potential room for obscure bypasses or unwanted internal routing if other vulnerabilities exist.
 **Prevention:** Implement defense-in-depth by augmenting `Url.IsLocalUrl()` with an explicit `IsUrlInSafelist()` check that verifies the relative path against a known-good list of allowed application routes (e.g., `/`, `/Home`, `/Contacts`). Default to the application root if validation fails.
-## 2024-06-09 - Fix DoS Vulnerability in API File Upload
-**Vulnerability:** The API `AttachmentsController.Upload` endpoint read entire uploaded files directly into a `MemoryStream` via `CopyToAsync` without any prior file size limits or validation.
-**Learning:** External API endpoints handling multipart/form-data need explicit, upfront file validation (size and extension) before buffering the file content to prevent memory exhaustion (DoS) attacks and malicious file uploads.
-**Prevention:** Always inject and utilize `IFileValidationService` to assert `IsAllowedFileSize` and `IsAllowedExtension` immediately upon receiving an `IFormFile`, prior to performing any stream operations or allocations.
+
+## 2025-06-05 - 🛡️ Sentinel: [CRITICAL] Fix DoS vulnerability in Immich controller proxy
+**Vulnerability:** The `ImmichController.SetAsProfilePhoto` endpoint proxied image downloads from the Immich API into an unbounded memory stream without limits if `Content-Length` was missing (e.g. chunked transfers). An attacker could cause memory exhaustion (DoS).
+**Learning:** `CopyToAsync` on streams without pre-validated size limits is dangerous. Using a chunked reading loop with an embedded size check mitigates this vulnerability.
+**Prevention:** Whenever buffering external streams into memory, always read in chunks and validate total bytes read against the application's maximum allowed size limit.
