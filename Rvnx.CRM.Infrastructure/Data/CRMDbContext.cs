@@ -38,6 +38,7 @@ public class CRMDbContext(DbContextOptions<CRMDbContext> options, ICurrentUserSe
     public DbSet<ContactTask>? ContactTasks { get; set; }
     public DbSet<ApiToken>? ApiTokens { get; set; }
     public DbSet<ContactImmichLink>? ContactImmichLinks { get; set; }
+    public DbSet<GroupImmichSettings>? GroupImmichSettings { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -205,6 +206,11 @@ public class CRMDbContext(DbContextOptions<CRMDbContext> options, ICurrentUserSe
 
         modelBuilder.Entity<ContactImmichLink>()
             .HasIndex(e => e.ContactId)
+            .IsUnique();
+
+        // One Immich settings row per group, shared by all group members.
+        modelBuilder.Entity<GroupImmichSettings>()
+            .HasIndex(s => s.GroupId)
             .IsUnique();
 
         // Self-referencing FK so a contact can record who introduced them.
