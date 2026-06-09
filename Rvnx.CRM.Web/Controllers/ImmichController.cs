@@ -22,7 +22,7 @@ public class ImmichController(
     [HttpGet("Immich/Gallery")]
     public async Task<IActionResult> Gallery([FromQuery] ImmichGalleryRequest request, CancellationToken ct)
     {
-        IReadOnlyList<ImmichAssetDto> assets = _immichService.IsEnabled
+        IReadOnlyList<ImmichAssetDto> assets = await _immichService.IsEnabledAsync(ct)
             ? await _immichService.GetAssetsAsync(request.PersonId, request.TagId, MaxAssets, ct)
             : [];
 
@@ -33,7 +33,7 @@ public class ImmichController(
             PersonName = request.PersonName,
             TagId = request.TagId,
             TagValue = request.TagValue,
-            WebBaseUrl = _immichService.WebBaseUrl,
+            WebBaseUrl = await _immichService.GetWebBaseUrlAsync(ct),
             Assets = assets,
         };
 
