@@ -12,9 +12,17 @@ public class LabelService(IRepository repository) : ILabelService
 
     public async Task<List<LabelDto>> GetAllAsync()
     {
+        // Counts come from EF's correlated subquery on the ContactLabels navigation —
+        // one SQL round-trip total instead of pulling every join row to count in memory.
         return await _repository.ListProjectedAsync<Label, LabelDto, string>(
             l => true,
-            l => new LabelDto { Id = l.Id, Name = l.Name, Color = l.Color },
+            l => new LabelDto
+            {
+                Id = l.Id,
+                Name = l.Name,
+                Color = l.Color,
+                ContactCount = l.ContactLabels.Count()
+            },
             orderBy: l => l.Name,
             descending: false
         );
