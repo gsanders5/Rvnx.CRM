@@ -49,6 +49,58 @@ public class SelfContactServiceTests
     }
 
     [Fact]
+    public async Task GetSelfContactIdAsyncWithMissingUserFallsBackToSubjectIdLookup()
+    {
+        Guid userId = Guid.NewGuid();
+        Guid selfContactId = Guid.NewGuid();
+        _currentUserServiceMock.Setup(c => c.UserId).Returns(userId);
+
+        // GetById returns null
+        _repositoryMock.Setup(r => r.GetByIdAsync<Rvnx.CRM.Core.Models.User>(userId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync((Rvnx.CRM.Core.Models.User?)null);
+
+        // Fallback to ListAsync by SubjectId
+        Rvnx.CRM.Core.Models.User user = new() { Id = userId, SubjectId = userId.ToString(), SelfContactId = selfContactId };
+        List<Rvnx.CRM.Core.Models.User> mockUsers = new() { user };
+
+        _repositoryMock.Setup(r => r.ListAsync<Rvnx.CRM.Core.Models.User>(
+                It.IsAny<Expression<Func<Rvnx.CRM.Core.Models.User, bool>>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((Expression<Func<Rvnx.CRM.Core.Models.User, bool>> expr, CancellationToken ct) =>
+                mockUsers.AsQueryable().Where(expr).ToList());
+
+        Guid? result = await _service.GetSelfContactIdAsync();
+
+        Assert.Equal(selfContactId, result);
+        _repositoryMock.Verify(r => r.GetByIdAsync<Rvnx.CRM.Core.Models.User>(userId, It.IsAny<CancellationToken>()), Times.Once());
+        _repositoryMock.Verify(r => r.ListAsync<Rvnx.CRM.Core.Models.User>(It.IsAny<Expression<Func<Rvnx.CRM.Core.Models.User, bool>>>(), It.IsAny<CancellationToken>()), Times.Once());
+    }
+
+    [Fact]
+    public async Task GetSelfContactIdAsyncWithCompletelyMissingUserReturnsNull()
+    {
+        Guid userId = Guid.NewGuid();
+        _currentUserServiceMock.Setup(c => c.UserId).Returns(userId);
+
+        // GetById returns null
+        _repositoryMock.Setup(r => r.GetByIdAsync<Rvnx.CRM.Core.Models.User>(userId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync((Rvnx.CRM.Core.Models.User?)null);
+
+        // Fallback to ListAsync by SubjectId also returns empty
+        List<Rvnx.CRM.Core.Models.User> mockUsers = new();
+
+        _repositoryMock.Setup(r => r.ListAsync<Rvnx.CRM.Core.Models.User>(
+                It.IsAny<Expression<Func<Rvnx.CRM.Core.Models.User, bool>>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((Expression<Func<Rvnx.CRM.Core.Models.User, bool>> expr, CancellationToken ct) =>
+                mockUsers.AsQueryable().Where(expr).ToList());
+
+        Guid? result = await _service.GetSelfContactIdAsync();
+
+        Assert.Null(result);
+        _repositoryMock.Verify(r => r.GetByIdAsync<Rvnx.CRM.Core.Models.User>(userId, It.IsAny<CancellationToken>()), Times.Once());
+        _repositoryMock.Verify(r => r.ListAsync<Rvnx.CRM.Core.Models.User>(It.IsAny<Expression<Func<Rvnx.CRM.Core.Models.User, bool>>>(), It.IsAny<CancellationToken>()), Times.Once());
+    }
+
+    [Fact]
     public async Task GetSelfContactIdAsyncCachesResultAcrossCalls()
     {
         Guid userId = Guid.NewGuid();

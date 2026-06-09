@@ -1211,6 +1211,104 @@ public class ContactReadServiceTests
         }
     }
 
+    public class ContactReadServiceGetIntroducerCandidatesTests : ContactReadServiceTestBase
+    {
+        [Fact]
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Naming", "CA1707:Identifiers should not contain underscores", Justification = "Test names follow a standard convention")]
+        public async Task GetIntroducerCandidatesAsync_WhenCalled_ReturnsCandidatesAlphabetically()
+        {
+            // Arrange
+            List<ContactSelectItemDto> mockData =
+            [
+                new() { Id = Guid.NewGuid(), FullName = "Zebra" },
+                new() { Id = Guid.NewGuid(), FullName = "Apple" },
+                new() { Id = Guid.NewGuid(), FullName = "Mango" }
+            ];
+
+            RepositoryMock.Setup(r => r.ListProjectedAsync<Contact, ContactSelectItemDto>(
+                It.IsAny<Expression<Func<Contact, bool>>>(),
+                It.IsAny<Expression<Func<Contact, ContactSelectItemDto>>>(),
+                It.IsAny<CancellationToken>()))
+                .ReturnsAsync(mockData);
+
+            // Act
+            List<ContactSelectItemDto> result = await Service.GetIntroducerCandidatesAsync(null);
+
+            // Assert
+            Assert.Equal(3, result.Count);
+            Assert.Equal("Apple", result[0].FullName);
+            Assert.Equal("Mango", result[1].FullName);
+            Assert.Equal("Zebra", result[2].FullName);
+        }
+
+        [Fact]
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Naming", "CA1707:Identifiers should not contain underscores", Justification = "Test names follow a standard convention")]
+        public async Task GetIntroducerCandidatesAsync_WhenCalled_ExcludesPartialContacts()
+        {
+            // Arrange
+            Expression<Func<Contact, bool>>? capturedFilter = null;
+            RepositoryMock.Setup(r => r.ListProjectedAsync<Contact, ContactSelectItemDto>(
+                It.IsAny<Expression<Func<Contact, bool>>>(),
+                It.IsAny<Expression<Func<Contact, ContactSelectItemDto>>>(),
+                It.IsAny<CancellationToken>()))
+                .Callback<Expression<Func<Contact, bool>>, Expression<Func<Contact, ContactSelectItemDto>>, CancellationToken>(
+                    (filter, _, _) => capturedFilter = filter)
+                .ReturnsAsync([]);
+
+            // Act
+            await Service.GetIntroducerCandidatesAsync(null);
+
+            // Assert
+            Assert.NotNull(capturedFilter);
+            Func<Contact, bool> filterFunc = capturedFilter.Compile();
+            Assert.False(filterFunc(new Contact { IsPartial = true }));
+            Assert.True(filterFunc(new Contact { IsPartial = false }));
+        }
+
+        [Fact]
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Naming", "CA1707:Identifiers should not contain underscores", Justification = "Test names follow a standard convention")]
+        public async Task GetIntroducerCandidatesAsync_WhenExcludeContactIdIsProvided_ExcludesSpecificContact()
+        {
+            // Arrange
+            Guid excludeId = Guid.NewGuid();
+            Expression<Func<Contact, bool>>? capturedFilter = null;
+            RepositoryMock.Setup(r => r.ListProjectedAsync<Contact, ContactSelectItemDto>(
+                It.IsAny<Expression<Func<Contact, bool>>>(),
+                It.IsAny<Expression<Func<Contact, ContactSelectItemDto>>>(),
+                It.IsAny<CancellationToken>()))
+                .Callback<Expression<Func<Contact, bool>>, Expression<Func<Contact, ContactSelectItemDto>>, CancellationToken>(
+                    (filter, _, _) => capturedFilter = filter)
+                .ReturnsAsync([]);
+
+            // Act
+            await Service.GetIntroducerCandidatesAsync(excludeId);
+
+            // Assert
+            Assert.NotNull(capturedFilter);
+            Func<Contact, bool> filterFunc = capturedFilter.Compile();
+            Assert.False(filterFunc(new Contact { Id = excludeId, IsPartial = false }));
+            Assert.True(filterFunc(new Contact { Id = Guid.NewGuid(), IsPartial = false }));
+        }
+
+        [Fact]
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Naming", "CA1707:Identifiers should not contain underscores", Justification = "Test names follow a standard convention")]
+        public async Task GetIntroducerCandidatesAsync_WhenNoCandidatesExist_ReturnsEmptyList()
+        {
+            // Arrange
+            RepositoryMock.Setup(r => r.ListProjectedAsync<Contact, ContactSelectItemDto>(
+                It.IsAny<Expression<Func<Contact, bool>>>(),
+                It.IsAny<Expression<Func<Contact, ContactSelectItemDto>>>(),
+                It.IsAny<CancellationToken>()))
+                .ReturnsAsync([]);
+
+            // Act
+            List<ContactSelectItemDto> result = await Service.GetIntroducerCandidatesAsync(null);
+
+            // Assert
+            Assert.Empty(result);
+        }
+    }
+
     public class ContactReadServiceHowWeMetTests : ContactReadServiceTestBase
     {
         [Fact]
