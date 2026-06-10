@@ -1,9 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Rvnx.CRM.Core.DTOs.Contact;
-using Rvnx.CRM.Core.Extensions;
 using Rvnx.CRM.Core.Interfaces;
 using Rvnx.CRM.Core.Models;
-using Rvnx.CRM.Core.Models.Contact;
 using Rvnx.CRM.Web.Controllers.Base;
 
 namespace Rvnx.CRM.Web.Controllers;
@@ -74,13 +72,6 @@ public class PetsController(IPetService petService, IRepository repository, ICon
 
         await PopulateContactsSelectListExcludeDeceased(_contactReadService, petDto.ContactIds);
         return View(petDto);
-    }
-
-    [HttpGet]
-    public async Task<IActionResult> Delete(Guid id)
-    {
-        Pet? pet = await _petService.GetByIdAsync(id);
-        return pet == null ? NotFound() : View(pet.ToDto());
     }
 
     [HttpPost, ActionName("Delete")]

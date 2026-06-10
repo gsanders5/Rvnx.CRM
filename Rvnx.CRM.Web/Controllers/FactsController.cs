@@ -2,7 +2,6 @@ using Microsoft.AspNetCore.Mvc;
 using Rvnx.CRM.Core.DTOs.Contact;
 using Rvnx.CRM.Core.Interfaces;
 using Rvnx.CRM.Core.Models;
-using Rvnx.CRM.Core.Models.Contact;
 using Rvnx.CRM.Web.Controllers.Base;
 
 namespace Rvnx.CRM.Web.Controllers;
@@ -63,18 +62,6 @@ public class FactsController(IFactService factService, IRepository repository) :
         }
 
         return View(factDto);
-    }
-
-    [HttpGet]
-    public async Task<IActionResult> Delete(Guid? id)
-    {
-        if (id == null)
-        {
-            return NotFound();
-        }
-
-        Fact? fact = await _factService.GetByIdAsync(id.Value);
-        return fact == null ? NotFound() : View(fact);
     }
 
     [HttpPost, ActionName("Delete")]

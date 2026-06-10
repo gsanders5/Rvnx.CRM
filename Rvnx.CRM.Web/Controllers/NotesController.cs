@@ -1,9 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Rvnx.CRM.Core.DTOs.Base;
-using Rvnx.CRM.Core.Extensions;
 using Rvnx.CRM.Core.Interfaces;
 using Rvnx.CRM.Core.Models;
-using Rvnx.CRM.Core.Models.Base;
 using Rvnx.CRM.Web.Controllers.Base;
 
 namespace Rvnx.CRM.Web.Controllers;
@@ -75,24 +73,6 @@ public class NotesController(INoteService noteService, IRepository repository, I
         }
 
         return View(viewModel);
-    }
-
-    [HttpGet]
-    public async Task<IActionResult> Delete(Guid? id)
-    {
-        if (id == null)
-        {
-            return NotFound();
-        }
-
-        Note? note = await _noteService.GetByIdAsync(id.Value);
-        if (note == null)
-        {
-            return NotFound();
-        }
-
-        string contactName = await _contactLookupService.GetContactNameAsync(note.ContactId ?? Guid.Empty);
-        return View(new NoteDeleteViewModel(note.ToDto(), contactName));
     }
 
     [HttpPost, ActionName("Delete")]

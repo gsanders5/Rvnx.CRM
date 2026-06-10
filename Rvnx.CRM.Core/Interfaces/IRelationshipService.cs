@@ -46,6 +46,5 @@ public interface IRelationshipService
     Task<RelationshipOperationResult> PromotePartialContactAsync(Guid contactId);
 
     Task<Relationship?> GetRelationshipForEditAsync(Guid id);
-    Task<Relationship?> GetRelationshipForDeleteAsync(Guid id);
     Task<OperationResult> DeleteRelationshipAsync(Guid id);
 }

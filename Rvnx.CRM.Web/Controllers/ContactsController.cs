@@ -329,18 +329,6 @@ public class ContactsController(
         }
     }
 
-    [HttpGet]
-    public async Task<IActionResult> Delete(Guid? id)
-    {
-        if (id == null)
-        {
-            return NotFound();
-        }
-
-        ContactDetailDto? contactDto = await _contactReadService.GetContactDetailsAsync(id.Value);
-        return contactDto == null ? NotFound() : View(contactDto);
-    }
-
     [HttpPost, ActionName("Delete")]
     public async Task<IActionResult> DeleteConfirmed(Guid id)
     {

@@ -164,18 +164,6 @@ public class SignificantDatesController(ISignificantDateService significantDateS
         return RedirectToAction(nameof(Edit), new { id = significantDateId });
     }
 
-    [HttpGet]
-    public async Task<IActionResult> Delete(Guid? id)
-    {
-        if (id == null)
-        {
-            return NotFound();
-        }
-
-        SignificantDateDto? dto = await _significantDateService.GetDtoAsync(id.Value);
-        return dto == null ? NotFound() : View(dto);
-    }
-
     [HttpPost, ActionName("Delete")]
     public async Task<IActionResult> DeleteConfirmed(Guid id, Guid contactId)
     {
