@@ -514,9 +514,9 @@ public class AttachmentServiceTests
     }
 
     /// <summary>
-    /// GetByIdAsync resolves an attachment by primary key via FindAsync, bypassing the global
-    /// group query filter. These tests confirm the ownership re-check (IsValidContactAsync, which
-    /// runs a group-filtered query) blocks reads and deletes of attachments owned by another group.
+    /// GetByIdAsync honors the global group query filter, and IsValidContactAsync provides a
+    /// second, group-filtered ownership check. These tests confirm reads and deletes of
+    /// attachments owned by another group are blocked end to end.
     /// </summary>
     public class AttachmentGroupIsolationTests
     {

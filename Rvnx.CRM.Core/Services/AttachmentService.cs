@@ -91,10 +91,9 @@ public class AttachmentService : IAttachmentService
             return AttachmentOperationResult.NotFound();
         }
 
-        // GetByIdAsync resolves by primary key via FindAsync, which bypasses the global group query
-        // filter, so an attachment from another group is loaded here. IsValidContactAsync runs a
-        // group-filtered check (exists, not partial), rejecting cross-group and partial-owned
-        // attachments alike before any deletion occurs.
+        // GetByIdAsync now honors the global group query filter, so a cross-group attachment never
+        // loads here. IsValidContactAsync is kept as defense in depth and to reject attachments
+        // owned by partial contacts.
         if (attachment.ContactId.HasValue && !await _repository.IsValidContactAsync(attachment.ContactId.Value))
         {
             return AttachmentOperationResult.NotFound();

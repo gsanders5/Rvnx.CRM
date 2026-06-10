@@ -61,6 +61,11 @@
 **Learning:** While `Url.IsLocalUrl()` is standard and generally safe, it only checks if a URL is relative (not absolute). It does not verify if the relative path actually exists or is a safe place to redirect a user within the application, leaving potential room for obscure bypasses or unwanted internal routing if other vulnerabilities exist.
 **Prevention:** Implement defense-in-depth by augmenting `Url.IsLocalUrl()` with an explicit `IsUrlInSafelist()` check that verifies the relative path against a known-good list of allowed application routes (e.g., `/`, `/Home`, `/Contacts`). Default to the application root if validation fails.
 
+## 2026-06-10 - Repository Primary-Key Lookups Bypassed Group Isolation
+**Vulnerability:** `Repository.GetByIdAsync<T>(Guid)` and `DeleteAsync<T>(Guid)` used EF Core's `FindAsync`, which does not apply global query filters. Since the `GroupId` filter is the only multi-tenant isolation mechanism, every by-key fetch or delete could reach entities in other groups unless the calling service remembered a manual ownership re-check (IDOR by default).
+**Learning:** `FindAsync` checks the identity map and issues a raw key lookup, deliberately skipping `HasQueryFilter`. Safety that depends on each caller adding an opt-in guard (`ExistsAsync`/`IsValidContactAsync`) will eventually be forgotten; the data-access layer must fail safe.
+**Prevention:** By-key repository members now use filtered `FirstOrDefaultAsync(e => e.Id == id)`. `QueryUnfiltered<T>()` is the single, greppable escape hatch for legitimate cross-group access (token resolution, OIDC login, background jobs, admin operations). Never reintroduce `FindAsync` in the repository; repository-level isolation tests in `RepositoryTests.GroupIsolation` enforce the contract.
+
 ## 2025-06-05 - 🛡️ Sentinel: [CRITICAL] Fix DoS vulnerability in Immich controller proxy
 **Vulnerability:** The `ImmichController.SetAsProfilePhoto` endpoint proxied image downloads from the Immich API into an unbounded memory stream without limits if `Content-Length` was missing (e.g. chunked transfers). An attacker could cause memory exhaustion (DoS).
 **Learning:** `CopyToAsync` on streams without pre-validated size limits is dangerous. Using a chunked reading loop with an embedded size check mitigates this vulnerability.

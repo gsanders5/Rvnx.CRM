@@ -18,7 +18,10 @@ public class Repository(CRMDbContext context) : IRepository
 
     public async Task<T?> GetByIdAsync<T>(Guid id, CancellationToken cancellationToken = default) where T : BaseEntity
     {
-        return await _context.Set<T>().FindAsync([id], cancellationToken);
+        // Deliberately not FindAsync: FindAsync bypasses global query filters, which would let a
+        // by-key lookup reach across group boundaries. Cross-group access must go through
+        // QueryUnfiltered<T>() so the intent is explicit at the call site.
+        return await _context.Set<T>().FirstOrDefaultAsync(e => e.Id == id, cancellationToken);
     }
 
     public async Task<T?> GetByIdWithIncludesAsync<T>(Guid id, params string[] includes) where T : BaseEntity
@@ -156,8 +159,10 @@ public class Repository(CRMDbContext context) : IRepository
 
     public async Task DeleteAsync<T>(Guid id, CancellationToken cancellationToken = default) where T : BaseEntity
     {
-        // FindAsync already checks the context's local cache before querying the database.
-        T? entity = await _context.Set<T>().FindAsync([id], cancellationToken);
+        // Deliberately not FindAsync: FindAsync bypasses global query filters, which would allow
+        // deleting an entity belonging to another group. A cross-group id resolves to null here,
+        // making the delete a silent no-op.
+        T? entity = await _context.Set<T>().FirstOrDefaultAsync(e => e.Id == id, cancellationToken);
 
         if (entity != null)
         {

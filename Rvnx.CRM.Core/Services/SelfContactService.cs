@@ -99,6 +99,8 @@ public class SelfContactService(IRepository repository, ICurrentUserService curr
             return null;
         }
 
+        // User is IGlobalEntity (no group query filter), so this filtered lookup is unaffected
+        // by group isolation.
         Rvnx.CRM.Core.Models.User? user = await _repository.GetByIdAsync<Rvnx.CRM.Core.Models.User>(userId.Value);
         _cachedUser = user ?? (await _repository.ListAsync<Rvnx.CRM.Core.Models.User>(u => u.SubjectId == userId.Value.ToString())).FirstOrDefault();
         _userLoaded = true;

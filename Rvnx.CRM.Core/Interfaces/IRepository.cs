@@ -12,7 +12,9 @@ public interface IRepository
     IQueryable<T> QueryUnfiltered<T>() where T : BaseEntity;
 
     /// <summary>
-    /// Retrieves an entity by its ID.
+    /// Retrieves an entity by its ID, honoring global query filters: an ID belonging to another
+    /// group resolves to <c>null</c>. Use <see cref="QueryUnfiltered{T}"/> when cross-group access
+    /// is genuinely intended.
     /// </summary>
     Task<T?> GetByIdAsync<T>(Guid id, CancellationToken cancellationToken = default) where T : BaseEntity;
 
@@ -89,7 +91,9 @@ public interface IRepository
 
 
     /// <summary>
-    /// Deletes an entity by its ID.
+    /// Deletes an entity by its ID, honoring global query filters: an ID belonging to another
+    /// group is a silent no-op. Callers needing a "not found" signal should pair this with
+    /// <see cref="ExistsAsync{T}"/>; cross-group deletes must go through <see cref="QueryUnfiltered{T}"/>.
     /// </summary>
     Task DeleteAsync<T>(Guid id, CancellationToken cancellationToken = default) where T : BaseEntity;
 

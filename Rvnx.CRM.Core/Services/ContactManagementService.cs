@@ -19,9 +19,9 @@ public class ContactManagementService(IRepository repository, IFileValidationSer
 
     public async Task DeleteContactAsync(Guid contactId)
     {
-        // GetByIdAsync/DeleteAsync resolve by primary key via FindAsync, which bypasses the global
-        // group query filter. Gate on the filtered ExistsAsync first so a caller cannot delete a
-        // contact (and cascade its children) belonging to another group.
+        // GetByIdAsync/DeleteAsync now honor the global group query filter themselves; this
+        // filtered ExistsAsync gate is kept as defense in depth and to skip the dependency
+        // cleanup below for ids outside the caller's group.
         if (!await _repository.ExistsAsync<Contact>(contactId))
         {
             return;
@@ -244,8 +244,8 @@ public class ContactManagementService(IRepository repository, IFileValidationSer
 
     public async Task<ContactOperationResult> UpdateContactAsync(Guid id, ContactFormDto contactDto, Stream? imageStream, string? fileName, string? contentType)
     {
-        // GetByIdAsync resolves by primary key via FindAsync, which bypasses the global group query
-        // filter. Gate on the filtered ExistsAsync so a caller cannot update a contact in another group.
+        // GetByIdAsync now honors the global group query filter itself; this filtered ExistsAsync
+        // gate is kept as defense in depth against cross-group updates.
         if (!await _repository.ExistsAsync<Contact>(id))
         {
             return ContactOperationResult.NotFound();
@@ -417,8 +417,8 @@ public class ContactManagementService(IRepository repository, IFileValidationSer
 
     public async Task<ContactOperationResult> DemoteToPartialAsync(Guid contactId)
     {
-        // GetByIdAsync bypasses the global group query filter (FindAsync by key); gate on the
-        // filtered ExistsAsync so a caller cannot demote a contact in another group.
+        // GetByIdAsync now honors the global group query filter itself; this filtered ExistsAsync
+        // gate is kept as defense in depth against cross-group demotion.
         if (!await _repository.ExistsAsync<Contact>(contactId))
         {
             return ContactOperationResult.NotFound();
