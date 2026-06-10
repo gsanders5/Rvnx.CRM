@@ -109,7 +109,10 @@ public class DashboardService(IRepository repository, ILogger<DashboardService> 
         const int MaxRecentContacts = 5;
         DateTime sevenDaysAgo = DateTime.UtcNow.AddDays(-7);
 
+        // Recently Modified is a prompt to revisit someone — keep deceased contacts out
+        // of it (they stay reachable via the contact list and network graph).
         dashboard.RecentContacts = contacts
+            .Where(c => !c.IsDeceased)
             .OrderByDescending(c => c.LastChangedDate)
             .Take(MaxRecentContacts)
             .Select(c => new RecentContactDto
