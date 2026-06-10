@@ -91,9 +91,13 @@ public class AttachmentService : IAttachmentService
             return AttachmentOperationResult.NotFound();
         }
 
-        if (attachment.ContactId.HasValue && await _contactLookupService.IsPartialAsync(attachment.ContactId.Value))
+        // GetByIdAsync resolves by primary key via FindAsync, which bypasses the global group query
+        // filter, so an attachment from another group is loaded here. IsValidContactAsync runs a
+        // group-filtered check (exists, not partial), rejecting cross-group and partial-owned
+        // attachments alike before any deletion occurs.
+        if (attachment.ContactId.HasValue && !await _repository.IsValidContactAsync(attachment.ContactId.Value))
         {
-            return AttachmentOperationResult.NotFound("Cannot modify partial contact.");
+            return AttachmentOperationResult.NotFound();
         }
 
         await _repository.DeleteAsync<Attachment>(attachmentId);
@@ -109,7 +113,7 @@ public class AttachmentService : IAttachmentService
 
         return attachment?.AttachmentContent == null
             ? null
-            : attachment.ContactId.HasValue && await _contactLookupService.IsPartialAsync(attachment.ContactId.Value)
+            : attachment.ContactId.HasValue && !await _repository.IsValidContactAsync(attachment.ContactId.Value)
             ? null
             : new AttachmentContentDto
             {
@@ -127,7 +131,7 @@ public class AttachmentService : IAttachmentService
         Attachment? attachment = await _repository.GetByIdAsync<Attachment>(attachmentId);
         return attachment == null
             ? null
-            : attachment.ContactId.HasValue && await _contactLookupService.IsPartialAsync(attachment.ContactId.Value)
+            : attachment.ContactId.HasValue && !await _repository.IsValidContactAsync(attachment.ContactId.Value)
             ? null
             : new AttachmentDto
             {

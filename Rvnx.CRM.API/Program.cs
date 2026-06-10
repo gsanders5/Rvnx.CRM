@@ -71,8 +71,26 @@ app.UseForwardedHeaders(new ForwardedHeadersOptions
                        | Microsoft.AspNetCore.HttpOverrides.ForwardedHeaders.XForwardedProto
 });
 
-app.UseSwagger();
-app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "Rvnx.CRM.API v1"));
+// Add baseline security headers to every API response, mirroring the Web app. The API serves
+// attachment downloads with stored content types, so nosniff in particular matters here.
+app.Use(async (context, next) =>
+{
+    context.Response.OnStarting(() =>
+    {
+        context.Response.Headers["X-Content-Type-Options"] = "nosniff";
+        context.Response.Headers["X-Frame-Options"] = "DENY";
+        return Task.CompletedTask;
+    });
+    await next();
+});
+
+// Publish the OpenAPI schema and Swagger UI only in development; production should not expose
+// the full API surface description.
+if (app.Environment.IsDevelopment())
+{
+    app.UseSwagger();
+    app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "Rvnx.CRM.API v1"));
+}
 
 app.UseHttpsRedirection();
 app.UseAuthentication();
