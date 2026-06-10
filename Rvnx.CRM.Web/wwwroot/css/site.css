@@ -267,14 +267,17 @@ h5, .card-title {
 }
 
 .crm-stat-card .stat-value {
-  font-size: 1.75rem;
-  font-weight: 700;
+  font-family: 'Newsreader', 'Source Serif Pro', Georgia, serif;
+  font-size: 2.25rem;
+  font-weight: 400;
   line-height: 1.2;
 }
 
 .crm-stat-card .stat-label {
-  font-size: 0.775rem;
+  font-size: 0.75rem;
   font-weight: 500;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
   color: var(--crm-text-tertiary);
   margin-top: 0.25rem;
 }
@@ -792,7 +795,6 @@ a:focus-visible .crm-avatar-placeholder {
 }
 
 [data-mdb-theme="dark"] .crm-relationship-row {
-  background-color: #262a3a;
   border-color: var(--crm-border);
 }
 
@@ -1033,19 +1035,6 @@ a:focus-visible .crm-avatar-placeholder {
   border-color: rgba(76, 201, 240, 0.2);
 }
 
-/* ==========================================================================
-   LEGACY COMPAT — Keep old class working alongside new
-   ========================================================================== */
-
-.card-img-profile {
-  max-height: 300px;
-  object-fit: cover;
-}
-
-.hover-shadow:hover {
-  box-shadow: var(--crm-shadow-md) !important;
-  transition: box-shadow var(--crm-transition-fast);
-}
 
 /* ==========================================================================
    DataTables Custom Styles
@@ -1498,7 +1487,7 @@ table.dataTable .crm-dtr-child-empty {
 }
 .crm-settings-toc .nav-link.active {
   color: var(--crm-text-primary);
-  border-left-color: var(--crm-primary);
+  border-left-color: var(--crm-brand);
   font-weight: 600;
 }
 
@@ -1517,36 +1506,8 @@ table.dataTable .crm-dtr-child-empty {
 }
 
 /* ==========================================================================
-   Bulk action toolbar (Contacts list)
+   Bulk action toolbar (Contacts list) — see "BULK TOOLBAR" section below
    ========================================================================== */
-
-.bulk-toolbar {
-  display: none;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.625rem 0.875rem;
-  margin-bottom: 0.75rem;
-  background-color: var(--crm-surface-elevated);
-  border: 1px solid var(--crm-border);
-  border-radius: var(--crm-radius-sm);
-  box-shadow: var(--crm-shadow-sm);
-}
-
-.bulk-toolbar.is-active {
-  display: flex;
-}
-
-.bulk-toolbar-count {
-  font-weight: 600;
-  color: var(--crm-text-primary);
-  margin-right: 0.5rem;
-}
-
-.bulk-toolbar-group {
-  display: inline-flex;
-  gap: 0.25rem;
-}
 
 table.dataTable td.select-col,
 table.dataTable th.select-col {
@@ -2447,20 +2408,22 @@ table.dataTable th.select-col input#select-all {
 }
 
 /* ==========================================================================
-   BULK TOOLBAR — Re-skin to use the inverse tokens (now editorial)
+   BULK TOOLBAR — Inverse-token (editorial) skin for the Contacts list
    ========================================================================== */
 
 .bulk-toolbar {
-  background: var(--crm-inverse-bg) !important;
-  color: var(--crm-inverse-text);
-  border-left: 4px solid var(--crm-brand);
-  border-radius: 10px;
-  padding: 10px 16px;
   display: none;
   flex-wrap: wrap;
   align-items: center;
   gap: 10px;
+  padding: 10px 16px;
   margin-bottom: 12px;
+  background: var(--crm-inverse-bg);
+  color: var(--crm-inverse-text);
+  border: 1px solid var(--crm-border);
+  border-left: 4px solid var(--crm-brand);
+  border-radius: 10px;
+  box-shadow: var(--crm-shadow-sm);
 }
 
 .bulk-toolbar.is-visible,
@@ -2472,6 +2435,12 @@ table.dataTable th.select-col input#select-all {
   color: var(--crm-inverse-text);
   font-size: 12px;
   font-weight: 600;
+  margin-right: 0.5rem;
+}
+
+.bulk-toolbar-group {
+  display: inline-flex;
+  gap: 0.25rem;
 }
 
 .bulk-toolbar .crm-btn-tertiary,
@@ -2794,20 +2763,6 @@ table.dataTable th.select-col input#select-all {
 .crm-recent-row-name .crm-badge-new {
   background: var(--crm-brand);
   color: var(--crm-inverse-text);
-}
-
-/* Override existing .stat-value usage from the legacy stats card */
-.crm-stat-card .stat-value {
-  font-family: 'Newsreader', 'Source Serif Pro', Georgia, serif;
-  font-size: 2.25rem;
-  font-weight: 400;
-}
-
-.crm-stat-card .stat-label {
-  font-size: 0.75rem;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  color: var(--crm-text-tertiary);
 }
 
 /* ==========================================================================
