@@ -1035,6 +1035,34 @@ a:focus-visible .crm-avatar-placeholder {
   border-color: rgba(76, 201, 240, 0.2);
 }
 
+/* Site-wide status banners rendered by _StatusAlerts.cshtml at the top of <main>.
+   Horizontal padding mirrors .crm-page so banners align with page content. */
+.crm-status-alerts {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 20px 40px 0;
+}
+
+@media (max-width: 1099px) {
+  .crm-status-alerts {
+    padding: 16px 24px 0;
+  }
+}
+
+/* ==========================================================================
+   LEGACY COMPAT — Keep old class working alongside new
+   ========================================================================== */
+
+.card-img-profile {
+  max-height: 300px;
+  object-fit: cover;
+}
+
+.hover-shadow:hover {
+  box-shadow: var(--crm-shadow-md) !important;
+  transition: box-shadow var(--crm-transition-fast);
+}
 
 /* ==========================================================================
    DataTables Custom Styles

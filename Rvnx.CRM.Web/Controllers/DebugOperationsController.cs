@@ -60,7 +60,7 @@ public class DebugOperationsController(
     {
         if (confirmation != "MERGE")
         {
-            TempData[TempDataKeys.DangerZoneError] = "Confirmation must be 'MERGE'.";
+            TempData[TempDataKeys.ErrorMessage] = "Confirmation must be 'MERGE'.";
             return RedirectToAction(nameof(MergeAccounts));
         }
 
@@ -68,11 +68,11 @@ public class DebugOperationsController(
 
         if (!result.Success)
         {
-            TempData[TempDataKeys.DangerZoneError] = result.Error ?? "An error occurred during merge.";
+            TempData[TempDataKeys.ErrorMessage] = result.Error ?? "An error occurred during merge.";
             return RedirectToAction(nameof(MergeAccounts));
         }
 
-        TempData[TempDataKeys.DangerZoneMessage] = result.Message;
+        TempData[TempDataKeys.SuccessMessage] = result.Message;
         return RedirectToAction(nameof(MergeAccounts));
     }
 }

@@ -1,4 +1,5 @@
 @model Rvnx.CRM.Core.DTOs.Dates.CreateSignificantDateRequest
+@using Rvnx.CRM.Web.ViewModels.Shared
 
 @{
     ViewData["Title"] = "Create Important Date";
@@ -8,32 +9,16 @@
     @Html.AntiForgeryToken()
     <input type="hidden" asp-for="ContactId" />
 
-    @* ── Action strip ────────────────────────────────────────────────────── *@
-    <div class="crm-details-actions-strip">
-        <a asp-action="Index" asp-route-contactId="@Model.ContactId" class="crm-btn-tertiary btn-sm">
-            <i class="bi bi-arrow-left" aria-hidden="true"></i> Back
-        </a>
-        <div class="d-flex gap-2 align-items-center flex-wrap">
-            <span class="crm-eyebrow crm-unsaved-indicator" id="unsaved-indicator" hidden>
-                <i class="bi bi-circle-fill" aria-hidden="true" style="font-size: 6px; vertical-align: middle; margin-right: 4px;"></i>
-                Unsaved
-            </span>
-            <button type="submit" class="crm-btn-primary btn-sm">
-                <i class="bi bi-plus-lg" aria-hidden="true"></i> Create
-            </button>
-        </div>
-    </div>
-
-    @* ── Editorial masthead ─────────────────────────────────────────────── *@
-    <section class="crm-edit-masthead crm-fade-in">
-        <div class="crm-edit-masthead-photo-placeholder" aria-hidden="true">
-            <i class="bi bi-calendar-event"></i>
-        </div>
-        <div>
-            <div class="crm-eyebrow" style="margin-bottom: 6px;">Adding important date</div>
-            <h1 class="crm-edit-masthead-title">New Important Date</h1>
-        </div>
-    </section>
+    @await Html.PartialAsync("_EditFormHeader", new EditFormHeaderModel
+    {
+        BackUrl = Url.Action("Index", new { contactId = Model.ContactId })!,
+        BackText = "Back",
+        SaveText = "Create",
+        SaveIcon = "bi-plus-lg",
+        Icon = "bi-calendar-event",
+        Eyebrow = "Adding important date",
+        Title = "New Important Date"
+    })
 
     @* ── Body ───────────────────────────────────────────────────────────── *@
     <div class="crm-edit-body">
@@ -70,7 +55,7 @@
 
                     <div class="crm-field-group">
                         <label asp-for="RecurrenceType">Recurrence Type</label>
-                        <select asp-for="RecurrenceType" class="crm-input" id="RecurrenceType">
+                        <select asp-for="RecurrenceType" class="crm-input" id="RecurrenceType" data-select2>
                             <option value="0">None (One-time)</option>
                             <option value="1">Annual</option>
                             <option value="2">Monthly</option>
@@ -124,16 +109,14 @@
         </div>
 
         <div class="crm-edit-col-side">
-            <div class="crm-save-shortcut-card">
-                <div class="crm-save-shortcut-title">Ready to save?</div>
-                <div class="crm-save-shortcut-desc">Changes are applied immediately.</div>
-                <button type="submit" class="crm-btn-primary btn-sm" form="significantdate-form">
-                    <i class="bi bi-plus-lg" aria-hidden="true"></i> Create
-                </button>
-                <a asp-action="Index" asp-route-contactId="@Model.ContactId" class="crm-btn-tertiary btn-sm">
-                    <i class="bi bi-x-lg" aria-hidden="true"></i> Cancel
-                </a>
-            </div>
+            @await Html.PartialAsync("_SaveShortcutCard", new SaveShortcutCardModel
+            {
+                FormId = "significantdate-form",
+                CancelUrl = Url.Action("Index", new { contactId = Model.ContactId })!,
+                CancelIcon = "bi-x-lg",
+                SaveText = "Create",
+                SaveIcon = "bi-plus-lg"
+            })
         </div>
     </div>
 </form>
@@ -144,8 +127,6 @@
         document.addEventListener('DOMContentLoaded', function () {
             var $recurrenceSelect = $('#RecurrenceType');
             var customIntervalDiv = document.getElementById('customIntervalDiv');
-
-            $recurrenceSelect.select2({ width: '100%' });
 
             function toggleCustomInterval() {
                 if ($recurrenceSelect.val() === '3') { // 3 is Custom

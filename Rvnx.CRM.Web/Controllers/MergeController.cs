@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Rvnx.CRM.Core.Interfaces;
+using Rvnx.CRM.Web.Constants;
 using Rvnx.CRM.Web.Controllers.Base;
 using Rvnx.CRM.Web.ViewModels.Merge;
 
@@ -64,19 +65,19 @@ public class MergeController(
     {
         if (primaryContactId == secondaryContactId)
         {
-            TempData["Error"] = "Cannot merge a contact with itself.";
+            TempData[TempDataKeys.ErrorMessage] = "Cannot merge a contact with itself.";
             return RedirectToAction(nameof(Index), new { primaryId = primaryContactId });
         }
 
         try
         {
             await _mergeService.MergeContactsAsync(primaryContactId, secondaryContactId);
-            TempData["Message"] = "Contacts merged successfully.";
+            TempData[TempDataKeys.SuccessMessage] = "Contacts merged successfully.";
             return RedirectToAction("Details", "Contacts", new { id = primaryContactId });
         }
         catch (Exception ex)
         {
-            TempData["Error"] = $"An error occurred during merge: {ex.Message}";
+            TempData[TempDataKeys.ErrorMessage] = $"An error occurred during merge: {ex.Message}";
             return RedirectToAction("Details", "Contacts", new { id = primaryContactId });
         }
     }

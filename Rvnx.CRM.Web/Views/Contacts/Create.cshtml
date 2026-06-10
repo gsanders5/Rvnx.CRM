@@ -119,7 +119,9 @@
                     <div class="crm-form-card-grid">
                         <div class="crm-field-group">
                             <label asp-for="Pronouns">Pronouns</label>
-                            <select asp-for="Pronouns" id="pronouns-select" class="crm-input">
+                            <select asp-for="Pronouns" id="pronouns-select" class="crm-input"
+                                    data-select2 data-select2-tags data-select2-allow-clear
+                                    data-select2-placeholder="Select or enter pronouns...">
                                 <option value=""></option>
                                 @if (!string.IsNullOrEmpty(Model.Pronouns) && !pronounOptions.Contains(Model.Pronouns))
                                 {
@@ -134,7 +136,9 @@
                         </div>
                         <div class="crm-field-group">
                             <label asp-for="Gender">Gender</label>
-                            <select asp-for="Gender" id="gender-select" class="crm-input">
+                            <select asp-for="Gender" id="gender-select" class="crm-input"
+                                    data-select2 data-select2-tags data-select2-allow-clear
+                                    data-select2-placeholder="Select or enter gender...">
                                 <option value=""></option>
                                 @if (!string.IsNullOrEmpty(Model.Gender) && !genderOptions.Contains(Model.Gender))
                                 {
@@ -224,7 +228,9 @@
                         </div>
                         <div class="crm-field-group">
                             <label asp-for="IntroducedByContactId">Introduced By</label>
-                            <select asp-for="IntroducedByContactId" id="introduced-by-select" class="crm-input">
+                            <select asp-for="IntroducedByContactId" id="introduced-by-select" class="crm-input"
+                                    data-select2 data-select2-allow-clear
+                                    data-select2-placeholder="Search for a contact...">
                                 <option value=""></option>
                                 @foreach (var candidate in Model.IntroducerCandidates)
                                 {
@@ -345,10 +351,6 @@
     @{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); }
     <script>
         (function () {
-            $('#pronouns-select').select2({ width: '100%', tags: true, placeholder: 'Select or enter pronouns...', allowClear: true });
-            $('#gender-select').select2({ width: '100%', tags: true, placeholder: 'Select or enter gender...', allowClear: true });
-            $('#introduced-by-select').select2({ width: '100%', placeholder: 'Search for a contact...', allowClear: true });
-
             // ── Live name preview in the masthead ──
             const firstInput = document.getElementById('FirstName');
             const lastInput = document.getElementById('LastName');

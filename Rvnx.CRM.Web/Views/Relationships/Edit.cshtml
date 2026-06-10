@@ -89,7 +89,7 @@
 
                 <div class="mb-3">
                     <label asp-for="RelatedContactId" class="form-label">Related Contact</label>
-                    <select asp-for="RelatedContactId" class="form-select" asp-items="@(new SelectList(Model.RelatedContactOptions, "Value", "Text"))">
+                    <select asp-for="RelatedContactId" class="form-select" data-select2 asp-items="@(new SelectList(Model.RelatedContactOptions, "Value", "Text"))">
                         <option value="">-- Select Related Contact --</option>
                     </select>
                     <span asp-validation-for="RelatedContactId" class="text-danger"></span>
@@ -160,10 +160,6 @@
 @section Scripts {
     @{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); }
     <script>
-        $(document).ready(function() {
-            $('#RelatedContactId').select2({ width: '100%' });
-        });
-
         document.addEventListener('DOMContentLoaded', function() {
             class RelationshipSelector {
                 constructor(config) {

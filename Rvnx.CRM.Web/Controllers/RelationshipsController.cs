@@ -4,6 +4,7 @@ using Rvnx.CRM.Core.Extensions;
 using Rvnx.CRM.Core.Interfaces;
 using Rvnx.CRM.Core.Models;
 using Rvnx.CRM.Core.Models.Contact;
+using Rvnx.CRM.Web.Constants;
 using Rvnx.CRM.Web.Controllers.Base;
 using Rvnx.CRM.Web.ViewModels.Contact;
 
@@ -108,7 +109,7 @@ public class RelationshipsController(
                 result.ErrorMessage ?? "Failed to create partial contact relationship.");
         }
 
-        TempData["ErrorMessage"] =
+        TempData[TempDataKeys.ErrorMessage] =
             string.Join("; ", ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage));
         return RedirectToAction(nameof(Create), new { contactId });
     }
@@ -222,30 +223,6 @@ public class RelationshipsController(
 
         await PopulateRelationshipFormOptionsAsync(viewModel);
         return View(viewModel);
-    }
-
-    [HttpGet]
-    public async Task<IActionResult> Delete(Guid? id, string? returnUrl = null)
-    {
-        if (id == null)
-        {
-            return NotFound();
-        }
-
-        Relationship? relationship = await _relationshipService.GetRelationshipForDeleteAsync(id.Value);
-        if (relationship == null)
-        {
-            return NotFound();
-        }
-
-        if (!await _contactLookupService.ExistsAsync(relationship.ContactId))
-        {
-            return NotFound();
-        }
-
-        string? safeReturnUrl = !string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl) ? returnUrl : null;
-
-        return View(new RelationshipDeleteViewModel(relationship.ToDto(), safeReturnUrl));
     }
 
     [HttpPost, ActionName("Delete")]

@@ -2,7 +2,6 @@ using Microsoft.AspNetCore.Mvc;
 using Rvnx.CRM.Core.DTOs.Contact;
 using Rvnx.CRM.Core.Interfaces;
 using Rvnx.CRM.Core.Models;
-using Rvnx.CRM.Core.Models.Contact;
 using Rvnx.CRM.Web.Controllers.Base;
 
 namespace Rvnx.CRM.Web.Controllers;
@@ -64,18 +63,6 @@ public class ContactMethodsController(IContactMethodService contactMethodService
         }
 
         return View(contactInfoInput);
-    }
-
-    [HttpGet]
-    public async Task<IActionResult> Delete(Guid? id)
-    {
-        if (id == null)
-        {
-            return NotFound();
-        }
-
-        ContactMethod? contactInfo = await _contactMethodService.GetByIdAsync(id.Value);
-        return contactInfo == null ? NotFound() : View(contactInfo);
     }
 
     [HttpPost, ActionName("Delete")]

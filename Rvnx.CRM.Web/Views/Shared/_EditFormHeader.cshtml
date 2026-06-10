@@ -1,0 +1,30 @@
+@model Rvnx.CRM.Web.ViewModels.Shared.EditFormHeaderModel
+
+@* Action strip + editorial masthead shared by the entity Create/Edit pages.
+   Render inside the page's <form data-edit-form> so the submit button and
+   unsaved indicator participate in that form. *@
+
+<div class="crm-details-actions-strip">
+    <a href="@Model.BackUrl" class="crm-btn-tertiary btn-sm">
+        <i class="bi bi-arrow-left" aria-hidden="true"></i> @Model.BackText
+    </a>
+    <div class="d-flex gap-2 align-items-center flex-wrap">
+        <span class="crm-eyebrow crm-unsaved-indicator" id="unsaved-indicator" hidden>
+            <i class="bi bi-circle-fill" aria-hidden="true" style="font-size: 6px; vertical-align: middle; margin-right: 4px;"></i>
+            Unsaved
+        </span>
+        <button type="submit" class="crm-btn-primary btn-sm">
+            <i class="bi @Model.SaveIcon" aria-hidden="true"></i> @Model.SaveText
+        </button>
+    </div>
+</div>
+
+<section class="crm-edit-masthead crm-fade-in">
+    <div class="crm-edit-masthead-photo-placeholder" aria-hidden="true">
+        <i class="bi @Model.Icon"></i>
+    </div>
+    <div>
+        <div class="crm-eyebrow" style="margin-bottom: 6px;">@Model.Eyebrow</div>
+        <h1 class="crm-edit-masthead-title">@Model.Title</h1>
+    </div>
+</section>

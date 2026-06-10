@@ -1,4 +1,5 @@
 @model Rvnx.CRM.Core.DTOs.Dates.UpdateSignificantDateRequest
+@using Rvnx.CRM.Web.ViewModels.Shared
 
 @{
     ViewData["Title"] = "Edit Important Date";
@@ -83,7 +84,7 @@
 
                     <div class="crm-field-group">
                         <label asp-for="RecurrenceType">Recurrence Type</label>
-                        <select asp-for="RecurrenceType" class="crm-input" id="RecurrenceType">
+                        <select asp-for="RecurrenceType" class="crm-input" id="RecurrenceType" data-select2>
                             <option value="0">None (One-time)</option>
                             <option value="1">Annual</option>
                             <option value="2">Monthly</option>
@@ -181,16 +182,12 @@
     </div>
 
     <div class="crm-edit-col-side">
-        <div class="crm-save-shortcut-card">
-            <div class="crm-save-shortcut-title">Ready to save?</div>
-            <div class="crm-save-shortcut-desc">Changes are applied immediately.</div>
-            <button type="submit" class="crm-btn-primary btn-sm" form="significantdate-form">
-                <i class="bi bi-save" aria-hidden="true"></i> Save
-            </button>
-            <a asp-action="Index" asp-route-contactId="@Model.ContactId" class="crm-btn-tertiary btn-sm">
-                <i class="bi bi-x-lg" aria-hidden="true"></i> Cancel
-            </a>
-        </div>
+        @await Html.PartialAsync("_SaveShortcutCard", new SaveShortcutCardModel
+        {
+            FormId = "significantdate-form",
+            CancelUrl = Url.Action("Index", new { contactId = Model.ContactId })!,
+            CancelIcon = "bi-x-lg"
+        })
     </div>
 </div>
 
@@ -200,8 +197,6 @@
         document.addEventListener('DOMContentLoaded', function () {
             var $recurrenceSelect = $('#RecurrenceType');
             var customIntervalDiv = document.getElementById('customIntervalDiv');
-
-            $recurrenceSelect.select2({ width: '100%' });
 
             function toggleCustomInterval() {
                 if ($recurrenceSelect.val() === '3') { // 3 is Custom

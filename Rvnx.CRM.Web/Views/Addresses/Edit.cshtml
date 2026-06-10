@@ -1,4 +1,5 @@
 @model Rvnx.CRM.Core.DTOs.Contact.AddressFormDto
+@using Rvnx.CRM.Web.ViewModels.Shared
 
 @{
     ViewData["Title"] = "Edit Address";
@@ -9,41 +10,13 @@
     <input type="hidden" asp-for="Id" />
     <input type="hidden" asp-for="ContactId" />
 
-    @* ── Action strip ────────────────────────────────────────────────────── *@
-    <div class="crm-details-actions-strip">
-        <a asp-controller="Contacts" asp-action="Details" asp-route-id="@Model.ContactId" class="crm-btn-tertiary btn-sm">
-            <i class="bi bi-arrow-left" aria-hidden="true"></i> Back to Contact
-        </a>
-        <div class="d-flex gap-2 align-items-center flex-wrap">
-            <span class="crm-eyebrow crm-unsaved-indicator" id="unsaved-indicator" hidden>
-                <i class="bi bi-circle-fill" aria-hidden="true" style="font-size: 6px; vertical-align: middle; margin-right: 4px;"></i>
-                Unsaved
-            </span>
-            <button type="submit" class="crm-btn-primary btn-sm">
-                <i class="bi bi-save" aria-hidden="true"></i> Save
-            </button>
-        </div>
-    </div>
-
-    @* ── Editorial masthead ─────────────────────────────────────────────── *@
-    <section class="crm-edit-masthead crm-fade-in">
-        <div class="crm-edit-masthead-photo-placeholder" aria-hidden="true">
-            <i class="bi bi-geo-alt"></i>
-        </div>
-        <div>
-            <div class="crm-eyebrow" style="margin-bottom: 6px;">Editing address</div>
-            <h1 class="crm-edit-masthead-title">
-                @if (!string.IsNullOrWhiteSpace(Model.AddressType))
-                {
-                    @Model.AddressType
-                }
-                else
-                {
-                    <text>Address</text>
-                }
-            </h1>
-        </div>
-    </section>
+    @await Html.PartialAsync("_EditFormHeader", new EditFormHeaderModel
+    {
+        BackUrl = Url.Action("Details", "Contacts", new { id = Model.ContactId })!,
+        Icon = "bi-geo-alt",
+        Eyebrow = "Editing address",
+        Title = string.IsNullOrWhiteSpace(Model.AddressType) ? "Address" : Model.AddressType
+    })
 
     @* ── Body ───────────────────────────────────────────────────────────── *@
     <div class="crm-edit-body">
@@ -59,7 +32,9 @@
                 <div class="crm-card-body">
                     <div class="crm-field-group">
                         <label asp-for="AddressType">Address Type *</label>
-                        <select asp-for="AddressType" id="AddressType" class="crm-input">
+                        <select asp-for="AddressType" id="AddressType" class="crm-input"
+                                data-select2 data-select2-tags data-select2-allow-clear
+                                data-select2-placeholder="Select or type a custom type...">
                             <option value="">Select or type a custom type...</option>
                             @foreach (var type in Rvnx.CRM.Core.Constants.AddressTypes.All)
                             {
@@ -125,25 +100,15 @@
         </div>
 
         <div class="crm-edit-col-side">
-            <div class="crm-save-shortcut-card">
-                <div class="crm-save-shortcut-title">Ready to save?</div>
-                <div class="crm-save-shortcut-desc">Changes are applied immediately.</div>
-                <button type="submit" class="crm-btn-primary btn-sm" form="address-form">
-                    <i class="bi bi-save" aria-hidden="true"></i> Save
-                </button>
-                <a asp-controller="Contacts" asp-action="Details" asp-route-id="@Model.ContactId" class="crm-btn-tertiary btn-sm">
-                    <i class="bi bi-arrow-left" aria-hidden="true"></i> Cancel
-                </a>
-            </div>
+            @await Html.PartialAsync("_SaveShortcutCard", new SaveShortcutCardModel
+            {
+                FormId = "address-form",
+                CancelUrl = Url.Action("Details", "Contacts", new { id = Model.ContactId })!
+            })
         </div>
     </div>
 </form>
 
 @section Scripts {
     @{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); }
-    <script>
-        $(function () {
-            $('#AddressType').select2({ width: '100%', tags: true, placeholder: 'Select or type a custom type...', allowClear: true });
-        });
-    </script>
 }

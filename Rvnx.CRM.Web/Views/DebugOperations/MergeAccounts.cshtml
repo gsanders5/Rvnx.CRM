@@ -36,20 +36,6 @@
 
             <div asp-validation-summary="ModelOnly" class="crm-field-error"></div>
 
-            @if (TempData["Message"] != null)
-            {
-                <div class="crm-alert crm-alert-success">
-                    @TempData["Message"]
-                </div>
-            }
-
-            @if (TempData["Error"] != null)
-            {
-                <div class="crm-alert crm-alert-danger">
-                    @TempData["Error"]
-                </div>
-            }
-
             <div class="crm-card">
                 <div class="crm-card-header">
                     <h5 class="card-title mb-0"><i class="bi bi-people" aria-hidden="true"></i> Accounts</h5>
@@ -63,7 +49,7 @@
                     <div class="crm-form-card-grid">
                         <div class="crm-field-group">
                             <label for="user1Id">User 1 (Target/Source)</label>
-                            <select id="user1Id" name="user1Id" class="crm-input" required>
+                            <select id="user1Id" name="user1Id" class="crm-input" data-select2 required>
                                 <option value="">Select User 1</option>
                                 @foreach (var user in Model.Users)
                                 {
@@ -75,7 +61,7 @@
 
                         <div class="crm-field-group">
                             <label for="user2Id">User 2 (Target/Source)</label>
-                            <select id="user2Id" name="user2Id" class="crm-input" required>
+                            <select id="user2Id" name="user2Id" class="crm-input" data-select2 required>
                                 <option value="">Select User 2</option>
                                 @foreach (var user in Model.Users)
                                 {
@@ -110,12 +96,3 @@
         </div>
     </div>
 </form>
-
-@section Scripts {
-    <script>
-        $(document).ready(function() {
-            $('#user1Id').select2({ width: '100%' });
-            $('#user2Id').select2({ width: '100%' });
-        });
-    </script>
-}
