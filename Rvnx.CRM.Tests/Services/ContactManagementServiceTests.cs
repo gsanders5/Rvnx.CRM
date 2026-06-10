@@ -30,6 +30,9 @@ public class ContactManagementServiceTests
             FileValidationServiceMock = new Mock<IFileValidationService>();
             SelfContactServiceMock = new Mock<ISelfContactService>();
             SelfContactServiceMock.Setup(s => s.GetSelfContactIdAsync()).ReturnsAsync((Guid?)null);
+            // By default the target contact is visible to the caller (same group). The group-isolation
+            // guards call the filtered ExistsAsync<Contact>; cross-group tests override this to false.
+            RepositoryMock.Setup(r => r.ExistsAsync<Contact>(It.IsAny<Guid>(), It.IsAny<CancellationToken>())).ReturnsAsync(true);
             Service = new ContactManagementService(RepositoryMock.Object, FileValidationServiceMock.Object, SelfContactServiceMock.Object);
         }
     }
@@ -353,8 +356,8 @@ public class ContactManagementServiceTests
             List<Contact> allContacts =
             [
                 .. partialContacts,
-                    .. siblingRelationships.Select(r => new Contact { Id = r.RelatedContactId, IsPartial = false }),
-                ];
+                .. siblingRelationships.Select(r => new Contact { Id = r.RelatedContactId, IsPartial = false }),
+            ];
 
 
             RepositoryMock.Setup(r => r.ListAsync<Rvnx.CRM.Core.Models.User>(It.IsAny<Expression<Func<Rvnx.CRM.Core.Models.User, bool>>>(), It.IsAny<CancellationToken>()))
@@ -951,6 +954,53 @@ public class ContactManagementServiceTests
             Core.DTOs.Base.BulkOperationResult result = await Service.BulkDeleteAsync([]);
             Assert.Equal(0, result.Successful);
             Assert.Equal(0, result.Skipped);
+        }
+    }
+
+    /// <summary>
+    /// Guards that contact-level mutations resolve the target through the group-filtered
+    /// ExistsAsync before touching it, so a caller cannot reach a contact in another group
+    /// via a primary-key lookup that bypasses the global query filter.
+    /// </summary>
+    public class ContactManagementServiceGroupIsolationTests : ContactManagementServiceTestBase
+    {
+        [Fact]
+        public async Task UpdateContactAsyncReturnsNotFoundWhenContactNotInCallerGroup()
+        {
+            Guid id = Guid.NewGuid();
+            RepositoryMock.Setup(r => r.ExistsAsync<Contact>(id, It.IsAny<CancellationToken>())).ReturnsAsync(false);
+
+            ContactOperationResult result = await Service.UpdateContactAsync(id, new ContactFormDto { FirstName = "Mallory" }, null, null, null);
+
+            Assert.False(result.Success);
+            Assert.True(result.IsNotFound);
+            RepositoryMock.Verify(r => r.GetByIdAsync<Contact>(It.IsAny<Guid>(), It.IsAny<CancellationToken>()), Times.Never);
+            RepositoryMock.Verify(r => r.UpdateAsync(It.IsAny<Contact>(), It.IsAny<CancellationToken>()), Times.Never);
+        }
+
+        [Fact]
+        public async Task DeleteContactAsyncDoesNothingWhenContactNotInCallerGroup()
+        {
+            Guid id = Guid.NewGuid();
+            RepositoryMock.Setup(r => r.ExistsAsync<Contact>(id, It.IsAny<CancellationToken>())).ReturnsAsync(false);
+
+            await Service.DeleteContactAsync(id);
+
+            RepositoryMock.Verify(r => r.DeleteAsync<Contact>(It.IsAny<Guid>(), It.IsAny<CancellationToken>()), Times.Never);
+            RepositoryMock.Verify(r => r.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
+        }
+
+        [Fact]
+        public async Task DemoteToPartialAsyncReturnsNotFoundWhenContactNotInCallerGroup()
+        {
+            Guid id = Guid.NewGuid();
+            RepositoryMock.Setup(r => r.ExistsAsync<Contact>(id, It.IsAny<CancellationToken>())).ReturnsAsync(false);
+
+            ContactOperationResult result = await Service.DemoteToPartialAsync(id);
+
+            Assert.True(result.IsNotFound);
+            RepositoryMock.Verify(r => r.GetByIdAsync<Contact>(It.IsAny<Guid>(), It.IsAny<CancellationToken>()), Times.Never);
+            RepositoryMock.Verify(r => r.UpdateAsync(It.IsAny<Contact>(), It.IsAny<CancellationToken>()), Times.Never);
         }
     }
 }

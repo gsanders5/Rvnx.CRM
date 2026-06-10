@@ -91,6 +91,131 @@ public class ApiTokenAuthenticationHandlerTests
     }
 
     [Fact]
+    public async Task HandleAuthenticateAsyncWithNonBearerSchemeReturnsNoResult()
+    {
+        DefaultHttpContext context = new();
+        context.Request.Headers["Authorization"] = "Basic dXNlcjpwYXNz";
+
+        ApiTokenAuthenticationHandler sut = await CreateInitializedHandlerAsync(context);
+
+        AuthenticateResult result = await sut.AuthenticateAsync();
+
+        Assert.True(result.None);
+        _apiTokenServiceMock.Verify(x => x.ResolveTokenAsync(It.IsAny<string>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task HandleAuthenticateAsyncWithEmptyAuthorizationHeaderReturnsNoResult()
+    {
+        DefaultHttpContext context = new();
+        context.Request.Headers["Authorization"] = string.Empty;
+
+        ApiTokenAuthenticationHandler sut = await CreateInitializedHandlerAsync(context);
+
+        AuthenticateResult result = await sut.AuthenticateAsync();
+
+        Assert.True(result.None);
+    }
+
+    [Fact]
+    public async Task HandleAuthenticateAsyncWithLowercaseBearerPrefixSucceeds()
+    {
+        Guid userId = Guid.NewGuid();
+        DefaultHttpContext context = new();
+        context.Request.Headers["Authorization"] = "bearer crm_validtoken123";
+
+        _apiTokenServiceMock.Setup(x => x.ResolveTokenAsync("crm_validtoken123")).ReturnsAsync(new ApiToken { UserId = userId });
+        _currentUserServiceMock.Setup(x => x.IsAuthenticated).Returns(true);
+        _currentUserServiceMock.Setup(x => x.UserId).Returns(userId);
+
+        ApiTokenAuthenticationHandler sut = await CreateInitializedHandlerAsync(context);
+
+        AuthenticateResult result = await sut.AuthenticateAsync();
+
+        Assert.True(result.Succeeded);
+    }
+
+    [Fact]
+    public async Task HandleAuthenticateAsyncStoresResolvedTokenInHttpContextItems()
+    {
+        DefaultHttpContext context = new();
+        context.Request.Headers["Authorization"] = "Bearer crm_validtoken123";
+
+        ApiToken resolvedToken = new()
+        { UserId = Guid.NewGuid() };
+        _apiTokenServiceMock.Setup(x => x.ResolveTokenAsync("crm_validtoken123")).ReturnsAsync(resolvedToken);
+        _currentUserServiceMock.Setup(x => x.IsAuthenticated).Returns(true);
+
+        ApiTokenAuthenticationHandler sut = await CreateInitializedHandlerAsync(context);
+
+        await sut.AuthenticateAsync();
+
+        Assert.Same(resolvedToken, context.Items[ApiTokenAuthenticationOptions.ResolvedTokenItemKey]);
+    }
+
+    [Fact]
+    public async Task HandleAuthenticateAsyncDoesNotStoreTokenInItemsWhenUnresolved()
+    {
+        DefaultHttpContext context = new();
+        context.Request.Headers["Authorization"] = "Bearer crm_unknown";
+
+        _apiTokenServiceMock.Setup(x => x.ResolveTokenAsync(It.IsAny<string>())).ReturnsAsync((ApiToken?)null);
+        _currentUserServiceMock.Setup(x => x.IsAuthenticated).Returns(false);
+
+        ApiTokenAuthenticationHandler sut = await CreateInitializedHandlerAsync(context);
+
+        await sut.AuthenticateAsync();
+
+        Assert.False(context.Items.ContainsKey(ApiTokenAuthenticationOptions.ResolvedTokenItemKey));
+    }
+
+    [Fact]
+    public async Task HandleAuthenticateAsyncTrimsWhitespaceAroundToken()
+    {
+        DefaultHttpContext context = new();
+        context.Request.Headers["Authorization"] = "Bearer   crm_validtoken123  ";
+
+        _apiTokenServiceMock.Setup(x => x.ResolveTokenAsync(It.IsAny<string>())).ReturnsAsync((ApiToken?)null);
+        _currentUserServiceMock.Setup(x => x.IsAuthenticated).Returns(false);
+
+        ApiTokenAuthenticationHandler sut = await CreateInitializedHandlerAsync(context);
+
+        await sut.AuthenticateAsync();
+
+        _apiTokenServiceMock.Verify(x => x.ResolveTokenAsync("crm_validtoken123"), Times.Once);
+    }
+
+    [Fact]
+    public async Task HandleAuthenticateAsyncWithBearerAndEmptyTokenReturnsFail()
+    {
+        DefaultHttpContext context = new();
+        context.Request.Headers["Authorization"] = "Bearer ";
+
+        _apiTokenServiceMock.Setup(x => x.ResolveTokenAsync(It.IsAny<string>())).ReturnsAsync((ApiToken?)null);
+        _currentUserServiceMock.Setup(x => x.IsAuthenticated).Returns(false);
+
+        ApiTokenAuthenticationHandler sut = await CreateInitializedHandlerAsync(context);
+
+        AuthenticateResult result = await sut.AuthenticateAsync();
+
+        Assert.False(result.Succeeded);
+        Assert.NotNull(result.Failure);
+    }
+
+    private async Task<ApiTokenAuthenticationHandler> CreateInitializedHandlerAsync(DefaultHttpContext context)
+    {
+        ApiTokenAuthenticationHandler sut = new(
+            _optionsMock.Object,
+            _loggerFactoryMock.Object,
+            _encoderMock.Object,
+            _currentUserServiceMock.Object,
+            _serviceProviderMock.Object);
+
+        await sut.InitializeAsync(new AuthenticationScheme(ApiTokenAuthenticationOptions.DefaultScheme, null, typeof(ApiTokenAuthenticationHandler)), context);
+        return sut;
+    }
+
+    [Fact]
     public async Task HandleAuthenticateAsyncWithValidTokenReturnsSuccess()
     {
         Guid userId = Guid.NewGuid();

@@ -1,4 +1,5 @@
 @model Rvnx.CRM.Web.ViewModels.Calendar.CalendarIndexViewModel
+@using Rvnx.CRM.Core.Constants
 @{
     ViewData["Title"] = "Calendar";
 
@@ -23,15 +24,15 @@
     <div class="crm-calendar-legend crm-fade-in crm-delay-1">
         <span class="crm-eyebrow">Legend</span>
         <span class="crm-calendar-legend-item">
-            <span class="crm-calendar-legend-swatch" style="background: #e67e22;"></span>
+            <span class="crm-calendar-legend-swatch" style="background: @CalendarColors.Birthday;"></span>
             Birthday
         </span>
         <span class="crm-calendar-legend-item">
-            <span class="crm-calendar-legend-swatch" style="background: #3498db;"></span>
+            <span class="crm-calendar-legend-swatch" style="background: @CalendarColors.SignificantDate;"></span>
             Significant Date
         </span>
         <span class="crm-calendar-legend-item">
-            <span class="crm-calendar-legend-swatch" style="background: #2ecc71;"></span>
+            <span class="crm-calendar-legend-swatch" style="background: @CalendarColors.Task;"></span>
             Task
         </span>
     </div>

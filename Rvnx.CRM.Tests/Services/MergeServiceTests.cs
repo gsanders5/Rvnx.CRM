@@ -40,6 +40,26 @@ public class MergeServiceTests : IDisposable
     }
 
     [Fact]
+    public async Task MergeContactsAsyncThrowsAndPreservesContactsWhenInAnotherGroup()
+    {
+        // The fixture's current user is the System user (GroupId null); seed contacts owned by a
+        // different group. The merge must resolve them through the group-filtered set, find nothing,
+        // and leave both contacts intact rather than performing a cross-group destructive merge.
+        Guid otherGroupId = Guid.NewGuid();
+        Contact primary = new()
+        { Id = Guid.NewGuid(), FirstName = "Primary", GroupId = otherGroupId };
+        Contact secondary = new()
+        { Id = Guid.NewGuid(), FirstName = "Secondary", GroupId = otherGroupId };
+
+        await _context.Contacts!.AddRangeAsync(primary, secondary);
+        await _context.SaveChangesAsync();
+
+        await Assert.ThrowsAsync<InvalidOperationException>(() => _sut.MergeContactsAsync(primary.Id, secondary.Id));
+
+        Assert.NotNull(await _context.Contacts.IgnoreQueryFilters().FirstOrDefaultAsync(c => c.Id == secondary.Id));
+    }
+
+    [Fact]
     public async Task MergeContactsAsyncWhenScalarsPrimaryWinsWhenBothSet()
     {
         Contact primary = new()

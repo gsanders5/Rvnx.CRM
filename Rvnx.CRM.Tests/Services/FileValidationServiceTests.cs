@@ -218,4 +218,25 @@ public class FileValidationServiceTests
         byte[] gifBytes = [0x47, 0x49, 0x46, 0x38, 0x39, 0x61];
         Assert.False(_service.IsValidFileSignature(gifBytes, ".docx"));
     }
+
+    [Theory]
+    [InlineData("image/jpeg")]
+    [InlineData("image/png")]
+    [InlineData("image/gif")]
+    [InlineData("IMAGE/PNG")] // Case insensitive
+    public void IsImageContentTypeShouldReturnTrueForSupportedImageTypes(string contentType)
+    {
+        Assert.True(_service.IsImageContentType(contentType));
+    }
+
+    [Theory]
+    [InlineData("application/pdf")]
+    [InlineData("text/plain")]
+    [InlineData("image/svg+xml")]
+    [InlineData("")]
+    [InlineData(null)]
+    public void IsImageContentTypeShouldReturnFalseForNonImageTypes(string? contentType)
+    {
+        Assert.False(_service.IsImageContentType(contentType));
+    }
 }

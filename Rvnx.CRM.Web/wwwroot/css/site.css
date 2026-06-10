@@ -438,6 +438,14 @@ h5, .card-title {
   color: var(--crm-danger);
 }
 
+.crm-icon-btn.icon-info {
+  color: var(--crm-info);
+}
+.crm-icon-btn.icon-info:hover {
+  background-color: var(--crm-brand-subtle);
+  color: var(--crm-brand);
+}
+
 .crm-icon-actions {
   display: flex;
   align-items: center;

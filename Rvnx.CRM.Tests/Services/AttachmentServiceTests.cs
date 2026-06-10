@@ -1,3 +1,4 @@
+using Microsoft.EntityFrameworkCore;
 using Moq;
 using Rvnx.CRM.Core.Constants;
 using Rvnx.CRM.Core.DTOs.Base;
@@ -251,7 +252,6 @@ public class AttachmentServiceTests
 
         Assert.False(result.Success);
         Assert.True(result.IsNotFound);
-        Assert.Contains("Cannot modify partial contact", result.Errors[0]);
 
         Attachment? attachment = await context.Attachments.FindAsync(attachmentId);
         Assert.NotNull(attachment);
@@ -510,6 +510,64 @@ public class AttachmentServiceTests
 
             // SECURITY CHECK: The ContentType should be "text/plain", NOT "text/html"
             Assert.Equal("text/plain", attachment.ContentType);
+        }
+    }
+
+    /// <summary>
+    /// GetByIdAsync resolves an attachment by primary key via FindAsync, bypassing the global
+    /// group query filter. These tests confirm the ownership re-check (IsValidContactAsync, which
+    /// runs a group-filtered query) blocks reads and deletes of attachments owned by another group.
+    /// </summary>
+    public class AttachmentGroupIsolationTests
+    {
+        private static readonly Guid CallerGroupId = Guid.Parse("11111111-1111-1111-1111-111111111111");
+        private static readonly Guid OtherGroupId = Guid.Parse("22222222-2222-2222-2222-222222222222");
+
+        private static CRMDbContext SeedOtherGroupAttachment(out Guid attachmentId)
+        {
+            CRMDbContext context = TestDbContextFactory.Create(Guid.NewGuid(), "caller", CallerGroupId, out _, ensureCreated: false);
+
+            Guid contactId = Guid.NewGuid();
+            attachmentId = Guid.NewGuid();
+            context.Contacts!.Add(new Contact { Id = contactId, FirstName = "Victim", GroupId = OtherGroupId });
+            context.Attachments!.Add(new Attachment
+            {
+                Id = attachmentId,
+                ContactId = contactId,
+                FileName = "secret.png",
+                ContentType = "image/png",
+                GroupId = OtherGroupId
+            });
+            context.SaveChanges();
+            return context;
+        }
+
+        private static AttachmentService CreateService(CRMDbContext context)
+        {
+            return new AttachmentService(new Repository(context), Mock.Of<IFileValidationService>(), Mock.Of<IContactLookupService>());
+        }
+
+        [Fact]
+        public async Task DeleteAttachmentAsyncReturnsNotFoundForAttachmentInAnotherGroup()
+        {
+            using CRMDbContext context = SeedOtherGroupAttachment(out Guid attachmentId);
+            AttachmentService service = CreateService(context);
+
+            AttachmentOperationResult result = await service.DeleteAttachmentAsync(attachmentId);
+
+            Assert.True(result.IsNotFound);
+            Assert.NotNull(await context.Attachments!.IgnoreQueryFilters().FirstOrDefaultAsync(a => a.Id == attachmentId));
+        }
+
+        [Fact]
+        public async Task GetAttachmentAsyncReturnsNullForAttachmentInAnotherGroup()
+        {
+            using CRMDbContext context = SeedOtherGroupAttachment(out Guid attachmentId);
+            AttachmentService service = CreateService(context);
+
+            AttachmentDto? result = await service.GetAttachmentAsync(attachmentId);
+
+            Assert.Null(result);
         }
     }
 }

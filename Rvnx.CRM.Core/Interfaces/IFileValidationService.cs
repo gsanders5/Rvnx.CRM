@@ -18,6 +18,14 @@ public interface IFileValidationService
     bool IsImageExtension(string extension);
 
     /// <summary>
+    /// Checks if the given MIME type corresponds to a supported image type. This is the single
+    /// source of truth for "is this attachment an image" decisions (e.g. inline vs. download).
+    /// </summary>
+    /// <param name="contentType">The MIME type (e.g. "image/png").</param>
+    /// <returns>True if it is a supported image content type; otherwise, false.</returns>
+    bool IsImageContentType(string? contentType);
+
+    /// <summary>
     /// Validates if the file content matches the expected signature for any allowed file type.
     /// </summary>
     /// <param name="fileBytes">The raw file content.</param>

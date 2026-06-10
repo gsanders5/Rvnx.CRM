@@ -20,8 +20,11 @@ public class MergeService(CRMDbContext context, IRepository repository) : IMerge
             throw new InvalidOperationException("Cannot merge a contact with itself.");
         }
 
-        Contact? primary = await _repository.QueryUnfiltered<Contact>().FirstOrDefaultAsync(c => c.Id == primaryId);
-        Contact? secondary = await _repository.QueryUnfiltered<Contact>().FirstOrDefaultAsync(c => c.Id == secondaryId);
+        // Fetch through the group-filtered set (not QueryUnfiltered) so a caller can only merge
+        // contacts that belong to their own group. A GUID from another group resolves to null
+        // here and is rejected below, preventing a cross-group destructive merge.
+        Contact? primary = await _context.Set<Contact>().FirstOrDefaultAsync(c => c.Id == primaryId);
+        Contact? secondary = await _context.Set<Contact>().FirstOrDefaultAsync(c => c.Id == secondaryId);
 
         if (primary == null || secondary == null)
         {
