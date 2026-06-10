@@ -12,8 +12,8 @@
 │   │   ├── Base/               # Base classes (BaseEntity, Person)
 │   │   ├── Contact/            # Contact-related entities (Contact, ContactMethod, Relationship, Address, ContactTask, Pet)
 │   │   ├── Activity/           # Activity entity
-│   │   ├── Dates/              # SignificantDate, Reminder
-│   │   └── Business/           # Attachment, Note
+│   │   ├── Dates/              # SignificantDate, ReminderOffset, ReminderLog
+│   │   └── Base/               # BaseEntity, Person, Attachment, AttachmentContent, Note
 │   ├── Services/               # Pure domain logic services (e.g. FileValidation, DateCalculation)
 │   ├── Validation/             # Custom ValidationAttributes (e.g. PhoneNumberAttribute)
 │   └── Rvnx.CRM.Core.csproj
@@ -41,7 +41,8 @@
 ├── Rvnx.CRM.ConsoleApp/        # Console application for scheduled tasks
 │   ├── Program.cs              # Entry point
 │   ├── AppHost.cs              # DI container builder
-│   ├── TaskManager.cs          # Task routing and execution
+│   ├── TaskManager.cs          # Argument parsing, migrations, task routing
+│   ├── ConsoleCommands.cs      # Task implementations (bodies of each command)
 │   ├── ConsoleUserService.cs   # ICurrentUserService for console context
 │   └── Rvnx.CRM.ConsoleApp.csproj
 └── Rvnx.CRM.Tests/             # Unit and integration tests
@@ -60,7 +61,7 @@
 ### Key Patterns
 
 - **Generic Repository Pattern**: `IRepository` handles basic CRUD for `BaseEntity` types.
-- **Explicit Foreign Keys**: Entities previously using polymorphic associations (`Note`, `Reminder`, `Attachment`, `ContactMethod`, etc.) now use typed nullable foreign keys (e.g., `ContactId`) with check constraints to enforce ownership.
+- **Explicit Foreign Keys**: Entities previously using polymorphic associations (`Note`, `ReminderOffset`, `Attachment`, `ContactMethod`, etc.) now use typed nullable foreign keys (e.g., `ContactId`) with check constraints to enforce ownership.
 - **User Isolation**: `CRMDbContext` applies global query filters to restrict access to data based on the current user (`ICurrentUserService`).
 - **Service Delegation**: Controllers delegate business logic to specialized services (e.g., `IContactManagementService`, `IContactImportService`).
 
@@ -104,8 +105,9 @@ The console app follows a three-class pattern:
 | File | Responsibility |
 |------|----------------|
 | `Program.cs` | Entry point with try/catch/finally error handling |
-| `AppHost.cs` | Builds the DI container, registers services, runs migrations |
-| `TaskManager.cs` | Parses arguments, routes to task methods, handles logging |
+| `AppHost.cs` | Builds the DI container and registers services |
+| `TaskManager.cs` | Parses arguments, applies migrations, routes to `ConsoleCommands` methods |
+| `ConsoleCommands.cs` | Implements each task body (e.g. `RunCountContactsAsync`, `RunAddApiTokenAsync`) |
 
 ### Service Registration
 
@@ -116,7 +118,10 @@ internal sealed class ConsoleUserService : ICurrentUserService
     public Guid? UserId => null;
     public Guid? GroupId => null;
     public string? UserName => "System";
+    public string? DisplayName => null;
+    public string? Email => null;
     public bool IsAuthenticated => false;
+    public Task<bool> IsAdministratorAsync() => Task.FromResult(false);
 }
 ```
 
@@ -131,17 +136,17 @@ int count = await context.Contacts
 
 ### Adding New Tasks
 
-1. Add a case to the switch in `TaskManager.ExecuteTaskAsync`:
+1. Add a case to the switch in `TaskManager.ProcessAsync`, dispatching to a `ConsoleCommands` method:
 ```csharp
 bool success = taskName switch
 {
-    "COUNT-CONTACTS" => await RunCountContactsAsync(services),
-    "NEW-TASK" => await RunNewTaskAsync(services),
+    "COUNT-CONTACTS" => await ConsoleCommands.RunCountContactsAsync(services),
+    "NEW-TASK" => await ConsoleCommands.RunNewTaskAsync(services),
     _ => false
 };
 ```
 
-2. Add the task method:
+2. Add the task method to `ConsoleCommands`:
 ```csharp
 private static async Task<bool> RunNewTaskAsync(IServiceProvider services)
 {
@@ -277,7 +282,7 @@ Per-group connection settings for the optional [Immich](https://immich.app) inte
 - **Infrastructure Services**: Implementations requiring external dependencies or DB access.
   - `UserSynchronizationService`: Syncs OIDC user claims to the local `User` table.
   - `VCardService`: Uses `FolkerKinzel.VCards` to parse and generate VCF files.
-  - `ImmichService`: Typed-HttpClient client for a self-hosted [Immich](https://immich.app) photo server. Connection details (`Enabled`, `BaseUrl`, `ApiKey`) come from the current group's `GroupImmichSettings` row via `IImmichSettingsService`, resolved lazily once per scoped instance (i.e. per request) — so settings changes take effect immediately without an app restart, and each group can point at a different Immich server. The `x-api-key` header and absolute request URI are constructed per request rather than bound to the shared `HttpClient`. `IsEnabledAsync` requires a stored row that is enabled with a valid absolute base URL. Exposes: (a) `GetAllPeopleAsync` / `GetAllTagsAsync` for the Edit-view Select2 dropdowns, cached in `IMemoryCache` with a 5-minute absolute TTL under group-partitioned keys (see `ImmichCacheKeys`); (b) `GetAssetsAsync(personId, tagId)` that issues parallel `POST /search/metadata` calls (Immich AND's `personIds` and `tagIds`, so two calls are unioned and de-duplicated), capped at 24 images; (c) `GetThumbnailAsync` / `GetOriginalAsync` that return an `ImmichMediaPayload` (HttpResponseMessage + content stream + content-type) for the controller to proxy. All failure modes (401, timeout, HTTP errors) log and return empty/null instead of throwing, so UI cards hide cleanly rather than surfacing errors. `GetWebBaseUrlAsync` strips the `/api` suffix from the group's base URL to produce the Immich web-UI URL for deep-link buttons.
+  - `ImmichService`: Typed-HttpClient client for a self-hosted [Immich](https://immich.app) photo server. Connection details (`Enabled`, `BaseUrl`, `ApiKey`) come from the current group's `GroupImmichSettings` row via `IImmichSettingsService`, resolved lazily once per scoped instance (i.e. per request) — so settings changes take effect immediately without an app restart, and each group can point at a different Immich server. The `x-api-key` header and absolute request URI are constructed per request rather than bound to the shared `HttpClient`. `IsEnabledAsync` requires a stored row that is enabled with a valid absolute base URL, plus the server-wide `Immich:Enabled` configuration flag (default `true`); when that flag is off, `GetConnectionAsync` returns null and `SaveAsync`/`DeleteAsync` reject writes. Exposes: (a) `GetAllPeopleAsync` / `GetAllTagsAsync` for the Edit-view Select2 dropdowns, cached in `IMemoryCache` with a 5-minute absolute TTL under group-partitioned keys (see `ImmichCacheKeys`); (b) `GetAssetsAsync(personId, tagId)` that issues parallel `POST /search/metadata` calls (Immich AND's `personIds` and `tagIds`, so two calls are unioned and de-duplicated), capped at 24 images; (c) `GetThumbnailAsync` / `GetOriginalAsync` that return an `ImmichMediaPayload` (HttpResponseMessage + content stream + content-type) for the controller to proxy. All failure modes (401, timeout, HTTP errors) log and return empty/null instead of throwing, so UI cards hide cleanly rather than surfacing errors. `GetWebBaseUrlAsync` strips the `/api` suffix from the group's base URL to produce the Immich web-UI URL for deep-link buttons.
   - `ImmichSettingsService`: CRUD for the group's `GroupImmichSettings` row. Reads/writes go through the group-filtered repository, so each group sees only its own row (enforced at the DB level by a unique `GroupId` index). `GetSettingsAsync` returns a display-safe DTO with a masked API-key hint (last four characters); `GetConnectionAsync` returns the raw key for `ImmichService` only. Saving with a blank key keeps the stored key (create requires one); save/delete evict the group's people/tags cache entries so a server change is reflected immediately.
   - `ContactTaskService`: CRUD for per-contact tasks/follow-ups with completion toggling and calendar event generation.
   - `ActivityService`: CRUD for activities with multi-contact association.
@@ -326,7 +331,7 @@ The Immich gallery on the Contact Details page is rendered by an async fetch + p
 
 ### Per-group Immich credentials
 
-The Immich `BaseUrl` and `ApiKey` are stored in the database per user group (`GroupImmichSettings`, one row per group enforced by a unique `GroupId` index) and managed in the UI under **Group Settings → Immich Photos** (`GroupSettingsController`). Every member of a group shares the group's Immich account — they all see the same people, tags, and photos — while different groups on the same instance can connect to different Immich servers (or none). The typed `HttpClient` constructs the `x-api-key` header and absolute URI per request from the current group's stored credentials, and the `IMemoryCache` keys for people/tags are partitioned by group. The API key is write-only in the UI: forms show only a masked hint of the stored key, and leaving the field blank on save keeps the existing key.
+The Immich `BaseUrl` and `ApiKey` are stored in the database per user group (`GroupImmichSettings`, one row per group enforced by a unique `GroupId` index) and managed in the UI on the **User Settings** page (`UserSettingsController.SaveImmich` / `DeleteImmich`). Every member of a group shares the group's Immich account — they all see the same people, tags, and photos — while different groups on the same instance can connect to different Immich servers (or none). The typed `HttpClient` constructs the `x-api-key` header and absolute URI per request from the current group's stored credentials, and the `IMemoryCache` keys for people/tags are partitioned by group. The API key is write-only in the UI: forms show only a masked hint of the stored key, and leaving the field blank on save keeps the existing key.
 
 ## Known Deviations from Pure Architecture
 

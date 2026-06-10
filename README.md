@@ -40,7 +40,7 @@ Each contact has dedicated sections for:
 - **Activities** — logged meetings, calls, and events; activities can link to multiple contacts at once, with a one-click **QuickLog** for fast entry
 - **Tasks / Follow-ups** — per-contact to-do items with due dates
 - **Attachments** — photos, documents, or any file
-- **Immich Photos** — optional integration with a self-hosted [Immich](https://immich.app) server. Link a contact to an Immich Person (face recognition) and/or Tag, and the Details page surfaces their photos inline. Set any Immich image as the contact's profile photo in one click. The connection (server URL + API key) is configured per user group under **Group Settings**, so each group shares one Immich library while separate groups can use separate Immich servers.
+- **Immich Photos** — optional integration with a self-hosted [Immich](https://immich.app) server. Link a contact to an Immich Person (face recognition) and/or Tag, and the Details page surfaces their photos inline. Set any Immich image as the contact's profile photo in one click. The connection (server URL + API key) is configured on the **Settings** page (User Settings → Immich Photos) and stored per user group, so each group shares one Immich library while separate groups can use separate Immich servers.
 - **Social Media** — linked social accounts
 
 ### Calendar
@@ -73,7 +73,7 @@ Interactive visualization of contact relationships on the dashboard. Node color 
 
 Full API coverage for all resources: contacts, activities, addresses, tasks, favorites, labels, notes, facts, significant dates, pets, attachments, relationships, and calendar events.
 
-- Bearer token authentication (`crm_` prefix tokens, created via the console app)
+- Bearer token authentication (`crm_` prefix tokens, created from the user settings page or via the console app)
 - String-based enums — all enum fields accept human-readable strings (`"Annual"`, `"Forward"`)
 - Swagger/OpenAPI docs at `/swagger`
 - Partial update support via JSON Merge Patch (`PATCH`) on all resources
@@ -129,7 +129,7 @@ Each runnable project (`Web`, `API`, `ConsoleApp`) reads an `appsettings.Local.j
 
 **Optional — Immich integration:**
 
-Immich is configured in the app, not in `appsettings.json`: open **Group Settings → Immich Photos** in the sidebar and enter the server URL and API key. The URL must include the `/api` suffix (the API key is passed via `x-api-key`). Create the API key in Immich under Account Settings → API Keys.
+The Immich connection is configured in the app: open **Settings → Immich Photos** (the User Settings page) and enter the server URL and API key. The URL must include the `/api` suffix (the API key is passed via `x-api-key`). Create the API key in Immich under Account Settings → API Keys. A server administrator can disable the whole integration with `"Immich": { "Enabled": false }` in `appsettings.json` (defaults to enabled).
 
 The connection is stored per **user group**, so every member of a group shares the same Immich server, API key, people, tags, and photos — while different groups on the same instance can point at entirely different Immich servers (or none at all).
 
@@ -160,6 +160,8 @@ cd Rvnx.CRM.ConsoleApp
 dotnet run -- ADD-API-TOKEN your@email.com my-token-name
 # Prints: Raw Token: crm_xxxxxxxxxxxx  (shown once — save it)
 ```
+
+Alternatively, create (and revoke) tokens in the web UI under **Settings → API Tokens**.
 
 ### 5. Run the API (optional)
 
