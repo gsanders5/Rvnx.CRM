@@ -36,20 +36,6 @@
 
             <div asp-validation-summary="ModelOnly" class="crm-field-error"></div>
 
-            @if (TempData["Message"] != null)
-            {
-                <div class="crm-alert crm-alert-success">
-                    @TempData["Message"]
-                </div>
-            }
-
-            @if (TempData["Error"] != null)
-            {
-                <div class="crm-alert crm-alert-danger">
-                    @TempData["Error"]
-                </div>
-            }
-
             <div class="crm-card">
                 <div class="crm-card-header">
                     <h5 class="card-title mb-0"><i class="bi bi-people" aria-hidden="true"></i> Accounts</h5>

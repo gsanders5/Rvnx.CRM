@@ -4,6 +4,7 @@ using Rvnx.CRM.Core.Constants;
 using Rvnx.CRM.Core.DTOs.Base;
 using Rvnx.CRM.Core.DTOs.Contact;
 using Rvnx.CRM.Core.Interfaces;
+using Rvnx.CRM.Web.Constants;
 using Rvnx.CRM.Web.Controllers.Base;
 using Rvnx.CRM.Web.ViewModels.Contact;
 
@@ -144,8 +145,7 @@ public class ContactsController(
         ContactIndexViewModel viewModel = new()
         {
             Contacts = contactDtos,
-            AllLabels = allLabels,
-            SuccessMessage = TempData["SuccessMessage"] as string
+            AllLabels = allLabels
         };
 
         return View(viewModel);
@@ -424,7 +424,7 @@ public class ContactsController(
             using Stream stream = file.OpenReadStream();
             ContactImportResult result = await _contactImportService.ImportFromVCardAsync(stream);
 
-            TempData["SuccessMessage"] =
+            TempData[TempDataKeys.SuccessMessage] =
                 $"Import successful! Added: {result.AddedCount}, Skipped: {result.SkippedCount}";
             return RedirectToAction(nameof(Index));
         }

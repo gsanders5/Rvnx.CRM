@@ -4,6 +4,7 @@ using Rvnx.CRM.Core.Extensions;
 using Rvnx.CRM.Core.Interfaces;
 using Rvnx.CRM.Core.Models;
 using Rvnx.CRM.Core.Models.Contact;
+using Rvnx.CRM.Web.Constants;
 using Rvnx.CRM.Web.Controllers.Base;
 using Rvnx.CRM.Web.ViewModels.Contact;
 
@@ -108,7 +109,7 @@ public class RelationshipsController(
                 result.ErrorMessage ?? "Failed to create partial contact relationship.");
         }
 
-        TempData["ErrorMessage"] =
+        TempData[TempDataKeys.ErrorMessage] =
             string.Join("; ", ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage));
         return RedirectToAction(nameof(Create), new { contactId });
     }

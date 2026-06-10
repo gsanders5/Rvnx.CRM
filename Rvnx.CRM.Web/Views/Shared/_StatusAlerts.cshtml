@@ -1,0 +1,30 @@
+@using Rvnx.CRM.Web.Constants
+
+@* Site-wide status banners. Controllers set TempData[TempDataKeys.SuccessMessage]
+   or TempData[TempDataKeys.ErrorMessage] before a redirect and the message is
+   rendered here on the next page, whatever that page is. *@
+
+@{
+    string? statusSuccess = TempData[TempDataKeys.SuccessMessage] as string;
+    string? statusError = TempData[TempDataKeys.ErrorMessage] as string;
+}
+
+@if (!string.IsNullOrEmpty(statusSuccess) || !string.IsNullOrEmpty(statusError))
+{
+    <div class="crm-status-alerts">
+        @if (!string.IsNullOrEmpty(statusSuccess))
+        {
+            <div class="crm-alert crm-alert-success alert-dismissible fade show" role="alert">
+                <i class="bi bi-check-circle" aria-hidden="true"></i> @statusSuccess
+                <button type="button" class="btn-close" data-mdb-dismiss="alert" aria-label="Close"></button>
+            </div>
+        }
+        @if (!string.IsNullOrEmpty(statusError))
+        {
+            <div class="crm-alert crm-alert-danger alert-dismissible fade show" role="alert">
+                <i class="bi bi-exclamation-triangle" aria-hidden="true"></i> @statusError
+                <button type="button" class="btn-close" data-mdb-dismiss="alert" aria-label="Close"></button>
+            </div>
+        }
+    </div>
+}
