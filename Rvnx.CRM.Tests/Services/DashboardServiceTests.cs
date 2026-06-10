@@ -450,6 +450,31 @@ public class DashboardServiceTests
     }
 
     [Fact]
+    public async Task GetDashboardDataAsyncExcludesDeceasedContactsFromRecentContacts()
+    {
+        // The "Recently Modified" widget is a prompt to revisit someone, so deceased
+        // contacts stay out of it even when they were the most recently changed.
+        Guid livingId = Guid.NewGuid();
+        Guid deceasedId = Guid.NewGuid();
+        DateTime now = DateTime.UtcNow;
+
+        SetupContactSummaries([
+            new ContactSummary(livingId, "Alive", "Person", null, now.AddDays(-30), now.AddDays(-2), false),
+            new ContactSummary(deceasedId, "Late", "Person", null, now.AddDays(-30), now, true)
+        ]);
+        SetupAttachments([]);
+        SetupSignificantDates([]);
+        SetupRelationships([]);
+
+        DashboardDto result = await _service.GetDashboardDataAsync();
+
+        // Deceased contact still counts as a node, but is absent from Recently Modified.
+        Assert.Equal(2, result.GraphNodes.Count);
+        Assert.Single(result.RecentContacts);
+        Assert.Equal(livingId, result.RecentContacts[0].Id);
+    }
+
+    [Fact]
     public async Task GetDashboardDataAsyncCarriesIsDeceasedThroughToGraphNodes()
     {
         // The network graph dims deceased contacts. The flag must round-trip from the
