@@ -139,6 +139,33 @@ public class ContactReadService(IRepository repository, IFavoriteService favorit
             }
         }
 
+        List<(Guid ContactId, DateTime ActivityDate)> activityDates = contactIds.Count > 0
+            ? await _repository.ListProjectedByChunkedContainsAsync<ActivityContact, (Guid, DateTime), Guid>(
+                contactIds,
+                chunk => ac => chunk.Contains(ac.ContactId),
+                ac => new ValueTuple<Guid, DateTime>(ac.ContactId, ac.Activity.ActivityDate))
+            : [];
+
+        if (activityDates.Count > 0)
+        {
+            Dictionary<Guid, DateTime> lastActivityMap = new(activityDates.Count);
+            foreach (var (contactId, activityDate) in activityDates)
+            {
+                if (!lastActivityMap.TryGetValue(contactId, out DateTime existing) || activityDate > existing)
+                {
+                    lastActivityMap[contactId] = activityDate;
+                }
+            }
+
+            foreach (ContactDto dto in contactDtos)
+            {
+                if (lastActivityMap.TryGetValue(dto.Id, out DateTime lastActivity))
+                {
+                    dto.LastActivityDate = lastActivity;
+                }
+            }
+        }
+
         HashSet<Guid> favoriteIds = await _favoriteService.GetFavoriteContactIdsAsync();
         if (favoriteIds.Count > 0)
         {

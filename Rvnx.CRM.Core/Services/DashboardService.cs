@@ -159,6 +159,42 @@ public class DashboardService(IRepository repository, ILogger<DashboardService> 
             ContactsHidden = hiddenContactsCount
         };
 
+        DateOnly today = DateOnly.FromDateTime(DateTime.Today);
+        DateOnly lookahead = today.AddDays(14);
+
+        List<(Guid TaskId, Guid? ContactId, string Title, DateOnly DueDate)> openTasks =
+            await _repository.ListProjectedAsync<ContactTask, (Guid, Guid?, string, DateOnly)>(
+                t => !t.IsCompleted && t.ContactId != null && t.DueDate <= lookahead,
+                t => new ValueTuple<Guid, Guid?, string, DateOnly>(t.Id, t.ContactId, t.Title, t.DueDate));
+
+        if (openTasks.Count > 0)
+        {
+            List<Guid> taskContactIds = [.. openTasks.Select(t => t.ContactId!.Value).Distinct()];
+            Dictionary<Guid, string> taskContactNames = new(taskContactIds.Count);
+            List<(Guid Id, string Name)> nameRows =
+                await _repository.ListProjectedByChunkedContainsAsync<Contact, (Guid, string), Guid>(
+                    taskContactIds,
+                    chunk => c => chunk.Contains(c.Id),
+                    c => new ValueTuple<Guid, string>(c.Id, (c.FirstName + " " + (c.LastName ?? "")).Trim()));
+            foreach (var (cId, name) in nameRows)
+            {
+                taskContactNames.TryAdd(cId, name);
+            }
+
+            dashboard.OpenTasks = openTasks
+                .Select(t => new OpenTaskDto
+                {
+                    TaskId = t.TaskId,
+                    ContactId = t.ContactId!.Value,
+                    ContactName = taskContactNames.TryGetValue(t.ContactId!.Value, out string? cname) ? cname : string.Empty,
+                    Title = t.Title,
+                    DueDate = t.DueDate,
+                    DaysOverdue = t.DueDate < today ? today.DayNumber - t.DueDate.DayNumber : 0
+                })
+                .OrderBy(t => t.DueDate)
+                .ToList();
+        }
+
         return dashboard;
     }
 

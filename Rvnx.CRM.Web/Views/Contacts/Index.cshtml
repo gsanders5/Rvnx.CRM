@@ -32,6 +32,7 @@
             </button>
             <ul class="dropdown-menu dropdown-menu-end">
                 <li><a class="dropdown-item" asp-action="Import"><i class="fa-solid fa-file-import me-2" aria-hidden="true"></i>Import VCF</a></li>
+                <li><a class="dropdown-item" asp-action="ImportCsv"><i class="fa-solid fa-file-csv me-2" aria-hidden="true"></i>Import CSV</a></li>
                 <li><a class="dropdown-item" asp-action="ExportCsv"><i class="fa-solid fa-file-export me-2" aria-hidden="true"></i>Export CSV</a></li>
                 <li><a class="dropdown-item" asp-action="ExportAllVCard"><i class="fa-solid fa-file-zipper me-2" aria-hidden="true"></i>Export All VCF (Zip)</a></li>
             </ul>
@@ -154,6 +155,7 @@
                 <th scope="col" class="default-hidden">Last Changed</th>
                 <th scope="col" class="default-hidden">Last Changed By</th>
                 <th scope="col" class="default-hidden">Birthday</th>
+                <th scope="col">Last Contact</th>
                 <th scope="col" class="no-sort col-actions">Actions</th>
             </tr>
             </thead>
@@ -219,6 +221,18 @@
                     <td>@item.LastChangedBy</td>
                     <td data-order="@(item.Birthday.HasValue ? item.Birthday.Value.ToString("yyyy-MM-dd") : "")">
                         @(item.Birthday.HasValue ? item.Birthday.Value.ToShortDateString() : "—")
+                    </td>
+                    <td data-order="@(item.LastActivityDate.HasValue ? item.LastActivityDate.Value.ToString("yyyy-MM-dd") : "0000-00-00")">
+                        @if (item.LastActivityDate.HasValue)
+                        {
+                            var daysAgo = (DateTime.Today - item.LastActivityDate.Value.Date).Days;
+                            var label = daysAgo == 0 ? "Today" : daysAgo == 1 ? "Yesterday" : daysAgo < 30 ? $"{daysAgo}d ago" : daysAgo < 365 ? $"{daysAgo / 30}mo ago" : $"{daysAgo / 365}yr ago";
+                            <span title="@item.LastActivityDate.Value.ToShortDateString()">@label</span>
+                        }
+                        else
+                        {
+                            <span class="text-muted">—</span>
+                        }
                     </td>
                     <td>
                         <div class="crm-icon-actions">
@@ -374,10 +388,11 @@ else
                     { width: '155px', targets: 'col-actions' },
                     { responsivePriority: 0, targets: 0 },
                     { responsivePriority: 1, targets: 2 },
-                    { responsivePriority: 2, targets: 13 },
+                    { responsivePriority: 2, targets: 14 },
                     { responsivePriority: 3, targets: 1 },
                     { responsivePriority: 4, targets: 3 },
-                    { responsivePriority: 5, targets: 4 }
+                    { responsivePriority: 5, targets: 4 },
+                    { responsivePriority: 6, targets: 13 }
                 ],
                 language: {
                     search: '',

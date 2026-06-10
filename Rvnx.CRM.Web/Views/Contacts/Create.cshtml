@@ -418,5 +418,43 @@
             }
 
         })();
+
+        // ── Duplicate name check ──
+        (function () {
+            const firstNameInput = document.getElementById('FirstName');
+            const lastNameInput = document.getElementById('LastName');
+            if (!firstNameInput) return;
+
+            let dupWarning = document.createElement('div');
+            dupWarning.id = 'dup-warning';
+            dupWarning.style.cssText = 'display:none; margin-top: 8px; padding: 8px 12px; background: var(--crm-warning-muted, #fefce8); border: 1px solid var(--crm-warning, #ca8a04); border-radius: 6px; font-size: 0.85rem; color: var(--crm-text-primary);';
+            firstNameInput.closest('.crm-card-body').appendChild(dupWarning);
+
+            let debounceTimer;
+            function checkDuplicate() {
+                clearTimeout(debounceTimer);
+                debounceTimer = setTimeout(async function () {
+                    const first = firstNameInput.value.trim();
+                    const last = lastNameInput ? lastNameInput.value.trim() : '';
+                    if (!first) { dupWarning.style.display = 'none'; return; }
+                    try {
+                        const params = new URLSearchParams({ firstName: first });
+                        if (last) params.set('lastName', last);
+                        const resp = await fetch('@Url.Action("CheckDuplicate")?' + params.toString());
+                        const matches = await resp.json();
+                        if (matches.length > 0) {
+                            const names = matches.map(m => '<a href="/Contacts/Details/' + m.id + '" target="_blank" style="font-weight:600;">' + m.name + '</a>').join(', ');
+                            dupWarning.innerHTML = '<i class="bi bi-exclamation-triangle-fill me-2" aria-hidden="true"></i>A contact with this name already exists: ' + names + '. You can still save if this is a different person.';
+                            dupWarning.style.display = '';
+                        } else {
+                            dupWarning.style.display = 'none';
+                        }
+                    } catch { dupWarning.style.display = 'none'; }
+                }, 500);
+            }
+
+            firstNameInput.addEventListener('input', checkDuplicate);
+            if (lastNameInput) lastNameInput.addEventListener('input', checkDuplicate);
+        })();
     </script>
 }

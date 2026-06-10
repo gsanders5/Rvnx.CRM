@@ -167,6 +167,44 @@
         </div>
     </div>
 
+    @* ── Open Tasks ────────────────────────────────────────────────────── *@
+    @if (Model.OpenTasks.Any())
+    {
+        <div class="crm-card crm-fade-in crm-delay-3" style="margin-bottom: 1rem;">
+            <div class="crm-card-header">
+                <h5 class="card-title mb-0"><i class="bi bi-check2-square" aria-hidden="true"></i> Open Tasks</h5>
+                <a class="crm-btn-tertiary btn-sm" asp-controller="Calendar" asp-action="Index">
+                    See calendar <i class="bi bi-arrow-right" aria-hidden="true"></i>
+                </a>
+            </div>
+            <div class="crm-card-body" style="padding: 8px 22px 18px;">
+                @foreach (var task in Model.OpenTasks)
+                {
+                    <a asp-controller="Contacts" asp-action="Details" asp-route-id="@task.ContactId" class="crm-recent-row">
+                        <div class="crm-avatar-placeholder" style="@(task.IsOverdue ? "background: var(--crm-danger-muted, #fee2e2); color: var(--crm-danger, #dc2626);" : "")">
+                            <i class="bi @(task.IsOverdue ? "bi-exclamation-circle-fill" : "bi-check2-square")" aria-hidden="true"></i>
+                        </div>
+                        <div style="flex: 1; min-width: 0;">
+                            <div class="text-truncate crm-recent-row-name">@task.Title</div>
+                            <div class="crm-recent-row-meta">
+                                @task.ContactName ·
+                                @if (task.IsOverdue)
+                                {
+                                    <span style="color: var(--crm-danger, #dc2626);">@task.DaysOverdue day@(task.DaysOverdue == 1 ? "" : "s") overdue</span>
+                                }
+                                else
+                                {
+                                    <span>due @task.DueDate.ToString("MMM d")</span>
+                                }
+                            </div>
+                        </div>
+                        <i class="bi bi-chevron-right" aria-hidden="true" style="color: var(--crm-text-tertiary); font-size: 12px;"></i>
+                    </a>
+                }
+            </div>
+        </div>
+    }
+
     @* ── Stats Strip ───────────────────────────────────────────────────── *@
     <div class="crm-card crm-fade-in crm-delay-3" style="margin-bottom: 1rem;">
         <div class="crm-stats-strip">
