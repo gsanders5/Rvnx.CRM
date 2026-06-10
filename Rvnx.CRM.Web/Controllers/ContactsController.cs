@@ -164,6 +164,33 @@ public class ContactsController(
     }
 
     [HttpGet]
+    public async Task<IActionResult> CheckDuplicate(string? firstName, string? lastName)
+    {
+        if (string.IsNullOrWhiteSpace(firstName))
+        {
+            return Json(Array.Empty<object>());
+        }
+
+        string first = firstName.Trim();
+        string? last = string.IsNullOrWhiteSpace(lastName) ? null : lastName.Trim();
+
+        List<(Guid Id, string FullName)> matches = await _contactReadService.GetContactNamesAsync();
+        var results = matches
+            .Where(m =>
+            {
+                string[] parts = m.FullName.Split(' ', 2);
+                string mFirst = parts[0];
+                string? mLast = parts.Length > 1 ? parts[1] : null;
+                return string.Equals(mFirst, first, StringComparison.OrdinalIgnoreCase)
+                    && (last == null || string.Equals(mLast, last, StringComparison.OrdinalIgnoreCase));
+            })
+            .Select(m => new { id = m.Id, name = m.FullName })
+            .ToList();
+
+        return Json(results);
+    }
+
+    [HttpGet]
     public async Task<IActionResult> Create()
     {
         ContactCreateViewModel viewModel = new()
@@ -411,6 +438,50 @@ public class ContactsController(
         {
             using Stream stream = file.OpenReadStream();
             ContactImportResult result = await _contactImportService.ImportFromVCardAsync(stream);
+
+            TempData[TempDataKeys.SuccessMessage] =
+                $"Import successful! Added: {result.AddedCount}, Skipped: {result.SkippedCount}";
+            return RedirectToAction(nameof(Index));
+        }
+        catch (Exception ex)
+        {
+            LogErrorImportingVcf(_logger, ex);
+            ModelState.AddModelError("", "An error occurred while parsing the file.");
+            return View();
+        }
+    }
+
+    [HttpGet]
+    public IActionResult ImportCsv()
+    {
+        return View();
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> ImportCsv(IFormFile file, [FromServices] ICsvImportService csvImportService)
+    {
+        if (file == null || file.Length == 0)
+        {
+            ModelState.AddModelError("file", "Please select a file.");
+            return View();
+        }
+
+        if (!_fileValidationService.IsAllowedFileSize(file.Length))
+        {
+            ModelState.AddModelError("file", "File is too large.");
+            return View();
+        }
+
+        if (!Path.GetExtension(file.FileName).Equals(".csv", StringComparison.OrdinalIgnoreCase))
+        {
+            ModelState.AddModelError("file", "Only .csv files are allowed.");
+            return View();
+        }
+
+        try
+        {
+            using Stream stream = file.OpenReadStream();
+            ContactImportResult result = await csvImportService.ImportFromCsvAsync(stream);
 
             TempData[TempDataKeys.SuccessMessage] =
                 $"Import successful! Added: {result.AddedCount}, Skipped: {result.SkippedCount}";
