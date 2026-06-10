@@ -4,7 +4,6 @@ using Rvnx.CRM.Core.DTOs.Base;
 using Rvnx.CRM.Core.DTOs.Contact;
 using Rvnx.CRM.Core.Interfaces;
 using Rvnx.CRM.Web.Controllers.Base;
-using System.Collections.Frozen;
 
 namespace Rvnx.CRM.Web.Controllers;
 
@@ -16,9 +15,6 @@ public class AttachmentsController(
     private readonly IAttachmentService _attachmentService = attachmentService;
     private readonly IFileValidationService _fileValidationService = fileValidationService;
     private readonly IThumbnailService _thumbnailService = thumbnailService;
-
-    private static readonly FrozenSet<string> ImageContentTypes =
-        new[] { "image/jpeg", "image/png", "image/gif" }.ToFrozenSet(StringComparer.OrdinalIgnoreCase);
 
     [HttpPost]
     public async Task<IActionResult> Upload(Guid contactId, [ForbidExecutables] IFormFile file,
@@ -110,7 +106,7 @@ public class AttachmentsController(
         Response.Headers.LastModified = dto.LastChangedDate.ToString("R");
         Response.Headers.CacheControl = "public, max-age=31536000";
 
-        return IsImage(dto.ContentType)
+        return _fileValidationService.IsImageContentType(dto.ContentType)
             ? File(dto.Content, dto.ContentType)
             : File(dto.Content, dto.ContentType, dto.FileName);
     }
@@ -143,7 +139,7 @@ public class AttachmentsController(
         // Short cache so the browser retries rather than caching the failure permanently
         Response.Headers.LastModified = dto.LastChangedDate.ToString("R");
         Response.Headers.CacheControl = "public, max-age=3600";
-        return IsImage(dto.ContentType)
+        return _fileValidationService.IsImageContentType(dto.ContentType)
             ? File(dto.Content, dto.ContentType)
             : File(dto.Content, dto.ContentType, dto.FileName);
     }
@@ -166,10 +162,5 @@ public class AttachmentsController(
         }
 
         return false;
-    }
-
-    private static bool IsImage(string contentType)
-    {
-        return ImageContentTypes.Contains(contentType);
     }
 }

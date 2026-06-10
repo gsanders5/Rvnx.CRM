@@ -41,6 +41,11 @@ public class FileValidationService : IFileValidationService
         { ".vcf", "text/vcard" }
     };
 
+    // Derived from the image extensions and MIME map above so image content types have a single
+    // source of truth shared with controllers that decide whether to serve an attachment inline.
+    private static readonly HashSet<string> ImageContentTypes =
+        ImageExtensions.Select(ext => MimeTypeMap[ext]).ToHashSet(StringComparer.OrdinalIgnoreCase);
+
     // Map from normalized lowercase extension to the FileTypeChecker type name.
     // FileTypeChecker identifies types by their Name property (e.g. "Joint Photographic Experts Group").
     // We use the Extension property (e.g. "jpg") which is more reliable and version-stable.
@@ -73,6 +78,11 @@ public class FileValidationService : IFileValidationService
     public bool IsImageExtension(string? extension)
     {
         return !string.IsNullOrEmpty(extension) && ImageExtensions.Contains(extension);
+    }
+
+    public bool IsImageContentType(string? contentType)
+    {
+        return !string.IsNullOrEmpty(contentType) && ImageContentTypes.Contains(contentType);
     }
 
     public bool IsValidImageSignature(byte[] fileBytes, string? extension)
