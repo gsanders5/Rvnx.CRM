@@ -60,4 +60,10 @@ public interface IContactReadService
     /// Excludes partial contacts and (if provided) the contact identified by <paramref name="excludeContactId"/>.
     /// </summary>
     Task<List<ContactSelectItemDto>> GetIntroducerCandidatesAsync(Guid? excludeContactId);
+
+    /// <summary>
+    /// Finds non-hidden contacts whose first name (and last name, when provided) matches
+    /// case-insensitively. Used to warn about likely duplicates before creating a contact.
+    /// </summary>
+    Task<List<ContactSelectItemDto>> FindContactsByNameAsync(string firstName, string? lastName);
 }

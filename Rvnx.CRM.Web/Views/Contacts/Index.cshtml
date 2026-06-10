@@ -155,7 +155,7 @@
                 <th scope="col" class="default-hidden">Last Changed</th>
                 <th scope="col" class="default-hidden">Last Changed By</th>
                 <th scope="col" class="default-hidden">Birthday</th>
-                <th scope="col">Last Contact</th>
+                <th scope="col" class="col-last-contact">Last Contact</th>
                 <th scope="col" class="no-sort col-actions">Actions</th>
             </tr>
             </thead>
@@ -388,11 +388,11 @@ else
                     { width: '155px', targets: 'col-actions' },
                     { responsivePriority: 0, targets: 0 },
                     { responsivePriority: 1, targets: 2 },
-                    { responsivePriority: 2, targets: 14 },
+                    { responsivePriority: 2, targets: 'col-actions' },
                     { responsivePriority: 3, targets: 1 },
                     { responsivePriority: 4, targets: 3 },
                     { responsivePriority: 5, targets: 4 },
-                    { responsivePriority: 6, targets: 13 }
+                    { responsivePriority: 6, targets: 'col-last-contact' }
                 ],
                 language: {
                     search: '',

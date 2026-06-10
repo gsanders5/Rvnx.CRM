@@ -181,7 +181,7 @@
                 @foreach (var task in Model.OpenTasks)
                 {
                     <a asp-controller="Contacts" asp-action="Details" asp-route-id="@task.ContactId" class="crm-recent-row">
-                        <div class="crm-avatar-placeholder" style="@(task.IsOverdue ? "background: var(--crm-danger-muted, #fee2e2); color: var(--crm-danger, #dc2626);" : "")">
+                        <div class="crm-avatar-placeholder" style="@(task.IsOverdue ? "color: var(--crm-danger);" : "")">
                             <i class="bi @(task.IsOverdue ? "bi-exclamation-circle-fill" : "bi-check2-square")" aria-hidden="true"></i>
                         </div>
                         <div style="flex: 1; min-width: 0;">
@@ -190,7 +190,7 @@
                                 @task.ContactName ·
                                 @if (task.IsOverdue)
                                 {
-                                    <span style="color: var(--crm-danger, #dc2626);">@task.DaysOverdue day@(task.DaysOverdue == 1 ? "" : "s") overdue</span>
+                                    <span style="color: var(--crm-danger);">@task.DaysOverdue day@(task.DaysOverdue == 1 ? "" : "s") overdue</span>
                                 }
                                 else
                                 {

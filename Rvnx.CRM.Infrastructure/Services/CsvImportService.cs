@@ -77,6 +77,18 @@ public class CsvImportService(IRepository repository, ILogger<CsvImportService> 
                 throw new FormatException("CSV header does not match the expected format.");
             }
 
+            // Pre-load existing names and contact-method values once; checking per row
+            // would cost two queries per imported contact. Rows added during this import
+            // are appended to the same sets so in-file duplicates are also caught.
+            HashSet<(string FirstName, string? LastName)> existingNames =
+                [.. await _repository.ListProjectedAsync<Contact, (string, string?)>(
+                    c => true,
+                    c => new ValueTuple<string, string?>(c.FirstName, c.LastName))];
+            HashSet<string> existingMethodValues =
+                [.. await _repository.ListProjectedAsync<ContactMethod, string>(
+                    cm => true,
+                    cm => cm.Value)];
+
             string? line;
             while ((line = await reader.ReadLineAsync()) != null)
             {
@@ -102,6 +114,7 @@ public class CsvImportService(IRepository repository, ILogger<CsvImportService> 
 
                 Contact contact = new()
                 {
+                    Id = Guid.NewGuid(),
                     FirstName = firstName,
                     LastName = NullIfEmpty(fields[ColLastName]),
                     Nickname = NullIfEmpty(fields[ColNickname]),
@@ -114,31 +127,30 @@ public class CsvImportService(IRepository repository, ILogger<CsvImportService> 
                     IsPartial = false
                 };
 
-                // Collect contact methods for duplicate detection
                 List<ContactMethod> methods = BuildContactMethods(fields);
-                contact.ContactMethods = methods;
 
-                if (await IsDuplicateAsync(contact))
+                if (existingNames.Contains((contact.FirstName, contact.LastName))
+                    || methods.Any(m => existingMethodValues.Contains(m.Value)))
                 {
                     skippedCount++;
                     continue;
                 }
 
-                // Clear the NotMapped collection before saving to avoid EF confusion
-                contact.ContactMethods = [];
+                existingNames.Add((contact.FirstName, contact.LastName));
+                foreach (ContactMethod method in methods)
+                {
+                    existingMethodValues.Add(method.Value);
+                }
 
                 await _repository.AddAsync(contact);
-                await _repository.SaveChangesAsync();
-
                 addedCount++;
 
-                // Save related entities now that we have the contact ID
                 await SaveContactMethodsAsync(contact.Id, methods);
                 await SaveBirthdayAsync(contact.Id, fields[ColBirthday]);
                 await SaveAddressAsync(contact.Id, fields);
-
-                await _repository.SaveChangesAsync();
             }
+
+            await _repository.SaveChangesAsync();
 
             return new ContactImportResult
             {
@@ -252,23 +264,6 @@ public class CsvImportService(IRepository repository, ILogger<CsvImportService> 
             Country = fields[ColAddrCountry].Trim(),
             AddressType = addressType
         });
-    }
-
-    private async Task<bool> IsDuplicateAsync(Contact candidate)
-    {
-        if (await _repository.CountAsync<Contact>(c => c.FirstName == candidate.FirstName && c.LastName == candidate.LastName) > 0)
-        {
-            return true;
-        }
-
-        if (candidate.ContactMethods != null && candidate.ContactMethods.Count > 0)
-        {
-            List<string> valuesToCheck = candidate.ContactMethods.Select(m => m.Value).ToList();
-            return await _repository.CountAsync<ContactMethod>(cm =>
-                valuesToCheck.Contains(cm.Value)) > 0;
-        }
-
-        return false;
     }
 
     /// <summary>

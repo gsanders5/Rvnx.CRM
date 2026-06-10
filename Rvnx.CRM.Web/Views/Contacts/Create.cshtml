@@ -427,7 +427,7 @@
 
             let dupWarning = document.createElement('div');
             dupWarning.id = 'dup-warning';
-            dupWarning.style.cssText = 'display:none; margin-top: 8px; padding: 8px 12px; background: var(--crm-warning-muted, #fefce8); border: 1px solid var(--crm-warning, #ca8a04); border-radius: 6px; font-size: 0.85rem; color: var(--crm-text-primary);';
+            dupWarning.style.cssText = 'display:none; margin-top: 8px; padding: 8px 12px; background: var(--crm-surface-secondary); border: 1px solid var(--crm-warning); border-radius: 6px; font-size: 0.85rem; color: var(--crm-text-primary);';
             firstNameInput.closest('.crm-card-body').appendChild(dupWarning);
 
             let debounceTimer;
@@ -443,8 +443,23 @@
                         const resp = await fetch('@Url.Action("CheckDuplicate")?' + params.toString());
                         const matches = await resp.json();
                         if (matches.length > 0) {
-                            const names = matches.map(m => '<a href="/Contacts/Details/' + m.id + '" target="_blank" style="font-weight:600;">' + m.name + '</a>').join(', ');
-                            dupWarning.innerHTML = '<i class="bi bi-exclamation-triangle-fill me-2" aria-hidden="true"></i>A contact with this name already exists: ' + names + '. You can still save if this is a different person.';
+                            // Build with DOM methods — contact names are user data and must not hit innerHTML.
+                            dupWarning.replaceChildren();
+                            const icon = document.createElement('i');
+                            icon.className = 'bi bi-exclamation-triangle-fill me-2';
+                            icon.setAttribute('aria-hidden', 'true');
+                            dupWarning.appendChild(icon);
+                            dupWarning.appendChild(document.createTextNode('A contact with this name already exists: '));
+                            matches.forEach(function (m, i) {
+                                if (i > 0) dupWarning.appendChild(document.createTextNode(', '));
+                                const a = document.createElement('a');
+                                a.href = '@Url.Action("Details")/' + encodeURIComponent(m.id);
+                                a.target = '_blank';
+                                a.style.fontWeight = '600';
+                                a.textContent = m.name;
+                                dupWarning.appendChild(a);
+                            });
+                            dupWarning.appendChild(document.createTextNode('. You can still save if this is a different person.'));
                             dupWarning.style.display = '';
                         } else {
                             dupWarning.style.display = 'none';

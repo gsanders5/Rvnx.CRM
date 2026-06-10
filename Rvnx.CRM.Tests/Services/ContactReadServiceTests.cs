@@ -29,6 +29,15 @@ public class ContactReadServiceTests
             RepositoryMock = new Mock<IRepository>();
             FavoriteServiceMock = new Mock<IFavoriteService>();
             FavoriteServiceMock.Setup(f => f.GetFavoriteContactIdsAsync()).ReturnsAsync([]);
+
+            // GetIndexDataAsync always queries activity dates for the Last Contact column;
+            // default to empty so tests that don't care about activities need no setup.
+            RepositoryMock.Setup(r => r.ListProjectedAsync<ActivityContact, (Guid, DateTime)>(
+                It.IsAny<Expression<Func<ActivityContact, bool>>>(),
+                It.IsAny<Expression<Func<ActivityContact, (Guid, DateTime)>>>(),
+                It.IsAny<CancellationToken>()))
+                .ReturnsAsync([]);
+
             Service = new ContactReadService(RepositoryMock.Object, FavoriteServiceMock.Object);
         }
     }

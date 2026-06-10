@@ -171,23 +171,8 @@ public class ContactsController(
             return Json(Array.Empty<object>());
         }
 
-        string first = firstName.Trim();
-        string? last = string.IsNullOrWhiteSpace(lastName) ? null : lastName.Trim();
-
-        List<(Guid Id, string FullName)> matches = await _contactReadService.GetContactNamesAsync();
-        var results = matches
-            .Where(m =>
-            {
-                string[] parts = m.FullName.Split(' ', 2);
-                string mFirst = parts[0];
-                string? mLast = parts.Length > 1 ? parts[1] : null;
-                return string.Equals(mFirst, first, StringComparison.OrdinalIgnoreCase)
-                    && (last == null || string.Equals(mLast, last, StringComparison.OrdinalIgnoreCase));
-            })
-            .Select(m => new { id = m.Id, name = m.FullName })
-            .ToList();
-
-        return Json(results);
+        List<ContactSelectItemDto> matches = await _contactReadService.FindContactsByNameAsync(firstName, lastName);
+        return Json(matches.Select(m => new { id = m.Id, name = m.FullName }));
     }
 
     [HttpGet]
