@@ -322,21 +322,6 @@ public class ContactsControllerTests
         }
 
         [Fact]
-        public async Task DeleteReturnsViewWithContactDetailDto()
-        {
-            Guid contactId = Guid.NewGuid();
-            ContactDetailDto contactDto = new() { Id = contactId, FirstName = "John", LastName = "Doe" };
-            _contactReadServiceMock.Setup(s => s.GetContactDetailsAsync(contactId)).ReturnsAsync(contactDto);
-
-            IActionResult result = await _controller.Delete(contactId);
-
-            ViewResult viewResult = Assert.IsType<ViewResult>(result);
-            ContactDetailDto model = Assert.IsAssignableFrom<ContactDetailDto>(viewResult.Model);
-            Assert.Equal(contactId, model.Id);
-            Assert.Equal("John", model.FirstName);
-        }
-
-        [Fact]
         public async Task EditPostWhenContactNotFoundShouldReturnNotFound()
         {
             Guid contactId = Guid.NewGuid();

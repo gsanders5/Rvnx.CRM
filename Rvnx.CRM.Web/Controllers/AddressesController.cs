@@ -1,9 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Rvnx.CRM.Core.DTOs.Contact;
-using Rvnx.CRM.Core.Extensions;
 using Rvnx.CRM.Core.Interfaces;
 using Rvnx.CRM.Core.Models;
-using Rvnx.CRM.Core.Models.Contact;
 using Rvnx.CRM.Web.Controllers.Base;
 
 namespace Rvnx.CRM.Web.Controllers;
@@ -59,13 +57,6 @@ public class AddressesController(IAddressService addressService, IRepository rep
         }
 
         return View(dto);
-    }
-
-    [HttpGet]
-    public async Task<IActionResult> Delete(Guid id)
-    {
-        Address? address = await _addressService.GetByIdAsync(id);
-        return address == null ? NotFound() : View(address.ToDto());
     }
 
     [HttpPost, ActionName("Delete")]

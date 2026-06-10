@@ -192,29 +192,6 @@ public class PetsControllerTests : IDisposable
     }
 
     [Fact]
-    public async Task DeleteGetWithValidIdShouldReturnViewWithPet()
-    {
-        Guid petId = Guid.NewGuid();
-        Guid contactId = Guid.NewGuid();
-        _context.Contacts!.Add(new Contact { Id = contactId, FirstName = "Test" });
-        _context.Set<Pet>().Add(new Pet
-        {
-            Id = petId,
-            Name = "ToDelete",
-            Species = "Fish"
-        });
-        _context.Set<PetContact>().Add(new PetContact { PetId = petId, ContactId = contactId });
-        await _context.SaveChangesAsync();
-
-        IActionResult result = await _controller.Delete(petId);
-
-        ViewResult viewResult = Assert.IsType<ViewResult>(result);
-        PetDto? model = viewResult.Model as PetDto;
-        Assert.NotNull(model);
-        Assert.Equal("ToDelete", model.Name);
-    }
-
-    [Fact]
     public async Task DeleteConfirmedWithValidIdShouldRemovePet()
     {
         Guid petId = Guid.NewGuid();

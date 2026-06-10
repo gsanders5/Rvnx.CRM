@@ -345,24 +345,6 @@ public class RelationshipService(IRepository repository, IRelationshipSuggestion
         return await repository.GetByIdAsync<Relationship>(id);
     }
 
-    public async Task<Relationship?> GetRelationshipForDeleteAsync(Guid id)
-    {
-        Relationship? relationship = await repository.GetByIdAsync<Relationship>(id);
-        if (relationship == null)
-        {
-            return null;
-        }
-
-        Guid p1Id = relationship.ContactId;
-        Guid p2Id = relationship.RelatedContactId;
-        List<Contact> contacts = await repository.ListAsync<Contact>(c => c.Id == p1Id || c.Id == p2Id);
-
-        relationship.Person = contacts.FirstOrDefault(c => c.Id == p1Id);
-        relationship.RelatedPerson = contacts.FirstOrDefault(c => c.Id == p2Id);
-
-        return relationship;
-    }
-
     public async Task<OperationResult> DeleteRelationshipAsync(Guid id)
     {
         List<Guid> contactIds = await repository.ListProjectedAsync<Relationship, Guid>(

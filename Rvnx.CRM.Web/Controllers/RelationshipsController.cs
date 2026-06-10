@@ -225,30 +225,6 @@ public class RelationshipsController(
         return View(viewModel);
     }
 
-    [HttpGet]
-    public async Task<IActionResult> Delete(Guid? id, string? returnUrl = null)
-    {
-        if (id == null)
-        {
-            return NotFound();
-        }
-
-        Relationship? relationship = await _relationshipService.GetRelationshipForDeleteAsync(id.Value);
-        if (relationship == null)
-        {
-            return NotFound();
-        }
-
-        if (!await _contactLookupService.ExistsAsync(relationship.ContactId))
-        {
-            return NotFound();
-        }
-
-        string? safeReturnUrl = !string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl) ? returnUrl : null;
-
-        return View(new RelationshipDeleteViewModel(relationship.ToDto(), safeReturnUrl));
-    }
-
     [HttpPost, ActionName("Delete")]
     public async Task<IActionResult> DeleteConfirmed(Guid id, string? returnUrl = null)
     {

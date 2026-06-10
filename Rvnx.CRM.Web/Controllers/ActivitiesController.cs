@@ -1,9 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Rvnx.CRM.Core.DTOs.Contact;
-using Rvnx.CRM.Core.Extensions;
 using Rvnx.CRM.Core.Interfaces;
 using Rvnx.CRM.Core.Models;
-using Rvnx.CRM.Core.Models.Activity;
 using Rvnx.CRM.Web.Controllers.Base;
 
 namespace Rvnx.CRM.Web.Controllers;
@@ -83,13 +81,6 @@ public class ActivitiesController(IActivityService activityService, IRepository 
 
         await PopulateContactsSelectListExcludeDeceased(_contactReadService, dto.ContactIds);
         return View(dto);
-    }
-
-    [HttpGet]
-    public async Task<IActionResult> Delete(Guid id)
-    {
-        Activity? activity = await _activityService.GetByIdAsync(id);
-        return activity == null ? NotFound() : View(activity.ToDto());
     }
 
     [HttpPost, ActionName("Delete")]
