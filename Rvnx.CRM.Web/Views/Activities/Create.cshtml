@@ -68,7 +68,9 @@
                         </div>
                         <div class="crm-field-group">
                             <label asp-for="ActivityType">Type</label>
-                            <select asp-for="ActivityType" id="ActivityType" class="crm-input">
+                            <select asp-for="ActivityType" id="ActivityType" class="crm-input"
+                                    data-select2 data-select2-tags data-select2-allow-clear
+                                    data-select2-placeholder="Select or type a custom type...">
                                 <option value="">Select or type a custom type...</option>
                                 @foreach (var type in Rvnx.CRM.Core.Constants.ActivityTypeSuggestions.All)
                                 {
@@ -103,7 +105,8 @@
 
                     <div class="crm-field-group">
                         <label for="ContactIds">Contacts</label>
-                        <select name="ContactIds" id="ContactIds" class="crm-input" multiple>
+                        <select name="ContactIds" id="ContactIds" class="crm-input" multiple
+                                data-select2 data-select2-placeholder="Select contacts...">
                             @foreach (var item in (MultiSelectList)ViewBag.ContactsList)
                             {
                                 <option value="@item.Value" selected="@item.Selected">@item.Text</option>
@@ -132,10 +135,4 @@
 @section Scripts {
     @{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); }
     @{ await Html.RenderPartialAsync("_EasyMDEScripts"); }
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            $('#ActivityType').select2({ width: '100%', tags: true, placeholder: 'Select or type a custom type...', allowClear: true });
-            $('#ContactIds').select2({ width: '100%', placeholder: 'Select contacts...' });
-        });
-    </script>
 }

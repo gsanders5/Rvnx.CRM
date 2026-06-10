@@ -44,7 +44,7 @@
                 <div class="crm-card-body">
                     <div class="crm-field-group">
                         <label asp-for="Type">Type</label>
-                        <select asp-for="Type" asp-items="Html.GetEnumSelectList<Rvnx.CRM.Core.Enumerations.ContactMethodType>()" class="crm-input" id="Type" autofocus></select>
+                        <select asp-for="Type" asp-items="Html.GetEnumSelectList<Rvnx.CRM.Core.Enumerations.ContactMethodType>()" class="crm-input" id="Type" data-select2 autofocus></select>
                         <span asp-validation-for="Type" class="crm-field-error"></span>
                     </div>
 
@@ -80,9 +80,4 @@
 
 @section Scripts {
     @{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); }
-    <script>
-        $(function () {
-            $('#Type').select2({ width: '100%' });
-        });
-    </script>
 }
