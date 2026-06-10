@@ -1,0 +1,24 @@
+// CA1716: "Shared" is a VB reserved keyword, but the namespace intentionally mirrors
+// the conventional Views/Shared folder; VB consumers are not a concern for this web app.
+#pragma warning disable CA1716
+namespace Rvnx.CRM.Web.ViewModels.Shared;
+#pragma warning restore CA1716
+
+/// <summary>
+/// Drives Views/Shared/_SaveShortcutCard.cshtml: the side-column card with a
+/// save button (linked to the main form via the HTML5 form attribute) and a
+/// cancel link, shared by the entity Create/Edit pages.
+/// </summary>
+public class SaveShortcutCardModel
+{
+    /// <summary>Id of the &lt;form&gt; the save button submits, e.g. "note-form".</summary>
+    public required string FormId { get; init; }
+
+    public required string CancelUrl { get; init; }
+    public string CancelText { get; init; } = "Cancel";
+    public string CancelIcon { get; init; } = "bi-arrow-left";
+    public string SaveText { get; init; } = "Save";
+    public string SaveIcon { get; init; } = "bi-save";
+    public string Title { get; init; } = "Ready to save?";
+    public string Description { get; init; } = "Changes are applied immediately.";
+}
