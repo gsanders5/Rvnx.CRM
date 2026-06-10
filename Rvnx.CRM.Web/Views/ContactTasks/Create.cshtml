@@ -1,4 +1,5 @@
 @model Rvnx.CRM.Core.DTOs.Contact.ContactTaskFormDto
+@using Rvnx.CRM.Web.ViewModels.Shared
 
 @{
     ViewData["Title"] = "Add Task";
@@ -8,30 +9,13 @@
     @Html.AntiForgeryToken()
     <input asp-for="ContactId" type="hidden" />
 
-    <div class="crm-details-actions-strip">
-        <a asp-controller="Contacts" asp-action="Details" asp-route-id="@Model.ContactId" class="crm-btn-tertiary btn-sm">
-            <i class="bi bi-arrow-left" aria-hidden="true"></i> Back to Contact
-        </a>
-        <div class="d-flex gap-2 align-items-center flex-wrap">
-            <span class="crm-eyebrow crm-unsaved-indicator" id="unsaved-indicator" hidden>
-                <i class="bi bi-circle-fill" aria-hidden="true" style="font-size: 6px; vertical-align: middle; margin-right: 4px;"></i>
-                Unsaved
-            </span>
-            <button type="submit" class="crm-btn-primary btn-sm">
-                <i class="bi bi-save" aria-hidden="true"></i> Save
-            </button>
-        </div>
-    </div>
-
-    <section class="crm-edit-masthead crm-fade-in">
-        <div class="crm-edit-masthead-photo-placeholder" aria-hidden="true">
-            <i class="bi bi-check2-square"></i>
-        </div>
-        <div>
-            <div class="crm-eyebrow" style="margin-bottom: 6px;">Adding task</div>
-            <h1 class="crm-edit-masthead-title">New task</h1>
-        </div>
-    </section>
+    @await Html.PartialAsync("_EditFormHeader", new EditFormHeaderModel
+    {
+        BackUrl = Url.Action("Details", "Contacts", new { id = Model.ContactId })!,
+        Icon = "bi-check2-square",
+        Eyebrow = "Adding task",
+        Title = "New task"
+    })
 
     <div class="crm-edit-body">
         <div class="crm-edit-col-main">
@@ -64,16 +48,11 @@
         </div>
 
         <div class="crm-edit-col-side">
-            <div class="crm-save-shortcut-card">
-                <div class="crm-save-shortcut-title">Ready to save?</div>
-                <div class="crm-save-shortcut-desc">Changes are applied immediately.</div>
-                <button type="submit" class="crm-btn-primary btn-sm" form="task-form">
-                    <i class="bi bi-save" aria-hidden="true"></i> Save
-                </button>
-                <a asp-controller="Contacts" asp-action="Details" asp-route-id="@Model.ContactId" class="crm-btn-tertiary btn-sm">
-                    <i class="bi bi-arrow-left" aria-hidden="true"></i> Cancel
-                </a>
-            </div>
+            @await Html.PartialAsync("_SaveShortcutCard", new SaveShortcutCardModel
+            {
+                FormId = "task-form",
+                CancelUrl = Url.Action("Details", "Contacts", new { id = Model.ContactId })!
+            })
         </div>
     </div>
 </form>

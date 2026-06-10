@@ -1,0 +1,16 @@
+@model Rvnx.CRM.Web.ViewModels.Shared.SaveShortcutCardModel
+
+@* Side-column save card shared by the entity Create/Edit pages. The save
+   button targets the main form via the HTML5 form attribute, so this can sit
+   outside the <form> element. *@
+
+<div class="crm-save-shortcut-card">
+    <div class="crm-save-shortcut-title">@Model.Title</div>
+    <div class="crm-save-shortcut-desc">@Model.Description</div>
+    <button type="submit" class="crm-btn-primary btn-sm" form="@Model.FormId">
+        <i class="bi @Model.SaveIcon" aria-hidden="true"></i> @Model.SaveText
+    </button>
+    <a href="@Model.CancelUrl" class="crm-btn-tertiary btn-sm">
+        <i class="bi @Model.CancelIcon" aria-hidden="true"></i> @Model.CancelText
+    </a>
+</div>
