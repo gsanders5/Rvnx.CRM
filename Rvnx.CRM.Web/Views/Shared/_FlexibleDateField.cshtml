@@ -1,0 +1,46 @@
+@model Rvnx.CRM.Web.ViewModels.Shared.FlexibleDateFieldModel
+@using System.Globalization
+@{
+    // Year 0001 is the "year unknown" sentinel — e.g. a birthday whose year nobody knows.
+    DateOnly? value = Model.Value;
+    bool hasValue = value.HasValue;
+    bool yearKnown = hasValue && value!.Value.Year != 1;
+    int currentYear = DateTime.Today.Year;
+    int maxYear = Math.Max(currentYear + 10, yearKnown ? value!.Value.Year : currentYear);
+    int minYear = Math.Min(1900, yearKnown ? value!.Value.Year : 1900);
+}
+
+<div class="crm-field-group" data-event-date>
+    <label for="@(Model.Name)-month">@Model.Label</label>
+
+    @* Canonical value posted to the server — yyyy-MM-dd, where year 0001 means the
+       year is unknown and empty means no date. The selects below are name-less,
+       so only this posts. *@
+    <input type="hidden" name="@Model.Name" value="@(hasValue ? value!.Value.ToString("yyyy-MM-dd") : string.Empty)" data-event-date-value />
+
+    <div class="crm-date-parts">
+        <select class="crm-input" id="@(Model.Name)-month" aria-label="Month" data-event-date-month>
+            <option value="">Month</option>
+            @for (int m = 1; m <= 12; m++)
+            {
+                <option value="@m.ToString("D2")" selected="@(hasValue && value!.Value.Month == m)">@CultureInfo.CurrentCulture.DateTimeFormat.GetMonthName(m)</option>
+            }
+        </select>
+        <select class="crm-input" aria-label="Day" data-event-date-day>
+            <option value="">Day</option>
+            @for (int d = 1; d <= 31; d++)
+            {
+                <option value="@d.ToString("D2")" selected="@(hasValue && value!.Value.Day == d)">@d</option>
+            }
+        </select>
+        <select class="crm-input" aria-label="Year" data-event-date-year>
+            <option value="0001" selected="@(!yearKnown)">Year unknown</option>
+            @for (int y = maxYear; y >= minYear; y--)
+            {
+                <option value="@y" selected="@(yearKnown && value!.Value.Year == y)">@y</option>
+            }
+        </select>
+    </div>
+
+    <span class="crm-field-error" data-valmsg-for="@Model.Name" data-valmsg-replace="true">@(ViewData.ModelState[Model.Name]?.Errors.FirstOrDefault()?.ErrorMessage)</span>
+</div>

@@ -74,7 +74,12 @@
                         <div class="crm-form-divider-line"></div>
                     </div>
 
-                    @await Html.PartialAsync("_EventDateField", Model.EventDate)
+                    @await Html.PartialAsync("_FlexibleDateField", new FlexibleDateFieldModel
+                    {
+                        Name = "EventDate",
+                        Label = "Event Date",
+                        Value = Model.EventDate
+                    })
 
                     <div class="crm-form-divider">
                         <div class="crm-form-divider-line"></div>

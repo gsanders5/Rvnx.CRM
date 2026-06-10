@@ -3093,36 +3093,26 @@ table.dataTable.crm-editorial-table tbody td .crm-contact-pronouns {
   opacity: 0.5;
 }
 
-/* Event-date field — native date picker, or month + day selects when the year
-   is unknown. The class sets display:flex, so it must yield to [hidden]. */
-.crm-event-date-md:not([hidden]) {
+/* Flexible date field — month / day / year selects in one row. "Year unknown"
+   is the year select's first option rather than a separate toggle. */
+.crm-date-parts {
   display: flex;
   gap: 8px;
 }
 
-.crm-event-date-md [data-event-date-month] {
+.crm-date-parts [data-event-date-month] {
+  flex: 3;
+  min-width: 0;
+}
+
+.crm-date-parts [data-event-date-day] {
   flex: 2;
+  min-width: 0;
 }
 
-.crm-event-date-md [data-event-date-day] {
-  flex: 1;
-}
-
-/* Selector beats `.crm-field-group > label`, which would otherwise impose the
-   uppercase monospace field-label treatment on this inline toggle. */
-.crm-field-group > label.crm-year-toggle {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  margin-top: 12px;
-  margin-bottom: 0;
-  font-family: inherit;
-  font-size: 13px;
-  font-weight: 400;
-  letter-spacing: normal;
-  text-transform: none;
-  color: var(--crm-text-secondary);
-  cursor: pointer;
+.crm-date-parts [data-event-date-year] {
+  flex: 3;
+  min-width: 0;
 }
 
 /* Multi-select checkbox chips — outlined ghost when off, filled accent when on.

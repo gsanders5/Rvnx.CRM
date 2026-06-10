@@ -1,6 +1,7 @@
 @using Microsoft.AspNetCore.Mvc.Rendering
 @using Rvnx.CRM.Core.DTOs.Base
 @using Rvnx.CRM.Core.Extensions
+@using Rvnx.CRM.Web.ViewModels.Shared
 @model Rvnx.CRM.Core.DTOs.Contact.ContactEditViewModel
 
 @{
@@ -192,22 +193,13 @@
                         <div class="crm-form-divider-line"></div>
                     </div>
 
-                    <div class="crm-form-card-grid-3">
-                        <div class="crm-field-group">
-                            <label asp-for="Birthday" id="BirthdayLabel">Birthday</label>
-                            <input asp-for="Birthday" type="date" class="crm-input" id="BirthdayField" />
-                            <span asp-validation-for="Birthday" class="crm-field-error"></span>
-                        </div>
-                        <div class="crm-field-group">
-                            <label class="crm-field-label" for="BirthdayYearUnknownField">Year Unknown</label>
-                            <label class="crm-toggle">
-                                <input type="checkbox" id="BirthdayYearUnknownField"
-                                       aria-label="Year unknown"
-                                       @(Model.Birthday?.Year == 1 ? "checked" : "") />
-                                <span class="crm-toggle-track"></span>
-                                <span class="crm-toggle-knob"></span>
-                            </label>
-                        </div>
+                    <div class="crm-form-card-grid">
+                        @await Html.PartialAsync("_FlexibleDateField", new FlexibleDateFieldModel
+                        {
+                            Name = "Birthday",
+                            Label = "Birthday",
+                            Value = Model.Birthday is { } birthday ? DateOnly.FromDateTime(birthday) : null
+                        })
                         <div class="crm-field-group">
                             <label class="crm-field-label" for="RemindOnBirthday">Remind on Birthday</label>
                             <label class="crm-toggle">
@@ -496,35 +488,6 @@
                 initImmichSelect('ImmichPersonId', 'ImmichPersonName', 'Select an Immich person...');
                 initImmichSelect('ImmichTagId', 'ImmichTagValue', 'Select an Immich tag...');
                 </text>
-            }
-
-            // ── Birthday: Year Unknown toggle swaps year between 0001 and current ──
-            const birthdayField = document.getElementById('BirthdayField');
-            const birthdayYearUnknownField = document.getElementById('BirthdayYearUnknownField');
-
-            function toggleBirthdayYear() {
-                if (!birthdayField || !birthdayYearUnknownField) return;
-                if (birthdayYearUnknownField.checked) {
-                    if (birthdayField.value) {
-                        const parts = birthdayField.value.split('-');
-                        if (parts.length === 3) {
-                            birthdayField.value = '0001-' + parts[1] + '-' + parts[2];
-                        }
-                    }
-                } else {
-                    if (birthdayField.value) {
-                        const parts = birthdayField.value.split('-');
-                        if (parts.length === 3 && parts[0] === '0001') {
-                            const currentYear = new Date().getFullYear();
-                            birthdayField.value = currentYear + '-' + parts[1] + '-' + parts[2];
-                        }
-                    }
-                }
-            }
-
-            if (birthdayYearUnknownField) {
-                birthdayYearUnknownField.addEventListener('change', toggleBirthdayYear);
-                toggleBirthdayYear();
             }
 
             // ── Deceased toggle reveals/hides Date of Death ──

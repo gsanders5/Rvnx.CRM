@@ -262,71 +262,48 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 
 // ---------------------------------------------------------------------------
-// Event date field with optional "year unknown"
-// A [data-event-date] group keeps a canonical yyyy-MM-dd in its hidden
-// [data-event-date-value] input (year 0001 = unknown). The native date picker
-// shows when the year is known; month + day selects replace it when it is not.
-// Toggling either way carries the month/day across, whether or not a date was
-// entered first.
+// Flexible date field — month / day / year selects where "Year unknown" is
+// just the year dropdown's first option. A [data-event-date] group keeps a
+// canonical yyyy-MM-dd in its hidden [data-event-date-value] input: year 0001
+// means the year is unknown, empty means no date. The selects are name-less,
+// so only the hidden input posts, and fill order never matters.
 // ---------------------------------------------------------------------------
 document.addEventListener('DOMContentLoaded', function () {
     document.querySelectorAll('[data-event-date]').forEach(function (group) {
         const hidden = group.querySelector('[data-event-date-value]');
-        const full   = group.querySelector('[data-event-date-full]');
-        const mdWrap = group.querySelector('[data-event-date-md]');
         const month  = group.querySelector('[data-event-date-month]');
         const day    = group.querySelector('[data-event-date-day]');
-        const toggle = group.querySelector('[data-event-date-yearunknown]');
-        if (!hidden || !full || !mdWrap || !month || !day || !toggle) return;
+        const year   = group.querySelector('[data-event-date-year]');
+        if (!hidden || !month || !day || !year) return;
 
-        function commit() {
-            if (toggle.checked) {
-                hidden.value = (month.value && day.value)
-                    ? '0001-' + month.value + '-' + day.value
-                    : '';
-            } else {
-                hidden.value = full.value || '';
-            }
-        }
-
-        function showYearUnknown(on) {
-            full.hidden = on;
-            mdWrap.hidden = !on;
-        }
-
-        // Hide day options past the selected month's end. Year-unknown dates are
-        // stored under year 0001 (not a leap year), so February tops out at 28.
-        const daysInMonth = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+        // Hide day options past the selected month's end. Year 0001 ("unknown")
+        // is not a leap year, so an unknown-year February tops out at 28.
         function clampDays() {
-            const max = month.value ? daysInMonth[Number(month.value) - 1] : 31;
+            let max = 31;
+            if (month.value) {
+                const m = Number(month.value);
+                const y = Number(year.value);
+                const leap = y % 4 === 0 && (y % 100 !== 0 || y % 400 === 0);
+                max = m === 2 ? (leap ? 29 : 28)
+                    : [4, 6, 9, 11].includes(m) ? 30 : 31;
+            }
             Array.from(day.options).forEach(function (opt) {
                 if (opt.value) opt.hidden = Number(opt.value) > max;
             });
             if (day.value && Number(day.value) > max) day.value = '';
         }
 
-        toggle.addEventListener('change', function () {
-            const parts = full.value.split('-');
-            if (toggle.checked) {
-                // Carry the picker's month/day into the selects.
-                month.value = parts.length === 3 ? parts[1] : '';
-                day.value   = parts.length === 3 ? parts[2] : '';
-                clampDays();
-            } else if (month.value && day.value) {
-                // Carry the selects back, keeping the picker's year (or this year).
-                full.value = (parts[0] || new Date().getFullYear()) +
-                             '-' + month.value + '-' + day.value;
-            }
-            showYearUnknown(toggle.checked);
-            commit();
+        function commit() {
+            hidden.value = (month.value && day.value)
+                ? year.value.padStart(4, '0') + '-' + month.value + '-' + day.value
+                : '';
+        }
+
+        [month, day, year].forEach(function (sel) {
+            sel.addEventListener('change', function () { clampDays(); commit(); });
         });
 
-        full.addEventListener('change', commit);
-        month.addEventListener('change', function () { clampDays(); commit(); });
-        day.addEventListener('change', commit);
-
         clampDays();
-        showYearUnknown(toggle.checked);
         commit();
     });
 });
