@@ -242,6 +242,26 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 
 // ---------------------------------------------------------------------------
+// Select2 auto-init
+// Any <select data-select2> is initialized on load, replacing the per-view
+// $('#id').select2({ ... }) script blocks. Optional attributes:
+//   data-select2-placeholder="..."  — placeholder text
+//   data-select2-tags               — allow free-text entries
+//   data-select2-allow-clear        — show the clear (x) control
+// ---------------------------------------------------------------------------
+document.addEventListener('DOMContentLoaded', function () {
+    $('select[data-select2]').each(function () {
+        const $el = $(this);
+        const options = { width: '100%' };
+        if ($el.is('[data-select2-tags]')) options.tags = true;
+        if ($el.is('[data-select2-allow-clear]')) options.allowClear = true;
+        const placeholder = $el.attr('data-select2-placeholder');
+        if (placeholder) options.placeholder = placeholder;
+        $el.select2(options);
+    });
+});
+
+// ---------------------------------------------------------------------------
 // Event date field with optional "year unknown"
 // A [data-event-date] group keeps a canonical yyyy-MM-dd in its hidden
 // [data-event-date-value] input (year 0001 = unknown). The native date picker

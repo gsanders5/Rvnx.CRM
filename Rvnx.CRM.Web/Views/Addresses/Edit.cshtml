@@ -32,7 +32,9 @@
                 <div class="crm-card-body">
                     <div class="crm-field-group">
                         <label asp-for="AddressType">Address Type *</label>
-                        <select asp-for="AddressType" id="AddressType" class="crm-input">
+                        <select asp-for="AddressType" id="AddressType" class="crm-input"
+                                data-select2 data-select2-tags data-select2-allow-clear
+                                data-select2-placeholder="Select or type a custom type...">
                             <option value="">Select or type a custom type...</option>
                             @foreach (var type in Rvnx.CRM.Core.Constants.AddressTypes.All)
                             {
@@ -109,9 +111,4 @@
 
 @section Scripts {
     @{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); }
-    <script>
-        $(function () {
-            $('#AddressType').select2({ width: '100%', tags: true, placeholder: 'Select or type a custom type...', allowClear: true });
-        });
-    </script>
 }

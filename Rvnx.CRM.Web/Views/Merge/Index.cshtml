@@ -43,7 +43,7 @@
 
                 <div class="crm-field-group">
                     <label asp-for="SecondaryContactId">Select a contact to merge into the primary</label>
-                    <select asp-for="SecondaryContactId" id="SecondaryContactId" asp-items="ViewBag.SecondaryContacts" class="crm-input" required>
+                    <select asp-for="SecondaryContactId" id="SecondaryContactId" asp-items="ViewBag.SecondaryContacts" class="crm-input" data-select2 required>
                         <option value="">-- Select Contact --</option>
                     </select>
                     <span asp-validation-for="SecondaryContactId" class="crm-field-error"></span>
@@ -55,9 +55,4 @@
 
 @section Scripts {
     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
-    <script>
-        $(document).ready(function() {
-            $('#SecondaryContactId').select2({ width: '100%' });
-        });
-    </script>
 }

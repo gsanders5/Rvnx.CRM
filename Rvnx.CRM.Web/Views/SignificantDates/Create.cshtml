@@ -55,7 +55,7 @@
 
                     <div class="crm-field-group">
                         <label asp-for="RecurrenceType">Recurrence Type</label>
-                        <select asp-for="RecurrenceType" class="crm-input" id="RecurrenceType">
+                        <select asp-for="RecurrenceType" class="crm-input" id="RecurrenceType" data-select2>
                             <option value="0">None (One-time)</option>
                             <option value="1">Annual</option>
                             <option value="2">Monthly</option>
@@ -127,8 +127,6 @@
         document.addEventListener('DOMContentLoaded', function () {
             var $recurrenceSelect = $('#RecurrenceType');
             var customIntervalDiv = document.getElementById('customIntervalDiv');
-
-            $recurrenceSelect.select2({ width: '100%' });
 
             function toggleCustomInterval() {
                 if ($recurrenceSelect.val() === '3') { // 3 is Custom
