@@ -2,6 +2,7 @@ using Microsoft.Extensions.Logging;
 using Rvnx.CRM.Core.Constants;
 using Rvnx.CRM.Core.DTOs.Contact;
 using Rvnx.CRM.Core.Enumerations;
+using Rvnx.CRM.Core.Helpers;
 using Rvnx.CRM.Core.Interfaces;
 using Rvnx.CRM.Core.Models.Contact;
 using Rvnx.CRM.Core.Models.Dates;
@@ -20,37 +21,48 @@ public class CsvImportService(IRepository repository, ILogger<CsvImportService> 
             new EventId(1, nameof(LogErrorImportingCsv)),
             "Error importing CSV");
 
-    // Column index constants matching CsvExportService.ColumnHeaders order
-    private const int ColContactId = 0;
-    private const int ColFirstName = 1;
-    private const int ColLastName = 2;
-    private const int ColNickname = 3;
-    private const int ColCompany = 4;
-    private const int ColJobTitle = 5;
-    private const int ColPronouns = 6;
-    private const int ColGender = 7;
-    private const int ColReligion = 8;
-    private const int ColBirthday = 9;
-    private const int ColIsHidden = 10;
-    // ColIsPartial = 11 — skipped intentionally
-    private const int ColEmail1 = 12;
-    private const int ColEmail2 = 13;
-    private const int ColEmail3 = 14;
-    private const int ColEmail4 = 15;
-    private const int ColEmail5 = 16;
-    private const int ColPhone1 = 17;
-    private const int ColPhone2 = 18;
-    private const int ColPhone3 = 19;
-    private const int ColPhone4 = 20;
-    private const int ColPhone5 = 21;
-    private const int ColAddrLine1 = 22;
-    private const int ColAddrLine2 = 23;
-    private const int ColAddrCity = 24;
-    private const int ColAddrState = 25;
-    private const int ColAddrZip = 26;
-    private const int ColAddrCountry = 27;
-    private const int ColAddrType = 28;
-    private const int ExpectedColumnCount = 29;
+    private static readonly Action<ILogger, string, Exception?> LogWarningInvalidPhoneOnImport =
+        LoggerMessage.Define<string>(
+            LogLevel.Warning,
+            new EventId(2, nameof(LogWarningInvalidPhoneOnImport)),
+            "Skipping invalid phone number on CSV import: {Phone}");
+
+    // Column indexes are resolved from the export schema by header name, so the import
+    // cannot silently misalign if CsvExportService.ColumnHeaders evolves.
+    // contact_id (round-trip identification) and is_partial are intentionally not imported.
+    private static readonly int ColFirstName = Col("first_name");
+    private static readonly int ColLastName = Col("last_name");
+    private static readonly int ColNickname = Col("nickname");
+    private static readonly int ColCompany = Col("company");
+    private static readonly int ColJobTitle = Col("job_title");
+    private static readonly int ColPronouns = Col("pronouns");
+    private static readonly int ColGender = Col("gender");
+    private static readonly int ColReligion = Col("religion");
+    private static readonly int ColBirthday = Col("birthday");
+    private static readonly int ColIsHidden = Col("is_hidden");
+    private static readonly int[] EmailCols = [Col("email_1"), Col("email_2"), Col("email_3"), Col("email_4"), Col("email_5")];
+    private static readonly int[] PhoneCols = [Col("phone_1"), Col("phone_2"), Col("phone_3"), Col("phone_4"), Col("phone_5")];
+    private static readonly int ColAddrLine1 = Col("address_1_line1");
+    private static readonly int ColAddrLine2 = Col("address_1_line2");
+    private static readonly int ColAddrCity = Col("address_1_city");
+    private static readonly int ColAddrState = Col("address_1_state");
+    private static readonly int ColAddrZip = Col("address_1_zip");
+    private static readonly int ColAddrCountry = Col("address_1_country");
+    private static readonly int ColAddrType = Col("address_1_type");
+    private static readonly int ExpectedColumnCount = CsvExportService.ColumnHeaders.Count;
+
+    private static int Col(string header)
+    {
+        IReadOnlyList<string> headers = CsvExportService.ColumnHeaders;
+        for (int i = 0; i < headers.Count; i++)
+        {
+            if (headers[i] == header)
+            {
+                return i;
+            }
+        }
+        throw new InvalidOperationException($"CSV column '{header}' is missing from the export schema.");
+    }
 
     public async Task<ContactImportResult> ImportFromCsvAsync(Stream csvStream)
     {
@@ -165,43 +177,43 @@ public class CsvImportService(IRepository repository, ILogger<CsvImportService> 
         }
     }
 
-    private static List<ContactMethod> BuildContactMethods(List<string> fields)
+    private List<ContactMethod> BuildContactMethods(List<string> fields)
     {
         List<ContactMethod> methods = [];
-
-        int[] emailCols = [ColEmail1, ColEmail2, ColEmail3, ColEmail4, ColEmail5];
-        foreach (int col in emailCols)
-        {
-            string val = fields[col].Trim();
-            if (!string.IsNullOrEmpty(val))
-            {
-                methods.Add(new ContactMethod
-                {
-                    Id = Guid.NewGuid(),
-                    Type = ContactMethodType.Email,
-                    Value = val,
-                    Label = ContactMethodLabels.Primary
-                });
-            }
-        }
-
-        int[] phoneCols = [ColPhone1, ColPhone2, ColPhone3, ColPhone4, ColPhone5];
-        foreach (int col in phoneCols)
-        {
-            string val = fields[col].Trim();
-            if (!string.IsNullOrEmpty(val))
-            {
-                methods.Add(new ContactMethod
-                {
-                    Id = Guid.NewGuid(),
-                    Type = ContactMethodType.Phone,
-                    Value = val,
-                    Label = ContactMethodLabels.Primary
-                });
-            }
-        }
-
+        AddContactMethods(methods, fields, ContactMethodType.Email, EmailCols);
+        AddContactMethods(methods, fields, ContactMethodType.Phone, PhoneCols);
         return methods;
+    }
+
+    private void AddContactMethods(List<ContactMethod> methods, List<string> fields, ContactMethodType type, int[] columns)
+    {
+        foreach (int col in columns)
+        {
+            string val = fields[col].Trim();
+            if (string.IsNullOrEmpty(val))
+            {
+                continue;
+            }
+
+            if (type == ContactMethodType.Phone)
+            {
+                // Mirror the vCard importer: store phones in E.164, skip values that don't parse.
+                if (!PhoneNumberNormalizer.TryNormalize(val, out string normalized, out _))
+                {
+                    LogWarningInvalidPhoneOnImport(_logger, val, null);
+                    continue;
+                }
+                val = normalized;
+            }
+
+            methods.Add(new ContactMethod
+            {
+                Id = Guid.NewGuid(),
+                Type = type,
+                Value = val,
+                Label = ContactMethodLabels.Primary
+            });
+        }
     }
 
     private async Task SaveContactMethodsAsync(Guid contactId, List<ContactMethod> methods)

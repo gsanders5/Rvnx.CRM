@@ -37,11 +37,11 @@ public class ContactsController(
     private readonly IImmichService _immichService = immichService;
     private readonly ILabelService _labelService = labelService;
 
-    private static readonly Action<ILogger, Exception?> LogErrorImportingVcf =
-        LoggerMessage.Define(
+    private static readonly Action<ILogger, string, Exception?> LogErrorImportingFile =
+        LoggerMessage.Define<string>(
             LogLevel.Error,
-            new EventId(1, nameof(LogErrorImportingVcf)),
-            "Error importing VCF");
+            new EventId(1, nameof(LogErrorImportingFile)),
+            "Error importing {FileExtension} file");
 
     [HttpGet]
     public async Task<IActionResult> Self()
@@ -398,42 +398,9 @@ public class ContactsController(
     }
 
     [HttpPost]
-    public async Task<IActionResult> Import(IFormFile file)
+    public Task<IActionResult> Import(IFormFile file)
     {
-        if (file == null || file.Length == 0)
-        {
-            ModelState.AddModelError("file", "Please select a file.");
-            return View();
-        }
-
-        if (!_fileValidationService.IsAllowedFileSize(file.Length))
-        {
-            ModelState.AddModelError("file", "File is too large.");
-            return View();
-        }
-
-        // Note: File.TypeChecker does not support .vcf, so we rely on extension validation.
-        if (!Path.GetExtension(file.FileName).Equals(".vcf", StringComparison.OrdinalIgnoreCase))
-        {
-            ModelState.AddModelError("file", "Only .vcf files are allowed.");
-            return View();
-        }
-
-        try
-        {
-            using Stream stream = file.OpenReadStream();
-            ContactImportResult result = await _contactImportService.ImportFromVCardAsync(stream);
-
-            TempData[TempDataKeys.SuccessMessage] =
-                $"Import successful! Added: {result.AddedCount}, Skipped: {result.SkippedCount}";
-            return RedirectToAction(nameof(Index));
-        }
-        catch (Exception ex)
-        {
-            LogErrorImportingVcf(_logger, ex);
-            ModelState.AddModelError("", "An error occurred while parsing the file.");
-            return View();
-        }
+        return ImportFileAsync(file, ".vcf", s => _contactImportService.ImportFromVCardAsync(s));
     }
 
     [HttpGet]
@@ -443,7 +410,19 @@ public class ContactsController(
     }
 
     [HttpPost]
-    public async Task<IActionResult> ImportCsv(IFormFile file, [FromServices] ICsvImportService csvImportService)
+    public Task<IActionResult> ImportCsv(IFormFile file, [FromServices] ICsvImportService csvImportService)
+    {
+        return ImportFileAsync(file, ".csv", s => csvImportService.ImportFromCsvAsync(s));
+    }
+
+    /// <summary>
+    /// Shared validation and error handling for file imports. Renders the view of the
+    /// calling action on failure (View() resolves by the executing action's name).
+    /// </summary>
+    private async Task<IActionResult> ImportFileAsync(
+        IFormFile file,
+        string extension,
+        Func<Stream, Task<ContactImportResult>> import)
     {
         if (file == null || file.Length == 0)
         {
@@ -457,16 +436,17 @@ public class ContactsController(
             return View();
         }
 
-        if (!Path.GetExtension(file.FileName).Equals(".csv", StringComparison.OrdinalIgnoreCase))
+        // Note: File.TypeChecker does not support these formats, so we rely on extension validation.
+        if (!Path.GetExtension(file.FileName).Equals(extension, StringComparison.OrdinalIgnoreCase))
         {
-            ModelState.AddModelError("file", "Only .csv files are allowed.");
+            ModelState.AddModelError("file", $"Only {extension} files are allowed.");
             return View();
         }
 
         try
         {
             using Stream stream = file.OpenReadStream();
-            ContactImportResult result = await csvImportService.ImportFromCsvAsync(stream);
+            ContactImportResult result = await import(stream);
 
             TempData[TempDataKeys.SuccessMessage] =
                 $"Import successful! Added: {result.AddedCount}, Skipped: {result.SkippedCount}";
@@ -474,7 +454,7 @@ public class ContactsController(
         }
         catch (Exception ex)
         {
-            LogErrorImportingVcf(_logger, ex);
+            LogErrorImportingFile(_logger, extension, ex);
             ModelState.AddModelError("", "An error occurred while parsing the file.");
             return View();
         }
