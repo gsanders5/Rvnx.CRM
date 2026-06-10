@@ -147,6 +147,7 @@
                 </div>
             </header>
             <main id="main-content" role="main" tabindex="-1">
+                @await Html.PartialAsync("_StatusAlerts")
                 @RenderBody()
             </main>
         </div>
