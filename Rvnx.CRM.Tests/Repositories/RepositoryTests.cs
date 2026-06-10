@@ -105,6 +105,113 @@ public class RepositoryTests
         }
     }
 
+    public class GroupIsolation
+    {
+        private static readonly Guid CallerGroupId = Guid.Parse("11111111-1111-1111-1111-111111111111");
+        private static readonly Guid OtherGroupId = Guid.Parse("22222222-2222-2222-2222-222222222222");
+
+        /// <summary>
+        /// Seeds one contact in the caller's group and one in another group, then clears the
+        /// change tracker so lookups must go through the (filtered) query pipeline.
+        /// </summary>
+        private static CRMDbContext SeedTwoGroups(Guid? callerGroupId, out Guid ownId, out Guid otherId)
+        {
+            CRMDbContext context = TestDbContextFactory.Create(Guid.NewGuid(), "caller", callerGroupId, out _);
+
+            ownId = Guid.NewGuid();
+            otherId = Guid.NewGuid();
+            context.Contacts!.Add(new Contact { Id = ownId, FirstName = "Mine", GroupId = callerGroupId });
+            context.Contacts!.Add(new Contact { Id = otherId, FirstName = "Theirs", GroupId = OtherGroupId });
+            context.SaveChanges();
+            context.ChangeTracker.Clear();
+            return context;
+        }
+
+        [Fact]
+        public async Task GetByIdAsyncReturnsEntityInCallerGroup()
+        {
+            using CRMDbContext context = SeedTwoGroups(CallerGroupId, out Guid ownId, out _);
+            Repository repo = new(context);
+
+            Contact? result = await repo.GetByIdAsync<Contact>(ownId);
+
+            Assert.NotNull(result);
+            Assert.Equal("Mine", result.FirstName);
+        }
+
+        [Fact]
+        public async Task GetByIdAsyncReturnsNullForEntityInAnotherGroup()
+        {
+            using CRMDbContext context = SeedTwoGroups(CallerGroupId, out _, out Guid otherId);
+            Repository repo = new(context);
+
+            Contact? result = await repo.GetByIdAsync<Contact>(otherId);
+
+            Assert.Null(result);
+        }
+
+        [Fact]
+        public async Task DeleteAsyncDeletesEntityInCallerGroup()
+        {
+            using CRMDbContext context = SeedTwoGroups(CallerGroupId, out Guid ownId, out _);
+            Repository repo = new(context);
+
+            await repo.DeleteAsync<Contact>(ownId);
+            await repo.SaveChangesAsync();
+
+            Assert.Null(await context.Contacts!.IgnoreQueryFilters().FirstOrDefaultAsync(c => c.Id == ownId));
+        }
+
+        [Fact]
+        public async Task DeleteAsyncNoOpsForEntityInAnotherGroup()
+        {
+            using CRMDbContext context = SeedTwoGroups(CallerGroupId, out _, out Guid otherId);
+            Repository repo = new(context);
+
+            await repo.DeleteAsync<Contact>(otherId);
+            await repo.SaveChangesAsync();
+
+            Assert.NotNull(await context.Contacts!.IgnoreQueryFilters().FirstOrDefaultAsync(c => c.Id == otherId));
+        }
+
+        [Fact]
+        public async Task QueryUnfilteredResolvesEntityInAnotherGroupById()
+        {
+            using CRMDbContext context = SeedTwoGroups(CallerGroupId, out _, out Guid otherId);
+            Repository repo = new(context);
+
+            Contact? result = await repo.QueryUnfiltered<Contact>().FirstOrDefaultAsync(c => c.Id == otherId);
+
+            Assert.NotNull(result);
+            Assert.Equal("Theirs", result.FirstName);
+        }
+
+        [Fact]
+        public async Task GetByIdAsyncWithNullGroupResolvesNullGroupRows()
+        {
+            // Single-tenant mode (Authentication:Enabled=false): GroupId is null for both the
+            // current user and seeded rows; the null == null filter must still match.
+            using CRMDbContext context = SeedTwoGroups(null, out Guid ownId, out _);
+            Repository repo = new(context);
+
+            Contact? result = await repo.GetByIdAsync<Contact>(ownId);
+
+            Assert.NotNull(result);
+        }
+
+        [Fact]
+        public async Task DeleteAsyncWithNullGroupDeletesNullGroupRows()
+        {
+            using CRMDbContext context = SeedTwoGroups(null, out Guid ownId, out _);
+            Repository repo = new(context);
+
+            await repo.DeleteAsync<Contact>(ownId);
+            await repo.SaveChangesAsync();
+
+            Assert.Null(await context.Contacts!.IgnoreQueryFilters().FirstOrDefaultAsync(c => c.Id == ownId));
+        }
+    }
+
     public class DeleteAsync
     {
         // BadEntity has no parameterless constructor

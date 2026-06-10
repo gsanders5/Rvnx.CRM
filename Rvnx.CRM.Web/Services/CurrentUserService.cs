@@ -37,6 +37,8 @@ public class CurrentUserService(IHttpContextAccessor httpContextAccessor, IConfi
         using IServiceScope scope = _serviceProvider.CreateScope();
         IRepository repo = scope.ServiceProvider.GetRequiredService<IRepository>();
 
+        // User is IGlobalEntity (no group query filter), so this filtered lookup resolves the
+        // user even though no group context is established yet.
         User? user = await repo.GetByIdAsync<User>(userId);
 
         return user?.IsAdministrator ?? false;
