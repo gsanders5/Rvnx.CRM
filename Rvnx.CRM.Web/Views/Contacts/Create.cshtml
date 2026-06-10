@@ -418,5 +418,58 @@
             }
 
         })();
+
+        // ── Duplicate name check ──
+        (function () {
+            const firstNameInput = document.getElementById('FirstName');
+            const lastNameInput = document.getElementById('LastName');
+            if (!firstNameInput) return;
+
+            let dupWarning = document.createElement('div');
+            dupWarning.id = 'dup-warning';
+            dupWarning.style.cssText = 'display:none; margin-top: 8px; padding: 8px 12px; background: var(--crm-surface-secondary); border: 1px solid var(--crm-warning); border-radius: 6px; font-size: 0.85rem; color: var(--crm-text-primary);';
+            firstNameInput.closest('.crm-card-body').appendChild(dupWarning);
+
+            let debounceTimer;
+            function checkDuplicate() {
+                clearTimeout(debounceTimer);
+                debounceTimer = setTimeout(async function () {
+                    const first = firstNameInput.value.trim();
+                    const last = lastNameInput ? lastNameInput.value.trim() : '';
+                    if (!first) { dupWarning.style.display = 'none'; return; }
+                    try {
+                        const params = new URLSearchParams({ firstName: first });
+                        if (last) params.set('lastName', last);
+                        const resp = await fetch('@Url.Action("CheckDuplicate")?' + params.toString());
+                        const matches = await resp.json();
+                        if (matches.length > 0) {
+                            // Build with DOM methods — contact names are user data and must not hit innerHTML.
+                            dupWarning.replaceChildren();
+                            const icon = document.createElement('i');
+                            icon.className = 'bi bi-exclamation-triangle-fill me-2';
+                            icon.setAttribute('aria-hidden', 'true');
+                            dupWarning.appendChild(icon);
+                            dupWarning.appendChild(document.createTextNode('A contact with this name already exists: '));
+                            matches.forEach(function (m, i) {
+                                if (i > 0) dupWarning.appendChild(document.createTextNode(', '));
+                                const a = document.createElement('a');
+                                a.href = '@Url.Action("Details")/' + encodeURIComponent(m.id);
+                                a.target = '_blank';
+                                a.style.fontWeight = '600';
+                                a.textContent = m.name;
+                                dupWarning.appendChild(a);
+                            });
+                            dupWarning.appendChild(document.createTextNode('. You can still save if this is a different person.'));
+                            dupWarning.style.display = '';
+                        } else {
+                            dupWarning.style.display = 'none';
+                        }
+                    } catch { dupWarning.style.display = 'none'; }
+                }, 500);
+            }
+
+            firstNameInput.addEventListener('input', checkDuplicate);
+            if (lastNameInput) lastNameInput.addEventListener('input', checkDuplicate);
+        })();
     </script>
 }

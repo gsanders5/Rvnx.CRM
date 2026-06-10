@@ -17,6 +17,7 @@ public class DashboardService(IRepository repository, ILogger<DashboardService> 
 
     private const int MaxUpcomingEvents = 5;
     private const int MaxEventsToProcess = 500;
+    private const int OpenTaskLookaheadDays = 14;
 
     private static readonly Action<ILogger, int, Exception?> LogSignificantDateProcessingLimitReached =
         LoggerMessage.Define<int>(
@@ -159,7 +160,44 @@ public class DashboardService(IRepository repository, ILogger<DashboardService> 
             ContactsHidden = hiddenContactsCount
         };
 
+        dashboard.OpenTasks = await GetOpenTasksAsync(contactDict);
+
         return dashboard;
+    }
+
+    private async Task<List<OpenTaskDto>> GetOpenTasksAsync(Dictionary<Guid, ContactSummary> contactDict)
+    {
+        DateOnly today = DateOnly.FromDateTime(DateTime.Today);
+        DateOnly lookahead = today.AddDays(OpenTaskLookaheadDays);
+
+        List<(Guid TaskId, Guid? ContactId, string Title, DateOnly DueDate)> openTasks =
+            await _repository.ListProjectedAsync<ContactTask, (Guid, Guid?, string, DateOnly)>(
+                t => !t.IsCompleted && t.ContactId != null && t.DueDate <= lookahead,
+                t => new ValueTuple<Guid, Guid?, string, DateOnly>(t.Id, t.ContactId, t.Title, t.DueDate));
+
+        List<OpenTaskDto> result = new(openTasks.Count);
+        foreach (var (taskId, contactId, title, dueDate) in openTasks)
+        {
+            // contactDict only holds visible (non-hidden, non-partial) contacts, so tasks for
+            // hidden contacts drop out here; deceased are skipped to mirror upcoming events.
+            if (!contactDict.TryGetValue(contactId!.Value, out ContactSummary? contact) || contact.IsDeceased)
+            {
+                continue;
+            }
+
+            result.Add(new OpenTaskDto
+            {
+                TaskId = taskId,
+                ContactId = contactId.Value,
+                ContactName = contact.FullName,
+                Title = title,
+                DueDate = dueDate,
+                DaysOverdue = dueDate < today ? today.DayNumber - dueDate.DayNumber : 0
+            });
+        }
+
+        result.Sort((a, b) => a.DueDate.CompareTo(b.DueDate));
+        return result;
     }
 
     private async Task EnqueueUpcomingEventsAsync(

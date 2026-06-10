@@ -6,7 +6,19 @@ public class DashboardDto
     public List<GraphNodeDto> GraphNodes { get; set; } = [];
     public List<GraphLinkDto> GraphLinks { get; set; } = [];
     public List<RecentContactDto> RecentContacts { get; set; } = [];
+    public List<OpenTaskDto> OpenTasks { get; set; } = [];
     public DashboardStatsDto Stats { get; set; } = new();
+}
+
+public class OpenTaskDto
+{
+    public Guid TaskId { get; set; }
+    public Guid ContactId { get; set; }
+    public string ContactName { get; set; } = string.Empty;
+    public string Title { get; set; } = string.Empty;
+    public DateOnly DueDate { get; set; }
+    public int DaysOverdue { get; set; }
+    public bool IsOverdue => DaysOverdue > 0;
 }
 
 public class RecentContactDto

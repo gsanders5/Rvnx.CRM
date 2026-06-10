@@ -139,6 +139,33 @@ public class ContactReadService(IRepository repository, IFavoriteService favorit
             }
         }
 
+        List<(Guid ContactId, DateTime ActivityDate)> activityDates = contactIds.Count > 0
+            ? await _repository.ListProjectedByChunkedContainsAsync<ActivityContact, (Guid, DateTime), Guid>(
+                contactIds,
+                chunk => ac => chunk.Contains(ac.ContactId),
+                ac => new ValueTuple<Guid, DateTime>(ac.ContactId, ac.Activity.ActivityDate))
+            : [];
+
+        if (activityDates.Count > 0)
+        {
+            Dictionary<Guid, DateTime> lastActivityMap = new(activityDates.Count);
+            foreach (var (contactId, activityDate) in activityDates)
+            {
+                if (!lastActivityMap.TryGetValue(contactId, out DateTime existing) || activityDate > existing)
+                {
+                    lastActivityMap[contactId] = activityDate;
+                }
+            }
+
+            foreach (ContactDto dto in contactDtos)
+            {
+                if (lastActivityMap.TryGetValue(dto.Id, out DateTime lastActivity))
+                {
+                    dto.LastActivityDate = lastActivity;
+                }
+            }
+        }
+
         HashSet<Guid> favoriteIds = await _favoriteService.GetFavoriteContactIdsAsync();
         if (favoriteIds.Count > 0)
         {
@@ -518,6 +545,26 @@ public class ContactReadService(IRepository repository, IFavoriteService favorit
                         : c.IsDeceased
                             ? (c.FirstName + " " + (c.LastName ?? "")).Trim() + " (Deceased)"
                             : (c.FirstName + " " + (c.LastName ?? "")).Trim()));
+    }
+
+    public async Task<List<ContactSelectItemDto>> FindContactsByNameAsync(string firstName, string? lastName)
+    {
+        string firstLower = firstName.Trim().ToLowerInvariant();
+        string? lastLower = string.IsNullOrWhiteSpace(lastName) ? null : lastName.Trim().ToLowerInvariant();
+
+        // Parameterless ToLower() is required inside the expression tree — EF Core translates it
+        // to SQL lower(); culture-aware overloads and string.Equals(StringComparison) are not translatable.
+#pragma warning disable CA1304, CA1311, CA1862
+        return await _repository.ListProjectedAsync<Contact, ContactSelectItemDto>(
+            c => !c.IsHidden
+                && c.FirstName.ToLower() == firstLower
+                && (lastLower == null || (c.LastName != null && c.LastName.ToLower() == lastLower)),
+            c => new ContactSelectItemDto
+            {
+                Id = c.Id,
+                FullName = (c.FirstName + " " + (c.LastName ?? "")).Trim()
+            });
+#pragma warning restore CA1304, CA1311, CA1862
     }
 
     public async Task<List<ContactSelectItemDto>> GetIntroducerCandidatesAsync(Guid? excludeContactId)

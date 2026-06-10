@@ -37,11 +37,11 @@ public class ContactsController(
     private readonly IImmichService _immichService = immichService;
     private readonly ILabelService _labelService = labelService;
 
-    private static readonly Action<ILogger, Exception?> LogErrorImportingVcf =
-        LoggerMessage.Define(
+    private static readonly Action<ILogger, string, Exception?> LogErrorImportingFile =
+        LoggerMessage.Define<string>(
             LogLevel.Error,
-            new EventId(1, nameof(LogErrorImportingVcf)),
-            "Error importing VCF");
+            new EventId(1, nameof(LogErrorImportingFile)),
+            "Error importing {FileExtension} file");
 
     [HttpGet]
     public async Task<IActionResult> Self()
@@ -161,6 +161,18 @@ public class ContactsController(
 
         ContactDetailDto? contactDto = await _contactReadService.GetContactDetailsAsync(id.Value);
         return contactDto == null ? NotFound() : View(contactDto);
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> CheckDuplicate(string? firstName, string? lastName)
+    {
+        if (string.IsNullOrWhiteSpace(firstName))
+        {
+            return Json(Array.Empty<object>());
+        }
+
+        List<ContactSelectItemDto> matches = await _contactReadService.FindContactsByNameAsync(firstName, lastName);
+        return Json(matches.Select(m => new { id = m.Id, name = m.FullName }));
     }
 
     [HttpGet]
@@ -386,7 +398,31 @@ public class ContactsController(
     }
 
     [HttpPost]
-    public async Task<IActionResult> Import(IFormFile file)
+    public Task<IActionResult> Import(IFormFile file)
+    {
+        return ImportFileAsync(file, ".vcf", s => _contactImportService.ImportFromVCardAsync(s));
+    }
+
+    [HttpGet]
+    public IActionResult ImportCsv()
+    {
+        return View();
+    }
+
+    [HttpPost]
+    public Task<IActionResult> ImportCsv(IFormFile file, [FromServices] ICsvImportService csvImportService)
+    {
+        return ImportFileAsync(file, ".csv", s => csvImportService.ImportFromCsvAsync(s));
+    }
+
+    /// <summary>
+    /// Shared validation and error handling for file imports. Renders the view of the
+    /// calling action on failure (View() resolves by the executing action's name).
+    /// </summary>
+    private async Task<IActionResult> ImportFileAsync(
+        IFormFile file,
+        string extension,
+        Func<Stream, Task<ContactImportResult>> import)
     {
         if (file == null || file.Length == 0)
         {
@@ -400,17 +436,17 @@ public class ContactsController(
             return View();
         }
 
-        // Note: File.TypeChecker does not support .vcf, so we rely on extension validation.
-        if (!Path.GetExtension(file.FileName).Equals(".vcf", StringComparison.OrdinalIgnoreCase))
+        // Note: File.TypeChecker does not support these formats, so we rely on extension validation.
+        if (!Path.GetExtension(file.FileName).Equals(extension, StringComparison.OrdinalIgnoreCase))
         {
-            ModelState.AddModelError("file", "Only .vcf files are allowed.");
+            ModelState.AddModelError("file", $"Only {extension} files are allowed.");
             return View();
         }
 
         try
         {
             using Stream stream = file.OpenReadStream();
-            ContactImportResult result = await _contactImportService.ImportFromVCardAsync(stream);
+            ContactImportResult result = await import(stream);
 
             TempData[TempDataKeys.SuccessMessage] =
                 $"Import successful! Added: {result.AddedCount}, Skipped: {result.SkippedCount}";
@@ -418,7 +454,7 @@ public class ContactsController(
         }
         catch (Exception ex)
         {
-            LogErrorImportingVcf(_logger, ex);
+            LogErrorImportingFile(_logger, extension, ex);
             ModelState.AddModelError("", "An error occurred while parsing the file.");
             return View();
         }

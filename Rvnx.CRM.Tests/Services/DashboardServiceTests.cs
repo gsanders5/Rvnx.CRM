@@ -23,6 +23,20 @@ public class DashboardServiceTests
         _repositoryMock = new Mock<IRepository>();
         _loggerMock = new Mock<ILogger<DashboardService>>();
         _service = new DashboardService(_repositoryMock.Object, _loggerMock.Object);
+
+        // The open-tasks query runs on every dashboard load; default to empty so tests
+        // that don't care about tasks don't need their own setup.
+        SetupOpenTasks([]);
+    }
+
+    private void SetupOpenTasks(List<(Guid TaskId, Guid? ContactId, string Title, DateOnly DueDate)> tasks)
+    {
+        _repositoryMock
+            .Setup(r => r.ListProjectedAsync<ContactTask, (Guid TaskId, Guid? ContactId, string Title, DateOnly DueDate)>(
+                It.IsAny<Expression<Func<ContactTask, bool>>>(),
+                It.IsAny<Expression<Func<ContactTask, (Guid, Guid?, string, DateOnly)>>>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(tasks);
     }
 
     private void SetupContactSummaries(List<ContactSummary> summaries)

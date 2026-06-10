@@ -34,5 +34,7 @@ public record class ContactDto : BaseDto
 
     public string? IntroducedByContactName { get; set; }
 
+    public DateTime? LastActivityDate { get; set; }
+
     public IEnumerable<LabelDto> Labels { get; set; } = [];
 }

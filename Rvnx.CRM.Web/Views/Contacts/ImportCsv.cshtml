@@ -1,8 +1,8 @@
 @{
-    ViewData["Title"] = "Import VCF";
+    ViewData["Title"] = "Import CSV";
 }
 
-<form id="import-form" asp-action="Import" method="post" enctype="multipart/form-data">
+<form id="import-csv-form" asp-action="ImportCsv" method="post" enctype="multipart/form-data">
     @Html.AntiForgeryToken()
 
     <div class="crm-details-actions-strip">
@@ -18,7 +18,7 @@
         <div class="crm-edit-masthead-photo-placeholder" aria-hidden="true"><i class="bi bi-file-earmark-arrow-up"></i></div>
         <div>
             <div class="crm-eyebrow" style="margin-bottom: 6px;">Import</div>
-            <h1 class="crm-edit-masthead-title">Import contacts</h1>
+            <h1 class="crm-edit-masthead-title">Import CSV</h1>
         </div>
     </section>
 
@@ -27,14 +27,16 @@
 
         <div class="crm-card">
             <div class="crm-card-header">
-                <h5 class="card-title mb-0"><i class="bi bi-file-earmark" aria-hidden="true"></i> vCard File</h5>
+                <h5 class="card-title mb-0"><i class="bi bi-file-earmark-spreadsheet" aria-hidden="true"></i> CSV File</h5>
             </div>
             <div class="crm-card-body">
                 <div class="crm-field-group">
-                    <label for="file">Select a .vcf file to import</label>
-                    <input type="file" id="file" name="file" class="crm-input" accept=".vcf" required />
-                    <div class="crm-field-help">Select a .vcf file to import contacts. Duplicates (Name, Email, or Phone) will be skipped.</div>
-                    <div class="crm-field-help" style="margin-top: 8px;">Want to import from CSV instead? <a asp-controller="Contacts" asp-action="ImportCsv">Import CSV</a></div>
+                    <label for="file">Select a .csv file to import</label>
+                    <input type="file" id="file" name="file" class="crm-input" accept=".csv" required />
+                    <div class="crm-field-help">Select a .csv file exported from this app. Duplicates will be skipped.</div>
+                    <div class="crm-field-help" style="margin-top: 8px;">
+                        Need a template? <a asp-controller="Contacts" asp-action="ExportCsv" class="crm-btn-tertiary btn-sm">Download template</a>
+                    </div>
                 </div>
             </div>
         </div>
