@@ -197,10 +197,14 @@ h5, .card-title {
   margin-bottom: 1rem;
   transition: box-shadow var(--crm-transition-fast), transform var(--crm-transition-fast);
 
-  /* Staggered card entrance animation */
-  opacity: 0;
-  transform: translateY(8px);
-  animation: crm-card-enter var(--crm-transition-normal) forwards;
+  /* Staggered card entrance animation. The hidden state lives in the `from`
+     keyframe (applied during the stagger delay via `backwards` fill) rather
+     than in base styles held with `forwards` fill: a forwards-filling
+     transform/opacity animation keeps the element a stacking context forever,
+     which traps dropdown menus below later positioned content (e.g. the
+     DataTables header). Once the animation ends, no fill applies and the
+     stacking context dissolves. */
+  animation: crm-card-enter var(--crm-transition-normal) backwards;
 }
 
 .crm-card:nth-child(1) { animation-delay: 0ms; }
@@ -213,13 +217,12 @@ h5, .card-title {
 .crm-card:nth-child(8) { animation-delay: 280ms; }
 
 @keyframes crm-card-enter {
-  to { opacity: 1; transform: translateY(0); }
+  from { opacity: 0; transform: translateY(8px); }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .crm-card {
-    opacity: 1;
-    transform: none;
+  .crm-card,
+  .crm-fade-in {
     animation: none;
   }
 }
@@ -1942,7 +1945,9 @@ table.dataTable th.select-col input#select-all {
 }
 
 .crm-fade-in {
-  animation: crm-card-enter var(--crm-transition-normal) both;
+  /* `backwards`, not `forwards`/`both` — see the .crm-card note: a permanent
+     fill would keep this element a stacking context and bury its dropdowns. */
+  animation: crm-card-enter var(--crm-transition-normal) backwards;
 }
 
 .crm-fade-in.crm-delay-1 { animation-delay: 40ms; }
