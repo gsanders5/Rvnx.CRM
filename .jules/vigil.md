@@ -129,3 +129,6 @@
 ## 2024-06-09 - Repository Extension Methods and Mocking
 **Learning:** In Rvnx.CRM, `IRepository` extension methods like `ListProjectedByChunkedContainsAsync` have their own internal early-exit logic. Furthermore, Moq cannot mock extension methods directly.
 **Action:** When testing early-exits for methods that call `IRepository` extensions, verify the underlying repository interface method (e.g. `ListProjectedAsync`) that the extension method calls, rather than attempting to mock the extension method itself.
+## 2026-06-11 - [DashboardService OpenTasks Coverage]
+**Learning:** Found that the open tasks aggregation logic within `DashboardService.GetDashboardDataAsync` (calculating overdue days, mapping properties, and filtering out tasks for hidden or deceased contacts) was completely untested, despite the method having other tests. This meant that modifications to the dashboard query or task filtering could silently break the open tasks view.
+**Action:** When a large aggregation method (like a dashboard query) calls multiple internal helper methods (like `GetOpenTasksAsync`), ensure that the behavior of each helper is explicitly verified in tests, particularly checking filtering, sorting, and mapping logic.
