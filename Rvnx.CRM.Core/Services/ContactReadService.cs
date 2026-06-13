@@ -547,14 +547,14 @@ public class ContactReadService(IRepository repository, IFavoriteService favorit
                             : (c.FirstName + " " + (c.LastName ?? "")).Trim()));
     }
 
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Globalization", "CA1304:Specify CultureInfo", Justification = "Parameterless ToLower() is required inside the expression tree — EF Core translates it to SQL lower(); culture-aware overloads and string.Equals(StringComparison) are not translatable.")]
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Globalization", "CA1311:Specify a culture or use an invariant version", Justification = "Parameterless ToLower() is required inside the expression tree — EF Core translates it to SQL lower(); culture-aware overloads and string.Equals(StringComparison) are not translatable.")]
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "CA1862:Use the 'StringComparison' method overloads to perform case-insensitive string comparisons", Justification = "Parameterless ToLower() is required inside the expression tree — EF Core translates it to SQL lower(); culture-aware overloads and string.Equals(StringComparison) are not translatable.")]
     public async Task<List<ContactSelectItemDto>> FindContactsByNameAsync(string firstName, string? lastName)
     {
         string firstLower = firstName.Trim().ToLowerInvariant();
         string? lastLower = string.IsNullOrWhiteSpace(lastName) ? null : lastName.Trim().ToLowerInvariant();
 
-        // Parameterless ToLower() is required inside the expression tree — EF Core translates it
-        // to SQL lower(); culture-aware overloads and string.Equals(StringComparison) are not translatable.
-#pragma warning disable CA1304, CA1311, CA1862
         return await _repository.ListProjectedAsync<Contact, ContactSelectItemDto>(
             c => !c.IsHidden
                 && c.FirstName.ToLower() == firstLower
@@ -564,7 +564,6 @@ public class ContactReadService(IRepository repository, IFavoriteService favorit
                 Id = c.Id,
                 FullName = (c.FirstName + " " + (c.LastName ?? "")).Trim()
             });
-#pragma warning restore CA1304, CA1311, CA1862
     }
 
     public async Task<List<ContactSelectItemDto>> GetIntroducerCandidatesAsync(Guid? excludeContactId)
