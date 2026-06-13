@@ -1056,12 +1056,10 @@ public class ContactReadServiceTests
             Func<Contact, bool> filterFunc = capturedFilter.Compile();
             Func<Contact, (Guid, string)> projectionFunc = capturedProjection.Compile();
 
-            // Validate the filter works
             Assert.True(filterFunc(testContacts[0]));
             Assert.True(filterFunc(testContacts[1]));
             Assert.False(filterFunc(new Contact { IsHidden = true }));
 
-            // Validate the projection logic on real in-memory objects
             (Guid, string) projectedFull = projectionFunc(testContacts[0]);
             Assert.Equal(id1, projectedFull.Item1);
             Assert.Equal("John Doe", projectedFull.Item2);

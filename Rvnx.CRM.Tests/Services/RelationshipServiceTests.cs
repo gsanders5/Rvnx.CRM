@@ -349,7 +349,6 @@ public class RelationshipServiceTests
         Guid cId = Guid.NewGuid();
         Guid typeId = RelationshipTypeIds.Colleague;
 
-        // Load the primary entity (source) and the directly-specified related entity (target)
         _repositoryMock.Setup(r => r.GetByIdAsync<Contact>(sourceId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new Contact { Id = sourceId, FirstName = "Jack" });
 

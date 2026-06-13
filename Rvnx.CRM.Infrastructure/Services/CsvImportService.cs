@@ -79,7 +79,6 @@ public class CsvImportService(IRepository repository, ILogger<CsvImportService> 
                 return new ContactImportResult { AddedCount = 0, SkippedCount = 0 };
             }
 
-            // Validate header matches expected schema
             List<string> headerFields = ParseCsvLine(headerLine);
             IReadOnlyList<string> expectedHeaders = CsvExportService.ColumnHeaders;
             bool headerMatches = headerFields.Count == expectedHeaders.Count
@@ -292,14 +291,12 @@ public class CsvImportService(IRepository repository, ILogger<CsvImportService> 
         {
             if (i == length)
             {
-                // Trailing comma — emit empty field
                 fields.Add(string.Empty);
                 break;
             }
 
             if (line[i] == '"')
             {
-                // Quoted field
                 i++; // skip opening quote
                 System.Text.StringBuilder sb = new();
                 while (i < length)
@@ -308,13 +305,11 @@ public class CsvImportService(IRepository repository, ILogger<CsvImportService> 
                     {
                         if (i + 1 < length && line[i + 1] == '"')
                         {
-                            // Escaped quote
                             sb.Append('"');
                             i += 2;
                         }
                         else
                         {
-                            // Closing quote
                             i++;
                             break;
                         }
@@ -326,7 +321,6 @@ public class CsvImportService(IRepository repository, ILogger<CsvImportService> 
                     }
                 }
                 fields.Add(sb.ToString());
-                // Skip the comma separator (or end of line)
                 if (i < length && line[i] == ',')
                 {
                     i++;
@@ -334,7 +328,6 @@ public class CsvImportService(IRepository repository, ILogger<CsvImportService> 
             }
             else
             {
-                // Unquoted field — read until comma or end
                 int start = i;
                 while (i < length && line[i] != ',')
                 {

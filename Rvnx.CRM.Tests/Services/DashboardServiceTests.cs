@@ -393,7 +393,6 @@ public class DashboardServiceTests
         // Alice and Bob have a relationship. Charlie has no relationships.
         SetupRelationships([(contactId1, contactId2)]);
 
-        // Set up mock counts for birthday and hidden contacts
         _repositoryMock
             .Setup(r => r.CountAsync<SignificantDate>(It.IsAny<Expression<Func<SignificantDate, bool>>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(1); // 1 birthday
