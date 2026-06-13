@@ -31,3 +31,7 @@
 ## 2024-05-23 - C# Tuple Deconstruction Code Review Error
 **Learning:** The code review tool flagged tuple deconstruction (`foreach ((Guid id, Guid relatedId) in list)`) as a compilation error when iterating over a `List<(Guid, Guid)>`. This was a hallucination, as `dotnet build` and `dotnet test` passed without issue.
 **Action:** Always trust successful `dotnet build` and `dotnet test` results over the reviewer claims of basic C# compilation failures.
+
+## 2024-05-24 - Extracting Duplicate LINQ Queries
+**Learning:** Extracting duplicated LINQ queries (like finding a primary contact method using `Where` and `OrderByDescending`) into private static helper methods significantly improves readability and reduces noise in service classes like `ContactReadService.cs`.
+**Action:** Actively look for duplicated or complex LINQ query patterns and extract them into well-named private static helper methods when it improves the clarity of the calling code without obfuscating intent.
