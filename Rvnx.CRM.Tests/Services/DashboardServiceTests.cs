@@ -489,6 +489,60 @@ public class DashboardServiceTests
     }
 
     [Fact]
+    [SuppressMessage("Naming", "CA1707:Identifiers should not contain underscores",
+        Justification = "Test names can contain underscores for readability.")]
+    public async Task GetDashboardDataAsync_IncludesOpenTasksSortedWithCorrectOverdueDays()
+    {
+        Guid activeContactId = Guid.NewGuid();
+        Guid hiddenContactId = Guid.NewGuid();
+        Guid deceasedContactId = Guid.NewGuid();
+        DateTime now = DateTime.UtcNow;
+        DateOnly today = DateOnly.FromDateTime(DateTime.Today);
+
+        SetupContactSummaries([
+            new ContactSummary(activeContactId, "Active", "Person", null, now, now, false),
+            new ContactSummary(deceasedContactId, "Late", "Person", null, now, now, true)
+            // Hidden contacts are excluded by the mock inherently because the list is empty of them
+        ]);
+
+        SetupAttachments([]);
+        SetupSignificantDates([]);
+        SetupRelationships([]);
+
+        Guid overdueTaskId = Guid.NewGuid();
+        Guid todayTaskId = Guid.NewGuid();
+        Guid futureTaskId = Guid.NewGuid();
+        Guid deceasedContactTaskId = Guid.NewGuid();
+
+        SetupOpenTasks([
+            (futureTaskId, activeContactId, "Future Task", today.AddDays(2)),
+            (overdueTaskId, activeContactId, "Overdue Task", today.AddDays(-3)),
+            (todayTaskId, activeContactId, "Today Task", today),
+            (deceasedContactTaskId, deceasedContactId, "Deceased Contact Task", today.AddDays(1))
+        ]);
+
+        DashboardDto result = await _service.GetDashboardDataAsync();
+
+        // Ensure task for deceased contact is excluded
+        Assert.Equal(3, result.OpenTasks.Count);
+
+        // Ensure tasks are sorted by due date ascending
+        Assert.Equal(overdueTaskId, result.OpenTasks[0].TaskId);
+        Assert.Equal(todayTaskId, result.OpenTasks[1].TaskId);
+        Assert.Equal(futureTaskId, result.OpenTasks[2].TaskId);
+
+        // Check overdue calculation
+        Assert.Equal(3, result.OpenTasks[0].DaysOverdue);
+        Assert.True(result.OpenTasks[0].IsOverdue);
+
+        Assert.Equal(0, result.OpenTasks[1].DaysOverdue);
+        Assert.False(result.OpenTasks[1].IsOverdue);
+
+        Assert.Equal(0, result.OpenTasks[2].DaysOverdue);
+        Assert.False(result.OpenTasks[2].IsOverdue);
+    }
+
+    [Fact]
     public async Task GetDashboardDataAsyncCarriesIsDeceasedThroughToGraphNodes()
     {
         // The network graph dims deceased contacts. The flag must round-trip from the
