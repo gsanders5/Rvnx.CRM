@@ -129,3 +129,7 @@
 ## 2024-06-09 - Repository Extension Methods and Mocking
 **Learning:** In Rvnx.CRM, `IRepository` extension methods like `ListProjectedByChunkedContainsAsync` have their own internal early-exit logic. Furthermore, Moq cannot mock extension methods directly.
 **Action:** When testing early-exits for methods that call `IRepository` extensions, verify the underlying repository interface method (e.g. `ListProjectedAsync`) that the extension method calls, rather than attempting to mock the extension method itself.
+
+## 2024-06-13 - [Explicitly Test Early-Exits]
+**Learning:** Returning early on null or empty input collections avoids downstream queries. Existing tests often assert the result is null but fail to assert that downstream repositories are strictly *not* called.
+**Action:** Always include explicitly scoped assertions (e.g. `Times.Never()`) for downstream operations to ensure early-exits function properly as optimizations.
