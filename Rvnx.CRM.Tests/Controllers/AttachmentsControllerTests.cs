@@ -43,6 +43,40 @@ public class AttachmentsControllerTests
                 "Stream should not be read if file size exceeds limit");
         }
 
+        [Fact]
+        public async Task UploadShouldHaltReadingAndReturnBadRequestWhenStreamExceedsLimitDuringChunkedRead()
+        {
+            Mock<IAttachmentService> attachmentServiceMock = new();
+            Mock<IFileValidationService> fileValidationServiceMock = new();
+
+            fileValidationServiceMock.Setup(x => x.IsAllowedExtension(It.IsAny<string>())).Returns(true);
+
+            // Allow initial file check (e.g. Length = 0 or missing/spoofed), but fail when streamed size exceeds limit
+            fileValidationServiceMock.Setup(x => x.IsAllowedFileSize(It.IsAny<long>()))
+                .Returns((long size) => size <= 500);
+
+            AttachmentsController controller = new(
+                attachmentServiceMock.Object,
+                fileValidationServiceMock.Object,
+                new Mock<IThumbnailService>().Object);
+
+            // Create a dummy stream that will output more than 500 bytes
+            Rvnx.CRM.Tests.Helpers.ChunkedDummyStream stream = new(2000, 256);
+
+            Mock<IFormFile> fileMock = new();
+            fileMock.Setup(f => f.FileName).Returns("spoofed.pdf");
+            fileMock.Setup(f => f.Length).Returns(100); // Spoofed small length to bypass initial check
+            fileMock.Setup(f => f.OpenReadStream()).Returns(stream);
+
+            IActionResult result = await controller.Upload(Guid.NewGuid(), fileMock.Object);
+
+            BadRequestObjectResult badRequestResult = Assert.IsType<BadRequestObjectResult>(result);
+            Assert.Equal("File is too large.", badRequestResult.Value);
+
+            // Verify reading halted early and did not consume the full 2000 bytes
+            Assert.True(stream.Position < 2000, "Stream reading should have halted before consuming all bytes");
+        }
+
     }
     public class AttachmentsControllerIdorTests
     {
