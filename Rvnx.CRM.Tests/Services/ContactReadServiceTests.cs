@@ -1318,6 +1318,106 @@ public class ContactReadServiceTests
         }
     }
 
+    public class ContactReadServiceFindContactsByNameTests : ContactReadServiceTestBase
+    {
+        [Fact]
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Naming", "CA1707:Identifiers should not contain underscores", Justification = "Test names follow a standard convention")]
+        public async Task FindContactsByNameAsync_WithValidFirstAndLastName_ReturnsMatchedContacts()
+        {
+            // Arrange
+            Expression<Func<Contact, bool>>? capturedFilter = null;
+            RepositoryMock.Setup(r => r.ListProjectedAsync(
+                It.IsAny<Expression<Func<Contact, bool>>>(),
+                It.IsAny<Expression<Func<Contact, ContactSelectItemDto>>>(),
+                It.IsAny<CancellationToken>()))
+                .Callback<Expression<Func<Contact, bool>>, Expression<Func<Contact, ContactSelectItemDto>>, CancellationToken>(
+                    (filter, _, _) => capturedFilter = filter)
+                .ReturnsAsync([]);
+
+            // Act
+            await Service.FindContactsByNameAsync("John", "Doe");
+
+            // Assert
+            Assert.NotNull(capturedFilter);
+            Func<Contact, bool> compiledFilter = capturedFilter.Compile();
+
+            Contact matching = new() { FirstName = "John", LastName = "Doe", IsHidden = false };
+            Contact wrongFirstName = new() { FirstName = "Jane", LastName = "Doe", IsHidden = false };
+            Contact wrongLastName = new() { FirstName = "John", LastName = "Smith", IsHidden = false };
+            Contact missingLastName = new() { FirstName = "John", LastName = null, IsHidden = false };
+            Contact hidden = new() { FirstName = "John", LastName = "Doe", IsHidden = true };
+
+            Assert.True(compiledFilter(matching));
+            Assert.False(compiledFilter(wrongFirstName));
+            Assert.False(compiledFilter(wrongLastName));
+            Assert.False(compiledFilter(missingLastName));
+            Assert.False(compiledFilter(hidden));
+        }
+
+        [Fact]
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Naming", "CA1707:Identifiers should not contain underscores", Justification = "Test names follow a standard convention")]
+        public async Task FindContactsByNameAsync_WithNullLastName_FiltersByFirstNameOnly()
+        {
+            // Arrange
+            Expression<Func<Contact, bool>>? capturedFilter = null;
+            RepositoryMock.Setup(r => r.ListProjectedAsync(
+                It.IsAny<Expression<Func<Contact, bool>>>(),
+                It.IsAny<Expression<Func<Contact, ContactSelectItemDto>>>(),
+                It.IsAny<CancellationToken>()))
+                .Callback<Expression<Func<Contact, bool>>, Expression<Func<Contact, ContactSelectItemDto>>, CancellationToken>(
+                    (filter, _, _) => capturedFilter = filter)
+                .ReturnsAsync([]);
+
+            // Act
+            await Service.FindContactsByNameAsync("John", null);
+
+            // Assert
+            Assert.NotNull(capturedFilter);
+            Func<Contact, bool> compiledFilter = capturedFilter.Compile();
+
+            Contact matchingNoLast = new() { FirstName = "John", LastName = null, IsHidden = false };
+            Contact matchingWithLast = new() { FirstName = "John", LastName = "Doe", IsHidden = false };
+            Contact wrongFirstName = new() { FirstName = "Jane", LastName = null, IsHidden = false };
+
+            Assert.True(compiledFilter(matchingNoLast));
+            Assert.True(compiledFilter(matchingWithLast));
+            Assert.False(compiledFilter(wrongFirstName));
+        }
+
+        [Fact]
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Naming", "CA1707:Identifiers should not contain underscores", Justification = "Test names follow a standard convention")]
+        public async Task FindContactsByNameAsync_IgnoresCaseAndWhitespace()
+        {
+            // Arrange
+            Expression<Func<Contact, bool>>? capturedFilter = null;
+            RepositoryMock.Setup(r => r.ListProjectedAsync(
+                It.IsAny<Expression<Func<Contact, bool>>>(),
+                It.IsAny<Expression<Func<Contact, ContactSelectItemDto>>>(),
+                It.IsAny<CancellationToken>()))
+                .Callback<Expression<Func<Contact, bool>>, Expression<Func<Contact, ContactSelectItemDto>>, CancellationToken>(
+                    (filter, _, _) => capturedFilter = filter)
+                .ReturnsAsync([]);
+
+            // Act
+            await Service.FindContactsByNameAsync("  JOHn  ", "  dOE  ");
+
+            // Assert
+            Assert.NotNull(capturedFilter);
+            Func<Contact, bool> compiledFilter = capturedFilter.Compile();
+
+            Contact matching1 = new() { FirstName = "John", LastName = "Doe", IsHidden = false };
+            Contact matching2 = new() { FirstName = "john", LastName = "doe", IsHidden = false };
+            Contact matching3 = new() { FirstName = "JOHN", LastName = "DOE", IsHidden = false };
+
+            // The compiled filter tests the query expression. The EF Core translator handles .ToLower().
+            // In memory, we explicitly used .ToLower() in the query for First/Last name matching,
+            // so compiled filter will evaluate correctly.
+            Assert.True(compiledFilter(matching1));
+            Assert.True(compiledFilter(matching2));
+            Assert.True(compiledFilter(matching3));
+        }
+    }
+
     public class ContactReadServiceHowWeMetTests : ContactReadServiceTestBase
     {
         [Fact]
