@@ -46,9 +46,16 @@ public class DashboardService(IRepository repository, ILogger<DashboardService> 
                 c.LastChangedDate,
                 c.IsDeceased));
 
-        Dictionary<Guid, ContactSummary> contactDict = contacts.ToDictionary(c => c.Id);
-
-        List<Guid> contactIds = [.. contacts.Select(c => c.Id)];
+        // Optimization: Pre-allocate Dictionary and List capacities to prevent dynamic
+        // array resizing during insertion. Populate both collections using a single loop
+        // to avoid iterating the contacts dataset multiple times.
+        Dictionary<Guid, ContactSummary> contactDict = new(contacts.Count);
+        List<Guid> contactIds = new(contacts.Count);
+        foreach (ContactSummary c in contacts)
+        {
+            contactDict.TryAdd(c.Id, c);
+            contactIds.Add(c.Id);
+        }
 
         List<(Guid ContactId, Guid AttachmentId)> profileAttachments = contactIds.Count > 0
             ? await _repository.ListProjectedByChunkedContainsAsync<Attachment, (Guid, Guid), Guid>(
