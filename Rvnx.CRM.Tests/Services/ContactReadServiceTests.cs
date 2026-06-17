@@ -1220,6 +1220,124 @@ public class ContactReadServiceTests
         }
     }
 
+    public class ContactReadServiceFindContactsByNameTests : ContactReadServiceTestBase
+    {
+        [Fact]
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Naming", "CA1707:Identifiers should not contain underscores", Justification = "Test names follow a standard convention")]
+        public async Task FindContactsByNameAsync_WhenCalled_FiltersAndProjectsCorrectly()
+        {
+            // Arrange
+            string searchFirst = "John";
+            string searchLast = "Doe";
+
+            List<ContactSelectItemDto> mockData =
+            [
+                new() { Id = Guid.NewGuid(), FullName = "John Doe" }
+            ];
+
+            Expression<Func<Contact, bool>>? capturedFilter = null;
+            Expression<Func<Contact, ContactSelectItemDto>>? capturedProjection = null;
+
+            RepositoryMock.Setup(r => r.ListProjectedAsync<Contact, ContactSelectItemDto>(
+                It.IsAny<Expression<Func<Contact, bool>>>(),
+                It.IsAny<Expression<Func<Contact, ContactSelectItemDto>>>(),
+                It.IsAny<CancellationToken>()))
+                .Callback<Expression<Func<Contact, bool>>, Expression<Func<Contact, ContactSelectItemDto>>, CancellationToken>(
+                    (filter, projection, _) =>
+                    {
+                        capturedFilter = filter;
+                        capturedProjection = projection;
+                    })
+                .ReturnsAsync(mockData);
+
+            // Act
+            List<ContactSelectItemDto> result = await Service.FindContactsByNameAsync(searchFirst, searchLast);
+
+            // Assert
+            Assert.Single(result);
+            Assert.Equal("John Doe", result[0].FullName);
+
+            Assert.NotNull(capturedFilter);
+            Func<Contact, bool> filterFunc = capturedFilter.Compile();
+
+            // Filter logic tests
+            Assert.True(filterFunc(new Contact { IsHidden = false, FirstName = "john", LastName = "doe" }), "Should match exact ignore case");
+            Assert.True(filterFunc(new Contact { IsHidden = false, FirstName = "John", LastName = "Doe" }), "Should match exact case");
+            Assert.False(filterFunc(new Contact { IsHidden = true, FirstName = "John", LastName = "Doe" }), "Should exclude hidden");
+            Assert.False(filterFunc(new Contact { IsHidden = false, FirstName = "Johnny", LastName = "Doe" }), "Should not partial match first name");
+            Assert.False(filterFunc(new Contact { IsHidden = false, FirstName = "John", LastName = "Do" }), "Should not partial match last name");
+            Assert.False(filterFunc(new Contact { IsHidden = false, FirstName = "John", LastName = null }), "Should handle null last name in DB when searching for specific last name");
+
+            Assert.NotNull(capturedProjection);
+            Func<Contact, ContactSelectItemDto> projectionFunc = capturedProjection.Compile();
+
+            // Projection logic tests
+            ContactSelectItemDto projectedFull = projectionFunc(new Contact { Id = Guid.Empty, FirstName = "Jane", LastName = "Smith" });
+            Assert.Equal("Jane Smith", projectedFull.FullName);
+
+            ContactSelectItemDto projectedNoLast = projectionFunc(new Contact { Id = Guid.Empty, FirstName = "Jane", LastName = null });
+            Assert.Equal("Jane", projectedNoLast.FullName); // Trimmed correctly
+        }
+
+        [Fact]
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Naming", "CA1707:Identifiers should not contain underscores", Justification = "Test names follow a standard convention")]
+        public async Task FindContactsByNameAsync_WhenLastNameIsNull_FiltersCorrectly()
+        {
+            // Arrange
+            string searchFirst = "Madonna";
+            string? searchLast = null;
+
+            Expression<Func<Contact, bool>>? capturedFilter = null;
+            RepositoryMock.Setup(r => r.ListProjectedAsync<Contact, ContactSelectItemDto>(
+                It.IsAny<Expression<Func<Contact, bool>>>(),
+                It.IsAny<Expression<Func<Contact, ContactSelectItemDto>>>(),
+                It.IsAny<CancellationToken>()))
+                .Callback<Expression<Func<Contact, bool>>, Expression<Func<Contact, ContactSelectItemDto>>, CancellationToken>(
+                    (filter, _, _) => capturedFilter = filter)
+                .ReturnsAsync([]);
+
+            // Act
+            await Service.FindContactsByNameAsync(searchFirst, searchLast);
+
+            // Assert
+            Assert.NotNull(capturedFilter);
+            Func<Contact, bool> filterFunc = capturedFilter.Compile();
+
+            // Filter logic tests
+            Assert.True(filterFunc(new Contact { IsHidden = false, FirstName = "madonna", LastName = null }), "Should match when no last name provided and DB has null");
+            Assert.True(filterFunc(new Contact { IsHidden = false, FirstName = "Madonna", LastName = "Ciccone" }), "Should match first name even if DB has a last name, when search last name is null");
+            Assert.False(filterFunc(new Contact { IsHidden = false, FirstName = "Madon", LastName = null }), "Should not partial match");
+        }
+
+        [Fact]
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Naming", "CA1707:Identifiers should not contain underscores", Justification = "Test names follow a standard convention")]
+        public async Task FindContactsByNameAsync_TrimsInputCorrectly()
+        {
+            // Arrange
+            string searchFirst = "  John  ";
+            string searchLast = "  Doe  ";
+
+            Expression<Func<Contact, bool>>? capturedFilter = null;
+            RepositoryMock.Setup(r => r.ListProjectedAsync<Contact, ContactSelectItemDto>(
+                It.IsAny<Expression<Func<Contact, bool>>>(),
+                It.IsAny<Expression<Func<Contact, ContactSelectItemDto>>>(),
+                It.IsAny<CancellationToken>()))
+                .Callback<Expression<Func<Contact, bool>>, Expression<Func<Contact, ContactSelectItemDto>>, CancellationToken>(
+                    (filter, _, _) => capturedFilter = filter)
+                .ReturnsAsync([]);
+
+            // Act
+            await Service.FindContactsByNameAsync(searchFirst, searchLast);
+
+            // Assert
+            Assert.NotNull(capturedFilter);
+            Func<Contact, bool> filterFunc = capturedFilter.Compile();
+
+            // The filter should match against "john" and "doe", not the padded versions
+            Assert.True(filterFunc(new Contact { IsHidden = false, FirstName = "john", LastName = "doe" }), "Should have trimmed the input parameters before querying");
+        }
+    }
+
     public class ContactReadServiceGetIntroducerCandidatesTests : ContactReadServiceTestBase
     {
         [Fact]
