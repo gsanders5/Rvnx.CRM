@@ -513,4 +513,81 @@ public class DashboardServiceTests
         Assert.False(livingNode.IsDeceased);
         Assert.True(deceasedNode.IsDeceased);
     }
+
+    [Fact]
+    [SuppressMessage("Naming", "CA1707:Identifiers should not contain underscores",
+        Justification = "Test names can contain underscores for readability.")]
+    public async Task GetDashboardDataAsync_WithValidTasks_PopulatesOpenTasksAndCalculatesOverdue()
+    {
+        Guid contactId = Guid.NewGuid();
+        DateTime now = DateTime.UtcNow;
+        DateOnly today = DateOnly.FromDateTime(DateTime.Today);
+
+        SetupContactSummaries([
+            new ContactSummary(contactId, "Task", "Owner", null, now, now, false)
+        ]);
+        SetupAttachments([]);
+        SetupSignificantDates([]);
+        SetupRelationships([]);
+
+        Guid overdueTaskId = Guid.NewGuid();
+        Guid upcomingTaskId = Guid.NewGuid();
+
+        SetupOpenTasks([
+            (overdueTaskId, contactId, "Overdue Task", today.AddDays(-3)),
+            (upcomingTaskId, contactId, "Upcoming Task", today.AddDays(2))
+        ]);
+
+        DashboardDto result = await _service.GetDashboardDataAsync();
+
+        Assert.Equal(2, result.OpenTasks.Count);
+
+        // Sorted by DueDate
+        Assert.Equal(overdueTaskId, result.OpenTasks[0].TaskId);
+        Assert.Equal("Overdue Task", result.OpenTasks[0].Title);
+        Assert.Equal(3, result.OpenTasks[0].DaysOverdue);
+        Assert.Equal("Task Owner", result.OpenTasks[0].ContactName);
+
+        Assert.Equal(upcomingTaskId, result.OpenTasks[1].TaskId);
+        Assert.Equal("Upcoming Task", result.OpenTasks[1].Title);
+        Assert.Equal(0, result.OpenTasks[1].DaysOverdue);
+    }
+
+    [Fact]
+    [SuppressMessage("Naming", "CA1707:Identifiers should not contain underscores",
+        Justification = "Test names can contain underscores for readability.")]
+    public async Task GetDashboardDataAsync_ExcludesTasksForHiddenOrDeceasedContacts()
+    {
+        Guid validId = Guid.NewGuid();
+        Guid deceasedId = Guid.NewGuid();
+        Guid hiddenId = Guid.NewGuid(); // Hidden/Partial will not be in the dictionary
+
+        DateTime now = DateTime.UtcNow;
+        DateOnly today = DateOnly.FromDateTime(DateTime.Today);
+
+        // Setup dictionaries with only valid and deceased
+        SetupContactSummaries([
+            new ContactSummary(validId, "Valid", "Owner", null, now, now, false),
+            new ContactSummary(deceasedId, "Deceased", "Owner", null, now, now, true)
+        ]);
+        SetupAttachments([]);
+        SetupSignificantDates([]);
+        SetupRelationships([]);
+
+        Guid validTaskId = Guid.NewGuid();
+        Guid deceasedTaskId = Guid.NewGuid();
+        Guid hiddenTaskId = Guid.NewGuid();
+
+        SetupOpenTasks([
+            (validTaskId, validId, "Valid Task", today),
+            (deceasedTaskId, deceasedId, "Deceased Task", today),
+            (hiddenTaskId, hiddenId, "Hidden Task", today)
+        ]);
+
+        DashboardDto result = await _service.GetDashboardDataAsync();
+
+        Assert.Single(result.OpenTasks);
+        Assert.Equal(validTaskId, result.OpenTasks[0].TaskId);
+        Assert.Equal("Valid Owner", result.OpenTasks[0].ContactName);
+    }
 }
