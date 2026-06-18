@@ -37,21 +37,27 @@ public class RelationshipSuggestionService(IRepository repository) : IRelationsh
             return suggestions;
         }
 
-        Contact? contact = await repository.GetByIdAsync<Contact>(contactId);
-        if (contact == null)
+        string? contactName = (await repository.ListProjectedAsync<Contact, string>(
+            c => c.Id == contactId,
+            c => (c.FirstName + " " + (c.LastName ?? "")).Trim()
+        ))?.FirstOrDefault();
+
+        if (contactName == null)
         {
             return suggestions;
         }
 
-        string contactName = contact.FullName;
-
         string relatedContactDisplayName = partialContactName ?? string.Empty;
         if (relatedContactId.HasValue)
         {
-            Contact? relatedContact = await repository.GetByIdAsync<Contact>(relatedContactId.Value);
-            if (relatedContact != null)
+            string? relatedContactName = (await repository.ListProjectedAsync<Contact, string>(
+                c => c.Id == relatedContactId.Value,
+                c => (c.FirstName + " " + (c.LastName ?? "")).Trim()
+            ))?.FirstOrDefault();
+
+            if (relatedContactName != null)
             {
-                relatedContactDisplayName = relatedContact.FullName;
+                relatedContactDisplayName = relatedContactName;
             }
         }
 
@@ -121,11 +127,13 @@ public class RelationshipSuggestionService(IRepository repository) : IRelationsh
             HashSet<Guid> compRIds = compR.Where(id => id != Guid.Empty && id != relatedContactId).ToHashSet();
 
             HashSet<Guid> allNeededIds = [.. compEIds, .. compRIds];
-            List<Contact> batchContacts = allNeededIds.Count > 0
-                ? await repository.ListAsNoTrackingAsync<Contact>(c => allNeededIds.Contains(c.Id))
+            List<(Guid Id, string FullName)> batchContacts = allNeededIds.Count > 0
+                ? await repository.ListProjectedAsync<Contact, (Guid, string)>(
+                    c => allNeededIds.Contains(c.Id),
+                    c => new ValueTuple<Guid, string>(c.Id, (c.FirstName + " " + (c.LastName ?? "")).Trim()))
                 : [];
 
-            Dictionary<Guid, Contact> contactMap = batchContacts.ToDictionary(c => c.Id);
+            Dictionary<Guid, string> contactMap = batchContacts.ToDictionary(c => c.Id, c => c.FullName);
 
             Guid tIdQuery = relatedContactId ?? Guid.Empty;
             List<Relationship> existingRels = await repository.ListAsNoTrackingAsync<Relationship>(r =>
@@ -139,9 +147,8 @@ public class RelationshipSuggestionService(IRepository repository) : IRelationsh
 
             foreach (Guid x in compEIds)
             {
-                if (contactMap.TryGetValue(x, out Contact? xContact))
+                if (contactMap.TryGetValue(x, out string? xName))
                 {
-                    string xName = xContact.FullName;
                     Guid tId = relatedContactId ?? Guid.Empty;
                     AddSuggestion(x, tId, xName, relatedContactDisplayName, isReverse, existingEdges);
                 }
@@ -149,9 +156,8 @@ public class RelationshipSuggestionService(IRepository repository) : IRelationsh
 
             foreach (Guid y in compRIds)
             {
-                if (contactMap.TryGetValue(y, out Contact? yContact))
+                if (contactMap.TryGetValue(y, out string? yName))
                 {
-                    string yName = yContact.FullName;
                     AddSuggestion(contactId, y, contactName, yName, isReverse, existingEdges);
                 }
             }
@@ -168,8 +174,10 @@ public class RelationshipSuggestionService(IRepository repository) : IRelationsh
                 HashSet<Guid> childSiblings = await GetComponentAsync(childId, RelationshipTypeIds.Sibling);
                 HashSet<Guid> siblingIds = childSiblings.Where(id => id != childId).ToHashSet();
 
-                List<Contact> sibContacts = siblingIds.Count > 0
-                    ? await repository.ListAsNoTrackingAsync<Contact>(c => siblingIds.Contains(c.Id))
+                List<(Guid Id, string FullName)> sibContacts = siblingIds.Count > 0
+                    ? await repository.ListProjectedAsync<Contact, (Guid, string)>(
+                        c => siblingIds.Contains(c.Id),
+                        c => new ValueTuple<Guid, string>(c.Id, (c.FirstName + " " + (c.LastName ?? "")).Trim()))
                     : [];
 
                 List<Relationship> existingRels = await repository.ListAsNoTrackingAsync<Relationship>(r =>
@@ -181,10 +189,9 @@ public class RelationshipSuggestionService(IRepository repository) : IRelationsh
                     .Select(r => (r.ContactId, r.RelatedContactId))
                     .ToHashSet();
 
-                foreach (Contact sibContact in sibContacts)
+                foreach (var (sibId, sibName) in sibContacts)
                 {
-                    string sibName = sibContact.FullName;
-                    AddSuggestion(adultId, sibContact.Id, adultName, sibName, false, existingEdges);
+                    AddSuggestion(adultId, sibId, adultName, sibName, false, existingEdges);
                 }
             }
         }

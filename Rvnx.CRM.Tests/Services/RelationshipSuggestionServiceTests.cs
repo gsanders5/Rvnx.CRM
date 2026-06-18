@@ -82,8 +82,11 @@ public class RelationshipSuggestionServiceTests
         Guid entityId = Guid.NewGuid();
         Guid typeId = RelationshipTypeIds.Sibling;
 
-        _repositoryMock.Setup(r => r.GetByIdAsync<Contact>(entityId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync((Contact?)null);
+        _repositoryMock.Setup(r => r.ListProjectedAsync(
+                It.IsAny<Expression<Func<Contact, bool>>>(),
+                It.IsAny<Expression<Func<Contact, string>>>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync([]);
 
         List<SuggestedRelationshipDto> result =
             await _service.GetSuggestedRelationshipsAsync(entityId, null, typeId, false, null);
@@ -109,10 +112,14 @@ public class RelationshipSuggestionServiceTests
         Contact relatedContact = new() { Id = relatedContactId, FirstName = "Jane", LastName = "Doe" };
         Contact newContact = new() { Id = newTransitiveContactId, FirstName = "Jim", LastName = "Doe" };
 
-        _repositoryMock.Setup(r => r.GetByIdAsync<Contact>(contactId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(contact);
-        _repositoryMock.Setup(r => r.GetByIdAsync<Contact>(relatedContactId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(relatedContact);
+        List<Contact> contactsDb = [contact, relatedContact, newContact];
+
+        _repositoryMock.Setup(r => r.ListProjectedAsync(
+                It.IsAny<Expression<Func<Contact, bool>>>(),
+                It.IsAny<Expression<Func<Contact, string>>>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync((Expression<Func<Contact, bool>> expr, Expression<Func<Contact, string>> selector, CancellationToken ct) =>
+                contactsDb.AsQueryable().Where(expr).Select(selector).ToList());
 
         List<Relationship> relationshipsDb = [
             new() { ContactId = relatedContactId, RelatedContactId = newTransitiveContactId, RelationshipTypeId = typeId }
@@ -125,14 +132,13 @@ public class RelationshipSuggestionServiceTests
             .ReturnsAsync((Expression<Func<Relationship, bool>> expr, CancellationToken ct, string[] includes) =>
                 relationshipsDb.AsQueryable().Where(expr).ToList());
 
-        List<Contact> contactsDb = [contact, relatedContact, newContact];
 
-        _repositoryMock.Setup(r => r.ListAsNoTrackingAsync<Contact>(
+        _repositoryMock.Setup(r => r.ListProjectedAsync(
                 It.IsAny<Expression<Func<Contact, bool>>>(),
-                It.IsAny<CancellationToken>(),
-                It.IsAny<string[]>()))
-            .ReturnsAsync((Expression<Func<Contact, bool>> expr, CancellationToken ct, string[] includes) =>
-                contactsDb.AsQueryable().Where(expr).ToList());
+                It.IsAny<Expression<Func<Contact, ValueTuple<Guid, string>>>>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync((Expression<Func<Contact, bool>> expr, Expression<Func<Contact, ValueTuple<Guid, string>>> selector, CancellationToken ct) =>
+                contactsDb.AsQueryable().Where(expr).Select(selector).ToList());
 
         List<SuggestedRelationshipDto> result =
             await _service.GetSuggestedRelationshipsAsync(contactId, relatedContactId, typeId, false, null);
@@ -157,10 +163,14 @@ public class RelationshipSuggestionServiceTests
         Contact child = new() { Id = childId, FirstName = "Child", LastName = "One" };
         Contact sibling = new() { Id = siblingId, FirstName = "Sibling", LastName = "One" };
 
-        _repositoryMock.Setup(r => r.GetByIdAsync<Contact>(adultId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(adult);
-        _repositoryMock.Setup(r => r.GetByIdAsync<Contact>(childId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(child);
+        List<Contact> contactsDb = [adult, child, sibling];
+
+        _repositoryMock.Setup(r => r.ListProjectedAsync(
+                It.IsAny<Expression<Func<Contact, bool>>>(),
+                It.IsAny<Expression<Func<Contact, string>>>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync((Expression<Func<Contact, bool>> expr, Expression<Func<Contact, string>> selector, CancellationToken ct) =>
+                contactsDb.AsQueryable().Where(expr).Select(selector).ToList());
 
         List<Relationship> relationshipsDb = [
             new() { ContactId = childId, RelatedContactId = siblingId, RelationshipTypeId = RelationshipTypeIds.Sibling }
@@ -173,14 +183,12 @@ public class RelationshipSuggestionServiceTests
             .ReturnsAsync((Expression<Func<Relationship, bool>> expr, CancellationToken ct, string[] includes) =>
                 relationshipsDb.AsQueryable().Where(expr).ToList());
 
-        List<Contact> contactsDb = [adult, child, sibling];
-
-        _repositoryMock.Setup(r => r.ListAsNoTrackingAsync<Contact>(
+        _repositoryMock.Setup(r => r.ListProjectedAsync(
                 It.IsAny<Expression<Func<Contact, bool>>>(),
-                It.IsAny<CancellationToken>(),
-                It.IsAny<string[]>()))
-            .ReturnsAsync((Expression<Func<Contact, bool>> expr, CancellationToken ct, string[] includes) =>
-                contactsDb.AsQueryable().Where(expr).ToList());
+                It.IsAny<Expression<Func<Contact, ValueTuple<Guid, string>>>>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync((Expression<Func<Contact, bool>> expr, Expression<Func<Contact, ValueTuple<Guid, string>>> selector, CancellationToken ct) =>
+                contactsDb.AsQueryable().Where(expr).Select(selector).ToList());
 
         List<SuggestedRelationshipDto> result =
             await _service.GetSuggestedRelationshipsAsync(adultId, childId, typeId, false, null);
