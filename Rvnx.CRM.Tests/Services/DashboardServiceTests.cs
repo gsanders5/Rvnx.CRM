@@ -513,4 +513,94 @@ public class DashboardServiceTests
         Assert.False(livingNode.IsDeceased);
         Assert.True(deceasedNode.IsDeceased);
     }
+
+    [Fact]
+    public async Task GetDashboardDataAsyncExcludesOpenTasksForDeceasedContacts()
+    {
+        Guid livingId = Guid.NewGuid();
+        Guid deceasedId = Guid.NewGuid();
+        Guid taskIdLiving = Guid.NewGuid();
+        Guid taskIdDeceased = Guid.NewGuid();
+        DateTime now = DateTime.UtcNow;
+
+        SetupContactSummaries([
+            new ContactSummary(livingId, "Alive", "Person", null, now, now, false),
+            new ContactSummary(deceasedId, "Late", "Person", null, now, now, true)
+        ]);
+        SetupAttachments([]);
+        SetupSignificantDates([]);
+        SetupRelationships([]);
+
+        SetupOpenTasks([
+            (taskIdLiving, livingId, "Task for Living", DateOnly.FromDateTime(DateTime.Today.AddDays(1))),
+            (taskIdDeceased, deceasedId, "Task for Deceased", DateOnly.FromDateTime(DateTime.Today.AddDays(1)))
+        ]);
+
+        DashboardDto result = await _service.GetDashboardDataAsync();
+
+        Assert.Single(result.OpenTasks);
+        Assert.Equal(taskIdLiving, result.OpenTasks[0].TaskId);
+    }
+
+    [Fact]
+    public async Task GetDashboardDataAsyncSortsOpenTasksByDueDate()
+    {
+        Guid contactId = Guid.NewGuid();
+        Guid taskIdSoon = Guid.NewGuid();
+        Guid taskIdLater = Guid.NewGuid();
+        DateTime now = DateTime.UtcNow;
+
+        SetupContactSummaries([
+            new ContactSummary(contactId, "Normal", "Person", null, now, now, false)
+        ]);
+        SetupAttachments([]);
+        SetupSignificantDates([]);
+        SetupRelationships([]);
+
+        SetupOpenTasks([
+            (taskIdLater, contactId, "Task Later", DateOnly.FromDateTime(DateTime.Today.AddDays(5))),
+            (taskIdSoon, contactId, "Task Soon", DateOnly.FromDateTime(DateTime.Today.AddDays(2)))
+        ]);
+
+        DashboardDto result = await _service.GetDashboardDataAsync();
+
+        Assert.Equal(2, result.OpenTasks.Count);
+        Assert.Equal(taskIdSoon, result.OpenTasks[0].TaskId);
+        Assert.Equal(taskIdLater, result.OpenTasks[1].TaskId);
+    }
+
+    [Fact]
+    public async Task GetDashboardDataAsyncCalculatesDaysOverdueCorrectly()
+    {
+        Guid contactId = Guid.NewGuid();
+        Guid taskIdOverdue = Guid.NewGuid();
+        Guid taskIdFuture = Guid.NewGuid();
+        DateTime now = DateTime.UtcNow;
+
+        SetupContactSummaries([
+            new ContactSummary(contactId, "Normal", "Person", null, now, now, false)
+        ]);
+        SetupAttachments([]);
+        SetupSignificantDates([]);
+        SetupRelationships([]);
+
+        DateOnly today = DateOnly.FromDateTime(DateTime.Today);
+        DateOnly pastDate = today.AddDays(-3);
+        DateOnly futureDate = today.AddDays(3);
+
+        SetupOpenTasks([
+            (taskIdOverdue, contactId, "Task Overdue", pastDate),
+            (taskIdFuture, contactId, "Task Future", futureDate)
+        ]);
+
+        DashboardDto result = await _service.GetDashboardDataAsync();
+
+        Assert.Equal(2, result.OpenTasks.Count);
+
+        OpenTaskDto overdueTask = result.OpenTasks.Single(t => t.TaskId == taskIdOverdue);
+        Assert.Equal(3, overdueTask.DaysOverdue);
+
+        OpenTaskDto futureTask = result.OpenTasks.Single(t => t.TaskId == taskIdFuture);
+        Assert.Equal(0, futureTask.DaysOverdue);
+    }
 }
