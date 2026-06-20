@@ -513,4 +513,180 @@ public class DashboardServiceTests
         Assert.False(livingNode.IsDeceased);
         Assert.True(deceasedNode.IsDeceased);
     }
+
+    [Fact]
+    [SuppressMessage("Naming", "CA1707:Identifiers should not contain underscores",
+        Justification = "Test names can contain underscores for readability.")]
+    public async Task GetDashboardDataAsync_WithTasksWithinLookahead_ReturnsOpenTasks()
+    {
+        Guid contactId = Guid.NewGuid();
+        DateTime now = DateTime.UtcNow;
+        DateOnly today = DateOnly.FromDateTime(DateTime.Today);
+        DateOnly futureDate = today.AddDays(5);
+
+        SetupContactSummaries([new ContactSummary(contactId, "Test", "Contact", null, now, now, false)]);
+        SetupAttachments([]);
+        SetupSignificantDates([]);
+        SetupRelationships([]);
+
+        List<ValueTuple<Guid, Guid?, string, DateOnly>> mockTasks =
+        [
+            new(Guid.NewGuid(), contactId, "Future Task", futureDate)
+        ];
+
+        _repositoryMock
+            .Setup(r => r.ListProjectedAsync<ContactTask, (Guid, Guid?, string, DateOnly)>(
+                It.IsAny<Expression<Func<ContactTask, bool>>>(),
+                It.IsAny<Expression<Func<ContactTask, (Guid, Guid?, string, DateOnly)>>>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(mockTasks);
+
+        DashboardDto result = await _service.GetDashboardDataAsync();
+
+        Assert.Single(result.OpenTasks);
+        Assert.Equal("Future Task", result.OpenTasks[0].Title);
+        Assert.Equal(0, result.OpenTasks[0].DaysOverdue);
+        Assert.Equal(contactId, result.OpenTasks[0].ContactId);
+        Assert.Equal("Test Contact", result.OpenTasks[0].ContactName);
+        Assert.Equal(futureDate, result.OpenTasks[0].DueDate);
+    }
+
+    [Fact]
+    [SuppressMessage("Naming", "CA1707:Identifiers should not contain underscores",
+        Justification = "Test names can contain underscores for readability.")]
+    public async Task GetDashboardDataAsync_WithOverdueTasks_CalculatesDaysOverdue()
+    {
+        Guid contactId = Guid.NewGuid();
+        DateTime now = DateTime.UtcNow;
+        DateOnly today = DateOnly.FromDateTime(DateTime.Today);
+        DateOnly overdueDate = today.AddDays(-2);
+
+        SetupContactSummaries([new ContactSummary(contactId, "Late", "Person", null, now, now, false)]);
+        SetupAttachments([]);
+        SetupSignificantDates([]);
+        SetupRelationships([]);
+
+        List<ValueTuple<Guid, Guid?, string, DateOnly>> mockTasks =
+        [
+            new(Guid.NewGuid(), contactId, "Overdue Task", overdueDate)
+        ];
+
+        _repositoryMock
+            .Setup(r => r.ListProjectedAsync<ContactTask, (Guid, Guid?, string, DateOnly)>(
+                It.IsAny<Expression<Func<ContactTask, bool>>>(),
+                It.IsAny<Expression<Func<ContactTask, (Guid, Guid?, string, DateOnly)>>>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(mockTasks);
+
+        DashboardDto result = await _service.GetDashboardDataAsync();
+
+        Assert.Single(result.OpenTasks);
+        Assert.Equal("Overdue Task", result.OpenTasks[0].Title);
+        // DaysOverdue is calculated as today.DayNumber - dueDate.DayNumber
+        int expectedDaysOverdue = today.DayNumber - overdueDate.DayNumber;
+        Assert.Equal(expectedDaysOverdue, result.OpenTasks[0].DaysOverdue);
+    }
+
+    [Fact]
+    [SuppressMessage("Naming", "CA1707:Identifiers should not contain underscores",
+        Justification = "Test names can contain underscores for readability.")]
+    public async Task GetDashboardDataAsync_TasksForDeceasedContacts_AreExcluded()
+    {
+        Guid deceasedContactId = Guid.NewGuid();
+        DateTime now = DateTime.UtcNow;
+        DateOnly today = DateOnly.FromDateTime(DateTime.Today);
+
+        SetupContactSummaries([new ContactSummary(deceasedContactId, "Late", "Person", null, now, now, true)]);
+        SetupAttachments([]);
+        SetupSignificantDates([]);
+        SetupRelationships([]);
+
+        List<ValueTuple<Guid, Guid?, string, DateOnly>> mockTasks =
+        [
+            new(Guid.NewGuid(), deceasedContactId, "Task for Deceased", today)
+        ];
+
+        _repositoryMock
+            .Setup(r => r.ListProjectedAsync<ContactTask, (Guid, Guid?, string, DateOnly)>(
+                It.IsAny<Expression<Func<ContactTask, bool>>>(),
+                It.IsAny<Expression<Func<ContactTask, (Guid, Guid?, string, DateOnly)>>>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(mockTasks);
+
+        DashboardDto result = await _service.GetDashboardDataAsync();
+
+        Assert.Empty(result.OpenTasks);
+    }
+
+    [Fact]
+    [SuppressMessage("Naming", "CA1707:Identifiers should not contain underscores",
+        Justification = "Test names can contain underscores for readability.")]
+    public async Task GetDashboardDataAsync_TasksOutsideLookahead_AreExcluded()
+    {
+        // SetupContactSummaries isn't strictly necessary here because we are mocking the task
+        // projection which relies on filtering at the DB level, but we provide it for completeness
+        Guid contactId = Guid.NewGuid();
+        DateTime now = DateTime.UtcNow;
+        DateOnly today = DateOnly.FromDateTime(DateTime.Today);
+
+        SetupContactSummaries([new ContactSummary(contactId, "Test", "Contact", null, now, now, false)]);
+        SetupAttachments([]);
+        SetupSignificantDates([]);
+        SetupRelationships([]);
+
+        // Let's use a callback on the setup to verify the filter logic.
+        // We capture the predicate to make sure it filters correctly.
+        bool delegateCalled = false;
+        _repositoryMock
+            .Setup(r => r.ListProjectedAsync<ContactTask, (Guid, Guid?, string, DateOnly)>(
+                It.IsAny<Expression<Func<ContactTask, bool>>>(),
+                It.IsAny<Expression<Func<ContactTask, (Guid, Guid?, string, DateOnly)>>>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync((Expression<Func<ContactTask, bool>> predicate,
+                Expression<Func<ContactTask, (Guid, Guid?, string, DateOnly)>> proj,
+                CancellationToken ct) =>
+            {
+                delegateCalled = true;
+                Func<ContactTask, bool> compiledPredicate = predicate.Compile();
+
+                DateOnly futureDate = today.AddDays(20);
+
+                ContactTask taskOutsideLookahead = new()
+                {
+                    Id = Guid.NewGuid(),
+                    ContactId = contactId,
+                    Title = "Far Future Task",
+                    DueDate = futureDate,
+                    IsCompleted = false
+                };
+
+                ContactTask taskInsideLookahead = new()
+                {
+                    Id = Guid.NewGuid(),
+                    ContactId = contactId,
+                    Title = "Near Future Task",
+                    DueDate = today.AddDays(10),
+                    IsCompleted = false
+                };
+
+                List<ValueTuple<Guid, Guid?, string, DateOnly>> results = [];
+                if (compiledPredicate(taskOutsideLookahead))
+                {
+                    results.Add(new(taskOutsideLookahead.Id, taskOutsideLookahead.ContactId, taskOutsideLookahead.Title, taskOutsideLookahead.DueDate));
+                }
+                if (compiledPredicate(taskInsideLookahead))
+                {
+                    results.Add(new(taskInsideLookahead.Id, taskInsideLookahead.ContactId, taskInsideLookahead.Title, taskInsideLookahead.DueDate));
+                }
+
+                return results;
+            });
+
+        DashboardDto result = await _service.GetDashboardDataAsync();
+
+        Assert.True(delegateCalled, "Repository was not queried");
+        Assert.Single(result.OpenTasks);
+        Assert.Equal("Near Future Task", result.OpenTasks[0].Title);
+        Assert.DoesNotContain(result.OpenTasks, t => t.Title == "Far Future Task");
+    }
 }
