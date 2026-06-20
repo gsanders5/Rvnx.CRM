@@ -513,4 +513,97 @@ public class DashboardServiceTests
         Assert.False(livingNode.IsDeceased);
         Assert.True(deceasedNode.IsDeceased);
     }
+
+    [Fact]
+    [SuppressMessage("Naming", "CA1707:Identifiers should not contain underscores",
+        Justification = "Test names can contain underscores for readability.")]
+    public async Task GetDashboardDataAsync_WithOpenTasks_CalculatesDaysOverdueCorrectly()
+    {
+        Guid contactId = Guid.NewGuid();
+        DateTime now = DateTime.UtcNow;
+        DateOnly today = DateOnly.FromDateTime(DateTime.Today);
+
+        SetupContactSummaries([
+            new ContactSummary(contactId, "Jane", "Doe", null, now, now, false)
+        ]);
+        SetupAttachments([]);
+        SetupSignificantDates([]);
+        SetupRelationships([]);
+
+        Guid futureTaskId = Guid.NewGuid();
+        Guid overdueTaskId = Guid.NewGuid();
+
+        SetupOpenTasks([
+            (futureTaskId, contactId, "Future Task", today.AddDays(3)),
+            (overdueTaskId, contactId, "Overdue Task", today.AddDays(-2))
+        ]);
+
+        DashboardDto result = await _service.GetDashboardDataAsync();
+
+        Assert.Equal(2, result.OpenTasks.Count);
+
+        // Sorting should place the overdue task first
+        Assert.Equal(overdueTaskId, result.OpenTasks[0].TaskId);
+        Assert.Equal(2, result.OpenTasks[0].DaysOverdue);
+
+        Assert.Equal(futureTaskId, result.OpenTasks[1].TaskId);
+        Assert.Equal(0, result.OpenTasks[1].DaysOverdue);
+    }
+
+    [Fact]
+    [SuppressMessage("Naming", "CA1707:Identifiers should not contain underscores",
+        Justification = "Test names can contain underscores for readability.")]
+    public async Task GetDashboardDataAsync_TaskForDeceasedContact_IsFilteredOut()
+    {
+        Guid livingId = Guid.NewGuid();
+        Guid deceasedId = Guid.NewGuid();
+        DateTime now = DateTime.UtcNow;
+        DateOnly today = DateOnly.FromDateTime(DateTime.Today);
+
+        SetupContactSummaries([
+            new ContactSummary(livingId, "Alive", "Person", null, now, now, false),
+            new ContactSummary(deceasedId, "Late", "Person", null, now, now, true)
+        ]);
+        SetupAttachments([]);
+        SetupSignificantDates([]);
+        SetupRelationships([]);
+
+        SetupOpenTasks([
+            (Guid.NewGuid(), livingId, "Living Task", today.AddDays(1)),
+            (Guid.NewGuid(), deceasedId, "Deceased Task", today.AddDays(1))
+        ]);
+
+        DashboardDto result = await _service.GetDashboardDataAsync();
+
+        Assert.Single(result.OpenTasks);
+        Assert.Equal(livingId, result.OpenTasks[0].ContactId);
+    }
+
+    [Fact]
+    [SuppressMessage("Naming", "CA1707:Identifiers should not contain underscores",
+        Justification = "Test names can contain underscores for readability.")]
+    public async Task GetDashboardDataAsync_TaskForHiddenContact_IsFilteredOut()
+    {
+        Guid visibleId = Guid.NewGuid();
+        Guid hiddenId = Guid.NewGuid(); // Not in ContactSummaries (implies hidden/partial)
+        DateTime now = DateTime.UtcNow;
+        DateOnly today = DateOnly.FromDateTime(DateTime.Today);
+
+        SetupContactSummaries([
+            new ContactSummary(visibleId, "Visible", "Person", null, now, now, false)
+        ]);
+        SetupAttachments([]);
+        SetupSignificantDates([]);
+        SetupRelationships([]);
+
+        SetupOpenTasks([
+            (Guid.NewGuid(), visibleId, "Visible Task", today.AddDays(1)),
+            (Guid.NewGuid(), hiddenId, "Hidden Task", today.AddDays(1))
+        ]);
+
+        DashboardDto result = await _service.GetDashboardDataAsync();
+
+        Assert.Single(result.OpenTasks);
+        Assert.Equal(visibleId, result.OpenTasks[0].ContactId);
+    }
 }
