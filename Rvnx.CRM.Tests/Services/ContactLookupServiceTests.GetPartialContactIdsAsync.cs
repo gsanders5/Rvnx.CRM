@@ -27,10 +27,8 @@ namespace Rvnx.CRM.Tests.Services
         [SuppressMessage("Naming", "CA1707:Identifiers should not contain underscores", Justification = "Test names follow a standard convention")]
         public async Task GetPartialContactIdsAsync_WhenIdsEmpty_ReturnsEmptyHashSetAndDoesNotCallRepository()
         {
-            // Act
             HashSet<Guid> result = await _service.GetPartialContactIdsAsync(new List<Guid>());
 
-            // Assert
             Assert.NotNull(result);
             Assert.Empty(result);
             _repositoryMock.Verify(r => r.ListProjectedAsync(
@@ -43,7 +41,6 @@ namespace Rvnx.CRM.Tests.Services
         [SuppressMessage("Naming", "CA1707:Identifiers should not contain underscores", Justification = "Test names follow a standard convention")]
         public async Task GetPartialContactIdsAsync_WhenIdsProvided_ReturnsHashSetOfPartialIds()
         {
-            // Arrange
             Guid id1 = Guid.NewGuid();
             Guid id2 = Guid.NewGuid();
             List<Guid> ids = new() { id1, id2 };
@@ -54,10 +51,8 @@ namespace Rvnx.CRM.Tests.Services
                 It.IsAny<CancellationToken>()))
                 .ReturnsAsync(new List<Guid> { id1 });
 
-            // Act
             HashSet<Guid> result = await _service.GetPartialContactIdsAsync(ids);
 
-            // Assert
             Assert.NotNull(result);
             Assert.Single(result);
             Assert.Contains(id1, result);

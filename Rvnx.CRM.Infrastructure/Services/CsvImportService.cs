@@ -79,7 +79,6 @@ public class CsvImportService(IRepository repository, ILogger<CsvImportService> 
                 return new ContactImportResult { AddedCount = 0, SkippedCount = 0 };
             }
 
-            // Validate header matches expected schema
             List<string> headerFields = ParseCsvLine(headerLine);
             IReadOnlyList<string> expectedHeaders = CsvExportService.ColumnHeaders;
             bool headerMatches = headerFields.Count == expectedHeaders.Count

@@ -120,13 +120,10 @@ public class FavoriteServiceTests
     [Fact]
     public async Task GetFavoriteSidebarItemsAsyncWhenUserIdNullReturnsEmptyList()
     {
-        // Arrange
         _currentUserServiceMock.Setup(x => x.UserId).Returns((Guid?)null);
 
-        // Act
         List<FavoriteSidebarItemDto> result = await _service.GetFavoriteSidebarItemsAsync();
 
-        // Assert
         Assert.NotNull(result);
         Assert.Empty(result);
         _repositoryMock.Verify(x => x.ListProjectedAsync(
@@ -138,7 +135,6 @@ public class FavoriteServiceTests
     [Fact]
     public async Task GetFavoriteSidebarItemsAsyncWhenUserHasNoFavoritesReturnsEmptyList()
     {
-        // Arrange
         Guid userId = Guid.NewGuid();
         _currentUserServiceMock.Setup(x => x.UserId).Returns(userId);
 
@@ -148,10 +144,8 @@ public class FavoriteServiceTests
             It.IsAny<CancellationToken>()))
             .ReturnsAsync([]);
 
-        // Act
         List<FavoriteSidebarItemDto> result = await _service.GetFavoriteSidebarItemsAsync();
 
-        // Assert
         Assert.NotNull(result);
         Assert.Empty(result);
         _repositoryMock.Verify(x => x.ListProjectedAsync(
@@ -163,7 +157,6 @@ public class FavoriteServiceTests
     [Fact]
     public async Task GetFavoriteSidebarItemsAsyncWhenUserHasFavoritesFiltersAndMapsData()
     {
-        // Arrange
         Guid userId = Guid.NewGuid();
         _currentUserServiceMock.Setup(x => x.UserId).Returns(userId);
 
@@ -194,10 +187,8 @@ public class FavoriteServiceTests
             It.IsAny<CancellationToken>()))
             .ReturnsAsync([]);
 
-        // Act
         List<FavoriteSidebarItemDto> result = await _service.GetFavoriteSidebarItemsAsync();
 
-        // Assert
         Assert.NotNull(result);
         Assert.Equal(2, result.Count);
         Assert.Contains(result, i => i.Id == contactId1 && i.FirstName == "Alice");
@@ -207,7 +198,6 @@ public class FavoriteServiceTests
     [Fact]
     public async Task GetFavoriteSidebarItemsAsyncWhenFavoritesHaveAttachmentsMapsProfileImage()
     {
-        // Arrange
         Guid userId = Guid.NewGuid();
         _currentUserServiceMock.Setup(x => x.UserId).Returns(userId);
 
@@ -239,10 +229,8 @@ public class FavoriteServiceTests
             It.IsAny<CancellationToken>()))
             .ReturnsAsync(attachments);
 
-        // Act
         List<FavoriteSidebarItemDto> result = await _service.GetFavoriteSidebarItemsAsync();
 
-        // Assert
         Assert.NotNull(result);
         Assert.Single(result);
         Assert.Equal(attachmentId, result[0].ProfileImageId);
@@ -251,7 +239,6 @@ public class FavoriteServiceTests
     [Fact]
     public async Task GetFavoriteSidebarItemsAsyncReturnsSortedData()
     {
-        // Arrange
         Guid userId = Guid.NewGuid();
         _currentUserServiceMock.Setup(x => x.UserId).Returns(userId);
 
@@ -284,10 +271,8 @@ public class FavoriteServiceTests
             It.IsAny<CancellationToken>()))
             .ReturnsAsync([]);
 
-        // Act
         List<FavoriteSidebarItemDto> result = await _service.GetFavoriteSidebarItemsAsync();
 
-        // Assert
         Assert.NotNull(result);
         Assert.Equal(3, result.Count);
         Assert.Equal("Apple", result[0].FirstName);
