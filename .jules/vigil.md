@@ -129,3 +129,6 @@
 ## 2024-06-09 - Repository Extension Methods and Mocking
 **Learning:** In Rvnx.CRM, `IRepository` extension methods like `ListProjectedByChunkedContainsAsync` have their own internal early-exit logic. Furthermore, Moq cannot mock extension methods directly.
 **Action:** When testing early-exits for methods that call `IRepository` extensions, verify the underlying repository interface method (e.g. `ListProjectedAsync`) that the extension method calls, rather than attempting to mock the extension method itself.
+## 2024-06-23 - Explicitly Testing EF Core Projection Expressions
+**Learning:** In C#, EF Core projection logic (like string concatenation with null coalescence) is encapsulated within an `Expression<Func<T, TResult>>` passed to the repository. Testing the caller service doesn't implicitly run this projection logic unless mocked to do so, masking potential string formatting bugs (like trailing spaces when a field is null).
+**Action:** When a service relies on an EF Core projection to format or transform data before returning it, capture the `Expression` via Moq's `.Callback()`, call `.Compile()`, and explicitly execute it against an in-memory instance to verify the projection's formatting rules work as intended, particularly for null handling.
