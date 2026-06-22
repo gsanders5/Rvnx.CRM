@@ -129,3 +129,6 @@
 ## 2024-06-09 - Repository Extension Methods and Mocking
 **Learning:** In Rvnx.CRM, `IRepository` extension methods like `ListProjectedByChunkedContainsAsync` have their own internal early-exit logic. Furthermore, Moq cannot mock extension methods directly.
 **Action:** When testing early-exits for methods that call `IRepository` extensions, verify the underlying repository interface method (e.g. `ListProjectedAsync`) that the extension method calls, rather than attempting to mock the extension method itself.
+## 2026-06-21 - [Testing EF Core Lowercase Projections]
+**Learning:** Found that `ContactReadService.FindContactsByNameAsync` lacked test coverage. The method contains logic to lowercase strings specifically for case-insensitive matching inside an EF Core query projection. If left untested, regressions to the LINQ expression logic (e.g. failing to properly check for null values or correctly formatting the string) would not fail any tests.
+**Action:** When inspecting query methods that use lowercasing or case-insensitive operations inside `ListProjectedAsync`, always explicitly test that the expression correctly formats the input and filters objects, especially capturing the case where search constraints might be null (e.g. searching only by a first name when the last name is null).
