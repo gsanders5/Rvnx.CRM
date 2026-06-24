@@ -32,15 +32,52 @@ public class ContactLookupServiceTests
     public async Task GetContactNameAsyncPersonReturnsFullName()
     {
         Guid id = Guid.NewGuid();
+        System.Linq.Expressions.Expression<Func<Contact, string>>? capturedProjection = null;
+
         _repositoryMock.Setup(r => r.ListProjectedAsync(
                 It.IsAny<System.Linq.Expressions.Expression<Func<Contact, bool>>>(),
                 It.IsAny<System.Linq.Expressions.Expression<Func<Contact, string>>>(),
                 It.IsAny<CancellationToken>()))
+            .Callback<System.Linq.Expressions.Expression<Func<Contact, bool>>, System.Linq.Expressions.Expression<Func<Contact, string>>, CancellationToken>((predicate, projection, ct) =>
+            {
+                capturedProjection = projection;
+            })
             .ReturnsAsync(["John Doe"]);
 
         string result = await _service.GetContactNameAsync(id);
 
         Assert.Equal("John Doe", result);
+        Assert.NotNull(capturedProjection);
+
+        Func<Contact, string> compiledProjection = capturedProjection!.Compile();
+        Contact testContact = new() { FirstName = "John", LastName = "Doe" };
+        Assert.Equal("John Doe", compiledProjection(testContact));
+    }
+
+    [Fact]
+    public async Task GetContactNameAsyncPersonWithNoLastNameReturnsFirstNameOnlyTrimmed()
+    {
+        Guid id = Guid.NewGuid();
+        System.Linq.Expressions.Expression<Func<Contact, string>>? capturedProjection = null;
+
+        _repositoryMock.Setup(r => r.ListProjectedAsync(
+                It.IsAny<System.Linq.Expressions.Expression<Func<Contact, bool>>>(),
+                It.IsAny<System.Linq.Expressions.Expression<Func<Contact, string>>>(),
+                It.IsAny<CancellationToken>()))
+            .Callback<System.Linq.Expressions.Expression<Func<Contact, bool>>, System.Linq.Expressions.Expression<Func<Contact, string>>, CancellationToken>((predicate, projection, ct) =>
+            {
+                capturedProjection = projection;
+            })
+            .ReturnsAsync(["John "]); // The service trims it to "John"
+
+        string result = await _service.GetContactNameAsync(id);
+
+        Assert.Equal("John", result);
+        Assert.NotNull(capturedProjection);
+
+        Func<Contact, string> compiledProjection = capturedProjection!.Compile();
+        Contact testContact = new() { FirstName = "John", LastName = null };
+        Assert.Equal("John ", compiledProjection(testContact)); // The projection outputs "John " before the service trims it
     }
 
     [Fact]
