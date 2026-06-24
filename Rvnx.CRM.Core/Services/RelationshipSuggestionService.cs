@@ -37,21 +37,27 @@ public class RelationshipSuggestionService(IRepository repository) : IRelationsh
             return suggestions;
         }
 
-        Contact? contact = await repository.GetByIdAsync<Contact>(contactId);
-        if (contact == null)
+        List<string> contactNames = await repository.ListProjectedAsync<Contact, string>(
+            c => c.Id == contactId,
+            c => (c.FirstName + " " + (c.LastName ?? "")).Trim());
+
+        string? contactName = contactNames?.FirstOrDefault();
+        if (contactName == null)
         {
             return suggestions;
         }
 
-        string contactName = contact.FullName;
-
         string relatedContactDisplayName = partialContactName ?? string.Empty;
         if (relatedContactId.HasValue)
         {
-            Contact? relatedContact = await repository.GetByIdAsync<Contact>(relatedContactId.Value);
-            if (relatedContact != null)
+            List<string> relatedContactNames = await repository.ListProjectedAsync<Contact, string>(
+                c => c.Id == relatedContactId.Value,
+                c => (c.FirstName + " " + (c.LastName ?? "")).Trim());
+
+            string? relatedName = relatedContactNames?.FirstOrDefault();
+            if (relatedName != null)
             {
-                relatedContactDisplayName = relatedContact.FullName;
+                relatedContactDisplayName = relatedName;
             }
         }
 

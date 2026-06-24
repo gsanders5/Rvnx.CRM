@@ -350,11 +350,17 @@ public class RelationshipServiceTests
         Guid typeId = RelationshipTypeIds.Colleague;
 
         // Load the primary entity (source) and the directly-specified related entity (target)
-        _repositoryMock.Setup(r => r.GetByIdAsync<Contact>(sourceId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new Contact { Id = sourceId, FirstName = "Jack" });
+        _repositoryMock.Setup(r => r.ListProjectedAsync(
+                It.Is<Expression<Func<Contact, bool>>>(expr => expr.Compile().Invoke(new Contact { Id = sourceId })),
+                It.IsAny<Expression<Func<Contact, string>>>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(["Jack"]);
 
-        _repositoryMock.Setup(r => r.GetByIdAsync<Contact>(targetId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new Contact { Id = targetId, FirstName = "Jill" });
+        _repositoryMock.Setup(r => r.ListProjectedAsync(
+                It.Is<Expression<Func<Contact, bool>>>(expr => expr.Compile().Invoke(new Contact { Id = targetId })),
+                It.IsAny<Expression<Func<Contact, string>>>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(["Jill"]);
 
         // BFS edge query: target is connected to cId via the Colleague relationship
         _repositoryMock.Setup(r => r.ListAsNoTrackingAsync(
