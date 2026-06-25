@@ -1,0 +1,11 @@
+💡 What
+Replaced `.GroupBy(keySelector).ToDictionary(...)` with a pre-allocated `Dictionary` and a manual `foreach` loop inside `LoadGroupedAsync` in `ContactExportService.cs`.
+
+🎯 Why
+Using `.GroupBy` followed by `.ToDictionary` allocates intermediate `IGrouping` instances for each key and causes redundant iterations over the items when grouping and transforming them to lists. Manually pre-allocating the dictionary with `contactIds.Count` (using it as an approximation) and using `TryAdd` with a `foreach` loop avoids these allocations, reducing GC pressure and execution time. This optimization is especially valuable for the `ExportAllToVCardZipAsync` method, which exports a large number of contacts.
+
+📉 Impact
+Reduces object allocations and improves iteration efficiency during the extraction of contact methods, significant dates, and attachments for bulk VCard exports.
+
+🔬 Measurement
+The impact of this optimization can be verified by profiling memory allocations (with tools like dotMemory) before and after this change when triggering bulk exports of hundreds or thousands of contacts. The total time for generating a zip export will be measurably faster.
