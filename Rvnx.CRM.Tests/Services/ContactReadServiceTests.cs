@@ -1108,6 +1108,118 @@ public class ContactReadServiceTests
         }
 
         [Fact]
+        public async Task FindContactsByNameAsyncEvaluatesFilterCorrectly()
+        {
+            // Arrange
+            Guid id1 = Guid.NewGuid();
+            Guid id2 = Guid.NewGuid();
+            Guid id3 = Guid.NewGuid();
+            Guid id4 = Guid.NewGuid();
+
+            List<Contact> mockData =
+            [
+                new() { Id = id1, FirstName = "John", LastName = "Doe", IsHidden = false },
+                new() { Id = id2, FirstName = " Jane ", LastName = " Smith ", IsHidden = false },
+                new() { Id = id3, FirstName = "John", LastName = "Hidden", IsHidden = true },
+                new() { Id = id4, FirstName = "John", LastName = "Different", IsHidden = false }
+            ];
+
+            Expression<Func<Contact, bool>>? capturedFilter = null;
+            RepositoryMock.Setup(r => r.ListProjectedAsync<Contact, ContactSelectItemDto>(
+                It.IsAny<Expression<Func<Contact, bool>>>(),
+                It.IsAny<Expression<Func<Contact, ContactSelectItemDto>>>(),
+                It.IsAny<CancellationToken>()))
+                .Callback<Expression<Func<Contact, bool>>, Expression<Func<Contact, ContactSelectItemDto>>, CancellationToken>(
+                    (filter, _, _) => capturedFilter = filter)
+                .ReturnsAsync([]);
+
+            // Act
+            await Service.FindContactsByNameAsync(" JOhN ", "doE");
+
+            // Assert
+            Assert.NotNull(capturedFilter);
+            Func<Contact, bool> filterFunc = capturedFilter.Compile();
+
+            Assert.True(filterFunc(mockData[0])); // Case-insensitive exact match
+            Assert.False(filterFunc(mockData[1])); // Name mismatch
+            Assert.False(filterFunc(mockData[2])); // Hidden
+            Assert.False(filterFunc(mockData[3])); // Last name mismatch
+        }
+
+        [Fact]
+        public async Task FindContactsByNameAsyncWithFirstNameOnlyEvaluatesFilterCorrectly()
+        {
+            // Arrange
+            Guid id1 = Guid.NewGuid();
+            Guid id2 = Guid.NewGuid();
+
+            List<Contact> mockData =
+            [
+                new() { Id = id1, FirstName = "John", LastName = "Doe", IsHidden = false },
+                new() { Id = id2, FirstName = "John", LastName = null, IsHidden = false },
+                new() { Id = Guid.NewGuid(), FirstName = "Jane", IsHidden = false }
+            ];
+
+            Expression<Func<Contact, bool>>? capturedFilter = null;
+            RepositoryMock.Setup(r => r.ListProjectedAsync<Contact, ContactSelectItemDto>(
+                It.IsAny<Expression<Func<Contact, bool>>>(),
+                It.IsAny<Expression<Func<Contact, ContactSelectItemDto>>>(),
+                It.IsAny<CancellationToken>()))
+                .Callback<Expression<Func<Contact, bool>>, Expression<Func<Contact, ContactSelectItemDto>>, CancellationToken>(
+                    (filter, _, _) => capturedFilter = filter)
+                .ReturnsAsync([]);
+
+            // Act
+            await Service.FindContactsByNameAsync(" JOhN ", null);
+
+            // Assert
+            Assert.NotNull(capturedFilter);
+            Func<Contact, bool> filterFunc = capturedFilter.Compile();
+
+            Assert.True(filterFunc(mockData[0])); // First name matches, ignores last name requirement
+            Assert.True(filterFunc(mockData[1])); // First name matches, null last name is fine
+            Assert.False(filterFunc(mockData[2])); // Name mismatch
+        }
+
+        [Fact]
+        public async Task FindContactsByNameAsyncEvaluatesProjectionCorrectly()
+        {
+            // Arrange
+            Guid id1 = Guid.NewGuid();
+            Guid id2 = Guid.NewGuid();
+
+            List<Contact> mockData =
+            [
+                new() { Id = id1, FirstName = "John", LastName = "Doe", IsHidden = false },
+                new() { Id = id2, FirstName = "Jane", LastName = null, IsHidden = false }
+            ];
+
+            Expression<Func<Contact, ContactSelectItemDto>>? capturedProjection = null;
+            RepositoryMock.Setup(r => r.ListProjectedAsync<Contact, ContactSelectItemDto>(
+                It.IsAny<Expression<Func<Contact, bool>>>(),
+                It.IsAny<Expression<Func<Contact, ContactSelectItemDto>>>(),
+                It.IsAny<CancellationToken>()))
+                .Callback<Expression<Func<Contact, bool>>, Expression<Func<Contact, ContactSelectItemDto>>, CancellationToken>(
+                    (_, projection, _) => capturedProjection = projection)
+                .ReturnsAsync([]);
+
+            // Act
+            await Service.FindContactsByNameAsync("John", "Doe");
+
+            // Assert
+            Assert.NotNull(capturedProjection);
+            Func<Contact, ContactSelectItemDto> projectionFunc = capturedProjection.Compile();
+
+            ContactSelectItemDto result1 = projectionFunc(mockData[0]);
+            Assert.Equal(id1, result1.Id);
+            Assert.Equal("John Doe", result1.FullName);
+
+            ContactSelectItemDto result2 = projectionFunc(mockData[1]);
+            Assert.Equal(id2, result2.Id);
+            Assert.Equal("Jane", result2.FullName);
+        }
+
+        [Fact]
         public async Task GetContactNamesAsyncWhenExcludeDeceasedFiltersDeceasedContacts()
         {
             Guid livingId = Guid.NewGuid();
