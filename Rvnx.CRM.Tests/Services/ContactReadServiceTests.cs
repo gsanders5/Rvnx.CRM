@@ -1220,6 +1220,123 @@ public class ContactReadServiceTests
         }
     }
 
+    public class ContactReadServiceFindContactsByNameTests : ContactReadServiceTestBase
+    {
+        [Fact]
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Naming", "CA1707:Identifiers should not contain underscores", Justification = "Test names follow a standard convention")]
+        public async Task FindContactsByNameAsync_WhenCalled_MatchesFirstNameCaseInsensitive()
+        {
+            // Arrange
+            Expression<Func<Contact, bool>>? capturedFilter = null;
+            RepositoryMock.Setup(r => r.ListProjectedAsync<Contact, ContactSelectItemDto>(
+                It.IsAny<Expression<Func<Contact, bool>>>(),
+                It.IsAny<Expression<Func<Contact, ContactSelectItemDto>>>(),
+                It.IsAny<CancellationToken>()))
+                .Callback<Expression<Func<Contact, bool>>, Expression<Func<Contact, ContactSelectItemDto>>, CancellationToken>(
+                    (filter, _, _) => capturedFilter = filter)
+                .ReturnsAsync([]);
+
+            // Act
+            await Service.FindContactsByNameAsync("aLiCe", null);
+
+            // Assert
+            Assert.NotNull(capturedFilter);
+            Func<Contact, bool> filterFunc = capturedFilter.Compile();
+
+            Assert.True(filterFunc(new Contact { FirstName = "Alice", LastName = "Smith" }));
+            Assert.True(filterFunc(new Contact { FirstName = "alice", LastName = null }));
+            Assert.False(filterFunc(new Contact { FirstName = "Bob", LastName = "Smith" }));
+        }
+
+        [Fact]
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Naming", "CA1707:Identifiers should not contain underscores", Justification = "Test names follow a standard convention")]
+        public async Task FindContactsByNameAsync_WhenCalledWithLastName_MatchesFirstAndLastNameCaseInsensitive()
+        {
+            // Arrange
+            Expression<Func<Contact, bool>>? capturedFilter = null;
+            RepositoryMock.Setup(r => r.ListProjectedAsync<Contact, ContactSelectItemDto>(
+                It.IsAny<Expression<Func<Contact, bool>>>(),
+                It.IsAny<Expression<Func<Contact, ContactSelectItemDto>>>(),
+                It.IsAny<CancellationToken>()))
+                .Callback<Expression<Func<Contact, bool>>, Expression<Func<Contact, ContactSelectItemDto>>, CancellationToken>(
+                    (filter, _, _) => capturedFilter = filter)
+                .ReturnsAsync([]);
+
+            // Act
+            await Service.FindContactsByNameAsync("jOhN", "dOe");
+
+            // Assert
+            Assert.NotNull(capturedFilter);
+            Func<Contact, bool> filterFunc = capturedFilter.Compile();
+
+            Assert.True(filterFunc(new Contact { FirstName = "John", LastName = "Doe" }));
+            Assert.True(filterFunc(new Contact { FirstName = "john", LastName = "doe" }));
+            Assert.False(filterFunc(new Contact { FirstName = "John", LastName = "Smith" }));
+            Assert.False(filterFunc(new Contact { FirstName = "Alice", LastName = "Doe" }));
+            Assert.False(filterFunc(new Contact { FirstName = "John", LastName = null }));
+        }
+
+        [Fact]
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Naming", "CA1707:Identifiers should not contain underscores", Justification = "Test names follow a standard convention")]
+        public async Task FindContactsByNameAsync_WhenCalled_ExcludesHiddenContacts()
+        {
+            // Arrange
+            Expression<Func<Contact, bool>>? capturedFilter = null;
+            RepositoryMock.Setup(r => r.ListProjectedAsync<Contact, ContactSelectItemDto>(
+                It.IsAny<Expression<Func<Contact, bool>>>(),
+                It.IsAny<Expression<Func<Contact, ContactSelectItemDto>>>(),
+                It.IsAny<CancellationToken>()))
+                .Callback<Expression<Func<Contact, bool>>, Expression<Func<Contact, ContactSelectItemDto>>, CancellationToken>(
+                    (filter, _, _) => capturedFilter = filter)
+                .ReturnsAsync([]);
+
+            // Act
+            await Service.FindContactsByNameAsync("Bob", null);
+
+            // Assert
+            Assert.NotNull(capturedFilter);
+            Func<Contact, bool> filterFunc = capturedFilter.Compile();
+
+            Assert.False(filterFunc(new Contact { FirstName = "Bob", IsHidden = true }));
+            Assert.True(filterFunc(new Contact { FirstName = "Bob", IsHidden = false }));
+        }
+
+        [Fact]
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Naming", "CA1707:Identifiers should not contain underscores", Justification = "Test names follow a standard convention")]
+        public async Task FindContactsByNameAsync_WhenCalled_ProjectsDataCorrectly()
+        {
+            // Arrange
+            Expression<Func<Contact, ContactSelectItemDto>>? capturedProjection = null;
+            RepositoryMock.Setup(r => r.ListProjectedAsync<Contact, ContactSelectItemDto>(
+                It.IsAny<Expression<Func<Contact, bool>>>(),
+                It.IsAny<Expression<Func<Contact, ContactSelectItemDto>>>(),
+                It.IsAny<CancellationToken>()))
+                .Callback<Expression<Func<Contact, bool>>, Expression<Func<Contact, ContactSelectItemDto>>, CancellationToken>(
+                    (_, projection, _) => capturedProjection = projection)
+                .ReturnsAsync([]);
+
+            // Act
+            await Service.FindContactsByNameAsync("Alice", null);
+
+            // Assert
+            Assert.NotNull(capturedProjection);
+            Func<Contact, ContactSelectItemDto> projectionFunc = capturedProjection.Compile();
+
+            Guid id = Guid.NewGuid();
+            Contact contact1 = new() { Id = id, FirstName = "Alice", LastName = "Smith" };
+            Contact contact2 = new() { Id = id, FirstName = "Alice", LastName = null };
+
+            ContactSelectItemDto result1 = projectionFunc(contact1);
+            ContactSelectItemDto result2 = projectionFunc(contact2);
+
+            Assert.Equal(id, result1.Id);
+            Assert.Equal("Alice Smith", result1.FullName);
+
+            Assert.Equal(id, result2.Id);
+            Assert.Equal("Alice", result2.FullName);
+        }
+    }
+
     public class ContactReadServiceGetIntroducerCandidatesTests : ContactReadServiceTestBase
     {
         [Fact]
