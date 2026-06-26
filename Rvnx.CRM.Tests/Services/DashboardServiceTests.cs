@@ -513,4 +513,53 @@ public class DashboardServiceTests
         Assert.False(livingNode.IsDeceased);
         Assert.True(deceasedNode.IsDeceased);
     }
+
+    [Fact]
+    [SuppressMessage("Naming", "CA1707:Identifiers should not contain underscores",
+        Justification = "Test names can contain underscores for readability.")]
+    public async Task GetDashboardDataAsync_WithOpenTasks_IncludesVisibleTasksAndCalculatesOverdue()
+    {
+        // Arrange
+        Guid visibleContactId = Guid.NewGuid();
+        Guid hiddenContactId = Guid.NewGuid(); // no ContactSummary returned
+        Guid deceasedContactId = Guid.NewGuid(); // ContactSummary IsDeceased = true
+        DateTime now = DateTime.UtcNow;
+        DateOnly today = DateOnly.FromDateTime(DateTime.Today);
+
+        SetupContactSummaries([
+            new ContactSummary(visibleContactId, "Visible", "Contact", null, now, now, false),
+            new ContactSummary(deceasedContactId, "Deceased", "Contact", null, now, now, true)
+        ]);
+        SetupAttachments([]);
+        SetupSignificantDates([]);
+        SetupRelationships([]);
+
+        SetupOpenTasks([
+            (Guid.NewGuid(), visibleContactId, "Task for Visible", today.AddDays(1)),
+            (Guid.NewGuid(), hiddenContactId, "Task for Hidden", today.AddDays(2)),
+            (Guid.NewGuid(), deceasedContactId, "Task for Deceased", today.AddDays(3)),
+            (Guid.NewGuid(), visibleContactId, "Overdue Task", today.AddDays(-2))
+        ]);
+
+        _repositoryMock
+            .Setup(r => r.CountAsync<SignificantDate>(It.IsAny<Expression<Func<SignificantDate, bool>>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(0);
+        _repositoryMock
+            .Setup(r => r.CountAsync<Contact>(It.IsAny<Expression<Func<Contact, bool>>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(0);
+
+        // Act
+        DashboardDto result = await _service.GetDashboardDataAsync();
+
+        // Assert
+        Assert.NotNull(result.OpenTasks);
+        Assert.Equal(2, result.OpenTasks.Count); // Only visible tasks
+
+        // Tasks are sorted by DueDate
+        Assert.Equal("Overdue Task", result.OpenTasks[0].Title);
+        Assert.Equal(2, result.OpenTasks[0].DaysOverdue);
+
+        Assert.Equal("Task for Visible", result.OpenTasks[1].Title);
+        Assert.Equal(0, result.OpenTasks[1].DaysOverdue);
+    }
 }

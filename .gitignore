@@ -381,3 +381,4 @@ FodyWeavers.xsd
 /.playwright-mcp
 .mcp.json
 .claude/settings.json
+coveragereport/
