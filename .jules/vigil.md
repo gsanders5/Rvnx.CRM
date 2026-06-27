@@ -129,3 +129,6 @@
 ## 2024-06-09 - Repository Extension Methods and Mocking
 **Learning:** In Rvnx.CRM, `IRepository` extension methods like `ListProjectedByChunkedContainsAsync` have their own internal early-exit logic. Furthermore, Moq cannot mock extension methods directly.
 **Action:** When testing early-exits for methods that call `IRepository` extensions, verify the underlying repository interface method (e.g. `ListProjectedAsync`) that the extension method calls, rather than attempting to mock the extension method itself.
+## 2026-06-27 - [Testing Filtering Logic within Repository Extension Methods]
+**Learning:** Found that `FavoriteService.GetFavoriteSidebarItemsAsync` used `ListProjectedByChunkedContainsAsync` with a predicate to filter out hidden (`!c.IsHidden`) and deceased (`!c.IsDeceased`) contacts. This filter expression was entirely untested, meaning the logic could be altered or removed during a refactor without any test failing.
+**Action:** When a service method applies filtering logic via LINQ predicates or repository queries, explicitly capture and test the expression against various model states to ensure edge cases (e.g. hidden or deceased states) are properly handled and protected from regressions.
