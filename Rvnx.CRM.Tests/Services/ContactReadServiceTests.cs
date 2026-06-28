@@ -1516,4 +1516,87 @@ public class ContactReadServiceTests
             Assert.Null(result.IntroducedByContactName);
         }
     }
+
+    public class ContactReadServiceFindContactsByNameTests : ContactReadServiceTestBase
+    {
+        [Fact]
+        public async Task FindContactsByNameAsyncFirstAndLastNameFiltersCorrectly()
+        {
+            Expression<Func<Contact, bool>>? capturedFilter = null;
+            RepositoryMock.Setup(r => r.ListProjectedAsync<Contact, ContactSelectItemDto>(
+                It.IsAny<Expression<Func<Contact, bool>>>(),
+                It.IsAny<Expression<Func<Contact, ContactSelectItemDto>>>(),
+                It.IsAny<CancellationToken>()))
+                .Callback<Expression<Func<Contact, bool>>, Expression<Func<Contact, ContactSelectItemDto>>, CancellationToken>(
+                    (filter, _, _) => capturedFilter = filter)
+                .ReturnsAsync([]);
+
+            await Service.FindContactsByNameAsync("John", "Doe");
+
+            Assert.NotNull(capturedFilter);
+            Func<Contact, bool> filterFunc = capturedFilter.Compile();
+
+            // Match - Case insensitive
+            Assert.True(filterFunc(new Contact { Id = Guid.NewGuid(), FirstName = "john", LastName = "doe", IsHidden = false }));
+            Assert.True(filterFunc(new Contact { Id = Guid.NewGuid(), FirstName = "JOHN", LastName = "DOE", IsHidden = false }));
+
+            // No Match - Different name
+            Assert.False(filterFunc(new Contact { Id = Guid.NewGuid(), FirstName = "Jane", LastName = "Doe", IsHidden = false }));
+            Assert.False(filterFunc(new Contact { Id = Guid.NewGuid(), FirstName = "John", LastName = "Smith", IsHidden = false }));
+
+            // No Match - Hidden
+            Assert.False(filterFunc(new Contact { Id = Guid.NewGuid(), FirstName = "John", LastName = "Doe", IsHidden = true }));
+        }
+
+        [Fact]
+        public async Task FindContactsByNameAsyncOnlyFirstNameFiltersCorrectly()
+        {
+            Expression<Func<Contact, bool>>? capturedFilter = null;
+            RepositoryMock.Setup(r => r.ListProjectedAsync<Contact, ContactSelectItemDto>(
+                It.IsAny<Expression<Func<Contact, bool>>>(),
+                It.IsAny<Expression<Func<Contact, ContactSelectItemDto>>>(),
+                It.IsAny<CancellationToken>()))
+                .Callback<Expression<Func<Contact, bool>>, Expression<Func<Contact, ContactSelectItemDto>>, CancellationToken>(
+                    (filter, _, _) => capturedFilter = filter)
+                .ReturnsAsync([]);
+
+            await Service.FindContactsByNameAsync("John", null);
+
+            Assert.NotNull(capturedFilter);
+            Func<Contact, bool> filterFunc = capturedFilter.Compile();
+
+            // Match - Case insensitive, last name doesn't matter
+            Assert.True(filterFunc(new Contact { Id = Guid.NewGuid(), FirstName = "john", LastName = "doe", IsHidden = false }));
+            Assert.True(filterFunc(new Contact { Id = Guid.NewGuid(), FirstName = "JOHN", LastName = "smith", IsHidden = false }));
+            Assert.True(filterFunc(new Contact { Id = Guid.NewGuid(), FirstName = "John", LastName = null, IsHidden = false }));
+
+            // No Match - Different first name
+            Assert.False(filterFunc(new Contact { Id = Guid.NewGuid(), FirstName = "Jane", LastName = "Doe", IsHidden = false }));
+
+            // No Match - Hidden
+            Assert.False(filterFunc(new Contact { Id = Guid.NewGuid(), FirstName = "John", LastName = "Doe", IsHidden = true }));
+        }
+
+        [Fact]
+        public async Task FindContactsByNameAsyncEmptyLastNameFiltersCorrectly()
+        {
+            Expression<Func<Contact, bool>>? capturedFilter = null;
+            RepositoryMock.Setup(r => r.ListProjectedAsync<Contact, ContactSelectItemDto>(
+                It.IsAny<Expression<Func<Contact, bool>>>(),
+                It.IsAny<Expression<Func<Contact, ContactSelectItemDto>>>(),
+                It.IsAny<CancellationToken>()))
+                .Callback<Expression<Func<Contact, bool>>, Expression<Func<Contact, ContactSelectItemDto>>, CancellationToken>(
+                    (filter, _, _) => capturedFilter = filter)
+                .ReturnsAsync([]);
+
+            await Service.FindContactsByNameAsync("John", "   ");
+
+            Assert.NotNull(capturedFilter);
+            Func<Contact, bool> filterFunc = capturedFilter.Compile();
+
+            // Match - Case insensitive, empty string last name handled same as null
+            Assert.True(filterFunc(new Contact { Id = Guid.NewGuid(), FirstName = "john", LastName = "doe", IsHidden = false }));
+            Assert.True(filterFunc(new Contact { Id = Guid.NewGuid(), FirstName = "John", LastName = null, IsHidden = false }));
+        }
+    }
 }
