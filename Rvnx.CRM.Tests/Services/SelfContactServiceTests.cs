@@ -55,7 +55,6 @@ public class SelfContactServiceTests
         Guid selfContactId = Guid.NewGuid();
         _currentUserServiceMock.Setup(c => c.UserId).Returns(userId);
 
-        // GetById returns null
         _repositoryMock.Setup(r => r.GetByIdAsync<Rvnx.CRM.Core.Models.User>(userId, It.IsAny<CancellationToken>()))
             .ReturnsAsync((Rvnx.CRM.Core.Models.User?)null);
 
@@ -81,7 +80,6 @@ public class SelfContactServiceTests
         Guid userId = Guid.NewGuid();
         _currentUserServiceMock.Setup(c => c.UserId).Returns(userId);
 
-        // GetById returns null
         _repositoryMock.Setup(r => r.GetByIdAsync<Rvnx.CRM.Core.Models.User>(userId, It.IsAny<CancellationToken>()))
             .ReturnsAsync((Rvnx.CRM.Core.Models.User?)null);
 

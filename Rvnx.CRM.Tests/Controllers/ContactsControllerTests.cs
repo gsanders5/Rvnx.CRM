@@ -154,7 +154,6 @@ public class ContactsControllerTests
                 LastName = "User",
             };
 
-            // Simulate validation error
             _controller.ModelState.AddModelError("FirstName", "Required");
 
             IActionResult result = await _controller.Create(dto);
@@ -219,7 +218,6 @@ public class ContactsControllerTests
                 LastName = "User"
             };
 
-            // Simulate validation error
             _controller.ModelState.AddModelError("FirstName", "Required");
 
             _contactReadServiceMock.Setup(s => s.ContactExistsAsync(contactId)).ReturnsAsync(true);

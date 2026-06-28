@@ -92,7 +92,6 @@ public class RelationshipServiceTests
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Naming", "CA1707:Identifiers should not contain underscores", Justification = "Test names follow standard convention")]
     public void GetRelationshipTypeOptions_Symmetric_ReturnsOneOption()
     {
-        // (No arrange needed as we are using the statically populated list of relationship types)
 
         List<SelectOptionDto> result = _service.GetRelationshipTypeOptions();
 
@@ -109,7 +108,6 @@ public class RelationshipServiceTests
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Naming", "CA1707:Identifiers should not contain underscores", Justification = "Test names follow standard convention")]
     public void GetRelationshipTypeOptions_Asymmetric_ReturnsTwoOptions()
     {
-        // (No arrange needed as we are using the statically populated list of relationship types)
 
         List<SelectOptionDto> result = _service.GetRelationshipTypeOptions();
 
@@ -349,7 +347,6 @@ public class RelationshipServiceTests
         Guid cId = Guid.NewGuid();
         Guid typeId = RelationshipTypeIds.Colleague;
 
-        // Load the primary entity (source) and the directly-specified related entity (target)
         _repositoryMock.Setup(r => r.GetByIdAsync<Contact>(sourceId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new Contact { Id = sourceId, FirstName = "Jack" });
 
