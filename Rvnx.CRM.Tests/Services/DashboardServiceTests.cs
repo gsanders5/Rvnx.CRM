@@ -513,4 +513,85 @@ public class DashboardServiceTests
         Assert.False(livingNode.IsDeceased);
         Assert.True(deceasedNode.IsDeceased);
     }
+
+    [Fact]
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Naming", "CA1707:Identifiers should not contain underscores", Justification = "Test names can contain underscores")]
+    public async Task GetDashboardDataAsync_ProcessesOpenTasksCorrectly_CalculatesOverdueAndSorts()
+    {
+        Guid contactId = Guid.NewGuid();
+        DateTime now = DateTime.UtcNow;
+        DateOnly today = DateOnly.FromDateTime(DateTime.Today);
+
+        SetupContactSummaries([
+            new ContactSummary(contactId, "Task", "Master", null, now, now, false)
+        ]);
+
+        Guid overdueTaskId = Guid.NewGuid();
+        Guid futureTaskId = Guid.NewGuid();
+        Guid todayTaskId = Guid.NewGuid();
+
+        SetupOpenTasks([
+            (futureTaskId, contactId, "Future Task", today.AddDays(5)),
+            (overdueTaskId, contactId, "Overdue Task", today.AddDays(-2)),
+            (todayTaskId, contactId, "Today Task", today)
+        ]);
+
+        SetupAttachments([]);
+        SetupSignificantDates([]);
+        SetupRelationships([]);
+
+        DashboardDto result = await _service.GetDashboardDataAsync();
+
+        Assert.Equal(3, result.OpenTasks.Count);
+
+        // Tasks should be sorted by DueDate (Overdue, Today, Future)
+        Assert.Equal(overdueTaskId, result.OpenTasks[0].TaskId);
+        Assert.Equal(todayTaskId, result.OpenTasks[1].TaskId);
+        Assert.Equal(futureTaskId, result.OpenTasks[2].TaskId);
+
+        // Verify overdue calculation
+        Assert.Equal(2, result.OpenTasks[0].DaysOverdue);
+        Assert.True(result.OpenTasks[0].IsOverdue);
+
+        Assert.Equal(0, result.OpenTasks[1].DaysOverdue);
+        Assert.False(result.OpenTasks[1].IsOverdue);
+
+        Assert.Equal(0, result.OpenTasks[2].DaysOverdue);
+        Assert.False(result.OpenTasks[2].IsOverdue);
+
+        // Verify mapping
+        Assert.Equal("Task Master", result.OpenTasks[0].ContactName);
+        Assert.Equal("Overdue Task", result.OpenTasks[0].Title);
+    }
+
+    [Fact]
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Naming", "CA1707:Identifiers should not contain underscores", Justification = "Test names can contain underscores")]
+    public async Task GetDashboardDataAsync_ExcludesOpenTasksForDeceasedOrMissingContacts()
+    {
+        Guid livingId = Guid.NewGuid();
+        Guid deceasedId = Guid.NewGuid();
+        Guid missingId = Guid.NewGuid(); // Not in contact summaries (e.g. hidden)
+        DateTime now = DateTime.UtcNow;
+        DateOnly today = DateOnly.FromDateTime(DateTime.Today);
+
+        SetupContactSummaries([
+            new ContactSummary(livingId, "Alive", "Person", null, now, now, false),
+            new ContactSummary(deceasedId, "Late", "Person", null, now, now, true)
+        ]);
+
+        SetupOpenTasks([
+            (Guid.NewGuid(), livingId, "Valid Task", today),
+            (Guid.NewGuid(), deceasedId, "Deceased Task", today),
+            (Guid.NewGuid(), missingId, "Hidden Task", today)
+        ]);
+
+        SetupAttachments([]);
+        SetupSignificantDates([]);
+        SetupRelationships([]);
+
+        DashboardDto result = await _service.GetDashboardDataAsync();
+
+        Assert.Single(result.OpenTasks);
+        Assert.Equal(livingId, result.OpenTasks[0].ContactId);
+    }
 }
