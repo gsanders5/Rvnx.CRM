@@ -29,8 +29,7 @@ public class ActivitiesController(IActivityService activityService, IRepository 
     {
         if (ModelState.IsValid)
         {
-            IActionResult? handled = HandleOperationResult(await _activityService.CreateAsync(dto));
-            if (handled != null)
+            if (HandleOperationResult(await _activityService.CreateAsync(dto)) is { } handled)
             {
                 return handled;
             }
@@ -72,8 +71,7 @@ public class ActivitiesController(IActivityService activityService, IRepository 
 
         if (ModelState.IsValid)
         {
-            IActionResult? handled = HandleOperationResult(await _activityService.UpdateAsync(id, dto));
-            if (handled != null)
+            if (HandleOperationResult(await _activityService.UpdateAsync(id, dto)) is { } handled)
             {
                 return handled;
             }

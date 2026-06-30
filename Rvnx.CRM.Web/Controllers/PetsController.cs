@@ -29,8 +29,7 @@ public class PetsController(IPetService petService, IRepository repository, ICon
     {
         if (ModelState.IsValid)
         {
-            IActionResult? handled = HandleOperationResult(await _petService.CreateAsync(petDto));
-            if (handled != null)
+            if (HandleOperationResult(await _petService.CreateAsync(petDto)) is { } handled)
             {
                 return handled;
             }
@@ -63,8 +62,7 @@ public class PetsController(IPetService petService, IRepository repository, ICon
 
         if (ModelState.IsValid)
         {
-            IActionResult? handled = HandleOperationResult(await _petService.UpdateAsync(id, petDto));
-            if (handled != null)
+            if (HandleOperationResult(await _petService.UpdateAsync(id, petDto)) is { } handled)
             {
                 return handled;
             }
