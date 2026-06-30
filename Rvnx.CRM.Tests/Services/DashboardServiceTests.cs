@@ -513,4 +513,104 @@ public class DashboardServiceTests
         Assert.False(livingNode.IsDeceased);
         Assert.True(deceasedNode.IsDeceased);
     }
+
+    [Fact]
+    public async Task GetDashboardDataAsyncIncludesOpenTasksAndCalculatesOverdueCorrectly()
+    {
+        Guid normalId = Guid.NewGuid();
+        DateTime now = DateTime.UtcNow;
+
+        SetupContactSummaries([new ContactSummary(normalId, "Normal", "Contact", null, now, now, false)]);
+        SetupAttachments([]);
+        SetupSignificantDates([]);
+        SetupRelationships([]);
+
+        DateOnly today = DateOnly.FromDateTime(DateTime.Today);
+        SetupOpenTasks([
+            (Guid.NewGuid(), normalId, "Overdue Task", today.AddDays(-3)),
+            (Guid.NewGuid(), normalId, "Future Task", today.AddDays(5))
+        ]);
+
+        DashboardDto result = await _service.GetDashboardDataAsync();
+
+        Assert.Equal(2, result.OpenTasks.Count);
+        Assert.Equal("Overdue Task", result.OpenTasks[0].Title); // Sorted by DueDate ascending
+        Assert.Equal(3, result.OpenTasks[0].DaysOverdue);
+        Assert.True(result.OpenTasks[0].IsOverdue);
+
+        Assert.Equal("Future Task", result.OpenTasks[1].Title);
+        Assert.Equal(0, result.OpenTasks[1].DaysOverdue);
+        Assert.False(result.OpenTasks[1].IsOverdue);
+    }
+
+    [Fact]
+    public async Task GetDashboardDataAsyncExcludesOpenTasksForDeceasedOrHiddenContacts()
+    {
+        Guid livingId = Guid.NewGuid();
+        Guid deceasedId = Guid.NewGuid();
+        Guid hiddenId = Guid.NewGuid();
+        DateTime now = DateTime.UtcNow;
+
+        SetupContactSummaries([
+            new ContactSummary(livingId, "Alive", "Person", null, now, now, false),
+            new ContactSummary(deceasedId, "Late", "Person", null, now, now, true)
+        ]);
+        SetupAttachments([]);
+        SetupSignificantDates([]);
+        SetupRelationships([]);
+
+        DateOnly today = DateOnly.FromDateTime(DateTime.Today);
+        SetupOpenTasks([
+            (Guid.NewGuid(), livingId, "Living Task", today),
+            (Guid.NewGuid(), deceasedId, "Deceased Task", today),
+            (Guid.NewGuid(), hiddenId, "Hidden Task", today)
+        ]);
+
+        DashboardDto result = await _service.GetDashboardDataAsync();
+
+        Assert.Single(result.OpenTasks);
+        Assert.Equal("Living Task", result.OpenTasks[0].Title);
+    }
+
+    [Fact]
+    public async Task GetDashboardDataAsyncRequestsCorrectOpenTasksFromRepository()
+    {
+        Guid normalId = Guid.NewGuid();
+        DateTime now = DateTime.UtcNow;
+
+        SetupContactSummaries([new ContactSummary(normalId, "Normal", "Contact", null, now, now, false)]);
+        SetupAttachments([]);
+        SetupSignificantDates([]);
+        SetupRelationships([]);
+
+        Expression<Func<ContactTask, bool>>? capturedPredicate = null;
+
+        _repositoryMock
+            .Setup(r => r.ListProjectedAsync<ContactTask, (Guid, Guid?, string, DateOnly)>(
+                It.IsAny<Expression<Func<ContactTask, bool>>>(),
+                It.IsAny<Expression<Func<ContactTask, (Guid, Guid?, string, DateOnly)>>>(),
+                It.IsAny<CancellationToken>()))
+            .Callback<Expression<Func<ContactTask, bool>>, Expression<Func<ContactTask, (Guid, Guid?, string, DateOnly)>>, CancellationToken>(
+                (predicate, _, _) => capturedPredicate = predicate)
+            .ReturnsAsync([]);
+
+        await _service.GetDashboardDataAsync();
+
+        Assert.NotNull(capturedPredicate);
+        Func<ContactTask, bool> compiledPredicate = capturedPredicate.Compile();
+
+        DateOnly today = DateOnly.FromDateTime(DateTime.Today);
+
+        // Valid task
+        Assert.True(compiledPredicate(new ContactTask { IsCompleted = false, ContactId = normalId, DueDate = today.AddDays(5) }));
+
+        // Invalid: Completed
+        Assert.False(compiledPredicate(new ContactTask { IsCompleted = true, ContactId = normalId, DueDate = today.AddDays(5) }));
+
+        // Invalid: No ContactId
+        Assert.False(compiledPredicate(new ContactTask { IsCompleted = false, ContactId = null, DueDate = today.AddDays(5) }));
+
+        // Invalid: Past lookahead limit (14 days)
+        Assert.False(compiledPredicate(new ContactTask { IsCompleted = false, ContactId = normalId, DueDate = today.AddDays(15) }));
+    }
 }
