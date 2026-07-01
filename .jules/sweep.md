@@ -31,3 +31,6 @@
 ## 2024-05-23 - C# Tuple Deconstruction Code Review Error
 **Learning:** The code review tool flagged tuple deconstruction (`foreach ((Guid id, Guid relatedId) in list)`) as a compilation error when iterating over a `List<(Guid, Guid)>`. This was a hallucination, as `dotnet build` and `dotnet test` passed without issue.
 **Action:** Always trust successful `dotnet build` and `dotnet test` results over the reviewer claims of basic C# compilation failures.
+## 2026-07-01 - Collapse null-checks with C# 8 property pattern
+**Learning:** In Rvnx.CRM.Web controllers, when conditionally returning the nullable result of `HandleOperationResult`, use C# 8 property pattern matching (e.g., `if (HandleOperationResult(await ...) is { } handled) { return handled; }`) to collapse the variable assignment and null-check into a single concise expression.
+**Action:** Use this pattern to improve code clarity and reduce boilerplate when handling nullable operation results.
