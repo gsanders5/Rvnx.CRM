@@ -31,3 +31,4 @@
 ## 2024-05-23 - C# Tuple Deconstruction Code Review Error
 **Learning:** The code review tool flagged tuple deconstruction (`foreach ((Guid id, Guid relatedId) in list)`) as a compilation error when iterating over a `List<(Guid, Guid)>`. This was a hallucination, as `dotnet build` and `dotnet test` passed without issue.
 **Action:** Always trust successful `dotnet build` and `dotnet test` results over the reviewer claims of basic C# compilation failures.
+## 2024-05-15 - Simplify HandleOperationResult pattern matching **Learning:** In Web controllers, returning the nullable result of `HandleOperationResult` can be collapsed via C# 8 property pattern matching `if (HandleOperationResult(...) is { } handled) { return handled; }` to eliminate the extra variable assignment and explicit null check. **Action:** Prefer property pattern matching for nullable returns in MVC controllers when the return type isn't used further.

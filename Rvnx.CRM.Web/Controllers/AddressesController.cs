@@ -22,8 +22,7 @@ public class AddressesController(IAddressService addressService, IRepository rep
     {
         if (ModelState.IsValid)
         {
-            IActionResult? handled = HandleOperationResult(await _addressService.CreateAsync(dto));
-            if (handled != null)
+            if (HandleOperationResult(await _addressService.CreateAsync(dto)) is { } handled)
             {
                 return handled;
             }
@@ -49,8 +48,7 @@ public class AddressesController(IAddressService addressService, IRepository rep
 
         if (ModelState.IsValid)
         {
-            IActionResult? handled = HandleOperationResult(await _addressService.UpdateAsync(id, dto));
-            if (handled != null)
+            if (HandleOperationResult(await _addressService.UpdateAsync(id, dto)) is { } handled)
             {
                 return handled;
             }
