@@ -23,8 +23,7 @@ public class ContactMethodsController(IContactMethodService contactMethodService
     {
         if (ModelState.IsValid)
         {
-            IActionResult? handled = HandleOperationResult(await _contactMethodService.CreateAsync(contactInfoInput));
-            if (handled != null)
+            if (HandleOperationResult(await _contactMethodService.CreateAsync(contactInfoInput)) is { } handled)
             {
                 return handled;
             }
@@ -55,8 +54,7 @@ public class ContactMethodsController(IContactMethodService contactMethodService
 
         if (ModelState.IsValid)
         {
-            IActionResult? handled = HandleOperationResult(await _contactMethodService.UpdateAsync(id, contactInfoInput));
-            if (handled != null)
+            if (HandleOperationResult(await _contactMethodService.UpdateAsync(id, contactInfoInput)) is { } handled)
             {
                 return handled;
             }
