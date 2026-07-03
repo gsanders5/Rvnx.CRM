@@ -140,9 +140,22 @@ public class ContactExportService(IRepository repository, IVCardService vCardSer
         List<T> rows = await _repository.ListByChunkedContainsAsync(
             contactIds, predicateBuilder, asNoTracking: true, cancellationToken, includes);
 
-        return rows
-            .GroupBy(keySelector)
-            .ToDictionary(g => g.Key, g => g.ToList());
+        // Optimization: Pre-allocate the dictionary and manually populate it in a single loop
+        // to avoid allocating intermediate IGrouping structures and redundant list iterations.
+        // Impact: Reduces GC pressure and memory allocations when grouping large lists of related entities during bulk VCard exports.
+        Dictionary<Guid, List<T>> dict = new(contactIds.Count);
+        foreach (T row in rows)
+        {
+            Guid key = keySelector(row);
+            if (!dict.TryGetValue(key, out List<T>? list))
+            {
+                list = [];
+                dict[key] = list;
+            }
+            list.Add(row);
+        }
+
+        return dict;
     }
 
     private static string BuildUniqueEntryName(Contact contact, HashSet<string> usedNames)
