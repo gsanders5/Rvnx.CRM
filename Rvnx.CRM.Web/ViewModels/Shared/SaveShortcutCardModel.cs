@@ -1,8 +1,6 @@
-// CA1716: "Shared" is a VB reserved keyword, but the namespace intentionally mirrors
-// the conventional Views/Shared folder; VB consumers are not a concern for this web app.
-#pragma warning disable CA1716
+[assembly: System.Diagnostics.CodeAnalysis.SuppressMessage("Naming", "CA1716:Identifiers should not match keywords", Justification = "\"Shared\" is a VB reserved keyword, but the namespace intentionally mirrors the conventional Views/Shared folder; VB consumers are not a concern for this web app.", Scope = "namespace", Target = "~N:Rvnx.CRM.Web.ViewModels.Shared")]
+
 namespace Rvnx.CRM.Web.ViewModels.Shared;
-#pragma warning restore CA1716
 
 /// <summary>
 /// Drives Views/Shared/_SaveShortcutCard.cshtml: the side-column card with a
