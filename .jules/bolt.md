@@ -139,3 +139,7 @@ Action: When a service builds a read-only in-memory aggregate (graph nodes, rece
 ## 2026-04-18 - Optimize LINQ chaining when creating collections
 **Learning:** Chaining LINQ methods such as `.Where().ToHashSet()` or `.Select().ToHashSet()` when creating HashSets introduces significant overhead in hot paths due to the allocation of iterator state machines, execution of multiple enumeration passes, and the inability to specify an initial capacity, which leads to dynamic array resizing. Furthermore, using `Enumerable.Concat` creates additional iterators and closures.
 **Action:** When creating new collections in performance-sensitive areas (e.g., `RelationshipSuggestionService`), pre-allocate the target collection (e.g., `new HashSet<T>(capacity)` or `new Dictionary<K, V>(capacity)`) and manually populate it via a single `foreach` loop. Use C# 12 collection expressions (`[.. col1, .. col2]`) instead of `.Concat` for cleaner and more efficient concatenation.
+
+## 2026-04-19 - GroupBy Overhead in ContactExportService
+**Learning:** Creating a `Dictionary<K, List<V>>` using `.GroupBy(key).ToDictionary(...)` introduces unnecessary overhead due to the instantiation of intermediate `IGrouping` structures and redundant iterations when exporting contacts.
+**Action:** Pre-allocate a `Dictionary` and populate it manually using a single-pass `foreach` loop and `.TryGetValue()` to avoid `GroupBy` allocations entirely.
