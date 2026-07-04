@@ -38,7 +38,7 @@
                     <div class="crm-card-body text-center">
                         @if (Model.SecondaryContact?.ProfileImageId.HasValue == true)
                         {
-                            <img src="@Url.Action("View", "Attachments", new { id = Model.SecondaryContact.ProfileImageId })" class="img-fluid rounded-circle mb-3" style="width: 150px; height: 150px; object-fit: cover;" alt="Profile Photo" />
+                            <img src="@Url.Action("View", "Attachments", new { id = Model.SecondaryContact.ProfileImageId })" class="img-fluid rounded-circle mb-3" style="width: 150px; height: 150px; object-fit: cover;" alt="Profile photo of @Model.SecondaryContact.FullName" />
                         }
                         else
                         {
@@ -78,7 +78,7 @@
                     <div class="crm-card-body text-center">
                         @if (Model.PrimaryContact?.ProfileImageId.HasValue == true)
                         {
-                            <img src="@Url.Action("View", "Attachments", new { id = Model.PrimaryContact.ProfileImageId })" class="img-fluid rounded-circle mb-3" style="width: 150px; height: 150px; object-fit: cover;" alt="Profile Photo" />
+                            <img src="@Url.Action("View", "Attachments", new { id = Model.PrimaryContact.ProfileImageId })" class="img-fluid rounded-circle mb-3" style="width: 150px; height: 150px; object-fit: cover;" alt="Profile photo of @Model.PrimaryContact.FullName" />
                         }
                         else
                         {
