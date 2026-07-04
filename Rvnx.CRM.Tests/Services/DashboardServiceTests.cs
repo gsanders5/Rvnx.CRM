@@ -513,4 +513,42 @@ public class DashboardServiceTests
         Assert.False(livingNode.IsDeceased);
         Assert.True(deceasedNode.IsDeceased);
     }
+
+    [Fact]
+    [SuppressMessage("Naming", "CA1707:Identifiers should not contain underscores", Justification = "Test names can contain underscores for readability.")]
+    public async Task GetDashboardDataAsync_ExcludesHiddenAndPartialContacts_EvaluatesFilterCorrectly()
+    {
+        // Arrange
+        List<Contact> dbContacts = [
+            new Contact { Id = Guid.NewGuid(), FirstName = "Normal", IsHidden = false, IsPartial = false },
+            new Contact { Id = Guid.NewGuid(), FirstName = "Hidden", IsHidden = true, IsPartial = false },
+            new Contact { Id = Guid.NewGuid(), FirstName = "Partial", IsHidden = false, IsPartial = true }
+        ];
+
+        Expression<Func<Contact, bool>>? capturedFilter = null;
+
+        _repositoryMock.Setup(r => r.ListProjectedAsync(
+            It.IsAny<Expression<Func<Contact, bool>>>(),
+            It.IsAny<Expression<Func<Contact, ContactSummary>>>(),
+            It.IsAny<CancellationToken>()))
+            .Callback<Expression<Func<Contact, bool>>, Expression<Func<Contact, ContactSummary>>, CancellationToken>(
+                (filter, projection, ct) => capturedFilter = filter)
+            .ReturnsAsync([]);
+
+        // Setup others to avoid null ref exceptions
+        _repositoryMock.Setup(r => r.ListAsNoTrackingAsync<SignificantDate>(It.IsAny<Expression<Func<SignificantDate, bool>>>(), It.IsAny<CancellationToken>(), It.IsAny<string[]>())).ReturnsAsync([]);
+        _repositoryMock.Setup(r => r.ListProjectedAsync(It.IsAny<Expression<Func<Relationship, bool>>>(), It.IsAny<Expression<Func<Relationship, (Guid ContactId, Guid RelatedContactId)>>>(), It.IsAny<CancellationToken>())).ReturnsAsync([]);
+        _repositoryMock.Setup(r => r.ListProjectedAsync(It.IsAny<Expression<Func<ContactTask, bool>>>(), It.IsAny<Expression<Func<ContactTask, (Guid, Guid?, string, DateOnly)>>>(), It.IsAny<CancellationToken>())).ReturnsAsync([]);
+
+        // Act
+        await _service.GetDashboardDataAsync();
+
+        // Assert
+        Assert.NotNull(capturedFilter);
+        Func<Contact, bool> filterFunc = capturedFilter.Compile();
+
+        Assert.True(filterFunc(dbContacts[0])); // Normal contact is included
+        Assert.False(filterFunc(dbContacts[1])); // Hidden contact is excluded
+        Assert.False(filterFunc(dbContacts[2])); // Partial contact is excluded
+    }
 }
