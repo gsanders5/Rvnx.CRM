@@ -129,3 +129,7 @@
 ## 2024-06-09 - Repository Extension Methods and Mocking
 **Learning:** In Rvnx.CRM, `IRepository` extension methods like `ListProjectedByChunkedContainsAsync` have their own internal early-exit logic. Furthermore, Moq cannot mock extension methods directly.
 **Action:** When testing early-exits for methods that call `IRepository` extensions, verify the underlying repository interface method (e.g. `ListProjectedAsync`) that the extension method calls, rather than attempting to mock the extension method itself.
+
+## 2026-07-04 - Mocking IRepository.ListProjectedAsync directly masks untestable lambda expressions
+**Learning:** In C# test projects using Moq, relying solely on explicit `ReturnsAsync` for complex mock repository setups (e.g. `ListProjectedAsync`, `CountAsync`) causes the test suite to bypass and mask untested filtering, sorting, or calculation logic in the actual lambda expressions passed to the repository. The test asserts that the result matches the mock output, but it doesn't actually test if the query condition was correct.
+**Action:** To explicitly unit test the filtering logic of EF Core query expressions passed to repository projections (e.g., `ListProjectedAsync`), capture the expression parameter via Moq's `.Callback()`, call `.Compile()` on the expression, and assert its behavior directly against individual in-memory instances representing varied state.

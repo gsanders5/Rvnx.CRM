@@ -297,4 +297,53 @@ public class FavoriteServiceTests
         Assert.Equal("Zebra", result[2].FirstName);
         Assert.Equal("Zoo", result[2].LastName);
     }
+
+    [Fact]
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Naming", "CA1707:Identifiers should not contain underscores", Justification = "Test names follow a standard convention")]
+    public async Task GetFavoriteSidebarItemsAsync_FiltersOutHiddenAndDeceasedContacts()
+    {
+        // Arrange
+        Guid userId = Guid.NewGuid();
+        _currentUserServiceMock.Setup(x => x.UserId).Returns(userId);
+
+        Guid normalContactId = Guid.NewGuid();
+        Guid hiddenContactId = Guid.NewGuid();
+        Guid deceasedContactId = Guid.NewGuid();
+        List<Guid> favoriteIds = [normalContactId, hiddenContactId, deceasedContactId];
+
+        _repositoryMock.Setup(x => x.ListProjectedAsync(
+            It.IsAny<Expression<Func<ContactFavorite, bool>>>(),
+            It.IsAny<Expression<Func<ContactFavorite, Guid>>>(),
+            It.IsAny<CancellationToken>()))
+            .ReturnsAsync(favoriteIds);
+
+        List<Contact> dbContacts = [
+            new Contact { Id = normalContactId, FirstName = "Normal", IsHidden = false, IsDeceased = false },
+            new Contact { Id = hiddenContactId, FirstName = "Hidden", IsHidden = true, IsDeceased = false },
+            new Contact { Id = deceasedContactId, FirstName = "Deceased", IsHidden = false, IsDeceased = true }
+        ];
+
+        // The method uses ListProjectedByChunkedContainsAsync, which calls ListProjectedAsync under the hood.
+        // We intercept the expression to evaluate it directly.
+        Expression<Func<Contact, bool>>? capturedFilter = null;
+
+        _repositoryMock.Setup(x => x.ListProjectedAsync(
+            It.IsAny<Expression<Func<Contact, bool>>>(),
+            It.IsAny<Expression<Func<Contact, FavoriteSidebarItemDto>>>(),
+            It.IsAny<CancellationToken>()))
+            .Callback<Expression<Func<Contact, bool>>, Expression<Func<Contact, FavoriteSidebarItemDto>>, CancellationToken>(
+                (filter, projection, ct) => capturedFilter = filter)
+            .ReturnsAsync([]);
+
+        // Act
+        await _service.GetFavoriteSidebarItemsAsync();
+
+        // Assert
+        Assert.NotNull(capturedFilter);
+        Func<Contact, bool> filterFunc = capturedFilter.Compile();
+
+        Assert.True(filterFunc(dbContacts[0])); // Normal contact is included
+        Assert.False(filterFunc(dbContacts[1])); // Hidden contact is excluded
+        Assert.False(filterFunc(dbContacts[2])); // Deceased contact is excluded
+    }
 }
