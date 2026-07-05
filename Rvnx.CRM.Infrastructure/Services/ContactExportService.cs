@@ -140,9 +140,20 @@ public class ContactExportService(IRepository repository, IVCardService vCardSer
         List<T> rows = await _repository.ListByChunkedContainsAsync(
             contactIds, predicateBuilder, asNoTracking: true, cancellationToken, includes);
 
-        return rows
-            .GroupBy(keySelector)
-            .ToDictionary(g => g.Key, g => g.ToList());
+        // Optimization: Pre-allocate Dictionary and populate via foreach to avoid GroupBy and IGrouping overhead, reducing CPU and memory allocations
+        Dictionary<Guid, List<T>> result = new(contactIds.Count);
+        foreach (T row in rows)
+        {
+            Guid key = keySelector(row);
+            if (!result.TryGetValue(key, out List<T>? list))
+            {
+                list = [];
+                result.Add(key, list);
+            }
+            list.Add(row);
+        }
+
+        return result;
     }
 
     private static string BuildUniqueEntryName(Contact contact, HashSet<string> usedNames)
