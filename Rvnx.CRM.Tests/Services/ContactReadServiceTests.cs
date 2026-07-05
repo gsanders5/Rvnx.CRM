@@ -1318,6 +1318,88 @@ public class ContactReadServiceTests
         }
     }
 
+    public class ContactReadServiceFindContactsByNameTests : ContactReadServiceTestBase
+    {
+        [Fact]
+        public async Task FindContactsByNameAsyncEvaluatesCaseInsensitiveMatchingAndOptionalLastNameCorrectly()
+        {
+            Expression<Func<Contact, bool>>? capturedFilter = null;
+            Expression<Func<Contact, ContactSelectItemDto>>? capturedProjection = null;
+
+            RepositoryMock.Setup(r => r.ListProjectedAsync<Contact, ContactSelectItemDto>(
+                It.IsAny<Expression<Func<Contact, bool>>>(),
+                It.IsAny<Expression<Func<Contact, ContactSelectItemDto>>>(),
+                It.IsAny<CancellationToken>()))
+                .Callback<Expression<Func<Contact, bool>>, Expression<Func<Contact, ContactSelectItemDto>>, CancellationToken>(
+                    (filter, projection, ct) =>
+                    {
+                        capturedFilter = filter;
+                        capturedProjection = projection;
+                    })
+                .ReturnsAsync([]);
+
+            await Service.FindContactsByNameAsync("  JOHn  ", "  sMiTh ");
+
+            Assert.NotNull(capturedFilter);
+            Assert.NotNull(capturedProjection);
+
+            Func<Contact, bool> filterFunc = capturedFilter.Compile();
+            Func<Contact, ContactSelectItemDto> projectionFunc = capturedProjection.Compile();
+
+            // Validate the filter works with case-insensitive matching
+            Assert.True(filterFunc(new Contact { FirstName = "John", LastName = "Smith", IsHidden = false }));
+            Assert.True(filterFunc(new Contact { FirstName = "john", LastName = "smith", IsHidden = false }));
+            Assert.True(filterFunc(new Contact { FirstName = "JOHN", LastName = "SMITH", IsHidden = false }));
+
+            // Validate hidden contacts are excluded
+            Assert.False(filterFunc(new Contact { FirstName = "John", LastName = "Smith", IsHidden = true }));
+
+            // Validate non-matching cases
+            Assert.False(filterFunc(new Contact { FirstName = "Jane", LastName = "Smith", IsHidden = false }));
+            Assert.False(filterFunc(new Contact { FirstName = "John", LastName = "Doe", IsHidden = false }));
+
+            // Validate projection logic (FullName concatenation)
+            ContactSelectItemDto result = projectionFunc(new Contact { Id = Guid.Empty, FirstName = "John", LastName = "Smith" });
+            Assert.Equal("John Smith", result.FullName);
+        }
+
+        [Fact]
+        public async Task FindContactsByNameAsyncEvaluatesNullLastNameCorrectly()
+        {
+            Expression<Func<Contact, bool>>? capturedFilter = null;
+            Expression<Func<Contact, ContactSelectItemDto>>? capturedProjection = null;
+
+            RepositoryMock.Setup(r => r.ListProjectedAsync<Contact, ContactSelectItemDto>(
+                It.IsAny<Expression<Func<Contact, bool>>>(),
+                It.IsAny<Expression<Func<Contact, ContactSelectItemDto>>>(),
+                It.IsAny<CancellationToken>()))
+                .Callback<Expression<Func<Contact, bool>>, Expression<Func<Contact, ContactSelectItemDto>>, CancellationToken>(
+                    (filter, projection, ct) =>
+                    {
+                        capturedFilter = filter;
+                        capturedProjection = projection;
+                    })
+                .ReturnsAsync([]);
+
+            // Act - No last name provided
+            await Service.FindContactsByNameAsync("John", null);
+
+            Assert.NotNull(capturedFilter);
+            Assert.NotNull(capturedProjection);
+
+            Func<Contact, bool> filterFunc = capturedFilter.Compile();
+            Func<Contact, ContactSelectItemDto> projectionFunc = capturedProjection.Compile();
+
+            // Validate the filter works when lastName is optional (null)
+            Assert.True(filterFunc(new Contact { FirstName = "John", LastName = "Smith", IsHidden = false }));
+            Assert.True(filterFunc(new Contact { FirstName = "John", LastName = null, IsHidden = false }));
+
+            // Validate projection logic handles null coalescence correctly
+            ContactSelectItemDto result = projectionFunc(new Contact { Id = Guid.Empty, FirstName = "John", LastName = null });
+            Assert.Equal("John", result.FullName);
+        }
+    }
+
     public class ContactReadServiceHowWeMetTests : ContactReadServiceTestBase
     {
         [Fact]

@@ -129,3 +129,7 @@
 ## 2024-06-09 - Repository Extension Methods and Mocking
 **Learning:** In Rvnx.CRM, `IRepository` extension methods like `ListProjectedByChunkedContainsAsync` have their own internal early-exit logic. Furthermore, Moq cannot mock extension methods directly.
 **Action:** When testing early-exits for methods that call `IRepository` extensions, verify the underlying repository interface method (e.g. `ListProjectedAsync`) that the extension method calls, rather than attempting to mock the extension method itself.
+
+## 2024-12-16 - Testing LINQ Expressions with ToLower() and Optional Parameters
+**Learning:** When a repository method accepts an expression with parameterless `.ToLower()` (which EF translates to SQL `lower()`) or conditional optional parameter checks, relying on mock data returned from `ListProjectedAsync` doesn't test the actual filter logic since the mock bypasses execution of the expression. The expression must be captured via Moq's `.Callback()`, compiled, and explicitly evaluated against in-memory models with varied case and nullability.
+**Action:** Always capture and compile expression parameters passed to repository mocks to verify case-insensitive matching logic, ensure null database fields don't throw, and guarantee that optional query parameters are correctly handled.
