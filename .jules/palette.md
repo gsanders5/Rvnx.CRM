@@ -13,3 +13,6 @@
 ## 2026-04-16 - Accessible Pinned Contact Links
 **Learning:** Anchor tags containing decorative images (like avatars with `alt=""`) and no text content can be unlabelled for screen readers, even if a `title` attribute is present.
 **Action:** Always ensure that links containing only decorative images have an explicit `aria-label` attribute describing their destination or action.
+## 2026-04-18 - Accessible Profile Photos in Comparison Contexts
+**Learning:** In ASP.NET Core Razor views, when displaying profile images in comparison or side-by-side contexts (e.g., merge screens), using hardcoded generic `alt` text like "Profile Photo" prevents screen reader users from distinguishing between the entities being compared.
+**Action:** Always use dynamic, context-specific `alt` text (e.g., `alt="Profile photo of @Model.Contact.FullName"`) for profile images to allow screen reader users to distinguish between entities in comparison views.
