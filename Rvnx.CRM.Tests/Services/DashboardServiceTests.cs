@@ -513,4 +513,78 @@ public class DashboardServiceTests
         Assert.False(livingNode.IsDeceased);
         Assert.True(deceasedNode.IsDeceased);
     }
+
+    [Fact]
+    public async Task GetDashboardDataAsyncIncludesOpenTasksForValidContacts()
+    {
+        Guid contactId = Guid.NewGuid();
+        Guid taskId = Guid.NewGuid();
+        DateTime now = DateTime.UtcNow;
+
+        SetupContactSummaries([new ContactSummary(contactId, "Normal", "Contact", null, now, now, false)]);
+        SetupAttachments([]);
+        SetupSignificantDates([]);
+        SetupRelationships([]);
+
+        // Overdue by 2 days
+        DateOnly today = DateOnly.FromDateTime(DateTime.Today);
+        DateOnly dueDate = today.AddDays(-2);
+
+        SetupOpenTasks([(taskId, contactId, "Test Task", dueDate)]);
+
+        DashboardDto result = await _service.GetDashboardDataAsync();
+
+        Assert.Single(result.OpenTasks);
+        Assert.Equal(taskId, result.OpenTasks[0].TaskId);
+        Assert.Equal(contactId, result.OpenTasks[0].ContactId);
+        Assert.Equal("Normal Contact", result.OpenTasks[0].ContactName);
+        Assert.Equal("Test Task", result.OpenTasks[0].Title);
+        Assert.Equal(dueDate, result.OpenTasks[0].DueDate);
+        Assert.Equal(2, result.OpenTasks[0].DaysOverdue);
+    }
+
+    [Fact]
+    public async Task GetDashboardDataAsyncExcludesOpenTasksForMissingContacts()
+    {
+        Guid hiddenContactId = Guid.NewGuid();
+        Guid taskId = Guid.NewGuid();
+
+        // No contact summaries returned (simulating a hidden or partial contact that got filtered out)
+        SetupContactSummaries([]);
+        SetupAttachments([]);
+        SetupSignificantDates([]);
+        SetupRelationships([]);
+
+        DateOnly today = DateOnly.FromDateTime(DateTime.Today);
+        DateOnly dueDate = today.AddDays(5);
+
+        SetupOpenTasks([(taskId, hiddenContactId, "Task for Hidden Contact", dueDate)]);
+
+        DashboardDto result = await _service.GetDashboardDataAsync();
+
+        Assert.Empty(result.OpenTasks);
+    }
+
+    [Fact]
+    public async Task GetDashboardDataAsyncExcludesOpenTasksForDeceasedContacts()
+    {
+        Guid deceasedContactId = Guid.NewGuid();
+        Guid taskId = Guid.NewGuid();
+        DateTime now = DateTime.UtcNow;
+
+        // Contact is deceased
+        SetupContactSummaries([new ContactSummary(deceasedContactId, "Deceased", "Contact", null, now, now, true)]);
+        SetupAttachments([]);
+        SetupSignificantDates([]);
+        SetupRelationships([]);
+
+        DateOnly today = DateOnly.FromDateTime(DateTime.Today);
+        DateOnly dueDate = today.AddDays(5);
+
+        SetupOpenTasks([(taskId, deceasedContactId, "Task for Deceased Contact", dueDate)]);
+
+        DashboardDto result = await _service.GetDashboardDataAsync();
+
+        Assert.Empty(result.OpenTasks);
+    }
 }
