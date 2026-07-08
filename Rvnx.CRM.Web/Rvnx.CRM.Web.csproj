@@ -21,7 +21,7 @@
 
 	<ItemGroup>
 		<PackageReference Include="File.TypeChecker.Web" Version="2.0.0" />
-		<PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.15">
+		<PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.17">
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
