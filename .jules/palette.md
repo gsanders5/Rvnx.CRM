@@ -13,3 +13,6 @@
 ## 2026-04-16 - Accessible Pinned Contact Links
 **Learning:** Anchor tags containing decorative images (like avatars with `alt=""`) and no text content can be unlabelled for screen readers, even if a `title` attribute is present.
 **Action:** Always ensure that links containing only decorative images have an explicit `aria-label` attribute describing their destination or action.
+## 2026-04-16 - Context-Specific Alt Text in Comparisons
+**Learning:** Hardcoding generic `alt` text like "Profile Photo" in comparison views (like merging contacts) makes it difficult for screen reader users to distinguish between the entities being compared when navigating by images.
+**Action:** Always use dynamic, descriptive `alt` text (e.g., `alt="Profile photo of @Model.Contact.FullName"`) when displaying profile images, especially in contexts where multiple entities are shown side-by-side.
