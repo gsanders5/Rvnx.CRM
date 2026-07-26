@@ -414,10 +414,24 @@ public class ContactReadService(IRepository repository, IFavoriteService favorit
             {
                 if (participantsByActivity.TryGetValue(actDto.Id, out List<Guid>? pIds))
                 {
-                    List<Guid> others = pIds.Where(pid => pid != id && contactInfoMap.ContainsKey(pid)).ToList();
-                    actDto.ContactIds = others;
-                    actDto.ContactNames = others.Select(pid => contactInfoMap[pid].Name).ToList();
-                    actDto.ContactIsDeceased = others.Select(pid => contactInfoMap[pid].IsDeceased).ToList();
+                    // Optimization: avoid multiple allocations and loops inside inner loop
+                    List<Guid> otherIds = new(pIds.Count);
+                    List<string> otherNames = new(pIds.Count);
+                    List<bool> otherDeceased = new(pIds.Count);
+
+                    foreach (Guid pid in pIds)
+                    {
+                        if (pid != id && contactInfoMap.TryGetValue(pid, out var info))
+                        {
+                            otherIds.Add(pid);
+                            otherNames.Add(info.Name);
+                            otherDeceased.Add(info.IsDeceased);
+                        }
+                    }
+
+                    actDto.ContactIds = otherIds;
+                    actDto.ContactNames = otherNames;
+                    actDto.ContactIsDeceased = otherDeceased;
                 }
             }
         }
