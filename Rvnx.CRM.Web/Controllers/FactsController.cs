@@ -22,8 +22,7 @@ public class FactsController(IFactService factService, IRepository repository) :
     {
         if (ModelState.IsValid)
         {
-            IActionResult? handled = HandleOperationResult(await _factService.CreateAsync(factDto));
-            if (handled != null)
+            if (HandleOperationResult(await _factService.CreateAsync(factDto)) is { } handled)
             {
                 return handled;
             }
@@ -54,8 +53,7 @@ public class FactsController(IFactService factService, IRepository repository) :
 
         if (ModelState.IsValid)
         {
-            IActionResult? handled = HandleOperationResult(await _factService.UpdateAsync(id, factDto));
-            if (handled != null)
+            if (HandleOperationResult(await _factService.UpdateAsync(id, factDto)) is { } handled)
             {
                 return handled;
             }

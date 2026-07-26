@@ -21,10 +21,7 @@ public class CurrentUserService(IHttpContextAccessor httpContextAccessor, IConfi
             return null;
         }
 
-        ClaimsPrincipal? user = _httpContextAccessor.HttpContext?.User;
-        string? groupId = user?.FindFirst(ClaimConstants.InternalGroupIdClaimType)?.Value;
-
-        return Guid.TryParse(groupId, out Guid guid) ? guid : null;
+        return GetGuidClaim(ClaimConstants.InternalGroupIdClaimType);
     }
 
     public async Task<bool> IsAdministratorAsync(Guid userId)
@@ -51,20 +48,8 @@ public class CurrentUserService(IHttpContextAccessor httpContextAccessor, IConfi
             return null;
         }
 
-        ClaimsPrincipal? user = _httpContextAccessor.HttpContext?.User;
-        if (user == null)
-        {
-            return null;
-        }
-
-        string? internalId = user.FindFirst(ClaimConstants.InternalUserIdClaimType)?.Value;
-        if (Guid.TryParse(internalId, out Guid internalGuid))
-        {
-            return internalGuid;
-        }
-
-        string? nameId = user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        return Guid.TryParse(nameId, out Guid guid) ? guid : null;
+        return GetGuidClaim(ClaimConstants.InternalUserIdClaimType)
+            ?? GetGuidClaim(ClaimTypes.NameIdentifier);
     }
 
     public string? UserName => !IsAuthEnabled() ? "System" :
@@ -79,10 +64,9 @@ public class CurrentUserService(IHttpContextAccessor httpContextAccessor, IConfi
                 return null;
             }
 
-            ClaimsPrincipal? user = _httpContextAccessor.HttpContext?.User;
-            return user?.FindFirst(ClaimConstants.OidcNameClaimType)?.Value
-                ?? user?.FindFirst(ClaimTypes.Name)?.Value
-                ?? user?.Identity?.Name;
+            return GetClaimValue(ClaimConstants.OidcNameClaimType)
+                ?? GetClaimValue(ClaimTypes.Name)
+                ?? _httpContextAccessor.HttpContext?.User?.Identity?.Name;
         }
     }
 
@@ -95,9 +79,8 @@ public class CurrentUserService(IHttpContextAccessor httpContextAccessor, IConfi
                 return null;
             }
 
-            ClaimsPrincipal? user = _httpContextAccessor.HttpContext?.User;
-            return user?.FindFirst(ClaimTypes.Email)?.Value
-                ?? user?.FindFirst(ClaimConstants.OidcEmailClaimType)?.Value;
+            return GetClaimValue(ClaimTypes.Email)
+                ?? GetClaimValue(ClaimConstants.OidcEmailClaimType);
         }
     }
 
@@ -108,4 +91,10 @@ public class CurrentUserService(IHttpContextAccessor httpContextAccessor, IConfi
     {
         return _configuration.GetValue<bool>("Authentication:Enabled");
     }
+
+    private string? GetClaimValue(string claimType) =>
+        _httpContextAccessor.HttpContext?.User?.FindFirst(claimType)?.Value;
+
+    private Guid? GetGuidClaim(string claimType) =>
+        Guid.TryParse(GetClaimValue(claimType), out Guid guid) ? guid : null;
 }
