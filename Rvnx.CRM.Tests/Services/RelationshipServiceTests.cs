@@ -349,12 +349,26 @@ public class RelationshipServiceTests
         Guid cId = Guid.NewGuid();
         Guid typeId = RelationshipTypeIds.Colleague;
 
-        // Load the primary entity (source) and the directly-specified related entity (target)
-        _repositoryMock.Setup(r => r.GetByIdAsync<Contact>(sourceId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new Contact { Id = sourceId, FirstName = "Jack" });
+        // Setup projected queries for Contact fields.
+        List<Contact> allContacts = [
+            new Contact { Id = sourceId, FirstName = "Jack" },
+            new Contact { Id = targetId, FirstName = "Jill" },
+            new Contact { Id = cId, FirstName = "James" }
+        ];
 
-        _repositoryMock.Setup(r => r.GetByIdAsync<Contact>(targetId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new Contact { Id = targetId, FirstName = "Jill" });
+        _repositoryMock.Setup(r => r.ListProjectedAsync(
+                It.IsAny<Expression<Func<Contact, bool>>>(),
+                It.IsAny<Expression<Func<Contact, string>>>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync((Expression<Func<Contact, bool>> expr, Expression<Func<Contact, string>> selector, CancellationToken ct) =>
+                allContacts.AsQueryable().Where(expr).Select(selector).ToList());
+
+        _repositoryMock.Setup(r => r.ListProjectedAsync(
+                It.IsAny<Expression<Func<Contact, bool>>>(),
+                It.IsAny<Expression<Func<Contact, ValueTuple<Guid, string>>>>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync((Expression<Func<Contact, bool>> expr, Expression<Func<Contact, ValueTuple<Guid, string>>> selector, CancellationToken ct) =>
+                allContacts.AsQueryable().Where(expr).Select(selector).ToList());
 
         // BFS edge query: target is connected to cId via the Colleague relationship
         _repositoryMock.Setup(r => r.ListAsNoTrackingAsync(
@@ -364,12 +378,6 @@ public class RelationshipServiceTests
             [
                 new Relationship { ContactId = targetId, RelatedContactId = cId, RelationshipTypeId = typeId }
             ]);
-
-        // Batch contact load for BFS component nodes (cId is the discovered neighbour)
-        _repositoryMock.Setup(r => r.ListAsNoTrackingAsync(
-                It.IsAny<Expression<Func<Contact, bool>>>(),
-                It.IsAny<CancellationToken>()))
-            .ReturnsAsync([new Contact { Id = cId, FirstName = "James" }]);
 
         // No existing relationships - explicitly mock to make the intent clear
         _repositoryMock.Setup(r => r.CountAsync(
