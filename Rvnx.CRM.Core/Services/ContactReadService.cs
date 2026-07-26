@@ -474,16 +474,10 @@ public class ContactReadService(IRepository repository, IFavoriteService favorit
             ImmichTagValue = contact.ImmichLink?.ImmichTagValue
         };
 
-        ContactMethod? email = contact.ContactMethods
-            .Where(c => c.Type == ContactMethodType.Email)
-            .OrderByDescending(c => c.Label == ContactMethodLabels.Primary)
-            .FirstOrDefault();
+        ContactMethod? email = GetPrimaryContactMethod(contact.ContactMethods, ContactMethodType.Email);
         dto.Email = email?.Value;
 
-        ContactMethod? phone = contact.ContactMethods
-            .Where(c => c.Type == ContactMethodType.Phone)
-            .OrderByDescending(c => c.Label == ContactMethodLabels.Primary)
-            .FirstOrDefault();
+        ContactMethod? phone = GetPrimaryContactMethod(contact.ContactMethods, ContactMethodType.Phone);
         dto.Phone = phone?.Value;
 
         SignificantDate? bday = contact.SignificantDates
@@ -578,5 +572,13 @@ public class ContactReadService(IRepository repository, IFavoriteService favorit
                 FullName = (c.FirstName + " " + (c.LastName ?? "")).Trim()
             }) ?? [];
         return [.. candidates.OrderBy(x => x.FullName)];
+    }
+
+    private static ContactMethod? GetPrimaryContactMethod(IEnumerable<ContactMethod> methods, ContactMethodType type)
+    {
+        return methods
+            .Where(c => c.Type == type)
+            .OrderByDescending(c => c.Label == ContactMethodLabels.Primary)
+            .FirstOrDefault();
     }
 }
