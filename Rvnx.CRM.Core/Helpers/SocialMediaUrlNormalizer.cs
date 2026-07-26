@@ -11,9 +11,8 @@ public static class SocialMediaUrlNormalizer
             return string.Empty;
         }
 
-        try
+        if (Uri.TryCreate(url, UriKind.Absolute, out Uri? uri))
         {
-            Uri uri = new(url);
             string path = uri.AbsolutePath.Trim('/');
 
             return type switch
@@ -25,11 +24,9 @@ public static class SocialMediaUrlNormalizer
                 _ => path
             };
         }
-        catch
-        {
-            // Not a valid URI, assume it's just a username
-            return url.TrimStart('@');
-        }
+
+        // Not a valid URI, assume it's just a username
+        return url.TrimStart('@');
     }
 
     public static string Normalize(ContactMethodType type, string value)
