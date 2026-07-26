@@ -31,3 +31,6 @@
 ## 2024-05-23 - C# Tuple Deconstruction Code Review Error
 **Learning:** The code review tool flagged tuple deconstruction (`foreach ((Guid id, Guid relatedId) in list)`) as a compilation error when iterating over a `List<(Guid, Guid)>`. This was a hallucination, as `dotnet build` and `dotnet test` passed without issue.
 **Action:** Always trust successful `dotnet build` and `dotnet test` results over the reviewer claims of basic C# compilation failures.
+## 2026-06-21 - Prefer Try-Parse Pattern over Exceptions
+**Learning:** Replaced a `try-catch` block around `new Uri()` with `Uri.TryCreate` to avoid using exceptions for control flow when extracting usernames from social media URLs. This aligns with standard C# performance and clarity practices.
+**Action:** Always prefer `Try*` methods (like `Uri.TryCreate`, `int.TryParse`) over throwing and catching exceptions for expected failure cases like invalid user input.
