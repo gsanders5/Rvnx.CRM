@@ -414,29 +414,48 @@ public class VCardService : IVCardService
 
         if (ipAddress.AddressFamily == AddressFamily.InterNetwork)
         {
-            if (ipAddress.Equals(IPAddress.Any))
-            {
-                return false;
-            }
-
-            byte[] v4bytes = ipAddress.GetAddressBytes();
-
-            return v4bytes[0] != 0 && v4bytes[0] != 10 && (v4bytes[0] != 172 || v4bytes[1] < 16 || v4bytes[1] > 31) && (v4bytes[0] != 192 || v4bytes[1] != 168) && (v4bytes[0] != 169 || v4bytes[1] != 254) && v4bytes[0] != 127;
+            return IsPublicIPv4(ipAddress);
         }
         else if (ipAddress.AddressFamily == AddressFamily.InterNetworkV6)
         {
-            if (ipAddress.IsIPv4MappedToIPv6)
-            {
-                IPAddress v4 = ipAddress.MapToIPv4();
-                return IsPublicIpAddress(v4);
-            }
-
-            return (bytes[0] != 0xFE || (bytes[1] & 0xC0) != 0x80) &&
-                   (bytes[0] & 0xFE) != 0xFC &&
-                   (bytes[0] != 0x20 || bytes[1] != 0x01 || bytes[2] != 0x0D || bytes[3] != 0xB8);
+            return IsPublicIPv6(ipAddress, bytes);
         }
 
         return false;
+    }
+
+    private static bool IsPublicIPv4(IPAddress ipAddress)
+    {
+        if (ipAddress.Equals(IPAddress.Any))
+        {
+            return false;
+        }
+
+        byte[] v4bytes = ipAddress.GetAddressBytes();
+
+        bool isLocalHost = v4bytes[0] == 127;
+        bool isZeroNetwork = v4bytes[0] == 0;
+        bool is10Network = v4bytes[0] == 10;
+        bool is172Network = v4bytes[0] == 172 && v4bytes[1] >= 16 && v4bytes[1] <= 31;
+        bool is192Network = v4bytes[0] == 192 && v4bytes[1] == 168;
+        bool isLinkLocal = v4bytes[0] == 169 && v4bytes[1] == 254;
+
+        return !isLocalHost && !isZeroNetwork && !is10Network && !is172Network && !is192Network && !isLinkLocal;
+    }
+
+    private static bool IsPublicIPv6(IPAddress ipAddress, byte[] bytes)
+    {
+        if (ipAddress.IsIPv4MappedToIPv6)
+        {
+            IPAddress v4 = ipAddress.MapToIPv4();
+            return IsPublicIpAddress(v4);
+        }
+
+        bool isLinkLocal = bytes[0] == 0xFE && (bytes[1] & 0xC0) == 0x80;
+        bool isUniqueLocal = (bytes[0] & 0xFE) == 0xFC;
+        bool isDocumentation = bytes[0] == 0x20 && bytes[1] == 0x01 && bytes[2] == 0x0D && bytes[3] == 0xB8;
+
+        return !isLinkLocal && !isUniqueLocal && !isDocumentation;
     }
 
     public byte[] ExportVCard(Contact contact)

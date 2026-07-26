@@ -414,10 +414,24 @@ public class ContactReadService(IRepository repository, IFavoriteService favorit
             {
                 if (participantsByActivity.TryGetValue(actDto.Id, out List<Guid>? pIds))
                 {
-                    List<Guid> others = pIds.Where(pid => pid != id && contactInfoMap.ContainsKey(pid)).ToList();
-                    actDto.ContactIds = others;
-                    actDto.ContactNames = others.Select(pid => contactInfoMap[pid].Name).ToList();
-                    actDto.ContactIsDeceased = others.Select(pid => contactInfoMap[pid].IsDeceased).ToList();
+                    // Optimization: avoid multiple allocations and loops inside inner loop
+                    List<Guid> otherIds = new(pIds.Count);
+                    List<string> otherNames = new(pIds.Count);
+                    List<bool> otherDeceased = new(pIds.Count);
+
+                    foreach (Guid pid in pIds)
+                    {
+                        if (pid != id && contactInfoMap.TryGetValue(pid, out var info))
+                        {
+                            otherIds.Add(pid);
+                            otherNames.Add(info.Name);
+                            otherDeceased.Add(info.IsDeceased);
+                        }
+                    }
+
+                    actDto.ContactIds = otherIds;
+                    actDto.ContactNames = otherNames;
+                    actDto.ContactIsDeceased = otherDeceased;
                 }
             }
         }
@@ -474,16 +488,10 @@ public class ContactReadService(IRepository repository, IFavoriteService favorit
             ImmichTagValue = contact.ImmichLink?.ImmichTagValue
         };
 
-        ContactMethod? email = contact.ContactMethods
-            .Where(c => c.Type == ContactMethodType.Email)
-            .OrderByDescending(c => c.Label == ContactMethodLabels.Primary)
-            .FirstOrDefault();
+        ContactMethod? email = GetPrimaryContactMethod(contact.ContactMethods, ContactMethodType.Email);
         dto.Email = email?.Value;
 
-        ContactMethod? phone = contact.ContactMethods
-            .Where(c => c.Type == ContactMethodType.Phone)
-            .OrderByDescending(c => c.Label == ContactMethodLabels.Primary)
-            .FirstOrDefault();
+        ContactMethod? phone = GetPrimaryContactMethod(contact.ContactMethods, ContactMethodType.Phone);
         dto.Phone = phone?.Value;
 
         SignificantDate? bday = contact.SignificantDates
@@ -577,5 +585,13 @@ public class ContactReadService(IRepository repository, IFavoriteService favorit
                 FullName = (c.FirstName + " " + (c.LastName ?? "")).Trim()
             }) ?? [];
         return [.. candidates.OrderBy(x => x.FullName)];
+    }
+
+    private static ContactMethod? GetPrimaryContactMethod(IEnumerable<ContactMethod> methods, ContactMethodType type)
+    {
+        return methods
+            .Where(c => c.Type == type)
+            .OrderByDescending(c => c.Label == ContactMethodLabels.Primary)
+            .FirstOrDefault();
     }
 }
