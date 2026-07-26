@@ -60,8 +60,7 @@ public class NotesController(INoteService noteService, IRepository repository, I
 
         if (ModelState.IsValid)
         {
-            IActionResult? handled = HandleOperationResult(await _noteService.UpdateAsync(id, viewModel));
-            if (handled != null)
+            if (HandleOperationResult(await _noteService.UpdateAsync(id, viewModel)) is { } handled)
             {
                 return handled;
             }

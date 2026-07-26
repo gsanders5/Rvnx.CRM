@@ -70,3 +70,8 @@
 **Vulnerability:** The `ImmichController.SetAsProfilePhoto` endpoint proxied image downloads from the Immich API into an unbounded memory stream without limits if `Content-Length` was missing (e.g. chunked transfers). An attacker could cause memory exhaustion (DoS).
 **Learning:** `CopyToAsync` on streams without pre-validated size limits is dangerous. Using a chunked reading loop with an embedded size check mitigates this vulnerability.
 **Prevention:** Whenever buffering external streams into memory, always read in chunks and validate total bytes read against the application's maximum allowed size limit.
+
+## 2026-06-12 - Prevent DoS via Unbounded Stream Buffering in Attachments
+**Vulnerability:** Memory Exhaustion (Denial of Service) during attachment upload and profile photo setting. Endpoints called `CopyToAsync` directly on externally-provided `IFormFile` or `Stream` streams into a `MemoryStream`. If a stream lacked a `Content-Length` (e.g. chunked encoding) or spoofed it, the application would blindly buffer the entire stream into memory until exhaustion, bypassing the `file.Length` limit checks.
+**Learning:** Checking `file.Length` before stream reading is insufficient because the length can be spoofed or absent. `CopyToAsync` provides no built-in size limit constraints and should never be used on untrusted external streams when buffering to memory.
+**Prevention:** Replace unbounded `CopyToAsync` with a `while ((bytesRead = await stream.ReadAsync(buffer)) > 0)` chunked reading loop. Rent the buffer using `ArrayPool<byte>.Shared` and check the accumulated total length against `IsAllowedFileSize` *inside* the loop.

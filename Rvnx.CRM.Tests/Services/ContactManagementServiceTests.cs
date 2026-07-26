@@ -271,6 +271,7 @@ public class ContactManagementServiceTests
 
             FileValidationServiceMock.Setup(f => f.IsImageExtension(It.IsAny<string>())).Returns(true);
             FileValidationServiceMock.Setup(f => f.IsValidImageSignature(It.IsAny<byte[]>(), It.IsAny<string>())).Returns(true);
+            FileValidationServiceMock.Setup(f => f.IsAllowedFileSize(It.IsAny<long>())).Returns(true);
 
             ContactFormDto dto = new() { Id = contactId, FirstName = "Test", LastName = "User" };
 
@@ -288,6 +289,33 @@ public class ContactManagementServiceTests
                 a.FileName == fileName &&
                 a.ContentType == contentType),
                 It.IsAny<CancellationToken>()), Times.Once);
+        }
+
+        [Fact]
+        public async Task UpdateContactProfileImageShouldFailWhenChunkedReadExceedsSizeLimit()
+        {
+            Guid contactId = Guid.NewGuid();
+            Contact contact = new() { Id = contactId, FirstName = "Test", LastName = "User" };
+
+            RepositoryMock.Setup(r => r.GetByIdAsync<Contact>(contactId, It.IsAny<CancellationToken>()))
+                .ReturnsAsync(contact);
+
+            FileValidationServiceMock.Setup(v => v.IsImageExtension(It.IsAny<string>())).Returns(true);
+            // Allow up to 500 bytes, fail when it exceeds this
+            FileValidationServiceMock.Setup(v => v.IsAllowedFileSize(It.IsAny<long>()))
+                .Returns((long size) => size <= 500);
+
+            ContactFormDto dto = new() { Id = contactId, FirstName = "Test", LastName = "User" };
+
+            Rvnx.CRM.Tests.Helpers.ChunkedDummyStream stream = new(2000, 256);
+
+            ContactOperationResult result = await Service.UpdateContactAsync(contactId, dto, stream, "test.png", "image/png");
+
+            Assert.False(result.Success);
+            Assert.Contains("File is too large.", result.Errors);
+
+            // Verify reading halted early
+            Assert.True(stream.Position < 2000, "Stream reading should have halted before consuming all bytes");
         }
 
     }
