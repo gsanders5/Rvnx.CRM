@@ -22,8 +22,7 @@ public class ContactTasksController(IContactTaskService contactTaskService, IRep
     {
         if (ModelState.IsValid)
         {
-            IActionResult? handled = HandleOperationResult(await _contactTaskService.CreateAsync(dto));
-            if (handled != null)
+            if (HandleOperationResult(await _contactTaskService.CreateAsync(dto)) is { } handled)
             {
                 return handled;
             }
@@ -49,8 +48,7 @@ public class ContactTasksController(IContactTaskService contactTaskService, IRep
 
         if (ModelState.IsValid)
         {
-            IActionResult? handled = HandleOperationResult(await _contactTaskService.UpdateAsync(id, dto));
-            if (handled != null)
+            if (HandleOperationResult(await _contactTaskService.UpdateAsync(id, dto)) is { } handled)
             {
                 return handled;
             }
