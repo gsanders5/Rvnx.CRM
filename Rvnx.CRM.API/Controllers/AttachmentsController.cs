@@ -58,7 +58,24 @@ public class AttachmentsController(
         }
 
         using MemoryStream stream = new();
-        await file.CopyToAsync(stream);
+        byte[] buffer = System.Buffers.ArrayPool<byte>.Shared.Rent(81920);
+        try
+        {
+            using Stream readStream = file.OpenReadStream();
+            int bytesRead;
+            while ((bytesRead = await readStream.ReadAsync(buffer)) > 0)
+            {
+                stream.Write(buffer, 0, bytesRead);
+                if (!_fileValidationService.IsAllowedFileSize(stream.Length))
+                {
+                    return BadRequest("File is too large.");
+                }
+            }
+        }
+        finally
+        {
+            System.Buffers.ArrayPool<byte>.Shared.Return(buffer);
+        }
         byte[] content = stream.ToArray();
 
         AttachmentOperationResult result = await _attachmentService.UploadAttachmentAsync(contactId, content, file.FileName);

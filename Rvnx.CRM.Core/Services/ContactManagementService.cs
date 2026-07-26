@@ -351,7 +351,23 @@ public class ContactManagementService(IRepository repository, IFileValidationSer
         }
 
         using MemoryStream ms = new();
-        await imageStream.CopyToAsync(ms);
+        byte[] buffer = System.Buffers.ArrayPool<byte>.Shared.Rent(81920);
+        try
+        {
+            int bytesRead;
+            while ((bytesRead = await imageStream.ReadAsync(buffer)) > 0)
+            {
+                ms.Write(buffer, 0, bytesRead);
+                if (!_fileValidationService.IsAllowedFileSize(ms.Length))
+                {
+                    return ContactOperationResult.Failure("File is too large.");
+                }
+            }
+        }
+        finally
+        {
+            System.Buffers.ArrayPool<byte>.Shared.Return(buffer);
+        }
         byte[] fileBytes = ms.ToArray();
 
         if (!_fileValidationService.IsValidImageSignature(fileBytes, extension))

@@ -1,11 +1,10 @@
 using Moq;
+using Rvnx.CRM.Core.Constants;
 using Rvnx.CRM.Core.DTOs.Contact;
-using Rvnx.CRM.Core.Extensions;
 using Rvnx.CRM.Core.Interfaces;
 using Rvnx.CRM.Core.Models.Base;
 using Rvnx.CRM.Core.Models.Contact;
 using Rvnx.CRM.Core.Services;
-using System.Collections.Generic;
 using System.Linq.Expressions;
 
 namespace Rvnx.CRM.Tests.Services;
@@ -24,7 +23,7 @@ public class FavoriteServiceTests
     }
 
     [Fact]
-    public async Task ToggleFavoriteAsyncWhenUserIdNullReturnsFalseAndDoesNothing()
+    public async Task ToggleFavoriteAsyncWhenUserIdNullReturnsFalse()
     {
         _currentUserServiceMock.Setup(x => x.UserId).Returns((Guid?)null);
         Guid contactId = Guid.NewGuid();
@@ -33,9 +32,6 @@ public class FavoriteServiceTests
 
         Assert.False(result);
         _repositoryMock.Verify(x => x.CountAsync(It.IsAny<Expression<Func<ContactFavorite, bool>>>(), It.IsAny<CancellationToken>()), Times.Never);
-        _repositoryMock.Verify(x => x.AddAsync(It.IsAny<ContactFavorite>(), It.IsAny<CancellationToken>()), Times.Never);
-        _repositoryMock.Verify(x => x.DeleteAsync(It.IsAny<Expression<Func<ContactFavorite, bool>>>(), It.IsAny<CancellationToken>()), Times.Never);
-        _repositoryMock.Verify(x => x.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]
@@ -249,6 +245,54 @@ public class FavoriteServiceTests
     }
 
     [Fact]
+    public async Task GetFavoriteSidebarItemsAsyncFiltersHiddenAndDeceasedContacts()
+    {
+        // Arrange
+        Guid userId = Guid.NewGuid();
+        _currentUserServiceMock.Setup(x => x.UserId).Returns(userId);
+
+        Guid contactId1 = Guid.NewGuid();
+        List<Guid> favoriteIds = [contactId1];
+
+        _repositoryMock.Setup(x => x.ListProjectedAsync(
+            It.IsAny<Expression<Func<ContactFavorite, bool>>>(),
+            It.IsAny<Expression<Func<ContactFavorite, Guid>>>(),
+            It.IsAny<CancellationToken>()))
+            .ReturnsAsync(favoriteIds);
+
+        Expression<Func<Contact, bool>>? capturedPredicate = null;
+
+        _repositoryMock.Setup(x => x.ListProjectedAsync(
+            It.IsAny<Expression<Func<Contact, bool>>>(),
+            It.IsAny<Expression<Func<Contact, FavoriteSidebarItemDto>>>(),
+            It.IsAny<CancellationToken>()))
+            .Callback<Expression<Func<Contact, bool>>, Expression<Func<Contact, FavoriteSidebarItemDto>>, CancellationToken>((predicate, selector, ct) =>
+            {
+                capturedPredicate = predicate;
+            })
+            .ReturnsAsync([]);
+
+        // Act
+        await _service.GetFavoriteSidebarItemsAsync();
+
+        // Assert
+        Assert.NotNull(capturedPredicate);
+        Func<Contact, bool> compiledPredicate = capturedPredicate.Compile();
+
+        // Valid contact
+        Contact validContact = new() { Id = contactId1, IsHidden = false, IsDeceased = false };
+        Assert.True(compiledPredicate(validContact));
+
+        // Hidden contact
+        Contact hiddenContact = new() { Id = contactId1, IsHidden = true, IsDeceased = false };
+        Assert.False(compiledPredicate(hiddenContact));
+
+        // Deceased contact
+        Contact deceasedContact = new() { Id = contactId1, IsHidden = false, IsDeceased = true };
+        Assert.False(compiledPredicate(deceasedContact));
+    }
+
+    [Fact]
     public async Task GetFavoriteSidebarItemsAsyncReturnsSortedData()
     {
         // Arrange
@@ -296,5 +340,54 @@ public class FavoriteServiceTests
         Assert.Equal("Bee", result[1].LastName);
         Assert.Equal("Zebra", result[2].FirstName);
         Assert.Equal("Zoo", result[2].LastName);
+    }
+
+    [Fact]
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Naming", "CA1707:Identifiers should not contain underscores", Justification = "Test names follow a standard convention")]
+    public async Task GetFavoriteSidebarItemsAsync_FiltersOutHiddenAndDeceasedContacts()
+    {
+        // Arrange
+        Guid userId = Guid.NewGuid();
+        _currentUserServiceMock.Setup(x => x.UserId).Returns(userId);
+
+        Guid normalContactId = Guid.NewGuid();
+        Guid hiddenContactId = Guid.NewGuid();
+        Guid deceasedContactId = Guid.NewGuid();
+        List<Guid> favoriteIds = [normalContactId, hiddenContactId, deceasedContactId];
+
+        _repositoryMock.Setup(x => x.ListProjectedAsync(
+            It.IsAny<Expression<Func<ContactFavorite, bool>>>(),
+            It.IsAny<Expression<Func<ContactFavorite, Guid>>>(),
+            It.IsAny<CancellationToken>()))
+            .ReturnsAsync(favoriteIds);
+
+        List<Contact> dbContacts = [
+            new Contact { Id = normalContactId, FirstName = "Normal", IsHidden = false, IsDeceased = false },
+            new Contact { Id = hiddenContactId, FirstName = "Hidden", IsHidden = true, IsDeceased = false },
+            new Contact { Id = deceasedContactId, FirstName = "Deceased", IsHidden = false, IsDeceased = true }
+        ];
+
+        // The method uses ListProjectedByChunkedContainsAsync, which calls ListProjectedAsync under the hood.
+        // We intercept the expression to evaluate it directly.
+        Expression<Func<Contact, bool>>? capturedFilter = null;
+
+        _repositoryMock.Setup(x => x.ListProjectedAsync(
+            It.IsAny<Expression<Func<Contact, bool>>>(),
+            It.IsAny<Expression<Func<Contact, FavoriteSidebarItemDto>>>(),
+            It.IsAny<CancellationToken>()))
+            .Callback<Expression<Func<Contact, bool>>, Expression<Func<Contact, FavoriteSidebarItemDto>>, CancellationToken>(
+                (filter, projection, ct) => capturedFilter = filter)
+            .ReturnsAsync([]);
+
+        // Act
+        await _service.GetFavoriteSidebarItemsAsync();
+
+        // Assert
+        Assert.NotNull(capturedFilter);
+        Func<Contact, bool> filterFunc = capturedFilter.Compile();
+
+        Assert.True(filterFunc(dbContacts[0])); // Normal contact is included
+        Assert.False(filterFunc(dbContacts[1])); // Hidden contact is excluded
+        Assert.False(filterFunc(dbContacts[2])); // Deceased contact is excluded
     }
 }

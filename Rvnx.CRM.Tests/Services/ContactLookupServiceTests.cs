@@ -2,13 +2,6 @@ using Moq;
 using Rvnx.CRM.Core.Interfaces;
 using Rvnx.CRM.Core.Models.Contact;
 using Rvnx.CRM.Core.Services;
-using System;
-using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
-using System.Linq.Expressions;
-using System.Threading;
-using System.Threading.Tasks;
-using Xunit;
 
 namespace Rvnx.CRM.Tests.Services;
 
@@ -66,6 +59,35 @@ public class ContactLookupServiceTests
     }
 
     [Fact]
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Naming", "CA1707:Identifiers should not contain underscores", Justification = "Test names follow a standard convention")]
+    public async Task GetContactNameAsync_WhenLastNameIsNull_ReturnsTrimmedFirstName()
+    {
+        Guid id = Guid.NewGuid();
+
+        System.Linq.Expressions.Expression<Func<Contact, string>>? capturedProjection = null;
+
+        _repositoryMock.Setup(r => r.ListProjectedAsync(
+                It.IsAny<System.Linq.Expressions.Expression<Func<Contact, bool>>>(),
+                It.IsAny<System.Linq.Expressions.Expression<Func<Contact, string>>>(),
+                It.IsAny<CancellationToken>()))
+            .Callback<System.Linq.Expressions.Expression<Func<Contact, bool>>, System.Linq.Expressions.Expression<Func<Contact, string>>, CancellationToken>((filter, projection, ct) =>
+            {
+                capturedProjection = projection;
+            })
+            .ReturnsAsync(["TestName "]);
+
+        string result = await _service.GetContactNameAsync(id);
+
+        Assert.NotNull(capturedProjection);
+        Func<Contact, string> compiledFunc = capturedProjection.Compile();
+        Contact contact = new() { FirstName = "John", LastName = null };
+        string projectedResult = compiledFunc(contact);
+
+        Assert.Equal("John ", projectedResult);
+        Assert.Equal("TestName", result);
+    }
+
+    [Fact]
     public async Task IsPartialAsyncPersonPartialReturnsTrue()
     {
         Guid id = Guid.NewGuid();
@@ -111,42 +133,54 @@ public class ContactLookupServiceTests
     }
 
     [Fact]
-    [SuppressMessage("Naming", "CA1707:Identifiers should not contain underscores", Justification = "Test names follow a standard convention")]
-    public async Task GetPartialContactIdsAsync_WhenIdsEmpty_ReturnsEmptyHashSetAndDoesNotCallRepository()
+    public async Task GetPartialContactIdsAsyncWithEmptyInputReturnsEmptySetAndDoesNotCallRepository()
     {
         // Act
-        HashSet<Guid> result = await _service.GetPartialContactIdsAsync(new List<Guid>());
+        HashSet<Guid> result = await _service.GetPartialContactIdsAsync([]);
 
         // Assert
-        Assert.NotNull(result);
         Assert.Empty(result);
-        _repositoryMock.Verify(r => r.ListProjectedAsync(
-            It.IsAny<Expression<Func<Contact, bool>>>(),
-            It.IsAny<Expression<Func<Contact, Guid>>>(),
-            It.IsAny<CancellationToken>()), Times.Never);
+        _repositoryMock.Verify(
+            r => r.ListProjectedAsync(
+                It.IsAny<System.Linq.Expressions.Expression<Func<Contact, bool>>>(),
+                It.IsAny<System.Linq.Expressions.Expression<Func<Contact, Guid>>>(),
+                It.IsAny<CancellationToken>()),
+            Times.Never);
     }
 
     [Fact]
-    [SuppressMessage("Naming", "CA1707:Identifiers should not contain underscores", Justification = "Test names follow a standard convention")]
-    public async Task GetPartialContactIdsAsync_WhenIdsProvided_ReturnsHashSetOfPartialIds()
+    public async Task GetPartialContactIdsAsyncReturnsOnlyPartialIdsFromRepository()
     {
         // Arrange
-        Guid id1 = Guid.NewGuid();
-        Guid id2 = Guid.NewGuid();
-        List<Guid> ids = new() { id1, id2 };
+        Guid partialId1 = Guid.NewGuid();
+        Guid partialId2 = Guid.NewGuid();
+        Guid nonPartialId = Guid.NewGuid();
 
+        List<Guid> inputIds = [partialId1, partialId2, nonPartialId];
+
+        // The mock repository will return the partial IDs
         _repositoryMock.Setup(r => r.ListProjectedAsync(
-            It.IsAny<Expression<Func<Contact, bool>>>(),
-            It.IsAny<Expression<Func<Contact, Guid>>>(),
-            It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new List<Guid> { id1 });
+                It.IsAny<System.Linq.Expressions.Expression<Func<Contact, bool>>>(),
+                It.IsAny<System.Linq.Expressions.Expression<Func<Contact, Guid>>>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync([partialId1, partialId2]);
 
         // Act
-        HashSet<Guid> result = await _service.GetPartialContactIdsAsync(ids);
+        HashSet<Guid> result = await _service.GetPartialContactIdsAsync(inputIds);
 
         // Assert
-        Assert.NotNull(result);
-        Assert.Single(result);
-        Assert.Contains(id1, result);
+        Assert.Equal(2, result.Count);
+        Assert.Contains(partialId1, result);
+        Assert.Contains(partialId2, result);
+        Assert.DoesNotContain(nonPartialId, result);
+
+        // Verify repository was called exactly once
+        _repositoryMock.Verify(
+            r => r.ListProjectedAsync(
+                It.IsAny<System.Linq.Expressions.Expression<Func<Contact, bool>>>(),
+                It.IsAny<System.Linq.Expressions.Expression<Func<Contact, Guid>>>(),
+                It.IsAny<CancellationToken>()),
+            Times.Once);
     }
+
 }

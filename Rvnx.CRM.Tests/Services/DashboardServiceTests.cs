@@ -513,4 +513,132 @@ public class DashboardServiceTests
         Assert.False(livingNode.IsDeceased);
         Assert.True(deceasedNode.IsDeceased);
     }
+
+    [Fact]
+    [SuppressMessage("Naming", "CA1707:Identifiers should not contain underscores", Justification = "Test names can contain underscores for readability.")]
+    public async Task GetDashboardDataAsync_WithOpenTasks_ReturnsSortedOpenTasksWithCalculatedOverdueDays()
+    {
+        Guid contactId1 = Guid.NewGuid();
+        Guid contactId2 = Guid.NewGuid();
+        DateTime now = DateTime.UtcNow;
+        DateOnly today = DateOnly.FromDateTime(DateTime.Today);
+
+        SetupContactSummaries([
+            new ContactSummary(contactId1, "Alice", "Smith", null, now, now, false),
+            new ContactSummary(contactId2, "Bob", "Jones", null, now, now, false)
+        ]);
+        SetupAttachments([]);
+        SetupSignificantDates([]);
+        SetupRelationships([]);
+
+        Guid taskId1 = Guid.NewGuid();
+        Guid taskId2 = Guid.NewGuid();
+        Guid taskId3 = Guid.NewGuid();
+
+        // taskId1: Overdue by 2 days (due 2 days ago)
+        // taskId2: Due today (0 days overdue)
+        // taskId3: Due in 5 days (not overdue)
+        SetupOpenTasks([
+            (taskId1, contactId1, "Overdue Task", today.AddDays(-2)),
+            (taskId2, contactId1, "Today Task", today),
+            (taskId3, contactId2, "Future Task", today.AddDays(5))
+        ]);
+
+        DashboardDto result = await _service.GetDashboardDataAsync();
+
+        Assert.NotNull(result);
+        Assert.NotNull(result.OpenTasks);
+        Assert.Equal(3, result.OpenTasks.Count);
+
+        // Sorting check (Earliest due date first)
+        Assert.Equal(taskId1, result.OpenTasks[0].TaskId);
+        Assert.Equal(taskId2, result.OpenTasks[1].TaskId);
+        Assert.Equal(taskId3, result.OpenTasks[2].TaskId);
+
+        // Overdue calculation check
+        Assert.Equal(2, result.OpenTasks[0].DaysOverdue);
+        Assert.Equal(0, result.OpenTasks[1].DaysOverdue);
+        Assert.Equal(0, result.OpenTasks[2].DaysOverdue);
+
+        // Name resolving check
+        Assert.Equal("Alice Smith", result.OpenTasks[0].ContactName);
+        Assert.Equal("Bob Jones", result.OpenTasks[2].ContactName);
+    }
+
+    [Fact]
+    [SuppressMessage("Naming", "CA1707:Identifiers should not contain underscores", Justification = "Test names can contain underscores for readability.")]
+    public async Task GetDashboardDataAsync_WithTasksForDeceasedOrHiddenContact_ExcludesTasks()
+    {
+        Guid aliveContactId = Guid.NewGuid();
+        Guid deceasedContactId = Guid.NewGuid();
+        Guid hiddenContactId = Guid.NewGuid();
+        DateTime now = DateTime.UtcNow;
+        DateOnly today = DateOnly.FromDateTime(DateTime.Today);
+
+        // The hidden contact won't even be in the summary dictionary
+        SetupContactSummaries([
+            new ContactSummary(aliveContactId, "Alive", "Person", null, now, now, false),
+            new ContactSummary(deceasedContactId, "Late", "Person", null, now, now, true)
+        ]);
+        SetupAttachments([]);
+        SetupSignificantDates([]);
+        SetupRelationships([]);
+
+        Guid taskAliveId = Guid.NewGuid();
+        Guid taskDeceasedId = Guid.NewGuid();
+        Guid taskHiddenId = Guid.NewGuid();
+
+        SetupOpenTasks([
+            (taskAliveId, aliveContactId, "Task for Alive", today),
+            (taskDeceasedId, deceasedContactId, "Task for Deceased", today),
+            (taskHiddenId, hiddenContactId, "Task for Hidden", today)
+        ]);
+
+        DashboardDto result = await _service.GetDashboardDataAsync();
+
+        Assert.NotNull(result);
+        Assert.NotNull(result.OpenTasks);
+
+        // Only the task for the alive, non-hidden contact should be included
+        Assert.Single(result.OpenTasks);
+        Assert.Equal(taskAliveId, result.OpenTasks[0].TaskId);
+    }
+
+    [Fact]
+    [SuppressMessage("Naming", "CA1707:Identifiers should not contain underscores", Justification = "Test names can contain underscores for readability.")]
+    public async Task GetDashboardDataAsync_ExcludesHiddenAndPartialContacts_EvaluatesFilterCorrectly()
+    {
+        // Arrange
+        List<Contact> dbContacts = [
+            new Contact { Id = Guid.NewGuid(), FirstName = "Normal", IsHidden = false, IsPartial = false },
+            new Contact { Id = Guid.NewGuid(), FirstName = "Hidden", IsHidden = true, IsPartial = false },
+            new Contact { Id = Guid.NewGuid(), FirstName = "Partial", IsHidden = false, IsPartial = true }
+        ];
+
+        Expression<Func<Contact, bool>>? capturedFilter = null;
+
+        _repositoryMock.Setup(r => r.ListProjectedAsync(
+            It.IsAny<Expression<Func<Contact, bool>>>(),
+            It.IsAny<Expression<Func<Contact, ContactSummary>>>(),
+            It.IsAny<CancellationToken>()))
+            .Callback<Expression<Func<Contact, bool>>, Expression<Func<Contact, ContactSummary>>, CancellationToken>(
+                (filter, projection, ct) => capturedFilter = filter)
+            .ReturnsAsync([]);
+
+        // Setup others to avoid null ref exceptions
+        _repositoryMock.Setup(r => r.ListAsNoTrackingAsync<SignificantDate>(It.IsAny<Expression<Func<SignificantDate, bool>>>(), It.IsAny<CancellationToken>(), It.IsAny<string[]>())).ReturnsAsync([]);
+        _repositoryMock.Setup(r => r.ListProjectedAsync(It.IsAny<Expression<Func<Relationship, bool>>>(), It.IsAny<Expression<Func<Relationship, (Guid ContactId, Guid RelatedContactId)>>>(), It.IsAny<CancellationToken>())).ReturnsAsync([]);
+        _repositoryMock.Setup(r => r.ListProjectedAsync(It.IsAny<Expression<Func<ContactTask, bool>>>(), It.IsAny<Expression<Func<ContactTask, (Guid, Guid?, string, DateOnly)>>>(), It.IsAny<CancellationToken>())).ReturnsAsync([]);
+
+        // Act
+        await _service.GetDashboardDataAsync();
+
+        // Assert
+        Assert.NotNull(capturedFilter);
+        Func<Contact, bool> filterFunc = capturedFilter.Compile();
+
+        Assert.True(filterFunc(dbContacts[0])); // Normal contact is included
+        Assert.False(filterFunc(dbContacts[1])); // Hidden contact is excluded
+        Assert.False(filterFunc(dbContacts[2])); // Partial contact is excluded
+    }
 }
