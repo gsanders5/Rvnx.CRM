@@ -59,6 +59,35 @@ public class ContactLookupServiceTests
     }
 
     [Fact]
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Naming", "CA1707:Identifiers should not contain underscores", Justification = "Test names follow a standard convention")]
+    public async Task GetContactNameAsync_WhenLastNameIsNull_ReturnsTrimmedFirstName()
+    {
+        Guid id = Guid.NewGuid();
+
+        System.Linq.Expressions.Expression<Func<Contact, string>>? capturedProjection = null;
+
+        _repositoryMock.Setup(r => r.ListProjectedAsync(
+                It.IsAny<System.Linq.Expressions.Expression<Func<Contact, bool>>>(),
+                It.IsAny<System.Linq.Expressions.Expression<Func<Contact, string>>>(),
+                It.IsAny<CancellationToken>()))
+            .Callback<System.Linq.Expressions.Expression<Func<Contact, bool>>, System.Linq.Expressions.Expression<Func<Contact, string>>, CancellationToken>((filter, projection, ct) =>
+            {
+                capturedProjection = projection;
+            })
+            .ReturnsAsync(["TestName "]);
+
+        string result = await _service.GetContactNameAsync(id);
+
+        Assert.NotNull(capturedProjection);
+        Func<Contact, string> compiledFunc = capturedProjection.Compile();
+        Contact contact = new() { FirstName = "John", LastName = null };
+        string projectedResult = compiledFunc(contact);
+
+        Assert.Equal("John ", projectedResult);
+        Assert.Equal("TestName", result);
+    }
+
+    [Fact]
     public async Task IsPartialAsyncPersonPartialReturnsTrue()
     {
         Guid id = Guid.NewGuid();
