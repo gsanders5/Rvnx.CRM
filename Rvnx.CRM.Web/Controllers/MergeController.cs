@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Rvnx.CRM.Core.DTOs.Contact;
 using Rvnx.CRM.Core.Interfaces;
 using Rvnx.CRM.Web.Constants;
 using Rvnx.CRM.Web.Controllers.Base;
@@ -17,14 +18,14 @@ public class MergeController(
     [HttpGet]
     public async Task<IActionResult> Index(Guid primaryId)
     {
-        Core.DTOs.Contact.ContactDetailDto? primaryContact = await _contactReadService.GetContactDetailsAsync(primaryId);
+        ContactDetailDto? primaryContact = await _contactReadService.GetContactDetailsAsync(primaryId);
         if (primaryContact == null)
         {
             return NotFound("Primary contact not found.");
         }
 
-        List<Core.DTOs.Contact.ContactDto> allContacts = await _contactReadService.GetIndexDataAsync(false);
-        List<Core.DTOs.Contact.ContactDto> availableContacts = allContacts.Where(c => c.Id != primaryId).ToList();
+        List<ContactDto> allContacts = await _contactReadService.GetIndexDataAsync(false);
+        List<ContactDto> availableContacts = allContacts.Where(c => c.Id != primaryId).ToList();
 
         ViewBag.SecondaryContacts = new SelectList(availableContacts, "Id", "FullName");
 
@@ -46,8 +47,8 @@ public class MergeController(
             return RedirectToAction(nameof(Index), new { primaryId = model.PrimaryContactId });
         }
 
-        Core.DTOs.Contact.ContactDetailDto? primaryContact = await _contactReadService.GetContactDetailsAsync(model.PrimaryContactId);
-        Core.DTOs.Contact.ContactDetailDto? secondaryContact = await _contactReadService.GetContactDetailsAsync(model.SecondaryContactId);
+        ContactDetailDto? primaryContact = await _contactReadService.GetContactDetailsAsync(model.PrimaryContactId);
+        ContactDetailDto? secondaryContact = await _contactReadService.GetContactDetailsAsync(model.SecondaryContactId);
 
         if (primaryContact == null || secondaryContact == null)
         {
