@@ -130,7 +130,7 @@ public class ContactReadServiceTests
         }
 
         [Fact]
-        public async Task GetContactDetailsAsyncWhenContactDoesNotExistReturnsNull()
+        public async Task GetContactDetailsAsyncWhenContactDoesNotExistReturnsNullAndAbortsDownstreamQueries()
         {
             Guid contactId = Guid.NewGuid();
 
@@ -143,10 +143,15 @@ public class ContactReadServiceTests
             ContactDetailDto? result = await Service.GetContactDetailsAsync(contactId);
 
             Assert.Null(result);
+
+            RepositoryMock.Verify(r => r.ListAsNoTrackingAsync<Relationship>(
+                It.IsAny<Expression<Func<Relationship, bool>>>(),
+                It.IsAny<CancellationToken>(),
+                It.IsAny<string[]>()), Times.Never);
         }
 
         [Fact]
-        public async Task GetContactDetailsAsyncReturnsNullForPartialContact()
+        public async Task GetContactDetailsAsyncForPartialContactReturnsNullAndAbortsDownstreamQueries()
         {
             Guid contactId = Guid.NewGuid();
             Expression<Func<Contact, bool>>? capturedFilter = null;
@@ -167,6 +172,11 @@ public class ContactReadServiceTests
             Func<Contact, bool> filterFunc = capturedFilter.Compile();
             Assert.False(filterFunc(new Contact { Id = contactId, FirstName = "Partial", IsPartial = true }));
             Assert.True(filterFunc(new Contact { Id = contactId, FirstName = "Full", IsPartial = false }));
+
+            RepositoryMock.Verify(r => r.ListAsNoTrackingAsync<Relationship>(
+                It.IsAny<Expression<Func<Relationship, bool>>>(),
+                It.IsAny<CancellationToken>(),
+                It.IsAny<string[]>()), Times.Never);
         }
 
         [Fact]
