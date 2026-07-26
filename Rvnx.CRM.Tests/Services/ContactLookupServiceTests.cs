@@ -103,4 +103,55 @@ public class ContactLookupServiceTests
         Assert.False(result);
     }
 
+    [Fact]
+    public async Task GetPartialContactIdsAsyncWithEmptyInputReturnsEmptySetAndDoesNotCallRepository()
+    {
+        // Act
+        HashSet<Guid> result = await _service.GetPartialContactIdsAsync([]);
+
+        // Assert
+        Assert.Empty(result);
+        _repositoryMock.Verify(
+            r => r.ListProjectedAsync(
+                It.IsAny<System.Linq.Expressions.Expression<Func<Contact, bool>>>(),
+                It.IsAny<System.Linq.Expressions.Expression<Func<Contact, Guid>>>(),
+                It.IsAny<CancellationToken>()),
+            Times.Never);
+    }
+
+    [Fact]
+    public async Task GetPartialContactIdsAsyncReturnsOnlyPartialIdsFromRepository()
+    {
+        // Arrange
+        Guid partialId1 = Guid.NewGuid();
+        Guid partialId2 = Guid.NewGuid();
+        Guid nonPartialId = Guid.NewGuid();
+
+        List<Guid> inputIds = [partialId1, partialId2, nonPartialId];
+
+        // The mock repository will return the partial IDs
+        _repositoryMock.Setup(r => r.ListProjectedAsync(
+                It.IsAny<System.Linq.Expressions.Expression<Func<Contact, bool>>>(),
+                It.IsAny<System.Linq.Expressions.Expression<Func<Contact, Guid>>>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync([partialId1, partialId2]);
+
+        // Act
+        HashSet<Guid> result = await _service.GetPartialContactIdsAsync(inputIds);
+
+        // Assert
+        Assert.Equal(2, result.Count);
+        Assert.Contains(partialId1, result);
+        Assert.Contains(partialId2, result);
+        Assert.DoesNotContain(nonPartialId, result);
+
+        // Verify repository was called exactly once
+        _repositoryMock.Verify(
+            r => r.ListProjectedAsync(
+                It.IsAny<System.Linq.Expressions.Expression<Func<Contact, bool>>>(),
+                It.IsAny<System.Linq.Expressions.Expression<Func<Contact, Guid>>>(),
+                It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
 }
